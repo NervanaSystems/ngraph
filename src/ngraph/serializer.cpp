@@ -1567,8 +1567,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 
                 auto pad_mode = read_pad_mode(node_js);
 
-                node =
-                    make_shared<op::v0::Pad>(args[0], args[1], padding_below, padding_above, pad_mode);
+                node = make_shared<op::v0::Pad>(
+                    args[0], args[1], padding_below, padding_above, pad_mode);
             }
             if (op_version == 1)
             {

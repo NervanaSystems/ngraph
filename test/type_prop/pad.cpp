@@ -412,10 +412,11 @@ TEST(type_prop, pad_v1_arg_pad_value_type_mismatch)
 
     try
     {
-        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value, op::PadMode::CONSTANT);
+        auto pad_v1 = make_shared<op::v1::Pad>(
+            arg, pads_begin, pads_end, arg_pad_value, op::PadMode::CONSTANT);
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Too much negative padding not detected";
+        FAIL() << "Incorrect arg_pad_value type exception not handled";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -438,10 +439,11 @@ TEST(type_prop, pad_v1_arg_pad_value_shape_not_compatible)
 
     try
     {
-        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value, op::PadMode::CONSTANT);
+        auto pad_v1 = make_shared<op::v1::Pad>(
+            arg, pads_begin, pads_end, arg_pad_value, op::PadMode::CONSTANT);
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Too much negative padding not detected";
+        FAIL() << "Incorrect arg_pad_value shape exception not handled";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -454,7 +456,7 @@ TEST(type_prop, pad_v1_arg_pad_value_shape_not_compatible)
     }
 }
 
-TEST(type_prop, pad_v1_arg_pads_begin_shape_not_1D)
+TEST(type_prop, pad_v1_pads_begin_shape_not_1D)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{1, 2});
@@ -465,7 +467,7 @@ TEST(type_prop, pad_v1_arg_pads_begin_shape_not_1D)
         auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, op::PadMode::SYMMETRIC);
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Too much negative padding not detected";
+        FAIL() << "Incorrect pads_begin shape exception not handled";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -478,7 +480,7 @@ TEST(type_prop, pad_v1_arg_pads_begin_shape_not_1D)
     }
 }
 
-TEST(type_prop, pad_v1_arg_pads_end_shape_not_1D)
+TEST(type_prop, pad_v1_pads_end_shape_not_1D)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{1});
@@ -489,7 +491,7 @@ TEST(type_prop, pad_v1_arg_pads_end_shape_not_1D)
         auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, op::PadMode::SYMMETRIC);
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Too much negative padding not detected";
+        FAIL() << "Incorrect pads_end shape exception not handled";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -501,7 +503,7 @@ TEST(type_prop, pad_v1_arg_pads_end_shape_not_1D)
     }
 }
 
-TEST(type_prop, pad_v1_arg_pads_begin_size_not_correct)
+TEST(type_prop, pad_v1_pads_begin_size_not_correct)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{4});
@@ -512,7 +514,7 @@ TEST(type_prop, pad_v1_arg_pads_begin_size_not_correct)
         auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, op::PadMode::SYMMETRIC);
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Too much negative padding not detected";
+        FAIL() << "Incorrect pads_begin size exception not handled";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -526,7 +528,7 @@ TEST(type_prop, pad_v1_arg_pads_begin_size_not_correct)
     }
 }
 
-TEST(type_prop, pad_v1_arg_pads_end_size_not_correct)
+TEST(type_prop, pad_v1_pads_end_size_not_correct)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{1});
@@ -535,10 +537,11 @@ TEST(type_prop, pad_v1_arg_pads_end_size_not_correct)
 
     try
     {
-        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value, op::PadMode::CONSTANT);
+        auto pad_v1 = make_shared<op::v1::Pad>(
+            arg, pads_begin, pads_end, arg_pad_value, op::PadMode::CONSTANT);
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Too much negative padding not detected";
+        FAIL() << "Incorrect pads_end size exception not handled";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -555,16 +558,16 @@ TEST(type_prop, pad_v1_arg_pads_end_size_not_correct)
 
 TEST(type_prop, pad_v1_arg_pads_begin_incompatible_type)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{ 1, 2, 3 });
-    auto pads_begin = make_shared<op::Parameter>(element::f32, Shape{ 1 });
-    auto pads_end = make_shared<op::Parameter>(element::i64, Shape{ 1 });
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto pads_begin = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto pads_end = make_shared<op::Parameter>(element::i64, Shape{1});
 
     try
     {
         auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, op::PadMode::REFLECT);
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Incorrect pad begin type exception not handled";
+        FAIL() << "Incorrect pad_begin type exception not handled";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -578,9 +581,9 @@ TEST(type_prop, pad_v1_arg_pads_begin_incompatible_type)
 
 TEST(type_prop, pad_v1_arg_pads_end_incompatible_type)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{ 1, 2, 3 });
-    auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{ 1 });
-    auto pads_end = make_shared<op::Parameter>(element::f32, Shape{ 1 });
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto pads_end = make_shared<op::Parameter>(element::f32, Shape{1});
 
     try
     {
@@ -601,9 +604,11 @@ TEST(type_prop, pad_v1_arg_pads_end_incompatible_type)
 
 TEST(type_prop, pad_v1_pads_begin_elem_negative_value)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{ 5, 4, 2 });
-    auto pads_begin = make_shared<op::Constant>(element::i64, Shape{ 3 }, std::vector<int64_t>{6, 9, -3});
-    auto pads_end = make_shared<op::Constant>(element::i64, Shape{ 3 }, std::vector<int64_t>{5, 3, 0});
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{5, 4, 2});
+    auto pads_begin =
+        make_shared<op::Constant>(element::i64, Shape{3}, std::vector<int64_t>{6, 9, -3});
+    auto pads_end =
+        make_shared<op::Constant>(element::i64, Shape{3}, std::vector<int64_t>{5, 3, 0});
     auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
     try
     {
@@ -626,9 +631,11 @@ TEST(type_prop, pad_v1_pads_begin_elem_negative_value)
 
 TEST(type_prop, pad_v1_pads_end_elem_negative_value)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{ 5, 4, 2 });
-    auto pads_begin = make_shared<op::Constant>(element::i64, Shape{ 3 }, std::vector<int64_t>{5, 3, 0});
-    auto pads_end = make_shared<op::Constant>(element::i64, Shape{ 3 }, std::vector<int64_t>{6, 9, -3});
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{5, 4, 2});
+    auto pads_begin =
+        make_shared<op::Constant>(element::i64, Shape{3}, std::vector<int64_t>{5, 3, 0});
+    auto pads_end =
+        make_shared<op::Constant>(element::i64, Shape{3}, std::vector<int64_t>{6, 9, -3});
     try
     {
         auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, op::PadMode::REFLECT);
@@ -639,8 +646,7 @@ TEST(type_prop, pad_v1_pads_end_elem_negative_value)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("All pads_end element must be non-negative (pads_end_coord"));
+            error.what(), std::string("All pads_end element must be non-negative (pads_end_coord"));
     }
     catch (...)
     {
@@ -650,9 +656,11 @@ TEST(type_prop, pad_v1_pads_end_elem_negative_value)
 
 TEST(type_prop, pad_v1_deduce_too_small_for_edge)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{ 1, 5, 0, 2 });
-    auto pads_begin = make_shared<op::Constant>(element::i64, Shape{ 4 }, std::vector<int64_t>{0, 1, 2, 3});
-    auto pads_end = make_shared<op::Constant>(element::i64, Shape{ 4 }, std::vector<int64_t>{0, 1, 2, 3});
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 5, 0, 2});
+    auto pads_begin =
+        make_shared<op::Constant>(element::i64, Shape{4}, std::vector<int64_t>{0, 1, 2, 3});
+    auto pads_end =
+        make_shared<op::Constant>(element::i64, Shape{4}, std::vector<int64_t>{0, 1, 2, 3});
     auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
 
     try
@@ -666,7 +674,8 @@ TEST(type_prop, pad_v1_deduce_too_small_for_edge)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-            std::string("EDGE padding mode requires an input of dimension of at least 1 at each spatial axis"));
+                             std::string("EDGE padding mode requires an input of dimension of at "
+                                         "least 1 at each spatial axis"));
     }
     catch (...)
     {
@@ -676,15 +685,17 @@ TEST(type_prop, pad_v1_deduce_too_small_for_edge)
 
 TEST(type_prop, pad_v1_deduce_too_small_for_reflect)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{ 1, 5, 1, 2 });
-    auto pads_begin = make_shared<op::Constant>(element::i64, Shape{ 4 }, std::vector<int64_t>{0, 1, 2, 3});
-    auto pads_end = make_shared<op::Constant>(element::i64, Shape{ 4 }, std::vector<int64_t>{0, 1, 2, 3});
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 5, 1, 2});
+    auto pads_begin =
+        make_shared<op::Constant>(element::i64, Shape{4}, std::vector<int64_t>{0, 1, 2, 3});
+    auto pads_end =
+        make_shared<op::Constant>(element::i64, Shape{4}, std::vector<int64_t>{0, 1, 2, 3});
     auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
 
     try
     {
-        auto pad_v1 =
-            make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value, op::PadMode::REFLECT);
+        auto pad_v1 = make_shared<op::v1::Pad>(
+            arg, pads_begin, pads_end, arg_pad_value, op::PadMode::REFLECT);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect input shape exception for REFLECT mode not thrown";
@@ -692,7 +703,8 @@ TEST(type_prop, pad_v1_deduce_too_small_for_reflect)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-            std::string("REFLECT padding mode requires an input of dimension of at least 2 at each spatial axis"));
+                             std::string("REFLECT padding mode requires an input of dimension of "
+                                         "at least 2 at each spatial axis"));
     }
     catch (...)
     {

@@ -102,7 +102,8 @@ namespace ngraph
                 /// beginning of each axis
                 /// \param pads_end The node which specifies the number of padding elements at the
                 /// end of each axis
-                /// \param The node with value which set to extended elements if pad_mode is CONSTANT
+                /// \param arg_pad_value The node with value which set to extended elements
+                /// if pad_mode is CONSTANT
                 /// \param pad_mode The padding mode: CONSTANT, EDGE, REFLECT or SYMMETRIC.
                 Pad(const Output<Node>& arg,
                     const Output<Node>& pads_begin,
@@ -113,10 +114,10 @@ namespace ngraph
                 /// \brief Constructs a generic padding operation.
                 ///
                 /// \param arg The node producing input tensor to be padded.
-                /// \param pads_begin The node which specifies the number of padding elements at the
-                /// beginning of each axis
-                /// \param pads_end The node which specifies the number of padding elements at the
-                /// end of each axis
+                /// \param pads_begin The node which specifies the number of padding elements
+                /// at the beginning of each axis
+                /// \param pads_end The node which specifies the number of padding elements
+                /// at the end of each axis
                 /// \param pad_mode The padding mode: CONSTANT, EDGE, REFLECT or SYMMETRIC.
                 Pad(const Output<Node>& arg,
                     const Output<Node>& pads_begin,
@@ -131,9 +132,11 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
-                ///return param pads_begin The node which specifies the number of padding elements at the beginning of each axis
+                /// return The node which specifies the number of padding elements
+                /// at the beginning of each axis
                 CoordinateDiff get_pads_begin() const;
-                ///return param pads_begin The node which specifies the number of padding elements at the end of each axis
+                /// return The node which specifies the number of padding elements
+                /// at the end of each axis
                 CoordinateDiff get_pads_end() const;
 
                 /// \return The padding mode.
