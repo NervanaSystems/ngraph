@@ -79,6 +79,12 @@ void op::GroupConvolution::pre_validate_and_infer_types()
 
     if (data_shape.is_static() && filters_shape.is_static())
     {
+        // Update groups
+        if (has_groups_in_filters_shape())
+        {
+            m_groups = get_input_partial_shape(1)[0];
+        }
+
         // Data channels
         NODE_VALIDATION_CHECK(this,
                               data_shape.to_shape()[1] % get_groups() == 0,
