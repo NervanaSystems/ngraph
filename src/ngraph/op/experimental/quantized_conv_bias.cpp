@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::QuantizedConvolutionBias::type_name{"QuantizedConvolutionBias"};
+constexpr NodeTypeInfo op::QuantizedConvolutionBias::type_info;
 
 op::QuantizedConvolutionBias::QuantizedConvolutionBias(const Output<Node>& data_batch,
                                                        const Output<Node>& filters,
@@ -89,7 +89,7 @@ shared_ptr<Node> op::QuantizedConvolutionBias::copy_with_new_args(const NodeVect
                                                          m_with_relu));
 }
 
-const string op::QuantizedConvolutionBiasAdd::type_name{"QuantizedConvolutionBiasAdd"};
+constexpr NodeTypeInfo op::QuantizedConvolutionBiasAdd::type_info;
 
 op::QuantizedConvolutionBiasAdd::QuantizedConvolutionBiasAdd(const Output<Node>& data_batch,
                                                              const Output<Node>& filters,
@@ -161,7 +161,7 @@ shared_ptr<Node>
                                                             m_with_relu));
 }
 
-const string op::QuantizedConvolutionBiasSignedAdd::type_name{"QuantizedConvolutionBiasSignedAdd"};
+constexpr NodeTypeInfo op::QuantizedConvolutionBiasSignedAdd::type_info;
 
 op::QuantizedConvolutionBiasSignedAdd::QuantizedConvolutionBiasSignedAdd(
     const Output<Node>& data_batch,

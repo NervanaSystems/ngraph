@@ -53,7 +53,7 @@ ngraph::op::SigmoidMultiply::FunctionType
     }
 }
 
-const string op::SigmoidMultiply::type_name{"SigmoidMultiply"};
+constexpr NodeTypeInfo op::SigmoidMultiply::type_info;
 
 op::SigmoidMultiply::SigmoidMultiply(const Output<Node>& input_0,
                                      const Output<Node>& input_1,
@@ -108,7 +108,7 @@ void op::SigmoidMultiply::generate_adjoints(autodiff::Adjoints& adjoints, const 
     adjoints.add_delta(input_1, input_1_delta);
 }
 
-const string op::SigmoidMultiplyBackprop::type_name{"SigmoidMultiplyBackprop"};
+constexpr NodeTypeInfo op::SigmoidMultiplyBackprop::type_info;
 
 op::SigmoidMultiplyBackprop::SigmoidMultiplyBackprop(const Output<Node>& input_0,
                                                      const Output<Node>& input_1,

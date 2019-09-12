@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Floor::type_name{"Floor"};
+constexpr NodeTypeInfo op::Floor::type_info;
 
 op::Floor::Floor(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)

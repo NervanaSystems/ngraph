@@ -95,7 +95,7 @@ Shape op::GroupConvolutionBias::get_weights_dimensions()
     return weights_shape_groups;
 }
 
-const std::string op::GroupConvolutionBias::type_name{"GroupConvolutionBias"};
+constexpr NodeTypeInfo op::GroupConvolutionBias::type_info;
 
 op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolution>& conv,
                                                const Output<Node>& bias,

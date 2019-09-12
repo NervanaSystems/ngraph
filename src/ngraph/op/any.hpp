@@ -16,9 +16,6 @@
 
 #pragma once
 
-#include "ngraph/axis_set.hpp"
-#include "ngraph/graph_util.hpp"
-#include "ngraph/op/op.hpp"
 #include "ngraph/op/util/logical_reduction.hpp"
 
 namespace ngraph
@@ -30,8 +27,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"Any", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs an "any" reduction operation.
             Any() = default;
             /// \brief Constructs an "any" reduction operation.
@@ -49,10 +46,7 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
             /// \return The default value for Any.
-            virtual std::shared_ptr<Node> get_default_value() const override
-            {
-                return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
-            }
+            virtual std::shared_ptr<Node> get_default_value() const override;
         };
     }
 }

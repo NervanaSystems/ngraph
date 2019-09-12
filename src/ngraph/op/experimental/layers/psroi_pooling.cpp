@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::PSROIPooling::type_name{"PSROIPooling"};
+constexpr NodeTypeInfo op::PSROIPooling::type_info;
 
 op::PSROIPooling::PSROIPooling(const Output<Node>& input,
                                const Output<Node>& coords,
