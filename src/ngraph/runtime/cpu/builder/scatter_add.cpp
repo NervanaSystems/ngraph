@@ -32,6 +32,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::ScatterAdd)
             {
+                (void)node;
                 auto& functors = external_function->get_functors();
 
                 auto inputs_buffer_index = external_function->get_buffer_index(args[0].get_name());

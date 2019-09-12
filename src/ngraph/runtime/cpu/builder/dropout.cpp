@@ -76,7 +76,7 @@ namespace ngraph
                                out0_buffer_index,
                                out1_buffer_index,
                                vmsr,
-                               use_seed](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                               use_seed](CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         bool training = static_cast<bool>(
                             static_cast<float*>(ctx->buffer_data[arg1_buffer_index])[0]);
                         double keep_prob =
@@ -102,7 +102,7 @@ namespace ngraph
                                out0_buffer_index,
                                out1_buffer_index,
                                vmsr,
-                               use_seed](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                               use_seed](CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         bool training = static_cast<bool>(
                             static_cast<double*>(ctx->buffer_data[arg1_buffer_index])[0]);
                         double keep_prob =

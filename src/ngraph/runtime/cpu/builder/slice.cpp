@@ -70,7 +70,7 @@ namespace ngraph
                                         offset,
                                         arg_buffer_index,
                                         out_buffer_index](CPURuntimeContext* ctx,
-                                                          CPUExecutionContext* ectx) {
+                                                          CPUExecutionContext* /* ectx */) {
                             if (ctx->buffer_data[out_buffer_index] <
                                     ctx->buffer_data[arg_buffer_index] ||
                                 ctx->buffer_data[out_buffer_index] >=
@@ -107,7 +107,7 @@ namespace ngraph
                                     slice_index,
                                     arg_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_slice(ctx->mkldnn_memories,

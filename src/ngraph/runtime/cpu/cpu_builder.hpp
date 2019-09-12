@@ -307,6 +307,7 @@
     }
 
 #define BUILD_UNARY_ELEMWISE_FUNCTOR(OP)                                                           \
+    (void)node;                                                                                    \
     auto& functors = external_function->get_functors();                                            \
     std::function<void(void*, void*, size_t, int)> kernel;                                         \
                                                                                                    \
@@ -326,6 +327,7 @@
     functors.emplace_back(functor)
 
 #define BUILD_BINARY_ELEMWISE_FUNCTOR(OP)                                                          \
+    (void)node;                                                                                    \
     auto& functors = external_function->get_functors();                                            \
     std::function<void(void*, void*, void*, size_t, int)> kernel;                                  \
                                                                                                    \
@@ -416,10 +418,10 @@ namespace ngraph
             {
             public:
                 template <typename OP>
-                static void build(CPU_ExternalFunction* external_function,
+                static void build(CPU_ExternalFunction* /* external_function */,
                                   const ngraph::Node* node,
-                                  const std::vector<TensorViewWrapper>& args,
-                                  const std::vector<TensorViewWrapper>& out)
+                                  const std::vector<TensorViewWrapper>& /* args */,
+                                  const std::vector<TensorViewWrapper>& /* out */)
                 {
                     throw unsupported_op("Unimplemented op '" + node->description() +
                                          "' in CPU builder");
@@ -432,10 +434,10 @@ namespace ngraph
                                          "' for constant folding in CPU builder");
                 }
 
-                static void nop(CPU_ExternalFunction* external_function,
-                                const ngraph::Node* node,
-                                const std::vector<TensorViewWrapper>& args,
-                                const std::vector<TensorViewWrapper>& out)
+                static void nop(CPU_ExternalFunction* /* external_function */,
+                                const ngraph::Node* /* node */,
+                                const std::vector<TensorViewWrapper>& /* args */,
+                                const std::vector<TensorViewWrapper>& /* out */)
                 {
                 }
             };
