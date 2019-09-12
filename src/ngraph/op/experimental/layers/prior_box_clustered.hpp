@@ -48,8 +48,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"PriorBoxClustered", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a PriorBoxClustered operation
             ///
             /// \param layer_shape    Shape of layer for which prior boxes are computed

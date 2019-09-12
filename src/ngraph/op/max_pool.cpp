@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::v0::MaxPool::type_name{"MaxPool"};
+constexpr NodeTypeInfo op::v0::MaxPool::type_info;
 
 op::v0::MaxPool::MaxPool(const Output<Node>& arg,
                          const Shape& window_shape,
@@ -144,12 +144,11 @@ shared_ptr<Node> op::v0::MaxPool::copy_with_new_args(const NodeVector& new_args)
                                     m_ceil_mode);
 }
 
+constexpr NodeTypeInfo op::v0::MaxPoolBackprop::type_info;
 shared_ptr<Node> op::v0::MaxPool::get_default_value() const
 {
     return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
 }
-
-const string op::v0::MaxPoolBackprop::type_name{"MaxPoolBackprop"};
 
 op::v0::MaxPoolBackprop::MaxPoolBackprop(const Output<Node>& arg_forward,
                                          const Output<Node>& delta,
@@ -274,7 +273,7 @@ void op::v0::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const Node
     adjoints.add_delta(operand, backprop);
 }
 
-const string op::v1::MaxPool::type_name{"MaxPool"};
+constexpr NodeTypeInfo op::v1::MaxPool::type_info;
 
 op::v1::MaxPool::MaxPool(const Output<Node>& arg,
                          const Strides& strides,
@@ -369,7 +368,7 @@ shared_ptr<Node> op::v1::MaxPool::get_default_value() const
     return op::Constant::create(get_element_type(), get_shape(), {0});
 }
 
-const string op::v1::MaxPoolBackprop::type_name{"MaxPoolBackprop"};
+constexpr NodeTypeInfo op::v1::MaxPoolBackprop::type_info;
 
 op::v1::MaxPoolBackprop::MaxPoolBackprop(const Output<Node>& arg_forward,
                                          const Output<Node>& delta,

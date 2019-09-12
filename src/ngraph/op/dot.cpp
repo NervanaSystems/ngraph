@@ -26,7 +26,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Dot::type_name{"Dot"};
+constexpr NodeTypeInfo op::Dot::type_info;
 
 op::Dot::Dot(const Output<Node>& arg0, const Output<Node>& arg1)
     : Dot(arg0, arg1, 0, false)

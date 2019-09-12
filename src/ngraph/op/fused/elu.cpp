@@ -28,7 +28,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Elu::type_name{"Elu"};
+constexpr NodeTypeInfo op::Elu::type_info;
 
 op::Elu::Elu(const Output<Node>& data, const double alpha)
     : FusedOp({data})

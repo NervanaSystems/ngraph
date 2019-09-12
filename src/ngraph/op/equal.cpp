@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Equal::type_name{"Equal"};
+constexpr NodeTypeInfo op::Equal::type_info;
 
 op::Equal::Equal(const Output<Node>& arg0,
                  const Output<Node>& arg1,

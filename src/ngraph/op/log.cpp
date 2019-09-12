@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Log::type_name{"Log"};
+constexpr NodeTypeInfo op::Log::type_info;
 
 op::Log::Log(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)

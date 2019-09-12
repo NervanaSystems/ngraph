@@ -22,7 +22,7 @@ using namespace std;
 using namespace ngraph;
 
 // *** AvgPool OP SET 0 ***
-const string op::v0::AvgPool::type_name{"AvgPool"};
+constexpr NodeTypeInfo op::v0::AvgPool::type_info;
 
 op::v0::AvgPool::AvgPool(const Output<Node>& arg,
                          const Shape& window_shape,
@@ -227,12 +227,11 @@ shared_ptr<Node> op::v0::AvgPool::copy_with_new_args(const NodeVector& new_args)
                                     m_ceil_mode);
 }
 
+constexpr NodeTypeInfo op::v0::AvgPoolBackprop::type_info;
 shared_ptr<Node> op::v0::AvgPool::get_default_value() const
 {
-    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
+    return Constant::create(get_element_type(), get_shape(), {0});
 }
-
-const string op::v0::AvgPoolBackprop::type_name("AvgPoolBackprop");
 
 op::v0::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
                                          const shared_ptr<Node>& delta,
@@ -350,14 +349,13 @@ void op::v0::AvgPoolBackprop::set_include_padding_in_avg_computation(
 shared_ptr<Node> op::v0::AvgPoolBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    AvgPoolBackprop* avpn = new AvgPoolBackprop(m_forward_arg_shape,
-                                                new_args.at(0),
-                                                m_window_shape,
-                                                m_window_movement_strides,
-                                                m_padding_below,
-                                                m_padding_above,
-                                                m_include_padding_in_avg_computation);
-    return shared_ptr<op::AvgPoolBackprop>(avpn);
+    return make_shared<v0::AvgPoolBackprop>(m_forward_arg_shape,
+                                            new_args.at(0),
+                                            m_window_shape,
+                                            m_window_movement_strides,
+                                            m_padding_below,
+                                            m_padding_above,
+                                            m_include_padding_in_avg_computation);
 }
 
 void op::v0::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
@@ -382,7 +380,7 @@ void op::v0::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const Node
 }
 
 // *** AvgPool OP SET 1 ***
-const string op::v1::AvgPool::type_name{"AvgPool"};
+constexpr NodeTypeInfo op::v1::AvgPool::type_info;
 
 op::v1::AvgPool::AvgPool(const Output<Node>& arg,
                          const Strides& strides,
@@ -558,7 +556,7 @@ shared_ptr<Node> op::v1::AvgPool::copy_with_new_args(const NodeVector& new_args)
                                     m_auto_pad);
 }
 
-const string op::v1::AvgPoolBackprop::type_name("AvgPoolBackprop");
+constexpr NodeTypeInfo op::v1::AvgPoolBackprop::type_info;
 
 op::v1::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
                                          const Output<Node>& delta,
@@ -666,14 +664,13 @@ void op::v1::AvgPoolBackprop::set_exclude_pad(bool exclude_pad)
 shared_ptr<Node> op::v1::AvgPoolBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    AvgPoolBackprop* avpn = new AvgPoolBackprop(m_forward_arg_shape,
-                                                new_args.at(0),
-                                                m_strides,
-                                                m_pads_begin,
-                                                m_pads_end,
-                                                m_kernel,
-                                                m_exclude_pad);
-    return shared_ptr<op::v1::AvgPoolBackprop>(avpn);
+    return make_shared<v1::AvgPoolBackprop>(m_forward_arg_shape,
+                                            new_args.at(0),
+                                            m_strides,
+                                            m_pads_begin,
+                                            m_pads_end,
+                                            m_kernel,
+                                            m_exclude_pad);
 }
 
 void op::v1::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
