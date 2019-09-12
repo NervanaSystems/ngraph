@@ -94,7 +94,7 @@ shared_ptr<Node> op::Tile::copy_with_new_args(const NodeVector& new_args) const
 }
 
 // TODO: This function is not implemented!
-void op::Tile::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Tile::generate_adjoints(autodiff::Adjoints& /* adjoints */, const NodeVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for Tile");
 }

@@ -148,7 +148,7 @@ private:
     std::unordered_map<Node*, int64_t> m_heights;
 };
 
-static std::string label_edge(const std::shared_ptr<Node>& src,
+static std::string label_edge(const std::shared_ptr<Node>& /* src */,
                               const std::shared_ptr<Node>& dst,
                               size_t arg_index,
                               int64_t jump_distance)

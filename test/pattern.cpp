@@ -305,7 +305,7 @@ TEST(pattern, matcher)
     ASSERT_TRUE(n.match(any, abs));
     ASSERT_EQ(n.get_matched_nodes(), (NodeVector{abs, a}));
 
-    auto false_pred = [](std::shared_ptr<Node> no) { return false; };
+    auto false_pred = [](std::shared_ptr<Node> /* no */) { return false; };
     auto any_false = std::make_shared<pattern::op::Skip>(a, false_pred);
     ASSERT_TRUE(n.match(any_false, a));
     ASSERT_EQ(n.get_matched_nodes(), (NodeVector{a, a}));

@@ -107,8 +107,11 @@ std::vector<const element::Type*> element::Type::get_known_types()
     return rc;
 }
 
-element::Type::Type(
-    size_t bitwidth, bool is_real, bool is_signed, bool is_quantized, const std::string& cname)
+element::Type::Type(size_t bitwidth,
+                    bool is_real,
+                    bool is_signed,
+                    bool is_quantized,
+                    const std::string& /* cname */)
 {
     for (auto& t : get_type_info_map())
     {

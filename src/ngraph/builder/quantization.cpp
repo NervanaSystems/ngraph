@@ -133,8 +133,8 @@ namespace ngraph
                                                 const Shape& padding_below,
                                                 const Shape& padding_above,
                                                 bool include_padding_in_avg_computation,
-                                                const Output<Node>& min,
-                                                const Output<Node>& max)
+                                                const Output<Node>& /* min */,
+                                                const Output<Node>& /* max */)
         {
             return make_shared<op::QuantizedAvgPool>(input,
                                                      window_shape,
@@ -222,8 +222,8 @@ namespace ngraph
                                                 const Strides& window_movement_strides,
                                                 const Shape& padding_below,
                                                 const Shape& padding_above,
-                                                const Output<Node>& min,
-                                                const Output<Node>& max)
+                                                const Output<Node>& /* min */,
+                                                const Output<Node>& /* max */)
         {
             return make_shared<op::QuantizedMaxPool>(
                 input, window_shape, window_movement_strides, padding_below, padding_above);
