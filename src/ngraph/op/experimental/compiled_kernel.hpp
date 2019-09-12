@@ -47,6 +47,10 @@ namespace ngraph
 
             const NodeVector& get_node_list() const { return m_node_list; }
             const NodeVector& get_kernel_outputs() const { return m_output_nodes; }
+            // For node B inside CompiledKernel ck such that A->B and A is outside of ck:
+            // replace input to B with a dummy Parameter Op and add an entry to ck's
+            // m_input_map.
+            void encapsulate_nodes();
             const std::unordered_map<std::shared_ptr<Node>, size_t>& get_input_map() const
             {
                 return m_input_map;

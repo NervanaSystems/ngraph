@@ -89,6 +89,7 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
     , m_output_nodes(outputs)
 {
     constructor_validate_and_infer_types();
+    encapsulate_nodes();
     set_output_size(m_output_nodes.size());
 
     for (size_t i = 0; i < outputs.size(); ++i)
@@ -100,6 +101,33 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
             throw ngraph_error(o->get_name() + " isn't in node_list");
         }
         set_output_type(i, o->get_element_type(), o->get_shape());
+    }
+}
+
+void ngraph::op::CompiledKernel::encapsulate_nodes()
+{
+    std::unordered_set<std::shared_ptr<Node>> node_set(m_node_list.begin(), m_node_list.end());
+
+    // Go through each non-CK user of input to CK
+    int ck_arg_idx = 0;
+    for (auto& arg_output : input_values())
+    {
+        for (auto& input : arg_output.get_target_inputs())
+        {
+            auto user = input.get_node();
+            if (!dynamic_cast<ngraph::op::CompiledKernel*>(user) &&
+                node_set.find(user->shared_from_this()) != node_set.end())
+            {
+                arg_output.remove_target_input(input);
+                // Use a dummy Parameter as input for now, will replace later with the correct
+                // one.
+                auto temp_input_param = std::make_shared<ngraph::op::Parameter>(
+                    arg_output.get_element_type(), arg_output.get_partial_shape());
+                input.replace_source_output(temp_input_param->output(0));
+                insert_to_input_map(temp_input_param, ck_arg_idx);
+            }
+        }
+        ck_arg_idx++;
     }
 }
 

@@ -132,7 +132,6 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
     sanity_check(func, ck_nodes);
 #endif
 
-    encapsulate_nodes(ck_nodes);
     clean_up();
 
     return true;
@@ -369,58 +368,19 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
             }
         }
 
-        // Any input to CK must also have at least one user in the sub-graph body
+        // Any input to CK must not have any user in the sub-graph body
         for (auto& arg : ck_node->get_arguments())
         {
             bool found = false;
             for (auto& user : arg->get_users())
             {
-                found = (node_set.find(user) != node_set.end());
+                found = (node_set.find(user) == node_set.end());
                 if (found)
                 {
                     break;
                 }
             }
-            NGRAPH_CHECK(found, "CK input is not input to sub-graph");
-        }
-    }
-}
-
-void MLIRSubgraphExtractionPass::encapsulate_nodes(NodeVector& ck_nodes)
-{
-    for (auto& node : ck_nodes)
-    {
-        auto ck_node = std::static_pointer_cast<CompiledKernel>(node);
-        auto& node_list = ck_node->get_node_list();
-        std::unordered_set<std::shared_ptr<Node>> node_set(node_list.begin(), node_list.end());
-
-        // Go through each non-CK user of input to CK
-        int ck_arg_idx = 0;
-        for (auto& arg : ck_node->get_arguments())
-        {
-            for (auto& user : arg->get_users())
-            {
-                if (!std::dynamic_pointer_cast<ngraph::op::CompiledKernel>(user) &&
-                    node_set.find(user) != node_set.end())
-                {
-                    auto user_inputs = user->inputs();
-                    for (auto input : user_inputs)
-                    {
-                        auto input_output = input.get_source_output();
-                        if (input.get_source_output().get_node() == arg.get())
-                        {
-                            input.get_source_output().remove_target_input(input);
-                            // Use a label as input for now, will replace later with the correct
-                            // one.
-                            auto temp_input_param = std::make_shared<ngraph::op::Parameter>(
-                                input_output.get_element_type(), input_output.get_partial_shape());
-                            input.replace_source_output(temp_input_param->output(0));
-                            ck_node->insert_to_input_map(temp_input_param, ck_arg_idx);
-                        }
-                    }
-                }
-            }
-            ck_arg_idx++;
+            NGRAPH_CHECK(found, "CK input is input to sub-graph");
         }
     }
 }
