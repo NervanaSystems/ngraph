@@ -27,7 +27,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::HardSigmoid::type_name{"HardSigmoid"};
+constexpr NodeTypeInfo op::HardSigmoid::type_info;
 
 op::HardSigmoid::HardSigmoid(const Output<Node>& data, float alpha, float beta)
     : FusedOp({data})

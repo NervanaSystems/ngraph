@@ -30,22 +30,18 @@
 #define DL_HANDLE void*
 #endif
 
+#include "ngraph/ngraph_visibility.hpp"
+
 namespace ngraph
 {
     namespace runtime
     {
         class Backend;
         class BackendManager;
-        class BackendConstructor;
+        using BackendConstructor =
+            std::function<std::shared_ptr<ngraph::runtime::Backend>(const std::string& config)>;
     }
 }
-
-class ngraph::runtime::BackendConstructor
-{
-public:
-    virtual ~BackendConstructor() {}
-    virtual std::shared_ptr<Backend> create(const std::string& config) = 0;
-};
 
 class ngraph::runtime::BackendManager
 {
@@ -57,7 +53,8 @@ public:
     /// \param name The name of the registering backend in UPPER CASE.
     /// \param backend_constructor A BackendConstructor which will be called to
     ////     construct an instance of the registered backend.
-    static void register_backend(const std::string& name, BackendConstructor* backend_constructor);
+    static NGRAPH_API void register_backend(const std::string& name,
+                                            BackendConstructor backend_constructor);
 
     /// \brief Query the list of registered devices
     /// \returns A vector of all registered devices.
@@ -66,9 +63,9 @@ public:
 private:
     static void initialize_backends();
     static std::shared_ptr<runtime::Backend> create_backend(const std::string& type);
-    static std::unordered_map<std::string, BackendConstructor*>& get_registry();
+    static std::unordered_map<std::string, BackendConstructor>& get_registry();
 
-    static std::unordered_map<std::string, BackendConstructor*> s_registered_backend;
+    static std::unordered_map<std::string, BackendConstructor> s_registered_backend;
 
     static DL_HANDLE open_shared_library(std::string type);
     static std::map<std::string, std::string> get_registered_device_map();

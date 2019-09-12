@@ -18,17 +18,29 @@ We are pleased to announce the release of version |version|.
 
 Core updates for |version|
 --------------------------
++ All ops support ``Output<Node>`` arguments
++ Additional ops
 
-+ Allow DLLs that link nGraph statically to load backends
-+ Add rank id to trace file name.
-+ Allow provenance merging to be disabled
 
+Latest documentation updates for |version|
+------------------------------------------
+
++ Note the only support for nGPU is now through PlaidML; nGraph support for nGPU 
+  (via cuDNN) has been deprecated.  
++ iGPU works only with nGraph version `0.24`.
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
 
 
 Changelog on Previous Releases
 ==============================
+
+0.25.1
+------
+
++ Allow DLLs that link nGraph statically to load backends
++ Add rank id to trace file name
++ Allow provenance merging to be disabled
 
 
 0.25.0

@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Recv::type_name{"Recv"};
+constexpr NodeTypeInfo op::Recv::type_info;
 
 op::Recv::Recv(const Output<Node>& arg, int src_id)
     : Op({arg})
