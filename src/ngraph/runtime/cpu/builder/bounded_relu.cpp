@@ -53,7 +53,7 @@ namespace ngraph
                                     bounded_relu_index,
                                     input_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_bounded_relu(ctx->mkldnn_primitives,

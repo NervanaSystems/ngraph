@@ -96,7 +96,7 @@ namespace ngraph
                            std::is_same<OP, ngraph::op::QuantizedConvolution>::value ||
                            std::is_same<OP, ngraph::op::GroupConvolution>::value),
                           std::nullptr_t>::type = nullptr>
-            bool has_relu(const ngraph::Node* node)
+            bool has_relu(const ngraph::Node* /* node */)
             {
                 return false;
             }
@@ -190,8 +190,8 @@ namespace ngraph
 
                 template <typename OP>
                 size_t build_deconvolution(const ngraph::Node* node,
-                                           const std::vector<TensorViewWrapper>& args,
-                                           const std::vector<TensorViewWrapper>& out)
+                                           const std::vector<TensorViewWrapper>& /* args */,
+                                           const std::vector<TensorViewWrapper>& /* out */)
                 {
                     auto convolution = static_cast<const OP*>(node);
 
@@ -257,8 +257,8 @@ namespace ngraph
 
                 template <typename OP>
                 size_t build_inner_product(const ngraph::Node* node,
-                                           const std::vector<TensorViewWrapper>& args,
-                                           const std::vector<TensorViewWrapper>& out)
+                                           const std::vector<TensorViewWrapper>& /* args */,
+                                           const std::vector<TensorViewWrapper>& /* out */)
                 {
                     auto data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);

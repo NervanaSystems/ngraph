@@ -77,7 +77,7 @@ namespace ngraph
                                     arg2_buffer_index,
                                     arg3_buffer_index,
                                     out0_buffer_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) mutable {
+                                                       CPUExecutionContext* /* ectx */) mutable {
                         if (ctx->first_iteration)
                         {
                             vector<float> dyn_scales;
@@ -115,6 +115,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::QuantizedDot)
             {
+                (void)node;
                 auto& functors = external_function->get_functors();
 
                 auto arg0_shape = args[0].get_shape();
@@ -146,7 +147,7 @@ namespace ngraph
                                 arg1_buffer_index,
                                 arg2_buffer_index,
                                 out0_buffer_index](CPURuntimeContext* ctx,
-                                                   CPUExecutionContext* ectx) {
+                                                   CPUExecutionContext* /* ectx */) {
 
                     float dyn_scale = *(static_cast<float*>(ctx->buffer_data[arg2_buffer_index]));
 
