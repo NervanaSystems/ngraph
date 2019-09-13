@@ -1464,10 +1464,10 @@ private:
 
             if (m_states.count(&node) == 0)
             {
-                m_states[&node] = std::unique_ptr<UniformRNGState<T>>(new UniformRNGState<T>());
+                m_states[&node] = std::unique_ptr<UniformRNGState>(new UniformRNGState());
             }
 
-            auto state = static_cast<UniformRNGState<T>*>(m_states.at(&node).get());
+            auto state = static_cast<UniformRNGState*>(m_states.at(&node).get());
             size_t element_count = shape_size(node.get_output_shape(0));
             if (!use_fixed_seed)
             {

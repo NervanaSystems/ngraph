@@ -28,7 +28,7 @@ namespace ngraph
         {
             template <typename T>
             void random_uniform(
-                T* out, T min_val, T max_val, size_t count, ngraph::UniformRNGState<T>* rng_state)
+                T* out, T min_val, T max_val, size_t count, ngraph::UniformRNGState* rng_state)
             {
                 auto& gen = rng_state->get_generator();
                 auto& bd = rng_state->get_distribution();
@@ -43,8 +43,8 @@ namespace ngraph
             void random_uniform_with_fixed_seed(
                 T* out, T min_val, T max_val, size_t count, size_t fixed_seed)
             {
-                ngraph::UniformRNGState<T> rng_state(fixed_seed);
-                random_uniform<T>(out, min_val, max_val, count, &rng_state);
+                ngraph::UniformRNGState rng_state(fixed_seed);
+                random_uniform(out, min_val, max_val, count, &rng_state);
             }
         }
     }
