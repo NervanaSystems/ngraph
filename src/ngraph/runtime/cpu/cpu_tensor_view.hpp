@@ -23,7 +23,7 @@
 #include "ngraph/type/element_type.hpp"
 
 // This define is a workaround for gcc on centos and is required for aligned()
-#define NGRAPH_CPU_ALIGNMENT 64
+#define NGRAPH_CPU_ALIGNMENT 2*1024*1024
 
 namespace ngraph
 {
