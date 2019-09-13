@@ -29,7 +29,7 @@ namespace ngraph
             {
             public:
                 NGRAPH_API
-                static constexpr NodeTypeInfo type_info{ "Gather", 0 };
+                static constexpr NodeTypeInfo type_info{"Gather", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Gather() = default;
                 /// \param params The tensor from which slices are gathered
@@ -59,7 +59,7 @@ namespace ngraph
             {
             public:
                 NGRAPH_API
-                static constexpr NodeTypeInfo type_info{ "Gather", 1 };
+                static constexpr NodeTypeInfo type_info{"Gather", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Gather() = default;
                 /// \param params The tensor from which slices are gathered

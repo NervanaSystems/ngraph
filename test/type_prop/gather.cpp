@@ -105,7 +105,8 @@ TEST(type_prop, gather_v1_incorrect_axis_shape)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Axes input must be scalar or have 1 element (shape:"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Axes input must be scalar or have 1 element (shape:"));
     }
     catch (...)
     {
