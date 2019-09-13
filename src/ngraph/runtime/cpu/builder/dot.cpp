@@ -79,7 +79,7 @@ namespace ngraph
                     std::function<decltype(runtime::cpu::kernel::dot_scalar<float>)> kernel;
 
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_scalar);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_scalar)
 
                     auto element_count = shape_size(second.get_shape());
 
@@ -106,7 +106,7 @@ namespace ngraph
                     std::function<decltype(runtime::cpu::kernel::dot_1d_1d_1rd<float>)> kernel;
 
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_1d_1d_1rd);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_1d_1d_1rd)
 
                     auto functor = [&,
                                     kernel,
@@ -135,7 +135,7 @@ namespace ngraph
                     std::function<decltype(runtime::cpu::kernel::dot_2d_1d_1rd<float>)> kernel;
 
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_2d_1d_1rd);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_2d_1d_1rd)
 
                     auto functor = [&,
                                     kernel,
@@ -164,7 +164,7 @@ namespace ngraph
                     std::function<decltype(runtime::cpu::kernel::dot_1d_2d_1rd<float>)> kernel;
 
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_1d_2d_1rd);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_1d_2d_1rd)
 
                     auto functor = [&,
                                     kernel,
@@ -234,7 +234,7 @@ namespace ngraph
                 std::function<decltype(runtime::cpu::kernel::dot_ref<float, float, float>)> kernel;
 
                 SELECT_KERNEL_3ARGS(
-                    kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_ref);
+                    kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_ref)
 
                 auto functor = [&,
                                 kernel,

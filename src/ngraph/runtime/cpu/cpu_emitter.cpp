@@ -503,7 +503,7 @@ namespace ngraph
                                                       "ones",
                                                       "1.0f",
                                                       arg2_shape.at(0));
-                        ;
+
                         emitCblasSgemmBatch(writer,
                                             Shape{1, arg2_shape.at(0), 1}, // ones shape
                                             Shape{1, 1, arg2_shape.at(1)}, // C shape

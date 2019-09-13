@@ -471,7 +471,7 @@ memory::desc runtime::cpu::mkldnn_utils::try_get_named_md(const mkldnn_memory_de
 
 #define CANONICALIZE_MD(X)                                                                         \
     if (compare_named_md(md, X, out_md))                                                           \
-        return get_named_md(md, X);
+    return get_named_md(md, X)
     switch (md.ndims)
     {
     case 1: CANONICALIZE_MD(mkldnn_x); break;

@@ -324,7 +324,7 @@
                element_count,                                                                      \
                ectx->arena);                                                                       \
     };                                                                                             \
-    functors.emplace_back(functor);
+    functors.emplace_back(functor)
 
 #define BUILD_BINARY_ELEMWISE_FUNCTOR(OP)                                                          \
     (void)node;                                                                                    \
@@ -347,7 +347,7 @@
                    element_count,                                                                  \
                    ectx->arena);                                                                   \
         };                                                                                         \
-    functors.emplace_back(functor);
+    functors.emplace_back(functor)
 
 #define BUILD_UNARY_ELEMWISE_CF_FUNCTOR(OP)                                                        \
     std::function<void(void*, void*, size_t, int)> kernel;                                         \
@@ -360,7 +360,7 @@
                                               std::vector<void*>& outputs) {                       \
         kernel(inputs[0], outputs[0], element_count, 0);                                           \
     };                                                                                             \
-    return functor;
+    return functor
 
 #define BUILD_BINARY_ELEMWISE_CF_FUNCTOR(OP)                                                       \
     std::function<void(void*, void*, void*, size_t, int)> kernel;                                  \
@@ -373,7 +373,7 @@
                                               std::vector<void*>& outputs) {                       \
         kernel(inputs[0], inputs[1], outputs[0], element_count, 0);                                \
     };                                                                                             \
-    return functor;
+    return functor
 
 #define REGISTER_OP_BUILDER(OP)                                                                    \
     static struct __register_##OP##_builder                                                        \
