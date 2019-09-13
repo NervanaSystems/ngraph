@@ -756,7 +756,7 @@ bool ngraph::check_for_cycles(const ngraph::Function* func,
         {
             is_bkwd_cycle = true;
             return true;
-        };
+        }
     }
 
     for (auto param : func->get_parameters())
@@ -768,7 +768,7 @@ bool ngraph::check_for_cycles(const ngraph::Function* func,
         {
             is_bkwd_cycle = false;
             return true;
-        };
+        }
     }
     // no cycles
     return false;

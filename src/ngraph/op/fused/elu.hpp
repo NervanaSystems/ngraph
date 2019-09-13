@@ -48,7 +48,7 @@ namespace ngraph
 
             double get_alpha() const { return m_alpha; }
         private:
-            const double m_alpha;
+            double m_alpha;
         };
     } // namespace op
 } // namespace ngraph

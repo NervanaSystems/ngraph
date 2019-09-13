@@ -228,7 +228,7 @@ TEST(debugger, MLIR_DISABLE_TEST(while_stepping))
     dbg.add_breakpoint(add);
     while (dbg.step())
     {
-    };
+    }
 
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
@@ -308,7 +308,7 @@ TEST(tracer, MLIR_DISABLE_TEST(basic))
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
     int good_or_bad_value = -777;
-    auto add_tracer = [&good_or_bad_value](void** values, const std::string& name) {
+    auto add_tracer = [&good_or_bad_value](void** values, const std::string& /* name */) {
         ASSERT_EQ(static_cast<int*>(values[0])[0], good_or_bad_value);
     };
 
@@ -344,7 +344,7 @@ TEST(tracer, MLIR_DISABLE_TEST(count_tracepoint))
     size_t offset = 5;
 
     std::function<void(void**, const std::string&)> callback =
-        [&num_iterations, offset](void** values, const std::string& name) {
+        [&num_iterations, offset](void** values, const std::string& /* name */) {
             ASSERT_EQ(static_cast<int*>(values[0])[0], num_iterations - 1 + offset);
         };
 
@@ -385,7 +385,8 @@ TEST(tracer, MLIR_DISABLE_TEST(conditional_tracepoint))
     size_t offset = 5;
     int countdown = num_iterations;
 
-    auto add_tracer = [&countdown, num_iterations, offset](void** values, const std::string& name) {
+    auto add_tracer = [&countdown, num_iterations, offset](void** values,
+                                                           const std::string& /* name */) {
         if (countdown-- == 0)
         {
             ASSERT_EQ(static_cast<int*>(values[0])[0], num_iterations - 1 + offset);

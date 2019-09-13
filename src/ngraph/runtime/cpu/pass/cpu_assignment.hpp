@@ -49,7 +49,7 @@ namespace ngraph
 
                     template <typename OP>
                     static void
-                        assign(ngraph::runtime::cpu::CPU_ExternalFunction* external_function,
+                        assign(ngraph::runtime::cpu::CPU_ExternalFunction* /* external_function */,
                                ngraph::Node* node)
                     {
                         throw std::runtime_error("Unimplemented op '" + node->description() +

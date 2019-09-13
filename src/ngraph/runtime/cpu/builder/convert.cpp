@@ -30,6 +30,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Convert)
             {
+                (void)node;
                 auto& functors = external_function->get_functors();
 
                 auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
@@ -42,59 +43,59 @@ namespace ngraph
                 if (out[0].get_element_type() == element::boolean)
                 {
                     SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_bool);
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_bool)
                 }
                 else if (out[0].get_element_type() == element::f32)
                 {
                     SELECT_KERNEL(kernel,
                                   args[0].get_element_type(),
-                                  runtime::cpu::kernel::convert_to_float32);
+                                  runtime::cpu::kernel::convert_to_float32)
                 }
                 else if (out[0].get_element_type() == element::f64)
                 {
                     SELECT_KERNEL(kernel,
                                   args[0].get_element_type(),
-                                  runtime::cpu::kernel::convert_to_float64);
+                                  runtime::cpu::kernel::convert_to_float64)
                 }
                 else if (out[0].get_element_type() == element::i8)
                 {
                     SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_i8);
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_i8)
                 }
                 else if (out[0].get_element_type() == element::i16)
                 {
                     SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_i16);
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_i16)
                 }
                 else if (out[0].get_element_type() == element::i32)
                 {
                     SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_i32);
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_i32)
                 }
                 else if (out[0].get_element_type() == element::i64)
                 {
                     SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_i64);
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_i64)
                 }
                 else if (out[0].get_element_type() == element::u8)
                 {
                     SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_u8);
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_u8)
                 }
                 else if (out[0].get_element_type() == element::u16)
                 {
                     SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_u16);
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_u16)
                 }
                 else if (out[0].get_element_type() == element::u32)
                 {
                     SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_u32);
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_u32)
                 }
                 else if (out[0].get_element_type() == element::u64)
                 {
                     SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_u64);
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_u64)
                 }
                 else
                 {

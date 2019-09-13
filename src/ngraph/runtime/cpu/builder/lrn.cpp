@@ -51,7 +51,7 @@ namespace ngraph
                     auto& deps = mkldnn_emitter->get_primitive_deps(lrn_index);
 
                     functor = [&, lrn_desc, lrn_index, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_lrn_forward(ctx->mkldnn_memories,
@@ -92,7 +92,7 @@ namespace ngraph
                                    nsize,
                                    arg_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
+                                                     CPUExecutionContext* /* ectx */) {
                             ngraph::runtime::reference::lrn<float>(
                                 static_cast<float*>(ctx->buffer_data[arg_buffer_index]),
                                 axes,
@@ -115,7 +115,7 @@ namespace ngraph
                                    nsize,
                                    arg_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
+                                                     CPUExecutionContext* /* ectx */) {
                             ngraph::runtime::reference::lrn<double>(
                                 static_cast<double*>(ctx->buffer_data[arg_buffer_index]),
                                 axes,

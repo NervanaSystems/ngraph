@@ -371,12 +371,12 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             return false;
         }
 
-        CHECK_RANK(pattern_map[xt], 2);
-        CHECK_RANK(pattern_map[ht_1], 2);
-        CHECK_RANK(pattern_map[w_i2h], 2);
-        CHECK_RANK(pattern_map[w_h2h], 2);
-        CHECK_RANK(pattern_map[bias_i2h], 1);
-        CHECK_RANK(pattern_map[bias_h2h], 1);
+        CHECK_RANK(pattern_map[xt], 2)
+        CHECK_RANK(pattern_map[ht_1], 2)
+        CHECK_RANK(pattern_map[w_i2h], 2)
+        CHECK_RANK(pattern_map[w_h2h], 2)
+        CHECK_RANK(pattern_map[bias_i2h], 1)
+        CHECK_RANK(pattern_map[bias_h2h], 1)
 
         auto weights_layer = pattern_map[w_i2h];
         auto weights_iter = pattern_map[w_h2h];
@@ -669,11 +669,11 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             }
         }
 
-        CHECK_RANK(rnn_src_layer, 2);
-        CHECK_RANK(rnn_src_iter, 2);
-        CHECK_RANK(rnn_weights_layer, 2);
-        CHECK_RANK(rnn_weights_iter, 2);
-        CHECK_RANK(rnn_bias, 1);
+        CHECK_RANK(rnn_src_layer, 2)
+        CHECK_RANK(rnn_src_iter, 2)
+        CHECK_RANK(rnn_weights_layer, 2)
+        CHECK_RANK(rnn_weights_iter, 2)
+        CHECK_RANK(rnn_bias, 1)
 
         if (rnn_src_layer->get_element_type() != element::f32 ||
             rnn_src_iter->get_element_type() != element::f32)
