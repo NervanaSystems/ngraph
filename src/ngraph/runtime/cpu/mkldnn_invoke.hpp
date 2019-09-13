@@ -83,6 +83,13 @@ namespace ngraph
                                                         size_t primitive_index,
                                                         std::vector<size_t>& deps,
                                                         OpType type);
+#if MKLDNN_VERSION_MAJOR >= 1
+                extern "C" void mkldnn_invoke_primitive_new(CPURuntimeContext* ctx,
+                                                        size_t primitive_index,
+                                                        std::vector<size_t>& deps,
+                                                        OpType type,
+                                                        mkldnn::memory&);
+#endif
             }
         }
     }

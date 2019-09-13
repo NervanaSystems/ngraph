@@ -71,11 +71,13 @@ namespace ngraph
                     size_t conv_index = mkldnn_emitter->convolution_forward_init();
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
+                    mkldnn::memory* scratchpad_ptr = nullptr;
                     auto functor = [&,
                                     conv_desc,
                                     conv_attr,
                                     deps,
-                                    conv_index,
+                                    conv_index,,
+                                    scratchpad_ptr,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     arg2_buffer_index,
@@ -104,6 +106,9 @@ namespace ngraph
                                 executor::global_cpu_engine,
                                 deps,
                                 conv_index);
+                            scratchpad_ptr = new mkldnn::memory(*ctx->mkldnn_scratchpad_mds[conv_index],
+                                                      executor::global_cpu_engine,
+                                                      ctx->scratchpad_buffer->get_ptr());
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -111,9 +116,12 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out0_buffer_index]);
-
+#if 0
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
                             ctx, conv_index, deps, cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTION);
+#endif
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive_new(
+                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTION, *scratchpad_ptr);
                     };
                     functors.emplace_back(functor);
                 }
@@ -350,12 +358,14 @@ namespace ngraph
                     size_t conv_index = mkldnn_emitter->convolution_forward_init();
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
+                    mkldnn::memory* scratchpad_ptr = nullptr;
                     auto functor = [&,
                                     scales_size,
                                     conv_desc,
                                     conv_attr,
                                     deps,
-                                    conv_index,
+                                    conv_index,,
+                                    scratchpad_ptr,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     arg2_buffer_index,
@@ -380,6 +390,9 @@ namespace ngraph
                                 executor::global_cpu_engine,
                                 deps,
                                 conv_index);
+                            scratchpad_ptr = new mkldnn::memory(*ctx->mkldnn_scratchpad_mds[conv_index],
+                                                      executor::global_cpu_engine,
+                                                      ctx->scratchpad_buffer->get_ptr());
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -388,11 +401,18 @@ namespace ngraph
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out0_buffer_index]);
 
+#if 0
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
                             ctx,
                             conv_index,
                             deps,
                             cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONRELU);
+#endif
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive_new(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONRELU, *scratchpad_ptr);
                     };
                     functors.emplace_back(functor);
                 }
@@ -435,12 +455,14 @@ namespace ngraph
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
+                    mkldnn::memory* scratchpad_ptr = nullptr;
                     auto functor = [&,
                                     scales_size,
                                     conv_desc,
                                     conv_attr,
                                     deps,
-                                    conv_index,
+                                    conv_index,,
+                                    scratchpad_ptr,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     arg2_buffer_index,
@@ -466,6 +488,9 @@ namespace ngraph
                                 executor::global_cpu_engine,
                                 deps,
                                 conv_index);
+                            scratchpad_ptr = new mkldnn::memory(*ctx->mkldnn_scratchpad_mds[conv_index],
+                                                      executor::global_cpu_engine,
+                                                      ctx->scratchpad_buffer->get_ptr());
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -476,11 +501,18 @@ namespace ngraph
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[3], ctx->buffer_data[out0_buffer_index]);
 
+#if 0
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
                             ctx,
                             conv_index,
                             deps,
                             cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONBIAS);
+#endif
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive_new(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONBIAS, *scratchpad_ptr);
                     };
                     functors.emplace_back(functor);
                 }
@@ -530,6 +562,7 @@ namespace ngraph
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
+                    mkldnn::memory* scratchpad_ptr = nullptr;
                     auto functor = [&,
                                     scales_size,
                                     sum_scales_size,
@@ -537,7 +570,8 @@ namespace ngraph
                                     conv_attr,
                                     deps,
                                     conv_index,
-                                    arg3_size,
+                                    arg3_size,,
+                                    scratchpad_ptr,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     arg2_buffer_index,
@@ -587,6 +621,9 @@ namespace ngraph
                                 executor::global_cpu_engine,
                                 deps,
                                 conv_index);
+                            scratchpad_ptr = new mkldnn::memory(*ctx->mkldnn_scratchpad_mds[conv_index],
+                                                      executor::global_cpu_engine,
+                                                      ctx->scratchpad_buffer->get_ptr());
                         }
 
                         if (ctx->buffer_data[out0_buffer_index] !=
@@ -605,11 +642,18 @@ namespace ngraph
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[3], ctx->buffer_data[out0_buffer_index]);
 
+#if 0
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
                             ctx,
                             conv_index,
                             deps,
                             cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONBIASADD);
+#endif
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive_new(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONBIASADD, *scratchpad_ptr);
                     };
                     functors.emplace_back(functor);
                 }
@@ -655,6 +699,7 @@ namespace ngraph
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
+                    mkldnn::memory* scratchpad_ptr = nullptr;
                     auto functor = [&,
                                     scales_size,
                                     sum_scales_size,
@@ -662,7 +707,8 @@ namespace ngraph
                                     conv_attr,
                                     deps,
                                     conv_index,
-                                    arg3_size,
+                                    arg3_size,,
+                                    scratchpad_ptr,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     arg2_buffer_index,
@@ -712,6 +758,9 @@ namespace ngraph
                                 executor::global_cpu_engine,
                                 deps,
                                 conv_index);
+                            scratchpad_ptr = new mkldnn::memory(*ctx->mkldnn_scratchpad_mds[conv_index],
+                                                      executor::global_cpu_engine,
+                                                      ctx->scratchpad_buffer->get_ptr());
                         }
 
                         if (ctx->buffer_data[out0_buffer_index] !=
@@ -730,11 +779,18 @@ namespace ngraph
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[3], ctx->buffer_data[out0_buffer_index]);
 
+#if 0
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
                             ctx,
                             conv_index,
                             deps,
                             cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONBIASSIGNEDADD);
+#endif
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive_new(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONBIASSIGNEDADD, *scratchpad_ptr);
                     };
                     functors.emplace_back(functor);
                 }
