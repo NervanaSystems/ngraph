@@ -29,7 +29,7 @@ static const int AXIS = 2;
 
 static const int64_t AXIS_NOT_SET_VALUE = std::numeric_limits<int64_t>::max();
 
-const string op::v0::Gather::type_name{"Gather"};
+constexpr NodeTypeInfo op::v0::Gather::type_info;
 
 op::v0::Gather::Gather(const Output<Node>& params, const Output<Node>& indices, size_t axis)
     : Op({params, indices})
@@ -101,7 +101,7 @@ void op::v0::Gather::generate_adjoints(autodiff::Adjoints& adjoints, const NodeV
     throw ngraph_error("Not yet implemented");
 }
 
-const string op::v1::Gather::type_name{"Gather"};
+constexpr NodeTypeInfo op::v1::Gather::type_info;
 
 op::v1::Gather::Gather(const Output<Node>& params,
                        const Output<Node>& indices,

@@ -58,7 +58,7 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_elementwise_add(ctx->mkldnn_memories,

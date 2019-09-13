@@ -20,7 +20,7 @@
 
 using namespace ngraph;
 
-const std::string op::BatchNormTrainingRelu::type_name{"BatchNormTrainingRelu"};
+constexpr NodeTypeInfo op::BatchNormTrainingRelu::type_info;
 
 ngraph::op::BatchNormTrainingRelu::BatchNormTrainingRelu(double eps,
                                                          const Output<Node>& gamma,
@@ -80,7 +80,7 @@ ngraph::op::BatchNormTrainingRelu::BatchNormTrainingRelu(double eps,
     set_output_type(2, input.get_element_type(), channel_shape);
 }
 
-const std::string op::BatchNormInferenceRelu::type_name{"BatchNormInferenceRelu"};
+constexpr NodeTypeInfo op::BatchNormInferenceRelu::type_info;
 
 ngraph::op::BatchNormInferenceRelu::BatchNormInferenceRelu(double eps,
                                                            const Output<ngraph::Node>& gamma,

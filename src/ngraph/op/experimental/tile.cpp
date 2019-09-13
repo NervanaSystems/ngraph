@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Tile::type_name{"Tile"};
+constexpr NodeTypeInfo op::Tile::type_info;
 
 op::Tile::Tile(const Output<Node>& arg, const Output<Node>& repeats)
     : Op({arg, repeats})
@@ -95,7 +95,7 @@ shared_ptr<Node> op::Tile::copy_with_new_args(const NodeVector& new_args) const
 }
 
 // TODO: This function is not implemented!
-void op::Tile::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Tile::generate_adjoints(autodiff::Adjoints& /* adjoints */, const NodeVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for Tile");
 }

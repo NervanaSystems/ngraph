@@ -29,8 +29,8 @@ namespace ngraph
             {
             public:
                 NGRAPH_API
-                static const std::string type_name;
-                const std::string& description() const override { return type_name; }
+                static constexpr NodeTypeInfo type_info{ "Gather", 0 };
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Gather() = default;
                 /// \param params The tensor from which slices are gathered
                 /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
@@ -59,8 +59,8 @@ namespace ngraph
             {
             public:
                 NGRAPH_API
-                static const std::string type_name;
-                const std::string& description() const override { return type_name; }
+                static constexpr NodeTypeInfo type_info{ "Gather", 1 };
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Gather() = default;
                 /// \param params The tensor from which slices are gathered
                 /// \param indices Tensor with indexes to gather

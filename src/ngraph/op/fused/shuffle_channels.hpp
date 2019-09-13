@@ -30,8 +30,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"ShuffleChannels", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             ShuffleChannels() = default;
             /// \brief Constructs a ShuffleChannels node.
             ///
@@ -64,7 +64,7 @@ namespace ngraph
             Shape get_pre_shuffle_shape(const Shape& data_shape) const;
 
             int m_axis;
-            const size_t m_groups;
+            size_t m_groups;
         };
     }
 }

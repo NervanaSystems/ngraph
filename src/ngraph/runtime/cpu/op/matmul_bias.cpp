@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const std::string op::MatmulBias::type_name{"MatmulBias"};
+constexpr NodeTypeInfo op::MatmulBias::type_info;
 
 shared_ptr<Node> op::MatmulBias::copy_with_new_args(const NodeVector& new_args) const
 {

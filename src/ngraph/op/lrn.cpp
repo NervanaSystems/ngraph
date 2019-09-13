@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::LRN::type_name{"LRN"};
+constexpr NodeTypeInfo op::LRN::type_info;
 
 op::LRN::LRN(const Output<Node>& arg, double alpha, double beta, double bias, size_t size)
     : LRN(arg, op::Constant::create(element::i64, Shape{1}, {1}), alpha, beta, bias, size)
@@ -123,7 +123,7 @@ shared_ptr<Node> op::LRN::copy_with_new_args(const NodeVector& new_args) const
     return make_shared<op::LRN>(new_args.at(0), new_args.at(1), m_alpha, m_beta, m_bias, m_size);
 }
 
-void op::LRN::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::LRN::generate_adjoints(autodiff::Adjoints& /* adjoints */, const NodeVector& /* deltas */)
 {
     throw ngraph_error("NYI");
 }

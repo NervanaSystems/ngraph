@@ -17,6 +17,7 @@
 #pragma once
 
 #include <atomic>
+#include <cstring>
 #include <deque>
 #include <iostream>
 #include <memory>
@@ -79,11 +80,19 @@ namespace ngraph
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
 
+    struct NodeTypeInfo
+    {
+        const char* name;
+        uint64_t version;
+    };
+
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// or a (possibly empty) tuple of values.
     class Node : public std::enable_shared_from_this<Node>
     {
+        static constexpr NodeTypeInfo type_info{"Node", 0};
+
         // For access to generate_adjoints.
         friend class autodiff::Adjoints;
 
@@ -131,14 +140,68 @@ namespace ngraph
         /// \param output_size Number of outputs for this node
         Node(const NodeVector& arguments, size_t output_size = 1);
 
-        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
+        virtual void generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                       const NodeVector& /* deltas */)
+        {
+        }
         /// \brief Moves nodes that would be deleted from inputs to nodes to avoid stack overflows
-        ///        on deep networks.
+        /// on deep networks.
         void safe_delete(NodeVector& nodes, bool recurse);
 
     public:
         virtual ~Node();
 
+        /// Tests if a node is of op type T
+        template <typename NodeType>
+        bool is_type() const
+        {
+            return &get_type_info() == &NodeType::type_info;
+        }
+
+        /// Casts a Node to a shared_ptr<T> if is of type T, nullptr otherwise;
+        template <typename NodeType>
+        std::shared_ptr<NodeType> as_type_ptr()
+        {
+            return is_type<NodeType>() ? std::static_pointer_cast<NodeType>(shared_from_this())
+                                       : std::shared_ptr<NodeType>();
+        }
+
+        /// Casts a Node to a shared_ptr<T> if is of type T, nullptr otherwise;
+        template <typename NodeType>
+        std::shared_ptr<const NodeType> as_type_ptr() const
+        {
+            return is_type<NodeType>() ? std::static_pointer_cast<NodeType>(shared_from_this())
+                                       : std::shared_ptr<NodeType>();
+        }
+
+        /// Casts a Node to a T* if is of type T, nullptr otherwise;
+        template <typename NodeType>
+        NodeType* as_type()
+        {
+            return is_type<NodeType>() ? static_cast<NodeType*>(this) : nullptr;
+        }
+
+        /// Casts a Node to a T* if is of type T, nullptr otherwise;
+        template <typename NodeType>
+        const NodeType* as_type() const
+        {
+            return is_type<NodeType>() ? static_cast<const NodeType*>(this) : nullptr;
+        }
+
+        /// Returns the NodeTypeInfo for the node's class.
+        /// During transition to type_info, returns a dummy type_info for Node if the class
+        /// has not been updated yet.
+        virtual const NodeTypeInfo& get_type_info() const { return type_info; }
+        virtual const char* get_type_name() const
+        {
+            auto& info = get_type_info();
+            if (is_type<Node>())
+            {
+                // Transitional definition
+                return description().c_str();
+            }
+            return info.name;
+        }
         /// Sets/replaces the arguments with new arguments.
         void set_arguments(const NodeVector& arguments);
         /// Sets/replaces the arguments with new arguments.
@@ -427,7 +490,7 @@ namespace ngraph
 
         std::vector<Node*> m_control_dependents;
         std::vector<std::shared_ptr<Node>> m_control_dependencies;
-        const std::string m_node_type;
+        std::string m_node_type;
         size_t m_instance_id{m_next_instance_id.fetch_add(1)};
         std::string m_friendly_name;
         std::string m_unique_name;

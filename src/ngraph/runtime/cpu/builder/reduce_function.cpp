@@ -46,7 +46,7 @@ namespace ngraph
                 auto reduction_axes = reduce->get_reduction_axes();
                 auto functor =
                     [&, arg0_shape, out_shape, reduction_axes, arg0_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         runtime::reference::any(
                             static_cast<char*>(ctx->buffer_data[arg0_buffer_index]),
                             static_cast<char*>(ctx->buffer_data[out_buffer_index]),
@@ -71,7 +71,7 @@ namespace ngraph
                 auto reduction_axes = reduce->get_reduction_axes();
                 auto functor =
                     [&, arg0_shape, out_shape, reduction_axes, arg0_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         runtime::reference::all(
                             static_cast<char*>(ctx->buffer_data[arg0_buffer_index]),
                             static_cast<char*>(ctx->buffer_data[out_buffer_index]),

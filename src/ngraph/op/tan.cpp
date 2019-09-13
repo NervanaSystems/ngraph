@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Tan::type_name{"Tan"};
+constexpr NodeTypeInfo op::Tan::type_info;
 
 op::Tan::Tan(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
