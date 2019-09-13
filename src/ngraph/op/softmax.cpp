@@ -46,7 +46,7 @@ op::v0::Softmax::Softmax(const Output<Node>& arg, const AxisSet& axes)
     for (auto axis : m_axes)
     {
         NODE_VALIDATION_CHECK(this,
-                              axis >= 0 && axis < static_cast<size_t>(input_shape.rank()),
+                              axis < static_cast<size_t>(input_shape.rank()),
                               "Reduction axis (",
                               axis,
                               ") is out of bounds (argument shape: ",
@@ -122,7 +122,7 @@ op::v1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
                           input_shape,
                           ").");
     NODE_VALIDATION_CHECK(this,
-                          axis >= 0 && axis < static_cast<size_t>(input_shape.rank()),
+                          axis < static_cast<size_t>(input_shape.rank()),
                           "Reduction axis (",
                           axis,
                           ") is out of bounds (argument shape: ",
