@@ -60,6 +60,7 @@ namespace ngraph
                 template <>
                 void GPULayout::LAYOUT_DECL(ngraph::op::Reshape)
                 {
+                    (void)compiled_function;
                     auto reshape = static_cast<ngraph::op::Reshape*>(node.get());
                     if (reshape->get_is_transpose())
                     {
@@ -84,6 +85,7 @@ namespace ngraph
                 template <>
                 void GPULayout::LAYOUT_DECL(ngraph::op::TopK)
                 {
+                    (void)compiled_function;
                     auto topk = std::dynamic_pointer_cast<ngraph::op::TopK>(node);
                     auto topk_axis = topk->get_top_k_axis();
                     auto topk_k = topk->get_k();
