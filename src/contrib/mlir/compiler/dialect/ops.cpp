@@ -238,7 +238,7 @@ mlir::LogicalResult verifyOp(NGConvolutionOp* op)
 
     SmallVector<int64_t, 4> stridesVal, padAboveVal, padBelowVal;
     // Identical filters and image element types
-    if (filtersEt != imagesType)
+    if (filtersEt != imagesEt)
     {
         return op->emitOpError("Incompatible image and filters types");
     }
@@ -297,7 +297,7 @@ mlir::LogicalResult verifyOp(NGConvolutionOp* op)
         unsigned resDim = llvm::divideCeil(padBelowVal[i] + padAboveVal[i] + imagesShape[2 + i] -
                                                filtersShape[2 + i] + 1,
                                            stridesVal[i]);
-        if (resultShape[i] != resDim)
+        if (resultShape[2 + i] != resDim)
         {
             return op->emitOpError("Invalid result spatial shape");
         }

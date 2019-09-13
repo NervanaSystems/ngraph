@@ -51,10 +51,9 @@ namespace
     public:
         MemoryOptimizationPass()
         {
-            m_inplaceOps = 
-            {
-                #define MLIR_OP(OP, INPLACE) {OP::getOperationName().str(), INPLACE},
-                #include "contrib/mlir/compiler/op_lowerers.inc"
+            m_inplaceOps = {
+#define MLIR_OP(OP, INPLACE) {OP::getOperationName().str(), INPLACE},
+#include "contrib/mlir/compiler/op_lowerers.inc"
             };
         }
         void runOnFunction() override;

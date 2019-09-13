@@ -193,8 +193,8 @@ namespace
         // List of temporary memrefs to deallocate at end of function
         SmallVector<Value*, 4> memRefsToDealloc;
 
-        // Ops maybe assigned mem-refs in previous memory optimization passes. 
-        // Track pre-assigned buffers  for each Value and re-use it if one is available. 
+        // Ops maybe assigned mem-refs in previous memory optimization passes.
+        // Track pre-assigned buffers  for each Value and re-use it if one is available.
         using IdToMemRefMap = std::unordered_map<unsigned, Value*>;
         IdToMemRefMap m_id_to_memref;
 
