@@ -109,6 +109,10 @@ non-device-specific optimizations:
 Limitations
 -----------
 
+The Beta release of nGraph only supports Just-In-Time (JiT) compilation; 
+Ahead-of Time (AoT) compilation will be supported in the official release. 
+nGraph currently has limited support for dynamic graphs.
+
 
 Current nGraph Compiler full stack
 ----------------------------------
