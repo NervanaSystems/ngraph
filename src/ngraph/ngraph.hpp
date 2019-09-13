@@ -71,6 +71,7 @@ namespace ngraph
 #include "ngraph/builder/reduce_ops.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/tensor_mask.hpp"
+#include "ngraph/component_manager.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"

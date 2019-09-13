@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include "ngraph/graph_util.hpp"
 #include "ngraph/op/util/arithmetic_reduction.hpp"
 
 namespace ngraph
@@ -32,8 +31,8 @@ namespace ngraph
             {
             public:
                 NGRAPH_API
-                static const std::string type_name;
-                const std::string& description() const override { return type_name; }
+                static constexpr NodeTypeInfo type_info{"Product", 1};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a product reduction operation.
                 ReduceProd() = default;
                 /// \brief Constructs a product reduction operation.

@@ -54,6 +54,7 @@ set (SRC
     builder/tensor_mask.hpp
     check.hpp
     code_writer.hpp
+    component_manager.hpp
     coordinate.cpp
     coordinate.hpp
     coordinate_diff.cpp

@@ -456,7 +456,7 @@ if (MSVS)
     )
 else()
     add_custom_target(unit-test-check
-        COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
+        COMMAND ${PROJECT_BINARY_DIR}/test/unit-test --cpath ${EXTERNAL_PROJECTS_ROOT}/src/ngraph/ \${ARGS}
         DEPENDS unit-test
     )
 endif()

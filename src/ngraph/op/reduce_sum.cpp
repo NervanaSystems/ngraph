@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::v1::ReduceSum::type_name{"Sum"};
+constexpr NodeTypeInfo op::v1::ReduceSum::type_info;
 
 op::v1::ReduceSum::ReduceSum(const Output<Node>& arg, const AxisSet& reduction_axes, bool keep_dims)
     : ArithmeticReduction(arg, reduction_axes)

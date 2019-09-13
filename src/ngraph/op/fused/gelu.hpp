@@ -30,8 +30,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"Gelu", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             Gelu() = default;
             /// \brief Constructs an Gelu operation.
             ///
@@ -55,8 +55,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"GeluBackpropFactor", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             GeluBackpropFactor() = default;
 
             GeluBackpropFactor(const Output<Node>& x);

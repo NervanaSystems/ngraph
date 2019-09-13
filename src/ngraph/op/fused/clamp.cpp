@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Clamp::type_name{"Clamp"};
+constexpr NodeTypeInfo op::Clamp::type_info;
 
 op::Clamp::Clamp(const Output<Node>& data, const double min, const double max)
     : FusedOp({data})

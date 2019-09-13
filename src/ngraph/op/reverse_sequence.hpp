@@ -26,8 +26,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"ReverseSequence", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             ReverseSequence() = default;
             /// \brief Constructs an arcsin operation.
             ///

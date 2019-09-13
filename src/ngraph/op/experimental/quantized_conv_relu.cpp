@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::QuantizedConvolutionRelu::type_name{"QuantizedConvolutionRelu"};
+constexpr NodeTypeInfo op::QuantizedConvolutionRelu::type_info;
 
 op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(const Output<Node>& data_batch,
                                                        const Output<Node>& filters,

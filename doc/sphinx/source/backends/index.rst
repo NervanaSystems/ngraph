@@ -34,6 +34,13 @@ from source in our documentation: :ref:`ngraph_plaidml_backend`.
    AMD\* GPUs, Yes, Some
 
 
+Each backend must define a function ``ngraph_register_${backend}_backend`` 
+that registers a backend constructor function and ensures that 
+initializations are performed. An example that includes initializations 
+can be found in the ``ngraph/src/runtime/cpu/cpu_backend.cpp`` file. See 
+also: :ref:`backend_api_macros`.
+
+
 .. _how_to_use:
 
 How to use?

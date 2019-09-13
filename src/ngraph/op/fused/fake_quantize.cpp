@@ -36,7 +36,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::FakeQuantize::type_name{"FakeQuantize"};
+constexpr NodeTypeInfo op::FakeQuantize::type_info;
 
 op::FakeQuantize::FakeQuantize(const Output<Node>& data,
                                const Output<Node>& input_low,

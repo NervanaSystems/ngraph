@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::QuantizedMatmul::type_name{"QuantizedMatmul"};
+constexpr NodeTypeInfo op::QuantizedMatmul::type_info;
 
 op::QuantizedMatmul::QuantizedMatmul(const Output<Node>& data,
                                      const Output<Node>& weights,

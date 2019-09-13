@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::v1::ReduceProd::type_name{"Product"};
+constexpr NodeTypeInfo op::v1::ReduceProd::type_info;
 
 op::v1::ReduceProd::ReduceProd(const Output<Node>& arg,
                                const AxisSet& reduction_axes,

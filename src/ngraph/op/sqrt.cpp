@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Sqrt::type_name{"Sqrt"};
+constexpr NodeTypeInfo op::Sqrt::type_info;
 
 op::Sqrt::Sqrt(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
