@@ -63,9 +63,9 @@ NGRAPH_TEST(${BACKEND_NAME}, random_uniform_all_static_seed_unused)
     ASSERT_TRUE(
         std::all_of(results_1.begin(), results_1.end(), [](float x) { return (x <= 120.0f); }));
 
-    ASSERT_FALSE(test::all_close_f(results_0, results_1))
-        << "Two separate vectors of 1000000 random numbers matched exactly. This is technically "
-           "possible, but the odds are astronomically small.";
+    ASSERT_FALSE(test::all_close_f(results_0, results_1)) << "Two different randomly generated "
+                                                             "large vectors matched exactly, even "
+                                                             "though use_fixed_seed was not set.";
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, random_uniform_all_static_seed_used)
@@ -161,9 +161,9 @@ NGRAPH_TEST(${BACKEND_NAME}, random_uniform_seed_use_dynamic)
     ASSERT_TRUE(
         std::all_of(results_3.begin(), results_3.end(), [](float x) { return (x <= 120.0f); }));
 
-    ASSERT_FALSE(test::all_close_f(results_2, results_3))
-        << "Two separate vectors of 1000000 random numbers matched exactly. This is technically "
-           "possible, but the odds are astronomically small.";
+    ASSERT_FALSE(test::all_close_f(results_2, results_3)) << "Two different randomly generated "
+                                                             "large vectors matched exactly, even "
+                                                             "though use_fixed_seed was not set.";
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, random_uniform_all_static_range_dynamic)
@@ -206,9 +206,9 @@ NGRAPH_TEST(${BACKEND_NAME}, random_uniform_all_static_range_dynamic)
     ASSERT_TRUE(
         std::all_of(results_1.begin(), results_1.end(), [](float x) { return (x <= 10.0f); }));
 
-    ASSERT_FALSE(test::all_close_f(results_0, results_1))
-        << "Two separate vectors of 1000000 random numbers matched exactly. This is technically "
-           "possible, but the odds are astronomically small.";
+    ASSERT_FALSE(test::all_close_f(results_0, results_1)) << "Two different randomly generated "
+                                                             "large vectors matched exactly, even "
+                                                             "though use_fixed_seed was not set.";
 
     copy_data(t_min_val, std::vector<float>{23.0f});
     copy_data(t_max_val, std::vector<float>{490.0f});
@@ -227,9 +227,9 @@ NGRAPH_TEST(${BACKEND_NAME}, random_uniform_all_static_range_dynamic)
     ASSERT_TRUE(
         std::all_of(results_3.begin(), results_3.end(), [](float x) { return (x <= 490.0f); }));
 
-    ASSERT_FALSE(test::all_close_f(results_2, results_3))
-        << "Two separate vectors of 1000000 random numbers matched exactly. This is technically "
-           "possible, but the odds are astronomically small.";
+    ASSERT_FALSE(test::all_close_f(results_2, results_3)) << "Two different randomly generated "
+                                                             "large vectors matched exactly, even "
+                                                             "though use_fixed_seed was not set.";
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, random_uniform_dynamic_shapes)
@@ -283,9 +283,9 @@ NGRAPH_TEST(${BACKEND_NAME}, random_uniform_dynamic_shapes)
     ASSERT_TRUE(
         std::all_of(results_1.begin(), results_1.end(), [](float x) { return (x <= 10.0f); }));
 
-    ASSERT_FALSE(test::all_close_f(results_0, results_1))
-        << "Two separate vectors of 100000 random numbers matched exactly. This is technically "
-           "possible, but the odds are astronomically small.";
+    ASSERT_FALSE(test::all_close_f(results_0, results_1)) << "Two different randomly generated "
+                                                             "large vectors matched exactly, even "
+                                                             "though use_fixed_seed was not set.";
 
     // Change the shape, run again with same executable.
     t_result_shape = backend->create_tensor(element::i64, Shape{2});
@@ -307,7 +307,7 @@ NGRAPH_TEST(${BACKEND_NAME}, random_uniform_dynamic_shapes)
     ASSERT_TRUE(
         std::all_of(results_3.begin(), results_3.end(), [](float x) { return (x <= 10.0f); }));
 
-    ASSERT_FALSE(test::all_close_f(results_2, results_3))
-        << "Two separate vectors of 1000000 random numbers matched exactly. This is technically "
-           "possible, but the odds are astronomically small.";
+    ASSERT_FALSE(test::all_close_f(results_2, results_3)) << "Two different randomly generated "
+                                                             "large vectors matched exactly, even "
+                                                             "though use_fixed_seed was not set.";
 }
