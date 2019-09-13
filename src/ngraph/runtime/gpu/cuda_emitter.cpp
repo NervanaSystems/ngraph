@@ -1691,7 +1691,7 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<element::Type>
         GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
         // (lazy) allocation for kernel arguments
         size_t idx_init_value = allocator.reserve_argspace(init_value, dtypes[0].size());
-        std::unique_ptr<gpu::primitive> memset(new gpu::primitive{[=](void** inputs,
+        std::unique_ptr<gpu::primitive> memset(new gpu::primitive{[=](void** /* inputs */,
                                                                       void** outputs) mutable {
             void* init_value_buff = runtime::gpu::invoke_memory_primitive(m_ctx, idx_init_value);
             gpu::invoke_primitive(m_ctx,
@@ -2128,7 +2128,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<element::Type>&
             // (lazy) allocation for kernel arguments
             size_t idx_init_value = allocator.reserve_argspace(init_value, data_bytes);
             std::unique_ptr<gpu::primitive> memset(
-                new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+                new gpu::primitive{[=](void** /* inputs */, void** outputs) mutable {
                     void* init_value_buff =
                         runtime::gpu::invoke_memory_primitive(m_ctx, idx_init_value);
                     gpu::invoke_primitive(m_ctx,
