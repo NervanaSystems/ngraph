@@ -138,7 +138,7 @@ namespace ngraph
                 auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);
                 auto functor =
                     [&, input_desc, result_desc, reorder_index, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_reorder(ctx->mkldnn_memories,

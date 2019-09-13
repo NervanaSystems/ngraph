@@ -125,7 +125,8 @@ shared_ptr<Node> op::DynSlice::copy_with_new_args(const NodeVector& new_args) co
                                  m_ellipsis_mask);
 }
 
-void op::DynSlice::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::DynSlice::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                     const NodeVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for DynSlice");
 }

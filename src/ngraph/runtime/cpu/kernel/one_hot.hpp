@@ -32,8 +32,11 @@ namespace ngraph
             namespace kernel
             {
                 template <typename ElementType>
-                void one_hot_rank_0(
-                    void* arg, void* out, const Shape& out_shape, size_t one_hot_axis, int arena)
+                void one_hot_rank_0(void* arg,
+                                    void* out,
+                                    const Shape& out_shape,
+                                    size_t /* one_hot_axis */,
+                                    int /* arena */)
 
                 {
                     size_t element_count = shape_size(out_shape);

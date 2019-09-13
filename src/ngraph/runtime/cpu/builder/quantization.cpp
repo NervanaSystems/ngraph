@@ -76,7 +76,7 @@ namespace ngraph
                                    arg0_buffer_index,
                                    arg1_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
+                                                     CPUExecutionContext* /* ectx */) {
                             // Create MKLDNN reorder primitive during the first iteration.
                             // Assumes the scales dont change for the duration of the graph
                             if (ctx->first_iteration)
@@ -120,7 +120,7 @@ namespace ngraph
                                    dequantize_index,
                                    arg0_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
+                                                     CPUExecutionContext* /* ectx */) {
                             if (ctx->first_iteration)
                             {
                                 mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_memories,
@@ -169,7 +169,7 @@ namespace ngraph
                                        arg1_buffer_index,
                                        arg2_buffer_index,
                                        out_buffer_index](CPURuntimeContext* ctx,
-                                                         CPUExecutionContext* ectx) {
+                                                         CPUExecutionContext* /* ectx */) {
                                 ngraph::runtime::reference::dequantize<int8_t>(
                                     static_cast<int8_t*>(ctx->buffer_data[arg0_buffer_index]),
                                     static_cast<float*>(ctx->buffer_data[arg1_buffer_index]),
@@ -190,7 +190,7 @@ namespace ngraph
                                        arg1_buffer_index,
                                        arg2_buffer_index,
                                        out_buffer_index](CPURuntimeContext* ctx,
-                                                         CPUExecutionContext* ectx) {
+                                                         CPUExecutionContext* /* ectx */) {
                                 ngraph::runtime::reference::dequantize<int8_t>(
                                     static_cast<int8_t*>(ctx->buffer_data[arg0_buffer_index]),
                                     static_cast<double*>(ctx->buffer_data[arg1_buffer_index]),
@@ -218,7 +218,7 @@ namespace ngraph
                                        arg1_buffer_index,
                                        arg2_buffer_index,
                                        out_buffer_index](CPURuntimeContext* ctx,
-                                                         CPUExecutionContext* ectx) {
+                                                         CPUExecutionContext* /* ectx */) {
                                 ngraph::runtime::reference::dequantize<uint8_t>(
                                     static_cast<uint8_t*>(ctx->buffer_data[arg0_buffer_index]),
                                     static_cast<float*>(ctx->buffer_data[arg1_buffer_index]),
@@ -239,7 +239,7 @@ namespace ngraph
                                        arg1_buffer_index,
                                        arg2_buffer_index,
                                        out_buffer_index](CPURuntimeContext* ctx,
-                                                         CPUExecutionContext* ectx) {
+                                                         CPUExecutionContext* /* ectx */) {
                                 ngraph::runtime::reference::dequantize<uint8_t>(
                                     static_cast<uint8_t*>(ctx->buffer_data[arg0_buffer_index]),
                                     static_cast<double*>(ctx->buffer_data[arg1_buffer_index]),
@@ -267,7 +267,7 @@ namespace ngraph
                                        arg1_buffer_index,
                                        arg2_buffer_index,
                                        out_buffer_index](CPURuntimeContext* ctx,
-                                                         CPUExecutionContext* ectx) {
+                                                         CPUExecutionContext* /* ectx */) {
                                 ngraph::runtime::reference::dequantize<int32_t>(
                                     static_cast<int32_t*>(ctx->buffer_data[arg0_buffer_index]),
                                     static_cast<float*>(ctx->buffer_data[arg1_buffer_index]),
@@ -288,7 +288,7 @@ namespace ngraph
                                        arg1_buffer_index,
                                        arg2_buffer_index,
                                        out_buffer_index](CPURuntimeContext* ctx,
-                                                         CPUExecutionContext* ectx) {
+                                                         CPUExecutionContext* /* ectx */) {
                                 ngraph::runtime::reference::dequantize<int32_t>(
                                     static_cast<int32_t*>(ctx->buffer_data[arg0_buffer_index]),
                                     static_cast<double*>(ctx->buffer_data[arg1_buffer_index]),
@@ -347,7 +347,7 @@ namespace ngraph
                                         arg0_buffer_index,
                                         arg1_buffer_index,
                                         out_buffer_index](CPURuntimeContext* ctx,
-                                                          CPUExecutionContext* ectx) {
+                                                          CPUExecutionContext* /* ectx */) {
                             // Create MKLDNN reorder primitive during the first iteration.
                             // Assumes the scales dont change for the duration of the graph
                             if (ctx->first_iteration)
@@ -398,7 +398,7 @@ namespace ngraph
                                         quantize_index,
                                         arg0_buffer_index,
                                         out_buffer_index](CPURuntimeContext* ctx,
-                                                          CPUExecutionContext* ectx) {
+                                                          CPUExecutionContext* /* ectx */) {
                             if (ctx->first_iteration)
                             {
                                 mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_memories,
@@ -455,7 +455,7 @@ namespace ngraph
                                        arg1_buffer_index,
                                        arg2_buffer_index,
                                        out_buffer_index](CPURuntimeContext* ctx,
-                                                         CPUExecutionContext* ectx) {
+                                                         CPUExecutionContext* /* ectx */) {
                                 ngraph::runtime::reference::quantize<float>(
                                     static_cast<float*>(ctx->buffer_data[arg0_buffer_index]),
                                     static_cast<float*>(ctx->buffer_data[arg1_buffer_index]),
@@ -478,7 +478,7 @@ namespace ngraph
                                        arg1_buffer_index,
                                        arg2_buffer_index,
                                        out_buffer_index](CPURuntimeContext* ctx,
-                                                         CPUExecutionContext* ectx) {
+                                                         CPUExecutionContext* /* ectx */) {
                                 ngraph::runtime::reference::quantize<float>(
                                     static_cast<float*>(ctx->buffer_data[arg0_buffer_index]),
                                     static_cast<float*>(ctx->buffer_data[arg1_buffer_index]),
@@ -501,7 +501,7 @@ namespace ngraph
                                        arg1_buffer_index,
                                        arg2_buffer_index,
                                        out_buffer_index](CPURuntimeContext* ctx,
-                                                         CPUExecutionContext* ectx) {
+                                                         CPUExecutionContext* /* ectx */) {
                                 ngraph::runtime::reference::quantize<float>(
                                     static_cast<float*>(ctx->buffer_data[arg0_buffer_index]),
                                     static_cast<float*>(ctx->buffer_data[arg1_buffer_index]),
@@ -531,7 +531,7 @@ namespace ngraph
                                        arg1_buffer_index,
                                        arg2_buffer_index,
                                        out_buffer_index](CPURuntimeContext* ctx,
-                                                         CPUExecutionContext* ectx) {
+                                                         CPUExecutionContext* /* ectx */) {
                                 ngraph::runtime::reference::quantize<double>(
                                     static_cast<double*>(ctx->buffer_data[arg0_buffer_index]),
                                     static_cast<double*>(ctx->buffer_data[arg1_buffer_index]),
@@ -554,7 +554,7 @@ namespace ngraph
                                        arg1_buffer_index,
                                        arg2_buffer_index,
                                        out_buffer_index](CPURuntimeContext* ctx,
-                                                         CPUExecutionContext* ectx) {
+                                                         CPUExecutionContext* /* ectx */) {
                                 ngraph::runtime::reference::quantize<double>(
                                     static_cast<double*>(ctx->buffer_data[arg0_buffer_index]),
                                     static_cast<double*>(ctx->buffer_data[arg1_buffer_index]),
@@ -577,7 +577,7 @@ namespace ngraph
                                        arg1_buffer_index,
                                        arg2_buffer_index,
                                        out_buffer_index](CPURuntimeContext* ctx,
-                                                         CPUExecutionContext* ectx) {
+                                                         CPUExecutionContext* /* ectx */) {
                                 ngraph::runtime::reference::quantize<double>(
                                     static_cast<double*>(ctx->buffer_data[arg0_buffer_index]),
                                     static_cast<double*>(ctx->buffer_data[arg1_buffer_index]),

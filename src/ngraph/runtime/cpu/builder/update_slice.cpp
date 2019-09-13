@@ -52,7 +52,7 @@ namespace ngraph
                 {
                     size_t size = args[0].get_element_type().size();
                     auto functor = [&, size, arg1_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         memcpy(ctx->buffer_data[out_buffer_index],
                                ctx->buffer_data[arg1_buffer_index],
                                size);
@@ -69,7 +69,7 @@ namespace ngraph
                     SELECT_KERNEL_BY_RANK(kernel,
                                           args[0].get_element_type(),
                                           arg0_shape.size(),
-                                          runtime::cpu::kernel::strided_update_slice);
+                                          runtime::cpu::kernel::strided_update_slice)
 
                     auto functor = [&,
                                     kernel,
@@ -101,7 +101,7 @@ namespace ngraph
                     SELECT_KERNEL_BY_RANK(kernel,
                                           args[0].get_element_type(),
                                           arg0_shape.size(),
-                                          runtime::cpu::kernel::update_slice);
+                                          runtime::cpu::kernel::update_slice)
 
                     auto functor = [&,
                                     kernel,

@@ -56,7 +56,7 @@ namespace ngraph
 
                     auto functor =
                         [&, softmax_desc, softmax_index, arg_buffer_index, out_buffer_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                             if (ctx->first_iteration)
                             {
                                 mkldnn_emitter->build_softmax_forward(ctx->mkldnn_memories,
@@ -85,7 +85,7 @@ namespace ngraph
                         PARTIAL_SELECT_KERNEL_BY_RANK(kernel,
                                                       args[0].get_element_type(),
                                                       args[0].get_shape().size(),
-                                                      runtime::cpu::kernel::softmax_all);
+                                                      runtime::cpu::kernel::softmax_all)
 
                         auto functor = [&, kernel, arg_shape, arg_buffer_index, out_buffer_index](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
@@ -108,7 +108,7 @@ namespace ngraph
                                 kernel,
                                 args[0].get_element_type(),
                                 args[0].get_shape().size(),
-                                runtime::cpu::kernel::softmax_innermost_1rd);
+                                runtime::cpu::kernel::softmax_innermost_1rd)
 
                             auto functor =
                                 [&, kernel, arg_shape, arg_buffer_index, out_buffer_index](
@@ -128,7 +128,7 @@ namespace ngraph
                             PARTIAL_SELECT_KERNEL_BY_RANK(kernel,
                                                           args[0].get_element_type(),
                                                           args[0].get_shape().size(),
-                                                          runtime::cpu::kernel::softmax_1rd);
+                                                          runtime::cpu::kernel::softmax_1rd)
 
                             auto functor =
                                 [&, kernel, arg_shape, axes, arg_buffer_index, out_buffer_index](
@@ -148,7 +148,7 @@ namespace ngraph
 
                         SELECT_KERNEL(kernel,
                                       args[0].get_element_type(),
-                                      runtime::cpu::kernel::softmax_3d_2rd);
+                                      runtime::cpu::kernel::softmax_3d_2rd)
 
                         auto functor =
                             [&, kernel, arg_shape, axes, arg_buffer_index, out_buffer_index](
@@ -167,7 +167,7 @@ namespace ngraph
 
                         SELECT_KERNEL(kernel,
                                       args[0].get_element_type(),
-                                      runtime::cpu::kernel::softmax_4d_3rd);
+                                      runtime::cpu::kernel::softmax_4d_3rd)
 
                         auto functor =
                             [&, kernel, arg_shape, axes, arg_buffer_index, out_buffer_index](
@@ -185,7 +185,7 @@ namespace ngraph
                         NGRAPH_WARN << "Falling back to refernce kernel for softmax " << arg_shape
                                     << " over " << axes;
                         auto functor = [&, arg_shape, axes, arg_buffer_index, out_buffer_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                             runtime::reference::softmax<float>(
                                 static_cast<float*>(ctx->buffer_data[arg_buffer_index]),
                                 static_cast<float*>(ctx->buffer_data[out_buffer_index]),
