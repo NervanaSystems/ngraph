@@ -41,6 +41,7 @@ namespace ngraph
                 template <>
                 void GPULayout::LAYOUT_DECL(ngraph::op::ReplaceSlice)
                 {
+                    (void)compiled_function;
                     auto rep_slice = static_cast<ngraph::op::ReplaceSlice*>(node.get());
 
                     auto op_annotations = rep_slice->get_op_annotations();
