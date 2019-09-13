@@ -73,10 +73,7 @@ nGraph leverages existing kernel libraries such as MKL-DNN, Eigen, and MLSL.
 
 MLSL library is called when nGraph executes distributed training.
 At the time of the nGraph Beta release, nGraph achieved state of the art
-results for ResNet50 with 16 nodes and 32 nodes for TensorFlow* and MXNet*.
-We are excited to continue our work in enabling distributed training,
-and we plan to expand to 256 nodes in Q4 ‘18. Additionally, we
-are testing model parallelism in addition to data parallelism.
+results for ResNet50 with 16 nodes and 32 nodes for TensorFlow and MXNet.
 
 The other mode of execution is Direct EXecution (DEX). In DEX mode,
 nGraph can execute the operations by directly calling associated kernels
@@ -108,3 +105,13 @@ non-device-specific optimizations:
     with nGraph.
 -   **Memory management** -- Prevent peak memory usage by intercepting
     a graph with or by a "saved checkpoint," and to enable data auditing.
+
+Limitations
+-----------
+
+
+Current nGraph Compiler full stack
+----------------------------------
+
+![](doc/sphinx/source/graphics/ngraph_full_stack_diagrams.png)
+
