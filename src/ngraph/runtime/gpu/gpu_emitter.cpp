@@ -501,6 +501,11 @@ std::string runtime::gpu::GPU_Emitter::emit_Concat(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Constant(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)node;
+    (void)args;
+    (void)out;
     return "";
 }
 
@@ -675,6 +680,7 @@ std::string runtime::gpu::GPU_Emitter::emit_EmbeddingLookup(EMIT_ARGS)
     (void)function_name;
     (void)args;
     (void)out;
+    (void)node;
     throw ngraph_error("EmbeddingLookup is not yet implemented for NVIDIA GPU");
 }
 
@@ -722,6 +728,11 @@ std::string runtime::gpu::GPU_Emitter::emit_GatherND(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_GenerateMask(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)node;
+    (void)args;
+    (void)out;
     throw ngraph_error("GenerateMask is not supported yet on NVIDIA GPU");
 }
 
@@ -978,6 +989,11 @@ std::string runtime::gpu::GPU_Emitter::emit_Pad(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Parameter(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)node;
+    (void)args;
+    (void)out;
     return "";
 }
 
