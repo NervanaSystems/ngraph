@@ -52,7 +52,11 @@ namespace ngraph
 
             /// \return The concatenation axis.
             size_t get_axis() const { return m_axis; }
-            void set_axis(size_t axis) { m_axis = axis; }
+            void set_axis(size_t axis)
+            {
+                m_axis = axis;
+            }
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;

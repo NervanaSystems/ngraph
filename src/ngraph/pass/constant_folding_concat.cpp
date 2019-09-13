@@ -38,8 +38,11 @@ static shared_ptr<op::Constant> fold_constant_concat_helper(const shared_ptr<op:
 
     std::vector<T> result_vec(shape_size(concat->get_shape()));
 
-    runtime::reference::concat<T>(
-        arg_bufs, result_vec.data(), arg_shapes, concat->get_shape(), concat->get_axis());
+    runtime::reference::concat<T>(arg_bufs,
+                                  result_vec.data(),
+                                  arg_shapes,
+                                  concat->get_shape(),
+                                  concat->get_axis());
 
     return make_shared<op::Constant>(
         concat->get_output_element_type(0), concat->get_output_shape(0), result_vec);
