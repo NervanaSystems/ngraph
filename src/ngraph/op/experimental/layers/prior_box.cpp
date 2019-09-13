@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::PriorBox::type_name{"PriorBox"};
+constexpr NodeTypeInfo op::PriorBox::type_info;
 
 op::PriorBox::PriorBox(const Output<Node>& layer_shape,
                        const Output<Node>& image_shape,

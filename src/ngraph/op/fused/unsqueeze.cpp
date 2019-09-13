@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Unsqueeze::type_name{"Unsqueeze"};
+constexpr NodeTypeInfo op::Unsqueeze::type_info;
 
 op::Unsqueeze::Unsqueeze(const Output<Node>& data, const Output<Node>& axes)
     : FusedOp({data, axes})

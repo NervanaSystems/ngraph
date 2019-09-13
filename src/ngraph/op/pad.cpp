@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::v0::Pad::type_name{"Pad"};
+constexpr NodeTypeInfo op::v0::Pad::type_info;
 
 op::v0::Pad::Pad(const Output<Node>& arg,
                  const Output<Node>& arg_pad_value,
@@ -176,7 +176,7 @@ std::shared_ptr<Node> op::Pad::get_default_value() const
     return std::make_shared<op::Broadcast>(input_value(1), get_shape(), axes);
 }
 
-const string op::v1::Pad::type_name{"Pad"};
+constexpr NodeTypeInfo op::v1::Pad::type_info;
 
 op::v1::Pad::Pad(const Output<Node>& arg,
                  const Output<Node>& pads_begin,

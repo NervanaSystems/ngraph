@@ -15,11 +15,12 @@
 //*****************************************************************************
 
 #include "ngraph/op/experimental/generate_mask.hpp"
+#include "ngraph/op/constant.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-const string op::GenerateMask::type_name{"GenerateMask"};
+constexpr NodeTypeInfo op::GenerateMask::type_info;
 
 #if 0
 // Not supported until all transformers use nodes instead of attributes

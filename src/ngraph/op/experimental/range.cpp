@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Range::type_name = "Range";
+constexpr NodeTypeInfo op::Range::type_info;
 
 op::Range::Range(const Output<Node>& start, const Output<Node>& stop, const Output<Node>& step)
     : Op({start, stop, step})

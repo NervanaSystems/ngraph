@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Rnn::type_name{"Rnn"};
+constexpr NodeTypeInfo op::Rnn::type_info;
 
 #if MKLDNN_VERSION_MAJOR >= 1
 shared_ptr<Node> op::Rnn::copy_with_new_args(const NodeVector& new_args) const

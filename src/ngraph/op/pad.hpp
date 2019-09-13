@@ -31,8 +31,8 @@ namespace ngraph
             {
             public:
                 NGRAPH_API
-                static const std::string type_name;
-                const std::string& description() const override { return type_name; }
+                static constexpr NodeTypeInfo type_info{"Pad", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a generic padding operation.
                 Pad() = default;
                 /// \brief Constructs a generic padding operation.
@@ -93,8 +93,8 @@ namespace ngraph
             {
             public:
                 NGRAPH_API
-                static const std::string type_name;
-                const std::string& description() const override { return type_name; }
+                static constexpr NodeTypeInfo type_info{"Pad", 1};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a generic padding operation.
                 ///
                 /// \param arg The node producing input tensor to be padded.

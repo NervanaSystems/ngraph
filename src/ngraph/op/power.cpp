@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Power::type_name{"Power"};
+constexpr NodeTypeInfo op::Power::type_info;
 
 op::Power::Power(const Output<Node>& arg0,
                  const Output<Node>& arg1,
