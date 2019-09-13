@@ -45,7 +45,7 @@ namespace ngraph
             int get_src_id() const;
 
         private:
-            const int m_src_id;
+            int m_src_id;
         };
     }
 }

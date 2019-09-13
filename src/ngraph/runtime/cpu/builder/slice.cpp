@@ -141,7 +141,7 @@ namespace ngraph
                         SELECT_KERNEL_BY_RANK(kernel,
                                               args[0].get_element_type(),
                                               arg_shape.size(),
-                                              runtime::cpu::kernel::strided_slice);
+                                              runtime::cpu::kernel::strided_slice)
 
                         auto functor = [&,
                                         kernel,
@@ -171,7 +171,7 @@ namespace ngraph
                         SELECT_KERNEL_BY_RANK(kernel,
                                               args[0].get_element_type(),
                                               arg_shape.size(),
-                                              runtime::cpu::kernel::slice);
+                                              runtime::cpu::kernel::slice)
 
                         auto functor = [&,
                                         kernel,
