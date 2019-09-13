@@ -85,7 +85,7 @@ namespace ngraph
                 /// \brief Constructs a concatenation operation.
                 ///
                 /// \param args               The nodes producing the input tensors.
-                /// \param concatenation_axis The axis along which to concatenate the input tensors.
+                /// \param axis The axis along which to concatenate the input tensors.
                 Concat(const NodeVector& args, size_t axis);
 
                 size_t get_axis() const { return m_axis; }
