@@ -24,43 +24,74 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Concatenation operation.
-        class Concat : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Concat", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a concatenation operation.
-            Concat() = default;
-            /// \brief Constructs a concatenation operation.
-            ///
-            /// \param args               The outputs producing the input tensors.
-            /// \param concatenation_axis The axis along which to concatenate the input tensors.
-            Concat(const OutputVector& args, size_t concatenation_axis);
-
-            /// \brief Constructs a concatenation operation.
-            ///
-            /// \param args               The nodes producing the input tensors.
-            /// \param concatenation_axis The axis along which to concatenate the input tensors.
-            Concat(const NodeVector& args, size_t concatenation_axis);
-
-            void validate_and_infer_types() override;
-
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-
-            /// \return The concatenation axis.
-            size_t get_concatenation_axis() const { return m_concatenation_axis; }
-            void set_concatenation_axis(size_t concatenation_axis)
+            /// \brief Concatenation operation.
+            class Concat : public Op
             {
-                m_concatenation_axis = concatenation_axis;
-            }
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"Concat", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a concatenation operation.
+                Concat() = default;
+                /// \brief Constructs a concatenation operation.
+                ///
+                /// \param args               The outputs producing the input tensors.
+                /// \param concatenation_axis The axis along which to concatenate the input tensors.
+                Concat(const OutputVector& args, size_t concatenation_axis);
 
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-            size_t m_concatenation_axis;
-        };
+                /// \brief Constructs a concatenation operation.
+                ///
+                /// \param args               The nodes producing the input tensors.
+                /// \param concatenation_axis The axis along which to concatenate the input tensors.
+                Concat(const NodeVector& args, size_t concatenation_axis);
+
+                void validate_and_infer_types() override;
+
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+                /// \return The concatenation axis.
+                size_t get_concatenation_axis() const { return m_axis; }
+                void set_concatenation_axis(size_t concatenation_axis)
+                {
+                    m_axis = concatenation_axis;
+                }
+
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+                size_t m_axis;
+            };
+        }
+
+        namespace v1
+        {
+            class Concat : public v0::Concat
+            {
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"Concat", 1};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a concatenation operation.
+                Concat() = default;
+                /// \brief Constructs a concatenation operation.
+                ///
+                /// \param args               The outputs producing the input tensors.
+                /// \param axis The axis along which to concatenate the input tensors.
+                Concat(const OutputVector& args, size_t axis);
+
+                /// \brief Constructs a concatenation operation.
+                ///
+                /// \param args               The nodes producing the input tensors.
+                /// \param concatenation_axis The axis along which to concatenate the input tensors.
+                Concat(const NodeVector& args, size_t axis);
+
+                size_t get_axis() const { return m_axis; }
+                void set_axis(size_t axis) { m_axis = axis; }
+            };
+        }
+        using op::v0::Concat;
     }
 }
