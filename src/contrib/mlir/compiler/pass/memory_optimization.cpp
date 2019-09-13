@@ -49,15 +49,23 @@ namespace
     class MemoryOptimizationPass : public mlir::FunctionPass<MemoryOptimizationPass>
     {
     public:
-        MemoryOptimizationPass() {}
+        MemoryOptimizationPass()
+        {
+            m_inplaceOps = 
+            {
+                #define MLIR_OP(OP, INPLACE) {OP::getOperationName().str(), INPLACE},
+                #include "contrib/mlir/compiler/op_lowerers.inc"
+            };
+        }
         void runOnFunction() override;
 
     private:
         bool isSafeInPlace(mlir::Operation* op);
-        static unsigned buffer_id;
+        std::unordered_map<std::string, bool> m_inplaceOps;
+        static unsigned bufferId;
     };
 
-    unsigned MemoryOptimizationPass::buffer_id = 0;
+    unsigned MemoryOptimizationPass::bufferId = 0;
 
     void MemoryOptimizationPass::runOnFunction()
     {
@@ -126,7 +134,7 @@ namespace
                     if (!attr)
                     {
                         // attach a new buffer id
-                        attr = setBufferId(defOp, this->buffer_id++);
+                        attr = setBufferId(defOp, this->bufferId++);
                     }
                     // propagate attribute to dst, and we are done
                     setBufferId(op, attr);
@@ -139,18 +147,8 @@ namespace
 
     bool MemoryOptimizationPass::isSafeInPlace(mlir::Operation* op)
     {
-        bool isBinOp = isa<NGAddOp>(op) || isa<NGAndOp>(op) || isa<NGSubOp>(op) ||
-                       isa<NGDivOp>(op) || isa<NGMaxOp>(op) || isa<NGMinOp>(op) ||
-                       isa<NGMulOp>(op) || isa<NGPowOp>(op);
-
-        bool isUnaryOp =
-            isa<NGAbsOp>(op) || isa<NGACosOp>(op) || isa<NGASinOp>(op) || isa<NGATanOp>(op) ||
-            isa<NGCeilOp>(op) || isa<NGConvertOp>(op) || isa<NGCosOp>(op) || isa<NGCoshOp>(op) ||
-            isa<NGExpOp>(op) || isa<NGFloorOp>(op) || isa<NGLogOp>(op) || isa<NGNegOp>(op) ||
-            isa<NGNotOp>(op) || isa<NGSignOp>(op) || isa<NGSinOp>(op) || isa<NGSinhOp>(op) ||
-            isa<NGTanOp>(op) || isa<NGTanhOp>(op) || isa<NGSqrtOp>(op) || isa<NGReluOp>(op);
-
-        return isBinOp || isUnaryOp;
+        auto it = m_inplaceOps.find(op->getName().getStringRef().str());
+        return it != m_inplaceOps.end() ? it->second : false;
     }
 }
 

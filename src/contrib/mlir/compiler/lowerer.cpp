@@ -67,7 +67,7 @@ namespace
     };
 
 // Conversion classes declarations
-#define MLIR_OP(OP)                                                                                \
+#define MLIR_OP(OP, INPLACE)                                                                       \
     class OP##Conversion : public NGraphOpLowering                                                 \
     {                                                                                              \
     public:                                                                                        \
@@ -193,6 +193,8 @@ namespace
         // List of temporary memrefs to deallocate at end of function
         SmallVector<Value*, 4> memRefsToDealloc;
 
+        // Ops maybe assigned mem-refs in previous memory optimization passes. 
+        // Track pre-assigned buffers  for each Value and re-use it if one is available. 
         using IdToMemRefMap = std::unordered_map<unsigned, Value*>;
         IdToMemRefMap m_id_to_memref;
 
@@ -234,8 +236,8 @@ namespace
     void DialectLoweringPass::populateNGraphToAffineConversionPatterns(
         OwningRewritePatternList& patterns)
     {
-#define MLIR_OP(OP) OP##Conversion,
-#define MLIR_LAST_OP(OP) OP##Conversion
+#define MLIR_OP(OP, INPLACE) OP##Conversion,
+#define MLIR_LAST_OP(OP, INPLACE) OP##Conversion
         patterns.insert<
 #include "op_lowerers.inc"
             >(&getContext(), *this);
