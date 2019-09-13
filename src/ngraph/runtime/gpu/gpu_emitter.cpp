@@ -181,11 +181,19 @@ std::string runtime::gpu::GPU_Emitter::emit_Add(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_All(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_AllReduce(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
@@ -196,6 +204,10 @@ std::string runtime::gpu::GPU_Emitter::emit_And(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Any(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
@@ -343,6 +355,10 @@ std::string runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_BatchMatMul(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
@@ -449,6 +465,10 @@ std::string runtime::gpu::GPU_Emitter::emit_Broadcast(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_BroadcastLike(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
@@ -567,6 +587,10 @@ std::string runtime::gpu::GPU_Emitter::emit_Cosh(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_BroadcastDistributed(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
@@ -577,6 +601,10 @@ std::string runtime::gpu::GPU_Emitter::emit_Divide(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Dequantize(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
@@ -616,21 +644,37 @@ std::string runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_DynReplaceSlice(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_DynReshape(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_DynSlice(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_EmbeddingLookup(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw ngraph_error("EmbeddingLookup is not yet implemented for NVIDIA GPU");
 }
 
@@ -641,6 +685,10 @@ std::string runtime::gpu::GPU_Emitter::emit_Equal(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Erf(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
@@ -656,11 +704,19 @@ std::string runtime::gpu::GPU_Emitter::emit_Floor(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Gather(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_GatherND(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
@@ -927,6 +983,10 @@ std::string runtime::gpu::GPU_Emitter::emit_Parameter(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Passthrough(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
@@ -956,61 +1016,109 @@ std::string runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Quantize(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_QuantizedAvgPool(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_QuantizedConvolution(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_QuantizedConvolutionBias(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_QuantizedConvolutionBiasAdd(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_QuantizedConvolutionBiasSignedAdd(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_QuantizedConvolutionRelu(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_QuantizedDot(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_QuantizedDotBias(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_QuantizedMaxPool(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Recv(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Range(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
@@ -1246,16 +1354,28 @@ std::string runtime::gpu::GPU_Emitter::emit_Rnn(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_ScalarConstantLike(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_ScatterAdd(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_ScatterNDAdd(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
@@ -1266,11 +1386,19 @@ std::string runtime::gpu::GPU_Emitter::emit_Select(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Send(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_ShapeOf(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
@@ -1353,6 +1481,10 @@ std::string runtime::gpu::GPU_Emitter::emit_Sqrt(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_StopGradient(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
@@ -1466,26 +1598,46 @@ std::string runtime::gpu::GPU_Emitter::emit_TopK(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Xor(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_DynBroadcast(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_DynPad(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Tile(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Transpose(EMIT_ARGS)
 {
+    (void)compiled_function;
+    (void)function_name;
+    (void)args;
+    (void)out;
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
