@@ -63,7 +63,7 @@ namespace ngraph
 
                     auto functor =
                         [&, avg_pool_desc, avg_pool_index, arg0_buffer_index, out_buffer_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                             if (ctx->first_iteration)
                             {
                                 mkldnn_emitter->build_pooling_forward(ctx->mkldnn_memories,
@@ -87,8 +87,7 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::avg_pool<float>)> kernel;
 
-                    SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::avg_pool);
+                    SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::avg_pool)
 
                     auto functor = [&,
                                     kernel,
@@ -101,7 +100,7 @@ namespace ngraph
                                     include_padding_in_avg_computation,
                                     arg0_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         kernel(ctx->buffer_data[arg0_buffer_index],
                                ctx->buffer_data[out_buffer_index],
                                arg0_shape,
@@ -157,7 +156,7 @@ namespace ngraph
                                     avg_pool_index,
                                     delta_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_pooling_backward(ctx->mkldnn_memories,
@@ -182,7 +181,7 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::avg_pool_backprop<float>)> kernel;
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::avg_pool_backprop);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::avg_pool_backprop)
 
                     auto functor = [&,
                                     kernel,
@@ -195,7 +194,7 @@ namespace ngraph
                                     include_padding_in_avg_computation,
                                     delta_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         kernel(ctx->buffer_data[delta_buffer_index],
                                ctx->buffer_data[out_buffer_index],
                                delta_shape,

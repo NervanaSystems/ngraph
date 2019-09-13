@@ -26,7 +26,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::GroupConvolutionTranspose::type_name{"GroupConvolutionTranspose"};
+constexpr NodeTypeInfo op::GroupConvolutionTranspose::type_info;
 
 op::GroupConvolutionTranspose::GroupConvolutionTranspose(const Output<Node>& data,
                                                          const Output<Node>& filters,
@@ -327,8 +327,8 @@ NodeVector op::GroupConvolutionTranspose::decompose_op() const
     }
 }
 
-void op::GroupConvolutionTranspose::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                      const NodeVector& deltas)
+void op::GroupConvolutionTranspose::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                                      const NodeVector& /* deltas */)
 {
     throw ngraph_error(
         "Generating adjoints is not yet implemented for GroupConvolutionTranspose node.");

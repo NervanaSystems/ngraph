@@ -1,5 +1,10 @@
 # API Changes
 
+## Op Definition
+* Every Op class must declare a `static constexpr NodeTypeInfo type_info{name, version}` in the class definition and define it in the .cpp file. See any op definition for an example.
+* The boolean node method `is_type<T>` is for testing if a node is the op `T`.
+* `T as_type_ptr<T>()` and `T as_type<T>()` will upcast `Node` to an explicit op class if it is of class `T`, or `nullptr` if it is not.
+
 ## Backend library interface
 * Each backend `BACKEND` needs to define the macro `${BACKEND}_API` appropriately to import symbols
   referenced from outside the library and to export them from within the library. See any

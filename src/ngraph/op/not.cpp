@@ -20,7 +20,7 @@
 using namespace ngraph;
 using namespace std;
 
-const string op::Not::type_name{"Not"};
+constexpr NodeTypeInfo op::Not::type_info;
 
 op::Not::Not(const Output<Node>& arg)
     : Op({arg})

@@ -85,8 +85,7 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::pad_ref<float>)> kernel;
 
-                    SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::pad_ref);
+                    SELECT_KERNEL(kernel, args[0].get_element_type(), runtime::cpu::kernel::pad_ref)
 
                     auto functor = [&,
                                     kernel,
@@ -152,7 +151,7 @@ namespace ngraph
                     std::function<decltype(runtime::cpu::kernel::pad_ref<float>)> kernel;
 
                     SELECT_KERNEL(
-                        kernel, pad->get_input_element_type(0), runtime::cpu::kernel::pad_ref);
+                        kernel, pad->get_input_element_type(0), runtime::cpu::kernel::pad_ref)
 
                     auto functor =
                         [kernel, arg_shape, out_shape, padding_below, padding_above, pad_mode](

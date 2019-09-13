@@ -56,7 +56,7 @@ namespace ngraph
 
                     auto functor =
                         [&, softmax_desc, softmax_index, arg_buffer_index, out_buffer_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                             if (ctx->first_iteration)
                             {
                                 mkldnn_emitter->build_softmax_forward(ctx->mkldnn_memories,

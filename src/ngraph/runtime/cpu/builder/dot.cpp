@@ -50,7 +50,8 @@ namespace ngraph
 
                 if (!shape_size(result_shape))
                 {
-                    auto functor = [](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {};
+                    auto functor = [](CPURuntimeContext* /* ctx */,
+                                      CPUExecutionContext* /* ectx */) {};
                     functors.emplace_back(functor);
                     return;
                 }
@@ -59,7 +60,7 @@ namespace ngraph
                 {
                     auto size = shape_size(result_shape) * out[0].get_element_type().size();
                     auto functor = [&, size, out_buffer_index](CPURuntimeContext* ctx,
-                                                               CPUExecutionContext* ectx) {
+                                                               CPUExecutionContext* /* ectx */) {
                         memset(ctx->buffer_data[out_buffer_index], 0, size);
                     };
                     functors.emplace_back(functor);
@@ -213,7 +214,7 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         cblas::cblas_sgemm(
                             cblas::Layout::RowMajor,
                             transpose_A ? cblas::Transpose::Transpose : cblas::Transpose::None,
@@ -237,7 +238,7 @@ namespace ngraph
                 std::function<decltype(runtime::cpu::kernel::dot_ref<float, float, float>)> kernel;
 
                 SELECT_KERNEL_3ARGS(
-                    kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_ref);
+                    kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_ref)
 
                 auto functor = [&,
                                 kernel,
@@ -248,7 +249,7 @@ namespace ngraph
                                 arg0_buffer_index,
                                 arg1_buffer_index,
                                 out_buffer_index](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
+                                                  CPUExecutionContext* /* ectx */) {
                     kernel(ctx->buffer_data[arg0_buffer_index],
                            ctx->buffer_data[arg1_buffer_index],
                            ctx->buffer_data[out_buffer_index],

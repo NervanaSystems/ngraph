@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Pad::type_name{"Pad"};
+constexpr NodeTypeInfo op::Pad::type_info;
 
 op::Pad::Pad(const Output<Node>& arg,
              const Output<Node>& arg_pad_value,
@@ -160,7 +160,7 @@ shared_ptr<Node> op::Pad::copy_with_new_args(const NodeVector& new_args) const
 
    and push that back.
 */
-void op::Pad::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Pad::generate_adjoints(autodiff::Adjoints& /* adjoints */, const NodeVector& /* deltas */)
 {
     throw invalid_argument("Autodiff is not yet implemented for Pad");
 }

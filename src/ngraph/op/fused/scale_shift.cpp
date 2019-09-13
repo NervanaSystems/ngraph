@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::ScaleShift::type_name{"ScaleShift"};
+constexpr NodeTypeInfo op::ScaleShift::type_info;
 
 op::ScaleShift::ScaleShift(const Output<Node>& data,
                            const Output<Node>& scale,

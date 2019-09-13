@@ -52,8 +52,8 @@ namespace ngraph
         class UpdateSlice : public Op
         {
         public:
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"UpdateSlice", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a tensor slice update operation.
             ///
             /// \param arg0 The tensor to overwrite into.

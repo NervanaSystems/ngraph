@@ -27,8 +27,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"GatherND", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             GatherND() = default;
             /// \param params The tensor from which slices are gathered
             /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
@@ -40,7 +40,8 @@ namespace ngraph
 
             void validate_and_infer_types() override;
 
-            void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override
+            void generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                   const NodeVector& /* deltas */) override
             {
                 throw ngraph_error("Not yet implemented");
             }

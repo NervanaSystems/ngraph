@@ -30,6 +30,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Tile)
             {
+                (void)node;
                 auto arg_shape = args[0].get_shape();
                 auto arg_rank = arg_shape.size();
 
@@ -46,9 +47,9 @@ namespace ngraph
                     size_t repeats = shape_size(out_shape);
                     std::function<decltype(runtime::cpu::kernel::tile_rank_0<float>)> kernel;
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::tile_rank_0);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::tile_rank_0)
                     auto functor = [&, kernel, repeats, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         kernel(ctx->buffer_data[arg_buffer_index],
                                ctx->buffer_data[out_buffer_index],
                                repeats);
