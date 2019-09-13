@@ -70,7 +70,7 @@ namespace ngraph
                                         offset,
                                         arg_buffer_index,
                                         out_buffer_index](CPURuntimeContext* ctx,
-                                                          CPUExecutionContext* ectx) {
+                                                          CPUExecutionContext* /* ectx */) {
                             if (ctx->buffer_data[out_buffer_index] <
                                     ctx->buffer_data[arg_buffer_index] ||
                                 ctx->buffer_data[out_buffer_index] >=
@@ -107,7 +107,7 @@ namespace ngraph
                                     slice_index,
                                     arg_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_slice(ctx->mkldnn_memories,
@@ -141,7 +141,7 @@ namespace ngraph
                         SELECT_KERNEL_BY_RANK(kernel,
                                               args[0].get_element_type(),
                                               arg_shape.size(),
-                                              runtime::cpu::kernel::strided_slice);
+                                              runtime::cpu::kernel::strided_slice)
 
                         auto functor = [&,
                                         kernel,
@@ -171,7 +171,7 @@ namespace ngraph
                         SELECT_KERNEL_BY_RANK(kernel,
                                               args[0].get_element_type(),
                                               arg_shape.size(),
-                                              runtime::cpu::kernel::slice);
+                                              runtime::cpu::kernel::slice)
 
                         auto functor = [&,
                                         kernel,
