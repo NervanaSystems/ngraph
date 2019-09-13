@@ -15,6 +15,7 @@
 //*****************************************************************************
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/softmax.hpp"
 
@@ -75,6 +76,107 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 #endif
     switch (get_typeid(node))
     {
+    case OP_TYPEID::Convolution:
+    {
+        auto tmp = dynamic_cast<const op::v0::Convolution*>(node.get());
+        auto strides = tmp->get_window_movement_strides();
+        auto dilations = tmp->get_window_dilation_strides();
+        auto pads_begin = tmp->get_padding_below();
+        auto pads_end = tmp->get_padding_above();
+        auto data_dilation_strides = tmp->get_data_dilation_strides();
+        auto auto_pad = tmp->get_pad_type();
+
+        bool is_dds_valid = true;
+        for (auto value : data_dilation_strides)
+        {
+            is_dds_valid = is_dds_valid && (value == 1);
+        }
+
+        NGRAPH_CHECK(is_dds_valid,
+                     "Unable to convert Convolution:0 to Convolution:1 with data dilation strides "
+                     "other than `1`. Node: ",
+                     *node);
+
+        auto replacement_node = make_shared<op::v1::Convolution>(node->input(0).get_source_output(),
+                                                                 node->input(1).get_source_output(),
+                                                                 strides,
+                                                                 pads_begin,
+                                                                 pads_end,
+                                                                 dilations,
+                                                                 auto_pad);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::ConvolutionBackpropData:
+    {
+        auto tmp = dynamic_cast<const op::v0::ConvolutionBackpropData*>(node.get());
+        auto data_batch_shape = tmp->get_data_batch_shape();
+        auto strides = tmp->get_window_movement_strides_forward();
+        auto dilations = tmp->get_window_dilation_strides_forward();
+        auto pads_begin = tmp->get_padding_below_forward();
+        auto pads_end = tmp->get_padding_above_forward();
+        auto data_dilation_strides = tmp->get_data_dilation_strides_forward();
+
+        bool is_dds_valid = true;
+        for (auto value : data_dilation_strides)
+        {
+            is_dds_valid = is_dds_valid && (value == 1);
+        }
+
+        NGRAPH_CHECK(is_dds_valid,
+                     "Unable to convert ConvolutionBackpropData:0 to ConvolutionBackpropData:1 "
+                     "with data dilation strides "
+                     "other than `1`. Node: ",
+                     *node);
+
+        auto replacement_node =
+            make_shared<op::v1::ConvolutionBackpropData>(data_batch_shape,
+                                                         node->input(0).get_source_output(),
+                                                         node->input(1).get_source_output(),
+                                                         strides,
+                                                         dilations,
+                                                         pads_begin,
+                                                         pads_end);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::ConvolutionBackpropFilters:
+    {
+        auto tmp = dynamic_cast<const op::v0::ConvolutionBackpropFilters*>(node.get());
+        auto filters_shape = tmp->get_filters_shape();
+        auto strides = tmp->get_window_movement_strides_forward();
+        auto dilations = tmp->get_window_dilation_strides_forward();
+        auto pads_begin = tmp->get_padding_below_forward();
+        auto pads_end = tmp->get_padding_above_forward();
+        auto data_dilation_strides = tmp->get_data_dilation_strides_forward();
+
+        bool is_dds_valid = true;
+        for (auto value : data_dilation_strides)
+        {
+            is_dds_valid = is_dds_valid && (value == 1);
+        }
+
+        NGRAPH_CHECK(
+            is_dds_valid,
+            "Unable to convert ConvolutionBackpropFilters:0 to ConvolutionBackpropFilters:1 "
+            "with data dilation strides "
+            "other than `1`. Node: ",
+            *node);
+
+        auto replacement_node =
+            make_shared<op::v1::ConvolutionBackpropFilters>(node->input(0).get_source_output(),
+                                                            filters_shape,
+                                                            node->input(1).get_source_output(),
+                                                            strides,
+                                                            dilations,
+                                                            pads_begin,
+                                                            pads_end);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::Softmax:
     {
         auto tmp = dynamic_cast<const op::v0::Softmax*>(node.get());
