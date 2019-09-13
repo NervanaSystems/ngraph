@@ -113,7 +113,7 @@ bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const ngraph::element::Typ
 }
 
 bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const Shape& dims,
-                                                      const Strides& strides,
+                                                      const Strides& /* strides */,
                                                       const ngraph::element::Type type)
 {
     auto it = get_mkldnn_data_type_map().find(type);
