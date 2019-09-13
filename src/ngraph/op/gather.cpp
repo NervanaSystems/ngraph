@@ -119,10 +119,12 @@ void op::v1::Gather::validate_and_infer_types()
 
     if (axis_rank.is_static() && axis_shape.is_static())
     {
+        const auto axis_is_scalar = static_cast<size_t>(axis_rank) == 0;
+        const auto axis_has_one_elem =
+            static_cast<size_t>(axis_rank) == 1 && static_cast<size_t>(axis_shape[0]) == 1;
         NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(axis_rank) == 1 &&
-                                  static_cast<size_t>(axis_shape[0]) == 1,
-                              "Axes input must have 1 element (shape: ",
+                              axis_is_scalar || axis_has_one_elem,
+                              "Axes input must be scalar or have 1 element (shape: ",
                               axis_shape,
                               ").");
     }
