@@ -1600,9 +1600,9 @@ namespace ngraph
 
                 template <bool with_bias>
                 void build_convolution_forward(
-                    std::vector<mkldnn::memory*>& mkldnn_memories,
+                    std::vector<mkldnn::memory*>& /* mkldnn_memories */,
                     std::vector<mkldnn::primitive*>& mkldnn_primitives,
-                    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
+                    std::vector<mkldnn::memory::desc*>& /* mkldnn_scratchpad_mds */,
                     const mkldnn::convolution_forward::desc& desc,
                     const mkldnn::primitive_attr& attr,
                     const mkldnn::engine& engine,
@@ -1652,9 +1652,9 @@ namespace ngraph
 
                 template <bool with_bias>
                 void build_inner_product_forward(
-                    std::vector<mkldnn::memory*>& mkldnn_memories,
+                    std::vector<mkldnn::memory*>& /* mkldnn_memories */,
                     std::vector<mkldnn::primitive*>& mkldnn_primitives,
-                    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
+                    std::vector<mkldnn::memory::desc*>& /* mkldnn_scratchpad_mds */,
                     const mkldnn::inner_product_forward::desc& desc,
                     const mkldnn::primitive_attr& attr,
                     const mkldnn::engine& engine,
