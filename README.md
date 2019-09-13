@@ -71,9 +71,10 @@ to improve it:
 * In the case of a larger feature, create a test.
 * Submit a [pull request].
 * Make sure your PR passes all CI tests. Note: You can test locally with `make check`.
-g* We will review your contribution and, if any additional fixes or
-  modifications are necessary, may provide feedback to guide you. When
-  accepted, your pull request will be merged to the repository.
+
+ We will review your contribution and, if any additional fixes or modifications are 
+ necessary, may provide feedback to guide you. When accepted, your pull request will 
+ be merged to the repository.
 
 
 [Ecosystem]: ./ecosystem-overview.md
@@ -90,7 +91,7 @@ g* We will review your contribution and, if any additional fixes or
 [contrib guide]: https://www.ngraph.ai/documentation/contributing/guide
 [pull request]: https://github.com/NervanaSystems/ngraph/pulls
 [how to import]: https://www.ngraph.ai/tutorials/onnx-tutorial#import-a-model-with-onnx-and-ngraph
-[ngraph_wireframes_with_notice]: doc/sphinx/source/graphics/nGraph_main.png "nGraph components as of Sept 2019"
+[ngraph_wireframes_with_notice]: doc/sphinx/source/graphics/nGraph_main.png "nGraph components"
 [build-status]: https://travis-ci.org/NervanaSystems/ngraph/branches
 [build-status-badge]: https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master
 [PlaidML]: https://github.com/plaidml/plaidml
