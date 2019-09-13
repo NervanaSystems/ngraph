@@ -21,6 +21,7 @@
 
 #include "ngraph/code_writer.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 
@@ -52,7 +53,6 @@ namespace ngraph
         class Multiply;
         class GetOutputElement;
         class Abs;
-        class Concat;
         class Divide;
         class Equal;
         class Greater;
