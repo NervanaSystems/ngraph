@@ -93,7 +93,7 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
     NodeVector slices;
 
     const size_t CHANNEL = 1;
-    if (concat->get_axis() != CHANNEL)
+    if (concat->get_concatenation_axis() != CHANNEL)
     {
         NGRAPH_DEBUG << "concatenating on an axis different from channel";
         return {nullptr};

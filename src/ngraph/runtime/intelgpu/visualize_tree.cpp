@@ -312,7 +312,7 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
     {
         const shared_ptr<op::Concat> concat_op = static_pointer_cast<op::Concat>(node);
 
-        writer << print_table_row_value("concat_axis", concat_op->get_axis());
+        writer << print_table_row_value("concat_axis", concat_op->get_concatenation_axis());
         break;
     }
     case OP_TYPEID::Pad:

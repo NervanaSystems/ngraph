@@ -119,7 +119,7 @@ TEST(copy, concat)
 
     ASSERT_TRUE(nullptr != new_node);
     ASSERT_TRUE(new_args == new_node->get_arguments());
-    ASSERT_TRUE(node_cast->get_axis() == axis);
+    ASSERT_TRUE(node_cast->get_concatenation_axis() == axis);
 }
 
 TEST(copy, constant)

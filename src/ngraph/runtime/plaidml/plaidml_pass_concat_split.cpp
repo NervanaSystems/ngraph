@@ -62,7 +62,7 @@ ngraph::runtime::plaidml::pass::ConcatSplit::ConcatSplit()
                         sub_args.push_back(*n);
                     }
                     new_args.emplace_back(std::make_shared<ngraph::op::Concat>(
-                        std::move(sub_args), concat->get_axis()));
+                        std::move(sub_args), concat->get_concatenation_axis()));
                 }
                 b = p;
             }

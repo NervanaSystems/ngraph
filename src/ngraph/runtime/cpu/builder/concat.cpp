@@ -33,7 +33,7 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::Concat)
             {
                 auto concat = static_cast<const ngraph::op::Concat*>(node);
-                auto axis = concat->get_axis();
+                auto axis = concat->get_concatenation_axis();
 
                 auto& functors = external_function->get_functors();
 

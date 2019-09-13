@@ -571,7 +571,7 @@ namespace ngraph
                 auto op = compiler.create_generic_op<mlir::NGConcatOp>(ng_node);
                 op->setAttr("concatenation_axis",
                             compiler.m_builder->getI64IntegerAttr(
-                                ng_node_concat->get_axis()));
+                                ng_node_concat->get_concatenation_axis()));
                 return op;
             }
 
