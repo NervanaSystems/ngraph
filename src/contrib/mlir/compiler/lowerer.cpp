@@ -192,7 +192,7 @@ namespace
         NGraphTypeConverter typeConverter;
         // List of temporary memrefs to deallocate at end of function
         SmallVector<Value*, 4> memRefsToDealloc;
-        
+
         using IdToMemRefMap = std::unordered_map<unsigned, Value*>;
         IdToMemRefMap m_id_to_memref;
 

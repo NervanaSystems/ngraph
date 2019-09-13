@@ -45,7 +45,7 @@ namespace
 
     /// Memory Optimization pass
     /// - Tries to perform operations in place where applicable by assigning a virtual buffer ID
-    //    to values. Those are used later in affine lowering pass to create or re-use memrefs
+    ///    to values. Those are used later in affine lowering pass to create or re-use memrefs
     class MemoryOptimizationPass : public mlir::FunctionPass<MemoryOptimizationPass>
     {
     public:
@@ -161,3 +161,6 @@ namespace mlir
         return std::make_unique<MemoryOptimizationPass>();
     }
 } // namespace mlir
+
+static PassRegistration<MemoryOptimizationPass> pass("ng-inplace-mem-opt",
+                                                     "Performs in-place memory optimizations");

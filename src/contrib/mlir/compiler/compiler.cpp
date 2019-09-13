@@ -93,10 +93,10 @@ static llvm::cl::opt<bool> clPrintIRAfterAll(
 
 // *** Optimization flags ***
 
-static llvm::cl::opt<bool>
-    clEnableNgMemoryOpt("ng-mem-opt",
-                        llvm::cl::init(true),
-                        llvm::cl::desc("Enable ngraph dialect memory optimization pass"));
+static llvm::cl::opt<bool> clEnableNgInPlaceMemoryOpt(
+    "ng-inplace-mem-opt",
+    llvm::cl::init(false),
+    llvm::cl::desc("Enable ngraph dialect in-place memory optimization pass"));
 
 static llvm::cl::opt<bool>
     clEnableAffineLoopFusion("affine-loop-fusion",
@@ -356,7 +356,6 @@ void MLIRCompiler::lower_ng_dialect()
         NGRAPH_CHECK(false, "Incorrect module after dialect lowering");
     }
 
-    dump_mlir_module("IR after affine lowering");
     optimize();
 
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
@@ -681,12 +680,12 @@ mlir::Operation* MLIRCompiler::create_index_reduction(const ngraph::Node* ng_nod
 void MLIRCompiler::optimize_ng_dialect()
 {
     mlir::PassManager pm(&m_context);
-    if (clEnableNgMemoryOpt)
+    mlir::applyPassManagerCLOptions(pm);
+    if (clEnableNgInPlaceMemoryOpt)
     {
         pm.addPass(mlir::createMemoryOptimizationPass());
     }
     pm.run(m_module.get());
-    dump_mlir_module("IR after ng dialect optimization");
 }
 
 // Binds MLIR function arguments to the proper values. This includes externally allocated tensors
