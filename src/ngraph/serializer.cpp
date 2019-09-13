@@ -237,7 +237,6 @@ public:
     json serialize_axis_set(const AxisSet& axis_set);
 
     void on(const std::string& name, std::string& value) override { m_json[name] = value; }
-    void on(const std::string& name, char*& value) override { m_json[name] = value; }
     void on(const std::string& name, element::Type& value) override
     {
         m_json[name] = write_element_type(value);
@@ -277,10 +276,6 @@ public:
     AxisSet deserialize_axis_set(json j);
 
     void on(const std::string& name, std::string& value) override { value = m_json[name]; }
-    void on(const std::string& name, char*& value) override
-    {
-        //*value = static_cast<char*>(m_json[name]);
-    }
     void on(const std::string& name, element::Type& value) override
     {
         value = read_element_type(m_json[name]);

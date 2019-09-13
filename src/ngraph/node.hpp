@@ -61,7 +61,6 @@ namespace ngraph
     public:
         virtual ~AttributeVisitor() {}
         virtual void on(const std::string& name, std::string& value) = 0;
-        virtual void on(const std::string& name, char*& value) = 0;
         virtual void on(const std::string& name, element::Type& value) = 0;
         virtual void on(const std::string& name, PartialShape& value) = 0;
         virtual void on(const std::string& name, Shape& value) = 0;
