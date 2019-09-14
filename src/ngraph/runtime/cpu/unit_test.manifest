@@ -23,8 +23,8 @@ lrn_across_empty
 lrn_6D_across_2_axes
 
 # RandomUniform not supported in CPU backend
-random_uniform_all_static_seed_unused
-random_uniform_all_static_seed_used
-random_uniform_seed_use_dynamic
-random_uniform_all_static_range_dynamic
-random_uniform_dynamic_shapes
+#random_uniform_all_static_seed_unused
+#random_uniform_all_static_seed_used
+#random_uniform_seed_use_dynamic
+#random_uniform_all_static_range_dynamic
+#random_uniform_dynamic_shapes
