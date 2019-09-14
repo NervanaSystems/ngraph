@@ -113,7 +113,7 @@ namespace ngraph
                     std::function<decltype(runtime::cpu::kernel::relu_backprop<float>)> kernel;
 
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::relu_backprop);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::relu_backprop)
 
                     auto functor = [&,
                                     kernel,

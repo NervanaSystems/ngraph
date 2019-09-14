@@ -225,7 +225,7 @@ namespace ngraph
 
                         SELECT_KERNEL(kernel,
                                       args[0].get_element_type(),
-                                      runtime::cpu::kernel::batch_norm_training);
+                                      runtime::cpu::kernel::batch_norm_training)
 
                         auto arg2_shape = args[2].get_shape();
                         auto arg0_buffer_index =
@@ -274,7 +274,7 @@ namespace ngraph
 
                         SELECT_KERNEL(kernel,
                                       args[0].get_element_type(),
-                                      runtime::cpu::kernel::batch_norm_inference);
+                                      runtime::cpu::kernel::batch_norm_inference)
 
                         auto arg2_shape = args[2].get_shape();
                         auto arg0_buffer_index =
@@ -337,7 +337,7 @@ namespace ngraph
 
                     SELECT_KERNEL(kernel,
                                   args[0].get_element_type(),
-                                  runtime::cpu::kernel::batch_norm_inference);
+                                  runtime::cpu::kernel::batch_norm_inference)
 
                     auto arg2_shape = args[2].get_shape();
                     auto arg0_buffer_index =

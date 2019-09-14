@@ -66,7 +66,7 @@ namespace ngraph
                                                     args[0].get_element_type(),
                                                     params_shape.size(),
                                                     out_shape.size(),
-                                                    runtime::cpu::kernel::gather_i64);
+                                                    runtime::cpu::kernel::gather_i64)
 
                             return [&,
                                     kernel,
@@ -126,7 +126,7 @@ namespace ngraph
                                                     args[0].get_element_type(),
                                                     params_shape.size(),
                                                     out_shape.size(),
-                                                    runtime::cpu::kernel::gather_i32);
+                                                    runtime::cpu::kernel::gather_i32)
 
                             return [&,
                                     kernel,

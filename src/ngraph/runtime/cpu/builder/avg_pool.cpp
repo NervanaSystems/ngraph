@@ -79,8 +79,7 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::avg_pool<float>)> kernel;
 
-                    SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::avg_pool);
+                    SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::avg_pool)
 
                     auto functor = [&,
                                     kernel,
@@ -168,7 +167,7 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::avg_pool_backprop<float>)> kernel;
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::avg_pool_backprop);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::avg_pool_backprop)
 
                     auto functor = [&,
                                     kernel,
