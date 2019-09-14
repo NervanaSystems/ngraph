@@ -443,6 +443,7 @@ namespace ngraph
                 const ngraph::op::BatchNormTrainingBackprop* batchnorm =
                     static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
                 auto eps = batchnorm->get_eps_value();
+                (void)eps; // Use depends on mkl-dnn version
                 QUERY_SCRATCHPAD_3ARGS(batchnorm_backward, batchnorm_desc, input_desc, eps);
 
                 auto functor = [&,
