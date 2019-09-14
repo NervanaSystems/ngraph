@@ -164,7 +164,7 @@ runtime::gpu::GPUExternalFunction::~GPUExternalFunction()
 
 std::string runtime::gpu::GPUExternalFunction::add_to_runtime(
     size_t primitive_index,
-    const std::string& function_name,
+    const std::string& /* function_name */,
     const std::vector<runtime::gpu::GPUTensorWrapper>& args,
     const std::vector<runtime::gpu::GPUTensorWrapper>& out)
 {
@@ -180,7 +180,7 @@ std::string runtime::gpu::GPUExternalFunction::add_to_runtime(
 }
 
 std::string runtime::gpu::GPUExternalFunction::add_call_to_runtime(
-    const std::string& caller,
+    const std::string& /* caller */,
     const std::string& callee,
     const std::vector<runtime::gpu::GPUTensorWrapper>& args,
     const std::vector<runtime::gpu::GPUTensorWrapper>& out)

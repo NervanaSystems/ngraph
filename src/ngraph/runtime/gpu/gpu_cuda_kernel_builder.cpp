@@ -60,7 +60,7 @@ void runtime::gpu::CudaKernelBuilder::get_elementwise_op(CodeWriter& writer,
 
 void runtime::gpu::CudaKernelBuilder::get_memset_op(CodeWriter& writer,
                                                     const std::string& name,
-                                                    const std::string& data_type,
+                                                    const std::string& /* data_type */,
                                                     runtime::gpu::GPUKernelArgs& args)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
@@ -1126,11 +1126,12 @@ void runtime::gpu::CudaKernelBuilder::get_onehot_op(CodeWriter& writer,
     writer.block_end();
 }
 
-void runtime::gpu::CudaKernelBuilder::get_reshape_op(CodeWriter& writer,
-                                                     const std::string& name,
-                                                     runtime::gpu::GPUKernelArgs& args,
-                                                     const std::array<std::string, 2>& data_types,
-                                                     size_t rank)
+void runtime::gpu::CudaKernelBuilder::get_reshape_op(
+    CodeWriter& writer,
+    const std::string& name,
+    runtime::gpu::GPUKernelArgs& args,
+    const std::array<std::string, 2>& /* data_types */,
+    size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();

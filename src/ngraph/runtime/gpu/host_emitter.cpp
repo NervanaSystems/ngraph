@@ -74,14 +74,15 @@ size_t runtime::gpu::HostEmitter::build_zero_out(size_t dst, size_t size, bool i
     std::unique_ptr<gpu::primitive> launch_kernel;
     if (is_local)
     {
-        launch_kernel.reset(new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-            void* tensor = gpu::invoke_memory_primitive(m_ctx, dst);
-            CUDA_RT_SAFE_CALL(cudaMemset(tensor, 0, size));
-        }});
+        launch_kernel.reset(
+            new gpu::primitive{[=](void** /* inputs */, void** /* outputs */) mutable {
+                void* tensor = gpu::invoke_memory_primitive(m_ctx, dst);
+                CUDA_RT_SAFE_CALL(cudaMemset(tensor, 0, size));
+            }});
     }
     else
     {
-        launch_kernel.reset(new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+        launch_kernel.reset(new gpu::primitive{[=](void** /* inputs */, void** outputs) mutable {
             CUDA_RT_SAFE_CALL(cudaMemset(outputs[dst], 0, size));
         }});
     }
