@@ -45,7 +45,7 @@ namespace ngraph
             int get_dest_id() const;
 
         private:
-            const int m_dest_id;
+            int m_dest_id;
         };
     }
 }

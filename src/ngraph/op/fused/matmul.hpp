@@ -51,8 +51,8 @@ namespace ngraph
             bool get_transpose_a() const { return m_transpose_a; }
             bool get_transpose_b() const { return m_transpose_b; }
         private:
-            const bool m_transpose_a;
-            const bool m_transpose_b;
+            bool m_transpose_a;
+            bool m_transpose_b;
         };
     } // namespace op
 } // namespace ngraph
