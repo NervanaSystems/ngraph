@@ -56,6 +56,7 @@ namespace ngraph
 
     namespace op
     {
+        struct AutoBroadcastSpec;
         class Constant;
     } // namespace op
 
@@ -188,6 +189,10 @@ namespace ngraph
             return is_type<NodeType>() ? static_cast<const NodeType*>(this) : nullptr;
         }
 
+        virtual bool is_unary_elementwise_arithmetic() const { return false; }
+        virtual bool is_binary_elementwise_arithmetic() const { return false; }
+        virtual bool is_auto_broadcast() const { return false; }
+        virtual const op::AutoBroadcastSpec* get_autob() const { return nullptr; }
         /// Returns the NodeTypeInfo for the node's class.
         /// During transition to type_info, returns a dummy type_info for Node if the class
         /// has not been updated yet.

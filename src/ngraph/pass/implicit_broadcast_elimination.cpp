@@ -27,14 +27,14 @@ using namespace ngraph;
 template <typename optype>
 static bool broadcast_and_replace(std::shared_ptr<ngraph::Node>& node)
 {
-    if (auto op = std::dynamic_pointer_cast<optype>(node))
+    if (node->is_auto_broadcast())
     {
-        if (op->get_autob().m_type != op::AutoBroadcastType::NONE)
+        if (node->get_autob()->m_type != op::AutoBroadcastType::NONE)
         {
-            auto new_args = pass::explicit_broadcast<optype>(op);
+            auto new_args = pass::explicit_broadcast(node);
             for (size_t i = 0; i < new_args.size(); i++)
             {
-                op->input(i).replace_source_output(new_args[i]->output(0));
+                node->input(i).replace_source_output(new_args[i]->output(0));
             }
             return true;
         }

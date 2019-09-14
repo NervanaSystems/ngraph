@@ -74,7 +74,7 @@ namespace ngraph
                        T* out,
                        const Shape& arg0_shape,
                        const Shape& arg1_shape,
-                       const op::AutoBroadcastSpec& broadcast_spec,
+                       const op::AutoBroadcastSpec* broadcast_spec,
                        bool pythondiv)
             {
                 auto functor = [pythondiv](T x, T y) -> T {
@@ -134,7 +134,7 @@ namespace ngraph
                        T* out,
                        const Shape& arg0_shape,
                        const Shape& arg1_shape,
-                       const op::AutoBroadcastSpec& broadcast_spec,
+                       const op::AutoBroadcastSpec* broadcast_spec,
                        bool pythondiv)
             {
                 (void)pythondiv;

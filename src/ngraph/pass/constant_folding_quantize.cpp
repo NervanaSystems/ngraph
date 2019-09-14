@@ -59,9 +59,9 @@ void pass::ConstantFolding::construct_constant_quantize()
 
         auto pattern_map = m.get_pattern_map();
 
-        auto constant_match = dynamic_pointer_cast<op::Constant>(pattern_map[constant_label]);
+        auto constant_match = pattern_map[constant_label]->as_type_ptr<op::Constant>();
         auto quant_match = pattern_map[quant];
-        auto quantize_op = dynamic_pointer_cast<op::Quantize>(quant_match);
+        auto quantize_op = quant_match->as_type_ptr<op::Quantize>();
 
         NGRAPH_CHECK(revalidate_and_ensure_static(quantize_op));
 
