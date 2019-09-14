@@ -4198,10 +4198,6 @@ namespace ngraph
                 writer << "bool use_fixed_seed = static_cast<bool>(" << args[3].get_name()
                        << "[0]);\n";
 
-                // writer << "uint64_t seed = static_cast<uint64_t>(" << args[3].get_name()
-                //       << "[0]);\n";
-                // writer << "double keep_prob = static_cast<double>(" << args[4].get_name()
-                //       << "[0]);\n";
                 writer << "if (use_fixed_seed == false) \n";
                 writer << "{\n";
                 writer << "    reference::random_uniform<" << args[0].get_type() << ">(\n";

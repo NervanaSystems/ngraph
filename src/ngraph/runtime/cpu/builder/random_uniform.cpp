@@ -97,10 +97,10 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
                 CPUKernelFunctor functor;
-                /*if (args[2].get_element_type() != element::i64)
+                if (args[2].get_element_type() != element::i64)
                 {
                     throw ngraph_error("Unsupported index 2 element type");
-                }*/
+                }
                 auto element_type = args[0].get_element_type();
                 if (element_type == element::f32)
                 {
