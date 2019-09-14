@@ -33,7 +33,7 @@ using namespace ngraph;
 TEST(gpu_test, gpu_shape_from_64bit_shape)
 {
     Shape shape{1UL << 33};
-    ASSERT_ANY_THROW([](NVShape s) {}(shape););
+    ASSERT_ANY_THROW([](NVShape /* s */) {}(shape););
 }
 
 TEST(gpu_test, memory_manager_unallocated)

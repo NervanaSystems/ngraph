@@ -44,6 +44,7 @@ namespace ngraph
                 template <typename T>
                 static std::string emit_elementwise(EMIT_ARGS)
                 {
+                    (void)node;
                     if (out[0].get_size() == 0)
                     {
                         return "";

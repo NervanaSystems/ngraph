@@ -38,7 +38,7 @@ extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
     class LocalBackendConstructor : public runtime::BackendConstructor
     {
     public:
-        std::shared_ptr<runtime::Backend> create(const std::string& config) override
+        std::shared_ptr<runtime::Backend> create(const std::string& /* config */) override
         {
             return std::make_shared<runtime::gpu::GPU_Backend>();
         }

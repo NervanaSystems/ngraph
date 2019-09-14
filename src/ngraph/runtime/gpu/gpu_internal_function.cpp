@@ -377,7 +377,7 @@ void runtime::gpu::GPUInternalFunction::build_functions()
     }
 }
 
-void runtime::gpu::GPUInternalFunction::add_passes(ngraph::pass::Manager& pass_manager)
+void runtime::gpu::GPUInternalFunction::add_passes(ngraph::pass::Manager& /* pass_manager */)
 {
 }
 
@@ -419,8 +419,8 @@ void runtime::gpu::GPUInternalFunction::save_manifest_to_disk() const
     out.close();
 }
 
-void runtime::gpu::GPUInternalFunction::propagate_in_place_input(ngraph::descriptor::Output* output,
-                                                                 const std::string& input_name)
+void runtime::gpu::GPUInternalFunction::propagate_in_place_input(
+    ngraph::descriptor::Output* /* output */, const std::string& /* input_name */)
 {
     // std::deque<ngraph::descriptor::Output*> stack;
     // stack.push_front(output);
@@ -459,7 +459,7 @@ void runtime::gpu::GPUInternalFunction::propagate_in_place_input(ngraph::descrip
 }
 
 void runtime::gpu::GPUInternalFunction::propagate_in_place_output(
-    ngraph::descriptor::Output* res_src_output, const std::string& output_name)
+    ngraph::descriptor::Output* /* res_src_output */, const std::string& /* output_name */)
 {
     // // we start with a particular output
     // // which is an argument to a given op::Result
@@ -502,7 +502,7 @@ void runtime::gpu::GPUInternalFunction::propagate_in_place_output(
 }
 
 void runtime::gpu::GPUInternalFunction::get_performance_data(
-    std::vector<runtime::PerformanceCounter>& rc) const
+    std::vector<runtime::PerformanceCounter>& /* rc */) const
 {
     // auto* engine = this->m_execution_engine.get();
     // if (engine)
