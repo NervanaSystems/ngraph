@@ -380,7 +380,7 @@ a .fa, a .rst-content .admonition-title, .rst-content a .admonition-title, a .rs
   display: block;
   background: #638470;
   margin: -5px;
-  font-family: "Nunito Sans", sans;
+  font-family: 'Nunito Sans', sans;
   font-weight: bolder;
   padding: 0.43em 0.74em;
   margin-bottom: 0.33em;
@@ -509,7 +509,7 @@ button::-moz-focus-inner, input::-moz-focus-inner {
   background-color: #c1c7d7;
   text-decoration: none;
   font-weight: bolder;
-  font-family: "Nunito Sans", "RobotoSlab", Arial, sans;
+  font-family: "Nunito Sans","RobotoSlab", Arial, sans;
   box-shadow: 0px 1px 2px -1px rgba(255, 255, 255, 0.5) inset, 0px -2px 0px 0px rgba(0, 0, 0, 0.1) inset;
   outline-none: false;
   vertical-align: middle;
@@ -1454,7 +1454,7 @@ h1 {
 
 h2, .rst-content .toctree-wrapper p.caption {
   font-size: 139%;
-  font-weight: lighter;
+  font-weight: normal;
   color: #393F4D;
 }
 
@@ -1550,7 +1550,7 @@ pre, .codeblock, .rst-content .literal-block, .rst-content pre.literal-block, di
   overflow-x: auto;
   font-size: 0.97em;
   line-height: 1.013em;
-  background: #efeeed;
+  background: #F4F2F0;
   margin: 1px 0 20px 0;
 }
 
@@ -1566,22 +1566,24 @@ div[class^='highlight'] td.code {
 }
 
 .wy-menu-vertical p.caption {
-  font-weight: bold;
+  font-family: 'Nunito Sans', sans;
+  text-decoration: underline 2px #393F4D;
   font-size: 110%;
-  color: #fff;
+  color: #23221d;
+  background-color: #FAFBFD;
   white-space: nowrap;
 }
 
 code, p.caption { 
   font-family: "Nunito Sans", sans, monospace;
-  color: #393f4d;
+  color: #23221d;
   font-size: 0.99em;
   line-height: 1.39em;
   }
 
 
 caption-text {
-   font-family: 'RobotoSlab Coding', monospace;
+   font-family: Courier, monospace;
    font-family: monospace;
    font-size: 1.03em;
    line-height: 1.43em;
@@ -1601,7 +1603,7 @@ caption-text {
 div[class^='highlight'] pre {
   margin: 0;
   padding: 12px 12px;
-  font-family: Monaco, Consolas, "Lucida Console", monospace;
+  font-family: 'Courier New', Monaco, Consolas, "Lucida Console", monospace;
   font-size: 1.03em;
   line-height: 1.13;
   display: block;
@@ -1977,7 +1979,7 @@ div[class^='highlight'] pre {
   clear: both;
 }
 .rst-versions .rst-current-version .fa, .rst-versions .rst-current-version .rst-content .admonition-title, .rst-content .rst-versions .rst-current-version .admonition-title, .rst-versions .rst-current-version .rst-content h1 .headerlink, .rst-content h1 .rst-versions .rst-current-version .headerlink, .rst-versions .rst-current-version .rst-content h2 .headerlink, .rst-content h2 .rst-versions .rst-current-version .headerlink, .rst-versions .rst-current-version .rst-content h3 .headerlink, .rst-content h3 .rst-versions .rst-current-version .headerlink, .rst-versions .rst-current-version .rst-content h4 .headerlink, .rst-content h4 .rst-versions .rst-current-version .headerlink, .rst-versions .rst-current-version .rst-content h5 .headerlink, .rst-content h5 .rst-versions .rst-current-version .headerlink, .rst-versions .rst-current-version .rst-content h6 .headerlink, .rst-content h6 .rst-versions .rst-current-version .headerlink, .rst-versions .rst-current-version .rst-content dl dt .headerlink, .rst-content dl dt .rst-versions .rst-current-version .headerlink, .rst-versions .rst-current-version .rst-content p.caption .headerlink, .rst-content p.caption .rst-versions .rst-current-version .headerlink, .rst-versions .rst-current-version .rst-content tt.download span:first-child, .rst-content tt.download .rst-versions .rst-current-version span:first-child, .rst-versions .rst-current-version .rst-content code.download span:first-child, .rst-content code.download .rst-versions .rst-current-version span:first-child, .rst-versions .rst-current-version .icon, .rst-versions .rst-current-version .wy-menu-vertical li span.toctree-expand, .wy-menu-vertical li .rst-versions .rst-current-version span.toctree-expand {
-  color: #FDC939;
+  color: #f0f0f2;
 }
 .rst-versions .rst-current-version .fa-book, .rst-versions .rst-current-version .icon-book {
   float: left;
@@ -1986,12 +1988,12 @@ div[class^='highlight'] pre {
   float: left;
 }
 .rst-versions .rst-current-version.rst-out-of-date {
-  background-color: #E74C3C;
-  color: #fff;
+  background-color: #23221d;
+  color: #23221d;
 }
 .rst-versions .rst-current-version.rst-active-old-version {
-  background-color: #F1C40F;
-  color: #000;
+  background-color: 23221d;
+  color: #23221d;
 }
 .rst-versions.shift-up .rst-other-versions {
   display: block;
@@ -2150,7 +2152,7 @@ div[class^='highlight'] pre {
   display: block;
   margin: 0 0 24px 24px;
   padding: 24px;
-  background: #31343D;
+  background: #f1f4af;
   border: solid 1px #e1e4e5;
 }
 .rst-content .sidebar p, .rst-content .sidebar ul, .rst-content .sidebar dl {
@@ -2161,9 +2163,9 @@ div[class^='highlight'] pre {
 }
 .rst-content .sidebar .sidebar-title {
   display: block;
-  font-family: "Nunito Sans", 'RobotoSlab', arial, sans-serif;
-  font-weight: bold;
-  background: #31343D;
+  font-family: "Nunito Sans",'RobotoSlab', Arial, sans;
+  font-weight: normal;
+  background: #f1f4fa;
   padding: 6px 12px;
   margin: -24px;
   margin-bottom: 24px;
@@ -2413,9 +2415,13 @@ span[id*='MathJax-Span'] {
   position: fixed;
   top: 1.618em;
 }
-
+.wy-menu a {
+  background-color: #FAFBFD;
+  color: #23221d;
+  font-family: Nunito, sans, 'Nunito Sans';
+}
 .wy-menu a:hover {
-  text-decoration: none;
+  background-color: #bba95e;
 }
 
 .wy-menu-horiz {
@@ -2456,12 +2462,14 @@ span[id*='MathJax-Span'] {
   line-height: 41.8px;
   padding: 0.1 0.1;
   margin-left: 0.43em;
+  padding-left: 0.23em;
   margin-bottom: 0;
   display: block;
-  font-family: 'Nunito Sans', sans-serif;
+  font-family: 'Nunito Sans', Nunito, 'Open Sans', sans;
   font-weight: bolder;
-  font-size: 100%;
-  color: #abb6cd;
+  border-bottom: 4px dotted #FFA400;
+  font-size: 139%;
+  color: #393F4D;
   white-space: nowrap;
 }
 .wy-menu-vertical ul {
@@ -2474,15 +2482,15 @@ span[id*='MathJax-Span'] {
   border-bottom: solid 1px #d1d5e3;
 }
 .wy-menu-vertical li.current {
-  background: #d1d5e3;
+  background: #FAFBFD;
 }
 .wy-menu-vertical li.current a {
-  color: #31343D;
-  border-right: solid 0px #31343D;
+  color: #23221D;
   padding: 0.4045em 2.427em;
 }
 .wy-menu-vertical li.current a:hover {
-  background: #fafbfd;
+  background: #FAFBFD;
+
 }
 .wy-menu-vertical li code, .wy-menu-vertical li .rst-content tt, .rst-content .wy-menu-vertical li tt {
   border: none;
@@ -2500,24 +2508,29 @@ span[id*='MathJax-Span'] {
   color: #393f4d;
 }
 .wy-menu-vertical li.on a, .wy-menu-vertical li.current > a {
-  color: #5a5a59;
+  font-family: 'Nunito Sans', sans;
   padding: 0.4045em 1.618em;
   position: relative;
-  background: #fafbfd;
-  border: none;
+  /* color: #23221D; */
   padding-left: 1.618em -4px;
+  background-color: #D4D4D4;
+  color: #FFA400;
+  border-right: 4px solid #999;
+
 }
 .wy-menu-vertical li.on a:hover, .wy-menu-vertical li.current > a:hover {
-  background: #fafbfd;
+  background-color: #D4D4D4;
+  color: #FFA400;
+  border-right: 4px solid #999;
 }
 .wy-menu-vertical li.on a:hover span.toctree-expand, .wy-menu-vertical li.current > a:hover span.toctree-expand {
-  color: gray;
+  color: #FAFBFD;
 }
 .wy-menu-vertical li.on a span.toctree-expand, .wy-menu-vertical li.current > a span.toctree-expand {
   display: block;
   font-size: 0.8em;
   line-height: 1.6em;
-  color: #554d2f;
+  color: #23221d;
 }
 .wy-menu-vertical li.toctree-l1.current li.toctree-l2 > ul, .wy-menu-vertical li.toctree-l2.current li.toctree-l3 > ul {
   display: none; margin-left: 0.33em; padding-left: 0.22em;
@@ -2531,7 +2544,7 @@ span[id*='MathJax-Span'] {
 }
 .wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a {
   display: block;
-  background: #f0f0f2;
+  background: #FAFBFD;
   padding: 0.4045em 4.045em;
 }
 .wy-menu-vertical li.toctree-l2 a:hover span.toctree-expand {
@@ -2544,12 +2557,12 @@ span[id*='MathJax-Span'] {
   font-size: 0.9em;
 }
 .wy-menu-vertical li.toctree-l3.current > a {
-  background: #bdbdbd;
+  background: #555;
   padding: 0.4045em 4.045em;
 }
 .wy-menu-vertical li.toctree-l3.current li.toctree-l4 > a {
   display: block;
-  background: #bdbdbd;
+  background: #555;
   padding: 0.4045em 5.663em;
   border-top: none;
   border-bottom: none;
@@ -2585,23 +2598,23 @@ span[id*='MathJax-Span'] {
   display: block;
   position: relative;
   font-size: 90%;
-  color: #e8e8e8;
+  font-family: 'Nunito Sans', sans;
 }
 .wy-menu-vertical a:hover {
   background-color: #fafbfd;
-  color: #16181e;
+  text-decoration: underline 1.33em dotted;
   cursor: pointer;
 }
 .wy-menu-vertical a:hover span.toctree-expand {
   color: #e8e8e8;
 }
 .wy-menu-vertical a:active {
-  background-color: #c38f4a;
+  background-color: #FAFBFD;
   cursor: pointer;
-  color: #fff;
+  color: #555;
 }
 .wy-menu-vertical a:active span.toctree-expand {
-  color: #fff;
+  color: #555;
 }
 
 .wy-side-nav-search {
@@ -2610,12 +2623,12 @@ span[id*='MathJax-Span'] {
   padding: 0.809em;
   margin-bottom: 0.809em;
   z-index: 200;
-  background-color: #fafbfd;
+  background-color: #FAFBFD;
   text-align: center;
   padding: 0.809em;
   display: block;
   color: #393f4d;
-  font-family: "Nunito Sans", sans;
+  font-family: 'Nunito Sans', Arial, sans;
   margin-bottom: 0.809em;
 }
 .wy-side-nav-search input[type=text] {
@@ -2666,18 +2679,18 @@ span[id*='MathJax-Span'] {
 }
 
 .wy-nav .wy-menu-vertical header {
-  color: #c38f4a;
+  color: #23221D;
 }
 .wy-nav .wy-menu-vertical a {
-  color: #dadada;
+  color: #23221D;
 }
 .wy-nav .wy-menu-vertical a:hover {
-  background-color: #aba09b;
-  color: #fff;
+  background-color: #fcfcfc;
+  color: #23221D;
 }
 
 .wy-body-for-nav {
-  background-color: #f0f0f2;  
+  background-color: #FAFBFD;  
 }
 
 .wy-grid-for-nav {
@@ -2696,7 +2709,7 @@ span[id*='MathJax-Span'] {
   overflow-x: hidden;
   overflow-y: hidden;
   min-height: 100%;
-  background: #393f4d;
+  background: #fafbfd;
   z-index: 200;
 }
 
@@ -2710,8 +2723,8 @@ span[id*='MathJax-Span'] {
 
 .wy-nav-top {
   display: none;
-  background: #31343d;
-  color: #fff;
+  background: #fafbfd;
+  color: #23221D;
   padding: 0.4045em 0.809em;
   position: relative;
   line-height: 50px;
