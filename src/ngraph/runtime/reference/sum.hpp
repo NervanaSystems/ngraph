@@ -45,7 +45,7 @@ namespace ngraph
             }
 
             template <typename T>
-            typename std::enable_if<std::is_integral<T>::value, bool>::type is_finite(T x)
+            typename std::enable_if<std::is_integral<T>::value, bool>::type is_finite(T /* x */)
             {
                 return true;
             }

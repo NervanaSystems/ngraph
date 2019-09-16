@@ -37,7 +37,7 @@ static bool broadcast_and_replace(std::shared_ptr<ngraph::Node>& node)
                 op->input(i).replace_source_output(new_args[i]->output(0));
             }
             return true;
-        };
+        }
     }
     return false;
 }

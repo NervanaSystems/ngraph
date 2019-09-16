@@ -30,6 +30,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Select)
             {
+                (void)node;
                 auto& functors = external_function->get_functors();
 
                 auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
@@ -42,7 +43,7 @@ namespace ngraph
 
                 std::function<decltype(runtime::cpu::kernel::select<float>)> kernel;
 
-                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::select);
+                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::select)
 
                 auto functor = [&,
                                 kernel,
