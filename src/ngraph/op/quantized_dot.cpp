@@ -217,7 +217,8 @@ shared_ptr<Node> op::QuantizedDot::copy_with_new_args(const NodeVector& new_args
                                              m_output_axes));
 }
 
-void op::QuantizedDot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::QuantizedDot::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                         const NodeVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }
