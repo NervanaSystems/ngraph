@@ -223,7 +223,7 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
 
         traverse_nodes(f, [&](shared_ptr<Node> node) {
 
-            if (auto ck = dynamic_pointer_cast<ngraph::op::CompiledKernel>(node))
+            if (auto ck = node->as_type_ptr<ngraph::op::CompiledKernel>())
             {
                 // print sub-graph
                 auto nodes_list = ck->get_node_list();

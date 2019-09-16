@@ -192,6 +192,12 @@ namespace ngraph
         virtual bool is_unary_elementwise_arithmetic() const { return false; }
         virtual bool is_binary_elementwise_arithmetic() const { return false; }
         virtual bool is_auto_broadcast() const { return false; }
+        virtual bool is_decomposable() const { return false; }
+        /// \brief Decomposes the FusedOp into a sub-graph consisting of core ngraph ops
+        ///
+        /// \return A vector of nodes comprising the sub-graph. The order of output
+        ///         tensors must match the match output tensors of the FusedOp
+        virtual NodeVector decompose_op() const { return NodeVector(); }
         virtual const op::AutoBroadcastSpec* get_autob() const { return nullptr; }
         /// Returns the NodeTypeInfo for the node's class.
         /// During transition to type_info, returns a dummy type_info for Node if the class
