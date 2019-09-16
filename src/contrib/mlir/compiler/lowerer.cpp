@@ -794,8 +794,8 @@ namespace
         //           Output[n, k, r_1, .. r_f] +=
         //             Images[n, c, i_1 + j_1, .. i_f + j_f] * Filters[k, c, j_1, .. j_f]
 
-        // With padding, we check (using IntegerSets) whether each spatial dim in Images lie within
-        // paddings. If true, we perform the computation:
+        // With padding, we check (using IntegerSets) whether each spatial dim in Images lie inside 
+        // non-padded spatial region. If true, we perform the computation:
         //
         //         for <j_1 .. j_f> : <0 .. 0> -> <F_1 .. F_f>
         //         if(indices in non-padded region):
@@ -880,6 +880,7 @@ namespace
             //   (d_dim - padBelow[dim] - LB_dim >= 0),
             //   (padBelow[dim] + UB_dim - d_dim - 1 >= 0)
             SmallVector<AffineExpr, 4> affineExprs;
+            // Bool to indicate if expr is equality or inequality
             SmallVector<bool, 4> isEq;
 
             for (unsigned dim = 0; dim < spatialRank; dim++)
@@ -980,8 +981,7 @@ namespace
                             {
                                 // if args : img dims, img lbs, img ubs
                                 SmallVector<IndexHandle, 4>::iterator it = imgIndices.begin();
-                                it++;
-                                it++;
+                                std::advance(it, 2);
                                 SmallVector<Value*, 4> affineIfArgs(it, imgIndices.end());
                                 affineIfArgs.insert(
                                     affineIfArgs.end(), imgSpatialLbs.begin(), imgSpatialLbs.end());
