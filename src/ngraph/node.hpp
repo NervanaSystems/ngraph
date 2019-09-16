@@ -419,6 +419,7 @@ namespace ngraph
 
         const std::unordered_set<std::string>& get_provenance_tags() const;
         void add_provenance_tag(const std::string& tag);
+        void add_provenance_tags(const std::unordered_set<std::string>& tag_set);
         void remove_provenance_tag(const std::string& tag);
 
         // to be used when nodes are replaced
