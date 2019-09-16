@@ -726,8 +726,10 @@ void MLIRCompiler::execute()
     auto invocationResult = m_engine->invoke("main", llvm::MutableArrayRef<void*>(m_invoke_args));
 
     if (clDumpObjectFile)
+    {
         m_engine->dumpToObjectFile(clObjectFilename.empty() ? "jitted_mlir.o"
                                                             : clObjectFilename.getValue());
+    }
 
     NGRAPH_CHECK(!invocationResult, "JIT invocation of 'main' failed\n");
 }
