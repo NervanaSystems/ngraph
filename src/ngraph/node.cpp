@@ -328,6 +328,14 @@ void Node::add_provenance_tag(const std::string& tag)
     m_provenance_tags.insert(tag);
 }
 
+void Node::add_provenance_tags(const std::unordered_set<std::string>& tag_set)
+{
+    for (auto tag : tag_set)
+    {
+        add_provenance_tag(tag);
+    }
+}
+
 void Node::remove_provenance_tag(const std::string& tag)
 {
     m_provenance_tags.erase(tag);
