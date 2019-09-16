@@ -51,7 +51,9 @@ static mlir::LogicalResult verifyCompatibleOperandsAndResults(T* op, bool checkR
     for (auto operand : opr->getOperands())
     {
         if (i == 0)
+        {
             continue;
+        }
         mlir::Type t = operand->getType();
         mlir::NGTensorType opType = t.cast<NGTensorType>();
         if (!opType.isCompatible(opType0))
