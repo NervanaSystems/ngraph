@@ -36,7 +36,7 @@ using descriptor::layout::DenseTensorLayout;
 
 extern "C" NOP_BACKEND_API void ngraph_register_nop_backend()
 {
-    runtime::BackendManager::register_backend("NOP", [](const std::string& config) {
+    runtime::BackendManager::register_backend("NOP", [](const std::string& /* config */) {
         return std::make_shared<runtime::nop::NOPBackend>();
     });
 }
@@ -62,7 +62,7 @@ shared_ptr<runtime::Executable>
 }
 
 runtime::nop::NOPExecutable::NOPExecutable(shared_ptr<Function> function,
-                                           bool enable_performance_collection)
+                                           bool /* enable_performance_collection */)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
@@ -71,8 +71,8 @@ runtime::nop::NOPExecutable::NOPExecutable(shared_ptr<Function> function,
     set_parameters_and_results(*function);
 }
 
-bool runtime::nop::NOPExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                       const vector<shared_ptr<runtime::Tensor>>& inputs)
+bool runtime::nop::NOPExecutable::call(const vector<shared_ptr<runtime::Tensor>>& /* outputs */,
+                                       const vector<shared_ptr<runtime::Tensor>>& /* inputs */)
 {
     return true;
 }

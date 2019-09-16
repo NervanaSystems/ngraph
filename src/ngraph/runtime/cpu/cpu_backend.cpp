@@ -38,7 +38,7 @@ using namespace std;
 
 extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend()
 {
-    runtime::BackendManager::register_backend("CPU", [](const std::string& config) {
+    runtime::BackendManager::register_backend("CPU", [](const std::string& /* config */) {
         static bool is_initialized = false;
         if (!is_initialized)
         {
@@ -202,7 +202,7 @@ vector<runtime::PerformanceCounter> runtime::cpu::CPU_Executable::get_performanc
     return rc;
 }
 
-bool runtime::cpu::CPU_Backend::is_supported(const Node& op) const
+bool runtime::cpu::CPU_Backend::is_supported(const Node& /* op */) const
 {
     return true;
 }

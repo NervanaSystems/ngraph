@@ -31,7 +31,7 @@ using namespace ngraph;
 
 extern "C" INTERPRETER_BACKEND_API void ngraph_register_interpreter_backend()
 {
-    runtime::BackendManager::register_backend("INTERPRETER", [](const std::string& config) {
+    runtime::BackendManager::register_backend("INTERPRETER", [](const std::string& /* config */) {
         return std::make_shared<runtime::interpreter::INTBackend>();
     });
 }
