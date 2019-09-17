@@ -2737,7 +2737,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         if (op_version == 0)
         {
-            auto tmp = dynamic_cast<const op::Product*>(&n);
+            break;
         }
         if (op_version == 1)
         {
@@ -2937,7 +2937,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         if (op_version == 0)
         {
-            auto tmp = dynamic_cast<const op::Sum*>(&n);
+            break;
         }
         if (op_version == 1)
         {
