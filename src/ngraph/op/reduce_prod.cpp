@@ -23,15 +23,6 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::v1::ReduceProd::type_info;
 
 op::v1::ReduceProd::ReduceProd(const Output<Node>& arg,
-                               const AxisSet& reduction_axes,
-                               bool keep_dims)
-    : ArithmeticReduction(arg, reduction_axes)
-    , m_keep_dims{keep_dims}
-{
-    constructor_validate_and_infer_types();
-}
-
-op::v1::ReduceProd::ReduceProd(const Output<Node>& arg,
                                const Output<Node>& reduction_axes,
                                bool keep_dims)
     : ArithmeticReduction(arg, reduction_axes)
@@ -48,7 +39,7 @@ shared_ptr<Node> op::v1::ReduceProd::get_default_value() const
 shared_ptr<Node> op::v1::ReduceProd::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<ReduceProd>(new_args.at(0), get_reduction_axes(), m_keep_dims);
+    return make_shared<ReduceProd>(new_args.at(0), new_args.at(1), m_keep_dims);
 }
 
 void op::v1::ReduceProd::validate_and_infer_types()
