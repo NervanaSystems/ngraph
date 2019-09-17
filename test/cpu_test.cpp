@@ -2262,12 +2262,36 @@ TEST(cpu_test, subtract_bf16)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-      
+
     void* fp_dst = malloc(shape_size(shape) * 4);
     ngraph::bf16_to_float(static_pointer_cast<runtime::cpu::CPUTensorView>(result)->get_data_ptr(),
                           fp_dst,
                           shape_size(shape));
     auto c = backend->create_tensor(element::f32, shape);
-    c->write(fp_dst, shape_size(shape) * 4);  
+    c->write(fp_dst, shape_size(shape) * 4);
     EXPECT_EQ((vector<float>{1, 2, 4, 8}), read_vector<float>(c));
+}
+
+TEST(cpu_test, sqrt_bf16)
+{
+    Shape shape{2, 3};
+    auto A = make_shared<op::Parameter>(element::bf16, shape);
+    auto f = make_shared<Function>(make_shared<op::Sqrt>(A), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::bf16, shape);
+    copy_data(a, vector<bfloat16>{16, 4, 81, 100, 144, 0});
+    auto result = backend->create_tensor(element::bf16, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    void* fp_dst = malloc(shape_size(shape) * 4);
+    ngraph::bf16_to_float(static_pointer_cast<runtime::cpu::CPUTensorView>(result)->get_data_ptr(),
+                          fp_dst,
+                          shape_size(shape));
+    auto c = backend->create_tensor(element::f32, shape);
+    c->write(fp_dst, shape_size(shape) * 4);
+    EXPECT_EQ((vector<float>{4, 2, 9, 10, 12, 0}), read_vector<float>(c));
 }
