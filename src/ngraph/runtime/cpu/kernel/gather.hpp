@@ -146,7 +146,7 @@ namespace ngraph
                     else
                     {
                         size_t num_indices = 1;
-                        for (auto d : indices_shape)
+                        for (size_t d : indices_shape)
                         {
                             num_indices *= d;
                         }
