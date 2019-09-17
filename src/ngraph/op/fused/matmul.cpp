@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::MatMul::type_name{"MatMul"};
+constexpr NodeTypeInfo op::MatMul::type_info;
 
 op::MatMul::MatMul(const Output<Node>& A,
                    const Output<Node>& B,

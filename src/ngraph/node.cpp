@@ -454,6 +454,12 @@ void Node::clear_control_dependents()
     }
 }
 
+const op::AutoBroadcastSpec& Node::get_autob() const
+{
+    static op::AutoBroadcastSpec s_spec;
+    return s_spec;
+}
+
 namespace ngraph
 {
     ostream& operator<<(ostream& out, const Node& node)
