@@ -56,6 +56,7 @@ namespace ngraph
 
     namespace op
     {
+        struct AutoBroadcastSpec;
         class Constant;
     } // namespace op
 
@@ -157,37 +158,21 @@ namespace ngraph
         {
             return &get_type_info() == &NodeType::type_info;
         }
-
-        /// Casts a Node to a shared_ptr<T> if is of type T, nullptr otherwise;
-        template <typename NodeType>
-        std::shared_ptr<NodeType> as_type_ptr()
-        {
-            return is_type<NodeType>() ? std::static_pointer_cast<NodeType>(shared_from_this())
-                                       : std::shared_ptr<NodeType>();
-        }
-
-        /// Casts a Node to a shared_ptr<T> if is of type T, nullptr otherwise;
-        template <typename NodeType>
-        std::shared_ptr<const NodeType> as_type_ptr() const
-        {
-            return is_type<NodeType>() ? std::static_pointer_cast<NodeType>(shared_from_this())
-                                       : std::shared_ptr<NodeType>();
-        }
-
-        /// Casts a Node to a T* if is of type T, nullptr otherwise;
-        template <typename NodeType>
-        NodeType* as_type()
-        {
-            return is_type<NodeType>() ? static_cast<NodeType*>(this) : nullptr;
-        }
-
-        /// Casts a Node to a T* if is of type T, nullptr otherwise;
-        template <typename NodeType>
-        const NodeType* as_type() const
-        {
-            return is_type<NodeType>() ? static_cast<const NodeType*>(this) : nullptr;
-        }
-
+        virtual bool is_unary_elementwise_arithmetic() const { return false; }
+        virtual bool is_binary_elementwise_arithmetic() const { return false; }
+        virtual bool is_binary_elementwise_comparison() const { return false; }
+        virtual bool is_binary_elementwise_logical() const { return false; }
+        /// \returns true if node supports autobroadcast operations
+        virtual bool supports_auto_broadcast() const { return false; }
+        /// \returns the autobroadcasr spec
+        virtual const op::AutoBroadcastSpec& get_autob() const;
+        /// \returns true if the node can decompose
+        virtual bool supports_decompose() const { return false; }
+        /// \brief Decomposes the FusedOp into a sub-graph consisting of core ngraph ops
+        ///
+        /// \return A vector of nodes comprising the sub-graph. The order of output
+        ///         tensors must match the match output tensors of the FusedOp
+        virtual NodeVector decompose_op() const { return NodeVector(); }
         /// Returns the NodeTypeInfo for the node's class.
         /// During transition to type_info, returns a dummy type_info for Node if the class
         /// has not been updated yet.
@@ -503,6 +488,36 @@ namespace ngraph
         Placement m_placement = Placement::DEFAULT;
         size_t m_placement_index = placement_invalid;
     };
+
+    /// Casts a Node* to a NodeType* if it is of type NodeType, nullptr otherwise
+    template <typename NodeType>
+    NodeType* as_type(Node* node)
+    {
+        return node->template is_type<NodeType>() ? static_cast<NodeType*>(node) : nullptr;
+    }
+
+    /// Casts a Node* to a NodePtr* if it is of type NodePtr, nullptr otherwise
+    template <typename NodeType>
+    const NodeType* as_type(const Node* node)
+    {
+        return node->template is_type<NodeType>() ? static_cast<const NodeType*>(node) : nullptr;
+    }
+
+    /// Casts a Node to a shared_ptr<NodePtr> if it is of type NodePtr, nullptr otherwise
+    template <typename NodeType>
+    std::shared_ptr<NodeType> as_type_ptr(std::shared_ptr<Node> node_ptr)
+    {
+        return node_ptr->template is_type<NodeType>() ? std::static_pointer_cast<NodeType>(node_ptr)
+                                                      : std::shared_ptr<NodeType>();
+    }
+
+    /// Casts a Node to a shared_ptr<NodePtr> if it is of type NodePtr, nullptr otherwise
+    template <typename NodeType>
+    std::shared_ptr<const NodeType> as_type_ptr(std::shared_ptr<const Node> node_ptr)
+    {
+        return node_ptr->template is_type<NodeType>() ? std::static_pointer_cast<NodeType>(node_ptr)
+                                                      : std::shared_ptr<NodeType>();
+    }
 
     /// \brief A handle for one of a node's inputs.
     template <typename NodeType>
