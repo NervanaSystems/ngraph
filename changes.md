@@ -68,6 +68,11 @@ arguments now take type `CoordinateDiff` instead of `Shape`. `CoordinateDiff` is
 `std::vector<std::ptrdiff_t>`, which "is like `size_t` but is allowed to be negative". Callers may
 need to be adapted.
 
+## Changes to Concat op
+
+* `get_concatenation_axis` was renamed to `get_axis`. In order to provide backward compatibility `get_concatenation_axis` is now alis of `get_axis` method
+* `set_concatenation_axis` was renamed to `set_axis`. In order to provide backward compatibility `set_concatenation_axis` is now alis of `set_axis` method
+
 ## `Parameter` and `Function` no longer take a type argument.
 
 ## Changes to Tensor read and write methods
