@@ -36,6 +36,9 @@
 using namespace std;
 using namespace ngraph;
 
+extern template ngraph::Shape ngraph::apply_permutation<ngraph::Shape>(ngraph::Shape input,
+                                                                       ngraph::AxisVector order);
+
 pass::DynElimination::DynElimination()
     : GraphRewrite()
 {

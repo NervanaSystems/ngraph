@@ -50,6 +50,9 @@
 using namespace ngraph;
 using namespace std;
 
+extern template ngraph::Shape ngraph::apply_permutation<ngraph::Shape>(ngraph::Shape input,
+                                                                       ngraph::AxisVector order);
+
 static shared_ptr<Node> construct_constant_node(int n)
 {
     return op::Constant::create(element::f32, Shape{}, {n});
