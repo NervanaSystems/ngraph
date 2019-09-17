@@ -147,7 +147,7 @@ static bool simplify_concat(shared_ptr<Node> n)
         }
 
         // check that no other node uses slices and reshapes
-        if (auto rcarg = carg->as_type_ptr<op::Reshape>())
+        if (auto rcarg = as_type_ptr<op::Reshape>(carg))
         {
             auto default_shape = get_default_order(rcarg->get_argument(0)->get_shape());
             if (default_shape != rcarg->get_input_order())
@@ -316,9 +316,9 @@ static bool simplify_add(shared_ptr<Node> n)
 //`simplify_log` optimizes `log(exp(x)/y)` into `x - log(y)`
 static bool simplify_log(shared_ptr<Node> n)
 {
-    if (auto div = n->input_value(0).get_node()->as_type_ptr<op::Divide>())
+    if (auto div = as_type_ptr<op::Divide>(n->input_value(0).get_node_shared_ptr()))
     {
-        if (auto exp = div->input_value(0).get_node()->as_type_ptr<op::Exp>())
+        if (auto exp = as_type_ptr<op::Exp>(div->input_value(0).get_node_shared_ptr()))
         {
             auto denom = div->get_argument(1);
             auto diff =
@@ -417,14 +417,14 @@ static bool simplify_reduction(shared_ptr<Node> n)
     NGRAPH_DEBUG << "In simplify_reduction for " << n->get_name();
     auto reduction = static_pointer_cast<T>(n);
 
-    auto broadcast = n->input_value(0).get_node()->as_type_ptr<op::Broadcast>();
+    auto broadcast = as_type_ptr<op::Broadcast>(n->input_value(0).get_node_shared_ptr());
     if (!broadcast)
     {
         NGRAPH_DEBUG << n->get_name() << " isn't Broadcast";
         return false;
     }
 
-    auto cnst = broadcast->input_value(0).get_node()->as_type_ptr<op::Constant>();
+    auto cnst = as_type_ptr<op::Constant>(broadcast->input_value(0).get_node_shared_ptr());
     if (!cnst || cnst->get_shape().size() > 0 /*not a scalar*/)
     {
         NGRAPH_DEBUG << broadcast->get_argument(0)->get_name() << " isn't a scalar constant";

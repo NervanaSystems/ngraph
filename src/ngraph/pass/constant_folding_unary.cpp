@@ -128,8 +128,7 @@ void pass::ConstantFolding::construct_constant_unary()
     auto constant_label = make_shared<pattern::op::Label>(
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
     auto is_ue = [](std::shared_ptr<Node> n) {
-        return (pattern::has_class<op::util::UnaryElementwiseArithmetic>()(n) ||
-                pattern::has_class<op::Not>()(n));
+        return n->is_unary_elementwise_arithmetic() || pattern::has_class<op::Not>()(n);
     };
     auto ue = std::make_shared<pattern::op::Any>(constant_label, is_ue, NodeVector{constant_label});
 
@@ -139,7 +138,7 @@ void pass::ConstantFolding::construct_constant_unary()
 
         auto pattern_map = m.get_pattern_map();
 
-        auto constant_match = pattern_map[constant_label]->as_type_ptr<op::Constant>();
+        auto constant_match = as_type_ptr<op::Constant>(pattern_map[constant_label]);
         auto unary_match = m.get_match_root();
 
         if (!is_supported_unary_op(unary_match))

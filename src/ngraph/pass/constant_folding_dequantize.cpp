@@ -57,12 +57,13 @@ void pass::ConstantFolding::construct_constant_dequantize()
 
         auto pattern_map = m.get_pattern_map();
 
-        auto constant_match = pattern_map[constant_label]->as_type_ptr<op::Constant>();
+        auto constant_match = as_type_ptr<op::Constant>(pattern_map[constant_label]);
         auto dequant_match = pattern_map[dequant];
-        auto dequantize_op = dequant_match->as_type_ptr<op::Dequantize>();
+        auto dequantize_op = as_type_ptr<op::Dequantize>(dequant_match);
 
-        auto scale = dequant_match->input_value(1).get_node()->as_type_ptr<op::Constant>();
-        auto offset = dequant_match->input_value(2).get_node()->as_type_ptr<op::Constant>();
+        auto scale = as_type_ptr<op::Constant>(dequant_match->input_value(1).get_node_shared_ptr());
+        auto offset =
+            as_type_ptr<op::Constant>(dequant_match->input_value(2).get_node_shared_ptr());
 
         NGRAPH_CHECK(revalidate_and_ensure_static(dequantize_op));
         auto type = constant_match->get_element_type();

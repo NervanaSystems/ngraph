@@ -43,7 +43,7 @@ NodeVector op::Squeeze::decompose_op() const
                           "doesn't support 'axes' input of other type than a Constant.");
 
     // Get value of axes from Constant
-    auto axes_constant = axes_node->as_type_ptr<op::Constant>();
+    auto axes_constant = as_type_ptr<op::Constant>(axes_node);
     auto axes = axes_constant->get_vector<size_t>();
 
     auto data_shape = data.get_shape();

@@ -821,15 +821,15 @@ void pass::CoreFusion::construct_zero_padded_reshaped_conv()
         pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
 
-        auto pad_value_op = pattern_map[pad_value]->as_type_ptr<ngraph::op::Constant>();
+        auto pad_value_op = as_type_ptr<ngraph::op::Constant>(pattern_map[pad_value]);
         if (!pad_value_op)
         {
             NGRAPH_DEBUG << "Pad value must be a constant";
             return false;
         }
 
-        const auto& matched_conv = pattern_map[conv_label]->as_type<ngraph::op::Convolution>();
-        const auto& matched_pad = pattern_map[pad_label]->as_type_ptr<ngraph::op::Pad>();
+        const auto& matched_conv = as_type_ptr<ngraph::op::Convolution>(pattern_map[conv_label]);
+        const auto& matched_pad = as_type_ptr<ngraph::op::Pad>(pattern_map[pad_label]);
         const auto& matched_reshape =
             std::static_pointer_cast<ngraph::op::Reshape>(pattern_map[reshape_label]);
 
@@ -904,7 +904,7 @@ void pass::CoreFusion::construct_zero_padded_conv()
         pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
 
-        auto pad_value_op = pattern_map[pad_value]->as_type_ptr<ngraph::op::Constant>();
+        auto pad_value_op = as_type_ptr<ngraph::op::Constant>(pattern_map[pad_value]);
         if (!pad_value_op)
         {
             NGRAPH_DEBUG << "Pad value must be a constant";
@@ -975,7 +975,7 @@ void pass::CoreFusion::construct_zero_padded_conv_backprop_filters()
         pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
 
-        auto pad_value_op = pattern_map[pad_value]->as_type_ptr<ngraph::op::Constant>();
+        auto pad_value_op = as_type_ptr<ngraph::op::Constant>(pattern_map[pad_value]);
         if (!pad_value_op)
         {
             NGRAPH_DEBUG << "Pad value must be a constant";
@@ -1035,7 +1035,7 @@ void pass::CoreFusion::construct_conv_bias()
     auto pbcast = make_shared<op::Broadcast>(pbias, shape, AxisSet{0, 1, 2, 3});
     auto pbcast_label = make_shared<pattern::op::Label>(pbcast, nullptr, NodeVector{pbcast});
     auto reshape_pred = [](shared_ptr<Node> node) -> bool {
-        if (auto reshape = node->as_type_ptr<op::Reshape>())
+        if (auto reshape = as_type_ptr<op::Reshape>(node))
         {
             auto ishape = reshape->get_input_shape(0);
             auto oshape = reshape->get_shape();
@@ -1065,7 +1065,7 @@ void pass::CoreFusion::construct_conv_bias()
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        auto conv_m = m.get_match_root()->get_argument(0)->as_type_ptr<op::Convolution>();
+        auto conv_m = as_type_ptr<op::Convolution>(m.get_match_root()->get_argument(0));
 
         if (conv_m == nullptr)
         {
@@ -1137,7 +1137,7 @@ void pass::CoreFusion::construct_conv_bias_add()
 
         auto add_m = m.get_match_root();
         auto pattern_map = m.get_pattern_map();
-        auto conv_m = add_m->get_argument(1)->as_type_ptr<op::ConvolutionBias>();
+        auto conv_m = as_type_ptr<op::ConvolutionBias>(add_m->get_argument(1));
         auto add_input_m = add_m->get_argument(0);
 
         if (!conv_m)

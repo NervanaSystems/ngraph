@@ -47,7 +47,7 @@ using ReshapeMap = unordered_map<shared_ptr<Node>, shared_ptr<op::Reshape>>;
 static string describe_reshape(shared_ptr<Node> node)
 {
     stringstream ss;
-    auto reshape = node->as_type_ptr<op::Reshape>();
+    auto reshape = as_type_ptr<op::Reshape>(node);
     ss << reshape->get_name()
        << " ( axis order = " << ngraph::vector_to_string(reshape->get_input_order())
        << " , shape = " << vector_to_string(reshape->get_shape()) << " ) "
@@ -533,7 +533,7 @@ bool ngraph::pass::ReshapeSinking::run_on_function(shared_ptr<ngraph::Function> 
             results.push_back(n);
         }
 
-        if (auto reshape = n->as_type_ptr<op::Reshape>())
+        if (auto reshape = as_type_ptr<op::Reshape>(n))
         {
             sink_reshape(reshape, reorders, reshapes_to_delete);
         }
@@ -545,19 +545,19 @@ bool ngraph::pass::ReshapeSinking::run_on_function(shared_ptr<ngraph::Function> 
         {
             sink_binary(n, reorders, reshapes_to_delete);
         }
-        else if (auto goe = n->as_type_ptr<op::GetOutputElement>())
+        else if (auto goe = as_type_ptr<op::GetOutputElement>(n))
         {
             write_reshapemap(reorders, goe, create_default_reshape(goe));
         }
-        else if (auto quantize = n->as_type_ptr<op::Quantize>())
+        else if (auto quantize = as_type_ptr<op::Quantize>(n))
         {
             sink_quantize(quantize, reorders, reshapes_to_delete);
         }
-        else if (auto dequantize = n->as_type_ptr<op::Dequantize>())
+        else if (auto dequantize = as_type_ptr<op::Dequantize>(n))
         {
             sink_dequantize(dequantize, reorders, reshapes_to_delete);
         }
-        else if (auto slice = n->as_type_ptr<op::Slice>())
+        else if (auto slice = as_type_ptr<op::Slice>(n))
         {
             // A heuristic. If Reshape has multiple slice users, if sunk
             // it will be replicated by the number of its users
@@ -578,11 +578,11 @@ bool ngraph::pass::ReshapeSinking::run_on_function(shared_ptr<ngraph::Function> 
                 materialize_shapes(n, reorders, reshapes_to_delete);
             }
         }
-        else if (auto pad = n->as_type_ptr<op::Pad>())
+        else if (auto pad = as_type_ptr<op::Pad>(n))
         {
             sink_pad(pad, reorders, reshapes_to_delete);
         }
-        else if (auto concat = n->as_type_ptr<op::Concat>())
+        else if (auto concat = as_type_ptr<op::Concat>(n))
         {
             sink_concat(concat, reorders, reshapes_to_delete);
         }

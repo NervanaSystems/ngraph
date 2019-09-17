@@ -45,12 +45,12 @@ shared_ptr<Node> op::Divide::copy_with_new_args(const NodeVector& new_args) cons
 {
     check_new_args_count(this, new_args);
     return make_shared<Divide>(
-        new_args.at(0), new_args.at(1), this->is_pythondiv(), *this->get_autob());
+        new_args.at(0), new_args.at(1), this->is_pythondiv(), this->get_autob());
 }
 
 void op::Divide::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
-    if (get_autob()->m_type != op::AutoBroadcastType::NONE)
+    if (get_autob().m_type != op::AutoBroadcastType::NONE)
     {
         throw ngraph_error("Autodiff not supported with auto broadcasting");
     }

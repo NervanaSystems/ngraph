@@ -51,10 +51,10 @@ namespace ngraph
                                      U* out,
                                      const Shape& arg0_shape,
                                      const Shape& arg1_shape,
-                                     const op::AutoBroadcastSpec* broadcast_spec,
+                                     const op::AutoBroadcastSpec& broadcast_spec,
                                      Functor elementwise_functor)
             {
-                switch (broadcast_spec->m_type)
+                switch (broadcast_spec.m_type)
                 {
                 case op::AutoBroadcastType::NONE:
                     for (size_t i = 0; i < shape_size(arg0_shape); i++)

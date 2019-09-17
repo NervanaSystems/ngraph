@@ -32,12 +32,12 @@ op::Multiply::Multiply(const Output<Node>& arg0,
 shared_ptr<Node> op::Multiply::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Multiply>(new_args.at(0), new_args.at(1), *this->get_autob());
+    return make_shared<Multiply>(new_args.at(0), new_args.at(1), this->get_autob());
 }
 
 void op::Multiply::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
-    if (get_autob()->m_type != op::AutoBroadcastType::NONE)
+    if (get_autob().m_type != op::AutoBroadcastType::NONE)
     {
         throw ngraph_error("Autodiff not supported with auto broadcasting");
     }

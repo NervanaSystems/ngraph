@@ -35,7 +35,7 @@ static shared_ptr<op::Constant>
 {
     vector<T> out_vec(shape_size(reduction_node->get_shape()));
 
-    if (auto max = reduction_node->as_type_ptr<op::Max>())
+    if (auto max = as_type_ptr<op::Max>(reduction_node))
     {
         runtime::reference::max<T>(constant->get_vector<T>().data(),
                                    out_vec.data(),
@@ -43,7 +43,7 @@ static shared_ptr<op::Constant>
                                    reduction_node->get_shape(),
                                    max->get_reduction_axes());
     }
-    else if (auto min = reduction_node->as_type_ptr<op::Min>())
+    else if (auto min = as_type_ptr<op::Min>(reduction_node))
     {
         runtime::reference::min<T>(constant->get_vector<T>().data(),
                                    out_vec.data(),
@@ -51,7 +51,7 @@ static shared_ptr<op::Constant>
                                    reduction_node->get_shape(),
                                    min->get_reduction_axes());
     }
-    else if (auto prod = reduction_node->as_type_ptr<op::Product>())
+    else if (auto prod = as_type_ptr<op::Product>(reduction_node))
     {
         runtime::reference::product<T>(constant->get_vector<T>().data(),
                                        out_vec.data(),
@@ -59,7 +59,7 @@ static shared_ptr<op::Constant>
                                        reduction_node->get_shape(),
                                        prod->get_reduction_axes());
     }
-    else if (auto sum = reduction_node->as_type_ptr<op::Sum>())
+    else if (auto sum = as_type_ptr<op::Sum>(reduction_node))
     {
         runtime::reference::sum<T>(constant->get_vector<T>().data(),
                                    out_vec.data(),

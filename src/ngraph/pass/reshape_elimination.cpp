@@ -52,7 +52,7 @@ void pass::ReshapeElimination::construct_identity_reshape_pattern()
         auto pattern_map = m.get_pattern_map();
         auto gop = pattern_map[op];
 
-        auto r1 = m.get_match_root()->as_type_ptr<op::Reshape>();
+        auto r1 = as_type_ptr<op::Reshape>(m.get_match_root());
 
         if (r1->get_shape() != gop->get_shape())
         {
@@ -249,7 +249,7 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
         for (auto it = std::next(reshape_node_vector.begin()); it != reshape_node_vector.end();
              it++)
         {
-            auto r = (*it)->as_type_ptr<op::Reshape>();
+            auto r = as_type_ptr<op::Reshape>(*it);
 
             // Check that the input to r is the last reshape stored in the
             // subpattern vector
@@ -284,9 +284,9 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
                 continue;
             }
 
-            auto first_reshape = sub_pattern.front()->as_type_ptr<op::Reshape>();
+            auto first_reshape = as_type_ptr<op::Reshape>(sub_pattern.front());
             auto input_to_first_reshape = first_reshape->get_argument(0);
-            auto last_reshape = sub_pattern.back()->as_type_ptr<op::Reshape>();
+            auto last_reshape = as_type_ptr<op::Reshape>(sub_pattern.back());
 
             auto new_input_order = first_reshape->get_input_order();
             auto new_out_shape = last_reshape->get_shape();

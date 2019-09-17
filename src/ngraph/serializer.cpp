@@ -323,11 +323,11 @@ static PartialShape read_partial_shape(json j)
     }
 }
 
-static json write_auto_broadcast(const op::AutoBroadcastSpec* autob)
+static json write_auto_broadcast(const op::AutoBroadcastSpec& autob)
 {
     json j;
-    j["type"] = autob->m_type;
-    j["axis"] = autob->m_axis;
+    j["type"] = autob.m_type;
+    j["axis"] = autob.m_axis;
     return j;
 }
 
@@ -624,7 +624,7 @@ ParameterVector JSONDeserializer::deserialize_parameter_vector(json json_paramet
     std::vector<std::shared_ptr<op::Parameter>> params;
     for (auto& param_ref : json_parameters)
     {
-        params.push_back(deserialize_node_reference(param_ref)->as_type_ptr<op::Parameter>());
+        params.push_back(as_type_ptr<op::Parameter>(deserialize_node_reference(param_ref)));
     }
     return params;
 }
@@ -645,7 +645,7 @@ shared_ptr<Function> JSONDeserializer::deserialize_function(json func_js)
     for (auto& result_ref : func_result)
     {
         auto fr = deserialize_node_reference(result_ref);
-        if (auto res = fr->as_type_ptr<op::Result>())
+        if (auto res = as_type_ptr<op::Result>(fr))
         {
             result.push_back(res);
             // make sure we have `op::Result` on top of all outputs
@@ -2120,7 +2120,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Add:
     {
         auto tmp = dynamic_cast<const op::Add*>(&n);
-        if (tmp->get_autob()->m_type != op::AutoBroadcastType::NONE)
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -2151,7 +2151,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::And:
     {
         auto tmp = dynamic_cast<const op::And*>(&n);
-        if (tmp->get_autob()->m_type != op::AutoBroadcastType::NONE)
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -2353,7 +2353,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = dynamic_cast<const op::Divide*>(&n);
         node["pythondiv"] = tmp->is_pythondiv();
-        if (tmp->get_autob()->m_type != op::AutoBroadcastType::NONE)
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -2402,7 +2402,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Equal:
     {
         auto tmp = dynamic_cast<const op::Equal*>(&n);
-        if (tmp->get_autob()->m_type != op::AutoBroadcastType::NONE)
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -2460,7 +2460,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Greater:
     {
         auto tmp = dynamic_cast<const op::Greater*>(&n);
-        if (tmp->get_autob()->m_type != op::AutoBroadcastType::NONE)
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -2469,7 +2469,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::GreaterEq:
     {
         auto tmp = dynamic_cast<const op::GreaterEq*>(&n);
-        if (tmp->get_autob()->m_type != op::AutoBroadcastType::NONE)
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -2527,7 +2527,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Less:
     {
         auto tmp = dynamic_cast<const op::Less*>(&n);
-        if (tmp->get_autob()->m_type != op::AutoBroadcastType::NONE)
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -2536,7 +2536,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::LessEq:
     {
         auto tmp = dynamic_cast<const op::LessEq*>(&n);
-        if (tmp->get_autob()->m_type != op::AutoBroadcastType::NONE)
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -2599,7 +2599,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Maximum:
     {
         auto tmp = dynamic_cast<const op::Maximum*>(&n);
-        if (tmp->get_autob()->m_type != op::AutoBroadcastType::NONE)
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -2614,7 +2614,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Minimum:
     {
         auto tmp = dynamic_cast<const op::Minimum*>(&n);
-        if (tmp->get_autob()->m_type != op::AutoBroadcastType::NONE)
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -2623,7 +2623,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Multiply:
     {
         auto tmp = dynamic_cast<const op::Multiply*>(&n);
-        if (tmp->get_autob()->m_type != op::AutoBroadcastType::NONE)
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -2649,7 +2649,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::NotEqual:
     {
         auto tmp = dynamic_cast<const op::NotEqual*>(&n);
-        if (tmp->get_autob()->m_type != op::AutoBroadcastType::NONE)
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -2667,7 +2667,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Or:
     {
         auto tmp = dynamic_cast<const op::Or*>(&n);
-        if (tmp->get_autob()->m_type != op::AutoBroadcastType::NONE)
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -2717,7 +2717,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Power:
     {
         auto tmp = dynamic_cast<const op::Power*>(&n);
-        if (tmp->get_autob()->m_type != op::AutoBroadcastType::NONE)
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -2895,7 +2895,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Subtract:
     {
         auto tmp = dynamic_cast<const op::Subtract*>(&n);
-        if (tmp->get_autob()->m_type != op::AutoBroadcastType::NONE)
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -2943,7 +2943,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Xor:
     {
         auto tmp = dynamic_cast<const op::Xor*>(&n);
-        if (tmp->get_autob()->m_type != op::AutoBroadcastType::NONE)
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }

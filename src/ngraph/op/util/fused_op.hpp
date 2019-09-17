@@ -30,7 +30,7 @@ namespace ngraph
             class FusedOp : public Op
             {
             public:
-                bool is_decomposable() const override { return true; }
+                bool supports_decompose() const override { return true; }
                 void validate_and_infer_types() override;
 
                 /// Pre and post validation hooks for op-specific actions

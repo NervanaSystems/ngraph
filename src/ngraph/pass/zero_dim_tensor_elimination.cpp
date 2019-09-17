@@ -111,7 +111,7 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
             continue;
         }
 
-        if (auto concat = n->as_type_ptr<op::Concat>())
+        if (auto concat = as_type_ptr<op::Concat>(n))
         {
             NodeVector non_zero_dim_args;
             for (auto arg : concat->get_arguments())

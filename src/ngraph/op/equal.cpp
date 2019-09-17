@@ -32,5 +32,5 @@ op::Equal::Equal(const Output<Node>& arg0,
 shared_ptr<Node> op::Equal::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Equal>(new_args.at(0), new_args.at(1), *this->get_autob());
+    return make_shared<Equal>(new_args.at(0), new_args.at(1), this->get_autob());
 }

@@ -26,13 +26,13 @@ namespace ngraph
         NodeVector explicit_broadcast(std::shared_ptr<Node>& node)
         {
             NodeVector rc;
-            if (node->is_auto_broadcast())
+            if (node->supports_auto_broadcast())
             {
-                if (node->get_autob()->m_type == op::AutoBroadcastType::NONE)
+                if (node->get_autob().m_type == op::AutoBroadcastType::NONE)
                 {
                     rc = node->get_arguments();
                 }
-                else if (node->get_autob()->m_type == op::AutoBroadcastType::NUMPY)
+                else if (node->get_autob().m_type == op::AutoBroadcastType::NUMPY)
                 {
                     rc = op::numpy_style_broadcast(node->get_arguments());
                 }

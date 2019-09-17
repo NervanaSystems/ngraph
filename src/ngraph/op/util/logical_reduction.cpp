@@ -46,7 +46,7 @@ bool op::util::LogicalReduction::reduction_axes_constant() const
 const AxisSet op::util::LogicalReduction::get_reduction_axes() const
 {
     AxisSet axes;
-    if (auto const_op = input_value(1).get_node()->as_type<op::Constant>())
+    if (auto const_op = as_type<op::Constant>(input_value(1).get_node()))
     {
         axes = const_op->get_axis_set_val();
     }

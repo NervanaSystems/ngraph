@@ -29,7 +29,7 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
 {
     bool modified = false;
 
-    if (node->is_decomposable())
+    if (node->supports_decompose())
     {
         if (m_has_direct_support && m_has_direct_support(*node))
         {
@@ -55,8 +55,7 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
                                                   end(node->get_outputs().at(i).get_inputs())};
                 for (auto fop_user : fop_users)
                 {
-                    if (auto goe =
-                            fop_user->get_raw_pointer_node()->as_type_ptr<op::GetOutputElement>())
+                    if (auto goe = as_type<op::GetOutputElement>(fop_user->get_raw_pointer_node()))
                     {
                         Output<Node> goe_output = goe->get_as_output();
                         if (goe_output.get_index() == i && !goe->get_output_inputs(0).empty())

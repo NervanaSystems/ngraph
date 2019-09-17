@@ -101,7 +101,7 @@ void pass::ConcatElimination::construct_concat_elimination()
         auto pattern_map = m.get_pattern_map();
         auto op = pattern_map[op_label];
 
-        auto root = m.get_match_root()->as_type_ptr<op::Concat>();
+        auto root = as_type_ptr<op::Concat>(m.get_match_root());
         if (root && (root->get_input_shape(0) == root->get_output_shape(0)))
         {
             NGRAPH_DEBUG << " eliminated " << m.get_match_root() << "\n";
@@ -122,7 +122,7 @@ bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> f
     bool modify_graph = false;
     auto has_multiple_inputs = [](std::shared_ptr<Node> n) {
         auto input_size = n->get_input_size();
-        auto root = n->as_type_ptr<op::Concat>();
+        auto root = as_type_ptr<op::Concat>(n);
         return (root && input_size > 1);
     };
 

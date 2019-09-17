@@ -24,12 +24,11 @@
 using namespace std;
 using namespace ngraph;
 
-template <typename optype>
-static bool broadcast_and_replace(std::shared_ptr<ngraph::Node>& node)
+bool ngraph::pass::ImplicitBroadcastElimination::run_on_node(std::shared_ptr<ngraph::Node> node)
 {
-    if (node->is_auto_broadcast())
+    if (node->supports_auto_broadcast())
     {
-        if (node->get_autob()->m_type != op::AutoBroadcastType::NONE)
+        if (node->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             auto new_args = pass::explicit_broadcast(node);
             for (size_t i = 0; i < new_args.size(); i++)
@@ -40,11 +39,4 @@ static bool broadcast_and_replace(std::shared_ptr<ngraph::Node>& node)
         }
     }
     return false;
-}
-
-bool ngraph::pass::ImplicitBroadcastElimination::run_on_node(std::shared_ptr<ngraph::Node> node)
-{
-    return broadcast_and_replace<op::util::BinaryElementwiseArithmetic>(node) ||
-           broadcast_and_replace<op::util::BinaryElementwiseComparison>(node) ||
-           broadcast_and_replace<op::util::BinaryElementwiseLogical>(node);
 }
