@@ -198,10 +198,12 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
         break;
     }
 
+#if 0
     mkldnn::memory scratchpad(*ctx->mkldnn_scratchpad_mds[primitive_index],
                               executor::global_cpu_engine,
                               ctx->scratchpad_buffer->get_ptr());
     exec_args.insert({MKLDNN_ARG_SCRATCHPAD, scratchpad});
+#endif
 
     mkldnn::stream s(executor::global_cpu_engine);
     try
