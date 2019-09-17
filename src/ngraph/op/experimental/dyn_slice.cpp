@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::DynSlice::type_name{"DynSlice"};
+constexpr NodeTypeInfo op::DynSlice::type_info;
 
 op::DynSlice::DynSlice(const Output<Node>& arg,
                        const Output<Node>& lower_bounds,
@@ -86,9 +86,9 @@ void op::DynSlice::validate_and_infer_types()
     set_input_is_relevant_to_shape(2);
     set_input_is_relevant_to_shape(3);
 
-    auto lower_bounds = dynamic_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr());
-    auto upper_bounds = dynamic_pointer_cast<op::Constant>(input_value(2).get_node_shared_ptr());
-    auto strides = dynamic_pointer_cast<op::Constant>(input_value(3).get_node_shared_ptr());
+    auto lower_bounds = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr());
+    auto upper_bounds = as_type_ptr<op::Constant>(input_value(2).get_node_shared_ptr());
+    auto strides = as_type_ptr<op::Constant>(input_value(3).get_node_shared_ptr());
 
     if (lower_bounds && upper_bounds && strides)
     {
@@ -125,7 +125,8 @@ shared_ptr<Node> op::DynSlice::copy_with_new_args(const NodeVector& new_args) co
                                  m_ellipsis_mask);
 }
 
-void op::DynSlice::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::DynSlice::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                     const NodeVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for DynSlice");
 }

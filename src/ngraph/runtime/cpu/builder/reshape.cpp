@@ -84,27 +84,27 @@ namespace ngraph
                 if (arg_rank == 1)
                 {
                     SELECT_KERNEL_BY_RANK(
-                        kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_1d);
+                        kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_1d)
                 }
                 else if (arg_rank == 2)
                 {
                     SELECT_KERNEL_BY_RANK(
-                        kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_2d);
+                        kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_2d)
                 }
                 else if (arg_rank == 3)
                 {
                     SELECT_KERNEL_BY_RANK(
-                        kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_3d);
+                        kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_3d)
                 }
                 else if (arg_rank == 4)
                 {
                     SELECT_KERNEL_BY_RANK(
-                        kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_4d);
+                        kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_4d)
                 }
                 else
                 {
                     SELECT_KERNEL(
-                        ref_kernel, result_element_type, runtime::cpu::kernel::reshape_ref);
+                        ref_kernel, result_element_type, runtime::cpu::kernel::reshape_ref)
                 }
             }
 
@@ -224,7 +224,7 @@ namespace ngraph
                 else if (skip_reshape)
                 {
                     functor = [&, size, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         if (ctx->buffer_data[out_buffer_index] !=
                             ctx->buffer_data[arg_buffer_index])
                         {
@@ -237,7 +237,7 @@ namespace ngraph
                 else
                 {
                     functor = [&, size, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         memcpy(ctx->buffer_data[out_buffer_index],
                                ctx->buffer_data[arg_buffer_index],
                                size);

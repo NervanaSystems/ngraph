@@ -1202,59 +1202,58 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         return true;
     };
 
-    REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass);
-    REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported);
-    REGISTER_KNOBBED_PASS(ImplicitBroadcastElimination, true, ngraph::pass);
-    REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass);
-    REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass);
-    REGISTER_KNOBBED_PASS(LSTMFusion, true, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(RNNFusion, true, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(AlgebraicSimplification, true, ngraph::pass);
-    REGISTER_KNOBBED_PASS(MultiLayerRNNFusion, true, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(BiDirectionalRnn, true, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(CPURnnMatFusion, true, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(BatchFusion, true, ngraph::pass);
-    REGISTER_KNOBBED_PASS(CPUBatchFusion, true, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(ReshapeSinking, false, ngraph::pass);
-    REGISTER_KNOBBED_PASS(ReshapeElimination, true, ngraph::pass);
-    REGISTER_KNOBBED_PASS(RecurrentReshapeElimination, false, ngraph::pass);
+    REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass)
+    REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported)
+    REGISTER_KNOBBED_PASS(ImplicitBroadcastElimination, true, ngraph::pass)
+    REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass)
+    REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass)
+    REGISTER_KNOBBED_PASS(LSTMFusion, true, runtime::cpu::pass)
+    REGISTER_KNOBBED_PASS(RNNFusion, true, runtime::cpu::pass)
+    REGISTER_KNOBBED_PASS(AlgebraicSimplification, true, ngraph::pass)
+    REGISTER_KNOBBED_PASS(MultiLayerRNNFusion, true, runtime::cpu::pass)
+    REGISTER_KNOBBED_PASS(BiDirectionalRnn, true, runtime::cpu::pass)
+    REGISTER_KNOBBED_PASS(CPURnnMatFusion, true, runtime::cpu::pass)
+    REGISTER_KNOBBED_PASS(BatchFusion, true, ngraph::pass)
+    REGISTER_KNOBBED_PASS(CPUBatchFusion, true, runtime::cpu::pass)
+    REGISTER_KNOBBED_PASS(ReshapeSinking, false, ngraph::pass)
+    REGISTER_KNOBBED_PASS(ReshapeElimination, true, ngraph::pass)
+    REGISTER_KNOBBED_PASS(RecurrentReshapeElimination, false, ngraph::pass)
     REGISTER_KNOBBED_PASS_WITH_ARGS(
-        CoreFusion, true, ngraph::pass, ngraph::pass::FusionType::ALL_FUSIONS);
-    REGISTER_KNOBBED_PASS(CPUPreFusion, true, runtime::cpu::pass);
+        CoreFusion, true, ngraph::pass, ngraph::pass::FusionType::ALL_FUSIONS)
+    REGISTER_KNOBBED_PASS(CPUPreFusion, true, runtime::cpu::pass)
 
     // Disable CPUFusion if MLIR is enabled to preserve core ops.
     if (std::getenv("NGRAPH_MLIR") == nullptr)
     {
-        REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass);
+        REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass)
     }
-    REGISTER_KNOBBED_PASS(CPUQuantFusion, true, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(CPUHorizontalFusion, true, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(CPUCollapseDims, true, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(CPUQuantFusion, true, runtime::cpu::pass)
+    REGISTER_KNOBBED_PASS(CPUHorizontalFusion, true, runtime::cpu::pass)
+    REGISTER_KNOBBED_PASS(CPUCollapseDims, true, runtime::cpu::pass)
 #if defined(NGRAPH_HALIDE)
-    REGISTER_KNOBBED_PASS(HalideSubgraphExtraction, true, ngraph::runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(HalideSubgraphExtraction, true, ngraph::runtime::cpu::pass)
 #endif
 
 #ifdef NGRAPH_MLIR_ENABLE
     if (std::getenv("NGRAPH_MLIR") != nullptr)
     {
-        REGISTER_KNOBBED_PASS(MLIRSubgraphExtractionPass, /*enable by default*/ true, ngraph::pass);
+        REGISTER_KNOBBED_PASS(MLIRSubgraphExtractionPass, /*enable by default*/ true, ngraph::pass)
     }
 #endif
 
     NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
-    REGISTER_KNOBBED_PASS_WITH_ARGS(CPUWorkspaceInsertion, true, runtime::cpu::pass, nv_cwi, false);
-    REGISTER_KNOBBED_PASS_WITH_ARGS(CPUAssignment, true, runtime::cpu::pass, this);
+    REGISTER_KNOBBED_PASS_WITH_ARGS(CPUWorkspaceInsertion, true, runtime::cpu::pass, nv_cwi, false)
+    REGISTER_KNOBBED_PASS_WITH_ARGS(CPUAssignment, true, runtime::cpu::pass, this)
+    REGISTER_KNOBBED_PASS_WITH_ARGS(ConstantFolding, true, ngraph::pass, GetGlobalCFDispatcherCPU())
+    REGISTER_KNOBBED_PASS_WITH_ARGS(CPULayout, true, runtime::cpu::pass, this)
     REGISTER_KNOBBED_PASS_WITH_ARGS(
-        ConstantFolding, true, ngraph::pass, GetGlobalCFDispatcherCPU());
-    REGISTER_KNOBBED_PASS_WITH_ARGS(CPULayout, true, runtime::cpu::pass, this);
+        CommonSubexpressionElimination, true, ngraph::pass, runtime::cpu::get_cse_handlers_map())
+    REGISTER_KNOBBED_PASS(CPUPostLayoutOptimizations, true, runtime::cpu::pass)
+    REGISTER_KNOBBED_PASS(CPUConvertLayoutConstantFolding, true, runtime::cpu::pass)
+    REGISTER_KNOBBED_PASS(CPUMemoryOptimization, true, runtime::cpu::pass)
+    REGISTER_KNOBBED_PASS(GetOutputElementElimination, false, ngraph::pass)
     REGISTER_KNOBBED_PASS_WITH_ARGS(
-        CommonSubexpressionElimination, true, ngraph::pass, runtime::cpu::get_cse_handlers_map());
-    REGISTER_KNOBBED_PASS(CPUPostLayoutOptimizations, true, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(CPUConvertLayoutConstantFolding, true, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(CPUMemoryOptimization, true, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(GetOutputElementElimination, false, ngraph::pass);
-    REGISTER_KNOBBED_PASS_WITH_ARGS(
-        PropagateCacheability, true, ngraph::pass, runtime::cpu::get_annotations_factory());
+        PropagateCacheability, true, ngraph::pass, runtime::cpu::get_annotations_factory())
     bool reuse_memory = pass_config.get_pass_attribute("CPUMemoryAssignment::ReuseMemory") ||
                         pass_config.get_pass_attribute("ReuseMemory");
     pass_manager.register_pass<runtime::cpu::pass::CPUMemoryAssignment>(
@@ -1608,7 +1607,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         function<bool(CPURuntimeContext*)> enable;
         if (disable_caching)
         {
-            enable = [in_stale, out_stale](CPURuntimeContext* ctx) -> bool {
+            enable = [in_stale, out_stale](CPURuntimeContext * /* ctx */) -> bool {
                 for (auto& stale : out_stale)
                 {
                     stale.get() = true;
@@ -1618,7 +1617,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         }
         else
         {
-            enable = [in_stale, out_stale](CPURuntimeContext* ctx) -> bool {
+            enable = [in_stale, out_stale](CPURuntimeContext * /* ctx */) -> bool {
                 bool en = false;
                 for (const auto& stale : in_stale)
                 {
@@ -1745,14 +1744,15 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
                     nodename_tbbnode_map;
                 tbb::flow::continue_node<tbb::flow::continue_msg>* flowgraph_node_start =
                     new tbb::flow::continue_node<tbb::flow::continue_msg>(
-                        *(ctx->G), [&](const tbb::flow::continue_msg& msg) {});
+                        *(ctx->G), [&](const tbb::flow::continue_msg& /* msg */) {});
                 auto it = enable_nodename_list.begin();
                 for (const auto& p : enables)
                 {
                     auto index = profiler_count++;
                     tbb::flow::continue_node<tbb::flow::continue_msg>* flowgraph_node =
                         new tbb::flow::continue_node<tbb::flow::continue_msg>(
-                            *(ctx->G), [&, functor, index](const tbb::flow::continue_msg& msg) {
+                            *(ctx->G),
+                            [&, functor, index](const tbb::flow::continue_msg& /* msg */) {
                                 if (p(ctx) || ctx->first_iteration)
                                 {
                                     if (runtime::cpu::IsTracingEnabled() || m_emit_timing)
@@ -2091,8 +2091,8 @@ void runtime::cpu::CPU_ExternalFunction::write_to_file(const std::string& code,
 void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
     CodeWriter& writer,
     Node* node,
-    const std::vector<TensorViewWrapper>& in,
-    const std::vector<TensorViewWrapper>& out)
+    const std::vector<TensorViewWrapper>& /* in */,
+    const std::vector<TensorViewWrapper>& /* out */)
 {
     if (m_emit_timing)
     {
@@ -2103,8 +2103,8 @@ void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
 void runtime::cpu::CPU_ExternalFunction::emit_debug_function_exit(
     CodeWriter& writer,
     Node* node,
-    const std::vector<TensorViewWrapper>& in,
-    const std::vector<TensorViewWrapper>& out)
+    const std::vector<TensorViewWrapper>& /* in */,
+    const std::vector<TensorViewWrapper>& /* out */)
 {
     if (m_emit_timing)
     {

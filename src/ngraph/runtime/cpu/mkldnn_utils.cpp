@@ -113,7 +113,7 @@ bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const ngraph::element::Typ
 }
 
 bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const Shape& dims,
-                                                      const Strides& strides,
+                                                      const Strides& /* strides */,
                                                       const ngraph::element::Type type)
 {
     auto it = get_mkldnn_data_type_map().find(type);
@@ -510,22 +510,22 @@ memory::desc runtime::cpu::mkldnn_utils::try_get_named_md(const mkldnn_memory_de
         return get_named_md(md, X);
     switch (md.ndims)
     {
-    case 1: CANONICALIZE_MD(mkldnn_x); break;
-    case 2: CANONICALIZE_MD(mkldnn_nc); break;
+    case 1: CANONICALIZE_MD(mkldnn_x) break;
+    case 2: CANONICALIZE_MD(mkldnn_nc) break;
     case 3:
-        CANONICALIZE_MD(mkldnn_tnc);
-        CANONICALIZE_MD(mkldnn_ntc);
+        CANONICALIZE_MD(mkldnn_tnc)
+        CANONICALIZE_MD(mkldnn_ntc)
         break;
     case 4:
-        CANONICALIZE_MD(mkldnn_nchw);
-        CANONICALIZE_MD(mkldnn_nhwc);
-        CANONICALIZE_MD(mkldnn_nChw8c);
-        CANONICALIZE_MD(mkldnn_nChw16c);
+        CANONICALIZE_MD(mkldnn_nchw)
+        CANONICALIZE_MD(mkldnn_nhwc)
+        CANONICALIZE_MD(mkldnn_nChw8c)
+        CANONICALIZE_MD(mkldnn_nChw16c)
         break;
     case 5:
-        CANONICALIZE_MD(mkldnn_ncdhw);
-        CANONICALIZE_MD(mkldnn_ndhwc);
-        CANONICALIZE_MD(mkldnn_nCdhw16c);
+        CANONICALIZE_MD(mkldnn_ncdhw)
+        CANONICALIZE_MD(mkldnn_ndhwc)
+        CANONICALIZE_MD(mkldnn_nCdhw16c)
         break;
     default:;
     }

@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Ceiling::type_name{"Ceiling"};
+constexpr NodeTypeInfo op::Ceiling::type_info;
 
 op::Ceiling::Ceiling(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)

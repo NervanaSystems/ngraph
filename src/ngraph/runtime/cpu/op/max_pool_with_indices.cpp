@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::MaxPoolWithIndices::type_name{"MaxPoolWithIndices"};
+constexpr NodeTypeInfo op::MaxPoolWithIndices::type_info;
 
 op::MaxPoolWithIndices::MaxPoolWithIndices(const Output<Node>& arg,
                                            const Shape& window_shape,
@@ -182,7 +182,7 @@ shared_ptr<Node> op::MaxPoolWithIndices::copy_with_new_args(const NodeVector& ne
                                                 m_padding_above);
 }
 
-const string op::MaxPoolWithIndicesBackprop::type_name{"MaxPoolWithIndicesBackprop"};
+constexpr NodeTypeInfo op::MaxPoolWithIndicesBackprop::type_info;
 
 op::MaxPoolWithIndicesBackprop::MaxPoolWithIndicesBackprop(const Output<Node>& arg_forward,
                                                            const Output<Node>& delta,
@@ -358,8 +358,8 @@ shared_ptr<Node>
                                                        m_padding_above);
 }
 
-void op::MaxPoolWithIndices::generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas)
+void op::MaxPoolWithIndices::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                               const NodeVector& /* deltas */)
 {
     throw ngraph_error("Differentation of MaxPoolWithIndices isn't supported");
 }

@@ -30,8 +30,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"Convolution", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a batched convolution operation.
             Convolution() = default;
             /// \brief Constructs a batched convolution operation.
@@ -195,8 +195,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"ConvolutionBackpropData", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a batched-convolution data batch-backprop operation.
             ConvolutionBackpropData() = default;
             /// \brief Constructs a batched-convolution data batch-backprop operation.
@@ -296,8 +296,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"ConvolutionBackpropFilters", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a batched-convolution filter-backprop operation.
             ConvolutionBackpropFilters() = default;
             /// \brief Constructs a batched-convolution filter-backprop operation.
