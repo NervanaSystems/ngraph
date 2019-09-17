@@ -70,7 +70,7 @@ std::shared_ptr<Function>
     ParameterVector new_parameters = f->get_parameters();
     for (size_t i = 0; i < new_parameters.size(); i++)
     {
-        new_parameters[i] = std::dynamic_pointer_cast<op::Parameter>(m[new_parameters[i].get()]);
+        new_parameters[i] = as_type_ptr<op::Parameter>(m[new_parameters[i].get()]);
 
         // If the replacement for a Parameter is not itself a Parameter, we must have replaced it
         // with a constant. We will insert a dead Parameter into the clone's parameters, in order

@@ -306,7 +306,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function&
     ResultVector cloned_results;
     for (shared_ptr<Node> node : func.get_results())
     {
-        auto result = std::dynamic_pointer_cast<op::Result>(node_map.at(node.get()));
+        auto result = as_type_ptr<op::Result>(node_map.at(node.get()));
         if (!result)
         {
             throw ngraph_error("Results should be of type op::Result");
@@ -316,7 +316,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function&
     std::vector<std::shared_ptr<op::Parameter>> cloned_params;
     for (auto param : func.get_parameters())
     {
-        cloned_params.push_back(std::dynamic_pointer_cast<op::Parameter>(node_map.at(param.get())));
+        cloned_params.push_back(as_type_ptr<op::Parameter>(node_map.at(param.get())));
     }
 
     // create and return cloned function
@@ -325,7 +325,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function&
 
 bool ngraph::is_equal_to_const_value(std::string const_value, const Output<Node>& reduce_constant)
 {
-    if (auto rc = dynamic_pointer_cast<ngraph::op::Constant>(reduce_constant.get_node_shared_ptr()))
+    if (auto rc = as_type_ptr<ngraph::op::Constant>(reduce_constant.get_node_shared_ptr()))
     {
         auto cshape = rc->get_shape();
         size_t n = shape_size(cshape);
