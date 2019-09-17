@@ -4,7 +4,7 @@
 # Default rule: @diyessi gets everything.
 *                                   @diyessi
 
-/cmake/                             @rkimballn1 @silee2 @aslepko
+/cmake/                             @silee2 @aslepko
 
 /.ci/                               @aslepko
 /.ci/travis/                        @aslepko @postrational
@@ -51,8 +51,6 @@ project/doc-contributor-README.rst  @indie
 /src/contrib/mlir/                  @nmostafa @dcaballe
 /src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv @jbobba
 /src/ngraph/runtime/dynamic/        @aprocter
-/src/ngraph/runtime/gpu/            @rkimballn1
-/src/ngraph/runtime/hybrid/         @rkimballn1
 /src/ngraph/runtime/intelgpu/       @dmyershov
 /src/ngraph/runtime/interpreter/    @rkimballn1
 /src/ngraph/runtime/plaidml/        @earhart @dgkutnic
@@ -64,7 +62,7 @@ project/doc-contributor-README.rst  @indie
 /test/backend/distributed.in.cpp    @wenzhe-nrv @diyessi @jianyinglang
 
 # Putting this last so it's not overridden by directory rules
-CMakeLists.txt                      @rkimballn1 @silee2
+CMakeLists.txt                      @silee2
 
 # Putting this last to make sure nothing else overrides.
 /CODEOWNERS                         @diyessi
