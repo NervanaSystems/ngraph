@@ -104,13 +104,19 @@ namespace
             // Convert the original function arguments.
             TypeConverter::SignatureConversion result(type.getNumInputs());
             for (unsigned i = 0, e = type.getNumInputs(); i != e; ++i)
+            {
                 if (failed(converter.convertSignatureArg(i, type.getInput(i), result)))
+                {
                     return matchFailure();
+                }
+            }
 
             // Convert the original function results.
             SmallVector<Type, 4> convertedResults;
             if (failed(converter.convertTypes(type.getResults(), convertedResults)))
+            {
                 return matchFailure();
+            }
 
             // Add result types as input args without mapping
             result.addInputs(convertedResults);
@@ -139,16 +145,16 @@ namespace
                              DialectLoweringPass& pass);
 
     template <typename OP>
-    void lower_binary_elementwise(Operation* op,
-                                  ArrayRef<Value*> operands,
-                                  PatternRewriter& rewriter,
-                                  DialectLoweringPass& pass);
+    void lowerBinaryElementwise(Operation* op,
+                                ArrayRef<Value*> operands,
+                                PatternRewriter& rewriter,
+                                DialectLoweringPass& pass);
 
     template <typename OP>
-    void lower_unary_elementwise(Operation* op,
-                                 ArrayRef<Value*> operands,
-                                 PatternRewriter& rewriter,
-                                 DialectLoweringPass& pass);
+    void lowerUnaryElementwise(Operation* op,
+                               ArrayRef<Value*> operands,
+                               PatternRewriter& rewriter,
+                               DialectLoweringPass& pass);
 
     ValueHandle createZeroConstant(mlir::Type type);
 
@@ -376,49 +382,49 @@ namespace
 
     REWRITER(NGAddOp)
     {
-        lower_binary_elementwise<mlir::NGAddOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGAddOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGSubOp)
     {
-        lower_binary_elementwise<mlir::NGSubOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGSubOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGMulOp)
     {
-        lower_binary_elementwise<mlir::NGMulOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGMulOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGDivOp)
     {
-        lower_binary_elementwise<mlir::NGDivOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGDivOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGGreaterOp)
     {
-        lower_binary_elementwise<mlir::NGGreaterOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGGreaterOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGLessOp)
     {
-        lower_binary_elementwise<mlir::NGLessOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGLessOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGMaxOp)
     {
-        lower_binary_elementwise<mlir::NGMaxOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGMaxOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGMinOp)
     {
-        lower_binary_elementwise<mlir::NGMinOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGMinOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
@@ -477,7 +483,7 @@ namespace
     // Negative
     REWRITER(NGNegOp)
     {
-        lower_unary_elementwise<mlir::NGNegOp>(op, operands, rewriter, pass);
+        lowerUnaryElementwise<mlir::NGNegOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
@@ -1037,10 +1043,10 @@ namespace
 #undef REWRITER
     /// End of pattern matchers
     template <typename OP>
-    void lower_unary_elementwise(Operation* op,
-                                 ArrayRef<Value*> operands,
-                                 PatternRewriter& rewriter,
-                                 DialectLoweringPass& pass)
+    void lowerUnaryElementwise(Operation* op,
+                               ArrayRef<Value*> operands,
+                               PatternRewriter& rewriter,
+                               DialectLoweringPass& pass)
     {
         auto loc = cast<OP>(op).getLoc();
 
@@ -1086,10 +1092,10 @@ namespace
     }
 
     template <typename OP>
-    void lower_binary_elementwise(Operation* op,
-                                  ArrayRef<Value*> operands,
-                                  PatternRewriter& rewriter,
-                                  DialectLoweringPass& pass)
+    void lowerBinaryElementwise(Operation* op,
+                                ArrayRef<Value*> operands,
+                                PatternRewriter& rewriter,
+                                DialectLoweringPass& pass)
     {
         auto loc = cast<OP>(op).getLoc();
         auto result = pass.buildOutputDefs(op, rewriter)[0];
@@ -1225,7 +1231,9 @@ namespace
                 for (auto i = 0; i < vArg.rank(); i++)
                 {
                     if (i != axis)
+                    {
                         nonRedIVs.push_back(allIVs[i]);
+                    }
                 }
 
                 // Load current min index with integer data type and convert it to index data type.
