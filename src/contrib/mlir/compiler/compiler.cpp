@@ -720,7 +720,7 @@ void MLIRCompiler::execute()
     // uniformity reasons, it takes a list of type-erased pointers to arguments.
     // Please, note that 'invoke' method is overloaded with a parameter pack version.
     // Make sure the MutableArrayRef version is invoked.
-    auto invocationResult = m_engine->invoke("main", llvm::MutableArrayRef<void*>(m_invoke_args));
+    auto invocationResult = m_engine->invoke("main", llvm::MutableArrayRef<void*>(m_invokeArgs));
 
     if (clDumpObjectFile)
     {
