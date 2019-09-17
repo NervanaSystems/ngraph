@@ -44,6 +44,12 @@ using namespace ngraph;
 
 using ReshapeMap = unordered_map<shared_ptr<Node>, shared_ptr<op::Reshape>>;
 
+extern template ngraph::Shape ngraph::apply_permutation<ngraph::Shape>(ngraph::Shape input,
+                                                                       ngraph::AxisVector order);
+extern template ngraph::CoordinateDiff
+    ngraph::apply_permutation<ngraph::CoordinateDiff>(ngraph::CoordinateDiff input,
+                                                      ngraph::AxisVector order);
+
 static string describe_reshape(shared_ptr<Node> node)
 {
     stringstream ss;
