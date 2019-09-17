@@ -81,6 +81,10 @@
 
 </head>
 
+
+<body> <div id="menu-float" class="menu-float"><a href="https://www.ngraph.ai">Home</a><a href="#">Docs</a><a href="https://www.ngraph.ai/tutorials">Tutorials</a><a href="https://www.ngraph.ai/ecosystem">Ecosystem</a><a href="https://ngraph.slack.com/">Slack<a><a href="https://github.com/NervanaSystems/ngraph/blob/master/LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a><img src="https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master"></div></body>
+
+
 <body class="wy-body-for-nav" role="document">
 
   <div class="wy-grid-for-nav">
@@ -99,7 +103,7 @@
 
           {% if logo %}
             {# Not strictly valid HTML, but it's the only way to display/scale it properly, without weird scripting or heaps of work #}
-            <img src="{{ pathto('_static/' + logo, 1) }}" class="logo" />
+            <br/><img src="{{ pathto('_static/' + logo, 1) }}" class="logo" />
 	    {{ project }}
           {% endif %}
           </a>
