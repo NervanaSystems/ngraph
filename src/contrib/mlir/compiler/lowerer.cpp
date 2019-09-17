@@ -67,7 +67,7 @@ namespace
     };
 
 // Conversion classes declarations
-#define MLIR_OP(OP)                                                                                \
+#define MLIR_OP(OP, INPLACE)                                                                       \
     class OP##Conversion : public NGraphOpLowering                                                 \
     {                                                                                              \
     public:                                                                                        \
@@ -198,6 +198,12 @@ namespace
         NGraphTypeConverter typeConverter;
         // List of temporary memrefs to deallocate at end of function
         SmallVector<Value*, 4> memRefsToDealloc;
+
+        // Ops maybe assigned mem-refs in previous memory optimization passes.
+        // Track pre-assigned buffers  for each Value and re-use it if one is available.
+        using IdToMemRefMap = std::unordered_map<unsigned, Value*>;
+        IdToMemRefMap m_id_to_memref;
+
         ngmlir::MLIRCompiler& compiler;
     };
 
@@ -236,8 +242,8 @@ namespace
     void DialectLoweringPass::populateNGraphToAffineConversionPatterns(
         OwningRewritePatternList& patterns)
     {
-#define MLIR_OP(OP) OP##Conversion,
-#define MLIR_LAST_OP(OP) OP##Conversion
+#define MLIR_OP(OP, INPLACE) OP##Conversion,
+#define MLIR_LAST_OP(OP, INPLACE) OP##Conversion
         patterns.insert<
 #include "op_lowerers.inc"
             >(&getContext(), *this);
@@ -288,7 +294,30 @@ namespace
             else
             {
                 auto tensorType = origResult->getType().cast<NGTensorType>();
-                auto newResult = createTempTensor(typeConverter.convertType(tensorType), rewriter);
+                Value* newResult;
+                Attribute bufferIdAttr = getBufferId(op);
+                if (!bufferIdAttr)
+                {
+                    // Allocate new memref
+                    newResult = createTempTensor(typeConverter.convertType(tensorType), rewriter);
+                }
+                else
+                {
+                    unsigned bufferId = bufferIdAttr.cast<IntegerAttr>().getInt();
+                    // Re-use a memref if it exist, else create a new one and update map
+                    IdToMemRefMap::iterator it = m_id_to_memref.find(bufferId);
+                    if (it == m_id_to_memref.end())
+                    {
+                        // create a new memref
+                        newResult =
+                            createTempTensor(typeConverter.convertType(tensorType), rewriter);
+                        m_id_to_memref[bufferId] = newResult;
+                    }
+                    else
+                    {
+                        newResult = it->second;
+                    }
+                }
                 newResults.push_back(newResult);
             }
         }
