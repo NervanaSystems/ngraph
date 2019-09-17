@@ -82,8 +82,10 @@ namespace ngraph
             public:
                 void validate_and_infer_types() override;
 
-                const AutoBroadcastSpec& get_autob() const { return m_autob; }
+                const AutoBroadcastSpec& get_autob() const override { return m_autob; }
                 void set_autob(const AutoBroadcastSpec& autob) { m_autob = autob; }
+                bool is_binary_elementwise_arithmetic() const override { return true; }
+                bool supports_auto_broadcast() const override { return true; }
             private:
                 AutoBroadcastSpec m_autob;
             };
