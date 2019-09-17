@@ -489,7 +489,7 @@ namespace ngraph
         size_t m_placement_index = placement_invalid;
     };
 
-    /// Casts a Node* to a NodePtr* if it is of type NodePtr, nullptr otherwise
+    /// Casts a Node* to a NodeType* if it is of type NodeType, nullptr otherwise
     template <typename NodeType>
     NodeType* as_type(Node* node)
     {
