@@ -52,7 +52,7 @@ Function::Function(const OutputVector& results,
     , m_unique_name("Function_" + to_string(m_instance_id))
 {
     if (std::any_of(results.cbegin(), results.cend(), [](Output<Node> n) {
-            return std::dynamic_pointer_cast<op::Result>(n.get_node_shared_ptr());
+            return as_type_ptr<op::Result>(n.get_node_shared_ptr());
         }))
     {
         throw ngraph_error(
@@ -76,7 +76,7 @@ Function::Function(const NodeVector& results,
     , m_unique_name("Function_" + to_string(m_instance_id))
 {
     if (std::any_of(results.cbegin(), results.cend(), [](std::shared_ptr<Node> n) {
-            return std::dynamic_pointer_cast<op::Result>(n);
+            return as_type_ptr<op::Result>(n);
         }))
     {
         throw ngraph_error(

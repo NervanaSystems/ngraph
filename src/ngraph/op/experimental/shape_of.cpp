@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::ShapeOf::type_name{"ShapeOf"};
+constexpr NodeTypeInfo op::ShapeOf::type_info;
 
 op::ShapeOf::ShapeOf(const Output<Node>& arg)
     : Op({arg})

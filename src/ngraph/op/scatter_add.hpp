@@ -27,8 +27,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"ScatterAdd", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             ScatterAdd() = default;
             /// \param inputs Tensor
             /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
@@ -43,7 +43,8 @@ namespace ngraph
 
             void validate_and_infer_types() override;
 
-            void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override
+            void generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                   const NodeVector& /* deltas */) override
             {
                 throw ngraph_error("Not yet implemented");
             }

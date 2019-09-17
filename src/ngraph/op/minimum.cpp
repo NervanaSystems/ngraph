@@ -25,7 +25,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Minimum::type_name{"Minimum"};
+constexpr NodeTypeInfo op::Minimum::type_info;
 
 op::Minimum::Minimum(const Output<Node>& arg0,
                      const Output<Node>& arg1,
