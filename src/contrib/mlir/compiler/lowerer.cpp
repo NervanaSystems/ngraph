@@ -800,7 +800,7 @@ namespace
         //           Output[n, k, r_1, .. r_f] +=
         //             Images[n, c, i_1 + j_1, .. i_f + j_f] * Filters[k, c, j_1, .. j_f]
 
-        // With padding, we check (using IntegerSets) whether each spatial dim in Images lie inside 
+        // With padding, we check (using IntegerSets) whether each spatial dim in Images lie inside
         // non-padded spatial region. If true, we perform the computation:
         //
         //         for <j_1 .. j_f> : <0 .. 0> -> <F_1 .. F_f>
