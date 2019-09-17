@@ -326,26 +326,57 @@
     functors.emplace_back(functor);
 
 #define BUILD_BINARY_ELEMWISE_FUNCTOR(OP)                                                          \
-    auto& functors = external_function->get_functors();                                            \
-    std::function<void(void*, void*, void*, size_t, int)> kernel;                                  \
+    if (args[0].get_element_type() == element::bf16)                                               \
+    {                                                                                              \
+        auto& functors = external_function->get_functors();                                        \
+        std::function<void(void*, void*, void*, size_t, int)> kernel;                              \
+        kernel = OP<float>;                                                                        \
                                                                                                    \
-    SELECT_KERNEL(kernel, args[0].get_element_type(), OP);                                         \
+        auto element_count = out[0].get_size();                                                    \
+        auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());          \
+        auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());          \
+        auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());           \
                                                                                                    \
-    auto element_count = out[0].get_size();                                                        \
-    auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());              \
-    auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());              \
-    auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());               \
-                                                                                                   \
-    auto functor =                                                                                 \
-        [&, kernel, element_count, arg0_buffer_index, arg1_buffer_index, out0_buffer_index](       \
-            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {                                   \
-            kernel(ctx->buffer_data[arg0_buffer_index],                                            \
-                   ctx->buffer_data[arg1_buffer_index],                                            \
-                   ctx->buffer_data[out0_buffer_index],                                            \
-                   element_count,                                                                  \
-                   ectx->arena);                                                                   \
+        auto functor = [&,                                                                         \
+                        kernel,                                                                    \
+                        element_count,                                                             \
+                        arg0_buffer_index,                                                         \
+                        arg1_buffer_index,                                                         \
+                        out0_buffer_index](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {    \
+            void* fp_src1 = std::malloc(element_count * 4);                                        \
+            void* fp_src2 = std::malloc(element_count * 4);                                        \
+            void* dst = std::malloc(element_count * 4);                                            \
+            ngraph::bf16_to_float(ctx->buffer_data[arg0_buffer_index], fp_src1, element_count);    \
+            ngraph::bf16_to_float(ctx->buffer_data[arg1_buffer_index], fp_src2, element_count);    \
+            kernel(fp_src1, fp_src2, dst, element_count, ectx->arena);                             \
+            ngraph::float_to_bf16(                                                                 \
+                dst, ctx->buffer_data[out0_buffer_index], (element_count * 4) / 2);                \
         };                                                                                         \
-    functors.emplace_back(functor);
+        functors.emplace_back(functor);                                                            \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+        auto& functors = external_function->get_functors();                                        \
+        std::function<void(void*, void*, void*, size_t, int)> kernel;                              \
+                                                                                                   \
+        SELECT_KERNEL(kernel, args[0].get_element_type(), OP);                                     \
+                                                                                                   \
+        auto element_count = out[0].get_size();                                                    \
+        auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());          \
+        auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());          \
+        auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());           \
+                                                                                                   \
+        auto functor =                                                                             \
+            [&, kernel, element_count, arg0_buffer_index, arg1_buffer_index, out0_buffer_index](   \
+                CPURuntimeContext* ctx, CPUExecutionContext* ectx) {                               \
+                kernel(ctx->buffer_data[arg0_buffer_index],                                        \
+                       ctx->buffer_data[arg1_buffer_index],                                        \
+                       ctx->buffer_data[out0_buffer_index],                                        \
+                       element_count,                                                              \
+                       ectx->arena);                                                               \
+            };                                                                                     \
+        functors.emplace_back(functor);                                                            \
+    }
 
 #define BUILD_UNARY_ELEMWISE_CF_FUNCTOR(OP)                                                        \
     std::function<void(void*, void*, size_t, int)> kernel;                                         \

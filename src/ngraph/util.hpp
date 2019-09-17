@@ -89,6 +89,10 @@ namespace ngraph
         return ss.str();
     }
 
+    void float_to_bf16(void* src, void* dst, int size);
+
+    void bf16_to_float(void* src, void* dst, int size);
+
     class stopwatch
     {
     public:

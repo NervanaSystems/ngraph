@@ -613,3 +613,35 @@ void ngraph::parse_version_string(
         throw runtime_error("Error parsing version string '" + version + "'");
     }
 }
+
+//
+//                f32 Mantissa
+//             <---------------------->
+//               bf16 Mantissa
+//   S   E      <------>
+//   0|00011110|0101010|1000011111111000
+//   1. Right shift number >> 16 which gives 0|00011110|0101010
+//   2. Logical & with 0xffff gives     &    1|11111111|1111111
+//                                         ---------------------
+//                                           0|00011110|0101010
+void ngraph::float_to_bf16(void* src, void* dst, int size)
+{
+    int* a = static_cast<int*>(src);
+    char16_t* b = static_cast<char16_t*>(dst);
+
+    for (; size != 0; b++, size--, a++)
+    {
+        *b = (a[0] >> 16) & 0xffff;
+    }
+}
+
+void ngraph::bf16_to_float(void* src, void* dst, int size)
+{
+    char16_t* a = static_cast<char16_t*>(src);
+    int* b = static_cast<int*>(dst);
+
+    for (; size != 0; a++, b++, size--)
+    {
+        *b = (a[0] & 0xffff) << 16;
+    }
+}
