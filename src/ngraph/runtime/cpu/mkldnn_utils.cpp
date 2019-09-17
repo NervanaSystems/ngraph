@@ -541,7 +541,7 @@ memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& i
     md.format = mkldnn_blocked;
     md.data_type = in.data.data_type;
 
-    for (size_t i = 0; i < in.data.ndims; i++)
+    for (int i = 0; i < in.data.ndims; i++)
     {
         md.layout_desc.blocking.block_dims[i] =
             in.data.layout_desc.blocking.block_dims[axis_order[i]];
@@ -564,7 +564,7 @@ memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& i
 memory::desc runtime::cpu::mkldnn_utils::squeeze_blocked_md(const memory::desc& in,
                                                             AxisVector& axis_list)
 {
-    if (in.data.ndims <= axis_list.size())
+    if (in.data.ndims <= static_cast<int64_t>(axis_list.size()))
     {
         throw ngraph_error("Squeezing too many axes: input " + to_string(in.data.ndims) +
                            " , removing " + to_string(axis_list.size()));
@@ -585,9 +585,9 @@ memory::desc runtime::cpu::mkldnn_utils::squeeze_blocked_md(const memory::desc& 
     md.data_type = in.data.data_type;
 
     size_t k = 0;
-    for (size_t i = 0, j = 0; i < in.data.ndims; i++)
+    for (int64_t i = 0, j = 0; i < in.data.ndims; i++)
     {
-        if (k < axis_list.size() && i == axis_list[k])
+        if (k < axis_list.size() && i == static_cast<int64_t>(axis_list[k]))
         {
             k++;
             continue;
@@ -618,9 +618,9 @@ memory::desc runtime::cpu::mkldnn_utils::expand_blocked_md(const memory::desc& i
     md.data_type = in.data.data_type;
 
     size_t k = 0;
-    for (size_t i = 0, j = 0; j < md.ndims; j++)
+    for (int64_t i = 0, j = 0; j < md.ndims; j++)
     {
-        if (k < axis_list.size() && j == axis_list[k])
+        if (k < axis_list.size() && j == static_cast<int64_t>(axis_list[k]))
         {
             k++;
             md.dims[j] = 1;
@@ -639,7 +639,7 @@ memory::desc runtime::cpu::mkldnn_utils::expand_blocked_md(const memory::desc& i
                 md.layout_desc.blocking.strides[1][j] =
                     in.data.layout_desc.blocking.strides[0][in.data.ndims - 1];
                 size_t nelems = 1;
-                for (size_t idx = 0; idx < in.data.ndims; idx++)
+                for (int64_t idx = 0; idx < in.data.ndims; idx++)
                     nelems *= in.data.layout_desc.blocking.padding_dims[idx];
                 md.layout_desc.blocking.strides[0][j] = nelems;
             }
@@ -684,7 +684,7 @@ bool runtime::cpu::mkldnn_utils::compare_mkldnn_mds(const mkldnn::memory::desc& 
 bool runtime::cpu::mkldnn_utils::is_mkldnn_padded_layout(const mkldnn::memory::desc& in,
                                                          const AxisVector& axis_list)
 {
-    for (size_t i = 0; i < in.data.ndims; i++)
+    for (int64_t i = 0; i < in.data.ndims; i++)
     {
         if (std::find(axis_list.begin(), axis_list.end(), i) == axis_list.end())
         {

@@ -50,28 +50,32 @@ namespace ngraph
                     // round
                     if (round_mode == op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY)
                     {
-                        auto abs_qvalue = std::fabs(qvalue);
-                        auto abs_qvalue_toward_inf = std::floor(abs_qvalue + 0.5);
-                        qvalue = (qvalue < 0.0) ? -abs_qvalue_toward_inf : abs_qvalue_toward_inf;
+                        REAL abs_qvalue = std::fabs(qvalue);
+                        REAL abs_qvalue_toward_inf =
+                            std::floor(abs_qvalue + static_cast<REAL>(0.5));
+                        qvalue = (qvalue < static_cast<REAL>(0.0)) ? -abs_qvalue_toward_inf
+                                                                   : abs_qvalue_toward_inf;
                     }
                     else if (round_mode == op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_ZERO)
                     {
                         auto abs_qvalue = std::fabs(qvalue);
-                        auto abs_qvalue_toward_zero = std::ceil(abs_qvalue - 0.5);
-                        qvalue = (qvalue < 0.0) ? -abs_qvalue_toward_zero : abs_qvalue_toward_zero;
+                        auto abs_qvalue_toward_zero =
+                            std::ceil(abs_qvalue - static_cast<REAL>(0.5));
+                        qvalue = (qvalue < static_cast<REAL>(0.0)) ? -abs_qvalue_toward_zero
+                                                                   : abs_qvalue_toward_zero;
                     }
                     else if (round_mode == op::Quantize::RoundMode::ROUND_NEAREST_UPWARD)
                     {
-                        qvalue = std::floor(qvalue + 0.5);
+                        qvalue = std::floor(qvalue + static_cast<REAL>(0.5));
                     }
                     else if (round_mode == op::Quantize::RoundMode::ROUND_NEAREST_DOWNWARD)
                     {
-                        qvalue = std::ceil(qvalue - 0.5);
+                        qvalue = std::ceil(qvalue - static_cast<REAL>(0.5));
                     }
                     else if (round_mode == op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN)
                     {
-                        auto up_qvalue = std::floor(qvalue + 0.5);
-                        auto dn_qvalue = std::ceil(qvalue - 0.5);
+                        auto up_qvalue = std::floor(qvalue + static_cast<REAL>(0.5));
+                        auto dn_qvalue = std::ceil(qvalue - static_cast<REAL>(0.5));
                         auto rem = std::fmod(up_qvalue, 2.0);
                         qvalue = (rem == 0.0) ? up_qvalue : dn_qvalue;
                     }
@@ -79,13 +83,15 @@ namespace ngraph
                     {
                         auto abs_qvalue = std::fabs(qvalue);
                         auto abs_qvalue_toward_inf = std::ceil(abs_qvalue);
-                        qvalue = (qvalue < 0.0) ? -abs_qvalue_toward_inf : abs_qvalue_toward_inf;
+                        qvalue = (qvalue < static_cast<REAL>(0.0)) ? -abs_qvalue_toward_inf
+                                                                   : abs_qvalue_toward_inf;
                     }
                     else if (round_mode == op::Quantize::RoundMode::ROUND_TOWARD_ZERO)
                     {
                         auto abs_qvalue = std::fabs(qvalue);
                         auto abs_qvalue_toward_zero = std::floor(abs_qvalue);
-                        qvalue = (qvalue < 0.0) ? -abs_qvalue_toward_zero : abs_qvalue_toward_zero;
+                        qvalue = (qvalue < static_cast<REAL>(0.0)) ? -abs_qvalue_toward_zero
+                                                                   : abs_qvalue_toward_zero;
                     }
                     else if (round_mode == op::Quantize::RoundMode::ROUND_UP)
                     {
