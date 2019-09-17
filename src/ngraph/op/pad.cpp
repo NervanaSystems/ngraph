@@ -161,7 +161,8 @@ shared_ptr<Node> op::v0::Pad::copy_with_new_args(const NodeVector& new_args) con
 
    and push that back.
 */
-void op::v0::Pad::generate_adjoints(autodiff::Adjoints& /* adjoints */, const NodeVector& /* deltas */)
+void op::v0::Pad::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                    const NodeVector& /* deltas */)
 {
     throw invalid_argument("Autodiff is not yet implemented for Pad");
 }
@@ -264,25 +265,20 @@ void op::v1::Pad::validate_and_infer_types()
 
     const auto& pads_begin_shape = get_input_partial_shape(1);
     const auto& pads_begin_rank = pads_begin_shape.rank();
-    if (pads_begin_rank.is_static())
-    {
-        NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(pads_begin_rank) == 1,
-                              "Argument for pads_begin is not 1D (shape: ",
-                              pads_begin_rank,
-                              ").");
-    }
+
+    NODE_VALIDATION_CHECK(this,
+                          pads_begin_rank.compatible(1),
+                          "Argument for pads_begin is not 1D (shape: ",
+                          pads_begin_rank,
+                          ").");
 
     const auto& pads_end_shape = get_input_partial_shape(2);
     const auto& pads_end_rank = pads_end_shape.rank();
-    if (pads_end_rank.is_static())
-    {
-        NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(pads_end_rank) == 1,
-                              "Argument for pads_end is not 1D (shape: ",
-                              pads_end_rank,
-                              ").");
-    }
+    NODE_VALIDATION_CHECK(this,
+                          pads_end_rank.compatible(1),
+                          "Argument for pads_end is not 1D (shape: ",
+                          pads_end_rank,
+                          ").");
 
     const auto& arg_shape = get_input_partial_shape(0);
     const auto& arg_shape_rank = arg_shape.rank();
