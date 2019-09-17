@@ -1046,7 +1046,7 @@ namespace ngraph
                     if (in_place_oi_pairs.size() > 0)
                     {
                         auto offset = 0;
-                        for (auto i = 0; i < args.size(); i++)
+                        for (size_t i = 0; i < args.size(); i++)
                         {
                             writer << "if (" << args[i].get_name() << " < " << out[0].get_name()
                                    << " || " << args[i].get_name() << " >= " << out[0].get_name()

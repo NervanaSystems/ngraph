@@ -35,7 +35,8 @@ namespace ngraph
                     const auto& input_shape = input->get_shape();
                     auto axis = node.get_attribute_value<std::int64_t>("axis", 1);
 
-                    ASSERT_VALID_ARGUMENT(node, axis >= 0 && axis < input_shape.size())
+                    ASSERT_VALID_ARGUMENT(
+                        node, axis >= 0 && axis < static_cast<int64_t>(input_shape.size()))
                         << "The provided axis value " << axis
                         << " does not match the input tensor dimensions";
 

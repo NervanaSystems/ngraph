@@ -64,9 +64,11 @@ namespace ngraph
 
                     int64_t groups{node.get_attribute_value<int64_t>("group", 1)};
 
-                    ASSERT_VALID_ARGUMENT(node,
-                                          ((groups >= 0) && (groups <= data->get_shape().at(1)) &&
-                                           (groups <= filters->get_shape().at(0))))
+                    ASSERT_VALID_ARGUMENT(
+                        node,
+                        ((groups >= 0) &&
+                         (groups <= static_cast<int64_t>(data->get_shape().at(1))) &&
+                         (groups <= static_cast<int64_t>(filters->get_shape().at(0)))))
                         << "incorrect value of 'group' attribute: " << groups;
 
                     std::size_t n_data_channels{data_shape.at(1)};

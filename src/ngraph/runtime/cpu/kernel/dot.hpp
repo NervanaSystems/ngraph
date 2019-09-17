@@ -51,22 +51,22 @@ namespace ngraph
                     Eigen::array<Eigen::Index, Input1Rank> in1_dims;
                     Eigen::array<Eigen::IndexPair<Eigen::Index>, DotDims> dot_dims;
 
-                    for (int i = 0; i < OutRank; i++)
+                    for (size_t i = 0; i < OutRank; i++)
                     {
                         out_dims[i] = output_shape[i];
                     }
 
-                    for (int i = 0; i < Input0Rank; i++)
+                    for (size_t i = 0; i < Input0Rank; i++)
                     {
                         in0_dims[i] = input0_shape[i];
                     }
 
-                    for (int i = 0; i < Input1Rank; i++)
+                    for (size_t i = 0; i < Input1Rank; i++)
                     {
                         in1_dims[i] = input1_shape[i];
                     }
 
-                    for (int i = 0; i < DotDims; i++)
+                    for (size_t i = 0; i < DotDims; i++)
                     {
                         dot_dims[i].first = Input0Rank - DotDims + i;
                         dot_dims[i].second = i;
