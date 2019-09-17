@@ -33,8 +33,11 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::set_memory_ptr(CPURuntimeCon
     primitive->set_data_handle(ptr);
 }
 
-extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
-    CPURuntimeContext* ctx, size_t primitive_index, std::vector<size_t>& deps, OpType type)
+extern "C" void
+    ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(CPURuntimeContext* ctx,
+                                                                size_t primitive_index,
+                                                                std::vector<size_t>& /* deps */,
+                                                                OpType /* type */)
 {
     mkldnn::stream s(mkldnn::stream::kind::eager);
     try

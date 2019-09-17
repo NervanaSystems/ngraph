@@ -144,7 +144,7 @@ public:
 
             size_t const_node_index =
                 m.get_match_root()->get_arguments().at(0) == pattern_map[pattern];
-            auto const_node = dynamic_pointer_cast<op::Constant>(
+            auto const_node = static_pointer_cast<op::Constant>(
                 m.get_match_root()->get_arguments().at(const_node_index));
             auto second_node = m.get_match_root()->get_arguments().at(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
@@ -305,7 +305,7 @@ TEST(pattern, matcher)
     ASSERT_TRUE(n.match(any, abs));
     ASSERT_EQ(n.get_matched_nodes(), (NodeVector{abs, a}));
 
-    auto false_pred = [](std::shared_ptr<Node> no) { return false; };
+    auto false_pred = [](std::shared_ptr<Node> /* no */) { return false; };
     auto any_false = std::make_shared<pattern::op::Skip>(a, false_pred);
     ASSERT_TRUE(n.match(any_false, a));
     ASSERT_EQ(n.get_matched_nodes(), (NodeVector{a, a}));
