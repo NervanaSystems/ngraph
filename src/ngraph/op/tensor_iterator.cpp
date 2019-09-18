@@ -20,7 +20,13 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::TensorIterator::type_name{"TensorIterator"};
+constexpr NodeTypeInfo op::TensorIterator::type_info;
+
+constexpr NodeTypeInfo op::TensorIterator::SliceInputDescription::type_info;
+constexpr NodeTypeInfo op::TensorIterator::BodyConnectionInputDescription::type_info;
+
+constexpr NodeTypeInfo op::TensorIterator::BodyOutputDescription::type_info;
+constexpr NodeTypeInfo op::TensorIterator::ConcatOutputDescription::type_info;
 
 op::TensorIterator::TensorIterator(const OutputVector& values)
     : op::util::FusedOp(values)
@@ -32,18 +38,6 @@ op::TensorIterator::InputDescription::InputDescription(
     : m_input_index(input_index)
     , m_body_parameter(body_parameter)
 {
-}
-
-const op::TensorIterator::SliceInputDescription*
-    op::TensorIterator::InputDescription::as_slice() const
-{
-    return nullptr;
-}
-
-const op::TensorIterator::BodyConnectionInputDescription*
-    op::TensorIterator::InputDescription::as_body_connection() const
-{
-    return nullptr;
 }
 
 op::TensorIterator::SliceInputDescription::SliceInputDescription(
@@ -70,12 +64,6 @@ shared_ptr<op::TensorIterator::InputDescription>
         m_input_index, m_body_parameter, m_start, m_stride, m_part_size, m_end, m_axis);
 }
 
-const op::TensorIterator::SliceInputDescription*
-    op::TensorIterator::SliceInputDescription::as_slice() const
-{
-    return this;
-}
-
 op::TensorIterator::BodyConnectionInputDescription::BodyConnectionInputDescription(
     uint64_t input_index,
     const std::shared_ptr<Parameter>& body_parameter,
@@ -92,28 +80,11 @@ shared_ptr<op::TensorIterator::InputDescription>
         m_input_index, m_body_parameter, m_body_value);
 }
 
-const op::TensorIterator::BodyConnectionInputDescription*
-    op::TensorIterator::BodyConnectionInputDescription::as_body_connection() const
-{
-    return this;
-}
-
 op::TensorIterator::OutputDescription::OutputDescription(const Output<Node>& body_value,
                                                          uint64_t output_index)
     : m_body_value(body_value)
     , m_output_index(output_index)
 {
-}
-
-const op::TensorIterator::ConcatOutputDescription*
-    op::TensorIterator::OutputDescription::as_concat_output_description() const
-{
-    return nullptr;
-}
-const op::TensorIterator::BodyOutputDescription*
-    op::TensorIterator::OutputDescription::as_body_output_description() const
-{
-    return nullptr;
 }
 
 op::TensorIterator::ConcatOutputDescription::ConcatOutputDescription(const Output<Node>& body_value,
@@ -139,12 +110,6 @@ shared_ptr<op::TensorIterator::OutputDescription>
         m_body_value, m_output_index, m_start, m_stride, m_part_size, m_end, m_axis);
 }
 
-const op::TensorIterator::ConcatOutputDescription*
-    op::TensorIterator::ConcatOutputDescription::as_concat_output_description() const
-{
-    return this;
-}
-
 op::TensorIterator::BodyOutputDescription::BodyOutputDescription(const Output<Node>& body_value,
                                                                  uint64_t output_index,
                                                                  int64_t iteration)
@@ -157,12 +122,6 @@ shared_ptr<op::TensorIterator::OutputDescription>
     op::TensorIterator::BodyOutputDescription::copy() const
 {
     return make_shared<BodyOutputDescription>(m_body_value, m_output_index, m_iteration);
-}
-
-const op::TensorIterator::BodyOutputDescription*
-    op::TensorIterator::BodyOutputDescription::as_body_output_description() const
-{
-    return this;
 }
 
 Input<Node> op::TensorIterator::input_for_value(const Output<Node>& value)
@@ -204,6 +163,7 @@ Output<Node> op::TensorIterator::get_iter_value(const Output<Node>& body_value, 
     auto output_index = get_output_size();
     m_output_descriptions.push_back(
         make_shared<BodyOutputDescription>(body_value, output_index, iteration));
+    set_output_size(output_index + 1);
     return Output<Node>(shared_from_this(), output_index);
 }
 
@@ -217,6 +177,7 @@ Output<Node> op::TensorIterator::get_concatenated_slices(const Output<Node>& bod
     auto output_index = get_output_size();
     m_output_descriptions.push_back(make_shared<ConcatOutputDescription>(
         body_value, output_index, start, stride, part_size, end, axis));
+    set_output_size(output_index + 1);
     return Output<Node>(shared_from_this(), output_index);
 }
 

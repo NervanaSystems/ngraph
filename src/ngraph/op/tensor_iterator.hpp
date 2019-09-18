@@ -23,6 +23,40 @@
 
 namespace ngraph
 {
+    template <typename T, typename U>
+    bool is_type(U u)
+    {
+        return &u->get_type_info() == &T::type_info;
+    }
+
+    /// Casts a Node* to a NodeType* if it is of type NodeType, nullptr otherwise
+    template <typename T, typename U>
+    T* as_type(U* u)
+    {
+        return is_type<T>(u) ? static_cast<T*>(u) : nullptr;
+    }
+
+    /// Casts a Node* to a NodePtr* if it is of type NodePtr, nullptr otherwise
+    template <typename T, typename U>
+    const T* as_type(const U* u)
+    {
+        return is_type<T>(u) ? static_cast<const T*>(u) : nullptr;
+    }
+
+    /// Casts a Node* to a NodeType* if it is of type NodeType, nullptr otherwise
+    template <typename T, typename U>
+    T* as_type(std::shared_ptr<U> u)
+    {
+        return is_type<T>(u) ? static_cast<T*>(u.get()) : nullptr;
+    }
+
+    /// Casts a Node* to a NodePtr* if it is of type NodePtr, nullptr otherwise
+    template <typename T, typename U>
+    const T* as_type(std::shared_ptr<const U> u)
+    {
+        return is_type<T>(u) ? static_cast<const T*>(u.get()) : nullptr;
+    }
+
     namespace op
     {
         /// \brief  Iterate a body over tensors, accumulating into tensors.
@@ -30,8 +64,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"TensorIterator", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             // Forward declarations
             class SliceInputDescription;
             class BodyConnectionInputDescription;
@@ -52,10 +86,7 @@ namespace ngraph
                 virtual ~InputDescription() {}
                 virtual std::shared_ptr<InputDescription> copy() const = 0;
 
-                /// \returns If a slice description, return it, else nullptr
-                virtual const SliceInputDescription* as_slice() const;
-                /// \returns If a body connection, return it, else nullptr
-                virtual const BodyConnectionInputDescription* as_body_connection() const;
+                virtual const NodeTypeInfo& get_type_info() const = 0;
 
                 uint64_t m_input_index;
                 std::shared_ptr<Parameter> m_body_parameter;
@@ -65,6 +96,8 @@ namespace ngraph
             class SliceInputDescription : public InputDescription
             {
             public:
+                static constexpr NodeTypeInfo type_info{"SliceInputDescription", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \param input_index Position of the TensorIterator input
                 /// \param body_parameter Body parameter to receive input
                 /// \param start First index for slices
@@ -81,7 +114,6 @@ namespace ngraph
                                       int64_t axis);
                 std::shared_ptr<InputDescription> copy() const override;
 
-                const SliceInputDescription* as_slice() const override;
                 int64_t m_start;
                 int64_t m_stride;
                 uint64_t m_part_size;
@@ -94,6 +126,8 @@ namespace ngraph
             class BodyConnectionInputDescription : public InputDescription
             {
             public:
+                static constexpr NodeTypeInfo type_info{"BodyConnectionInputDescription", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \param input_index Position of the TensorIterator input supplying a value to
                 /// body_parameter
                 /// for the initial iteration.
@@ -103,7 +137,6 @@ namespace ngraph
                                                const std::shared_ptr<Parameter>& body_parameter,
                                                const Output<Node>& body_value);
                 std::shared_ptr<InputDescription> copy() const override;
-                const BodyConnectionInputDescription* as_body_connection() const override;
 
                 Output<Node> m_body_value;
             };
@@ -123,10 +156,7 @@ namespace ngraph
             public:
                 virtual ~OutputDescription() {}
                 virtual std::shared_ptr<OutputDescription> copy() const = 0;
-                /// \returns If a concat, the concat, else nullptr
-                virtual const ConcatOutputDescription* as_concat_output_description() const;
-                /// \returns If a body output, the body output, else nullptr
-                virtual const BodyOutputDescription* as_body_output_description() const;
+                virtual const NodeTypeInfo& get_type_info() const = 0;
 
                 Output<Node> m_body_value;
                 uint64_t m_output_index;
@@ -136,6 +166,8 @@ namespace ngraph
             class ConcatOutputDescription : public OutputDescription
             {
             public:
+                static constexpr NodeTypeInfo type_info{"ConcatOutputDescription", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \param body_value A body value that produces the output
                 /// \param output_index The TensorIterator output index
                 /// \param start First index for slices
@@ -151,8 +183,6 @@ namespace ngraph
                                         int64_t end,
                                         int64_t axis);
 
-                const ConcatOutputDescription* as_concat_output_description() const override;
-
                 virtual std::shared_ptr<OutputDescription> copy() const override;
 
                 int64_t m_start;
@@ -166,6 +196,8 @@ namespace ngraph
             class BodyOutputDescription : public OutputDescription
             {
             public:
+                static constexpr NodeTypeInfo type_info{"BodyOutputDescription", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \param body_value A body value that produces the output
                 /// \param output_index The TensorIterator output index
                 /// \param iteration which iteration (typically -1, final) will supply the value
@@ -173,7 +205,6 @@ namespace ngraph
                                       uint64_t output_index,
                                       int64_t iteration);
                 std::shared_ptr<OutputDescription> copy() const override;
-                const BodyOutputDescription* as_body_output_description() const override;
 
                 int64_t m_iteration;
             };

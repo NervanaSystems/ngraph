@@ -632,7 +632,7 @@ json JSONSerializer::serialize_tensor_iterator_input_description(
     const std::shared_ptr<op::TensorIterator::InputDescription>& input_description)
 {
     json result;
-    if (auto slice = input_description->as_slice())
+    if (auto slice = as_type<op::TensorIterator::SliceInputDescription>(input_description))
     {
         result["kind"] = "slice";
         result["input_index"] = slice->m_input_index;
@@ -643,7 +643,7 @@ json JSONSerializer::serialize_tensor_iterator_input_description(
         result["end"] = slice->m_end;
         result["axis"] = slice->m_axis;
     }
-    else if (auto body_connection = input_description->as_body_connection())
+    else if (auto body_connection = as_type<op::TensorIterator::BodyConnectionInputDescription>(input_description))
     {
         result["kind"] = "body_connection";
         result["input_index"] = body_connection->m_input_index;
@@ -695,7 +695,7 @@ json JSONSerializer::serialize_tensor_iterator_output_description(
     const std::shared_ptr<op::TensorIterator::OutputDescription>& output_description)
 {
     json result;
-    if (auto concat = output_description->as_concat_output_description())
+    if (auto concat = as_type<op::TensorIterator::ConcatOutputDescription>(output_description))
     {
         result["kind"] = "concat";
         result["body_value"] = serialize_output(concat->m_body_value);
@@ -706,7 +706,8 @@ json JSONSerializer::serialize_tensor_iterator_output_description(
         result["end"] = concat->m_end;
         result["axis"] = concat->m_axis;
     }
-    else if (auto body_output = output_description->as_body_output_description())
+    else if (auto body_output =
+                 as_type<op::TensorIterator::BodyOutputDescription>(output_description))
     {
         result["kind"] = "body_output";
         result["body_value"] = serialize_output(body_output->m_body_value);
