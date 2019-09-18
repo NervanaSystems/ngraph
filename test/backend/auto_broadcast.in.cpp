@@ -45,8 +45,10 @@ using namespace ngraph;
 static string s_manifest = "${MANIFEST}";
 
 template <typename optype, typename itype, typename otype>
-void check_auto_bcast(const std::vector<std::vector<itype>>& inputs,
-                      const std::vector<otype> output)
+void check_auto_bcast(
+    const std::vector<std::vector<itype>>& inputs,
+    const std::vector<otype> output,
+    const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY))
 {
     auto iet = element::from<itype>();
     auto oet = element::from<otype>();
@@ -61,8 +63,7 @@ void check_auto_bcast(const std::vector<std::vector<itype>>& inputs,
     }
     auto A = make_shared<op::Parameter>(iet, Shape{2, 3});
     auto B = make_shared<op::Parameter>(iet, Shape{3});
-    auto f = make_shared<Function>(make_shared<optype>(A, B, op::AutoBroadcastType::NUMPY),
-                                   ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<optype>(A, B, autob), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -107,4 +108,11 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise)
                                                 {1, 1, 1, 0, 1, 1});
     check_auto_bcast<op::NotEqual, uint8_t, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
                                                   {0, 1, 1, 1, 0, 1});
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise_pdpd)
+{
+    const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec(op::AutoBroadcastType::PDPD);
+    check_auto_bcast<op::Add, float, float>(
+        {{1, 2, 3, 4, 5, 6}, {5, 6, 7}}, {6, 8, 10, 9, 11, 13}, autob);
 }
