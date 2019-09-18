@@ -175,7 +175,7 @@ namespace ngraph
                                    arg_buffer_index,
                                    out_indices_buffer_index,
                                    out_values_buffer_index](CPURuntimeContext* ctx,
-                                                            CPUExecutionContext* ectx) {
+                                                            CPUExecutionContext* /* ectx */) {
                             ngraph::runtime::reference::topk<int32_t, int64_t>(
                                 static_cast<int32_t*>(ctx->buffer_data[arg_buffer_index]),
                                 static_cast<int64_t*>(ctx->buffer_data[out_indices_buffer_index]),
@@ -200,7 +200,7 @@ namespace ngraph
                                    arg_buffer_index,
                                    out_indices_buffer_index,
                                    out_values_buffer_index](CPURuntimeContext* ctx,
-                                                            CPUExecutionContext* ectx) {
+                                                            CPUExecutionContext* /* ectx */) {
                             ngraph::runtime::reference::topk<int32_t, int32_t>(
                                 static_cast<int32_t*>(ctx->buffer_data[arg_buffer_index]),
                                 static_cast<int32_t*>(ctx->buffer_data[out_indices_buffer_index]),
