@@ -89,3 +89,31 @@ NGRAPH_TEST(${BACKEND_NAME}, add_overload)
     EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
                                   (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector()));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, add_in_place)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto T = A + B;
+    auto T2 = T + T;
+    auto T3 = T2 + T2;
+    auto T4 = T3 + T3;
+
+    auto f = make_shared<Function>(T4, ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shape);
+
+    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{48, 64}, {80, 96}})).get_vector()));
+}

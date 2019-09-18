@@ -41,13 +41,13 @@ op::util::ArithmeticReduction::ArithmeticReduction(const Output<Node>& arg,
 
 bool op::util::ArithmeticReduction::reduction_axes_constant() const
 {
-    return dynamic_pointer_cast<op::Constant>(get_argument(1)) != nullptr;
+    return input_value(1).get_node()->is_type<op::Constant>();
 }
 
 const AxisSet op::util::ArithmeticReduction::get_reduction_axes() const
 {
     AxisSet axes;
-    if (auto const_op = dynamic_pointer_cast<op::Constant>(get_argument(1)))
+    if (auto const_op = as_type<op::Constant>(input_value(1).get_node()))
     {
         axes = const_op->get_axis_set_val();
     }

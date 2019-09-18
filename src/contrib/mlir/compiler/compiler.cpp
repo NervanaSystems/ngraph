@@ -46,6 +46,7 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "pass/memory_optimization.hpp"
 
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
@@ -91,6 +92,11 @@ static llvm::cl::opt<bool> clPrintIRAfterAll(
         "complements MLIR -print-ir-after-all and LLVM -print-after-all flags"));
 
 // *** Optimization flags ***
+
+static llvm::cl::opt<bool> clEnableNgInPlaceMemoryOpt(
+    "ng-inplace-mem-opt",
+    llvm::cl::init(false),
+    llvm::cl::desc("Enable ngraph dialect in-place memory optimization pass"));
 
 static llvm::cl::opt<bool>
     clEnableAffineLoopFusion("affine-loop-fusion",
@@ -184,6 +190,7 @@ void MLIRCompiler::init_mlir()
 void MLIRCompiler::compile()
 {
     buildNgDialectModule();
+    optimizeNgDialect();
     lowerNgDialect();
 }
 
@@ -666,6 +673,18 @@ mlir::Operation* MLIRCompiler::createIndexReduction(const ngraph::Node* ngNode)
     op->setAttr("axes", redAxesAttr);
     return op;
 }
+
+void MLIRCompiler::optimizeNgDialect()
+{
+    mlir::PassManager pm(&m_context);
+    mlir::applyPassManagerCLOptions(pm);
+    if (clEnableNgInPlaceMemoryOpt)
+    {
+        pm.addPass(mlir::createMemoryOptimizationPass());
+    }
+    pm.run(m_module.get());
+}
+
 // Binds MLIR function arguments to the proper values. This includes externally allocated tensors
 // helpers to be used inside the function.
 void MLIRCompiler::bindArguments(std::vector<void*>& externalTensors)

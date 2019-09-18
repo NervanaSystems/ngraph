@@ -20,26 +20,27 @@
 #endif
 
 #ifndef MLIR_LAST_OP
-#define MLIR_LAST_OP(OP) MLIR_OP(OP)
+#define MLIR_LAST_OP(OP, INPLACE) MLIR_OP(OP, INPLACE)
 #endif
 
-MLIR_OP(NGAddOp)
-MLIR_OP(NGArgMaxRedOp)
-MLIR_OP(NGArgMinRedOp)
-MLIR_OP(NGConcatOp)
-MLIR_OP(NGConvolutionOp)
-MLIR_OP(NGDivOp)
-MLIR_OP(NGDotOp)
-MLIR_OP(NGGatherOp)
-MLIR_OP(NGGreaterOp)
-MLIR_OP(NGLessOp)
-MLIR_OP(NGMulOp)
-MLIR_OP(NGMaxOp)
-MLIR_OP(NGMinOp)
-MLIR_OP(NGNegOp)
-MLIR_OP(NGReluOp)
-MLIR_OP(NGSubOp)
-MLIR_LAST_OP(NGReturnOp)
+        /* op name */         /* in-place safe ? */ 
+MLIR_OP(NGAddOp             , true                  )
+MLIR_OP(NGArgMaxRedOp       , false                 )
+MLIR_OP(NGArgMinRedOp       , false                 )
+MLIR_OP(NGConcatOp          , false                 )
+MLIR_OP(NGConvolutionOp     , false                 )
+MLIR_OP(NGDivOp             , true                  )
+MLIR_OP(NGDotOp             , false                 )
+MLIR_OP(NGGatherOp          , false                 )
+MLIR_OP(NGGreaterOp         , true                  )
+MLIR_OP(NGLessOp            , true                  )
+MLIR_OP(NGMulOp             , true                  )
+MLIR_OP(NGMaxOp             , true                  )
+MLIR_OP(NGMinOp             , true                  )
+MLIR_OP(NGNegOp             , true                  )
+MLIR_OP(NGReluOp            , true                  )
+MLIR_OP(NGSubOp             , true                  )
+MLIR_LAST_OP(NGReturnOp     , false                 )
 
 #undef MLIR_OP
 #undef MLIR_LAST_OP
