@@ -116,3 +116,10 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise_pdpd)
     check_auto_bcast<op::Add, float, float>(
         {{1, 2, 3, 4, 5, 6}, {5, 6, 7}}, {6, 8, 10, 9, 11, 13}, autob);
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise_pdpd_dynamic)
+{
+    const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec(op::AutoBroadcastType::PDPD);
+    check_auto_bcast<op::Add, float, float>(
+        {{1, 2, 3, 4, 5, 6}, {5, 6, 7}}, {6, 8, 10, 9, 11, 13}, autob);
+}
