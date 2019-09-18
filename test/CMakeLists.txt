@@ -118,6 +118,7 @@ set(SRC
     type_prop/gru_cell.cpp
     type_prop/hard_sigmoid.cpp
     type_prop/index_reduction.cpp
+    type_prop/layer_norm.cpp
     type_prop/lrn.cpp
     type_prop/lstm_cell.cpp
     type_prop/matmul.cpp
