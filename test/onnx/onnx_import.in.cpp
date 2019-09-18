@@ -275,6 +275,24 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_unknown_domain)
         file_util::path_join(SERIALIZED_ZOO, "onnx/unknown_domain.prototxt")));
 }
 
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_op_in_unknown_domain)
+{
+    try
+    {
+        onnx_import::import_onnx_model(
+            file_util::path_join(SERIALIZED_ZOO, "onnx/unknown_domain_add.prototxt"));
+
+        FAIL() << "The onnx_importer did not throw for unknown domain and op";
+    }
+    catch (const ngraph::ngraph_error& e)
+    {
+        const std::string msg = e.what();
+
+        EXPECT_NE(msg.find("unknown.domain.Add"), std::string::npos)
+            << "The error message should contain domain and op name: unknown.domain.Add";
+    }
+}
+
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_missing_input)
 {
     onnx_import::register_operator(
