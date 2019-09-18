@@ -25,9 +25,9 @@
 #include "ngraph/op/fused/layer_norm.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
+#include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
@@ -42,26 +42,26 @@ op::LayerNorm::LayerNorm(const Output<Node>& data,
                          bool keep_stats,
                          int64_t begin_norm_axis,
                          double epsilon)
-    : FusedOp({data, scale, bias}),
-      m_keep_stats(keep_stats),
-      m_use_affine(true),
-      m_begin_norm_axis(begin_norm_axis),
-      m_epsilon(epsilon)
+    : FusedOp({data, scale, bias})
+    , m_keep_stats(keep_stats)
+    , m_use_affine(true)
+    , m_begin_norm_axis(begin_norm_axis)
+    , m_epsilon(epsilon)
 {
-        constructor_validate_and_infer_types();
+    constructor_validate_and_infer_types();
 }
 
 op::LayerNorm::LayerNorm(const Output<Node>& data,
                          bool keep_stats,
                          int64_t begin_norm_axis,
                          double epsilon)
-    : FusedOp({data}),
-      m_keep_stats(keep_stats),
-      m_use_affine(false),
-      m_begin_norm_axis(begin_norm_axis),
-      m_epsilon(epsilon)
+    : FusedOp({data})
+    , m_keep_stats(keep_stats)
+    , m_use_affine(false)
+    , m_begin_norm_axis(begin_norm_axis)
+    , m_epsilon(epsilon)
 {
-        constructor_validate_and_infer_types();
+    constructor_validate_and_infer_types();
 }
 
 // All input shape should be static by this point
@@ -147,13 +147,16 @@ shared_ptr<Node> op::LayerNorm::copy_with_new_args(const NodeVector& new_args) c
     }
     if (!m_use_affine)
     {
-        return make_shared<LayerNorm>(
-            new_args.at(0), m_keep_stats, m_begin_norm_axis, m_epsilon);
+        return make_shared<LayerNorm>(new_args.at(0), m_keep_stats, m_begin_norm_axis, m_epsilon);
     }
     else
     {
-        return make_shared<LayerNorm>(
-            new_args.at(0), new_args.at(1), new_args.at(2), m_keep_stats, m_begin_norm_axis, m_epsilon);
+        return make_shared<LayerNorm>(new_args.at(0),
+                                      new_args.at(1),
+                                      new_args.at(2),
+                                      m_keep_stats,
+                                      m_begin_norm_axis,
+                                      m_epsilon);
     }
 }
 
@@ -175,17 +178,15 @@ void op::LayerNorm::pre_validate_and_infer_types()
     {
         d_rank = static_cast<int64_t>(data_rank);
         n_axis = m_begin_norm_axis >= 0 ? m_begin_norm_axis : d_rank + m_begin_norm_axis;
-        NODE_VALIDATION_CHECK(this,
-                              n_axis > 0,
-                              "begin_norm_axis is out of range");
+        NODE_VALIDATION_CHECK(this, n_axis > 0, "begin_norm_axis is out of range");
 
-        if(m_use_affine)
+        if (m_use_affine)
         {
             const PartialShape& scale_shape = get_input_partial_shape(1);
             const PartialShape& bias_shape = get_input_partial_shape(2);
             Rank scale_rank = scale_shape.rank();
             Rank bias_rank = bias_shape.rank();
-            if(scale_rank.is_static() && bias_rank.is_static())
+            if (scale_rank.is_static() && bias_rank.is_static())
             {
                 int64_t s_rank = static_cast<int64_t>(scale_rank);
                 int64_t b_rank = static_cast<int64_t>(bias_rank);
@@ -198,13 +199,13 @@ void op::LayerNorm::pre_validate_and_infer_types()
 
     PartialShape norm_shape{data_shape};
     set_output_type(0, input_element_type, norm_shape);
-    if(m_keep_stats)
+    if (m_keep_stats)
     {
         // output shape: data_shape[:begin_norm_axis]
         if (d_rank > 0)
         {
             std::vector<Dimension> stats_dim;
-            for(int64_t i = 0; i < n_axis; i++)
+            for (int64_t i = 0; i < n_axis; i++)
             {
                 stats_dim.emplace_back(data_shape[i]);
             }
@@ -228,7 +229,7 @@ void op::LayerNorm::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVe
     {
         auto scale = input_value(1);
         auto bias = input_value(2);
-        if(m_keep_stats)
+        if (m_keep_stats)
         {
             auto mean = outputs()[1];
             auto variance = outputs()[2];
@@ -249,7 +250,7 @@ void op::LayerNorm::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVe
     }
     else
     {
-        if(m_keep_stats)
+        if (m_keep_stats)
         {
             auto mean = outputs()[1];
             auto variance = outputs()[2];
@@ -259,8 +260,8 @@ void op::LayerNorm::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVe
         }
         else
         {
-            auto bprop = make_shared<op::LayerNormBackprop>(
-                data, delta, m_begin_norm_axis, m_epsilon);
+            auto bprop =
+                make_shared<op::LayerNormBackprop>(data, delta, m_begin_norm_axis, m_epsilon);
             adjoints.add_delta(data, bprop->outputs()[0]);
         }
     }
@@ -274,42 +275,42 @@ op::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
                                          const Output<Node>& bias,
                                          int64_t begin_norm_axis,
                                          double epsilon)
-    : FusedOp({data, delta, mean, variance, scale, bias}),
-      m_use_stats(true),
-      m_use_affine(true),
-      m_begin_norm_axis(begin_norm_axis),
-      m_epsilon(epsilon)
+    : FusedOp({data, delta, mean, variance, scale, bias})
+    , m_use_stats(true)
+    , m_use_affine(true)
+    , m_begin_norm_axis(begin_norm_axis)
+    , m_epsilon(epsilon)
 {
-        constructor_validate_and_infer_types();
+    constructor_validate_and_infer_types();
 }
 
 op::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
                                          const Output<Node>& delta,
                                          const Output<Node>& mean_scale,
                                          const Output<Node>& variance_bias,
-                                         bool  use_stats,
+                                         bool use_stats,
                                          int64_t begin_norm_axis,
                                          double epsilon)
-    : FusedOp({data, delta, mean_scale, variance_bias}),
-      m_use_stats(use_stats),
-      m_use_affine(!use_stats),
-      m_begin_norm_axis(begin_norm_axis),
-      m_epsilon(epsilon)
+    : FusedOp({data, delta, mean_scale, variance_bias})
+    , m_use_stats(use_stats)
+    , m_use_affine(!use_stats)
+    , m_begin_norm_axis(begin_norm_axis)
+    , m_epsilon(epsilon)
 {
-        constructor_validate_and_infer_types();
+    constructor_validate_and_infer_types();
 }
 
 op::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
                                          const Output<Node>& delta,
                                          int64_t begin_norm_axis,
                                          double epsilon)
-    : FusedOp({data, delta}),
-      m_use_stats(false),
-      m_use_affine(false),
-      m_begin_norm_axis(begin_norm_axis),
-      m_epsilon(epsilon)
+    : FusedOp({data, delta})
+    , m_use_stats(false)
+    , m_use_affine(false)
+    , m_begin_norm_axis(begin_norm_axis)
+    , m_epsilon(epsilon)
 {
-        constructor_validate_and_infer_types();
+    constructor_validate_and_infer_types();
 }
 
 // All input shape should be static by this point
@@ -365,7 +366,8 @@ NodeVector op::LayerNormBackprop::decompose_op() const
     // Get mean
     std::vector<size_t> post_reduction_axes(shape.size() - n_axis);
     std::iota(post_reduction_axes.begin(), post_reduction_axes.end(), n_axis);
-    auto mean = m_use_stats ? input_value(2) : builder::mean(data, post_reduction_axes)->outputs()[0];
+    auto mean =
+        m_use_stats ? input_value(2) : builder::mean(data, post_reduction_axes)->outputs()[0];
 
     AxisSet post_axis_set;
     for (size_t i = static_cast<size_t>(n_axis); i < shape.size(); i++)
@@ -375,7 +377,8 @@ NodeVector op::LayerNormBackprop::decompose_op() const
     auto b_mean = make_shared<ngraph::op::Broadcast>(mean, shape, post_axis_set);
 
     // Get variance
-    auto var = m_use_stats ? input_value(3) : builder::variance(data, post_reduction_axes)->outputs()[0];
+    auto var =
+        m_use_stats ? input_value(3) : builder::variance(data, post_reduction_axes)->outputs()[0];
 
     // Compute standard deviation with epsilon
     auto epsilon = builder::make_constant(var.get_element_type(), var.get_shape(), m_epsilon);
@@ -397,8 +400,11 @@ NodeVector op::LayerNormBackprop::decompose_op() const
         auto b_scale = make_shared<op::Broadcast>(input_value(1), shape, pre_axis_set);
         d_data = d_data * b_scale;
     }
-    auto d_mean = make_shared<op::Broadcast>(builder::mean(-d_data, post_reduction_axes), shape, post_axis_set);
-    auto d_stddev = norm * make_shared<op::Broadcast>(builder::mean(-d_data * norm, post_reduction_axes), shape, post_axis_set);
+    auto d_mean = make_shared<op::Broadcast>(
+        builder::mean(-d_data, post_reduction_axes), shape, post_axis_set);
+    auto d_stddev =
+        norm * make_shared<op::Broadcast>(
+                   builder::mean(-d_data * norm, post_reduction_axes), shape, post_axis_set);
     d_data = d_data + d_mean + d_stddev;
 
     NodeVector retval;
@@ -446,10 +452,8 @@ shared_ptr<Node> op::LayerNormBackprop::copy_with_new_args(const NodeVector& new
     }
     else
     {
-        return make_shared<LayerNormBackprop>(new_args.at(0),
-                                              new_args.at(1),
-                                              m_begin_norm_axis,
-                                              m_epsilon);
+        return make_shared<LayerNormBackprop>(
+            new_args.at(0), new_args.at(1), m_begin_norm_axis, m_epsilon);
     }
 }
 
@@ -471,9 +475,7 @@ void op::LayerNormBackprop::pre_validate_and_infer_types()
     {
         d_rank = static_cast<int64_t>(data_rank);
         n_axis = m_begin_norm_axis >= 0 ? m_begin_norm_axis : d_rank + m_begin_norm_axis;
-        NODE_VALIDATION_CHECK(this,
-                              n_axis > 0,
-                              "begin_norm_axis is out of range");
+        NODE_VALIDATION_CHECK(this, n_axis > 0, "begin_norm_axis is out of range");
 
         const PartialShape& delta_shape = get_input_partial_shape(1);
         Rank delta_rank = delta_shape.rank();
@@ -481,13 +483,13 @@ void op::LayerNormBackprop::pre_validate_and_infer_types()
                               delta_rank.is_dynamic() || static_cast<int64_t>(delta_rank) == d_rank,
                               "Delta rank is incorrect");
 
-        if(m_use_stats)
+        if (m_use_stats)
         {
             const PartialShape& mean_shape = get_input_partial_shape(2);
             const PartialShape& var_shape = get_input_partial_shape(3);
             Rank mean_rank = mean_shape.rank();
             Rank var_rank = var_shape.rank();
-            if(mean_rank.is_static() && var_rank.is_static())
+            if (mean_rank.is_static() && var_rank.is_static())
             {
                 int64_t m_rank = static_cast<int64_t>(mean_rank);
                 int64_t v_rank = static_cast<int64_t>(var_rank);
@@ -497,13 +499,13 @@ void op::LayerNormBackprop::pre_validate_and_infer_types()
             }
         }
 
-        if(m_use_affine)
+        if (m_use_affine)
         {
             const PartialShape& scale_shape = get_input_partial_shape(m_use_stats ? 4 : 2);
             const PartialShape& bias_shape = get_input_partial_shape(m_use_stats ? 5 : 3);
             Rank scale_rank = scale_shape.rank();
             Rank bias_rank = bias_shape.rank();
-            if(scale_rank.is_static() && bias_rank.is_static())
+            if (scale_rank.is_static() && bias_rank.is_static())
             {
                 int64_t s_rank = static_cast<int64_t>(scale_rank);
                 int64_t b_rank = static_cast<int64_t>(bias_rank);
@@ -516,13 +518,13 @@ void op::LayerNormBackprop::pre_validate_and_infer_types()
 
     PartialShape norm_shape{data_shape};
     set_output_type(0, input_element_type, norm_shape);
-    if(m_use_stats)
+    if (m_use_stats)
     {
         // output shape: data_shape[:begin_norm_axis]
         if (d_rank > 0)
         {
             std::vector<Dimension> stats_dim;
-            for(int64_t i = 0; i < n_axis; i++)
+            for (int64_t i = 0; i < n_axis; i++)
             {
                 stats_dim.emplace_back(data_shape[i]);
             }
@@ -537,4 +539,3 @@ void op::LayerNormBackprop::pre_validate_and_infer_types()
         }
     }
 }
-

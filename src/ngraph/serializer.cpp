@@ -1367,8 +1367,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             else
             {
-                node = make_shared<op::LayerNorm>(
-                    args[0], keep_stats, begin_norm_axis, epsilon);
+                node = make_shared<op::LayerNorm>(args[0], keep_stats, begin_norm_axis, epsilon);
             }
             break;
         }
@@ -1390,8 +1389,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             else
             {
-                node = make_shared<op::LayerNormBackprop>(
-                    args[0], args[1], begin_norm_axis, epsilon);
+                node =
+                    make_shared<op::LayerNormBackprop>(args[0], args[1], begin_norm_axis, epsilon);
             }
             break;
         }

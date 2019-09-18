@@ -47,24 +47,23 @@ static string s_manifest = "${MANIFEST}";
 
 NGRAPH_TEST(${BACKEND_NAME}, layer_norm_dummy)
 {
-    //Shape shape{8};
-    //auto A = make_shared<op::Parameter>(element::f32, shape);
-    //auto f = make_shared<Function>(make_shared<op::Gelu>(A), ParameterVector{A});
+    // Shape shape{8};
+    // auto A = make_shared<op::Parameter>(element::f32, shape);
+    // auto f = make_shared<Function>(make_shared<op::Gelu>(A), ParameterVector{A});
 
-    //auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    // auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    //auto a = backend->create_tensor(element::f32, shape);
-    //vector<float> input{-4.0f, -3.0f, -2.0f, -1.0f, 0.0f, 1.0f, 2.0f, 3.0f};
-    //copy_data(a, input);
-    //auto result = backend->create_tensor(element::f32, shape);
+    // auto a = backend->create_tensor(element::f32, shape);
+    // vector<float> input{-4.0f, -3.0f, -2.0f, -1.0f, 0.0f, 1.0f, 2.0f, 3.0f};
+    // copy_data(a, input);
+    // auto result = backend->create_tensor(element::f32, shape);
 
-    //std::transform(input.begin(), input.end(), input.begin(), [](float x) -> float {
+    // std::transform(input.begin(), input.end(), input.begin(), [](float x) -> float {
     //    return 0.5f * x * (1.0f + erf(x / sqrt(2.0f)));
     //});
 
-    //auto handle = backend->compile(f);
-    //handle->call_with_validate({result}, {a});
-    //EXPECT_TRUE(test::all_close_f(input, read_vector<float>(result)));
+    // auto handle = backend->compile(f);
+    // handle->call_with_validate({result}, {a});
+    // EXPECT_TRUE(test::all_close_f(input, read_vector<float>(result)));
 }
-

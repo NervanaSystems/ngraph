@@ -23,11 +23,10 @@ using namespace ngraph;
 
 TEST(type_prop, layer_norm_dummy_prop)
 {
-    //auto tv0_2_4_param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
-    //auto tv0_2_4_param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    //auto tv0_2_4_param_2 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    //auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
-    //ASSERT_EQ(bc->get_element_type(), element::f32);
-    //ASSERT_EQ(bc->get_shape(), (Shape{2, 4}));
+    // auto tv0_2_4_param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+    // auto tv0_2_4_param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    // auto tv0_2_4_param_2 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    // auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
+    // ASSERT_EQ(bc->get_element_type(), element::f32);
+    // ASSERT_EQ(bc->get_shape(), (Shape{2, 4}));
 }
-
