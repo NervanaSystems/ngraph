@@ -268,6 +268,13 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_missing_op_domain)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_unknown_domain)
+{
+    // the importer should not throw when it encounters an unknown domain in the model
+    EXPECT_NO_THROW(onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/unknown_domain.prototxt")));
+}
+
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_missing_input)
 {
     onnx_import::register_operator(
