@@ -30,8 +30,6 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 
-#include <iostream>
-
 using namespace std;
 using namespace ngraph;
 
@@ -401,7 +399,8 @@ NodeVector op::LayerNormBackprop::decompose_op() const
         {
             pre_axis_set.insert(i);
         }
-        auto b_scale = make_shared<op::Broadcast>(input_value(1), shape, pre_axis_set);
+        auto b_scale =
+            make_shared<op::Broadcast>(input_value(m_use_stats ? 4 : 2), shape, pre_axis_set);
         d_data = d_data * b_scale;
     }
     auto d_mean = make_shared<op::Broadcast>(
@@ -418,7 +417,7 @@ NodeVector op::LayerNormBackprop::decompose_op() const
     if (m_use_affine)
     {
         std::vector<size_t> pre_reduction_axes(n_axis);
-        std::iota(pre_reduction_axes.begin(), pre_reduction_axes.end(), n_axis);
+        std::iota(pre_reduction_axes.begin(), pre_reduction_axes.end(), 0);
         auto d_bias = make_shared<op::Sum>(delta, pre_reduction_axes);
         auto d_scale = make_shared<op::Sum>(delta * norm, pre_reduction_axes);
         retval.emplace_back(d_scale);

@@ -58,7 +58,7 @@ NGRAPH_TEST(${BACKEND_NAME}, layer_norm_affine_stats)
     // Create tensors for input
     auto data = backend->create_tensor(element::f32, Shape{2, 4});
     auto scale = backend->create_tensor(element::f32, Shape{4});
-    auto bias= backend->create_tensor(element::f32, Shape{4});
+    auto bias = backend->create_tensor(element::f32, Shape{4});
     // Fill in input tensors
     vector<float> d_input{-4.0f, -3.0f, -2.0f, -1.0f, 0.0f, 1.0f, 2.0f, 3.0f};
     copy_data(data, d_input);
@@ -89,3 +89,62 @@ NGRAPH_TEST(${BACKEND_NAME}, layer_norm_affine_stats)
     EXPECT_TRUE(test::all_close_f(exp_mean, read_vector<float>(mean)));
     EXPECT_TRUE(test::all_close_f(exp_var, read_vector<float>(var)));
 }
+
+#if 0
+NGRAPH_TEST(${BACKEND_NAME}, layer_norm_bprop_affine_stats)
+{
+    auto p_data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto p_delta = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto p_mean = make_shared<op::Parameter>(element::f32, Shape{2});
+    auto p_var = make_shared<op::Parameter>(element::f32, Shape{2});
+    auto p_scale = make_shared<op::Parameter>(element::f32, Shape{4});
+    auto p_bias = make_shared<op::Parameter>(element::f32, Shape{4});
+    auto lnb = make_shared<op::LayerNormBackprop>(p_data, p_delta, p_mean, p_var, p_scale, p_bias);
+    auto f = make_shared<Function>(lnb->outputs(), ParameterVector{p_data, p_delta, p_mean, p_var, p_scale, p_bias});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create tensors for input
+    auto data = backend->create_tensor(element::f32, Shape{2, 4});
+    auto delta = backend->create_tensor(element::f32, Shape{2, 4});
+    auto mean = backend->create_tensor(element::f32, Shape{2});
+    auto var = backend->create_tensor(element::f32, Shape{2});
+    auto scale = backend->create_tensor(element::f32, Shape{4});
+    auto bias= backend->create_tensor(element::f32, Shape{4});
+    // Fill in input tensors
+    vector<float> d_input{-4.0f, -3.0f, -2.0f, -1.0f, 0.0f, 1.0f, 2.0f, 3.0f};
+    copy_data(data, d_input);
+    vector<float> dt_input{0.1f, -0.1f, 0.2f, -0.2f, 0.1f, -0.1f, 0.2f, -0.2f};
+    copy_data(delta, dt_input);
+    vector<float> s_input{-1.0f, 1.0f, 2.0f, 3.0f};
+    copy_data(scale, s_input);
+    vector<float> b_input{-4.0f, -3.0f, -2.0f, -1.0f};
+    copy_data(bias, b_input);
+    vector<float> m_input{-2.5f, 1.5f};
+    copy_data(scale, m_input);
+    vector<float> v_input{-1.25f, -1.25f};
+    copy_data(bias, v_input);
+    // Create tensors for output
+    auto d_data = backend->create_tensor(element::f32, Shape{2, 4});
+    auto d_scale = backend->create_tensor(element::f32, Shape{4});
+    auto d_bias = backend->create_tensor(element::f32, Shape{4});
+
+    // Expected results
+    vector<float> exp_d_data{-2.658364534378051758f,
+                             -3.447211742401123047f,
+                             -1.105576276779174805f,
+                             3.024906158447265625f,
+                             -2.658364534378051758f,
+                             -3.447211742401123047f,
+                             -1.105576276779174805f,
+                             3.024906158447265625f};
+    vector<float> exp_d_scale{-2.5f, 1.5f, 0.0f, 0.0f};
+    vector<float> exp_d_bias{1.25f, 1.25f, 0.0f, 0.0f};
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({d_data, d_scale, d_bias}, {data, delta, mean, var, scale, bias});
+    EXPECT_TRUE(test::all_close_f(exp_d_data, read_vector<float>(d_data)));
+    EXPECT_TRUE(test::all_close_f(exp_d_scale, read_vector<float>(d_scale)));
+    EXPECT_TRUE(test::all_close_f(exp_d_bias, read_vector<float>(d_bias)));
+}
+#endif
