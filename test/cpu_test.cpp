@@ -2171,7 +2171,7 @@ TEST(cpu_test, max_pool_bf16)
 
     // input data
     vector<float> a_data = {
-        0.5, 1.5, 0.5, 2.5, 1.5, 0.5, 3.5, 2.5, 0.5, 0.5, 2.5, 0.5, 0.5, 0.5, 1.5};
+        0.5f, 1.5f, 0.5f, 2.5f, 1.5f, 0.5f, 3.5f, 2.5f, 0.5f, 0.5f, 2.5f, 0.5f, 0.5f, 0.5f, 1.5f};
 
     // allocate memory for destination
     int size = a_data.size() * sizeof(float) / 2;
@@ -2198,7 +2198,7 @@ TEST(cpu_test, max_pool_bf16)
         shape_size(shape_r));
     auto b = backend->create_tensor(element::f32, shape_r);
     b->write(fp_dst, shape_size(shape_r) * 4);
-    EXPECT_EQ((vector<float>{3.5, 3.5, 2.5, 3.5, 3.5, 2.5}), read_vector<float>(b));
+    EXPECT_EQ((vector<float>{3.5f, 3.5f, 2.5f, 3.5f, 3.5f, 2.5f}), read_vector<float>(b));
 }
 
 TEST(cpu_test, convolution_simple_bf16)
