@@ -52,9 +52,11 @@ div.menu-float {
    /* margin-left: 55%; */ 
    /* margin-right: 3%; */
   padding: 3px;
-  border-top: 4px solid #999999;
-  border-left: 4px solid #999999;
-  border-right: 2px solid #999999;
+  border-top: 1px solid #999999;
+  border-left: 1px solid #999999;
+  border-right: 1px solid #999999;
+  margin-top: -2px;
+  margin-left: -2px;
  /*  -moz-box-shadow: 2px 3px 2px #d3d3d3; */
  /* -webkit-box-shadow: 2px 3px 2px #d3d3d3 */
  /* box-shadow: 3px 4px 3px #d3d3d3; */
@@ -64,7 +66,7 @@ div.menu-float {
    z-index:1000;
 }
 
-div.menu-float a, div.floating-menu h3 {display:inline-block; margin:0 0.5em; font-size: 143%; line-height: 1.41em; }
+div.menu-float a, div.floating-menu h3 {display:inline-block; margin:0 0.5em; font-size: 143%; line-height: 1.41em; color: #fcfcfc; }
 
 
 #nav {
@@ -81,7 +83,8 @@ div.nav {position:fixed; z-index:100;}
 
 #nav li {
   margin: 0 5px;
-  padding: 0 0 8px;
+  padding-left: 8px;
+  padding-right: 6px;
   float: left;
   position: relative;
   list-style: none;
@@ -93,7 +96,7 @@ div.nav {position:fixed; z-index:100;}
 }
 
 #nav a {
-  color: #a73e2b;
+  color: #e3e3e3;
   text-decoration: none;
   display: block;
   padding:  3px 4px;
@@ -112,7 +115,6 @@ div.nav {position:fixed; z-index:100;}
   background: transparent;
    position: relative;
   border: 2px;
-   padding: 2px;
   color: #5a3226;
   font: 18px;
   -webkit-box-shadow: none;
@@ -204,7 +206,6 @@ div.nav {position:fixed; z-index:100;}
   display: inline-block;
 } 
 
-.slack { background-image: url(../slack.png); }
 
 html[xmlns] #nav {
   display: block;
@@ -832,7 +833,7 @@ button::-moz-focus-inner, input::-moz-focus-inner {
 .wy-dropdown-menu {
   position: absolute;
   left: 0;
-  display: none;
+  display: visible;
   float: left;
   top: 100%;
   min-width: 100%;
@@ -903,7 +904,6 @@ button::-moz-focus-inner, input::-moz-focus-inner {
 }
 
 .wy-dropdown-arrow:before {
-  content: " ";
   border-bottom: 5px solid whitesmoke;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
@@ -1426,7 +1426,8 @@ input[type="radio"][disabled], input[type="checkbox"][disabled] {
   white-space: nowrap;
 }
 .wy-table thead th, .rst-content table.docutils thead th, .rst-content table.field-list thead th {
-  font-weight: bold;
+  font-family: 'Nunito Sans', sans;
+  text-variant: small-caps;
   border-bottom: solid 1px #c1c7d7;
 }
 .wy-table td, .rst-content table.docutils td, .rst-content table.field-list td {
@@ -1460,7 +1461,7 @@ input[type="radio"][disabled], input[type="checkbox"][disabled] {
 }
 
 .wy-table-odd td, .wy-table-striped tr:nth-child(2n-1) td, .rst-content table.docutils:not(.field-list) tr:nth-child(2n-1) td {
-  background-color: #d4d3d2;
+  background-color: #e8e8e8;
 }
 
 .wy-table-backed {
@@ -1496,6 +1497,7 @@ input[type="radio"][disabled], input[type="checkbox"][disabled] {
 .wy-table-horizontal td, .wy-table-horizontal th {
   border-width: 0 0 1px 0;
   border-bottom: 1px solid #e1e4e5;
+  font-variant: small-caps;
 }
 .wy-table-horizontal tbody > tr:last-child td {
   border-bottom-width: 0;
@@ -1510,8 +1512,14 @@ input[type="radio"][disabled], input[type="checkbox"][disabled] {
 .wy-table-responsive table {
   margin-bottom: 0 !important;
 }
-.wy-table-responsive table td, .wy-table-responsive table th {
+.wy-table-responsive table td {
   white-space: pre-wrap;
+}
+
+.wy-table-responsive table th {
+  white-space: pre-wrap;
+  font-family: Nunito, 'Nunito Sans', sans;
+  font-variant: small-caps;
 }
 
 
@@ -1790,7 +1798,7 @@ div[class^='highlight'] pre {
   line-height: 1.13;
   display: block;
   overflow: wrap;
-  color: #8a8e98;
+  color: #999;
 }
 
   .linenodiv pre {
@@ -1800,7 +1808,8 @@ div[class^='highlight'] pre {
     font-family: Monaco, Consolas, "Lucida Console", monospace;
     font-size: 1.0em;
     line-height: 1.01;
-    color: #d9d9d9;
+    color: #d2af71;
+    background-color: #393F4D;
     }
 
 @media print {
@@ -1889,7 +1898,7 @@ div[class^='highlight'] pre {
 
 .go {
   /* Original white wasn't visible */
-  color: #554d2f;
+  color: #2e2b27;
 }
 
 .gp {
@@ -2333,8 +2342,8 @@ div[class^='highlight'] pre {
   width: 40%;
   display: block;
   margin: 0 0 24px 24px;
-  padding: 24px;
-  background: #f1f4af;
+  padding: 11px;
+  background: #574BB1;
   border: solid 1px #e1e4e5;
 }
 .rst-content .sidebar p, .rst-content .sidebar ul, .rst-content .sidebar dl {
@@ -2417,7 +2426,8 @@ div[class^='highlight'] pre {
 }
 .rst-content tt.literal, .rst-content tt.literal, .rst-content code.literal {
   font-size: 103% !important;
-  color: #a0a9b0;
+  color: #2e2b27;
+  background-color: #fff;
   line-height: 0.93em;
 }
 .rst-content tt.xref, a .rst-content tt, .rst-content tt.xref, .rst-content code.xref, a .rst-content tt, a .rst-content code {
@@ -2651,6 +2661,7 @@ span[id*='MathJax-Span'] {
   font-family: 'Nunito Sans', Nunito, 'Open Sans', sans;
   font-weight: bolder;
   border-top: 5px dotted #FFA400;
+  margin-bottom: 0.23em;
   border-bottom: 31px solid #d3d3d3;
   font-size: 139%;
   color: #393F4D;
@@ -2699,7 +2710,7 @@ span[id*='MathJax-Span'] {
 .wy-menu-vertical li span.toctree-expand {
   display: block;
   float: left;
-  margin-left: -1.2em;
+  margin-left: -0.2em;
   font-size: 0.8em;
   line-height: 1.6em;
   color: #393f4d;
@@ -2710,9 +2721,11 @@ span[id*='MathJax-Span'] {
   position: relative;
   /* color: #23221D; */
   padding-left: 1.618em -4px;
-  background-color: #D4D4D4;
+  background-color: #fafbfd;
   color: #5c5955;
   border-right: 4px solid #FFA400;
+  border-left: 0.79em;
+  margin-left: 23px;
 
 }
 .wy-menu-vertical li.on a:hover, .wy-menu-vertical li.current > a:hover {
@@ -3062,7 +3075,6 @@ footer span.commit code, footer span.commit .rst-content tt, .rst-content footer
 }
 @media screen and (min-width: 950px) {
   .wy-nav-content-wrap {
-    background-image: url(../banner-black-01.png);
     background-size: cover;
     background-repeat: no-repeat;
   }
