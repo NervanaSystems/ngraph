@@ -119,47 +119,47 @@
 
 // Expand only selected datatypes. Named macros (e.g., F32_SELECT) are expanded based on build-flags
 #define EXPAND_ETS(K, KV, ET, S, ...)                                                              \
-    if (ET == element::boolean)                                                                    \
+    if (BOOLEAN_EN && ET == element::boolean)                                                      \
     {                                                                                              \
         BOOLEAN_SELECT(S, K, KV, ##__VA_ARGS__, char);                                             \
     }                                                                                              \
-    else if (ET == element::f32)                                                                   \
+    else if (F32_EN && ET == element::f32)                                                         \
     {                                                                                              \
         F32_SELECT(S, K, KV, ##__VA_ARGS__, float);                                                \
     }                                                                                              \
-    else if (ET == element::f64)                                                                   \
+    else if (F64_EN && ET == element::f64)                                                         \
     {                                                                                              \
         F64_SELECT(S, K, KV, ##__VA_ARGS__, double);                                               \
     }                                                                                              \
-    else if (ET == element::i8)                                                                    \
+    else if (I8_EN && ET == element::i8)                                                           \
     {                                                                                              \
         I8_SELECT(S, K, KV, ##__VA_ARGS__, int8_t);                                                \
     }                                                                                              \
-    else if (ET == element::i16)                                                                   \
+    else if (I16_EN && ET == element::i16)                                                         \
     {                                                                                              \
         I16_SELECT(S, K, KV, ##__VA_ARGS__, int16_t);                                              \
     }                                                                                              \
-    else if (ET == element::i32)                                                                   \
+    else if (I32_EN && ET == element::i32)                                                         \
     {                                                                                              \
         I32_SELECT(S, K, KV, ##__VA_ARGS__, int32_t);                                              \
     }                                                                                              \
-    else if (ET == element::i64)                                                                   \
+    else if (I64_EN && ET == element::i64)                                                         \
     {                                                                                              \
         I64_SELECT(S, K, KV, ##__VA_ARGS__, int64_t);                                              \
     }                                                                                              \
-    else if (ET == element::u8)                                                                    \
+    else if (U8_EN && ET == element::u8)                                                           \
     {                                                                                              \
         U8_SELECT(S, K, KV, ##__VA_ARGS__, uint8_t);                                               \
     }                                                                                              \
-    else if (ET == element::u16)                                                                   \
+    else if (U16_EN && ET == element::u16)                                                         \
     {                                                                                              \
         U16_SELECT(S, K, KV, ##__VA_ARGS__, uint16_t);                                             \
     }                                                                                              \
-    else if (ET == element::u32)                                                                   \
+    else if (U32_EN && ET == element::u32)                                                         \
     {                                                                                              \
         U32_SELECT(S, K, KV, ##__VA_ARGS__, uint32_t);                                             \
     }                                                                                              \
-    else if (ET == element::u64)                                                                   \
+    else if (U64_EN && ET == element::u64)                                                         \
     {                                                                                              \
         U64_SELECT(S, K, KV, ##__VA_ARGS__, uint64_t);                                             \
     }                                                                                              \
