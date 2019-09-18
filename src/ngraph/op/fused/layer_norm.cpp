@@ -26,6 +26,7 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/subtract.hpp"
+#include "ngraph/op/sum.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 
@@ -93,23 +94,23 @@ NodeVector op::LayerNorm::decompose_op() const
     auto data = input_value(0);
 
     // Compute mean
-    std::vector<size_t> reduction_axes(shape.size() - n_axis);
-    std::iota(reduction_axes.begin(), reduction_axes.end(), n_axis);
-    auto mean = builder::mean(data, reduction_axes);
-    AxisSet axis_set;
+    std::vector<size_t> post_reduction_axes(shape.size() - n_axis);
+    std::iota(post_reduction_axes.begin(), post_reduction_axes.end(), n_axis);
+    auto mean = builder::mean(data, post_reduction_axes);
+    AxisSet post_axis_set;
     for (size_t i = static_cast<size_t>(n_axis); i < shape.size(); i++)
     {
-        axis_set.insert(i);
+        post_axis_set.insert(i);
     }
-    auto b_mean = make_shared<ngraph::op::Broadcast>(data, shape, axis_set);
+    auto b_mean = make_shared<ngraph::op::Broadcast>(data, shape, post_axis_set);
 
     // Compute variance
-    auto var = builder::variance(data, reduction_axes);
+    auto var = builder::variance(data, post_reduction_axes);
 
     // Compute standard deviation with epsilon
     auto epsilon = builder::make_constant(var->get_element_type(), var->get_shape(), m_epsilon);
     auto stddev = make_shared<op::Sqrt>(var + epsilon);
-    auto b_stddev = make_shared<op::Broadcast>(stddev, shape, axis_set);
+    auto b_stddev = make_shared<op::Broadcast>(stddev, shape, post_axis_set);
 
     // Get normalized input
     auto norm = (data - b_mean) / b_stddev;
@@ -117,13 +118,13 @@ NodeVector op::LayerNorm::decompose_op() const
     // Apply affine transformation
     if (m_use_affine)
     {
-        AxisSet b_axis_set;
+        AxisSet pre_axis_set;
         for (size_t i = 0; i < static_cast<size_t>(n_axis); i++)
         {
-            b_axis_set.insert(i);
+            pre_axis_set.insert(i);
         }
-        auto b_scale = make_shared<op::Broadcast>(input_value(1), shape, b_axis_set);
-        auto b_bias = make_shared<op::Broadcast>(input_value(2), shape, b_axis_set);
+        auto b_scale = make_shared<op::Broadcast>(input_value(1), shape, pre_axis_set);
+        auto b_bias = make_shared<op::Broadcast>(input_value(2), shape, pre_axis_set);
         norm = norm * b_scale + b_bias;
     }
 
@@ -222,19 +223,47 @@ void op::LayerNorm::pre_validate_and_infer_types()
 void op::LayerNorm::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     auto delta = deltas.at(0);
-
     auto data = input_value(0);
-    auto scale = input_value(1);
-    auto bias = input_value(2);
-    auto self = shared_from_this();
-    auto mean = outputs()[1];
-    auto variance = outputs()[2];
-
-    auto bprop = make_shared<op::LayerNormBackprop>(
-        data, mean, variance, delta, scale, bias, m_begin_norm_axis, m_epsilon);
-        adjoints.add_delta(data, bprop->outputs()[0]);
-        adjoints.add_delta(scale, bprop->outputs()[1]);
-        adjoints.add_delta(variance, bprop->outputs()[2]);
+    if (m_use_affine)
+    {
+        auto scale = input_value(1);
+        auto bias = input_value(2);
+        if(m_keep_stats)
+        {
+            auto mean = outputs()[1];
+            auto variance = outputs()[2];
+            auto bprop = make_shared<op::LayerNormBackprop>(
+                data, delta, mean, variance, scale, bias, m_begin_norm_axis, m_epsilon);
+            adjoints.add_delta(data, bprop->outputs()[0]);
+            adjoints.add_delta(scale, bprop->outputs()[1]);
+            adjoints.add_delta(bias, bprop->outputs()[2]);
+        }
+        else
+        {
+            auto bprop = make_shared<op::LayerNormBackprop>(
+                data, delta, scale, bias, false, m_begin_norm_axis, m_epsilon);
+            adjoints.add_delta(data, bprop->outputs()[0]);
+            adjoints.add_delta(scale, bprop->outputs()[1]);
+            adjoints.add_delta(bias, bprop->outputs()[2]);
+        }
+    }
+    else
+    {
+        if(m_keep_stats)
+        {
+            auto mean = outputs()[1];
+            auto variance = outputs()[2];
+            auto bprop = make_shared<op::LayerNormBackprop>(
+                data, delta, mean, variance, true, m_begin_norm_axis, m_epsilon);
+            adjoints.add_delta(data, bprop->outputs()[0]);
+        }
+        else
+        {
+            auto bprop = make_shared<op::LayerNormBackprop>(
+                data, delta, m_begin_norm_axis, m_epsilon);
+            adjoints.add_delta(data, bprop->outputs()[0]);
+        }
+    }
 }
 
 op::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
@@ -334,24 +363,24 @@ NodeVector op::LayerNormBackprop::decompose_op() const
     auto delta = input_value(1);
 
     // Get mean
-    std::vector<size_t> reduction_axes(shape.size() - n_axis);
-    std::iota(reduction_axes.begin(), reduction_axes.end(), n_axis);
-    auto mean = m_use_stats ? input_value(2) : builder::mean(data, reduction_axes)->outputs()[0];
+    std::vector<size_t> post_reduction_axes(shape.size() - n_axis);
+    std::iota(post_reduction_axes.begin(), post_reduction_axes.end(), n_axis);
+    auto mean = m_use_stats ? input_value(2) : builder::mean(data, post_reduction_axes)->outputs()[0];
 
-    AxisSet axis_set;
+    AxisSet post_axis_set;
     for (size_t i = static_cast<size_t>(n_axis); i < shape.size(); i++)
     {
-        axis_set.insert(i);
+        post_axis_set.insert(i);
     }
-    auto b_mean = make_shared<ngraph::op::Broadcast>(mean, shape, axis_set);
+    auto b_mean = make_shared<ngraph::op::Broadcast>(mean, shape, post_axis_set);
 
     // Get variance
-    auto var = m_use_stats ? input_value(3) : builder::variance(data, reduction_axes)->outputs()[0];
+    auto var = m_use_stats ? input_value(3) : builder::variance(data, post_reduction_axes)->outputs()[0];
 
     // Compute standard deviation with epsilon
     auto epsilon = builder::make_constant(var.get_element_type(), var.get_shape(), m_epsilon);
     auto stddev = make_shared<op::Sqrt>(var + epsilon);
-    auto b_stddev = make_shared<op::Broadcast>(stddev, shape, axis_set);
+    auto b_stddev = make_shared<op::Broadcast>(stddev, shape, post_axis_set);
 
     // Get normalized input
     auto norm = (data - b_mean) / b_stddev;
@@ -360,19 +389,32 @@ NodeVector op::LayerNormBackprop::decompose_op() const
     auto d_data = delta / b_stddev;
     if (m_use_affine)
     {
-        AxisSet b_axis_set;
+        AxisSet pre_axis_set;
         for (size_t i = 0; i < static_cast<size_t>(n_axis); i++)
         {
-            b_axis_set.insert(i);
+            pre_axis_set.insert(i);
         }
-        auto b_scale = make_shared<op::Broadcast>(input_value(1), shape, b_axis_set);
+        auto b_scale = make_shared<op::Broadcast>(input_value(1), shape, pre_axis_set);
         d_data = d_data * b_scale;
-        auto d_mean = builder::mean(-d_data, reduction_axes);
     }
+    auto d_mean = make_shared<op::Broadcast>(builder::mean(-d_data, post_reduction_axes), shape, post_axis_set);
+    auto d_stddev = norm * make_shared<op::Broadcast>(builder::mean(-d_data * norm, post_reduction_axes), shape, post_axis_set);
+    d_data = d_data + d_mean + d_stddev;
+
+    NodeVector retval;
+    retval.emplace_back(d_data);
+
     // Get gradients for affine
     if (m_use_affine)
     {
+        std::vector<size_t> pre_reduction_axes(n_axis);
+        std::iota(pre_reduction_axes.begin(), pre_reduction_axes.end(), n_axis);
+        auto d_bias = make_shared<op::Sum>(delta, pre_reduction_axes);
+        auto d_scale = make_shared<op::Sum>(delta * norm, pre_reduction_axes);
+        retval.emplace_back(d_scale);
+        retval.emplace_back(d_bias);
     }
+    return retval;
 }
 
 shared_ptr<Node> op::LayerNormBackprop::copy_with_new_args(const NodeVector& new_args) const
