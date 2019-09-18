@@ -36,6 +36,10 @@ namespace ngraph
             {
                 rc = op::numpy_style_broadcast(node->get_arguments());
             }
+            else if (node->get_autob().m_type == op::AutoBroadcastType::PDPD)
+            {
+                rc = op::numpy_style_broadcast(node->get_arguments());
+            }
             else
             {
                 throw ngraph_error("Unsupported implicit broadcast type");

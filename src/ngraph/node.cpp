@@ -722,6 +722,13 @@ std::tuple<element::Type, PartialShape>
                     PartialShape::broadcast_merge_into(pshape, get_input_partial_shape(i), autob),
                     "Argument shapes are inconsistent.");
             }
+            else if (autob.m_type == op::AutoBroadcastType::PDPD)
+            {
+                NODE_VALIDATION_CHECK(
+                    this,
+                    PartialShape::broadcast_merge_into(pshape, get_input_partial_shape(i), autob),
+                    "Argument shapes are inconsistent.");
+            }
             else
             {
                 NODE_VALIDATION_CHECK(this, false, "Unsupported auto broadcast specification");
