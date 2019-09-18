@@ -57,11 +57,11 @@ void op::RegionYolo::validate_and_infer_types()
         if (m_do_softmax)
         {
             size_t flat_dim = 1;
-            for (size_t i = 0; i < m_axis; i++)
+            for (int64_t i = 0; i < m_axis; i++)
             {
                 output_shape.push_back(input_shape[i]);
             }
-            for (size_t i = m_axis; i < end_axis + 1; i++)
+            for (int64_t i = m_axis; i < end_axis + 1; i++)
             {
                 flat_dim *= input_shape[i];
             }

@@ -42,7 +42,7 @@ namespace ngraph
                      const Shape& arg1_shape,
                      const Shape& out_shape,
                      size_t reduction_axes_count,
-                     const float requant_scale = 1.0f)
+                     const ACCUMULATION requant_scale = 1)
             {
                 auto old_mode = std::fegetround();
                 std::fesetround(FE_TONEAREST);
@@ -117,8 +117,9 @@ namespace ngraph
                                 arg1_projected_coord.begin(), arg1_projected_coord.end(), arg1_it);
 
                             // Multiply and add to the sum.
-                            sum += arg0[arg0_transform.index(arg0_coord)] *
-                                   arg1[arg1_transform.index(arg1_coord)];
+                            sum +=
+                                static_cast<ACCUMULATION>(arg0[arg0_transform.index(arg0_coord)]) *
+                                static_cast<ACCUMULATION>(arg1[arg1_transform.index(arg1_coord)]);
                         }
 
                         // Write the sum back.

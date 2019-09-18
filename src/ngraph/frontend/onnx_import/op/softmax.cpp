@@ -41,7 +41,7 @@ namespace ngraph
                         axis = data_shape.size() + axis;
                     }
 
-                    ASSERT_VALID_ARGUMENT(node, axis < data_shape.size())
+                    ASSERT_VALID_ARGUMENT(node, axis < static_cast<int64_t>(data_shape.size()))
                         << "provided 'axis' value:" << axis
                         << " is out of input tensor dimensions range.";
 

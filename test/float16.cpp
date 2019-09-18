@@ -74,14 +74,14 @@ TEST(float16, assigns)
     std::vector<float> f32vec{1.0, 2.0, 4.0};
     std::vector<float16> f16vec;
     std::copy(f32vec.begin(), f32vec.end(), std::back_inserter(f16vec));
-    for (int i = 0; i < f32vec.size(); ++i)
+    for (size_t i = 0; i < f32vec.size(); ++i)
     {
         EXPECT_EQ(f32vec.at(i), f16vec.at(i));
     }
 
     float f32arr[] = {1.0, 2.0, 4.0};
     float16 f16arr[sizeof(f32arr)];
-    for (int i = 0; i < sizeof(f32arr) / sizeof(f32arr[0]); ++i)
+    for (size_t i = 0; i < sizeof(f32arr) / sizeof(f32arr[0]); ++i)
     {
         f16arr[i] = f32arr[i];
         EXPECT_EQ(f32arr[i], f16arr[i]);
