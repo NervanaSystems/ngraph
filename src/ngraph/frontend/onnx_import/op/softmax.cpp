@@ -36,7 +36,7 @@ namespace ngraph
                     auto data_shape = data->get_shape();
 
                     int axis = node.get_attribute_value<int64_t>("axis", 1);
-                    std::size_t valid_axis = common::convert_negative_axis(axis, data_shape.size());
+                    std::size_t valid_axis = common::validate_axis(node, axis, data_shape.size());
 
                     // create vector of capacity data_dimensions - axis_divider position
                     std::vector<size_t> axes(data_shape.size() - valid_axis);

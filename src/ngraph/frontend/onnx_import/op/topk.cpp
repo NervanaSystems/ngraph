@@ -39,7 +39,7 @@ namespace ngraph
                     std::int64_t k{node.get_attribute_value<std::int64_t>("k")};
                     auto num_dimensions = data->get_shape().size();
                     std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
-                    std::int64_t valid_axis = common::convert_negative_axis(axis, num_dimensions);
+                    std::int64_t valid_axis = common::validate_axis(node, axis, num_dimensions);
 
                     std::shared_ptr<ngraph::Node> top_k =
                         std::make_shared<ngraph::op::TopK>(data, valid_axis, element::i64, k);

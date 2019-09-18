@@ -35,7 +35,7 @@ namespace ngraph
                     auto data = ng_inputs.at(0);
                     auto indices = ng_inputs.at(1);
                     auto axis = node.get_attribute_value<int64_t>("axis", 0);
-                    auto valid_axis = common::convert_negative_axis(axis, data->get_shape().size());
+                    auto valid_axis = common::validate_axis(node, axis, data->get_shape().size());
 
                     return {std::make_shared<ngraph::op::Gather>(data, indices, valid_axis)};
                 }

@@ -31,10 +31,8 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
                     auto axes = node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
-                    std::vector<std::size_t> valid_axes =
-                        common::convert_negative_axes(axes, data->get_shape().size());
                     auto axes_node = std::make_shared<ngraph::op::Constant>(
-                        element::i64, Shape{valid_axes.size()}, valid_axes);
+                        element::i64, Shape{axes.size()}, axes);
                     return {std::make_shared<ngraph::op::Unsqueeze>(data, axes_node)};
                 }
 

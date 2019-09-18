@@ -33,7 +33,8 @@ namespace ngraph
                     NodeVector inputs{node.get_ng_inputs()};
                     auto data = inputs.at(0);
                     auto axis = node.get_attribute_value<std::int64_t>("axis", 1);
-                    auto valid_axis = common::convert_negative_axis(axis, data->get_shape().size());
+                    auto valid_axis =
+                        common::validate_axis(node, axis, data->get_shape().size() + 1);
 
                     return {ngraph::builder::flatten(data, valid_axis)};
                 }

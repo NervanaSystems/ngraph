@@ -52,7 +52,7 @@ namespace ngraph
                         std::make_shared<ngraph::op::Slice>(values, Coordinate{1}, Coordinate{2});
                     auto axis = node.get_attribute_value<std::int64_t>("axis", -1);
                     std::size_t valid_axis =
-                        common::convert_negative_axis(axis, inputs.at(0)->get_shape().size() + 1);
+                        common::validate_axis(node, axis, indices_shape.size() + 1);
 
                     auto constant_depth = std::dynamic_pointer_cast<ngraph::op::Constant>(depth);
 

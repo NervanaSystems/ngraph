@@ -46,34 +46,36 @@ namespace ngraph
                                        static_cast<onnx::TensorProto_DataType>(onnx_type)));
             }
 
-            std::size_t convert_negative_axis(std::int64_t axis, std::size_t tensor_rank)
+            std::size_t validate_axis(const ngraph::onnx_import::Node& node,
+                                      std::int64_t axis,
+                                      std::size_t tensor_rank)
             {
-                if (axis >= 0)
-                {
-                    return std::min(static_cast<size_t>(axis), tensor_rank);
-                }
-                else
+                NGRAPH_CHECK(abs(axis) < tensor_rank,
+                             node.get_description(),
+                             "Parameter axis out of the tensor rank.");
+
+                if (axis < 0)
                 {
                     std::int64_t new_axis = axis + static_cast<std::int64_t>(tensor_rank);
-                    if (new_axis < 0)
-                    {
-                        throw ngraph_error("Parameter axis out of the tensor rank.");
-                    }
-                    else
-                    {
-                        return static_cast<size_t>(new_axis);
-                    }
+                    NGRAPH_CHECK(new_axis >= 0,
+                                 node.get_description(),
+                                 "Parameter axis out of the tensor rank.");
+
+                    return static_cast<size_t>(new_axis);
                 }
+
+                return static_cast<size_t>(axis);
             }
 
-            std::vector<std::size_t> convert_negative_axes(std::vector<std::int64_t> axes,
-                                                           std::size_t tensor_rank)
+            std::vector<std::size_t> validate_axes(const ngraph::onnx_import::Node& node,
+                                                   std::vector<std::int64_t> axes,
+                                                   std::size_t tensor_rank)
             {
                 std::vector<std::size_t> new_axes;
 
                 for (auto a : axes)
                 {
-                    new_axes.push_back(convert_negative_axis(a, tensor_rank));
+                    new_axes.push_back(validate_axis(node, a, tensor_rank));
                 }
 
                 return new_axes;
