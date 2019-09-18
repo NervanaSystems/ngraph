@@ -192,7 +192,8 @@ void op::LayerNorm::pre_validate_and_infer_types()
                 int64_t s_rank = static_cast<int64_t>(scale_rank);
                 int64_t b_rank = static_cast<int64_t>(bias_rank);
                 NODE_VALIDATION_CHECK(this,
-                                      s_rank == b_rank && s_rank == (d_rank - n_axis),
+                                      s_rank == b_rank &&
+                                          ((s_rank == (d_rank - n_axis)) || s_rank == 1),
                                       "Scale and/or bias rank is incorrect");
             }
         }
@@ -498,7 +499,7 @@ void op::LayerNormBackprop::pre_validate_and_infer_types()
                 int64_t m_rank = static_cast<int64_t>(mean_rank);
                 int64_t v_rank = static_cast<int64_t>(var_rank);
                 NODE_VALIDATION_CHECK(this,
-                                      m_rank == v_rank && m_rank == (d_rank - n_axis),
+                                      m_rank == v_rank && m_rank == n_axis,
                                       "Mean and/or variance rank is incorrect");
             }
         }
@@ -514,7 +515,8 @@ void op::LayerNormBackprop::pre_validate_and_infer_types()
                 int64_t s_rank = static_cast<int64_t>(scale_rank);
                 int64_t b_rank = static_cast<int64_t>(bias_rank);
                 NODE_VALIDATION_CHECK(this,
-                                      s_rank == b_rank && s_rank == n_axis,
+                                      s_rank == b_rank &&
+                                          ((s_rank == (d_rank - n_axis)) || s_rank == 1),
                                       "Scale and/or bias rank is incorrect");
             }
         }
