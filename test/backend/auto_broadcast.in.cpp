@@ -119,7 +119,26 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise_pdpd)
 
 NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise_pdpd_dynamic)
 {
+    auto pshape_a = PartialShape{Dimension::dynamic(), 3};
+    auto pshape_b = PartialShape{Dimension::dynamic()};
+    auto a = make_shared<op::Parameter>(element::f32, pshape_a);
+    auto b = make_shared<op::Parameter>(element::f32, pshape_b);
+
     const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec(op::AutoBroadcastType::PDPD);
-    check_auto_bcast<op::Add, float, float>(
-        {{1, 2, 3, 4, 5, 6}, {5, 6, 7}}, {6, 8, 10, 9, 11, 13}, autob);
+    auto f = make_shared<Function>(make_shared<op::Add>(a, b, autob), ParameterVector{a, b});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+    auto ex = backend->compile(f);
+
+    auto t_r = backend->create_dynamic_tensor(element::f32, pshape_a);
+    auto t_a = backend->create_tensor(element::f32, Shape{2, 3});
+    auto t_b = backend->create_tensor(element::f32, Shape{3});
+    copy_data(t_a, vector<float>{1, 2, 3, 4, 5, 6});
+    copy_data(t_b, vector<float>{5, 6, 7});
+
+    ex->call_with_validate({t_r}, {t_a, t_b});
+
+    ASSERT_EQ(t_r->get_shape(), (Shape{2, 3}));
+    auto results = read_vector<float>(t_r);
+    vector<float> expected_values{6, 8, 10, 9, 11, 13};
+    EXPECT_TRUE(test::all_close_f(results, expected_values));
 }
