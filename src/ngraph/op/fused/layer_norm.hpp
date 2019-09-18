@@ -70,8 +70,8 @@ namespace ngraph
         private:
             bool m_keep_stats{true};
             bool m_use_affine{true};
-            double m_epsilon{1e-5};
             int64_t m_begin_norm_axis{1};
+            double m_epsilon{1e-5};
         };
 
         /// \brief Layer Normalization Backprop
@@ -129,8 +129,8 @@ namespace ngraph
         private:
             bool m_use_stats{true};
             bool m_use_affine{true};
-            double m_epsilon{1e-5};
             int64_t m_begin_norm_axis{1};
+            double m_epsilon{1e-5};
         };
     }
 }
