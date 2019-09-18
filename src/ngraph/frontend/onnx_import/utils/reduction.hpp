@@ -65,8 +65,7 @@ namespace ngraph
                 auto axis = node.get_attribute_value<std::int64_t>("axis", 0);
                 auto keepdims = node.get_attribute_value<std::int64_t>("keepdims", 1);
                 auto input_node = node.get_ng_inputs().at(0);
-                auto valid_axis =
-                    common::convert_negative_axis(axis, input_node->get_shape().size());
+                auto valid_axis = common::validate_axis(node, axis, input_node->get_shape().size());
 
                 auto op_node =
                     std::make_shared<IndexReduction>(input_node, valid_axis, element::i64);

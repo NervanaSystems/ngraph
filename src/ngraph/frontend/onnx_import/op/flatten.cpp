@@ -33,7 +33,9 @@ namespace ngraph
                     NodeVector inputs{node.get_ng_inputs()};
                     auto data = inputs.at(0);
                     auto axis = node.get_attribute_value<std::int64_t>("axis", 1);
-                    auto valid_axis = common::convert_negative_axis(axis, data->get_shape().size());
+		    auto data_rank = data->get_shape().size();
+                    //Accepted range is [-r, r] where r = rank(input).
+                    auto valid_axis = common::validate_axis(node, axis, data_rank, -data_rank, data_rank);
                     return {ngraph::builder::flatten(data, valid_axis)};
                 }
 

@@ -35,7 +35,7 @@ namespace ngraph
                     std::int64_t axis = node.get_attribute_value<std::int64_t>("axis");
 
                     size_t valid_axis =
-                        common::convert_negative_axis(axis, inputs.at(0)->get_shape().size());
+                        common::validate_axis(node, axis, inputs.at(0)->get_shape().size());
 
                     return {std::make_shared<ngraph::op::Concat>(inputs, valid_axis)};
                 }

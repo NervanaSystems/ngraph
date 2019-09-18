@@ -37,6 +37,7 @@ namespace ngraph
 
                     int axis = node.get_attribute_value<int64_t>("axis", 1);
 <<<<<<< HEAD
+<<<<<<< HEAD
 
                     if (axis < 0)
                     {
@@ -49,6 +50,9 @@ namespace ngraph
 =======
                     std::size_t valid_axis = common::convert_negative_axis(axis, data_shape.size());
 >>>>>>> [ONNX] Added function for converting negative axes.
+=======
+                    std::size_t valid_axis = common::validate_axis(node, axis, data_shape.size());
+>>>>>>> Added validation for axis/axes.
 
                     // create vector of capacity data_dimensions - axis_divider position
                     std::vector<size_t> axes(data_shape.size() - valid_axis);

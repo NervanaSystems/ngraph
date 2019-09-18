@@ -35,7 +35,7 @@ namespace ngraph
                     const auto outputs_number = node.get_output_names().size();
                     const auto axis = node.get_attribute_value<int64_t>("axis", 0);
                     std::size_t valid_axis =
-                        common::convert_negative_axis(axis, input->get_shape().size());
+                        common::validate_axis(node, axis, input->get_shape().size());
 
                     try
                     {

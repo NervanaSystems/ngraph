@@ -36,7 +36,7 @@ namespace ngraph
                     std::vector<std::int64_t> axes =
                         node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
                     std::vector<std::size_t> valid_axes =
-                        common::convert_negative_axes(axes, data->get_shape().size());
+                        common::validate_axes(node, axes, data->get_shape().size());
                     auto axes_node = std::make_shared<ngraph::op::Constant>(
                         element::u64, Shape{valid_axes.size()}, valid_axes);
                     return {std::make_shared<ngraph::op::Squeeze>(data, axes_node)};

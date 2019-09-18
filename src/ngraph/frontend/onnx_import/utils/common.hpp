@@ -25,6 +25,7 @@
 #include <type_traits> // std::enable_if
 #include <vector>
 
+#include "core/node.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
@@ -67,25 +68,30 @@ namespace ngraph
                 return range;
             }
 
-            /// \brief      Handle negative axis value.
+            /// \brief      Handle out of range axis.
             ///
+            /// \param[in]  node        The node with requested axis.
             /// \param[in]  axis        The requested axis value.
             /// \param[in]  tensor_rank  The corresponding tensor rank.
             ///
             /// \return     If negative axis, then return sum of tensor rank and axis.
             ///
-            std::size_t convert_negative_axis(std::int64_t axis, std::size_t tensor_rank);
+            std::size_t validate_axis(const ngraph::onnx_import::Node& node,
+                                      std::int64_t axis,
+                                      std::size_t tensor_rank);
 
-            /// \brief      Handle negative axes' values in vector.
+            /// \brief      Handle out of range axes in vector.
             ///
+            /// \param[in]  node        The node with requested axes.
             /// \param[in]  axes        The requested vector of axes.
             /// \param[in]  tensor_rank  The corresponding tensor rank.
             ///
             /// \return     If any negative axis in vector, then replace by sum of tensor rank and
             /// axis.
             ///
-            std::vector<std::size_t> convert_negative_axes(std::vector<std::int64_t> axes,
-                                                           std::size_t tensor_rank);
+            std::vector<std::size_t> validate_axes(const ngraph::onnx_import::Node& node,
+                                                   std::vector<std::int64_t> axes,
+                                                   std::size_t tensor_rank);
 
             /// \brief Creates a shifted square identity matrix.
             /// \note Shifting in the context of this operator means that

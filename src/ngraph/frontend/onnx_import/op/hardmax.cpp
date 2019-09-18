@@ -34,9 +34,13 @@ namespace ngraph
                     const auto input = node.get_ng_inputs().at(0);
                     const auto& input_shape = input->get_shape();
                     auto axis = node.get_attribute_value<std::int64_t>("axis", 1);
+<<<<<<< HEAD
 
                     auto valid_axis =
                         common::convert_negative_axis(axis, input->get_shape().size());
+=======
+                    auto valid_axis = common::validate_axis(node, axis, input_shape.size());
+>>>>>>> Added validation for axis/axes.
 
 
                     // reshape to 2D - "batch size" x "input feature dimensions" (NxD)

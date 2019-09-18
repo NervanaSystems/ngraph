@@ -39,7 +39,7 @@ namespace ngraph
                     std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
                     const std::int64_t p_norm{node.get_attribute_value<std::int64_t>("p", 2)};
                     std::size_t valid_axis =
-                        common::convert_negative_axis(axis, data->get_shape().size());
+                        common::validate_axis(node, axis, data->get_shape().size());
 
                     ASSERT_VALID_ARGUMENT(node, p_norm == 1 || p_norm == 2)
                         << "Invalid `p` attribute value: " << p_norm
