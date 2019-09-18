@@ -37,7 +37,8 @@ extern "C" void
     ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(CPURuntimeContext* ctx,
                                                                 size_t primitive_index,
                                                                 std::vector<size_t>& /* deps */,
-                                                                OpType /* type */)
+                                                                OpType /* type */,
+                                                                size_t sractchpad_size)
 {
     mkldnn::stream s(mkldnn::stream::kind::eager);
     try
@@ -58,8 +59,12 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::set_memory_ptr(CPURuntimeCon
     memory->set_data_handle(ptr);
 }
 
-extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
-    CPURuntimeContext* ctx, size_t primitive_index, std::vector<size_t>& deps, OpType type)
+extern "C" void
+    ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(CPURuntimeContext* ctx,
+                                                                size_t primitive_index,
+                                                                std::vector<size_t>& deps,
+                                                                OpType type,
+                                                                size_t scratchpad_size)
 {
     std::unordered_map<int, mkldnn::memory> exec_args;
     size_t nargs;
@@ -201,10 +206,13 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
         break;
     }
 
-    mkldnn::memory scratchpad(*ctx->mkldnn_scratchpad_mds[primitive_index],
-                              executor::global_cpu_engine,
-                              ctx->scratchpad_buffer->get_ptr());
-    exec_args.insert({MKLDNN_ARG_SCRATCHPAD, scratchpad});
+    if (scratchpad_size)
+    {
+        mkldnn::memory scratchpad(*ctx->mkldnn_scratchpad_mds[primitive_index],
+                                  executor::global_cpu_engine,
+                                  ctx->scratchpad_buffer->get_ptr());
+        exec_args.insert({MKLDNN_ARG_SCRATCHPAD, scratchpad});
+    }
 
     mkldnn::stream s(executor::global_cpu_engine);
     try
