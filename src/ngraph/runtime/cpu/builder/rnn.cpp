@@ -52,8 +52,6 @@ namespace ngraph
                 auto rnn_desc =
                     mkldnn_emitter->get_rnn_forward_desc<ngraph::op::Rnn>(node, args, out);
 
-                size_t s_size = 0;
-
 #if MKLDNN_VERSION_MAJOR < 1
                 auto weights_layer_buffer_index =
                     external_function->get_buffer_index(args[2].get_name());
@@ -111,7 +109,7 @@ namespace ngraph
                 };
                 functors.emplace_back(functor);
 #else
-                s_size = mkldnn_emitter->query_scratchpad_rnn_forward(rnn_desc);
+                size_t s_size = mkldnn_emitter->query_scratchpad_rnn_forward(rnn_desc);
 
                 auto src_iter_c_buffer_index =
                     external_function->get_buffer_index(args[2].get_name());

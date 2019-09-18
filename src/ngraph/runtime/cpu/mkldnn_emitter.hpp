@@ -1215,15 +1215,6 @@ namespace ngraph
                                                           attr);
                 }
 
-                mkldnn::memory::format_tag query_convolution_forward_weight_format_tag(
-                    const mkldnn::memory::desc& input_data_desc,
-                    const mkldnn::memory::desc& weights_desc_any,
-                    const mkldnn::memory::desc& result_desc,
-                    const ngraph::Strides& filter_strides,
-                    const ngraph::Strides& window_dilation_strides_adjusted,
-                    const ngraph::CoordinateDiff& padding_below,
-                    const ngraph::CoordinateDiff& padding_above);
-
                 template <typename OP>
                 mkldnn::lstm_forward::desc
                     get_rnn_forward_desc(const ngraph::Node* node,
@@ -1697,15 +1688,6 @@ namespace ngraph
 
                     mkldnn_primitives[ip_idx] = prim;
                 }
-
-                mkldnn::memory::format query_convolution_forward_weight_format(
-                    const mkldnn::memory::desc& input_data_desc,
-                    const mkldnn::memory::desc& weights_desc_any,
-                    const mkldnn::memory::desc& result_desc,
-                    const ngraph::Strides& filter_strides,
-                    const ngraph::Strides& window_dilation_strides_adjusted,
-                    const ngraph::CoordinateDiff& padding_below,
-                    const ngraph::CoordinateDiff& padding_above);
 
                 void build_rnn_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
                                        std::vector<mkldnn::primitive*>& mkldnn_primitives,
