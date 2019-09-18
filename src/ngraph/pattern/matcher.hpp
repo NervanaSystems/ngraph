@@ -40,9 +40,7 @@ namespace ngraph
         template <typename T>
         std::function<bool(std::shared_ptr<Node>)> has_class()
         {
-            auto pred = [](std::shared_ptr<Node> node) -> bool {
-                return std::dynamic_pointer_cast<T>(node) != nullptr;
-            };
+            auto pred = [](std::shared_ptr<Node> node) -> bool { return node->is_type<T>(); };
 
             return pred;
         }
@@ -109,7 +107,7 @@ namespace ngraph
                 std::shared_ptr<T> matched;
                 for (auto arg : node->get_arguments())
                 {
-                    if (auto t_casted = std::dynamic_pointer_cast<T>(arg))
+                    if (auto t_casted = as_type_ptr<T>(arg))
                     {
                         if (matched)
                         {
