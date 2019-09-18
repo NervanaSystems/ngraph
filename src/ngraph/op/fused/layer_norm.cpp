@@ -35,7 +35,7 @@ using namespace std;
 using namespace ngraph;
 
 const string op::LayerNorm::type_name{"LayerNorm"};
-const string op::LayerNormBackprop::type_name{"LayerNormBackProp"};
+const string op::LayerNormBackprop::type_name{"LayerNormBackprop"};
 
 op::LayerNorm::LayerNorm(const Output<Node>& data,
                          const Output<Node>& scale,
