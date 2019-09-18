@@ -23,20 +23,21 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v0
+        namespace v1
         {
             /// \brief Tensor dynamic reshape operation.
             ///
             /// "Converts" an input tensor into a new shape with the same number of elements.
             /// This op does not touch the actual data. If needed, use Transpose for that purpose.
             ///
-            class DynReshape : public Op
+            class Reshape : public Op
             {
             public:
+            public:
                 NGRAPH_API
-                static constexpr NodeTypeInfo type_info{"DynReshape", 0};
+                static constexpr NodeTypeInfo type_info{"DynReshape", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
-                DynReshape() = default;
+                Reshape() = default;
                 /// \brief Constructs a dynamic reshape operation. This operation does not perform
                 ///        transpose.
                 ///
@@ -47,29 +48,18 @@ namespace ngraph
                 ///        be of the form \f$(b_0,\dots,b_{j-1})\f$ where \f$\Pi(a_i) = \Pi(b_i)\f$.
                 ///        A value of -1 is allowed for at most one dimension, in which case the
                 ///        dimension size is inferred based on element count of input tensor.
-                /// \param zero_flag Treats zeros in `pattern` as wildcard flags indicating a copy
-                /// from
-                ///                  input shape at the same index.
-                DynReshape(const Output<Node>& arg,
-                           const Output<Node>& pattern,
-                           bool zero_flag = false);
+                Reshape(const Output<Node>& arg, const Output<Node>& pattern);
 
                 void validate_and_infer_types() override;
 
+                size_t get_version() const override { return 1; }
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
-                bool get_zero_flag() const { return m_zero_flag; }
-                void set_zero_flag(bool zero_flag) { m_zero_flag = zero_flag; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const NodeVector& deltas) override;
-
-            private:
-                bool m_zero_flag;
             };
         }
-        // default opset version
-        using v0::DynReshape;
     }
 }
