@@ -154,7 +154,8 @@ namespace ngraph
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-                        for (int64_t i = 0; i < outer_loop_num * num_indices; i++)
+                        // omp requires signed iterator
+                        for (int64_t i = 0; i < static_cast<int64_t>(outer_loop_num * num_indices); i++)
                         {
                             Eigen::array<Eigen::Index, Rank1> in_extents, in_offsets;
                             Eigen::array<Eigen::Index, Rank2> out_extents, out_offsets;
