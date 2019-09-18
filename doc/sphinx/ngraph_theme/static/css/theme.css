@@ -1460,7 +1460,7 @@ input[type="radio"][disabled], input[type="checkbox"][disabled] {
 }
 
 .wy-table-odd td, .wy-table-striped tr:nth-child(2n-1) td, .rst-content table.docutils:not(.field-list) tr:nth-child(2n-1) td {
-  background-color: #eef1f6;
+  background-color: #d4d3d2;
 }
 
 .wy-table-backed {
@@ -1469,22 +1469,22 @@ input[type="radio"][disabled], input[type="checkbox"][disabled] {
 
 /* BORDERED TABLES */
 .wy-table-bordered-all, .rst-content table.docutils {
-  border: 1px solid #e1e4e5;
+  border: 1px solid #e5e2dd;
 }
 .wy-table-bordered-all td, .rst-content table.docutils td {
-  border-bottom: 1px solid #e1e4e5;
-  border-left: 1px solid #e1e4e5;
+  border-bottom: 1px solid #e5e2dd;
+  border-left: 1px solid #e5e2dd;
 }
 .wy-table-bordered-all tbody > tr:last-child td, .rst-content table.docutils tbody > tr:last-child td {
   border-bottom-width: 0;
 }
 
 .wy-table-bordered {
-  border: 1px solid #e1e4e5;
+  border: 1px solid #e5e2dd;
 }
 
 .wy-table-bordered-rows td {
-  border-bottom: 1px solid #e1e4e5;
+  border-bottom: 1px solid #e5e2dd;
 }
 .wy-table-bordered-rows tbody > tr:last-child td {
   border-bottom-width: 0;
@@ -1790,7 +1790,7 @@ div[class^='highlight'] pre {
   line-height: 1.13;
   display: block;
   overflow: wrap;
-  color: #83827d;
+  color: #8a8e98;
 }
 
   .linenodiv pre {
@@ -2417,7 +2417,7 @@ div[class^='highlight'] pre {
 }
 .rst-content tt.literal, .rst-content tt.literal, .rst-content code.literal {
   font-size: 103% !important;
-  color: #c68b4b;
+  color: #a0a9b0;
   line-height: 0.93em;
 }
 .rst-content tt.xref, a .rst-content tt, .rst-content tt.xref, .rst-content code.xref, a .rst-content tt, a .rst-content code {
@@ -2650,10 +2650,11 @@ span[id*='MathJax-Span'] {
   display: block;
   font-family: 'Nunito Sans', Nunito, 'Open Sans', sans;
   font-weight: bolder;
-  border-top: 4px dotted #FFA400;
-  border-bottom: 50px solid #d3d3d3;
+  border-top: 5px dotted #FFA400;
+  border-bottom: 31px solid #d3d3d3;
   font-size: 139%;
   color: #393F4D;
+  width: auto;
   white-space: nowrap;
 }
 
@@ -2710,8 +2711,8 @@ span[id*='MathJax-Span'] {
   /* color: #23221D; */
   padding-left: 1.618em -4px;
   background-color: #D4D4D4;
-  color: #FFA400;
-  border-right: 4px solid #999;
+  color: #5c5955;
+  border-right: 4px solid #FFA400;
 
 }
 .wy-menu-vertical li.on a:hover, .wy-menu-vertical li.current > a:hover {
