@@ -21,12 +21,173 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(type_prop, layer_norm_dummy_prop)
+TEST(type_prop, layer_norm_element_type)
 {
-    // auto tv0_2_4_param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
-    // auto tv0_2_4_param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    // auto tv0_2_4_param_2 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    // auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
-    // ASSERT_EQ(bc->get_element_type(), element::f32);
-    // ASSERT_EQ(bc->get_shape(), (Shape{2, 4}));
+    auto data = make_shared<op::Parameter>(element::i32, Shape{2, 4});
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{4});
+    auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
+    try
+    {
+        auto ln = make_shared<op::LayerNorm>(data, scale, bias);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Argument element type must be f16, bf16, f32, f64 or dynamic"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, layer_norm_begin_norm_axis)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{4});
+    auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
+    try
+    {
+        auto ln = make_shared<op::LayerNorm>(data, scale, bias, false, 2);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("begin_norm_axis is out of range"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, layer_norm_affine_rank)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
+    try
+    {
+        auto ln = make_shared<op::LayerNorm>(data, scale, bias);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Scale and/or bias rank is incorrect"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, layer_norm_bprop_element_type)
+{
+    auto data = make_shared<op::Parameter>(element::i32, Shape{2, 4});
+    auto delta = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto mean = make_shared<op::Parameter>(element::f32, Shape{2});
+    auto variance = make_shared<op::Parameter>(element::f32, Shape{2});
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{4});
+    auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
+    try
+    {
+        auto lnb = make_shared<op::LayerNormBackprop>(data, delta);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Argument element type must be f16, bf16, f32, f64 or dynamic"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, layer_norm_bprop_begin_norm_axis)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto delta = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto mean = make_shared<op::Parameter>(element::f32, Shape{2});
+    auto variance = make_shared<op::Parameter>(element::f32, Shape{2});
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{4});
+    auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
+    try
+    {
+        auto lnb = make_shared<op::LayerNormBackprop>(data, delta, 2);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("begin_norm_axis is out of range"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, layer_norm_bprop_delta)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto delta = make_shared<op::Parameter>(element::f32, Shape{4});
+    auto mean = make_shared<op::Parameter>(element::f32, Shape{2});
+    auto variance = make_shared<op::Parameter>(element::f32, Shape{2});
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{4});
+    auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
+    try
+    {
+        auto lnb = make_shared<op::LayerNormBackprop>(data, delta);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Delta rank is incorrect"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, layer_norm_bprop_stats)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto delta = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto mean = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto variance = make_shared<op::Parameter>(element::f32, Shape{2});
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{4});
+    auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
+    try
+    {
+        auto lnb = make_shared<op::LayerNormBackprop>(data, delta);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Mean and/or variance rank is incorrect"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, layer_norm_bprop_affine)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto delta = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto mean = make_shared<op::Parameter>(element::f32, Shape{2});
+    auto variance = make_shared<op::Parameter>(element::f32, Shape{2});
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
+    try
+    {
+        auto lnb = make_shared<op::LayerNormBackprop>(data, delta);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Scale and/or bias rank is incorrect"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }

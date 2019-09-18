@@ -178,7 +178,8 @@ void op::LayerNorm::pre_validate_and_infer_types()
     {
         d_rank = static_cast<int64_t>(data_rank);
         n_axis = m_begin_norm_axis >= 0 ? m_begin_norm_axis : d_rank + m_begin_norm_axis;
-        NODE_VALIDATION_CHECK(this, n_axis > 0, "begin_norm_axis is out of range");
+        NODE_VALIDATION_CHECK(
+            this, n_axis >= 0 && n_axis < d_rank, "begin_norm_axis is out of range");
 
         if (m_use_affine)
         {
@@ -475,7 +476,8 @@ void op::LayerNormBackprop::pre_validate_and_infer_types()
     {
         d_rank = static_cast<int64_t>(data_rank);
         n_axis = m_begin_norm_axis >= 0 ? m_begin_norm_axis : d_rank + m_begin_norm_axis;
-        NODE_VALIDATION_CHECK(this, n_axis > 0, "begin_norm_axis is out of range");
+        NODE_VALIDATION_CHECK(
+            this, n_axis >= 0 && n_axis < d_rank, "begin_norm_axis is out of range");
 
         const PartialShape& delta_shape = get_input_partial_shape(1);
         Rank delta_rank = delta_shape.rank();
