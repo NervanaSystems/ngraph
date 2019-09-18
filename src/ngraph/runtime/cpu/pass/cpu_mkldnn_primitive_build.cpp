@@ -74,7 +74,7 @@ namespace ngraph
                                                    std::vector<mkldnn::memory::desc>& descs,
                                                    size_t primitive_index)
                 {
-                    for (auto i = 0; i < descs.size(); i++)
+                    for (size_t i = 0; i < descs.size(); i++)
                     {
                         desc_file << primitive_index;
                         desc_file.write(reinterpret_cast<char*>(&descs[i]),

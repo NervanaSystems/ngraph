@@ -35,6 +35,12 @@
 using namespace std;
 using namespace ngraph;
 
+extern template ngraph::Shape ngraph::apply_permutation<ngraph::Shape>(ngraph::Shape input,
+                                                                       ngraph::AxisVector order);
+extern template ngraph::PartialShape
+    ngraph::apply_permutation<ngraph::PartialShape>(ngraph::PartialShape input,
+                                                    ngraph::AxisVector order);
+
 TEST(util, split)
 {
     {
