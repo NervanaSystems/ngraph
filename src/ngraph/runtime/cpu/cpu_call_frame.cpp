@@ -217,7 +217,14 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
                 std::vector<mkldnn::memory*>(mkldnn_emitter->get_mkldnn_memories().size());
             ctx->mkldnn_scratchpad_mds = std::vector<mkldnn::memory::desc*>(
                 mkldnn_emitter->get_mkldnn_scratchpad_mds().size());
-            ctx->scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment);
+            if (scratchpad_size > 0)
+            {
+                ctx->scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment, allocator);
+            }
+            else
+            {
+                ctx->scratchpad_buffer = nullptr;
+            }
         }
         else
         {
