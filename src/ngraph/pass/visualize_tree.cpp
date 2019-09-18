@@ -163,7 +163,7 @@ static std::string label_edge(const std::shared_ptr<Node>& /* src */,
     if (getenv("NGRAPH_VISUALIZE_EDGE_LABELS") != nullptr)
     {
         size_t output = 0;
-        if (auto goe = dst->as_type<op::GetOutputElement>())
+        if (auto goe = as_type_ptr<op::GetOutputElement>(dst))
         {
             output = goe->get_as_output().get_index();
         }
@@ -223,7 +223,7 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
 
         traverse_nodes(f, [&](shared_ptr<Node> node) {
 
-            if (auto ck = dynamic_pointer_cast<ngraph::op::CompiledKernel>(node))
+            if (auto ck = as_type_ptr<ngraph::op::CompiledKernel>(node))
             {
                 // print sub-graph
                 auto nodes_list = ck->get_node_list();
@@ -416,7 +416,7 @@ string pass::VisualizeTree::get_node_name(shared_ptr<Node> node)
     {
         rc += "\\n" + node->get_name();
     }
-    if (auto ck = node->as_type<ngraph::op::CompiledKernel>())
+    if (auto ck = as_type_ptr<ngraph::op::CompiledKernel>(node))
     {
         rc += "\\n{";
         // add sub-graph node names

@@ -48,7 +48,7 @@ NodeVector op::Unsqueeze::decompose_op() const
     auto axes_node = input_value(1).get_node_shared_ptr();
 
     // Get value of axes from Constant
-    auto axes_constant = dynamic_pointer_cast<op::Constant>(axes_node);
+    auto axes_constant = as_type_ptr<op::Constant>(axes_node);
     auto axes = axes_constant->get_vector<size_t>();
 
     auto data_shape = data.get_shape();
