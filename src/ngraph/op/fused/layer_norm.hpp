@@ -44,12 +44,12 @@ namespace ngraph
                       const Output<Node>& scale,
                       const Output<Node>& bias,
                       bool keep_stats = true,
-                      int64_t begin_norm_axis = -1,
+                      int64_t begin_norm_axis = 1,
                       double epsilon = 1e-5);
 
             LayerNorm(const Output<Node>& data,
                       bool keep_stats = true,
-                      int64_t begin_norm_axis = -1,
+                      int64_t begin_norm_axis = 1,
                       double epsilon = 1e-5);
 
             virtual NodeVector decompose_op() const override;
@@ -72,7 +72,7 @@ namespace ngraph
             bool m_keep_stats{true};
             bool m_use_affine{true};
             double m_epsilon{1e-5};
-            int64_t m_begin_norm_axis{-1};
+            int64_t m_begin_norm_axis{1};
         };
 
         /// \brief Layer Normalization Backprop
@@ -100,7 +100,7 @@ namespace ngraph
                               const Output<Node>& variance,
                               const Output<Node>& scale,
                               const Output<Node>& bias,
-                              int64_t begin_norm_axis = -1,
+                              int64_t begin_norm_axis = 1,
                               double epsilon = 1e-5);
 
             LayerNormBackprop(const Output<Node>& data,
@@ -108,12 +108,12 @@ namespace ngraph
                               const Output<Node>& mean_scale,
                               const Output<Node>& variance_bias,
                               bool  use_stats,
-                              int64_t begin_norm_axis = -1,
+                              int64_t begin_norm_axis = 1,
                               double epsilon = 1e-5);
 
             LayerNormBackprop(const Output<Node>& data,
                               const Output<Node>& delta,
-                              int64_t begin_norm_axis = -1,
+                              int64_t begin_norm_axis = 1,
                               double epsilon = 1e-5);
 
             virtual NodeVector decompose_op() const override;
@@ -132,7 +132,7 @@ namespace ngraph
             bool m_use_stats{true};
             bool m_use_affine{true};
             double m_epsilon{1e-5};
-            int64_t m_begin_norm_axis{-1};
+            int64_t m_begin_norm_axis{1};
         };
     }
 }
