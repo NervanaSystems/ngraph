@@ -32,8 +32,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"Elu", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             Elu() = default;
             /// \brief Constructs an Elu operation.
             ///
@@ -48,7 +48,7 @@ namespace ngraph
 
             double get_alpha() const { return m_alpha; }
         private:
-            const double m_alpha;
+            double m_alpha;
         };
     } // namespace op
 } // namespace ngraph

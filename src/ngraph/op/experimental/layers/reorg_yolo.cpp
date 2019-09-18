@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::ReorgYolo::type_name{"ReorgYolo"};
+constexpr NodeTypeInfo op::ReorgYolo::type_info;
 
 op::ReorgYolo::ReorgYolo(const Output<Node>& input, const Strides& strides)
     : Op({input})

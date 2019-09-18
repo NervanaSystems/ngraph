@@ -28,17 +28,17 @@
 using namespace std;
 using namespace ngraph;
 
-static shared_ptr<Node> sigmoid(const shared_ptr<Node>& arg, float alpha, float beta)
+static shared_ptr<Node> sigmoid(const shared_ptr<Node>& arg, float /* alpha */, float /* beta */)
 {
     return make_shared<op::Sigmoid>(arg);
 }
 
-static shared_ptr<Node> tanh(const shared_ptr<Node>& arg, float alpha, float beta)
+static shared_ptr<Node> tanh(const shared_ptr<Node>& arg, float /* alpha */, float /* beta */)
 {
     return make_shared<op::Tanh>(arg);
 }
 
-static shared_ptr<Node> relu(const shared_ptr<Node>& arg, float alpha, float beta)
+static shared_ptr<Node> relu(const shared_ptr<Node>& arg, float /* alpha */, float /* beta */)
 {
     return make_shared<op::Relu>(arg);
 }

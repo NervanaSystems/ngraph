@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Tanh::type_name{"Tanh"};
+constexpr NodeTypeInfo op::Tanh::type_info;
 
 op::Tanh::Tanh(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
