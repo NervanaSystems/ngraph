@@ -486,7 +486,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 
     // Build mkldnn primitives for codegen.
     pass_manager.register_pass<runtime::cpu::pass::MKLDNNPrimitiveBuildPass>(
-        m_desc_filename, *m_mkldnn_emitter, m_node_primitive_string_deps_index_map);
+        m_desc_filename, *m_mkldnn_emitter, m_node_primitive_string_deps_index_size_map);
 
     unordered_map<Node*, Node*> node_function_map;
     string common_function_string;
@@ -685,8 +685,15 @@ using namespace ngraph::runtime;
     writer << "mkldnn_scratchpad_mds = std::vector<mkldnn::memory::desc*>("
            << to_string(m_mkldnn_emitter->get_mkldnn_scratchpad_mds().size()) << ");\n";
     writer << "size_t scratchpad_size = " << m_mkldnn_emitter->get_max_scratchpad_size() << ";\n";
+    writer << "if (scratchpad_size > 0)\n";
+    writer.block_begin();
     writer << "size_t alignment = 4096;\n";
     writer << "scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment);\n";
+    writer.block_end();
+    writer << "else\n";
+    writer.block_begin();
+    writer << "scratchpad_buffer = nullptr;\n";
+    writer.block_end();
     writer.block_end();
     writer << "\n";
 

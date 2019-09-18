@@ -682,41 +682,6 @@ void MKLDNNEmitter::build_quantize_reorder(
     mkldnn_primitives[quantize_index] = new mkldnn::reorder(reorder_prim_desc);
 }
 
-#if 0
-mkldnn::memory::format_tag MKLDNNEmitter::query_convolution_forward_weight_format_tag(
-    const mkldnn::memory::desc& input_data_desc,
-    const mkldnn::memory::desc& weights_desc_any,
-    const mkldnn::memory::desc& result_desc,
-    const ngraph::Strides& filter_strides,
-    const ngraph::Strides& window_dilation_strides_adjusted,
-    const ngraph::CoordinateDiff& padding_below,
-    const ngraph::CoordinateDiff& padding_above)
-
-{
-    mkldnn::memory::dims mkldnn_filter_strides(filter_strides.begin(), filter_strides.end());
-    mkldnn::memory::dims mkldnn_dilated_strides(window_dilation_strides_adjusted.begin(),
-                                                window_dilation_strides_adjusted.end());
-    mkldnn::memory::dims mkldnn_padding_below(padding_below.begin(), padding_below.end());
-    mkldnn::memory::dims mkldnn_padding_above(padding_above.begin(), padding_above.end());
-
-    mkldnn::algorithm convolution_algo = mkldnn_utils::get_conv_algo();
-    mkldnn::convolution_forward::desc conv_desc_layout(
-        mkldnn::prop_kind::forward_inference,
-        convolution_algo,
-        input_data_desc,
-        weights_desc_any, // this needs to be in default format
-        result_desc,
-        mkldnn_filter_strides,
-        mkldnn_dilated_strides,
-        mkldnn_padding_below,
-        mkldnn_padding_above);
-
-    mkldnn::convolution_forward::primitive_desc prim_desc(conv_desc_layout, executor::global_cpu_engine);
-    return static_cast<mkldnn::memory::format_tag>(
-        prim_desc.weights_primitive_desc().desc().data.format_tag);
-}
-#endif
-
 void MKLDNNEmitter::build_deconvolutionbias_forward(
     std::vector<mkldnn::memory*>& mkldnn_memories,
     std::vector<mkldnn::primitive*>& mkldnn_primitives,
@@ -1403,6 +1368,7 @@ size_t MKLDNNEmitter::query_scratchpad_sum(const mkldnn::sum::primitive_desc pd)
     mkldnn::memory::desc scratchpad_md = pd.scratchpad_desc();
     auto size = scratchpad_md.get_size();
     m_max_scratchpad_size = size > m_max_scratchpad_size ? size : m_max_scratchpad_size;
+    return size;
 }
 
 size_t MKLDNNEmitter::query_scratchpad_concat(const mkldnn::concat::primitive_desc pd)
@@ -1410,6 +1376,7 @@ size_t MKLDNNEmitter::query_scratchpad_concat(const mkldnn::concat::primitive_de
     mkldnn::memory::desc scratchpad_md = pd.scratchpad_desc();
     auto size = scratchpad_md.get_size();
     m_max_scratchpad_size = size > m_max_scratchpad_size ? size : m_max_scratchpad_size;
+    return size;
 }
 
 size_t MKLDNNEmitter::query_scratchpad_pooling_forward(const mkldnn::pooling_forward::desc& desc)
@@ -1437,10 +1404,13 @@ size_t MKLDNNEmitter::query_scratchpad_max_pooling_backward(
         mkldnn::pooling_forward::primitive_desc(fwd_desc, attr, executor::global_cpu_engine);
     auto pd = mkldnn::pooling_backward::primitive_desc(
         bwd_desc, attr, executor::global_cpu_engine, fwd_pd);
-    GET_SIZE
-    mkldnn::memory::desc fwd_scratchpad_md = fwd_pd.scratchpad_desc();
-    size = fwd_scratchpad_md.get_size();
+    mkldnn::memory::desc scratchpad_md = pd.scratchpad_desc();
+    size_t size = scratchpad_md.get_size();
     m_max_scratchpad_size = size > m_max_scratchpad_size ? size : m_max_scratchpad_size;
+    mkldnn::memory::desc fwd_scratchpad_md = fwd_pd.scratchpad_desc();
+    size_t f_size = fwd_scratchpad_md.get_size();
+    m_max_scratchpad_size = f_size > m_max_scratchpad_size ? f_size : m_max_scratchpad_size;
+    return size > f_size ? size : f_size;
 }
 
 size_t MKLDNNEmitter::query_scratchpad_max_pooling_with_indices_backward(
@@ -1683,40 +1653,6 @@ void MKLDNNEmitter::build_quantize_reorder(
                                                         attr);
     mkldnn_primitives[quantize_index] = new mkldnn::reorder(
         reorder_desc, *mkldnn_primitives[input_index], *mkldnn_primitives[result_index]);
-}
-
-mkldnn::memory::format MKLDNNEmitter::query_convolution_forward_weight_format(
-    const mkldnn::memory::desc& input_data_desc,
-    const mkldnn::memory::desc& weights_desc_any,
-    const mkldnn::memory::desc& result_desc,
-    const ngraph::Strides& filter_strides,
-    const ngraph::Strides& window_dilation_strides_adjusted,
-    const ngraph::CoordinateDiff& padding_below,
-    const ngraph::CoordinateDiff& padding_above)
-{
-    mkldnn::memory::dims mkldnn_filter_strides(filter_strides.begin(), filter_strides.end());
-    mkldnn::memory::dims mkldnn_dilated_strides(window_dilation_strides_adjusted.begin(),
-                                                window_dilation_strides_adjusted.end());
-    mkldnn::memory::dims mkldnn_padding_below(padding_below.begin(), padding_below.end());
-    mkldnn::memory::dims mkldnn_padding_above(padding_above.begin(), padding_above.end());
-
-    mkldnn::algorithm convolution_algo = mkldnn_utils::get_conv_algo();
-    mkldnn::engine cpu_engine(mkldnn::engine::cpu, 0);
-    mkldnn::convolution_forward::desc conv_desc_layout(
-        mkldnn::prop_kind::forward_inference,
-        convolution_algo,
-        input_data_desc,
-        weights_desc_any, // this needs to be in default format
-        result_desc,
-        mkldnn_filter_strides,
-        mkldnn_dilated_strides,
-        mkldnn_padding_below,
-        mkldnn_padding_above,
-        mkldnn::padding_kind::zero);
-
-    mkldnn::convolution_forward::primitive_desc prim_desc(conv_desc_layout, cpu_engine);
-    return static_cast<mkldnn::memory::format>(
-        prim_desc.weights_primitive_desc().desc().data.format);
 }
 
 void MKLDNNEmitter::build_deconvolutionbias_forward(
