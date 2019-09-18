@@ -63,6 +63,7 @@ namespace ngraph
                     }
                     break;
                 case op::AutoBroadcastType::NUMPY:
+                case op::AutoBroadcastType::PDPD:
                     // We'll be using CoordinateTransform to handle the broadcasting. The general
                     // procedure is as follows:
                     //
