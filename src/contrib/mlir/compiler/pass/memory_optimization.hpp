@@ -19,20 +19,9 @@
 
 #pragma once
 
-#include <cstdarg>
-#include "mlir/IR/Builders.h"
-#include "mlir/IR/OpDefinition.h"
-#include "mlir/IR/OperationSupport.h"
-#include "mlir/IR/StandardTypes.h"
-#include "mlir/Support/STLExtras.h"
+#include <mlir/Pass/Pass.h>
 
 namespace mlir
 {
-#define GET_OP_CLASSES
-#include "ops.h.inc"
-#undef GET_OP_CLASSES
+    std::unique_ptr<Pass> createMemoryOptimizationPass();
 }
-
-void setBufferId(mlir::Operation* op, mlir::IntegerAttr attr);
-mlir::IntegerAttr setBufferId(mlir::Operation* op, unsigned val);
-mlir::IntegerAttr getBufferId(mlir::Operation* op);

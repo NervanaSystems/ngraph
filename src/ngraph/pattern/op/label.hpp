@@ -31,6 +31,9 @@ namespace ngraph
             class Label : public Pattern
             {
             public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"patternLabel", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief creates a Label node containing a sub-pattern described by \sa type and
                 ///        \sa shape.
                 ///
@@ -73,12 +76,6 @@ namespace ngraph
                             pred,
                             wrapped_nodes)
                 {
-                }
-
-                const std::string& description() const override
-                {
-                    static std::string desc = "Label";
-                    return desc;
                 }
             };
         }
