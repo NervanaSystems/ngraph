@@ -275,7 +275,7 @@ namespace ngraph
 
             template <typename T>
             void write_to_buffer(const element::Type& target_type,
-                                 const Shape& target_shape,
+                                 const Shape& /* target_shape */,
                                  const std::vector<T>& source,
                                  void* target,
                                  size_t target_element_count)

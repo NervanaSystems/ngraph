@@ -36,14 +36,14 @@ op::Range::Range(const Output<Node>& start, const Output<Node>& stop, const Outp
 
 template <typename T>
 static typename std::enable_if<std::is_integral<T>::value, void>::type
-    check_start(const op::Range* node, T start)
+    check_start(const op::Range* /* node */, T /* start */)
 {
     // Nothing to check for integral types.
 }
 
 template <typename T>
 static typename std::enable_if<std::is_integral<T>::value, void>::type
-    check_stop(const op::Range* node, T stop)
+    check_stop(const op::Range* /* node */, T /* stop */)
 {
     // Nothing to check for integral types.
 }
@@ -125,7 +125,7 @@ static
 }
 
 template <typename T>
-static PartialShape infer_output_shape(const op::Range* node, const element::Type& et)
+static PartialShape infer_output_shape(const op::Range* node, const element::Type& /* et */)
 {
     auto const_start = dynamic_pointer_cast<op::Constant>(node->get_argument(0));
     auto const_stop = dynamic_pointer_cast<op::Constant>(node->get_argument(1));

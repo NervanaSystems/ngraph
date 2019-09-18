@@ -46,7 +46,7 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::one_hot_rank_0<float>)> kernel;
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::one_hot_rank_0);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::one_hot_rank_0)
                     auto functor =
                         [&, kernel, out_shape, one_hot_axis, arg_buffer_index, out_buffer_index](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
@@ -63,7 +63,7 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::one_hot_rank_1<float>)> kernel;
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::one_hot_rank_1);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::one_hot_rank_1)
                     auto functor = [&,
                                     kernel,
                                     arg_shape,
@@ -88,7 +88,7 @@ namespace ngraph
                         kernel;
                     SELECT_KERNEL(kernel,
                                   out[0].get_element_type(),
-                                  runtime::cpu::kernel::one_hot_rank_2_or_more);
+                                  runtime::cpu::kernel::one_hot_rank_2_or_more)
                     auto functor = [&,
                                     kernel,
                                     arg_shape,
@@ -96,7 +96,7 @@ namespace ngraph
                                     one_hot_axis,
                                     arg_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         kernel(ctx->buffer_data[arg_buffer_index],
                                ctx->buffer_data[out_buffer_index],
                                arg_shape,

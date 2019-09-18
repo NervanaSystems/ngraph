@@ -43,7 +43,7 @@ namespace ngraph
 
                 std::function<decltype(runtime::cpu::kernel::reverse<float>)> kernel;
 
-                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::reverse);
+                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::reverse)
 
                 auto functor = [&,
                                 kernel,
@@ -52,7 +52,7 @@ namespace ngraph
                                 reversed_axes,
                                 arg_buffer_index,
                                 out_buffer_index](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
+                                                  CPUExecutionContext* /* ectx */) {
                     kernel(ctx->buffer_data[arg_buffer_index],
                            ctx->buffer_data[out_buffer_index],
                            arg_shape,

@@ -109,7 +109,7 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
                                                             size_t iterations,
                                                             bool timing_detail,
                                                             int warmup_iterations,
-                                                            bool copy_data)
+                                                            bool /* copy_data */)
 {
     constexpr size_t pipeline_depth = 2;
     s_iterations = iterations;

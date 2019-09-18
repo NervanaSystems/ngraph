@@ -85,7 +85,9 @@ cudnnTensorDescriptor_t& runtime::gpu::CUDNNEmitter::tensor_descriptor_from_shap
 }
 
 cudnnTensorDescriptor_t& runtime::gpu::CUDNNEmitter::get_nd_tensor_descriptor(
-    const Shape& shape, const cudnnDataType_t data_type, const cudnnTensorFormat_t tensor_format)
+    const Shape& shape,
+    const cudnnDataType_t data_type,
+    const cudnnTensorFormat_t /* tensor_format */)
 {
     cudnnTensorDescriptor_t& desc = m_descriptors.build<cudnnTensorDescriptor_t>();
     std::vector<int> dimensions(shape.size());
@@ -269,8 +271,8 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
 
             auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
 
-            std::function<void(void**, void**)> convert_output = [](void** inputs, void** outputs) {
-            };
+            std::function<void(void**, void**)> convert_output = [](void** /* inputs */,
+                                                                    void** /* outputs */) {};
             std::function<void*(void*)> convert_output_space = [](void* ptr) { return ptr; };
             if (output_type == element::i64)
             {
@@ -280,13 +282,13 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
                 convert_output = [=](void** inputs, void** outputs) {
                     gpu::invoke_primitive(m_ctx, convert_idx, inputs, outputs);
                 };
-                convert_output_space = [=](void* ptr) {
+                convert_output_space = [=](void* /* ptr */) {
                     return runtime::gpu::invoke_memory_primitive(m_ctx, workspace_indices_idx);
                 };
             }
 
-            std::function<void(void**, void**)> convert_input = [](void** inputs, void** outputs) {
-            };
+            std::function<void(void**, void**)> convert_input = [](void** /* inputs */,
+                                                                   void** /* outputs */) {};
             std::function<void*(void*)> convert_input_space = [](void* ptr) { return ptr; };
             if (input_type == element::i32)
             {
@@ -298,7 +300,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
                 convert_input = [=](void** inputs, void** outputs) {
                     gpu::invoke_primitive(m_ctx, convert_input_idx, inputs, outputs);
                 };
-                convert_input_space = [=](void* ptr) {
+                convert_input_space = [=](void* /* ptr */) {
                     return runtime::gpu::invoke_memory_primitive(m_ctx, input_idx);
                 };
             }
@@ -968,7 +970,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Max* node)
         size_t idx_float_inf =
             allocator.reserve_argspace(negative_inf.data(), negative_inf.size() * sizeof(float));
 
-        kernel_launch.reset(new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+        kernel_launch.reset(new gpu::primitive{[=](void** /* inputs */, void** outputs) mutable {
             void* temp_d = runtime::gpu::invoke_memory_primitive(m_ctx, idx_float_inf);
             runtime::gpu::cuda_memcpyDtD(outputs[0], temp_d, output_size * output_element_size);
         }});
@@ -1031,7 +1033,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Min* node)
         size_t idx_float_inf =
             allocator.reserve_argspace(negative_inf.data(), negative_inf.size() * sizeof(float));
 
-        kernel_launch.reset(new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+        kernel_launch.reset(new gpu::primitive{[=](void** /* inputs */, void** outputs) mutable {
             void* temp_d = runtime::gpu::invoke_memory_primitive(m_ctx, idx_float_inf);
             runtime::gpu::cuda_memcpyDtD(outputs[0], temp_d, output_size * output_element_size);
         }});

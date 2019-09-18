@@ -49,7 +49,7 @@ namespace ngraph
 
                 auto functor =
                     [&, sigmoid_desc, sigmoid_index, arg0_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_sigmoid_forward(
@@ -91,7 +91,7 @@ namespace ngraph
                                 arg0_buffer_index,
                                 arg1_buffer_index,
                                 out_buffer_index](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
+                                                  CPUExecutionContext* /* ectx */) {
                     if (ctx->first_iteration)
                     {
                         mkldnn_emitter->build_sigmoid_backward(

@@ -313,7 +313,7 @@ bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const ngraph::element::Typ
 }
 
 bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const Shape& dims,
-                                                      const Strides& strides,
+                                                      const Strides& /* strides */,
                                                       const ngraph::element::Type type)
 {
     auto it = get_mkldnn_data_type_map().find(type);
@@ -471,7 +471,7 @@ memory::desc runtime::cpu::mkldnn_utils::try_get_named_md(const mkldnn_memory_de
 
 #define CANONICALIZE_MD(X)                                                                         \
     if (compare_named_md(md, X, out_md))                                                           \
-        return get_named_md(md, X);
+    return get_named_md(md, X)
     switch (md.ndims)
     {
     case 1: CANONICALIZE_MD(mkldnn_x); break;

@@ -65,7 +65,7 @@ namespace ngraph
 
                         auto functor =
                             [&, arg_buffer_indices, nargs, out_size, arg_sizes, out_buffer_index](
-                                CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                                 auto offset = 0;
                                 for (size_t i = 0; i < nargs; i++)
                                 {
@@ -116,7 +116,7 @@ namespace ngraph
                                     nargs,
                                     concat_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_concat(ctx->mkldnn_primitives,
@@ -144,7 +144,7 @@ namespace ngraph
                     SELECT_KERNEL_BY_RANK(kernel,
                                           out[0].get_element_type(),
                                           out[0].get_shape().size(),
-                                          runtime::cpu::kernel::concat);
+                                          runtime::cpu::kernel::concat)
 
                     auto functor = [&,
                                     kernel,
@@ -153,7 +153,7 @@ namespace ngraph
                                     out_shape,
                                     axis,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         std::vector<void*> arg_tensors;
                         for (auto& arg_buffer_index : arg_buffer_indices)
                         {

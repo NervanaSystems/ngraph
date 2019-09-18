@@ -55,7 +55,7 @@
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 
-#define WRITE_MKLDNN_DIMS(X) writer << "mkldnn::memory::dims{" << join(X) << "}, \n";
+#define WRITE_MKLDNN_DIMS(X) writer << "mkldnn::memory::dims{" << join(X) << "}, \n"
 
 using namespace ngraph;
 using namespace ngraph::op;
@@ -773,7 +773,6 @@ namespace ngraph
 
                     writer << "mkldnn::memory::dims dims1{" << join(result_shape) << "};\n";
                     writer << "mkldnn::memory::dims dims2{" << join(lower_bounds) << "};\n";
-                    ;
 
                     writer << "mkldnn::memory::primitive_desc input_pd = "
                               "mkldnn::memory::primitive_desc(*cg_ctx->mkldnn_descriptors["

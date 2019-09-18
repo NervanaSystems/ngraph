@@ -115,6 +115,7 @@ namespace ngraph
             void write(const void* p, size_t offset, size_t n)
                 NGRAPH_DEPRECATED("Use two-parameter write")
             {
+                (void)offset;
                 write(p, n);
             }
 
@@ -126,6 +127,7 @@ namespace ngraph
             void read(void* p, size_t offset, size_t n) const
                 NGRAPH_DEPRECATED("Use two-parameter read")
             {
+                (void)offset;
                 read(p, n);
             }
 

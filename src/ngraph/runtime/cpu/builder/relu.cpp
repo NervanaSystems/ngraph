@@ -46,7 +46,7 @@ namespace ngraph
                     auto& deps = mkldnn_emitter->get_primitive_deps(relu_index);
 
                     auto functor = [&, relu_desc, relu_index, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_relu_forward(
@@ -92,7 +92,7 @@ namespace ngraph
                                     arg_fwd_buffer_index,
                                     delta_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_relu_backward(
@@ -113,7 +113,7 @@ namespace ngraph
                     std::function<decltype(runtime::cpu::kernel::relu_backprop<float>)> kernel;
 
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::relu_backprop);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::relu_backprop)
 
                     auto functor = [&,
                                     kernel,
