@@ -25,6 +25,7 @@
 #include "ngraph/op/fused/layer_norm.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
@@ -123,8 +124,17 @@ NodeVector op::LayerNorm::decompose_op() const
         {
             pre_axis_set.insert(i);
         }
-        auto b_scale = make_shared<op::Broadcast>(input_value(1), shape, pre_axis_set);
-        auto b_bias = make_shared<op::Broadcast>(input_value(2), shape, pre_axis_set);
+        auto scale = input_value(1);
+        auto bias = input_value(2);
+        auto scale_shape = get_input_partial_shape(1).to_shape();
+        if (shape.size() - n_axis != scale_shape.size())
+        {
+            Shape reshape_shape(shape.begin() + m_begin_norm_axis, shape.end());
+            scale = make_shared<op::Reshape>(scale, AxisVector{0}, reshape_shape);
+            bias = make_shared<op::Reshape>(bias, AxisVector{0}, reshape_shape);
+        }
+        auto b_scale = make_shared<op::Broadcast>(scale, shape, pre_axis_set);
+        auto b_bias = make_shared<op::Broadcast>(bias, shape, pre_axis_set);
         norm = norm * b_scale + b_bias;
     }
 
@@ -393,6 +403,8 @@ NodeVector op::LayerNormBackprop::decompose_op() const
 
     // Get gradient for data
     auto d_data = delta / b_stddev;
+
+    bool scale_flattened = false;
     if (m_use_affine)
     {
         AxisSet pre_axis_set;
@@ -400,8 +412,17 @@ NodeVector op::LayerNormBackprop::decompose_op() const
         {
             pre_axis_set.insert(i);
         }
-        auto b_scale =
-            make_shared<op::Broadcast>(input_value(m_use_stats ? 4 : 2), shape, pre_axis_set);
+
+        size_t scale_idx = m_use_stats ? 4 : 2;
+        auto scale = input_value(scale_idx);
+        auto scale_shape = get_input_partial_shape(scale_idx).to_shape();
+        if (shape.size() - n_axis != scale_shape.size())
+        {
+            scale_flattened = true;
+            Shape reshape_shape(shape.begin() + m_begin_norm_axis, shape.end());
+            scale = make_shared<op::Reshape>(scale, AxisVector{0}, reshape_shape);
+        }
+        auto b_scale = make_shared<op::Broadcast>(scale, shape, pre_axis_set);
         d_data = d_data * b_scale;
     }
     auto d_mean = make_shared<op::Broadcast>(
@@ -421,8 +442,23 @@ NodeVector op::LayerNormBackprop::decompose_op() const
         std::iota(pre_reduction_axes.begin(), pre_reduction_axes.end(), 0);
         auto d_bias = make_shared<op::Sum>(delta, pre_reduction_axes);
         auto d_scale = make_shared<op::Sum>(delta * norm, pre_reduction_axes);
-        retval.emplace_back(d_scale);
-        retval.emplace_back(d_bias);
+        if (scale_flattened)
+        {
+            AxisVector flatten_axes = AxisVector(post_reduction_axes);
+            Shape reshape_shape(shape.begin() + m_begin_norm_axis, shape.end());
+            size_t reshape_size = shape_size(reshape_shape);
+            auto flatten_d_scale =
+                make_shared<op::Reshape>(d_scale, flatten_axes, Shape{reshape_size});
+            auto flatten_d_bias =
+                make_shared<op::Reshape>(d_bias, flatten_axes, Shape{reshape_size});
+            retval.emplace_back(flatten_d_scale);
+            retval.emplace_back(flatten_d_bias);
+        }
+        else
+        {
+            retval.emplace_back(d_scale);
+            retval.emplace_back(d_bias);
+        }
     }
     return retval;
 }
