@@ -1145,7 +1145,7 @@ size_t MKLDNNEmitter::reserve_primitive_space(size_t count, bool new_workspace)
 {
     size_t size = m_mkldnn_primitives.size();
     m_mkldnn_primitives.resize(size + count, nullptr);
-    for (auto i = 0; i < count - 1; i++)
+    for (size_t i = 0; i < count - 1; i++)
     {
         m_primitive_deps[m_mkldnn_primitives.size() - 1].push_back(size + i);
     }
@@ -1160,7 +1160,7 @@ size_t MKLDNNEmitter::reserve_primitive_space_cg(size_t count, bool new_workspac
 {
     size_t size = m_mkldnn_primitives_cg.size();
     m_mkldnn_primitives_cg.resize(size + count, nullptr);
-    for (auto i = 0; i < count - 1; i++)
+    for (size_t i = 0; i < count - 1; i++)
     {
         m_primitive_deps_cg[m_mkldnn_primitives_cg.size() - 1].push_back(size + i);
     }

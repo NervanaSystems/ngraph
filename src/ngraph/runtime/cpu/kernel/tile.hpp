@@ -36,7 +36,7 @@ namespace ngraph
                 {
                     auto data = (static_cast<ElementType*>(input))[0];
                     auto output_ptr = static_cast<ElementType*>(output);
-                    for (auto i = 0; i < repeats; i++)
+                    for (size_t i = 0; i < repeats; i++)
                     {
                         output_ptr[i] = data;
                     }
@@ -52,7 +52,7 @@ namespace ngraph
                     Eigen::array<Eigen::Index, Rank> out_dims;
                     Eigen::array<Eigen::Index, Rank> in_dims;
 
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         out_dims[i] = output_shape[i];
                         in_dims[i] = input_shape[i];
@@ -64,7 +64,7 @@ namespace ngraph
                         static_cast<ElementType*>(input), in_dims);
 
                     Eigen::array<ptrdiff_t, Rank> factors;
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         factors[i] = output_shape[i] / input_shape[i];
                     }

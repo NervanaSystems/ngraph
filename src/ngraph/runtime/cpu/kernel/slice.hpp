@@ -42,7 +42,7 @@ namespace ngraph
                     Eigen::array<Eigen::Index, Rank> out_dims, in_dims;
                     Eigen::array<Eigen::Index, Rank> indices;
 
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         out_dims[i] = output_shape[i];
                         in_dims[i] = input_shape[i];
@@ -71,7 +71,7 @@ namespace ngraph
                     Eigen::array<Eigen::Index, Rank> out_dims, in_dims;
                     Eigen::array<Eigen::Index, Rank> start_indices, stop_indices, strides;
 
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         out_dims[i] = output_shape[i];
                         in_dims[i] = input_shape[i];
