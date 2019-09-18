@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Split::type_name{"Split"};
+constexpr NodeTypeInfo op::Split::type_info;
 
 op::Split::Split(const Output<Node>& data, const int axis, const size_t num_split)
     : FusedOp({data})

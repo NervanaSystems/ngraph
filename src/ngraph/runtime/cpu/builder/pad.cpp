@@ -57,7 +57,7 @@ namespace ngraph
                     SELECT_KERNEL_BY_RANK(kernel,
                                           args[0].get_element_type(),
                                           arg_shape.size(),
-                                          runtime::cpu::kernel::pad_and_slice);
+                                          runtime::cpu::kernel::pad_and_slice)
 
                     auto functor = [&,
                                     kernel,
@@ -84,8 +84,7 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::pad_ref<float>)> kernel;
 
-                    SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::pad_ref);
+                    SELECT_KERNEL(kernel, args[0].get_element_type(), runtime::cpu::kernel::pad_ref)
 
                     auto functor = [&,
                                     kernel,
@@ -130,7 +129,7 @@ namespace ngraph
                     SELECT_KERNEL_BY_RANK(kernel,
                                           pad->get_input_element_type(0),
                                           arg_shape.size(),
-                                          runtime::cpu::kernel::pad_and_slice);
+                                          runtime::cpu::kernel::pad_and_slice)
 
                     auto functor = [kernel, arg_shape, out_shape, padding_below, padding_above](
                         const std::vector<void*>& inputs, std::vector<void*>& outputs) {
@@ -150,7 +149,7 @@ namespace ngraph
                     std::function<decltype(runtime::cpu::kernel::pad_ref<float>)> kernel;
 
                     SELECT_KERNEL(
-                        kernel, pad->get_input_element_type(0), runtime::cpu::kernel::pad_ref);
+                        kernel, pad->get_input_element_type(0), runtime::cpu::kernel::pad_ref)
 
                     auto functor =
                         [kernel, arg_shape, out_shape, padding_below, padding_above, pad_mode](

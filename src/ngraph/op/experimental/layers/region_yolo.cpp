@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::RegionYolo::type_name{"RegionYolo"};
+constexpr NodeTypeInfo op::RegionYolo::type_info;
 
 op::RegionYolo::RegionYolo(const Output<Node>& input,
                            const size_t num_coords,

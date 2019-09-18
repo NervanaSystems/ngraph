@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Broadcast::type_name{"Broadcast"};
+constexpr NodeTypeInfo op::Broadcast::type_info;
 
 op::Broadcast::Broadcast(const OutputVector& args,
                          const Shape& shape,
@@ -95,7 +95,7 @@ void op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVe
     adjoints.add_delta(x, make_shared<op::Sum>(delta, m_broadcast_axes));
 }
 
-const string op::BroadcastLike::type_name{"BroadcastLike"};
+constexpr NodeTypeInfo op::BroadcastLike::type_info;
 
 op::BroadcastLike::BroadcastLike(const Output<Node>& arg,
                                  const Output<Node>& like_arg,

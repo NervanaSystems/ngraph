@@ -31,14 +31,14 @@ ngraph::runtime::plaidml::pass::ImplicitBroadcast::ImplicitBroadcast()
         element::i8, Shape{}, [](std::shared_ptr<Node>) { return true; });
     auto broadcast_op = std::make_shared<ngraph::op::Broadcast>(src_op, Shape{}, AxisSet{});
 
-    auto target_op = std::make_shared<pattern::op::AnyOf>(
-        element::i8,
-        Shape{},
-        [](std::shared_ptr<Node> node) {
-            return pattern::has_class<ngraph::op::util::UnaryElementwiseArithmetic>()(node) ||
-                   pattern::has_class<ngraph::op::util::BinaryElementwiseArithmetic>()(node);
-        },
-        NodeVector{broadcast_op});
+    auto target_op =
+        std::make_shared<pattern::op::AnyOf>(element::i8,
+                                             Shape{},
+                                             [](std::shared_ptr<Node> node) {
+                                                 return node->is_unary_elementwise_arithmetic() ||
+                                                        node->is_binary_elementwise_arithmetic();
+                                             },
+                                             NodeVector{broadcast_op});
 
     auto callback = [](pattern::Matcher& m) {
         // Since the broadcast is going to an elementwise operation, we

@@ -418,7 +418,7 @@ static void serialize_to_cpio(ostream& out, shared_ptr<ngraph::Function> func, s
 
     traverse_nodes(const_cast<Function*>(func.get()),
                    [&](shared_ptr<Node> node) {
-                       if (auto c = dynamic_pointer_cast<op::Constant>(node))
+                       if (auto c = node->as_type<op::Constant>())
                        {
                            uint32_t size =
                                static_cast<uint32_t>(shape_size(c->get_output_shape(0)) *
@@ -624,8 +624,7 @@ ParameterVector JSONDeserializer::deserialize_parameter_vector(json json_paramet
     std::vector<std::shared_ptr<op::Parameter>> params;
     for (auto& param_ref : json_parameters)
     {
-        params.push_back(
-            dynamic_pointer_cast<op::Parameter>(deserialize_node_reference(param_ref)));
+        params.push_back(as_type_ptr<op::Parameter>(deserialize_node_reference(param_ref)));
     }
     return params;
 }
@@ -646,7 +645,7 @@ shared_ptr<Function> JSONDeserializer::deserialize_function(json func_js)
     for (auto& result_ref : func_result)
     {
         auto fr = deserialize_node_reference(result_ref);
-        if (auto res = std::dynamic_pointer_cast<op::Result>(fr))
+        if (auto res = as_type_ptr<op::Result>(fr))
         {
             result.push_back(res);
             // make sure we have `op::Result` on top of all outputs

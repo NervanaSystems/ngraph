@@ -81,7 +81,8 @@ namespace ngraph
                 }
 
                 template <typename ElementType>
-                void relu_backprop(void* arg, void* delta_arg, void* out, size_t count, int arena)
+                void relu_backprop(
+                    void* arg, void* delta_arg, void* out, size_t count, int /* arena */)
                 {
                     reference::relu_backprop<ElementType>(static_cast<ElementType*>(arg),
                                                           static_cast<ElementType*>(delta_arg),
