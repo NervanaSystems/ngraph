@@ -54,13 +54,15 @@ namespace ngraph
 
             virtual NodeVector decompose_op() const override;
 
+            void pre_validate_and_infer_types() override;
+
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            bool get_keep_stats() { return m_keep_stats; }
-            bool get_use_affine() { return m_use_affine; }
-            double get_epsilon() { return m_epsilon; }
-            int64_t get_begin_norm_axis() { return m_begin_norm_axis; }
+            bool get_keep_stats() const { return m_keep_stats; }
+            bool get_use_affine() const { return m_use_affine; }
+            double get_epsilon() const { return m_epsilon; }
+            int64_t get_begin_norm_axis() const { return m_begin_norm_axis; }
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -105,7 +107,7 @@ namespace ngraph
                               const Output<Node>& delta,
                               const Output<Node>& mean_scale,
                               const Output<Node>& variance_bias,
-                              bool  use_stats;
+                              bool  use_stats,
                               int64_t begin_norm_axis = -1,
                               double epsilon = 1e-5);
 
@@ -116,13 +118,15 @@ namespace ngraph
 
             virtual NodeVector decompose_op() const override;
 
+            void pre_validate_and_infer_types() override;
+
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            bool get_use_stats() { return m_use_stats; }
-            bool get_use_affine() { return m_use_affine; }
-            double get_epsilon() { return m_epsilon; }
-            int64_t get_begin_norm_axis() { return m_begin_norm_axis; }
+            bool get_use_stats() const { return m_use_stats; }
+            bool get_use_affine() const { return m_use_affine; }
+            double get_epsilon() const { return m_epsilon; }
+            int64_t get_begin_norm_axis() const { return m_begin_norm_axis; }
 
         private:
             bool m_use_stats{true};
