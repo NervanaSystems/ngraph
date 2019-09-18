@@ -153,7 +153,7 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
     {
         auto common_args = ngraph::find_common_args(target, replacement);
 
-        std::unordered_set<string> removed_subgraph_tags;
+        std::set<string> removed_subgraph_tags;
 
         auto set_replacement_prov = [&removed_subgraph_tags](std::shared_ptr<Node> node) {
             for (auto tag : node->get_provenance_tags())

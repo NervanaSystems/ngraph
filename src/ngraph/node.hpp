@@ -366,9 +366,9 @@ namespace ngraph
         /// Set device placement
         void set_placement_index(size_t placement);
 
-        const std::unordered_set<std::string>& get_provenance_tags() const;
+        const std::set<std::string>& get_provenance_tags() const;
         void add_provenance_tag(const std::string& tag);
-        void add_provenance_tags(const std::unordered_set<std::string>& tag_set);
+        void add_provenance_tags(const std::set<std::string>& tag_set);
         void remove_provenance_tag(const std::string& tag);
 
         // to be used when nodes are replaced
@@ -424,7 +424,7 @@ namespace ngraph
         std::string m_unique_name;
         NGRAPH_API
         static std::atomic<size_t> m_next_instance_id;
-        std::unordered_set<std::string> m_provenance_tags;
+        std::set<std::string> m_provenance_tags;
         std::deque<descriptor::Input> m_inputs;
         std::deque<descriptor::Output> m_outputs;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;

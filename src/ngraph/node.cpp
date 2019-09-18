@@ -318,7 +318,7 @@ void Node::set_placement_index(size_t placement)
     m_placement_index = placement;
 }
 
-const std::unordered_set<std::string>& Node::get_provenance_tags() const
+const std::set<std::string>& Node::get_provenance_tags() const
 {
     return m_provenance_tags;
 }
@@ -328,7 +328,7 @@ void Node::add_provenance_tag(const std::string& tag)
     m_provenance_tags.insert(tag);
 }
 
-void Node::add_provenance_tags(const std::unordered_set<std::string>& tag_set)
+void Node::add_provenance_tags(const std::set<std::string>& tag_set)
 {
     for (auto tag : tag_set)
     {
