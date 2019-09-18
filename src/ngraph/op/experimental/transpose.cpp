@@ -22,6 +22,9 @@
 using namespace std;
 using namespace ngraph;
 
+extern template ngraph::PartialShape
+    ngraph::apply_permutation<ngraph::PartialShape>(ngraph::PartialShape input,
+                                                    ngraph::AxisVector order);
 const string op::Transpose::type_name{"Transpose"};
 
 op::Transpose::Transpose(const shared_ptr<Node>& arg, const shared_ptr<Node>& input_order)

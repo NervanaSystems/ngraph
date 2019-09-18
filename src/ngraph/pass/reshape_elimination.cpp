@@ -37,6 +37,8 @@ using namespace ngraph;
 
 extern template AxisVector ngraph::apply_permutation<AxisVector>(AxisVector input,
                                                                  AxisVector order);
+extern template ngraph::Shape ngraph::apply_permutation<ngraph::Shape>(ngraph::Shape input,
+                                                                       ngraph::AxisVector order);
 
 void pass::ReshapeElimination::construct_identity_reshape_pattern()
 {
