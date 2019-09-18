@@ -53,7 +53,7 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    QUERY_SCRATCHPAD_2ARGS(reorder, input_desc, result_desc);
+                    size_t s_size = QUERY_SCRATCHPAD_2ARGS(reorder, input_desc, result_desc);
 
                     auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
                         dequantize->get_argument(1));
@@ -73,6 +73,7 @@ namespace ngraph
                                    result_desc,
                                    scales_size,
                                    dequantize_index,
+                                   s_size,
                                    arg0_buffer_index,
                                    arg1_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
@@ -101,7 +102,11 @@ namespace ngraph
                                 ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
                             cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                                ctx, dequantize_index, deps, cpu::mkldnn_utils::OpType::DEQUANTIZE);
+                                ctx,
+                                dequantize_index,
+                                deps,
+                                cpu::mkldnn_utils::OpType::DEQUANTIZE,
+                                s_size);
                         };
                         functors.emplace_back(functor);
                     }
@@ -118,6 +123,7 @@ namespace ngraph
                                    result_desc,
                                    scales,
                                    dequantize_index,
+                                   s_size,
                                    arg0_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
                                                      CPUExecutionContext* ectx) {
@@ -138,7 +144,11 @@ namespace ngraph
                                 ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
                             cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                                ctx, dequantize_index, deps, cpu::mkldnn_utils::OpType::DEQUANTIZE);
+                                ctx,
+                                dequantize_index,
+                                deps,
+                                cpu::mkldnn_utils::OpType::DEQUANTIZE,
+                                s_size);
                         };
                         functors.emplace_back(functor);
                     }
@@ -325,7 +335,7 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    QUERY_SCRATCHPAD_2ARGS(reorder, input_desc, result_desc);
+                    size_t s_size = QUERY_SCRATCHPAD_2ARGS(reorder, input_desc, result_desc);
 
                     auto scale_const_op =
                         std::dynamic_pointer_cast<ngraph::op::Constant>(quantize->get_argument(1));
@@ -344,6 +354,7 @@ namespace ngraph
                                         result_desc,
                                         scales_size,
                                         quantize_index,
+                                        s_size,
                                         arg0_buffer_index,
                                         arg1_buffer_index,
                                         out_buffer_index](CPURuntimeContext* ctx,
@@ -379,7 +390,11 @@ namespace ngraph
                                 ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
                             cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                                ctx, quantize_index, deps, cpu::mkldnn_utils::OpType::QUANTIZE);
+                                ctx,
+                                quantize_index,
+                                deps,
+                                cpu::mkldnn_utils::OpType::QUANTIZE,
+                                s_size);
                         };
                         functors.emplace_back(functor);
                     }
@@ -396,6 +411,7 @@ namespace ngraph
                                         result_desc,
                                         scales,
                                         quantize_index,
+                                        s_size,
                                         arg0_buffer_index,
                                         out_buffer_index](CPURuntimeContext* ctx,
                                                           CPUExecutionContext* ectx) {
@@ -416,7 +432,11 @@ namespace ngraph
                                 ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
                             cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                                ctx, quantize_index, deps, cpu::mkldnn_utils::OpType::QUANTIZE);
+                                ctx,
+                                quantize_index,
+                                deps,
+                                cpu::mkldnn_utils::OpType::QUANTIZE,
+                                s_size);
                         };
                         functors.emplace_back(functor);
                     }

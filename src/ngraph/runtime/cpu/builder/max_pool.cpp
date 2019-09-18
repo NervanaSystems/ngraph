@@ -54,32 +54,36 @@ namespace ngraph
                     auto max_pool_desc =
                         mkldnn_emitter->get_max_pooling_forward_desc<ngraph::op::MaxPool>(node,
                                                                                           false);
-                    QUERY_SCRATCHPAD(pooling_forward, max_pool_desc);
+                    size_t s_size = QUERY_SCRATCHPAD(pooling_forward, max_pool_desc);
 
                     // MaxPool needs 3 primitives: input, result, and pooling_forward.
                     size_t max_pool_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(max_pool_index);
 
-                    auto functor =
-                        [&, max_pool_desc, max_pool_index, arg0_buffer_index, out_buffer_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            if (ctx->first_iteration)
-                            {
-                                mkldnn_emitter->build_pooling_forward(ctx->mkldnn_memories,
-                                                                      ctx->mkldnn_primitives,
-                                                                      ctx->mkldnn_scratchpad_mds,
-                                                                      max_pool_desc,
-                                                                      deps,
-                                                                      max_pool_index);
-                            }
-                            cpu::mkldnn_utils::set_memory_ptr(
-                                ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
-                            cpu::mkldnn_utils::set_memory_ptr(
-                                ctx, deps[1], ctx->buffer_data[out_buffer_index]);
+                    auto functor = [&,
+                                    max_pool_desc,
+                                    max_pool_index,
+                                    s_size,
+                                    arg0_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->build_pooling_forward(ctx->mkldnn_memories,
+                                                                  ctx->mkldnn_primitives,
+                                                                  ctx->mkldnn_scratchpad_mds,
+                                                                  max_pool_desc,
+                                                                  deps,
+                                                                  max_pool_index);
+                        }
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                                ctx, max_pool_index, deps, cpu::mkldnn_utils::OpType::MAXPOOL);
-                        };
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, max_pool_index, deps, cpu::mkldnn_utils::OpType::MAXPOOL, s_size);
+                    };
                     functors.emplace_back(functor);
                 }
                 else
@@ -142,7 +146,8 @@ namespace ngraph
                         mkldnn_emitter->get_max_pooling_backward_desc<ngraph::op::MaxPoolBackprop>(
                             node);
                     auto fprop_src_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    QUERY_SCRATCHPAD_2ARGS(max_pooling_backward, fwd_pool_desc, bwd_pool_desc);
+                    size_t s_size =
+                        QUERY_SCRATCHPAD_2ARGS(max_pooling_backward, fwd_pool_desc, bwd_pool_desc);
 
                     // MaxPoolBackprop forward needs 4 primitives: fprop_src, diff_src, workspace,
                     // and pooling_forward.
@@ -152,8 +157,13 @@ namespace ngraph
                     auto& fdeps = mkldnn_emitter->get_primitive_deps(fwd_pool_index);
 
                     auto functor_fprop =
+<<<<<<< HEAD
                         [&, fwd_pool_index, arg_fwd_buffer_index, out_buffer_index](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+=======
+                        [&, fwd_pool_index, arg_fwd_buffer_index, s_size, out_buffer_index](
+                            CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
+>>>>>>> 6cd00c2f7... Check size requirement before creating scratchpad.
                             cpu::mkldnn_utils::set_memory_ptr(
                                 ctx, fdeps[0], ctx->buffer_data[arg_fwd_buffer_index]);
                             cpu::mkldnn_utils::set_memory_ptr(
@@ -164,7 +174,8 @@ namespace ngraph
                                 ctx,
                                 fwd_pool_index,
                                 fdeps,
-                                cpu::mkldnn_utils::OpType::MAXPOOLBACKPROPFORWARD);
+                                cpu::mkldnn_utils::OpType::MAXPOOLBACKPROPFORWARD,
+                                s_size);
                         };
 
                     // MaxPoolBackprop backward needs 4 primitives: diff_dst, workspace, diff_src,
@@ -268,7 +279,7 @@ namespace ngraph
                     mkldnn_emitter
                         ->get_max_pooling_with_indices_forward_desc<ngraph::op::MaxPoolWithIndices>(
                             node);
-                QUERY_SCRATCHPAD(pooling_forward, max_pool_desc);
+                size_t s_size = QUERY_SCRATCHPAD(pooling_forward, max_pool_desc);
 
                 // MaxPoolWithIndices needs 4 primitives: src, dst, workspace, and pooling_forward.
                 size_t max_pool_index = mkldnn_emitter->reserve_primitive_space(4);
@@ -277,6 +288,7 @@ namespace ngraph
                 auto functor = [&,
                                 max_pool_desc,
                                 max_pool_index,
+                                s_size,
                                 arg0_buffer_index,
                                 out0_buffer_index,
                                 out1_buffer_index](CPURuntimeContext* ctx,
@@ -299,7 +311,11 @@ namespace ngraph
                         ctx, deps[2], ctx->buffer_data[out1_buffer_index]);
 
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                        ctx, max_pool_index, deps, cpu::mkldnn_utils::OpType::MAXPOOLWITHINDICES);
+                        ctx,
+                        max_pool_index,
+                        deps,
+                        cpu::mkldnn_utils::OpType::MAXPOOLWITHINDICES,
+                        s_size);
                 };
                 functors.emplace_back(functor);
             }
@@ -327,7 +343,7 @@ namespace ngraph
                     mkldnn_emitter
                         ->get_max_pooling_backward_desc<ngraph::op::MaxPoolWithIndicesBackprop>(
                             node);
-                QUERY_SCRATCHPAD_2ARGS(
+                size_t s_size = QUERY_SCRATCHPAD_2ARGS(
                     max_pooling_with_indices_backward, fwd_pool_desc, bwd_pool_desc);
 
                 // MaxPoolWithIndicesBackprop needs 4 primitives: diff_dst, fprop_workspace,
@@ -339,6 +355,7 @@ namespace ngraph
                                 bwd_pool_desc,
                                 fwd_pool_desc,
                                 max_pool_index,
+                                s_size,
                                 arg1_buffer_index,
                                 arg2_buffer_index,
                                 out_buffer_index](CPURuntimeContext* ctx,
@@ -365,7 +382,8 @@ namespace ngraph
                         ctx,
                         max_pool_index,
                         deps,
-                        cpu::mkldnn_utils::OpType::MAXPOOLWITHINDICESBACKPROP);
+                        cpu::mkldnn_utils::OpType::MAXPOOLWITHINDICESBACKPROP,
+                        s_size);
                 };
                 functors.emplace_back(functor);
             }
