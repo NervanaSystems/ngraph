@@ -56,7 +56,7 @@ static shared_ptr<pattern::Matcher>
 
 static shared_ptr<pattern::op::Label> get_broadcast_label(shared_ptr<pattern::Matcher> matcher)
 {
-    return dynamic_pointer_cast<pattern::op::Label>(matcher->get_pattern()->get_argument(1));
+    return static_pointer_cast<pattern::op::Label>(matcher->get_pattern()->get_argument(1));
 }
 
 //`simplify_concat` identifies slices-concat sequences
@@ -147,7 +147,7 @@ static bool simplify_concat(shared_ptr<Node> n)
         }
 
         // check that no other node uses slices and reshapes
-        if (auto rcarg = dynamic_pointer_cast<op::Reshape>(carg))
+        if (auto rcarg = as_type_ptr<op::Reshape>(carg))
         {
             auto default_shape = get_default_order(rcarg->get_argument(0)->get_shape());
             if (default_shape != rcarg->get_input_order())
@@ -316,9 +316,9 @@ static bool simplify_add(shared_ptr<Node> n)
 //`simplify_log` optimizes `log(exp(x)/y)` into `x - log(y)`
 static bool simplify_log(shared_ptr<Node> n)
 {
-    if (auto div = dynamic_pointer_cast<op::Divide>(n->get_argument(0)))
+    if (auto div = as_type_ptr<op::Divide>(n->input_value(0).get_node_shared_ptr()))
     {
-        if (auto exp = dynamic_pointer_cast<op::Exp>(div->get_argument(0)))
+        if (auto exp = as_type_ptr<op::Exp>(div->input_value(0).get_node_shared_ptr()))
         {
             auto denom = div->get_argument(1);
             auto diff =
@@ -417,14 +417,14 @@ static bool simplify_reduction(shared_ptr<Node> n)
     NGRAPH_DEBUG << "In simplify_reduction for " << n->get_name();
     auto reduction = static_pointer_cast<T>(n);
 
-    auto broadcast = dynamic_pointer_cast<op::Broadcast>(n->get_argument(0));
+    auto broadcast = as_type_ptr<op::Broadcast>(n->input_value(0).get_node_shared_ptr());
     if (!broadcast)
     {
         NGRAPH_DEBUG << n->get_name() << " isn't Broadcast";
         return false;
     }
 
-    auto cnst = dynamic_pointer_cast<op::Constant>(broadcast->get_argument(0));
+    auto cnst = as_type_ptr<op::Constant>(broadcast->input_value(0).get_node_shared_ptr());
     if (!cnst || cnst->get_shape().size() > 0 /*not a scalar*/)
     {
         NGRAPH_DEBUG << broadcast->get_argument(0)->get_name() << " isn't a scalar constant";

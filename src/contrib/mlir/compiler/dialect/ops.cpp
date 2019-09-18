@@ -240,7 +240,7 @@ mlir::LogicalResult verifyOp(NGConvolutionOp* op)
 
     SmallVector<int64_t, 4> stridesVal, padAboveVal, padBelowVal;
     // Identical filters and image element types
-    if (filtersEt != imagesType)
+    if (filtersEt != imagesEt)
     {
         return op->emitOpError("Incompatible image and filters types");
     }
@@ -299,13 +299,36 @@ mlir::LogicalResult verifyOp(NGConvolutionOp* op)
         unsigned resDim = llvm::divideCeil(padBelowVal[i] + padAboveVal[i] + imagesShape[2 + i] -
                                                filtersShape[2 + i] + 1,
                                            stridesVal[i]);
-        if (resultShape[i] != resDim)
+        if (resultShape[2 + i] != resDim)
         {
             return op->emitOpError("Invalid result spatial shape");
         }
     }
     return mlir::success();
 }
+
+static std::string getBufferIdAttrName()
+{
+    return "ng.buffer_id";
+}
+
+void setBufferId(mlir::Operation* op, mlir::IntegerAttr attr)
+{
+    op->setAttr(getBufferIdAttrName(), attr);
+}
+
+mlir::IntegerAttr setBufferId(mlir::Operation* op, unsigned val)
+{
+    auto attr = mlir::IntegerAttr::get(IntegerType::get(32, op->getContext()), val);
+    setBufferId(op, attr);
+    return attr;
+}
+
+mlir::IntegerAttr getBufferId(mlir::Operation* op)
+{
+    return op->getAttrOfType<mlir::IntegerAttr>(getBufferIdAttrName());
+}
+
 namespace mlir
 {
 #define GET_OP_CLASSES
