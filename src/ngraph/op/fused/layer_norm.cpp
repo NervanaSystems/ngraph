@@ -30,6 +30,8 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 
+#include <iostream>
+
 using namespace std;
 using namespace ngraph;
 
@@ -102,7 +104,7 @@ NodeVector op::LayerNorm::decompose_op() const
     {
         post_axis_set.insert(i);
     }
-    auto b_mean = make_shared<ngraph::op::Broadcast>(data, shape, post_axis_set);
+    auto b_mean = make_shared<ngraph::op::Broadcast>(mean, shape, post_axis_set);
 
     // Compute variance
     auto var = builder::variance(data, post_reduction_axes);
@@ -198,10 +200,9 @@ void op::LayerNorm::pre_validate_and_infer_types()
         }
     }
 
-    PartialShape norm_shape{data_shape};
-    set_output_type(0, input_element_type, norm_shape);
     if (m_keep_stats)
     {
+        set_output_size(3);
         // output shape: data_shape[:begin_norm_axis]
         if (d_rank > 0)
         {
@@ -220,6 +221,8 @@ void op::LayerNorm::pre_validate_and_infer_types()
             set_output_type(2, input_element_type, PartialShape::dynamic());
         }
     }
+    PartialShape norm_shape{data_shape};
+    set_output_type(0, input_element_type, norm_shape);
 }
 
 void op::LayerNorm::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
@@ -518,21 +521,20 @@ void op::LayerNormBackprop::pre_validate_and_infer_types()
         }
     }
 
-    PartialShape norm_shape{data_shape};
-    set_output_type(0, input_element_type, norm_shape);
-    if (m_use_stats)
+    if (m_use_affine)
     {
-        // output shape: data_shape[:begin_norm_axis]
+        set_output_size(3);
+        // output shape: data_shape[begin_norm_axis:]
         if (d_rank > 0)
         {
-            std::vector<Dimension> stats_dim;
-            for (int64_t i = 0; i < n_axis; i++)
+            std::vector<Dimension> affine_dim;
+            for (int64_t i = n_axis; i < d_rank; i++)
             {
-                stats_dim.emplace_back(data_shape[i]);
+                affine_dim.emplace_back(data_shape[i]);
             }
-            PartialShape stats_shape(stats_dim);
-            set_output_type(1, input_element_type, stats_shape);
-            set_output_type(2, input_element_type, stats_shape);
+            PartialShape affine_shape(affine_dim);
+            set_output_type(1, input_element_type, affine_shape);
+            set_output_type(2, input_element_type, affine_shape);
         }
         else // set shape to dynamic
         {
@@ -540,4 +542,6 @@ void op::LayerNormBackprop::pre_validate_and_infer_types()
             set_output_type(2, input_element_type, PartialShape::dynamic());
         }
     }
+    PartialShape norm_shape{data_shape};
+    set_output_type(0, input_element_type, norm_shape);
 }

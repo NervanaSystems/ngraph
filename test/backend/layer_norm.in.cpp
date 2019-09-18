@@ -45,25 +45,47 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, layer_norm_dummy)
+NGRAPH_TEST(${BACKEND_NAME}, layer_norm_affine_stats)
 {
-    // Shape shape{8};
-    // auto A = make_shared<op::Parameter>(element::f32, shape);
-    // auto f = make_shared<Function>(make_shared<op::Gelu>(A), ParameterVector{A});
+    auto p_data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto p_scale = make_shared<op::Parameter>(element::f32, Shape{4});
+    auto p_bias = make_shared<op::Parameter>(element::f32, Shape{4});
+    auto ln = make_shared<op::LayerNorm>(p_data, p_scale, p_bias);
+    auto f = make_shared<Function>(ln->outputs(), ParameterVector{p_data, p_scale, p_bias});
 
-    // auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    // Create some tensors for input/output
-    // auto a = backend->create_tensor(element::f32, shape);
-    // vector<float> input{-4.0f, -3.0f, -2.0f, -1.0f, 0.0f, 1.0f, 2.0f, 3.0f};
-    // copy_data(a, input);
-    // auto result = backend->create_tensor(element::f32, shape);
+    // Create tensors for input
+    auto data = backend->create_tensor(element::f32, Shape{2, 4});
+    auto scale = backend->create_tensor(element::f32, Shape{4});
+    auto bias= backend->create_tensor(element::f32, Shape{4});
+    // Fill in input tensors
+    vector<float> d_input{-4.0f, -3.0f, -2.0f, -1.0f, 0.0f, 1.0f, 2.0f, 3.0f};
+    copy_data(data, d_input);
+    vector<float> s_input{-1.0f, 1.0f, 2.0f, 3.0f};
+    copy_data(scale, s_input);
+    vector<float> b_input{-4.0f, -3.0f, -2.0f, -1.0f};
+    copy_data(bias, b_input);
+    // Create tensors for output
+    auto norm = backend->create_tensor(element::f32, Shape{2, 4});
+    auto mean = backend->create_tensor(element::f32, Shape{2});
+    auto var = backend->create_tensor(element::f32, Shape{2});
 
-    // std::transform(input.begin(), input.end(), input.begin(), [](float x) -> float {
-    //    return 0.5f * x * (1.0f + erf(x / sqrt(2.0f)));
-    //});
+    // Expected results
+    vector<float> exp_norm{-2.658364534378051758f,
+                           -3.447211742401123047f,
+                           -1.105576276779174805f,
+                           3.024906158447265625f,
+                           -2.658364534378051758f,
+                           -3.447211742401123047f,
+                           -1.105576276779174805f,
+                           3.024906158447265625f};
+    vector<float> exp_mean{-2.5f, 1.5f};
+    vector<float> exp_var{1.25f, 1.25f};
 
-    // auto handle = backend->compile(f);
-    // handle->call_with_validate({result}, {a});
-    // EXPECT_TRUE(test::all_close_f(input, read_vector<float>(result)));
+    auto handle = backend->compile(f);
+    handle->call_with_validate({norm, mean, var}, {data, scale, bias});
+    EXPECT_TRUE(test::all_close_f(exp_norm, read_vector<float>(norm)));
+    EXPECT_TRUE(test::all_close_f(exp_mean, read_vector<float>(mean)));
+    EXPECT_TRUE(test::all_close_f(exp_var, read_vector<float>(var)));
 }
