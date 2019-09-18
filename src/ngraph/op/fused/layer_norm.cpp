@@ -24,6 +24,7 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/fused/layer_norm.hpp"
 #include "ngraph/op/multiply.hpp"
+#include "ngraph/op/negative.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
@@ -103,8 +104,7 @@ NodeVector op::LayerNorm::decompose_op() const
     auto b_mean = make_shared<ngraph::op::Broadcast>(data, shape, axis_set);
 
     // Compute variance
-    auto diff = data - b_mean;
-    auto var = builder::mean(diff * diff, reduction_axes);
+    auto var = builder::variance(data, reduction_axes);
 
     // Compute standard deviation with epsilon
     auto epsilon = builder::make_constant(var->get_element_type(), var->get_shape(), m_epsilon);
@@ -112,7 +112,7 @@ NodeVector op::LayerNorm::decompose_op() const
     auto b_stddev = make_shared<op::Broadcast>(stddev, shape, axis_set);
 
     // Get normalized input
-    auto norm = diff / b_stddev;
+    auto norm = (data - b_mean) / b_stddev;
 
     // Apply affine transformation
     if (m_use_affine)
@@ -336,7 +336,7 @@ NodeVector op::LayerNormBackprop::decompose_op() const
     // Get mean
     std::vector<size_t> reduction_axes(shape.size() - n_axis);
     std::iota(reduction_axes.begin(), reduction_axes.end(), n_axis);
-    auto mean = m_use_stats ? input_value(2) : builder::mean(data, reduction_axes);
+    auto mean = m_use_stats ? input_value(2) : builder::mean(data, reduction_axes)->outputs()[0];
 
     AxisSet axis_set;
     for (size_t i = static_cast<size_t>(n_axis); i < shape.size(); i++)
@@ -346,16 +346,15 @@ NodeVector op::LayerNormBackprop::decompose_op() const
     auto b_mean = make_shared<ngraph::op::Broadcast>(mean, shape, axis_set);
 
     // Get variance
-    auto diff = data - b_mean;
-    auto var = m_use_stats ? input_value(3) : builder::mean(diff * diff, reduction_axes);
+    auto var = m_use_stats ? input_value(3) : builder::variance(data, reduction_axes)->outputs()[0];
 
     // Compute standard deviation with epsilon
-    auto epsilon = builder::make_constant(var->get_element_type(), var->get_shape(), m_epsilon);
+    auto epsilon = builder::make_constant(var.get_element_type(), var.get_shape(), m_epsilon);
     auto stddev = make_shared<op::Sqrt>(var + epsilon);
     auto b_stddev = make_shared<op::Broadcast>(stddev, shape, axis_set);
 
     // Get normalized input
-    auto norm = diff / b_stddev;
+    auto norm = (data - b_mean) / b_stddev;
 
     // Get gradient for data
     auto d_data = delta / b_stddev;
