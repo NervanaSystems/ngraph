@@ -63,6 +63,7 @@ namespace ngraph
                             const Strides& dilations,
                             const PadType& auto_pad = PadType::EXPLICIT);
 
+                size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
@@ -122,6 +123,7 @@ namespace ngraph
                                         const CoordinateDiff& pads_begin,
                                         const CoordinateDiff& pads_end);
 
+                size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
 
                 void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -185,6 +187,7 @@ namespace ngraph
                                            const CoordinateDiff& pads_begin,
                                            const CoordinateDiff& pads_end);
 
+                size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
@@ -515,13 +518,11 @@ namespace ngraph
                 /// \param filters_shape The shape of the filters from forward-prop.
                 /// \param output_delta The node producing output delta.
                 /// \param window_movement_strides_forward The window movement strides from
-                ///                                        forward-prop.
-                /// \param window_dilation_strides_forward The window dilation strides from
-                ///                                        forward-prop.
-                /// \param padding_below_forward The padding-below sizes from forward-prop.
-                /// \param padding_above_forward The padding-above sizes from forward-prop.
-                /// \param data_dilation_strides_forward The data dilation strides from
-                /// forward-prop.
+                /// forward-prop. \param window_dilation_strides_forward The window dilation strides
+                /// from forward-prop. \param padding_below_forward The padding-below sizes from
+                /// forward-prop. \param padding_above_forward The padding-above sizes from
+                /// forward-prop. \param data_dilation_strides_forward The data dilation strides
+                /// from forward-prop.
                 ConvolutionBackpropFilters(const Output<Node>& data_batch,
                                            const Shape& filters_shape,
                                            const Output<Node>& output_delta,
@@ -603,8 +604,8 @@ namespace ngraph
         namespace util
         {
             // This is a legacy function, retained because the CPU backend uses it for now.
-            // TODO: Update CPU backend to use the new stuff in validation_util.hpp, and remove
-            // this function.
+            // TODO: Update CPU backend to use the new stuff in validation_util.hpp, and remove this
+            // function.
             Shape infer_convolution_output_shape(const Node* node,
                                                  const Shape& data_batch_shape,
                                                  const Shape& filters_shape,

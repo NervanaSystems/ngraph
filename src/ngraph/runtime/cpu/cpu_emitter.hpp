@@ -21,6 +21,7 @@
 
 #include "ngraph/code_writer.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/convolution.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 
@@ -105,10 +106,7 @@ namespace ngraph
         class QuantizedConvolution;
         class GroupConvolution;
         class GroupConvolutionBias;
-        class Convolution;
-        class ConvolutionBackpropFilters;
         class DeconvolutionBias;
-        class ConvolutionBackpropData;
         class QuantizedConvolutionBias;
         class QuantizedConvolutionBiasAdd;
         class QuantizedConvolutionBiasSignedAdd;

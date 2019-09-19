@@ -76,7 +76,6 @@ void op::v1::Convolution::validate_and_infer_types()
     {
         if (data_batch_shape.is_static() && filters_shape.is_static())
         {
-            // TODO: data dilation
             m_pads_begin.clear();
             m_pads_end.clear();
             auto filter_shape = filters_shape.to_shape();
