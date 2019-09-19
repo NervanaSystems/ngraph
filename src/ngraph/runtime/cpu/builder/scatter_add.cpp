@@ -157,7 +157,7 @@ namespace ngraph
                                     indices_buffer_index,
                                     updates_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /*ectx*/) {
                         kernel(ctx->buffer_data[inputs_buffer_index],
                                ctx->buffer_data[indices_buffer_index],
                                ctx->buffer_data[updates_buffer_index],
@@ -188,7 +188,7 @@ namespace ngraph
                                     indices_buffer_index,
                                     updates_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /*ectx*/) {
                         kernel(ctx->buffer_data[inputs_buffer_index],
                                ctx->buffer_data[indices_buffer_index],
                                ctx->buffer_data[updates_buffer_index],
