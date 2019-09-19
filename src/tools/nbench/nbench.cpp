@@ -200,7 +200,7 @@ int main(int argc, char** argv)
     bool double_buffer = false;
 
     configure_static_backends();
-    for (size_t i = 1; i < argc; i++)
+    for (int i = 1; i < argc; i++)
     {
         string arg = argv[i];
         if (arg == "-f" || arg == "--file")

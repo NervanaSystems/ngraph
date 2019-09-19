@@ -471,7 +471,7 @@ size_t MKLDNNEmitter::reserve_primitive_space(size_t count, bool new_workspace)
     }
 #else
     m_mkldnn_primitives.resize(size + count, nullptr);
-    for (auto i = 0; i < count - 1; i++)
+    for (size_t i = 0; i < count - 1; i++)
     {
         m_primitive_deps[m_mkldnn_primitives.size() - 1].push_back(size + i);
     }

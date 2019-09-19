@@ -576,7 +576,7 @@ static void test_batchnorm_multiply_add_relu(Shape input_shape)
             std::make_shared<ngraph::op::BatchNormInference>(eps, gamma, beta, input, mean, var);
 
         std::vector<size_t> vec{0};
-        for (auto i = 2; i < input_shape.size(); i++)
+        for (size_t i = 2; i < input_shape.size(); i++)
         {
             vec.push_back(i);
         }
@@ -645,7 +645,7 @@ TEST(cpu_fusion, batchnorm_multiply_add_relu_no_fusion)
             std::make_shared<ngraph::op::BatchNormInference>(eps, gamma, beta, input, mean, var);
 
         std::vector<size_t> vec;
-        for (auto i = 1; i < input_shape.size(); i++)
+        for (size_t i = 1; i < input_shape.size(); i++)
         {
             vec.push_back(i);
         }
@@ -2146,7 +2146,7 @@ void sigmoid_multiply_fusion_forward_compute(runtime::Backend* backend,
     shared_ptr<runtime::Tensor> result_tensor = backend->create_tensor(element::f32, result_shape);
 
     vector<shared_ptr<runtime::Tensor>> input_tensors;
-    for (int i = 0; i < input_params.size(); ++i)
+    for (size_t i = 0; i < input_params.size(); ++i)
     {
         input_tensors.push_back(backend->create_tensor(element::f32, input_shapes[i]));
         copy_data(input_tensors[i], input_data[i]);
@@ -2314,7 +2314,7 @@ void sigmoid_multiply_fusion_backward_compute(runtime::Backend* backend,
                                               const vector<float>& expected_1)
 {
     vector<shared_ptr<runtime::Tensor>> input_tensors;
-    for (int i = 0; i < input_params.size(); ++i)
+    for (size_t i = 0; i < input_params.size(); ++i)
     {
         input_tensors.push_back(backend->create_tensor(element::f32, input_shapes[i]));
         copy_data(input_tensors[i], input_data[i]);
