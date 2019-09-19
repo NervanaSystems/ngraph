@@ -65,8 +65,11 @@ namespace ngraph
                 std::printf("%s [MLSL RANK: %d]: %s\n", timestamp.c_str(), get_rank(), buf.data());
             }
 
-            void
-                all_reduce(void* in, void* out, element::Type_t element_type, size_t count) override
+            void all_reduce(void* in,
+                            void* out,
+                            element::Type_t element_type,
+                            reduction::Type reduce_type,
+                            size_t count) override
             {
                 auto data_type = MLSL::DT_FLOAT;
 
@@ -83,15 +86,37 @@ namespace ngraph
                     throw std::runtime_error("AllReduce op supports only f32 and f64 types");
                 }
 
+                decltype(MLSL::RT_SUM) mlsl_reduce_type;
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+#endif
+                switch (reduce_type)
+                {
+                case reduction::Type::SUM: mlsl_reduce_type = MLSL::RT_SUM; break;
+                case reduction::Type::PROD:
+                    throw std::runtime_error("MLSL doesn't support allreduce prod");
+                    break;
+                case reduction::Type::MIN: mlsl_reduce_type = MLSL::RT_MIN; break;
+                case reduction::Type::MAX: mlsl_reduce_type = MLSL::RT_MAX; break;
+                }
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic pop
+#endif
+
                 MLSL::Environment& env = MLSL::Environment::GetEnv();
                 MLSL::Distribution* distribution = env.CreateDistribution(env.GetProcessCount(), 1);
-                MLSL::CommReq* req =
-                    distribution->AllReduce(in, out, count, data_type, MLSL::RT_SUM, MLSL::GT_DATA);
+                MLSL::CommReq* req = distribution->AllReduce(
+                    in, out, count, data_type, mlsl_reduce_type, MLSL::GT_DATA);
                 env.Wait(req);
                 env.DeleteDistribution(distribution);
             }
 
-            void broadcast(void* in, element::Type_t element_type, size_t count) override
+            void broadcast(void* in,
+                           element::Type_t element_type,
+                           size_t count,
+                           int root_id) override
             {
                 auto data_type = MLSL::DT_FLOAT;
 
@@ -107,9 +132,26 @@ namespace ngraph
 
                 MLSL::Environment& env = MLSL::Environment::GetEnv();
                 MLSL::Distribution* distribution = env.CreateDistribution(env.GetProcessCount(), 1);
-                MLSL::CommReq* req = distribution->Bcast(in, count, data_type, 0, MLSL::GT_DATA);
+                MLSL::CommReq* req =
+                    distribution->Bcast(in, count, data_type, root_id, MLSL::GT_DATA);
                 env.Wait(req);
                 env.DeleteDistribution(distribution);
+            }
+
+            void recv(void* /* in */,
+                      element::Type_t /* element_type */,
+                      size_t /* count */,
+                      int /* src_id */) override
+            {
+                throw ngraph_error("recv not supported/mentioned in MLSL");
+            }
+
+            void send(const void* /* in */,
+                      element::Type_t /* element_type */,
+                      size_t /* count */,
+                      int /* dest_id */) override
+            {
+                throw ngraph_error("send not supported/mentioned in MLSL");
             }
 
         protected:

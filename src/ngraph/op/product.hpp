@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include "ngraph/graph_util.hpp"
 #include "ngraph/op/util/arithmetic_reduction.hpp"
 
 namespace ngraph
@@ -30,10 +29,10 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"Product", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a product reduction operation.
-            Product();
+            Product() = default;
             /// \brief Constructs a product reduction operation.
             ///
             /// \param arg The tensor to be reduced.
@@ -46,10 +45,7 @@ namespace ngraph
             Product(const Output<Node>& arg, const Output<Node>& reduction_axes);
 
             /// \return The default value for Product.
-            virtual std::shared_ptr<Node> get_default_value() const override
-            {
-                return ngraph::make_constant_from_string("1", get_element_type(), get_shape());
-            }
+            virtual std::shared_ptr<Node> get_default_value() const override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

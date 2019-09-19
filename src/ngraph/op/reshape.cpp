@@ -18,16 +18,17 @@
 #include <iostream>
 
 #include "ngraph/function.hpp"
-#include "ngraph/graph_util.hpp"
 #include "ngraph/op/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::Reshape::Reshape(const shared_ptr<Node>& arg,
+constexpr NodeTypeInfo op::Reshape::type_info;
+
+op::Reshape::Reshape(const Output<Node>& arg,
                      const AxisVector& input_order,
                      const Shape& output_shape)
-    : Op("Reshape", check_single_output_args({arg}))
+    : Op({arg})
     , m_input_order(input_order)
     , m_output_shape(output_shape)
 {
@@ -142,5 +143,5 @@ void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
         reshape = make_shared<op::Reshape>(reshape, x_input_order, x_shape);
     }
 
-    adjoints.add_delta(get_argument(0), reshape);
+    adjoints.add_delta(input_value(0), reshape);
 }

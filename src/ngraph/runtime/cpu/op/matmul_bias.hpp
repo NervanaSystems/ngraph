@@ -27,9 +27,11 @@ namespace ngraph
         class MatmulBias : public Op
         {
         public:
-            CPU_BACKEND_API MatmulBias(std::shared_ptr<Node> W,
-                                       std::shared_ptr<Node> x,
-                                       std::shared_ptr<Node> b,
+            static constexpr NodeTypeInfo type_info{"MatmulBias", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            CPU_BACKEND_API MatmulBias(const Output<Node>& W,
+                                       const Output<Node>& x,
+                                       const Output<Node>& b,
                                        Shape shape_w,
                                        Shape shape_x,
                                        bool transpose_w,

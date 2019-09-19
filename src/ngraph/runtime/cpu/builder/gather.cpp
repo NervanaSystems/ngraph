@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,8 +55,9 @@ namespace ngraph
                     {
                         if ((args[0].get_element_type() == element::f32 ||
                              args[0].get_element_type() == element::f64 ||
-                             args[0].get_element_type() == element::u8) &&
-                            axis == 0)
+                             args[0].get_element_type() == element::u8 ||
+                             args[0].get_element_type() == element::i8) &&
+                            params_shape.size() <= 3 && out_shape.size() <= 5)
                         {
                             std::function<decltype(runtime::cpu::kernel::gather_i64<float, 2, 2>)>
                                 kernel;
@@ -65,13 +66,14 @@ namespace ngraph
                                                     args[0].get_element_type(),
                                                     params_shape.size(),
                                                     out_shape.size(),
-                                                    runtime::cpu::kernel::gather_i64);
+                                                    runtime::cpu::kernel::gather_i64)
 
                             return [&,
                                     kernel,
                                     params_shape,
                                     indices_shape,
                                     out_shape,
+                                    axis,
                                     params_buffer_index,
                                     indices_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
@@ -82,6 +84,7 @@ namespace ngraph
                                        params_shape,
                                        indices_shape,
                                        out_shape,
+                                       axis,
                                        ectx->arena);
                             };
                         }
@@ -95,7 +98,7 @@ namespace ngraph
                                     params_buffer_index,
                                     indices_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                                 ngraph::runtime::reference::gather<T, int64_t>(
                                     static_cast<T*>(ctx->buffer_data[params_buffer_index]),
                                     static_cast<int64_t*>(ctx->buffer_data[indices_buffer_index]),
@@ -112,8 +115,9 @@ namespace ngraph
                     {
                         if ((args[0].get_element_type() == element::f32 ||
                              args[0].get_element_type() == element::f64 ||
-                             args[0].get_element_type() == element::u8) &&
-                            axis == 0)
+                             args[0].get_element_type() == element::u8 ||
+                             args[0].get_element_type() == element::i8) &&
+                            params_shape.size() <= 3 && out_shape.size() <= 5)
                         {
                             std::function<decltype(runtime::cpu::kernel::gather_i32<float, 2, 2>)>
                                 kernel;
@@ -122,13 +126,14 @@ namespace ngraph
                                                     args[0].get_element_type(),
                                                     params_shape.size(),
                                                     out_shape.size(),
-                                                    runtime::cpu::kernel::gather_i32);
+                                                    runtime::cpu::kernel::gather_i32)
 
                             return [&,
                                     kernel,
                                     params_shape,
                                     indices_shape,
                                     out_shape,
+                                    axis,
                                     params_buffer_index,
                                     indices_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
@@ -139,6 +144,7 @@ namespace ngraph
                                        params_shape,
                                        indices_shape,
                                        out_shape,
+                                       axis,
                                        ectx->arena);
                             };
                         }
@@ -152,7 +158,7 @@ namespace ngraph
                                     params_buffer_index,
                                     indices_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                                 ngraph::runtime::reference::gather<T, int32_t>(
                                     static_cast<T*>(ctx->buffer_data[params_buffer_index]),
                                     static_cast<int32_t*>(ctx->buffer_data[indices_buffer_index]),
@@ -230,7 +236,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(Gather);
+            void register_builders_gather_cpp() { REGISTER_OP_BUILDER(Gather); }
         } // namespace cpu
     }     // namespace runtime
 } // namespace ngraph

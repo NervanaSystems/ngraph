@@ -1,5 +1,4 @@
-.. ---------------------------------------------------------------------------
-.. Copyright 2018-2019 Intel Corporation
+.. Copyright 2017-2019 Intel Corporation
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
@@ -13,33 +12,39 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-
-.. This documentation is available online at
-.. https://ngraph.nervanasys.com/docs/latest
-
 ######################
 nGraph Compiler stack 
 ######################
 
 
-nGraph is an open-source graph compiler for :abbr:`Artificial Neural Networks (ANNs)`. 
-The nGraph Compiler stack provides an inherently efficient graph-based compilation 
-infrastructure designed to be compatible with many upcoming 
-:abbr:`Application-Specific Integrated Circuits (ASICs)`, like the Intel® Nervana™ 
-Neural Network Processor (Intel® Nervana™ NNP), while also unlocking a massive 
-performance boost on any existing hardware targets for your neural network: both 
-GPUs and CPUs. Using its flexible infrastructure, you will find it becomes much 
-easier to create Deep Learning (DL) models that can adhere to the "write once, 
-run anywhere" mantra that enables your AI solutions to easily go from concept to 
-production to scale.
+.. _ngraph_home:
 
-Frameworks using nGraph to execute workloads have shown `up to 45X`_ performance 
-boost compared to native implementations. For a high-level overview, see the 
-:doc:`project/introduction` and our latest :doc:`project/release-notes`.
+.. only:: release
+
+  nGraph Compiler stack documentation for version |version|.
+
+   Documentation for the latest (master) development branch can be found 
+   at https://ngraph.nervanasys.com/docs/latest 
+   .. https://docs.ngraph.ai/
+
+.. only:: (development or daily)
+
+   nGraph Compiler stack documentation for the master tree under development 
+   (version |version|).
+
+For information about the releases, see the :doc:`../project/release-notes`. 
+
+The nGraph Library and Compiler stack are provided under the `Apache 2.0 license`_ 
+(found in the LICENSE file in the project's `repo`_). It may also import or reference 
+packages, scripts, and other files that use licensing.
+
+.. _Apache 2.0 license: https://github.com/NervanaSystems/ngraph/blob/master/LICENSE
+.. _repo: https://github.com/NervanaSystems/ngraph
+
 
 .. toctree::
    :maxdepth: 1
-   :caption: Connecting Frameworks
+   :caption: Getting Started
    
    frameworks/index.rst
    frameworks/validated/list.rst
@@ -56,6 +61,7 @@ boost compared to native implementations. For a high-level overview, see the
    nGraph Core Ops <ops/index.rst>
    core/constructing-graphs/index.rst
    core/passes/passes.rst
+
    
 .. toctree::
    :maxdepth: 1
@@ -66,10 +72,10 @@ boost compared to native implementations. For a high-level overview, see the
    
 .. toctree::
    :maxdepth: 1
-   :caption: Backend Support
+   :caption: Backend Developers
 
-   backend-support/index.rst
-   backend-support/cpp-api.rst
+   backends/index.rst
+   backends/cpp-api.rst
 
 
 .. toctree::
@@ -88,17 +94,13 @@ boost compared to native implementations. For a high-level overview, see the
    project/contribution-guide.rst
    project/doc-contributor-README.rst
    project/index.rst
-   project/extras.rst 
+   project/extras/index.rst 
    glossary.rst
+
+.. only:: html
 
 Indices and tables
 ==================
 
    * :ref:`search`
    * :ref:`genindex`
-
-
-
-
-.. nGraph: https://www.ngraph.ai
-.. _up to 45X: https://ai.intel.com/ngraph-compiler-stack-beta-release/

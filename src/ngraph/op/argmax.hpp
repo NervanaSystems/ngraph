@@ -16,8 +16,6 @@
 
 #pragma once
 
-#include "ngraph/axis_set.hpp"
-#include "ngraph/graph_util.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
 
 namespace ngraph
@@ -29,15 +27,16 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"ArgMax", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a ArgMax operation.
-            ArgMax();
+            ArgMax() = default;
             /// \brief Constructs a ArgMax operation.
             ///
             /// \param arg The input tensor
             /// \param axis The axis along which to compute an index for maximum
-            /// \param index_element_type produce indices. Currently, only int64 or int32 are supported
+            /// \param index_element_type produce indices. Currently, only int64 or int32 are
+            ///                           supported
             ArgMax(const Output<Node>& arg, size_t axis, const element::Type& index_element_type);
 
             virtual std::shared_ptr<Node>

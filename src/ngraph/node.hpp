@@ -17,6 +17,7 @@
 #pragma once
 
 #include <atomic>
+#include <cstring>
 #include <deque>
 #include <iostream>
 #include <memory>
@@ -55,6 +56,7 @@ namespace ngraph
 
     namespace op
     {
+        struct AutoBroadcastSpec;
         class Constant;
     } // namespace op
 
@@ -73,14 +75,25 @@ namespace ngraph
                                                          size_t i);
     const NodeVector& check_single_output_args(const NodeVector& args);
 
+    OutputVector as_output_vector(const NodeVector& args);
+    NodeVector as_node_vector(const OutputVector& values);
+
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
+
+    struct NodeTypeInfo
+    {
+        const char* name;
+        uint64_t version;
+    };
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// or a (possibly empty) tuple of values.
     class Node : public std::enable_shared_from_this<Node>
     {
+        static constexpr NodeTypeInfo type_info{"Node", 0};
+
         // For access to generate_adjoints.
         friend class autodiff::Adjoints;
 
@@ -128,13 +141,52 @@ namespace ngraph
         /// \param output_size Number of outputs for this node
         Node(const NodeVector& arguments, size_t output_size = 1);
 
-        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
-        /// \brief Moves nodes that would be deleted from inputs to nodes to avoid stack overflows on deep networks.
+        virtual void generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                       const NodeVector& /* deltas */)
+        {
+        }
+        /// \brief Moves nodes that would be deleted from inputs to nodes to avoid stack overflows
+        /// on deep networks.
         void safe_delete(NodeVector& nodes, bool recurse);
 
     public:
         virtual ~Node();
 
+        /// Tests if a node is of op type T
+        template <typename NodeType>
+        bool is_type() const
+        {
+            return &get_type_info() == &NodeType::type_info;
+        }
+        virtual bool is_unary_elementwise_arithmetic() const { return false; }
+        virtual bool is_binary_elementwise_arithmetic() const { return false; }
+        virtual bool is_binary_elementwise_comparison() const { return false; }
+        virtual bool is_binary_elementwise_logical() const { return false; }
+        /// \returns true if node supports autobroadcast operations
+        virtual bool supports_auto_broadcast() const { return false; }
+        /// \returns the autobroadcasr spec
+        virtual const op::AutoBroadcastSpec& get_autob() const;
+        /// \returns true if the node can decompose
+        virtual bool supports_decompose() const { return false; }
+        /// \brief Decomposes the FusedOp into a sub-graph consisting of core ngraph ops
+        ///
+        /// \return A vector of nodes comprising the sub-graph. The order of output
+        ///         tensors must match the match output tensors of the FusedOp
+        virtual NodeVector decompose_op() const { return NodeVector(); }
+        /// Returns the NodeTypeInfo for the node's class.
+        /// During transition to type_info, returns a dummy type_info for Node if the class
+        /// has not been updated yet.
+        virtual const NodeTypeInfo& get_type_info() const { return type_info; }
+        virtual const char* get_type_name() const
+        {
+            auto& info = get_type_info();
+            if (is_type<Node>())
+            {
+                // Transitional definition
+                return description().c_str();
+            }
+            return info.name;
+        }
         /// Sets/replaces the arguments with new arguments.
         void set_arguments(const NodeVector& arguments);
         /// Sets/replaces the arguments with new arguments.
@@ -212,8 +264,9 @@ namespace ngraph
         virtual bool is_constant() const;
         virtual bool is_null() const { return false; }
         virtual bool is_op() const { return false; }
-        virtual bool is_commutative() { return false; }
+        virtual bool is_commutative() const { return false; }
         virtual bool is_dynamic() const;
+        virtual bool has_state() const { return false; }
         size_t get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
         virtual std::ostream& write_short_description(std::ostream&) const;
@@ -233,14 +286,28 @@ namespace ngraph
             NGRAPH_DEPRECATED("use outputs() instead");
 
         /// Get control dependencies registered on the node
-        const std::set<std::shared_ptr<Node>>& get_control_dependencies() const;
+        const std::vector<std::shared_ptr<Node>>& get_control_dependencies() const;
 
+        /// Get nodes dependent on this node
+        const std::vector<Node*>& get_control_dependents() const;
+
+        /// This node cannot execute until node executes
         void add_control_dependency(std::shared_ptr<Node> node);
 
-        void remove_control_dependency(std::shared_ptr<Node> node)
-        {
-            m_control_dependencies.erase(node);
-        }
+        /// Remove the dependency of this node on node
+        void remove_control_dependency(std::shared_ptr<Node> node);
+
+        /// Remove all dependencies from this node
+        void clear_control_dependencies();
+
+        /// Remove this node as a dependency from all dependent nodes
+        void clear_control_dependents();
+
+        /// This node absorbs the control dependencies of source_node
+        void add_node_control_dependencies(std::shared_ptr<Node> source_node);
+
+        /// This node becomes a dependent of every node dependent on source_node
+        void add_node_control_dependents(std::shared_ptr<Node> source_node);
 
         /// Returns the number of outputs from the node.
         size_t get_output_size() const;
@@ -261,6 +328,9 @@ namespace ngraph
 
         /// Returns the partial shape for output i
         const PartialShape& get_output_partial_shape(size_t i) const;
+
+        std::shared_ptr<Node> get_output_as_single_output_node(size_t i,
+                                                               bool for_get_output_element = true);
 
         /// Checks that there is exactly one output and returns its shape
         // TODO: deprecate in favor of node->output(0).get_shape() with a suitable check in the
@@ -292,7 +362,7 @@ namespace ngraph
             "output, or update calling code not to assume only one output");
 
         /// Returns the set of inputs using output i
-        const std::set<descriptor::Input*>& get_output_inputs(size_t i) const
+        const std::vector<descriptor::Input*>& get_output_inputs(size_t i) const
             NGRAPH_DEPRECATED("use node->output(i).get_target_inputs() instead");
 
         /// Returns the number of inputs for the op
@@ -320,10 +390,17 @@ namespace ngraph
         virtual NodeVector get_arguments() const;
         // Will be deprecated
         std::shared_ptr<Node> get_argument(size_t index) const;
+
+    protected:
         // Will be replaced with an OutputVector version
         virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const = 0;
 
-        virtual std::vector<std::shared_ptr<Function>> get_functions() const;
+    public:
+        std::shared_ptr<Node> copy_with_new_inputs(const OutputVector& new_args) const;
+
+        std::shared_ptr<Node> copy_with_new_inputs(
+            const OutputVector& inputs,
+            const std::vector<std::shared_ptr<Node>>& control_dependencies) const;
 
         /// True if this and node have one output with same element type and shape
         bool has_same_type(std::shared_ptr<const Node> node) const;
@@ -350,6 +427,8 @@ namespace ngraph
         /// Get all the nodes that uses the current node
         NodeVector get_users(bool check_is_used = false) const;
 
+        /// \return Version of this node
+        virtual size_t get_version() const { return 0; }
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
         /// Use instance ids for comparison instead of memory addresses to improve determinism
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
@@ -361,6 +440,9 @@ namespace ngraph
 
         /// \return A vector containing a handle for each of this node's inputs, in order.
         std::vector<Input<const Node>> inputs() const;
+
+        /// \return A vector containing the values for each input
+        std::vector<Output<Node>> input_values() const;
 
         /// \return A vector containing a handle for each of this node's outputs, in order.
         // TODO: Rename to get_outputs()?
@@ -377,6 +459,8 @@ namespace ngraph
         /// \throw std::out_of_range if the node does not have at least `input_index+1` inputs.
         Input<const Node> input(size_t input_index) const;
 
+        Output<Node> input_value(size_t input_index) const;
+
         /// \return A handle to the `output_index`th output of this node.
         /// \throw std::out_of_range if the node does not have at least `output_index+1` outputs.
         Output<Node> output(size_t output_index);
@@ -389,11 +473,13 @@ namespace ngraph
         descriptor::Input& get_input_descriptor(size_t position);
         descriptor::Output& get_output_descriptor(size_t position);
 
-        std::set<std::shared_ptr<Node>> m_control_dependencies;
-        const std::string m_node_type;
+        std::vector<Node*> m_control_dependents;
+        std::vector<std::shared_ptr<Node>> m_control_dependencies;
+        std::string m_node_type;
         size_t m_instance_id{m_next_instance_id.fetch_add(1)};
         std::string m_friendly_name;
         std::string m_unique_name;
+        NGRAPH_API
         static std::atomic<size_t> m_next_instance_id;
         std::unordered_set<std::string> m_provenance_tags;
         std::deque<descriptor::Input> m_inputs;
@@ -402,6 +488,36 @@ namespace ngraph
         Placement m_placement = Placement::DEFAULT;
         size_t m_placement_index = placement_invalid;
     };
+
+    /// Casts a Node* to a NodeType* if it is of type NodeType, nullptr otherwise
+    template <typename NodeType>
+    NodeType* as_type(Node* node)
+    {
+        return node->template is_type<NodeType>() ? static_cast<NodeType*>(node) : nullptr;
+    }
+
+    /// Casts a Node* to a NodePtr* if it is of type NodePtr, nullptr otherwise
+    template <typename NodeType>
+    const NodeType* as_type(const Node* node)
+    {
+        return node->template is_type<NodeType>() ? static_cast<const NodeType*>(node) : nullptr;
+    }
+
+    /// Casts a Node to a shared_ptr<NodePtr> if it is of type NodePtr, nullptr otherwise
+    template <typename NodeType>
+    std::shared_ptr<NodeType> as_type_ptr(std::shared_ptr<Node> node_ptr)
+    {
+        return node_ptr->template is_type<NodeType>() ? std::static_pointer_cast<NodeType>(node_ptr)
+                                                      : std::shared_ptr<NodeType>();
+    }
+
+    /// Casts a Node to a shared_ptr<NodePtr> if it is of type NodePtr, nullptr otherwise
+    template <typename NodeType>
+    std::shared_ptr<const NodeType> as_type_ptr(std::shared_ptr<const Node> node_ptr)
+    {
+        return node_ptr->template is_type<NodeType>() ? std::static_pointer_cast<NodeType>(node_ptr)
+                                                      : std::shared_ptr<NodeType>();
+    }
 
     /// \brief A handle for one of a node's inputs.
     template <typename NodeType>
@@ -481,7 +597,7 @@ namespace ngraph
     };
 
     /// \brief A handle for one of a node's outputs.
-    template <typename NodeType>
+    template <typename NodeType = Node>
     class Output
     {
     public:
@@ -489,7 +605,7 @@ namespace ngraph
         /// \param node A pointer to the node for the output handle.
         /// \param index The index of the output.
         Output(NodeType* node, size_t index)
-            : m_node(node)
+            : m_node(node->shared_from_this())
             , m_index(index)
         {
         }
@@ -500,7 +616,7 @@ namespace ngraph
         ///
         /// TODO: Make a plan to deprecate this.
         Output(const std::shared_ptr<NodeType>& node, size_t index)
-            : m_node(node.get())
+            : m_node(node)
             , m_index(index)
         {
         }
@@ -513,12 +629,29 @@ namespace ngraph
         {
         }
 
+        /// A null output
+        Output() = default;
+
+        /// This output position for a different node
+        Output<NodeType> for_node(const std::shared_ptr<NodeType>& node)
+        {
+            return Output(node, m_index);
+        }
+
         /// \return A pointer to the node referred to by this output handle.
-        NodeType* get_node() const { return m_node; }
+        NodeType* get_node() const { return m_node.get(); }
         /// \return A `shared_ptr` to the node referred to by this output handle.
         ///
         /// TODO: Make a plan to deprecate this.
-        std::shared_ptr<NodeType> get_node_shared_ptr() const { return m_node->shared_from_this(); }
+        std::shared_ptr<NodeType> get_node_shared_ptr() const { return m_node; }
+        /// \return A useable shared pointer to this output. If index 0, the node,
+        /// otherwise find or create a GOE.
+        std::shared_ptr<Node> as_single_output_node(bool for_get_output_element = true) const
+            NGRAPH_DEPRECATED("Transitional.")
+        {
+            return m_node->get_output_as_single_output_node(m_index, for_get_output_element);
+        }
+
         /// \return The index of the output referred to by this output handle.
         size_t get_index() const { return m_index; }
         /// \return A reference to the tensor descriptor for this output.
@@ -570,8 +703,8 @@ namespace ngraph
         bool operator<=(const Output& other) const { return !(*this > other); }
         bool operator>=(const Output& other) const { return !(*this < other); }
     private:
-        NodeType* const m_node;
-        const size_t m_index;
+        std::shared_ptr<NodeType> m_node;
+        size_t m_index{0};
     };
 
     inline Input<Node> Node::input(size_t input_index)
@@ -582,6 +715,11 @@ namespace ngraph
         }
 
         return Input<Node>(this, input_index);
+    }
+
+    inline Output<Node> Node::input_value(size_t input_index) const
+    {
+        return input(input_index).get_source_output();
     }
 
     inline Input<const Node> Node::input(size_t input_index) const
@@ -655,6 +793,18 @@ namespace ngraph
         for (size_t i = 0; i < get_input_size(); i++)
         {
             result.emplace_back(this, i);
+        }
+
+        return result;
+    }
+
+    inline std::vector<Output<Node>> Node::input_values() const
+    {
+        std::vector<Output<Node>> result;
+
+        for (size_t i = 0; i < get_input_size(); i++)
+        {
+            result.emplace_back(input(i).get_source_output());
         }
 
         return result;

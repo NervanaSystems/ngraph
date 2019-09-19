@@ -17,6 +17,8 @@
 set (SRC
     nbench.cpp
     benchmark.cpp
+    benchmark_pipelined.cpp
+    benchmark_utils.cpp
 )
 
 add_executable(nbench ${SRC})
@@ -30,9 +32,6 @@ if (NGRAPH_CPU_ENABLE)
 endif()
 if (NGRAPH_INTELGPU_ENABLE)
     target_link_libraries(nbench PRIVATE intelgpu_backend)
-endif()
-if (NGRAPH_GPU_ENABLE)
-    target_link_libraries(nbench PRIVATE gpu_backend)
 endif()
 if (NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(nbench PRIVATE interpreter_backend)

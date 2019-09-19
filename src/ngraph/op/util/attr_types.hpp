@@ -27,7 +27,8 @@ namespace ngraph
         {
             CONSTANT = 0,
             EDGE,
-            REFLECT
+            REFLECT,
+            SYMMETRIC
         };
 
         /// \brief Padding Type used for `Convolution` and `Pooling`
@@ -49,7 +50,7 @@ namespace ngraph
             SAME_UPPER,
             VALID,
             AUTO = SAME_UPPER,
-            NOTSET = EXPLICIT
+            NOTSET = EXPLICIT,
         };
 
         /// \brief Specifies the algorithm to use for implicit broadcasting of a tensor
@@ -78,6 +79,15 @@ namespace ngraph
         {
             NONE = 0,
             NUMPY
+        };
+
+        /// \brief Specifies how eps is combined with L2 value
+        enum class EpsMode
+        {
+            // Add bias to norm
+            ADD,
+            // Calculate max of norm and bias
+            MAX
         };
 
         /// \brief Implicit broadcast specification

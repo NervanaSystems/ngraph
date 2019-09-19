@@ -48,23 +48,31 @@ namespace ngraph
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto softmax_desc = mkldnn_emitter->get_softmax_forward_desc(node);
+                    QUERY_SCRATCHPAD(softmax_forward, softmax_desc);
+
                     // Softmax needs 3 primitives: input, result, and softmax_forward.
                     size_t softmax_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(softmax_index);
 
                     auto functor =
                         [&, softmax_desc, softmax_index, arg_buffer_index, out_buffer_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                             if (ctx->first_iteration)
                             {
-                                mkldnn_emitter->build_softmax_forward(
-                                    ctx->mkldnn_primitives, softmax_desc, deps, softmax_index);
+                                mkldnn_emitter->build_softmax_forward(ctx->mkldnn_memories,
+                                                                      ctx->mkldnn_primitives,
+                                                                      ctx->mkldnn_scratchpad_mds,
+                                                                      softmax_desc,
+                                                                      deps,
+                                                                      softmax_index);
                             }
                             cpu::mkldnn_utils::set_memory_ptr(
                                 ctx, deps[0], ctx->buffer_data[arg_buffer_index]);
                             cpu::mkldnn_utils::set_memory_ptr(
                                 ctx, deps[1], ctx->buffer_data[out_buffer_index]);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, softmax_index);
+
+                            cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                                ctx, softmax_index, deps, cpu::mkldnn_utils::OpType::SOFTMAX);
                         };
                     functors.emplace_back(functor);
                 }
@@ -77,7 +85,7 @@ namespace ngraph
                         PARTIAL_SELECT_KERNEL_BY_RANK(kernel,
                                                       args[0].get_element_type(),
                                                       args[0].get_shape().size(),
-                                                      runtime::cpu::kernel::softmax_all);
+                                                      runtime::cpu::kernel::softmax_all)
 
                         auto functor = [&, kernel, arg_shape, arg_buffer_index, out_buffer_index](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
@@ -100,7 +108,7 @@ namespace ngraph
                                 kernel,
                                 args[0].get_element_type(),
                                 args[0].get_shape().size(),
-                                runtime::cpu::kernel::softmax_innermost_1rd);
+                                runtime::cpu::kernel::softmax_innermost_1rd)
 
                             auto functor =
                                 [&, kernel, arg_shape, arg_buffer_index, out_buffer_index](
@@ -120,7 +128,7 @@ namespace ngraph
                             PARTIAL_SELECT_KERNEL_BY_RANK(kernel,
                                                           args[0].get_element_type(),
                                                           args[0].get_shape().size(),
-                                                          runtime::cpu::kernel::softmax_1rd);
+                                                          runtime::cpu::kernel::softmax_1rd)
 
                             auto functor =
                                 [&, kernel, arg_shape, axes, arg_buffer_index, out_buffer_index](
@@ -140,7 +148,7 @@ namespace ngraph
 
                         SELECT_KERNEL(kernel,
                                       args[0].get_element_type(),
-                                      runtime::cpu::kernel::softmax_3d_2rd);
+                                      runtime::cpu::kernel::softmax_3d_2rd)
 
                         auto functor =
                             [&, kernel, arg_shape, axes, arg_buffer_index, out_buffer_index](
@@ -159,7 +167,7 @@ namespace ngraph
 
                         SELECT_KERNEL(kernel,
                                       args[0].get_element_type(),
-                                      runtime::cpu::kernel::softmax_4d_3rd);
+                                      runtime::cpu::kernel::softmax_4d_3rd)
 
                         auto functor =
                             [&, kernel, arg_shape, axes, arg_buffer_index, out_buffer_index](
@@ -177,7 +185,7 @@ namespace ngraph
                         NGRAPH_WARN << "Falling back to refernce kernel for softmax " << arg_shape
                                     << " over " << axes;
                         auto functor = [&, arg_shape, axes, arg_buffer_index, out_buffer_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                             runtime::reference::softmax<float>(
                                 static_cast<float*>(ctx->buffer_data[arg_buffer_index]),
                                 static_cast<float*>(ctx->buffer_data[out_buffer_index]),
@@ -195,7 +203,7 @@ namespace ngraph
                 }
             }
 
-            REGISTER_OP_BUILDER(Softmax);
+            void register_builders_softmax_cpp() { REGISTER_OP_BUILDER(Softmax); }
         }
     }
 }

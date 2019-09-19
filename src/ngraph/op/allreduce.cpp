@@ -19,14 +19,11 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::AllReduce::type_name{"AllReduce"};
+constexpr NodeTypeInfo op::AllReduce::type_info;
 
-op::AllReduce::AllReduce()
-{
-}
-
-op::AllReduce::AllReduce(const shared_ptr<Node>& arg)
-    : Op(check_single_output_args({arg}))
+op::AllReduce::AllReduce(const Output<Node>& arg, reduction::Type reduce_type)
+    : Op({arg})
+    , m_reduce_type(reduce_type)
 {
     constructor_validate_and_infer_types();
 }
@@ -47,5 +44,15 @@ void op::AllReduce::validate_and_infer_types()
 shared_ptr<Node> op::AllReduce::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<AllReduce>(new_args.at(0));
+    return make_shared<AllReduce>(new_args.at(0), get_reduce_type());
+}
+
+reduction::Type op::AllReduce::get_reduce_type() const
+{
+    return m_reduce_type;
+}
+
+void op::AllReduce::set_reduce_type(reduction::Type reduce_type)
+{
+    m_reduce_type = reduce_type;
 }

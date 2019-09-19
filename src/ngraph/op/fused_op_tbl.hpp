@@ -17,6 +17,11 @@
 // This collection contains one entry for each fused op.
 //
 
+#ifndef NGRAPH_OP
+#warning "NGRAPH_OP not defined"
+#define NGRAPH_OP(x, y)
+#endif
+
 NGRAPH_OP(Clamp, ngraph::op)
 NGRAPH_OP(ConvolutionBias, ngraph::op)
 NGRAPH_OP(ConvolutionBiasAdd, ngraph::op)
@@ -24,18 +29,24 @@ NGRAPH_OP(ConvolutionBiasBackpropFiltersBias, ngraph::op)
 NGRAPH_OP(DepthToSpace, ngraph::op)
 NGRAPH_OP(Elu, ngraph::op)
 NGRAPH_OP(FakeQuantize, ngraph::op)
-NGRAPH_OP(GRN, ngraph::op)
+NGRAPH_OP(Gelu, ngraph::op)
+NGRAPH_OP(GeluBackpropFactor, ngraph::op)
 NGRAPH_OP(Gemm, ngraph::op)
+NGRAPH_OP(GRN, ngraph::op)
 NGRAPH_OP(GroupConvolution, ngraph::op)
+NGRAPH_OP(GroupConvolutionTranspose, ngraph::op)
+NGRAPH_OP(GRUCell, ngraph::op)
 NGRAPH_OP(HardSigmoid, ngraph::op)
-NGRAPH_OP(LeakyRelu, ngraph::op)
+NGRAPH_OP(LSTMCell, ngraph::op)
+NGRAPH_OP(MatMul, ngraph::op)
 NGRAPH_OP(MVN, ngraph::op)
-NGRAPH_OP(Normalize, ngraph::op)
+NGRAPH_OP(NormalizeL2, ngraph::op)
 NGRAPH_OP(PRelu, ngraph::op)
+NGRAPH_OP(RNNCell, ngraph::op)
 NGRAPH_OP(ScaleShift, ngraph::op)
-NGRAPH_OP(SpaceToDepth, ngraph::op)
 NGRAPH_OP(ShuffleChannels, ngraph::op)
+NGRAPH_OP(SpaceToDepth, ngraph::op)
+NGRAPH_OP(Split, ngraph::op)
 NGRAPH_OP(SquaredDifference, ngraph::op)
 NGRAPH_OP(Squeeze, ngraph::op)
-NGRAPH_OP(Split, ngraph::op)
 NGRAPH_OP(Unsqueeze, ngraph::op)

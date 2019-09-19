@@ -40,8 +40,8 @@ namespace ngraph
                      op::PadMode pad_mode)
             {
                 Coordinate input_start(arg0_shape.size(), 0); // start at (0,0,...,0)
-                Coordinate input_end =
-                    out_shape; // end at (d'0,d'1,...,d'n), the outer corner of the post-padding shape
+                Coordinate input_end = out_shape; // end at (d'0,d'1,...,d'n), the outer corner of
+                                                  // the post-padding shape
 
                 Strides input_strides(arg0_shape.size(), 1);
 
@@ -103,6 +103,7 @@ namespace ngraph
                     }
                     case op::PadMode::REFLECT:
                     {
+                        // clang-format off
                         // The algorithm here is a bit complicated because if the padding is
                         // bigger than the tensor, we may reflect multiple times.
                         //
@@ -127,6 +128,7 @@ namespace ngraph
                         //
                         // Note that this algorithm works because REFLECT padding only makes sense
                         // if each dim is >= 2.
+                        // clang-format on
                         Coordinate c = in_coord; // have to copy because in_coord is const
 
                         for (size_t i = 0; i < c.size(); i++)
@@ -158,6 +160,34 @@ namespace ngraph
                             }
 
                             c[i] = static_cast<size_t>(new_dim);
+                        }
+                        v = arg0[input_transform.index(c)];
+                        break;
+                    }
+                    case op::PadMode::SYMMETRIC:
+                    {
+                        Coordinate c = in_coord; // have to copy because in_coord is const
+                        for (size_t i = 0; i < c.size(); i++)
+                        {
+                            ptrdiff_t pos = padding_below[i] - (c[i] + 1);
+                            if (pos >= 0)
+                            {
+                                c[i] = static_cast<size_t>(pos + padding_below[i]);
+                            }
+                            else
+                            {
+                                pos = -(pos + 1);
+                                ptrdiff_t src_dim = static_cast<ptrdiff_t>(arg0_shape[i]);
+                                if (pos < src_dim)
+                                {
+                                    c[i] = static_cast<size_t>(pos + padding_below[i]);
+                                }
+                                else
+                                {
+                                    c[i] = static_cast<size_t>(padding_below[i] + src_dim +
+                                                               padding_above[i] - pos);
+                                }
+                            }
                         }
                         v = arg0[input_transform.index(c)];
                         break;

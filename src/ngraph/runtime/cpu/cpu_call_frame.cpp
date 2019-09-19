@@ -30,7 +30,8 @@ using namespace ngraph;
 runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction> external_function,
                                            InitContextFuncCG compiled_init_ctx_func,
                                            DestroyContextFuncCG compiled_destroy_ctx_func,
-                                           EntryPoint compiled_function)
+                                           EntryPoint compiled_function,
+                                           runtime::Allocator* allocator)
     : m_external_function(external_function)
     , m_compiled_init_ctx_func(compiled_init_ctx_func)
     , m_compiled_destroy_ctx_func(compiled_destroy_ctx_func)
@@ -47,7 +48,7 @@ runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction>
             std::to_string(std::thread::hardware_concurrency()) + "]");
     }
 
-    setup_runtime_context();
+    setup_runtime_context(allocator);
     if (!m_external_function->is_direct_execution())
     {
         // Invoke codegen runtime context initialization function.
@@ -118,7 +119,7 @@ void runtime::cpu::CPU_CallFrame::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
 {
-    auto id = 0;
+    size_t id = 0;
     auto disable_caching = false;
     {
         std::unique_lock<std::mutex> lck(m_mutex);
@@ -127,7 +128,7 @@ void runtime::cpu::CPU_CallFrame::call(
             m_cv.wait(lck);
         }
 
-        for (auto i = 0; i < m_num_ctx; i++)
+        for (size_t i = 0; i < m_num_ctx; i++)
         {
             if (m_id_pool[i])
             {
@@ -178,9 +179,9 @@ void runtime::cpu::CPU_CallFrame::propagate_layouts(
     }
 }
 
-void runtime::cpu::CPU_CallFrame::setup_runtime_context()
+void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
 {
-    for (auto i = 0; i < m_num_ctx; i++)
+    for (size_t i = 0; i < m_num_ctx; i++)
     {
         m_id_pool[i] = true;
         auto ctx = new CPURuntimeContext;
@@ -202,22 +203,26 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         size_t alignment = runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
         for (auto buffer_size : m_external_function->get_memory_buffer_sizes())
         {
-            auto buffer = new AlignedBuffer(buffer_size, alignment);
+            auto buffer = new AlignedBuffer(buffer_size, alignment, allocator);
             ctx->memory_buffers.push_back(buffer);
         }
         const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
-
+        // Create scratchpad
+        auto scratchpad_size = mkldnn_emitter->get_max_scratchpad_size();
         if (m_external_function->is_direct_execution())
         {
             ctx->mkldnn_primitives =
                 std::vector<mkldnn::primitive*>(mkldnn_emitter->get_mkldnn_primitives().size());
+            ctx->mkldnn_memories =
+                std::vector<mkldnn::memory*>(mkldnn_emitter->get_mkldnn_memories().size());
+            ctx->mkldnn_scratchpad_mds = std::vector<mkldnn::memory::desc*>(
+                mkldnn_emitter->get_mkldnn_scratchpad_mds().size());
+            ctx->scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment);
         }
         else
         {
             // single thread for codegen
             NGRAPH_CHECK(m_num_ctx == 1);
-            ctx->mkldnn_primitives.swap(mkldnn_emitter->get_mkldnn_primitives());
-            ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces();
         }
 
         ctx->states = m_external_function->m_states.data();
@@ -239,7 +244,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
 
 void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
 {
-    for (auto i = 0; i < m_num_ctx; i++)
+    for (size_t i = 0; i < m_num_ctx; i++)
     {
         auto ctx = m_ctx_vec.back();
         m_ctx_vec.pop_back();
@@ -250,10 +255,23 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
         {
             delete p;
         }
+        for (auto m : ctx->mkldnn_memories)
+        {
+            delete m;
+        }
         for (auto buffer : ctx->memory_buffers)
         {
             delete buffer;
         }
+        for (auto s : ctx->mkldnn_scratchpad_mds)
+        {
+            delete s;
+        }
+        if (m_external_function->is_direct_execution())
+        {
+            delete ctx->scratchpad_buffer;
+        }
+
         if (m_external_function->is_direct_execution() &&
             std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
         {

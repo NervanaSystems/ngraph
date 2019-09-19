@@ -37,6 +37,10 @@ namespace ngraph
                  const ParameterVector& parameters,
                  const std::string& name = "");
 
+        Function(const OutputVector& results,
+                 const ParameterVector& parameters,
+                 const std::string& name = "");
+
         Function(const std::shared_ptr<Node>& result,
                  const ParameterVector& parameters,
                  const std::string& name = "");
@@ -54,6 +58,8 @@ namespace ngraph
 
         /// Return the op that generates output i
         std::shared_ptr<Node> get_output_op(size_t i) const;
+
+        Output<Node> output(size_t i) const;
 
         /// Return the element type of output i
         const element::Type& get_output_element_type(size_t i) const;
@@ -76,7 +82,8 @@ namespace ngraph
         const std::string& get_name() const;
 
         /// \brief Sets a friendly name for a function. This does not overwrite the unique name
-        ///        of the function and is retrieved via get_friendly_name(). Used mainly for debugging.
+        ///        of the function and is retrieved via get_friendly_name(). Used mainly for
+        ///        debugging.
         ///        The friendly name may be set exactly once.
         /// \param name is the friendly name to set
         void set_friendly_name(const std::string& name);
@@ -88,6 +95,8 @@ namespace ngraph
 
         std::list<std::shared_ptr<Node>> get_ops(bool include_control_deps = true) const;
         std::list<std::shared_ptr<Node>> get_ordered_ops(bool include_control_deps = true) const;
+        void map_unordered_ops(std::function<void(Node*)> f) const;
+
         friend std::ostream& operator<<(std::ostream&, const Function&);
         size_t get_instance_id() { return m_instance_id; }
         size_t get_temporary_pool_size();
@@ -107,6 +116,16 @@ namespace ngraph
 
         /// \brief Returns true if any of the op's defined in the function contains partial shape
         bool is_dynamic() const;
+
+        /// \brief Replace the `parameter_index`th parameter of the function with `parameter`.
+        ///
+        /// All users of the `parameter_index`th parameter are redirected to `parameter`, and the
+        /// `parameter_index`th entry in the function parameter list is replaced with `parameter`.
+        ///
+        /// \param parameter_index The index of the parameter to replace.
+        /// \param parameter The parameter to substitute for the `parameter_index`th parameter.
+        void replace_parameter(size_t parameter_index,
+                               const std::shared_ptr<op::Parameter>& parameter);
 
     protected:
         ResultVector m_results;

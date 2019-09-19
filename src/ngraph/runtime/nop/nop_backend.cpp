@@ -14,7 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/nop/nop_backend.hpp"
+#include "ngraph/runtime/nop/nop_backend_visibility.hpp"
+
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/op/convert.hpp"
@@ -25,6 +26,7 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/nop/nop_backend.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -32,20 +34,11 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorLayout;
 
-extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
+extern "C" NOP_BACKEND_API void ngraph_register_nop_backend()
 {
-    class LocalBackendConstructor : public runtime::BackendConstructor
-    {
-    public:
-        std::shared_ptr<runtime::Backend> create(const std::string& config) override
-        {
-            return std::make_shared<runtime::nop::NOPBackend>();
-        }
-    };
-
-    static unique_ptr<runtime::BackendConstructor> s_backend_constructor(
-        new LocalBackendConstructor());
-    return s_backend_constructor.get();
+    runtime::BackendManager::register_backend("NOP", [](const std::string& /* config */) {
+        return std::make_shared<runtime::nop::NOPBackend>();
+    });
 }
 
 shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor(const element::Type& type,
@@ -69,7 +62,7 @@ shared_ptr<runtime::Executable>
 }
 
 runtime::nop::NOPExecutable::NOPExecutable(shared_ptr<Function> function,
-                                           bool enable_performance_collection)
+                                           bool /* enable_performance_collection */)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
@@ -78,8 +71,8 @@ runtime::nop::NOPExecutable::NOPExecutable(shared_ptr<Function> function,
     set_parameters_and_results(*function);
 }
 
-bool runtime::nop::NOPExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                       const vector<shared_ptr<runtime::Tensor>>& inputs)
+bool runtime::nop::NOPExecutable::call(const vector<shared_ptr<runtime::Tensor>>& /* outputs */,
+                                       const vector<shared_ptr<runtime::Tensor>>& /* inputs */)
 {
     return true;
 }

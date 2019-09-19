@@ -15,13 +15,14 @@
 //*****************************************************************************
 
 #include "ngraph/op/experimental/shape_of.hpp"
-#include "ngraph/op/constant.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::ShapeOf::ShapeOf(const shared_ptr<Node>& arg)
-    : Op("ShapeOf", check_single_output_args({arg}))
+constexpr NodeTypeInfo op::ShapeOf::type_info;
+
+op::ShapeOf::ShapeOf(const Output<Node>& arg)
+    : Op({arg})
 {
     constructor_validate_and_infer_types();
 }

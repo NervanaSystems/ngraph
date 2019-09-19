@@ -13,17 +13,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+
 #include "ngraph/op/fused/shuffle_channels.hpp"
-#include "ngraph/op/reshape.hpp"
-#include "ngraph/op/util/reshape.hpp"
+#include "ngraph/builder/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::ShuffleChannels::ShuffleChannels(const shared_ptr<Node>& data,
-                                     const int axis,
-                                     const size_t groups)
-    : FusedOp("ShuffleChannels", {data})
+constexpr NodeTypeInfo op::ShuffleChannels::type_info;
+
+op::ShuffleChannels::ShuffleChannels(const Output<Node>& data, const int axis, const size_t groups)
+    : FusedOp({data})
     , m_axis(axis)
     , m_groups{groups}
 {
@@ -53,7 +53,7 @@ void op::ShuffleChannels::pre_validate_and_infer_types()
 {
     if (get_input_partial_shape(0).is_static())
     {
-        const auto shape = get_argument(0)->get_shape();
+        const auto shape = input(0).get_shape();
 
         NODE_VALIDATION_CHECK(
             this, shape.size() >= 1, "The input tensor's shape is expected to be at least 1D.");
@@ -74,13 +74,13 @@ void op::ShuffleChannels::pre_validate_and_infer_types()
 
 NodeVector op::ShuffleChannels::decompose_op() const
 {
-    const auto data = get_argument(0);
-    const auto& data_shape = data->get_shape();
+    const auto data = input_value(0);
+    const auto& data_shape = data.get_shape();
 
-    const auto reshaped = util::reshape(data, get_pre_shuffle_shape(data_shape));
-    const auto shuffled = util::reorder_axes(reshaped, {0, 2, 1, 3});
+    const auto reshaped = builder::reshape(data, get_pre_shuffle_shape(data_shape));
+    const auto shuffled = builder::reorder_axes(reshaped, {0, 2, 1, 3});
 
-    return {util::reshape(shuffled, data_shape)};
+    return {builder::reshape(shuffled, data_shape)};
 }
 
 shared_ptr<Node> op::ShuffleChannels::copy_with_new_args(const NodeVector& new_args) const
@@ -102,7 +102,8 @@ Shape op::ShuffleChannels::get_pre_shuffle_shape(const Shape& data_shape) const
     // [0]: ds[0] * ds[1] * ... * ds[m_axis-1] (or 1 if m_axis == 0)
     // [1]: m_groups
     // [2]: ds[axis] / m_groups
-    // [3]: ds[axis+1] * ds[axis+2] * ... * ds[ds.size()-1] (or 1 if m_axis points to the last elem of ds)
+    // [3]: ds[axis+1] * ds[axis+2] * ... * ds[ds.size()-1] (or 1 if m_axis points to the last elem
+    //                                                       of ds)
     Shape res(4, 1);
 
     size_t axis_zb = get_zero_based_axis();

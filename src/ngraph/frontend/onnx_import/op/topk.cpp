@@ -16,11 +16,9 @@
 
 #include <cstdint>
 #include <memory>
-#include <vector>
 
 #include "exceptions.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -47,7 +45,7 @@ namespace ngraph
                         axis += num_dimensions;
                     }
 
-                    ASSERT_VALID_ARGUMENT(node, axis < num_dimensions)
+                    ASSERT_VALID_ARGUMENT(node, axis < static_cast<int64_t>(num_dimensions))
                         << "`axis` parameter is out of range: " << axis;
 
                     std::shared_ptr<ngraph::Node> top_k =
@@ -63,7 +61,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

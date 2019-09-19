@@ -14,9 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 
 #include "exceptions.hpp"
 #include "lp_pool.hpp"
@@ -72,7 +72,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

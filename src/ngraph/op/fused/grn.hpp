@@ -30,12 +30,16 @@ namespace ngraph
         class GRN : public ngraph::op::util::FusedOp
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"GRN", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            GRN() = default;
             /// \brief      Constructs a GRN operation.
             ///
             /// \param      data  - Node producing the input tensor
             /// \param      bias  - The bias added to the variance.
             ///
-            GRN(const std::shared_ptr<ngraph::Node>& data, float bias);
+            GRN(const Output<Node>& data, float bias);
 
             float get_bias() const { return m_bias; }
             virtual void pre_validate_and_infer_types() override;

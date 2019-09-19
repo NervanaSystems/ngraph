@@ -73,8 +73,20 @@ namespace ngraph
                                      size_t filter_in_channel_axis,
                                      size_t out_batch_axis,
                                      size_t out_channel_axis,
-                                     const float requant_scale = 1.0f)
+                                     const float* input_scale = nullptr,
+                                     const INPUT* input_zero_point = nullptr,
+                                     const float* filter_scale = nullptr,
+                                     const FILTER* filter_zero_point = nullptr,
+                                     const float* output_scale = nullptr,
+                                     const OUTPUT* output_zero_point = nullptr)
             {
+                bool is_quantized = false;
+                if (input_scale && input_zero_point && filter_scale && filter_zero_point &&
+                    output_scale && output_zero_point)
+                {
+                    is_quantized = true;
+                }
+
                 auto old_mode = std::fegetround();
                 std::fesetround(FE_TONEAREST);
                 // Comments throughout assume without loss of generality that:
@@ -104,14 +116,19 @@ namespace ngraph
                     //
                     //   (N,0,s_1*i_1,s_2*i_2,...,s_n*i_n) ->
                     //
-                    //     (N+1,chans_in_count,s_1*i_1 + l_1*filter_dims_1,...,s_n*i_n + l_n*filter_dims_n)
+                    //     (N+1,
+                    //      chans_in_count,
+                    //      s_1*i_1+ l_1*filter_dims_1,
+                    ///       ...,
+                    ///     s_n*i_n +l_n*filter_dims_n)
                     //
                     // with strides:
                     //
                     //   (1,l_1,...,l_n).
                     //
-                    // Note that we are iterating within the *padded* and *dilated* in batch, so further
-                    // down we must check the current coordinate is in the pad or dilation gap.
+                    // Note that we are iterating within the *padded* and *dilated* in batch, so
+                    // further down we must check the current coordinate is in the pad or dilation
+                    // gap.
 
                     size_t n_spatial_dimensions = in_shape.size() - 2;
                     size_t n_in_channels = in_shape[in_channel_axis];
@@ -159,13 +176,19 @@ namespace ngraph
                                                      in_transform_pad_above,
                                                      in_transform_dilation_strides);
 
-                    // Simultaneously with iterating I, for the filter we need to iterate the coordinate:
+                    // Simultaneously with iterating I, for the filter we need to iterate the
+                    // coordinate:
                     //
                     //   F
                     //
                     // over the range (noninclusive on the right):
                     //
-                    //   (chan_out,0,0,...,0) -> (chan_out+1,chans_in_count,filter_dims_1,...,filter_dims_n)
+                    //   (chan_out,0,0,...,0) ->
+                    //     (chan_out+1,
+                    //      chans_in_count,
+                    //      filter_dims_1,
+                    //        ...,
+                    //      filter_dims_n)
                     //
                     // with unit stride.
 
@@ -211,8 +234,13 @@ namespace ngraph
                             size_t filter_idx = filter_transform.index(filter_coord);
                             for (size_t in_channel = 0; in_channel < n_in_channels; ++in_channel)
                             {
-                                ACCUMULATION in_v = in[in_idx];
-                                ACCUMULATION f_v = filter[filter_idx];
+                                ACCUMULATION in_v = static_cast<ACCUMULATION>(in[in_idx]);
+                                ACCUMULATION f_v = static_cast<ACCUMULATION>(filter[filter_idx]);
+                                if (is_quantized)
+                                {
+                                    in_v = in_v - static_cast<ACCUMULATION>(*input_zero_point);
+                                    f_v = f_v - static_cast<ACCUMULATION>(*filter_zero_point);
+                                }
                                 result += in_v * f_v;
                                 in_idx += in_channel_stride;
                                 filter_idx += filter_in_channel_stride;
@@ -221,8 +249,17 @@ namespace ngraph
                         ++in_it;
                         ++filter_it;
                     }
-                    out[out_transform.index(out_coord)] =
-                        static_cast<OUTPUT>(result * requant_scale);
+                    if (is_quantized)
+                    {
+                        float scale = *input_scale * *filter_scale / *output_scale;
+                        out[out_transform.index(out_coord)] =
+                            static_cast<OUTPUT>(std::round(static_cast<float>(result) * scale)) +
+                            *output_zero_point;
+                    }
+                    else
+                    {
+                        out[out_transform.index(out_coord)] = result;
+                    }
                 }
                 std::fesetround(old_mode);
             }
@@ -242,7 +279,12 @@ namespace ngraph
                              const CoordinateDiff& in_pad_below,
                              const CoordinateDiff& in_pad_above,
                              const Strides& in_dilation,
-                             const float requant_scale = 1.0f)
+                             const float* input_scale = nullptr,
+                             const INPUT* input_zero_point = nullptr,
+                             const float* filter_scale = nullptr,
+                             const FILTER* filter_zero_point = nullptr,
+                             const float* output_scale = nullptr,
+                             const OUTPUT* output_zero_point = nullptr)
 
             {
                 general_convolution<INPUT, FILTER, OUTPUT, ACCUMULATION>(in,
@@ -262,7 +304,12 @@ namespace ngraph
                                                                          1,
                                                                          0,
                                                                          1,
-                                                                         requant_scale);
+                                                                         input_scale,
+                                                                         input_zero_point,
+                                                                         filter_scale,
+                                                                         filter_zero_point,
+                                                                         output_scale,
+                                                                         output_zero_point);
             }
 
             template <typename INPUT,

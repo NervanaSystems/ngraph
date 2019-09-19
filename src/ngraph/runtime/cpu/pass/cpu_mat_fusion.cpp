@@ -48,7 +48,7 @@ struct Type
     };
 };
 
-//constructs (x*W + bias)
+// constructs (x*W + bias)
 static std::shared_ptr<pattern::Matcher>
     construct_rnn_input_linear_transformation(std::shared_ptr<pattern::op::Label> labels[])
 {
@@ -217,7 +217,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             auto weights = it.first.first;
             auto bias = it.first.second;
 
-            //if there's just one data node skip the optimization
+            // if there's just one data node skip the optimization
             if (it.second.size() < 2)
             {
                 return;
@@ -298,7 +298,8 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
     auto callback_matcher_v1 = [&]() -> void {
 
         // Expecting input data shape D=[x, y, z], weights W=[u, v], bias B = [w]
-        // where y is the time step. We are computing R=dot(D,W)=[x,y,v]. We can reshape D to D'=[x*y, z], then we have dot(D',W), result
+        // where y is the time step. We are computing R=dot(D,W)=[x,y,v]. We can reshape D to
+        // D'=[x*y, z], then we have dot(D',W), result
         // in R=[x*y, v], then add(R,B). We need to slice the result by strided by time steps.
         // iterate each unique set of parameters, replace original operations
         for (auto& p : param_list)
@@ -344,7 +345,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
             auto old_weights_reshape_node = op_seg_map.at(op_nodes.at(0)).at(Type::WEIGHTS);
             auto weights_reshape_node =
-                old_weights_reshape_node->copy_with_new_args({weights_node});
+                old_weights_reshape_node->copy_with_new_inputs({weights_node});
             auto dot_node = std::make_shared<op::Dot>(data_reshape_node, weights_reshape_node);
             const auto& dot_shape = dot_node->get_shape();
 
@@ -360,7 +361,8 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             for (size_t i = 0, start_index = 0; i < op_nodes.size(); i++, start_index += batch_size)
             {
                 // calculate the lower and upper bounds for the slice of the new fused node
-                // ((<x0 | x1..|xt>*W)+b), which will used to replace the nodes matched in the pattern
+                // ((<x0 | x1..|xt>*W)+b), which will used to replace the nodes matched in the
+                // pattern
                 const Coordinate lower_bounds{start_index, 0};
                 const Coordinate upper_bounds{start_index + batch_size, feature_size};
 
@@ -478,13 +480,11 @@ bool runtime::cpu::pass::CPUBatchFusion::run_on_function(std::shared_ptr<Functio
             }
             if (m_fusion_type.is_set(FusionType::REGULAR_FUSIONS))
             {
-                /*
-                if (auto fused_conv = fuse_group_convolution(n))
-                {
-                    func->replace_node(n, fused_conv);
-                    modified = true;
-                }
-                */
+                // if (auto fused_conv = fuse_group_convolution(n))
+                // {
+                //     func->replace_node(n, fused_conv);
+                //     modified = true;
+                // }
             }
         }
     }

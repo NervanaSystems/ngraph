@@ -29,7 +29,7 @@ namespace ngraph
             {
                 for (size_t i = 0; i < count; i++)
                 {
-                    out[i] = (arg[i] < 0 ? -1 : (arg[i] > 0 ? 1 : 0));
+                    out[i] = (arg[i] < T(0) ? T(-1) : (arg[i] > T(0) ? T(1) : T(0)));
                 }
             }
         }

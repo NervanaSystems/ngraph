@@ -91,8 +91,17 @@ void op::util::IndexReduction::validate_and_infer_types()
 
     PartialShape output_shape{PartialShape::dynamic()};
 
-    if (!rank.is_dynamic())
+    if (rank.is_static())
     {
+        Dimension d = arg_shape[m_axis];
+        if (d.is_static())
+        {
+            NODE_VALIDATION_CHECK(this,
+                                  0 != size_t(d),
+                                  "Tensor reduction axis can not be empty, shape is: ",
+                                  arg_shape);
+        }
+
         std::vector<Dimension> output_dims(size_t(rank) - 1);
         size_t j = 0;
 
@@ -111,8 +120,8 @@ void op::util::IndexReduction::validate_and_infer_types()
     set_output_type(0, m_index_element_type, output_shape);
 }
 
-void op::util::IndexReduction::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                 const NodeVector& deltas)
+void op::util::IndexReduction::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                                 const NodeVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }

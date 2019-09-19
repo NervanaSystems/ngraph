@@ -20,13 +20,15 @@
 using namespace std;
 using namespace ngraph;
 
-op::Dequantize::Dequantize(const shared_ptr<Node>& input,
-                           const shared_ptr<Node>& scale,
-                           const shared_ptr<Node>& zero_point,
+constexpr NodeTypeInfo op::Dequantize::type_info;
+
+op::Dequantize::Dequantize(const Output<Node>& input,
+                           const Output<Node>& scale,
+                           const Output<Node>& zero_point,
                            const element::Type& type,
                            const AxisSet& axes)
 
-    : Op("Dequantize", check_single_output_args({input, scale, zero_point}))
+    : Op({input, scale, zero_point})
     , m_type(type)
     , m_axes(axes)
 {
@@ -155,7 +157,8 @@ shared_ptr<Node> op::Dequantize::copy_with_new_args(const NodeVector& new_args) 
     return make_shared<Dequantize>(new_args.at(0), new_args.at(1), new_args.at(2), m_type, m_axes);
 }
 
-void op::Dequantize::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Dequantize::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                       const NodeVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }

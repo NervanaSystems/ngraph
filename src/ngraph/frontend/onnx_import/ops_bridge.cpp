@@ -53,6 +53,7 @@
 #include "op/equal.hpp"
 #include "op/erf.hpp"
 #include "op/exp.hpp"
+#include "op/eye_like.hpp"
 #include "op/flatten.hpp"
 #include "op/floor.hpp"
 #include "op/gather.hpp"
@@ -63,10 +64,12 @@
 #include "op/hard_sigmoid.hpp"
 #include "op/hardmax.hpp"
 #include "op/identity.hpp"
+#include "op/instance_norm.hpp"
 #include "op/leaky_relu.hpp"
 #include "op/less.hpp"
 #include "op/log.hpp"
 #include "op/log_softmax.hpp"
+#include "op/lp_norm.hpp"
 #include "op/lp_pool.hpp"
 #include "op/lrn.hpp"
 #include "op/lstm.hpp"
@@ -75,13 +78,13 @@
 #include "op/max.hpp"
 #include "op/max_pool.hpp"
 #include "op/mean.hpp"
+#include "op/mean_variance_normalization.hpp"
 #include "op/min.hpp"
 #include "op/mul.hpp"
 #include "op/neg.hpp"
 #include "op/not.hpp"
 #include "op/onehot.hpp"
 #include "op/or.hpp"
-#include "op/pad.cpp"
 #include "op/pad.hpp"
 #include "op/pow.hpp"
 #include "op/prelu.hpp"
@@ -92,8 +95,10 @@
 #include "op/reduce.hpp"
 #include "op/relu.hpp"
 #include "op/reshape.hpp"
+#include "op/reverse_sequence.h"
 #include "op/selu.hpp"
 #include "op/shape.hpp"
+#include "op/shrink.hpp"
 #include "op/sigmoid.hpp"
 #include "op/sign.hpp"
 #include "op/sin.hpp"
@@ -174,7 +179,8 @@ namespace ngraph
             auto dm = m_map.find(domain);
             if (dm == std::end(m_map))
             {
-                throw error::UnknownDomain{domain};
+                NGRAPH_WARN << "Domain '" << domain << "' not recognized by nGraph";
+                return OperatorSet{};
             }
             if (domain == "" && version > OperatorsBridge::LATEST_SUPPORTED_ONNX_OPSET_VERSION)
             {
@@ -259,6 +265,7 @@ namespace ngraph
             REGISTER_OPERATOR("Equal", 1, equal);
             REGISTER_OPERATOR("Erf", 1, erf);
             REGISTER_OPERATOR("Exp", 1, exp);
+            REGISTER_OPERATOR("EyeLike", 1, eye_like);
             REGISTER_OPERATOR("Flatten", 1, flatten);
             REGISTER_OPERATOR("Floor", 1, floor);
             REGISTER_OPERATOR("Gather", 1, gather);
@@ -270,10 +277,12 @@ namespace ngraph
             REGISTER_OPERATOR("Hardmax", 1, hardmax);
             REGISTER_OPERATOR("HardSigmoid", 1, hard_sigmoid);
             REGISTER_OPERATOR("Identity", 1, identity);
+            REGISTER_OPERATOR("InstanceNormalization", 1, instance_norm);
             REGISTER_OPERATOR("LeakyRelu", 1, leaky_relu);
             REGISTER_OPERATOR("Less", 1, less);
             REGISTER_OPERATOR("Log", 1, log);
             REGISTER_OPERATOR("LogSoftmax", 1, log_softmax);
+            REGISTER_OPERATOR("LpNormalization", 1, lp_norm);
             REGISTER_OPERATOR("LRN", 1, lrn);
             REGISTER_OPERATOR("LSTM", 1, lstm);
             REGISTER_OPERATOR("MatMul", 1, matmul);
@@ -283,6 +292,8 @@ namespace ngraph
             REGISTER_OPERATOR("Max", 8, max);
             REGISTER_OPERATOR("Mean", 1, mean);
             REGISTER_OPERATOR("Mean", 8, mean);
+            REGISTER_OPERATOR("MeanVarianceNormalization", 1, mean_variance_normalization);
+            REGISTER_OPERATOR("MeanVarianceNormalization", 9, mean_variance_normalization);
             REGISTER_OPERATOR("Min", 1, min);
             REGISTER_OPERATOR("Min", 8, min);
             REGISTER_OPERATOR("Mul", 1, mul);
@@ -310,8 +321,10 @@ namespace ngraph
             REGISTER_OPERATOR("ReduceSumSquare", 1, reduce_sum_square);
             REGISTER_OPERATOR("Relu", 1, relu);
             REGISTER_OPERATOR("Reshape", 1, reshape);
+            REGISTER_OPERATOR("ReverseSequence", 1, reverse_sequence);
             REGISTER_OPERATOR("Selu", 1, selu);
             REGISTER_OPERATOR("Shape", 1, shape);
+            REGISTER_OPERATOR("Shrink", 1, shrink);
             REGISTER_OPERATOR("Sigmoid", 1, sigmoid);
             REGISTER_OPERATOR("Sign", 1, sign);
             REGISTER_OPERATOR("Sin", 1, sin);

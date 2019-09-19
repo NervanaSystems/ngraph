@@ -33,7 +33,7 @@ using namespace ngraph::runtime::intelgpu;
 
 string runtime::intelgpu::get_opencl_type_name(const element::Type& ngraph_type)
 {
-    switch (ngraph_type.get_type_enum())
+    switch (ngraph_type)
     {
     case element::Type_t::i64: return "long";
     case element::Type_t::u64: return "ulong";
@@ -52,7 +52,7 @@ string runtime::intelgpu::get_opencl_type_name(const element::Type& ngraph_type)
 string runtime::intelgpu::get_opencl_type_min_max_value(const element::Type& ngraph_type,
                                                         bool is_min)
 {
-    switch (ngraph_type.get_type_enum())
+    switch (ngraph_type)
     {
     case element::Type_t::f32: return is_min ? "-INFINITY" : "INFINITY";
     case element::Type_t::f64: return is_min ? "-INFINITY" : "INFINITY";
@@ -1839,9 +1839,8 @@ void runtime::intelgpu::do_convert_operation(cldnn::topology& topology,
     {
         gws = generate_loops(writer, output_shape, true);
 
-        if (((input_type.get_type_enum() == element::Type_t::f64) ||
-             (input_type.get_type_enum() == element::Type_t::f32)) &&
-            (output_type.get_type_enum() != element::Type_t::boolean))
+        if (((input_type == element::Type_t::f64) || (input_type == element::Type_t::f32)) &&
+            (output_type != element::Type_t::boolean))
         {
             // this is the workaround for OpenCL to be same as with CPU floating point operations
             writer << input_type_name << " input_var = input0" << access_dims(output_shape) << ";\n"

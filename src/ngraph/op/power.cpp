@@ -22,10 +22,12 @@
 using namespace std;
 using namespace ngraph;
 
-op::Power::Power(const shared_ptr<Node>& arg0,
-                 const shared_ptr<Node>& arg1,
-                 const AutoBroadcastSpec& autob)
-    : BinaryElementwiseArithmetic("Power", arg0, arg1, autob)
+constexpr NodeTypeInfo op::Power::type_info;
+
+op::Power::Power(const Output<Node>& arg0,
+                 const Output<Node>& arg1,
+                 const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }
@@ -45,8 +47,8 @@ void op::Power::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector
 
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
-    auto y = get_argument(1);
+    auto x = input_value(0);
+    auto y = input_value(1);
 
     auto log_x = make_shared<op::Log>(x);
 

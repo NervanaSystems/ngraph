@@ -27,10 +27,15 @@ namespace ngraph
         class Result : public Op
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"Result", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            /// \brief Allows a value to be used as a function result.
+            Result() = default;
             /// \brief Allows a value to be used as a function result.
             ///
             /// \param arg Node that produces the input tensor.
-            Result(const std::shared_ptr<Node>& arg);
+            Result(const Output<Node>& arg, bool needs_default_layout = false);
 
             void validate_and_infer_types() override;
 

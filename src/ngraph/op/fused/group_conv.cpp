@@ -21,14 +21,15 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/slice.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::GroupConvolution::GroupConvolution(const shared_ptr<Node>& data_batch,
-                                       const shared_ptr<Node>& filters,
+constexpr NodeTypeInfo op::GroupConvolution::type_info;
+
+op::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
+                                       const Output<Node>& filters,
                                        const Strides& window_movement_strides,
                                        const Strides& window_dilation_strides,
                                        const CoordinateDiff& padding_below,
@@ -36,7 +37,7 @@ op::GroupConvolution::GroupConvolution(const shared_ptr<Node>& data_batch,
                                        const Strides& data_dilation_strides,
                                        const size_t groups,
                                        const PadType& pad_type)
-    : FusedOp("GroupConvolution", check_single_output_args({data_batch, filters}))
+    : FusedOp({data_batch, filters})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -45,7 +46,6 @@ op::GroupConvolution::GroupConvolution(const shared_ptr<Node>& data_batch,
     , m_groups(groups)
     , m_pad_type(pad_type)
 {
-    // TODO: Move this out of constructor to validate_and_infer_types()
     constructor_validate_and_infer_types();
 }
 
@@ -129,22 +129,23 @@ shared_ptr<Node> op::GroupConvolution::copy_with_new_args(const NodeVector& new_
 
 NodeVector op::GroupConvolution::decompose_op() const
 {
-    auto data = get_argument(0);
-    auto filters = get_argument(1);
+    auto data = input_value(0);
+    auto filters = input_value(1);
     // Split one convolution op to N ops where N is the number of groups
     // and concat results after computation.
-    // reference: https://github.com/NervanaSystems/ngraph-mxnet/blob/fdd692/src/ngraph/ngraph_emitter.cc#L822-L856
-    std::size_t n_data_channels{data->get_shape().at(1)};
-    std::size_t n_filters_channels{filters->get_shape().at(0)};
+    // reference:
+    // https://github.com/NervanaSystems/ngraph-mxnet/blob/fdd692/src/ngraph/ngraph_emitter.cc#L822-L856
+    std::size_t n_data_channels{data.get_shape().at(1)};
+    std::size_t n_filters_channels{filters.get_shape().at(0)};
     std::size_t data_group_size{n_data_channels / m_groups};
     std::size_t filters_group_size{n_filters_channels / m_groups};
     NodeVector convolution_nodes;
 
     // initial bounds for splice
-    std::vector<std::size_t> data_lower_bounds(data->get_shape().size());
-    std::vector<std::size_t> data_upper_bounds{data->get_shape()};
-    std::vector<std::size_t> filters_lower_bounds(filters->get_shape().size());
-    std::vector<std::size_t> filters_upper_bounds{filters->get_shape()};
+    std::vector<std::size_t> data_lower_bounds(data.get_shape().size());
+    std::vector<std::size_t> data_upper_bounds{data.get_shape()};
+    std::vector<std::size_t> filters_lower_bounds(filters.get_shape().size());
+    std::vector<std::size_t> filters_upper_bounds{filters.get_shape()};
 
     for (std::size_t group{0}; group < m_groups; ++group)
     {
@@ -173,7 +174,8 @@ NodeVector op::GroupConvolution::decompose_op() const
     return {std::make_shared<ngraph::op::Concat>(convolution_nodes, concatenation_axis)};
 }
 
-void op::GroupConvolution::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::GroupConvolution::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                             const NodeVector& /* deltas */)
 {
     throw ngraph_error("NYI");
 }

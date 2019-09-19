@@ -19,10 +19,12 @@
 using namespace std;
 using namespace ngraph;
 
-op::Or::Or(const shared_ptr<Node>& arg0,
-           const shared_ptr<Node>& arg1,
-           const AutoBroadcastSpec& autob)
-    : BinaryElementwiseLogical("Or", arg0, arg1, autob)
+constexpr NodeTypeInfo op::Or::type_info;
+
+op::Or::Or(const Output<Node>& arg0,
+           const Output<Node>& arg1,
+           const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseLogical(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }

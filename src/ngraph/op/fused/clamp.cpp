@@ -22,8 +22,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Clamp::Clamp(const shared_ptr<Node>& data, const double min, const double max)
-    : FusedOp("Clamp", {data})
+constexpr NodeTypeInfo op::Clamp::type_info;
+
+op::Clamp::Clamp(const Output<Node>& data, const double min, const double max)
+    : FusedOp({data})
     , m_min{min}
     , m_max{max}
 {
@@ -38,11 +40,11 @@ void op::Clamp::pre_validate_and_infer_types()
 
 NodeVector op::Clamp::decompose_op() const
 {
-    const auto data = get_argument(0);
-    const auto data_shape = data->get_shape();
+    const auto data = input_value(0);
+    const auto data_shape = data.get_shape();
 
-    const auto clamp_min = builder::make_constant(data->get_element_type(), data_shape, m_min);
-    const auto clamp_max = builder::make_constant(data->get_element_type(), data_shape, m_max);
+    const auto clamp_min = builder::make_constant(data.get_element_type(), data_shape, m_min);
+    const auto clamp_max = builder::make_constant(data.get_element_type(), data_shape, m_max);
 
     return {std::make_shared<ngraph::op::Minimum>(
         clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};

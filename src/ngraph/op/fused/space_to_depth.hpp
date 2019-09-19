@@ -32,11 +32,15 @@ namespace ngraph
         class SpaceToDepth : public ngraph::op::util::FusedOp
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"SpaceToDepth", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            SpaceToDepth() = default;
             /// \brief Constructs a SpaceToDepth operation.
             ///
             /// \param data - Node producing the input tensor
             /// \param block_size - the size of the block of values to be moved
-            SpaceToDepth(const std::shared_ptr<ngraph::Node>& data, std::size_t block_size);
+            SpaceToDepth(const Output<Node>& data, std::size_t block_size);
 
             std::size_t get_block_size() const { return m_blocksize; }
             virtual NodeVector decompose_op() const override;

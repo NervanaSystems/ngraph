@@ -25,6 +25,11 @@
 #include <tbb/flow_graph.h>
 #include <tbb/global_control.h>
 #include <tbb/task_scheduler_init.h>
+#include "ngraph/op/experimental/compiled_kernel.hpp"
+
+#ifdef NGRAPH_MLIR_ENABLE
+#include "contrib/mlir/compiler/compiler.hpp"
+#endif
 
 namespace mkldnn
 {
@@ -37,7 +42,6 @@ namespace ngraph
     {
         class AlignedBuffer;
     }
-
     class State;
 }
 
@@ -59,14 +63,25 @@ namespace ngraph
                 bool first_iteration;
                 // stores tensor pointers
                 std::vector<void*> buffer_data;
+                std::vector<mkldnn::memory*> mkldnn_memories;
                 std::vector<mkldnn::primitive*> mkldnn_primitives;
                 std::vector<AlignedBuffer*> memory_buffers;
+                std::vector<mkldnn::memory::desc*> mkldnn_scratchpad_mds;
+                AlignedBuffer* scratchpad_buffer;
                 std::vector<char*> mkldnn_workspaces;
                 tbb::flow::graph* G;
                 tbb::global_control* c;
                 State* const* states;
                 std::set<size_t> breakpoints;
                 size_t pc;
+#ifdef NGRAPH_MLIR_ENABLE
+                /// Maps CompiledKernel nodes to their MLIR compiler
+                /// The MLIR compiler caches the compiled code on the first invocation,
+                /// and may in the future support re-compilation
+                std::unordered_map<ngraph::op::CompiledKernel*,
+                                   ngraph::runtime::ngmlir::MLIRCompiler>
+                    mlir_compilers;
+#endif
             };
             }
 

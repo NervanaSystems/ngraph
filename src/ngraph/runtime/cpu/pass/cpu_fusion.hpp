@@ -18,6 +18,7 @@
 
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/runtime/cpu/cpu_backend_visibility.h"
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 namespace ngraph
 {
@@ -27,12 +28,26 @@ namespace ngraph
         {
             namespace pass
             {
+                class CPUPreFusion;
                 class CPUFusion;
                 class CPUQuantFusion;
             }
         }
     }
 }
+
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUPreFusion : public ngraph::pass::GraphRewrite
+{
+public:
+    CPUPreFusion()
+        : GraphRewrite()
+    {
+        construct_maxpool_relu_switch();
+    }
+
+private:
+    void construct_maxpool_relu_switch();
+};
 
 class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
 {
@@ -70,13 +85,17 @@ public:
             construct_conv_add();
             construct_conv_add_relu();
             construct_update_slice();
+#if MKLDNN_VERSION_MAJOR < 1
             construct_fuse_lstm_recurrent_state();
+#endif
             if (std::getenv("NGRAPH_DECONV_FUSE") != nullptr)
             {
                 // Note: enable when the deconv perf is better than convbackpropdata
                 construct_deconvolution_affine_folding();
                 construct_deconvolution_affine_folding_relu();
             }
+            construct_dropout();
+            construct_batch_norm_infer_relu_with_multiply_add();
         }
     }
 
@@ -89,6 +108,7 @@ private:
     void construct_sigmoid_multiply();
     void construct_batch_norm_relu();
     void construct_batch_norm_relu_global_stats();
+    void construct_batch_norm_infer_relu_with_multiply_add();
     void construct_conv_relu();
     void construct_conv_bias_relu();
     void construct_conv_bias_add();
@@ -102,9 +122,12 @@ private:
     void construct_groupconv_batchnorm_global_stats_folding();
     void construct_groupconv_batchnorm_global_stats_folding_relu();
     void construct_update_slice();
+#if MKLDNN_VERSION_MAJOR < 1
     void construct_fuse_lstm_recurrent_state();
+#endif
     void construct_deconvolution_affine_folding();
     void construct_deconvolution_affine_folding_relu();
+    void construct_dropout();
 };
 
 class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUQuantFusion : public ngraph::pass::GraphRewrite

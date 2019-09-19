@@ -21,10 +21,12 @@
 using namespace std;
 using namespace ngraph;
 
-op::PriorBoxClustered::PriorBoxClustered(const shared_ptr<Node>& layer_shape,
-                                         const shared_ptr<Node>& image_shape,
+constexpr NodeTypeInfo op::PriorBoxClustered::type_info;
+
+op::PriorBoxClustered::PriorBoxClustered(const Output<Node>& layer_shape,
+                                         const Output<Node>& image_shape,
                                          const PriorBoxClusteredAttrs& attrs)
-    : Op("PriorBoxClustered", check_single_output_args({layer_shape, image_shape}))
+    : Op({layer_shape, image_shape})
     , m_attrs(attrs)
 {
     constructor_validate_and_infer_types();
@@ -70,7 +72,7 @@ void op::PriorBoxClustered::validate_and_infer_types()
 
     set_input_is_relevant_to_shape(0);
 
-    if (auto const_shape = dynamic_pointer_cast<op::Constant>(get_argument(0)))
+    if (auto const_shape = as_type_ptr<op::Constant>(input_value(0).get_node_shared_ptr()))
     {
         NODE_VALIDATION_CHECK(this,
                               shape_size(const_shape->get_shape()) == 2,

@@ -6,7 +6,7 @@ Overview: Optimize graphs with nGraph Compiler fusions
 The nGraph Compiler is an optimizing compiler. As such, it provides a way to 
 capture a given :term:`function graph` and perform a series of optimization 
 passes over that graph. The result is a semantically-equivalent graph that, when 
-executed using any :doc:`backend <../../backend-support/index>`, has 
+executed using any :doc:`backend <../../backends/index>`, has 
 hardware-agnostic *and* hardware-specific optimizations, providing superior 
 runtime characteristics to increase training performance or reduce inference 
 latency.   

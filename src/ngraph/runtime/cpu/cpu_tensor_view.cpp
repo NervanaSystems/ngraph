@@ -142,11 +142,20 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t n) const
         auto output_desc = mkldnn_utils::create_blocked_mkldnn_md(
             this->get_shape(), cpu_tvl->get_strides(), this->get_element_type());
 
+#if MKLDNN_VERSION_MAJOR < 1
         memory input{{input_desc, executor::global_cpu_engine}, aligned_buffer};
         memory output{{output_desc, executor::global_cpu_engine}, target};
         reorder prim{input, output};
         mkldnn::stream s(mkldnn::stream::kind::eager);
         s.submit({prim}).wait();
+#else
+        memory input{input_desc, executor::global_cpu_engine, aligned_buffer};
+        memory output{output_desc, executor::global_cpu_engine, target};
+        reorder prim{input, output};
+        mkldnn::stream s(executor::global_cpu_engine);
+        prim.execute(s, {{MKLDNN_ARG_SRC, input}, {MKLDNN_ARG_DST, output}});
+        s.wait();
+#endif
     }
     else
     {
@@ -173,7 +182,7 @@ void runtime::cpu::CPUTensorView::copy_from(const ngraph::runtime::Tensor& sourc
             dynamic_cast<ngraph::runtime::cpu::LayoutDescriptor*>(this->get_tensor_layout().get());
         auto other_tl =
             dynamic_cast<ngraph::runtime::cpu::LayoutDescriptor*>(source.get_tensor_layout().get());
-        if ((this_tl != NULL) && (other_tl != NULL) && (*this_tl == *other_tl))
+        if ((this_tl != nullptr) && (other_tl != nullptr) && (*this_tl == *other_tl))
         {
             // Direct copy
             memcpy(get_data_ptr(), cpu_source->get_data_ptr(), get_size_in_bytes());

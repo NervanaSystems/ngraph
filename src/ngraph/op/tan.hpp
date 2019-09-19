@@ -22,6 +22,7 @@ namespace ngraph
 {
     namespace op
     {
+        // clang-format off
         /// \brief Elementwise tangent operation.
         ///
         /// ## Inputs
@@ -35,13 +36,18 @@ namespace ngraph
         /// | Type                   | Description                                                                          |
         /// | ---------------------- | ------------------------------------------------------------------------------------ |
         /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \tan(\texttt{arg}[i_1,\dots,i_n])\f$ |
+        // clang-format on
         class Tan : public util::UnaryElementwiseArithmetic
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"Tan", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a tangent operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Tan(const std::shared_ptr<Node>& arg);
+            Tan(const Output<Node>& arg);
+            Tan() = default;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

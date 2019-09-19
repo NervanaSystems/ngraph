@@ -20,14 +20,16 @@
 using namespace std;
 using namespace ngraph;
 
-op::Quantize::Quantize(const shared_ptr<Node>& input,
-                       const shared_ptr<Node>& scale,
-                       const shared_ptr<Node>& zero_point,
+constexpr NodeTypeInfo op::Quantize::type_info;
+
+op::Quantize::Quantize(const Output<Node>& input,
+                       const Output<Node>& scale,
+                       const Output<Node>& zero_point,
                        const element::Type& type,
                        const AxisSet& axes,
                        RoundMode round_mode)
 
-    : Op("Quantize", check_single_output_args({input, scale, zero_point}))
+    : Op({input, scale, zero_point})
     , m_type(type)
     , m_axes(axes)
     , m_round_mode(round_mode)
@@ -158,7 +160,8 @@ shared_ptr<Node> op::Quantize::copy_with_new_args(const NodeVector& new_args) co
         new_args.at(0), new_args.at(1), new_args.at(2), m_type, m_axes, m_round_mode);
 }
 
-void op::Quantize::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Quantize::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                     const NodeVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }

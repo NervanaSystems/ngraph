@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2018-2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,24 +27,22 @@ namespace ngraph
         class QuantizedMatmul : public Op
         {
         public:
-            QuantizedMatmul(const std::shared_ptr<Node>& data,
-                            const std::shared_ptr<Node>& weights,
-                            const std::shared_ptr<Node>& scale,
-                            bool requantize = true,
-                            bool with_relu = false);
-
+            QuantizedMatmul(const Output<Node>& data,
+                            const Output<Node>& weights,
+                            const Output<Node>& scale,
+                            const element::Type& output_type);
+            static constexpr NodeTypeInfo type_info{"QuantizedMatmul", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override
             {
                 check_new_args_count(this, new_args);
                 return std::make_shared<QuantizedMatmul>(
-                    new_args.at(0), new_args.at(1), new_args.at(2), m_requantize, m_with_relu);
+                    new_args.at(0), new_args.at(1), new_args.at(2), m_output_type);
             }
-            bool with_relu() const { return m_with_relu; }
-            bool requantize() const { return m_requantize; }
+            const ngraph::element::Type& get_output_type() const { return m_output_type; }
         protected:
-            bool m_requantize;
-            bool m_with_relu;
+            ngraph::element::Type m_output_type;
         };
     } // namespace op
 } // namespace ngraph

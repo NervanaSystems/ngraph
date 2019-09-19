@@ -24,12 +24,14 @@
 using namespace std;
 using namespace ngraph;
 
-op::MaxPoolWithIndices::MaxPoolWithIndices(const shared_ptr<Node>& arg,
+constexpr NodeTypeInfo op::MaxPoolWithIndices::type_info;
+
+op::MaxPoolWithIndices::MaxPoolWithIndices(const Output<Node>& arg,
                                            const Shape& window_shape,
                                            const Strides& window_movement_strides,
                                            const Shape& padding_below,
                                            const Shape& padding_above)
-    : Op("MaxPoolWithIndices", check_single_output_args({arg}))
+    : Op({arg})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
@@ -133,7 +135,8 @@ op::MaxPoolWithIndices::MaxPoolWithIndices(const shared_ptr<Node>& arg,
     }
 
     //
-    // Compute output item shape Do, checking at the same time that all window movement strides are larger than 0.
+    // Compute output item shape Do, checking at the same time that all window movement strides are
+    // larger than 0.
     //
     Shape output_item_shape;
 
@@ -179,14 +182,16 @@ shared_ptr<Node> op::MaxPoolWithIndices::copy_with_new_args(const NodeVector& ne
                                                 m_padding_above);
 }
 
-op::MaxPoolWithIndicesBackprop::MaxPoolWithIndicesBackprop(const shared_ptr<Node>& arg_forward,
-                                                           const shared_ptr<Node>& delta,
-                                                           const shared_ptr<Node>& indices,
+constexpr NodeTypeInfo op::MaxPoolWithIndicesBackprop::type_info;
+
+op::MaxPoolWithIndicesBackprop::MaxPoolWithIndicesBackprop(const Output<Node>& arg_forward,
+                                                           const Output<Node>& delta,
+                                                           const Output<Node>& indices,
                                                            const Shape& window_shape,
                                                            const Strides& window_movement_strides,
                                                            const Shape& padding_below,
                                                            const Shape& padding_above)
-    : Op("MaxPoolWithIndicesBackprop", check_single_output_args({arg_forward, delta, indices}))
+    : Op({arg_forward, delta, indices})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
@@ -194,7 +199,7 @@ op::MaxPoolWithIndicesBackprop::MaxPoolWithIndicesBackprop(const shared_ptr<Node
 {
     constructor_validate_and_infer_types();
 
-    if (delta->get_shape() != indices->get_shape())
+    if (delta.get_shape() != indices.get_shape())
     {
         throw ngraph_error("delta shape doesn't match indices' ");
     }
@@ -305,7 +310,8 @@ op::MaxPoolWithIndicesBackprop::MaxPoolWithIndicesBackprop(const shared_ptr<Node
     }
 
     //
-    // Compute output item shape Do, checking at the same time that all window movement strides are larger than 0.
+    // Compute output item shape Do, checking at the same time that all window movement strides are
+    // larger than 0.
     //
     Shape output_item_shape;
 
@@ -343,18 +349,17 @@ shared_ptr<Node>
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    MaxPoolWithIndicesBackprop* mpbp = new MaxPoolWithIndicesBackprop(new_args.at(0),
-                                                                      new_args.at(1),
-                                                                      new_args.at(2),
-                                                                      m_window_shape,
-                                                                      m_window_movement_strides,
-                                                                      m_padding_below,
-                                                                      m_padding_above);
-    return shared_ptr<op::MaxPoolWithIndicesBackprop>(mpbp);
+    return make_shared<op::MaxPoolWithIndicesBackprop>(new_args.at(0),
+                                                       new_args.at(1),
+                                                       new_args.at(2),
+                                                       m_window_shape,
+                                                       m_window_movement_strides,
+                                                       m_padding_below,
+                                                       m_padding_above);
 }
 
-void op::MaxPoolWithIndices::generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas)
+void op::MaxPoolWithIndices::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                               const NodeVector& /* deltas */)
 {
     throw ngraph_error("Differentation of MaxPoolWithIndices isn't supported");
 }

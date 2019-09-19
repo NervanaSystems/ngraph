@@ -1,5 +1,6 @@
 pytest
 tox
+pydocstyle==3.0.0
 flake8
 flake8-commas
 flake8-comprehensions

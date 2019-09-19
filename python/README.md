@@ -18,8 +18,8 @@ boost compared to native implementations.
 
 nGraph can be used directly with the [Python API][api_python] described here, or 
 with the [C++ API][api_cpp] described in the [core documentation]. Alternatively, 
-its performance benefits can be realized through a frontend such as 
-[TensorFlow][frontend_tf], [MXNet][frontend_mxnet], and [ONNX][frontend_onnx].
+its performance benefits can be realized through frontends such as 
+[TensorFlow][frontend_tf], [PaddlePaddle][paddle_paddle] and [ONNX][frontend_onnx].
 You can also create your own custom framework to integrate directly with the 
 [nGraph Ops] for highly-targeted graph execution.
 
@@ -77,7 +77,7 @@ print('Result = ', result)
 
 [up to 45X]: https://ai.intel.com/ngraph-compiler-stack-beta-release/
 [frontend_onnx]: https://pypi.org/project/ngraph-onnx/
-[frontend_mxnet]: https://pypi.org/project/ngraph-mxnet/ 
+[paddle_paddle]: https://ngraph.nervanasys.com/docs/latest/frameworks/paddle_integ.html 
 [frontend_tf]: https://pypi.org/project/ngraph-tensorflow-bridge/
 [ngraph_github]: https://github.com/NervanaSystems/ngraph "nGraph on GitHub"
 [ngraph_building]: https://github.com/NervanaSystems/ngraph/blob/master/python/BUILDING.md "Building nGraph"

@@ -17,53 +17,49 @@
 #include <tbb/tbb_stddef.h>
 
 #include "cpu_backend_visibility.h"
+
+#include "ngraph/component_manager.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
+#include "ngraph/runtime/cpu/cpu_builder_registry.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/cpu/static_initialize.hpp"
 #include "ngraph/util.hpp"
+
+#ifdef NGRAPH_MLIR_ENABLE
+#include "contrib/mlir/compiler/compiler.hpp"
+#endif
 
 using namespace ngraph;
 using namespace std;
 
-extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
+extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend()
 {
-    class CPU_BackendConstructor : public runtime::BackendConstructor
-    {
-    public:
-        std::shared_ptr<runtime::Backend> create(const std::string& config) override
+    runtime::BackendManager::register_backend("CPU", [](const std::string& /* config */) {
+        static bool is_initialized = false;
+        if (!is_initialized)
         {
-            // Force TBB to link to the backend
             tbb::TBB_runtime_interface_version();
-            return make_shared<runtime::cpu::CPU_Backend>();
+            ngraph::runtime::cpu::register_builders();
+            is_initialized = true;
         }
-    };
-
-    static unique_ptr<runtime::BackendConstructor> s_backend_constructor(
-        new CPU_BackendConstructor());
-    return s_backend_constructor.get();
+        return make_shared<runtime::cpu::CPU_Backend>();
+    });
 }
 
-namespace
+runtime::cpu::CPU_Backend::~CPU_Backend()
 {
-    static class CPUStaticInit
-    {
-    public:
-        CPUStaticInit()
-        {
-            runtime::BackendManager::register_backend("CPU", get_backend_constructor_pointer());
-        }
-        ~CPUStaticInit() {}
-    } s_cpu_static_init;
+    m_exec_map.clear();
 }
-
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
     const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function,
-    ngraph::pass::PassConfig& pass_config)
+    ngraph::pass::PassConfig& pass_config,
+    Allocator* allocator)
 {
-    return external_function->make_call_frame(pass_config);
+    return external_function->make_call_frame(pass_config, allocator);
 }
 
 shared_ptr<runtime::Tensor>
@@ -90,22 +86,39 @@ shared_ptr<runtime::Executable>
                                        ngraph::pass::PassConfig& pass_config,
                                        bool performance_counters_enabled)
 {
+#ifdef NGRAPH_MLIR_ENABLE
+    if (std::getenv("NGRAPH_MLIR") != nullptr)
+    {
+        // Initialize MLIR compiler
+        ngmlir::MLIRCompiler::init_mlir();
+    }
+#endif
+
     shared_ptr<runtime::Executable> rc;
-    auto it = m_exec_map.find(func);
-    if (it != m_exec_map.end())
+    // we will protect the access to map (m_exec_map) across multiple threads by creating a
+    // lock_gaurd
+    // m_exec_map_mutex will be released once the object `guard` goes out of scope
     {
-        rc = it->second;
+        std::lock_guard<std::mutex> guard(m_exec_map_mutex);
+        auto it = m_exec_map.find(func);
+        if (it != m_exec_map.end())
+        {
+            rc = it->second;
+            return rc;
+        }
     }
-    else
+    rc = make_shared<CPU_Executable>(
+        func, pass_config, get_host_memory_allocator(), performance_counters_enabled);
     {
-        rc = make_shared<CPU_Executable>(func, pass_config, performance_counters_enabled);
+        std::lock_guard<std::mutex> guard(m_exec_map_mutex);
         m_exec_map.insert({func, rc});
+        return rc;
     }
-    return rc;
 }
 
 runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Function> func,
                                              ngraph::pass::PassConfig& pass_config,
+                                             Allocator* allocator,
                                              bool performance_counters_enabled)
 {
     FunctionInstance& instance = m_function_instance;
@@ -113,7 +126,7 @@ runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Function> func,
     {
         instance.m_external_function = make_shared<CPU_ExternalFunction>(func);
         instance.m_external_function->m_emit_timing = performance_counters_enabled;
-        auto cf = instance.m_external_function->make_call_frame(pass_config);
+        auto cf = instance.m_external_function->make_call_frame(pass_config, allocator);
         instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
     }
     set_parameters_and_results(*func);
@@ -144,6 +157,7 @@ bool runtime::cpu::CPU_Executable::call(const vector<shared_ptr<runtime::Tensor>
 
 void runtime::cpu::CPU_Backend::remove_compiled_function(shared_ptr<Executable> exec)
 {
+    std::lock_guard<std::mutex> guard(m_exec_map_mutex);
     for (auto it = m_exec_map.begin(); it != m_exec_map.end(); ++it)
     {
         if (it->second == exec)
@@ -152,6 +166,27 @@ void runtime::cpu::CPU_Backend::remove_compiled_function(shared_ptr<Executable> 
             break;
         }
     }
+}
+
+runtime::Allocator* runtime::cpu::CPU_Backend::get_host_memory_allocator()
+{
+    if (!m_allocator)
+    {
+        return runtime::get_default_allocator();
+    }
+    return m_allocator;
+}
+
+void runtime::cpu::CPU_Backend::set_host_memory_allocator(Allocator* allocator)
+{
+    if (m_allocator)
+    {
+        // Resources allocated with the existing allocator might still be around and expect it
+        // to be available for freeing. We cannot switch to the new allocator
+        throw ngraph_error(
+            "Allocator already exists. Changing allocators mid-execution is not permitted.");
+    }
+    m_allocator = allocator;
 }
 
 vector<runtime::PerformanceCounter> runtime::cpu::CPU_Executable::get_performance_data() const
@@ -167,7 +202,7 @@ vector<runtime::PerformanceCounter> runtime::cpu::CPU_Executable::get_performanc
     return rc;
 }
 
-bool runtime::cpu::CPU_Backend::is_supported(const Node& op) const
+bool runtime::cpu::CPU_Backend::is_supported(const Node& /* op */) const
 {
     return true;
 }

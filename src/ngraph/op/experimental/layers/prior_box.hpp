@@ -49,13 +49,16 @@ namespace ngraph
         class PriorBox : public Op
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"PriorBox", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a PriorBox operation
             ///
             /// \param layer_shape    Shape of layer for which prior boxes are computed
             /// \param image_shape    Shape of image to which prior boxes are scaled
             /// \param attrs          PriorBox attributes
-            PriorBox(const std::shared_ptr<Node>& layer_shape,
-                     const std::shared_ptr<Node>& image_shape,
+            PriorBox(const Output<Node>& layer_shape,
+                     const Output<Node>& image_shape,
                      const PriorBoxAttrs& attrs);
 
             void validate_and_infer_types() override;

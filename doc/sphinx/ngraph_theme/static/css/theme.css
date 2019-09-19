@@ -355,7 +355,7 @@ big, small {
 
 @font-face {
   font-family: 'NeoSansIntel';
-  src: url("../fonts/NeoSansIntel); src: url("../fonts/NeoSansIntel) format("ttf","svg"), webformat("svg");
+  src: url("../fonts/NeoSansIntel.ttf"); src: url("../fonts/NeoSansIntel.ttf") format("ttf","svg"), webformat("svg");
   font-weight: normal;
   font-style: normal;
 

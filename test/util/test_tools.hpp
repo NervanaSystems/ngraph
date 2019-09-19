@@ -25,12 +25,20 @@
 #include <random>
 #include <vector>
 
+#include "gtest/gtest.h"
+
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/serializer.hpp"
+
+#ifdef NGRAPH_MLIR_ENABLE
+#define MLIR_DISABLE_TEST(name) DISABLED_##name
+#else
+#define MLIR_DISABLE_TEST(name) name
+#endif
 
 namespace ngraph
 {
@@ -277,3 +285,6 @@ std::vector<T> read_binary_file(const std::string& path)
     inputs_fs.read(reinterpret_cast<char*>(file_content.data()), size);
     return file_content;
 }
+
+testing::AssertionResult test_ordered_ops(std::shared_ptr<ngraph::Function> f,
+                                          const ngraph::NodeVector& required_ops);

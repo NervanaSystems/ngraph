@@ -24,8 +24,9 @@ namespace ngraph
     {
         namespace util
         {
-            /// \brief Abstract base class for logical reduction operations, i.e., operations where chosen axes of the input tensors
-            ///        are eliminated (reduced out) by repeated application of a particular binary logical operation.
+            /// \brief Abstract base class for logical reduction operations, i.e., operations where
+            ///        chosen axes of the input tensors are eliminated (reduced out) by repeated
+            ///        application of a particular binary logical operation.
             class LogicalReduction : public Op
             {
             protected:
@@ -45,7 +46,12 @@ namespace ngraph
             public:
                 void validate_and_infer_types() override;
 
+                /// \return true if reduction axes are constant else false.
+                bool reduction_axes_constant() const;
+
                 /// \return The axis positions (0-based) to be eliminated through reduction.
+                /// \throws CheckFailure if the reduction axes are not constant. (Use
+                ///           reduction_axes_constant to check.)
                 const AxisSet get_reduction_axes() const;
                 void set_reduction_axes(const AxisSet& reduction_axes);
             };

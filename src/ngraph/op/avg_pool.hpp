@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 
@@ -30,10 +29,10 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"AvgPool", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a batched average pooling operation.
-            AvgPool();
+            AvgPool() = default;
 
             /// \brief Constructs a batched average pooling operation.
             ///
@@ -107,7 +106,8 @@ namespace ngraph
                     const Shape& padding_above,
                     bool include_padding_in_avg_computation = false);
 
-            /// \brief Constructs a batched, unpadded average pooling operation (i.e., all padding shapes are set to 0).
+            /// \brief Constructs a batched, unpadded average pooling operation (i.e., all padding
+            ///        shapes are set to 0).
             ///
             /// \param arg The output producing the input data batch tensor.<br>
             /// `[d1, ..., dn]`
@@ -119,7 +119,8 @@ namespace ngraph
                     const Shape& window_shape,
                     const Strides& window_movement_strides);
 
-            /// \brief Constructs an unstrided batched convolution operation (i.e., all window movement strides are 1 and all padding shapes are set to 0).
+            /// \brief Constructs an unstrided batched convolution operation (i.e., all window
+            ///        movement strides are 1 and all padding shapes are set to 0).
             ///
             /// \param arg The output producing the input data batch tensor.<br>
             /// `[d1, ..., dn]`
@@ -148,17 +149,14 @@ namespace ngraph
             const Shape& get_padding_above() const;
             void set_padding_above(const Shape& padding_above);
             bool get_include_padding_in_avg_computation() const;
-            void get_include_padding_in_avg_computation(bool include_padding_in_avg_computation);
+            void set_include_padding_in_avg_computation(bool include_padding_in_avg_computation);
             /// \return The pad type for pooling.
             const PadType& get_pad_type() const;
             void set_pad_type(const PadType& pad_type);
             bool get_ceil_mode() const;
             void set_ceil_mode(bool ceil_mode);
             /// \return The default value for AvgPool.
-            virtual std::shared_ptr<Node> get_default_value() const override
-            {
-                return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
-            }
+            virtual std::shared_ptr<Node> get_default_value() const override;
 
         protected:
             Shape m_window_shape;
@@ -173,9 +171,10 @@ namespace ngraph
         class AvgPoolBackprop : public Op
         {
         public:
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
-            AvgPoolBackprop();
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"AvgPoolBackprop", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            AvgPoolBackprop() = default;
             AvgPoolBackprop(const Shape& forward_arg_shape,
                             const std::shared_ptr<Node>& delta,
                             const Shape& window_shape,

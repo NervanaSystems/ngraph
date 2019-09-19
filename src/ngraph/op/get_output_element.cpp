@@ -21,8 +21,10 @@
 using namespace std;
 using namespace ngraph;
 
+constexpr NodeTypeInfo op::GetOutputElement::type_info;
+
 op::GetOutputElement::GetOutputElement(const shared_ptr<Node>& arg, size_t n)
-    : Op("GetOutputElement", {arg})
+    : Op({Output<Node>{arg, n}})
     , m_n{n}
 {
     constructor_validate_and_infer_types();
@@ -31,14 +33,14 @@ op::GetOutputElement::GetOutputElement(const shared_ptr<Node>& arg, size_t n)
 void op::GetOutputElement::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this,
-                          m_n < get_input_size(),
+                          m_n < input_value(0).get_node()->get_output_size(),
                           "Output at index ",
                           m_n,
                           " requested, but node has only ",
                           get_input_size(),
                           " inputs.");
 
-    set_output_type(0, get_input_element_type(m_n), get_input_partial_shape(m_n));
+    set_output_type(0, input(0).get_element_type(), input(0).get_partial_shape());
 }
 
 shared_ptr<Node> op::GetOutputElement::copy_with_new_args(const NodeVector& new_args) const
@@ -47,26 +49,29 @@ shared_ptr<Node> op::GetOutputElement::copy_with_new_args(const NodeVector& new_
     return make_shared<GetOutputElement>(new_args.at(0), m_n);
 }
 
+Output<Node> op::GetOutputElement::get_as_output() const
+{
+    return input_value(0);
+}
+
 NodeVector op::GetOutputElement::get_arguments() const
 {
-    return NodeVector{input(0).get_source_output().get_node_shared_ptr()};
+    return NodeVector{input_value(0).get_node_shared_ptr()};
 }
 
 void op::GetOutputElement::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    adjoints.add_delta(input(0).get_source_output().get_node_shared_ptr(), delta, get_n());
+    adjoints.add_delta(input_value(0).get_node_shared_ptr(), delta, get_n());
 }
 
 NodeVector op::get_output_elements(const shared_ptr<Node>& mon)
 {
     NodeVector goes(mon->get_output_size());
-
-    for (auto goe_input : mon->output(0).get_target_inputs())
+    for (auto o : mon->outputs())
     {
-        auto goe = static_cast<op::GetOutputElement*>(goe_input.get_node());
-        goes.at(goe->get_n()) = goe_input.get_node()->shared_from_this();
+        goes.at(o.get_index()) = o.as_single_output_node();
     }
     return goes;
 }

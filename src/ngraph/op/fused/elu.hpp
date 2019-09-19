@@ -31,17 +31,24 @@ namespace ngraph
         class Elu : public ngraph::op::util::FusedOp
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"Elu", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            Elu() = default;
             /// \brief Constructs an Elu operation.
             ///
             /// \param data Input tensor
             /// \param alpha Multiplier for negative values
-            Elu(const std::shared_ptr<ngraph::Node>& data,
-                const std::shared_ptr<ngraph::Node>& alpha);
+            Elu(const Output<Node>& data, const double alpha);
 
             virtual NodeVector decompose_op() const override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+
+            double get_alpha() const { return m_alpha; }
+        private:
+            double m_alpha;
         };
-    }
-}
+    } // namespace op
+} // namespace ngraph

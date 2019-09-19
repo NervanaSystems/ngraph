@@ -30,7 +30,9 @@ namespace ngraph
         /// \note       Input floating point values are quantized into a discrete
         ///             set of floating point values.
         ///
-        /// \paragraph Implementation This class creates a node which performs the following operation:
+        /// \paragraph Implementation This class creates a node which performs the following
+        ///            operation:
+        ///
         ///            round((data - input_low) / (input_high - input_low) * (levels-1)) /
         ///                 (levels-1) * (output_high - output_low) + output_low
         ///
@@ -38,6 +40,10 @@ namespace ngraph
         class FakeQuantize : public ngraph::op::util::FusedOp
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"FakeQuantize", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            FakeQuantize() = default;
             ///
             /// \brief      Constructs a FakeQuantize operation node.
             ///
@@ -48,11 +54,11 @@ namespace ngraph
             /// \param[in]  output_high  The maximum quantized value.
             /// \param[in]  levels       The number of quantization levels.
             ///
-            FakeQuantize(const std::shared_ptr<ngraph::Node>& data,
-                         const std::shared_ptr<ngraph::Node>& input_low,
-                         const std::shared_ptr<ngraph::Node>& input_high,
-                         const std::shared_ptr<ngraph::Node>& output_low,
-                         const std::shared_ptr<ngraph::Node>& output_high,
+            FakeQuantize(const Output<Node>& data,
+                         const Output<Node>& input_low,
+                         const Output<Node>& input_high,
+                         const Output<Node>& output_low,
+                         const Output<Node>& output_high,
                          std::size_t levels);
 
             virtual NodeVector decompose_op() const override;

@@ -27,9 +27,12 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            void broadcastdistributed(T* arg, const element::Type_t element_type, int count)
+            void broadcastdistributed(T* arg,
+                                      const element::Type_t element_type,
+                                      int count,
+                                      int root_id)
             {
-                get_distributed_interface()->broadcast(arg, element_type, count);
+                get_distributed_interface()->broadcast(arg, element_type, count, root_id);
             }
         }
     }

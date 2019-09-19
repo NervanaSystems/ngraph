@@ -14,9 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/generic_cpu/gcpu_backend.hpp"
+#include "ngraph/runtime/generic_cpu/gcpu_backend_visibility.hpp"
+
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/generic_cpu/gcpu_backend.hpp"
 #include "ngraph/runtime/generic_cpu/gcpu_executable.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/util.hpp"
@@ -24,20 +26,11 @@
 using namespace std;
 using namespace ngraph;
 
-extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
+extern "C" GCPU_BACKEND_API void ngraph_register_gcpu_backend()
 {
-    class LocalBackendConstructor : public runtime::BackendConstructor
-    {
-    public:
-        std::shared_ptr<runtime::Backend> create(const std::string& config) override
-        {
-            return std::make_shared<runtime::gcpu::GCPUBackend>();
-        }
-    };
-
-    static unique_ptr<runtime::BackendConstructor> s_backend_constructor(
-        new LocalBackendConstructor());
-    return s_backend_constructor.get();
+    runtime::BackendManager::register_backend("GCPU", [](const std::string& config) {
+        return std::make_shared<runtime::gcpu::GCPUBackend>();
+    });
 }
 
 runtime::gcpu::GCPUBackend::GCPUBackend()
@@ -52,14 +45,14 @@ runtime::gcpu::GCPUBackend::GCPUBackend(const vector<string>& unsupported_op_nam
 shared_ptr<runtime::Tensor> runtime::gcpu::GCPUBackend::create_tensor(const element::Type& type,
                                                                       const Shape& shape)
 {
-    return make_shared<runtime::HostTensor>(type, shape, this);
+    return make_shared<runtime::HostTensor>(type, shape);
 }
 
 shared_ptr<runtime::Tensor> runtime::gcpu::GCPUBackend::create_tensor(const element::Type& type,
                                                                       const Shape& shape,
                                                                       void* memory_pointer)
 {
-    return make_shared<runtime::HostTensor>(type, shape, memory_pointer, this);
+    return make_shared<runtime::HostTensor>(type, shape, memory_pointer);
 }
 
 shared_ptr<runtime::Executable>

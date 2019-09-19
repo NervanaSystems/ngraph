@@ -30,6 +30,11 @@ op::util::FusedOp::FusedOp(const NodeVector& args)
 {
 }
 
+op::util::FusedOp::FusedOp(const OutputVector& args)
+    : Op(args)
+{
+}
+
 op::util::FusedOp::FusedOp(const std::string& node_type, const NodeVector& args)
     : Op(node_type, args)
 {
@@ -60,7 +65,8 @@ void op::util::FusedOp::validate_and_infer_types()
     post_validate_and_infer_types();
 }
 
-void op::util::FusedOp::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::util::FusedOp::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                          const NodeVector& /*deltas*/)
 {
     // TODO
     throw ngraph_error("Autodiff on fused ops not supported yet");

@@ -211,14 +211,6 @@
         KV = K<ET, 2, R2>;                                                                         \
     else if (R1 == 3)                                                                              \
         KV = K<ET, 3, R2>;                                                                         \
-    else if (R1 == 4)                                                                              \
-        KV = K<ET, 4, R2>;                                                                         \
-    else if (R1 == 5)                                                                              \
-        KV = K<ET, 5, R2>;                                                                         \
-    else if (R1 == 6)                                                                              \
-        KV = K<ET, 6, R2>;                                                                         \
-    else if (R1 == 7)                                                                              \
-        KV = K<ET, 7, R2>;                                                                         \
     else                                                                                           \
         throw ngraph_error("Unsupported first rank " + std::to_string(R1) + " for kernel " #K);
 
@@ -243,14 +235,6 @@
     {                                                                                              \
         SELECT_RANK1(KV, ET, R1, 5, K);                                                            \
     }                                                                                              \
-    else if (R2 == 6)                                                                              \
-    {                                                                                              \
-        SELECT_RANK1(KV, ET, R1, 6, K);                                                            \
-    }                                                                                              \
-    else if (R2 == 7)                                                                              \
-    {                                                                                              \
-        SELECT_RANK1(KV, ET, R1, 7, K);                                                            \
-    }                                                                                              \
     else                                                                                           \
     {                                                                                              \
         throw ngraph_error("Unsupported second rank " + std::to_string(R2) + " for kernel " #K);   \
@@ -269,6 +253,10 @@
     else if (ET == element::u8)                                                                    \
     {                                                                                              \
         SELECT_2RANKS(KV, uint8_t, R1, R2, K);                                                     \
+    }                                                                                              \
+    else if (ET == element::i8)                                                                    \
+    {                                                                                              \
+        SELECT_2RANKS(KV, int8_t, R1, R2, K);                                                      \
     }                                                                                              \
     else                                                                                           \
     {                                                                                              \
@@ -319,6 +307,7 @@
     }
 
 #define BUILD_UNARY_ELEMWISE_FUNCTOR(OP)                                                           \
+    (void)node;                                                                                    \
     auto& functors = external_function->get_functors();                                            \
     std::function<void(void*, void*, size_t, int)> kernel;                                         \
                                                                                                    \
@@ -335,9 +324,10 @@
                element_count,                                                                      \
                ectx->arena);                                                                       \
     };                                                                                             \
-    functors.emplace_back(functor);
+    functors.emplace_back(functor)
 
 #define BUILD_BINARY_ELEMWISE_FUNCTOR(OP)                                                          \
+    (void)node;                                                                                    \
     auto& functors = external_function->get_functors();                                            \
     std::function<void(void*, void*, void*, size_t, int)> kernel;                                  \
                                                                                                    \
@@ -357,7 +347,7 @@
                    element_count,                                                                  \
                    ectx->arena);                                                                   \
         };                                                                                         \
-    functors.emplace_back(functor);
+    functors.emplace_back(functor)
 
 #define BUILD_UNARY_ELEMWISE_CF_FUNCTOR(OP)                                                        \
     std::function<void(void*, void*, size_t, int)> kernel;                                         \
@@ -370,7 +360,7 @@
                                               std::vector<void*>& outputs) {                       \
         kernel(inputs[0], outputs[0], element_count, 0);                                           \
     };                                                                                             \
-    return functor;
+    return functor
 
 #define BUILD_BINARY_ELEMWISE_CF_FUNCTOR(OP)                                                       \
     std::function<void(void*, void*, void*, size_t, int)> kernel;                                  \
@@ -383,51 +373,27 @@
                                               std::vector<void*>& outputs) {                       \
         kernel(inputs[0], inputs[1], outputs[0], element_count, 0);                                \
     };                                                                                             \
-    return functor;
+    return functor
 
 #define REGISTER_OP_BUILDER(OP)                                                                    \
-    static struct __register_##OP##_builder                                                        \
-    {                                                                                              \
-        __register_##OP##_builder()                                                                \
-        {                                                                                          \
-            GetGlobalBuildDispatcher().insert({type_index(typeid(ngraph::op::OP)),                 \
-                                               &runtime::cpu::Builder::build<ngraph::op::OP>});    \
-        }                                                                                          \
-    } __register_##OP##_builder_instance;
+    GetGlobalBuildDispatcher().insert(                                                             \
+        {type_index(typeid(ngraph::op::OP)), &runtime::cpu::Builder::build<ngraph::op::OP>})
 
 #define REGISTER_CPU_OP_BUILDER(OP)                                                                \
-    static struct __register_##OP##_builder                                                        \
-    {                                                                                              \
-        __register_##OP##_builder()                                                                \
-        {                                                                                          \
-            GetGlobalBuildDispatcher().insert(                                                     \
-                {type_index(typeid(ngraph::runtime::cpu::op::OP)),                                 \
-                 &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::OP>});                    \
-        }                                                                                          \
-    } __register_##OP##_builder_instance;
+    GetGlobalBuildDispatcher().insert(                                                             \
+        {type_index(typeid(ngraph::runtime::cpu::op::OP)),                                         \
+         &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::OP>})
 
 #define BUILDER_CF_DECL(op_name) CFbuild<op_name>(const ngraph::Node* node)
 
 #define REGISTER_CF_BUILDER(OP)                                                                    \
-    static struct __register_##OP##_cf_builder                                                     \
-    {                                                                                              \
-        __register_##OP##_cf_builder()                                                             \
-        {                                                                                          \
-            GetGlobalCFDispatcherCPU().insert({type_index(typeid(ngraph::op::OP)),                 \
-                                               &runtime::cpu::Builder::CFbuild<ngraph::op::OP>});  \
-        }                                                                                          \
-    } __register_##OP##_cf_builder_instance;
+    GetGlobalCFDispatcherCPU().insert(                                                             \
+        {type_index(typeid(ngraph::op::OP)), &runtime::cpu::Builder::CFbuild<ngraph::op::OP>})
 
 #define REGISTER_CPU_CF_BUILDER(OP)                                                                \
-    static struct __register_##OP##_cf_builder                                                     \
-    {                                                                                              \
-        __register_##OP##_cf_builder()                                                             \
-        {                                                                                          \
-            GetGlobalCFDispatcherCPU().insert(                                                     \
-                {type_index(typeid(ngraph::runtime::cpu::op::OP)),                                 \
-                 &runtime::cpu::Builder::CFbuild<ngraph::runtime::cpu::op::OP>});                  \
-        }                                                                                          \
-    } __register_##OP##_cf_builder_instance;
+    GetGlobalCFDispatcherCPU().insert(                                                             \
+        {type_index(typeid(ngraph::runtime::cpu::op::OP)),                                         \
+         &runtime::cpu::Builder::CFbuild<ngraph::runtime::cpu::op::OP>})
 
 namespace ngraph
 {
@@ -452,10 +418,10 @@ namespace ngraph
             {
             public:
                 template <typename OP>
-                static void build(CPU_ExternalFunction* external_function,
+                static void build(CPU_ExternalFunction* /* external_function */,
                                   const ngraph::Node* node,
-                                  const std::vector<TensorViewWrapper>& args,
-                                  const std::vector<TensorViewWrapper>& out)
+                                  const std::vector<TensorViewWrapper>& /* args */,
+                                  const std::vector<TensorViewWrapper>& /* out */)
                 {
                     throw unsupported_op("Unimplemented op '" + node->description() +
                                          "' in CPU builder");
@@ -468,10 +434,10 @@ namespace ngraph
                                          "' for constant folding in CPU builder");
                 }
 
-                static void nop(CPU_ExternalFunction* external_function,
-                                const ngraph::Node* node,
-                                const std::vector<TensorViewWrapper>& args,
-                                const std::vector<TensorViewWrapper>& out)
+                static void nop(CPU_ExternalFunction* /* external_function */,
+                                const ngraph::Node* /* node */,
+                                const std::vector<TensorViewWrapper>& /* args */,
+                                const std::vector<TensorViewWrapper>& /* out */)
                 {
                 }
             };

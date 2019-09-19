@@ -42,12 +42,12 @@ namespace ngraph
                     Eigen::array<Eigen::Index, Rank - 1> out_dims;
                     Eigen::array<Eigen::Index, Rank> in_dims;
 
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         in_dims[i] = input_shape[i];
                     }
 
-                    for (int i = 0; i < Rank - 1; i++)
+                    for (size_t i = 0; i < Rank - 1; i++)
                     {
                         out_dims[i] = output_shape[i];
                     }

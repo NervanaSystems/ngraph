@@ -15,24 +15,23 @@
 //*****************************************************************************
 
 #include "ngraph/op/max_pool.hpp"
-#include "ngraph/function.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/greater.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
+constexpr NodeTypeInfo op::MaxPool::type_info;
+
+op::MaxPool::MaxPool(const Output<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides,
                      const Shape& padding_below,
                      const Shape& padding_above,
                      const PadType& pad_type,
                      bool ceil_mode)
-    : Op("MaxPool", check_single_output_args({arg}))
+    : Op({arg})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
@@ -43,7 +42,7 @@ op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
+op::MaxPool::MaxPool(const Output<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides,
                      const Shape& padding_below,
@@ -54,7 +53,7 @@ op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
 {
 }
 
-op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
+op::MaxPool::MaxPool(const Output<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides,
                      const Shape& padding_below,
@@ -121,14 +120,14 @@ void op::MaxPool::validate_and_infer_types()
                                                   m_ceil_mode));
 }
 
-op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
+op::MaxPool::MaxPool(const Output<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides)
     : MaxPool(arg, window_shape, window_movement_strides, Shape(), Shape())
 {
 }
 
-op::MaxPool::MaxPool(const shared_ptr<Node>& arg, const Shape& window_shape)
+op::MaxPool::MaxPool(const Output<Node>& arg, const Shape& window_shape)
     : MaxPool(arg, window_shape, Strides(), Shape(), Shape())
 {
 }
@@ -145,13 +144,19 @@ shared_ptr<Node> op::MaxPool::copy_with_new_args(const NodeVector& new_args) con
                                 m_ceil_mode);
 }
 
-op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
-                                     const shared_ptr<Node>& delta,
+constexpr NodeTypeInfo op::MaxPoolBackprop::type_info;
+shared_ptr<Node> op::MaxPool::get_default_value() const
+{
+    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
+}
+
+op::MaxPoolBackprop::MaxPoolBackprop(const Output<Node>& arg_forward,
+                                     const Output<Node>& delta,
                                      const Shape& window_shape,
                                      const Strides& window_movement_strides,
                                      const Shape& padding_below,
                                      const Shape& padding_above)
-    : Op("MaxPoolBackprop", check_single_output_args({arg_forward, delta}))
+    : Op({arg_forward, delta})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
@@ -160,14 +165,14 @@ op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
     constructor_validate_and_infer_types();
 }
 
-op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
-                                     const shared_ptr<Node>& delta,
-                                     const shared_ptr<Node>& result_forward,
+op::MaxPoolBackprop::MaxPoolBackprop(const Output<Node>& arg_forward,
+                                     const Output<Node>& delta,
+                                     const Output<Node>& result_forward,
                                      const Shape& window_shape,
                                      const Strides& window_movement_strides,
                                      const Shape& padding_below,
                                      const Shape& padding_above)
-    : Op("MaxPoolBackprop", check_single_output_args({arg_forward, delta, result_forward}))
+    : Op({arg_forward, delta, result_forward})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
@@ -227,7 +232,7 @@ void op::MaxPoolBackprop::validate_and_infer_types()
 shared_ptr<Node> op::MaxPoolBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    if (this->get_arguments().size() == 3)
+    if (this->get_input_size() == 3)
     {
         return make_shared<op::MaxPoolBackprop>(new_args.at(0),
                                                 new_args.at(1),
@@ -255,7 +260,7 @@ void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
 
     auto delta = deltas.at(0);
 
-    auto operand = get_argument(0);
+    auto operand = input_value(0);
     auto backprop =
         make_shared<op::MaxPoolBackprop>(operand,
                                          delta,

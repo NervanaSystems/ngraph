@@ -144,7 +144,7 @@ public:
 
             size_t const_node_index =
                 m.get_match_root()->get_arguments().at(0) == pattern_map[pattern];
-            auto const_node = dynamic_pointer_cast<op::Constant>(
+            auto const_node = static_pointer_cast<op::Constant>(
                 m.get_match_root()->get_arguments().at(const_node_index));
             auto second_node = m.get_match_root()->get_arguments().at(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
@@ -292,17 +292,6 @@ TEST(pattern, graph_rewrite)
     }
 }
 
-std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv)
-{
-    std::vector<std::string> names;
-    for (auto n : nv)
-    {
-        names.push_back(n->get_name());
-    }
-    os << vector_to_string(names);
-    return os;
-}
-
 TEST(pattern, matcher)
 {
     Shape shape{};
@@ -316,7 +305,7 @@ TEST(pattern, matcher)
     ASSERT_TRUE(n.match(any, abs));
     ASSERT_EQ(n.get_matched_nodes(), (NodeVector{abs, a}));
 
-    auto false_pred = [](std::shared_ptr<Node> no) { return false; };
+    auto false_pred = [](std::shared_ptr<Node> /* no */) { return false; };
     auto any_false = std::make_shared<pattern::op::Skip>(a, false_pred);
     ASSERT_TRUE(n.match(any_false, a));
     ASSERT_EQ(n.get_matched_nodes(), (NodeVector{a, a}));
@@ -332,7 +321,9 @@ TEST(pattern, matcher)
 
     auto b = make_shared<op::Parameter>(element::i32, shape);
 
-    auto is_bea = pattern::has_class<op::util::BinaryElementwiseArithmetic>();
+    auto is_bea = [](std::shared_ptr<Node> node) -> bool {
+        return node->is_binary_elementwise_arithmetic();
+    };
     auto bea = std::make_shared<pattern::op::Any>(a, is_bea, NodeVector{a, b});
     auto add_ab = a + b;
     ASSERT_TRUE(n.match(bea, add_ab));
@@ -522,6 +513,33 @@ TEST(pattern, previous_matches)
         Matcher n(pattern + b);
         previous_matches.insert(std::make_pair(pattern, a));
         ASSERT_FALSE(n.match(add, previous_matches));
+    }
+}
+
+TEST(pattern, test_sort)
+{
+    using ngraph::pattern::Matcher;
+    Shape shape{};
+
+    auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto abs1 = make_shared<op::Abs>(a);
+    auto abs2 = make_shared<op::Abs>(b);
+    auto add = abs1 + abs2;
+
+    auto pa = make_shared<op::Parameter>(element::i32, shape);
+    auto pb = make_shared<op::Parameter>(element::i32, shape);
+    auto pabs1 = make_shared<op::Abs>(pa);
+    auto pabs1_label = std::make_shared<pattern::op::Label>(pabs1);
+    auto pabs2 = make_shared<op::Abs>(b);
+    auto padd = pabs1_label + pabs2;
+
+    {
+        Matcher n1(padd);
+        ASSERT_TRUE(n1.match(add));
+        auto r1 = n1.get_pattern_map()[pabs1_label];
+        ASSERT_TRUE(n1.match(add));
+        ASSERT_EQ(r1, n1.get_pattern_map()[pabs1_label]);
     }
 }
 

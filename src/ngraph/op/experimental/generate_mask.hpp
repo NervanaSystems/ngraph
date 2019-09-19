@@ -17,9 +17,9 @@
 #pragma once
 
 #include <memory>
-#include "ngraph/op/constant.hpp"
+
 #include "ngraph/op/op.hpp"
-#include "ngraph/state/rng_state.hpp"
+
 namespace ngraph
 {
     namespace op
@@ -30,11 +30,11 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"GenerateMask", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a GenerateMask node with a given shape, seed,
             /// probability and training/inference mode
-            GenerateMask();
+            GenerateMask() = default;
 
 #if 0
             /// Switch to dynamic arguments when all transformers have switched to using the node values
@@ -72,13 +72,16 @@ namespace ngraph
             /// \brief Returns the seed value supplied to a random generator
             uint64_t get_seed() const { return m_seed; }
             bool get_use_seed() const { return m_use_seed; }
+            /// GenerateMask has state.
+            bool has_state() const override { return true; }
+            void validate_and_infer_types() override;
+
         protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override
+            virtual void generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                           const NodeVector& /* deltas */) override
             {
             }
 
-            void validate_and_infer_types() override;
             element::Type m_element_type;
             // These will be deprecated
             Shape m_shape;

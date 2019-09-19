@@ -19,15 +19,17 @@
 using namespace std;
 using namespace ngraph;
 
-op::ROIPooling::ROIPooling(const shared_ptr<Node>& input,
-                           const std::shared_ptr<Node>& coords,
+constexpr NodeTypeInfo op::ROIPooling::type_info;
+
+op::ROIPooling::ROIPooling(const Output<Node>& input,
+                           const Output<Node>& coords,
                            const Shape& output_size,
                            const float spatial_scale,
-                           const std::string& kind)
-    : Op("ROIPooling", check_single_output_args({input, coords}))
+                           const string& method)
+    : Op({input, coords})
     , m_output_size(output_size)
     , m_spatial_scale(spatial_scale)
-    , m_kind(kind)
+    , m_method(method)
 {
     constructor_validate_and_infer_types();
 }
@@ -67,5 +69,5 @@ shared_ptr<Node> op::ROIPooling::copy_with_new_args(const NodeVector& new_args) 
 {
     check_new_args_count(this, new_args);
     return make_shared<ROIPooling>(
-        new_args.at(0), new_args.at(1), m_output_size, m_spatial_scale, m_kind);
+        new_args.at(0), new_args.at(1), m_output_size, m_spatial_scale, m_method);
 }

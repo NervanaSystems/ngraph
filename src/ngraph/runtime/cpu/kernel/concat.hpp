@@ -49,9 +49,9 @@ namespace ngraph
                         static_cast<ElementType*>(output), out_dims);
 
                     Eigen::array<Eigen::Index, Rank> in_dims, concat_pos;
-                    concat_pos.fill(0);
+                    concat_pos.fill(static_cast<Eigen::Index>(0));
 
-                    for (int i = 0; i < input_shapes.size(); i++)
+                    for (size_t i = 0; i < input_shapes.size(); i++)
                     {
                         for (int j = 0; j < Rank; j++)
                         {

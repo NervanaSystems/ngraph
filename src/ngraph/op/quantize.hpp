@@ -25,11 +25,14 @@ namespace ngraph
     namespace op
     {
         /// \brief Quantize operation
-        ///        Maps real input (r) to quantized output (q) using scale (s), zero point (z) and round mode:
-        ///        q = ROUND(r / s) + o
+        ///        Maps real input (r) to quantized output (q) using scale (s), zero point (z) and
+        ///        round mode: q = ROUND(r / s) + o
         class Quantize : public ngraph::op::Op
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"Quantize", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             enum class RoundMode
             {
                 // round to nearest integer
@@ -82,12 +85,14 @@ namespace ngraph
             /// \param type output element type
             /// \param axes axis positions on which `scale` and `zero_point` are specified
             /// \param round_mode describes how to perform ROUND function (see above)
-            Quantize(const std::shared_ptr<Node>& input,
-                     const std::shared_ptr<Node>& scale,
-                     const std::shared_ptr<Node>& zero_point,
+            Quantize(const Output<Node>& input,
+                     const Output<Node>& scale,
+                     const Output<Node>& zero_point,
                      const ngraph::element::Type& type,
                      const ngraph::AxisSet& axes,
                      RoundMode round_mode);
+
+            Quantize() = default;
 
             void validate_and_infer_types() override;
 

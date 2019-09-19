@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2018-2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,19 +24,19 @@
 using namespace std;
 using namespace ngraph;
 
-op::QuantizedMatmul::QuantizedMatmul(const shared_ptr<Node>& data,
-                                     const shared_ptr<Node>& weights,
-                                     const shared_ptr<Node>& scale,
-                                     bool requantize,
-                                     bool with_relu)
-    : Op("QuantizedMatmul", check_single_output_args({data, weights, scale}))
-    , m_requantize(requantize)
-    , m_with_relu(with_relu)
+constexpr NodeTypeInfo op::QuantizedMatmul::type_info;
+
+op::QuantizedMatmul::QuantizedMatmul(const Output<Node>& data,
+                                     const Output<Node>& weights,
+                                     const Output<Node>& scale,
+                                     const element::Type& output_type)
+    : Op({data, weights, scale})
+    , m_output_type(output_type)
 {
     constructor_validate_and_infer_types();
 
-    auto& data_shape = data->get_shape();
-    auto& weights_shape = weights->get_shape();
+    auto& data_shape = data.get_shape();
+    auto& weights_shape = weights.get_shape();
     // QuantizedMatmul does [n, ic] * [oc, ic] = [n, oc]
     NODE_VALIDATION_CHECK(this,
                           data_shape.size() == 2 && weights_shape.size() == 2 &&
@@ -46,6 +46,5 @@ op::QuantizedMatmul::QuantizedMatmul(const shared_ptr<Node>& data,
                           " weights shape ",
                           weights_shape);
 
-    auto output_et = requantize ? (with_relu ? element::u8 : element::i8) : element::i32;
-    set_output_type(0, output_et, Shape{data_shape[0], weights_shape[0]});
+    set_output_type(0, output_type, Shape{data_shape[0], weights_shape[0]});
 }

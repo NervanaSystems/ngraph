@@ -30,8 +30,11 @@ namespace ngraph
         class Squeeze : public ngraph::op::util::FusedOp
         {
         public:
-            Squeeze(const std::shared_ptr<ngraph::Node>& data,
-                    const std::shared_ptr<ngraph::Node>& axes);
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"Squeeze", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            Squeeze() = default;
+            Squeeze(const Output<Node>& data, const Output<Node>& axes);
 
             virtual NodeVector decompose_op() const override;
 

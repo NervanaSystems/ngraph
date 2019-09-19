@@ -34,7 +34,7 @@ namespace ngraph
     /// \li Dynamic rank. (Informal notation: `?`)
     /// \li Static rank, but dynamic dimensions on some or all axes.
     ///     (Informal notation examples: `{1,2,?,4}`, `{?,?,?}`)
-    /// \li Static rank, and dynamic dimensions on all axes.
+    /// \li Static rank, and static dimensions on all axes.
     ///     (Informal notation examples: `{1,2,3,4}`, `{6}`, `{}`)
     class PartialShape
     {
@@ -163,6 +163,10 @@ namespace ngraph
         /// \return A new Shape `s` where `s[i] = size_t((*this)[i])`.
         /// \throws std::invalid_argument If this PartialShape is dynamic.
         Shape to_shape() const;
+
+        /// \brief Returns `true` if all static dimensions of the tensor are non-negative, else
+        ///        `false`.
+        bool all_non_negative() const;
 
         /// \brief Index operator for PartialShape.
         /// \param i The index of the dimension being selected.

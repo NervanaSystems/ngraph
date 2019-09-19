@@ -46,6 +46,9 @@ descriptor::Tensor::Tensor(const element::Type& element_type,
 void descriptor::Tensor::set_tensor_type(const element::Type& element_type,
                                          const PartialShape& pshape)
 {
+    NGRAPH_CHECK(pshape.all_non_negative(),
+                 "set_tensor_type called on a PartialShape containing negative dimensions: ",
+                 pshape);
     if (pshape.is_static())
     {
         m_shape = pshape.to_shape();
@@ -96,14 +99,16 @@ size_t descriptor::Tensor::size() const
 void descriptor::Tensor::set_tensor_layout(
     const std::shared_ptr<layout::TensorLayout>& tensor_layout)
 {
-    if (tensor_layout->get_shape() != get_shape())
-    {
-        throw ngraph_error("Setting tensor's layout to a layout with a different shape.");
-    }
-    if (tensor_layout->get_element_type() != get_element_type())
-    {
-        throw ngraph_error("Setting tensor's layout to a layout with a different element type.");
-    }
+    NGRAPH_CHECK(tensor_layout->get_shape() == get_shape(),
+                 "Setting tensor's layout to a layout with a different shape : ",
+                 get_shape(),
+                 " -> ",
+                 tensor_layout->get_shape());
+    NGRAPH_CHECK(tensor_layout->get_element_type() == get_element_type(),
+                 "Setting tensor's layout to a layout with a different element type : ",
+                 get_element_type(),
+                 " -> ",
+                 tensor_layout->get_element_type());
     m_tensor_layout = tensor_layout;
 }
 

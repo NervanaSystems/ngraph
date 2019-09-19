@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2018-2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "onehot.hpp"
-#include "utils/reshape.hpp"
 
 namespace ngraph
 {
@@ -57,7 +56,8 @@ namespace ngraph
                         axis += indices_shape.size() + 1;
                     }
 
-                    ASSERT_VALID_ARGUMENT(node, (axis >= 0) && (axis <= indices_shape.size()))
+                    ASSERT_VALID_ARGUMENT(
+                        node, (axis >= 0) && (axis <= static_cast<int64_t>(indices_shape.size())))
                         << "invalid 'axis' attribute: "
                         << node.get_attribute_value<std::int64_t>("axis", -1);
 
@@ -90,7 +90,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace  onnx_import
 

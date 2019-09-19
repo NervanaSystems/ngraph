@@ -14,11 +14,14 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/interpreter/int_backend.hpp"
+#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
+
+#include "ngraph/component_manager.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/runtime/interpreter/int_executable.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -26,20 +29,11 @@
 using namespace std;
 using namespace ngraph;
 
-extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
+extern "C" INTERPRETER_BACKEND_API void ngraph_register_interpreter_backend()
 {
-    class INTBackendConstructor : public runtime::BackendConstructor
-    {
-    public:
-        std::shared_ptr<runtime::Backend> create(const std::string& config) override
-        {
-            return std::make_shared<runtime::interpreter::INTBackend>();
-        }
-    };
-
-    static unique_ptr<runtime::BackendConstructor> s_backend_constructor(
-        new INTBackendConstructor());
-    return s_backend_constructor.get();
+    runtime::BackendManager::register_backend("INTERPRETER", [](const std::string& /* config */) {
+        return std::make_shared<runtime::interpreter::INTBackend>();
+    });
 }
 
 runtime::interpreter::INTBackend::INTBackend()
@@ -104,4 +98,17 @@ std::shared_ptr<runtime::Executable> runtime::interpreter::INTBackend::load(istr
         }
     }
     return exec;
+}
+
+bool runtime::interpreter::INTBackend::set_config(const map<string, string>& config, string& error)
+{
+    bool rc = false;
+    auto it = config.find("test_echo");
+    error = "";
+    if (it != config.end())
+    {
+        error = it->second;
+        rc = true;
+    }
+    return rc;
 }

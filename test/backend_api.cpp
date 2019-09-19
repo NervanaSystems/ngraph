@@ -37,6 +37,28 @@ TEST(backend_api, invalid_name)
     ASSERT_ANY_THROW(ngraph::runtime::Backend::create("COMPLETELY-BOGUS-NAME"));
 }
 
+TEST(backend_api, config)
+{
+    auto backend = runtime::Backend::create("INTERPRETER");
+    string error;
+    string message = "hello";
+    map<string, string> config = {{"test_echo", message}};
+    EXPECT_TRUE(backend->set_config(config, error));
+    EXPECT_STREQ(error.c_str(), message.c_str());
+    EXPECT_FALSE(backend->set_config({}, error));
+    EXPECT_STREQ(error.c_str(), "");
+}
+
+TEST(backend_api, config_unsupported)
+{
+    auto backend = runtime::Backend::create("NOP");
+    string error;
+    string message = "hello";
+    map<string, string> config = {{"test_echo", message}};
+    EXPECT_FALSE(backend->set_config(config, error));
+    EXPECT_FALSE(error == "");
+}
+
 #ifndef NGRAPH_JSON_DISABLE
 TEST(backend_api, save_load)
 {
@@ -67,5 +89,16 @@ TEST(backend_api, save_load)
         handle->call_with_validate({result}, {a, b});
         EXPECT_TRUE(test::all_close_f(read_vector<float>(result), {6.f, 8.f, 10.f, 12.f}));
     }
+}
+#endif
+
+#if defined(NGRAPH_INTERPRETER_ENABLE) && defined(NGRAPH_CPU_ENABLE)
+TEST(backend_api, executable_can_create_tensor)
+{
+    auto interpreter = runtime::Backend::create("INTERPRETER");
+    auto cpu = runtime::Backend::create("CPU");
+
+    EXPECT_TRUE(interpreter->executable_can_create_tensors());
+    EXPECT_FALSE(cpu->executable_can_create_tensors());
 }
 #endif

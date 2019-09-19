@@ -20,6 +20,7 @@
 #include <functional>
 #include <list>
 #include <memory>
+#include <stack>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -70,161 +71,304 @@ namespace ngraph
                         bool include_control_deps,
                         const NodeVector& subgraph_params = {});
 
-    void traverse_functions(std::shared_ptr<Function> p,
-                            std::function<void(std::shared_ptr<Function>)> f);
+    inline void traverse_functions(std::shared_ptr<Function> p,
+                                   std::function<void(std::shared_ptr<Function>)> f)
+        NGRAPH_DEPRECATED("Replace with f(p)")
+    {
+        f(p);
+    };
 
+    /// \brief Replace the node `target` with the node `replacement`, i.e.,
+    ///        redirect all users and control dependencies of `target` to
+    ///        `replacement`.
+    ///
+    /// \param target Node to be replaced.
+    /// \param replacement Node to replace `target` with.
+    ///
+    /// This is primarily used in graph-rewriting passes. For example, we
+    /// might "fuse" two Concat operations as follows:
+    ///
+    /// (Step 0: Original graph)
+    ///
+    ///   A                       B
+    ///   |                       |
+    ///   v                       v
+    /// N0[Concat, concatenation_axis=3]     C
+    ///          |                           |
+    ///          v                           v
+    ///        N1[Concat, concatenation_axis=3]
+    ///          |                |
+    ///          v                v
+    ///       some_user         another_user
+    ///
+    /// (Step 1: Construct replacement)
+    ///
+    ///    shared_ptr<Node> new_N1 = make_shared<op::Concat>({A,B,C},3);
+    ///
+    ///   A----------------------------------------.
+    ///   |                                        |
+    ///   |                       B----------------)--.
+    ///   |                       |                |  |
+    ///   v                       v                |  |
+    /// N0[Concat, concatenation_axis=3]     C-----)--)--.
+    ///          |                           |     |  |  |
+    ///          v                           v     v  v  v
+    ///        N1[Concat, concatenation_axis=3]   new_N1[Concat, concatenation_axis=3]
+    ///          |                |
+    ///          v                v
+    ///       some_user         another_user
+    ///
+    /// (Step 2: Replace N1 with new_N1)
+    ///
+    ///    replace_node(N1, new_N1);
+    ///
+    ///   A----------------------------------------.
+    ///   |                                        |
+    ///   |                       B----------------)--.
+    ///   |                       |                |  |
+    ///   v                       v                |  |
+    /// N0[Concat, concatenation_axis=3]     C-----)--)--.
+    ///          |                           |     |  |  |
+    ///          v                           v     v  v  v
+    ///        N1[Concat, concatenation_axis=3]   new_N1[Concat, concatenation_axis=3]
+    ///                                                  |                |
+    ///                                                  v                v
+    ///                                               some_user         another_user
+    ///
+    /// (Step 3: N0 and N1 are now dead, nodes will be freed)
+    ///
+    ///    [happens automatically, once all shared_ptrs to N1 are released]
+    ///
+    ///   A----------------------------------------.
+    ///                                            |
+    ///                           B----------------)--.
+    ///                                            |  |
+    ///                                            |  |
+    ///                                      C-----)--)--.
+    ///                                            |  |  |
+    ///                                            v  v  v
+    ///                                           new_N1[Concat, concatenation_axis=3]
+    ///                                                  |                |
+    ///                                                  v                v
+    ///                                               some_user         another_user
+    ///
+    /// NOTE 1: replace_node is not type-safe (the graph is not revalidated).
+    /// For example, the following is allowed, even if node `some_user`
+    /// requires an input of shape 2x2:
+    ///
+    /// (Before)
+    ///      A(shape=2x2)  B(shape=3x3)
+    ///      |
+    ///      v
+    ///   some_user(requires 2x2 input)
+    ///
+    /// (After -- graph is now invalid)
+    ///
+    ///      replace_node(A, B);
+    ///
+    ///      A(shape=2x2)  B(shape=3x3)
+    ///                    |
+    ///                    v
+    ///                 some_user(requires 2x2 input)
+    ///
+    /// NOTE 2: it is possible to insert a cycle into the graph with
+    /// replace_node, resulting in an invalid graph. Care must be taken to
+    /// avoid this. One common example is when you are attempting to insert a
+    /// new node `M` "after"` a node `N`. For example, you might expect this
+    /// to work:
+    ///
+    ///    shared_ptr<Node> M = make_shared<SomeUnaryOp>(N);
+    ///    replace_node(M, N);
+    ///
+    /// The problem is that at replacement time, N itself is a user of M. So
+    /// we end up introducing a cycle as follows:
+    ///
+    ///       N
+    ///       |
+    ///       v
+    ///  other users...
+    ///
+    ///      |||
+    ///      vvv
+    ///
+    ///       N------------>M
+    ///       |
+    ///       v
+    ///  other users...
+    ///
+    ///      |||
+    ///      vvv
+    ///
+    ///               .----.
+    ///              |      |
+    ///              |      |
+    ///       N      `----->M
+    ///                     |
+    ///                     v
+    ///                other users...
+    ///
+    /// To avoid the cycle, a valid way to perform the above desired insertion would be,
+    ///
+    ///        auto new_N = N->copy_with_new_args(N->get_arguments());
+    ///        shared_ptr<Node> M = make_shared<SomeUnaryOp>(new_N);
+    ///        replace_node(N, M);
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
+
+    /// \brief Replace multiple nodes in a function.
+    /// \param f Function where replacement is taking place.
+    /// \param parameter_replacement_map A mapping from parameter shared pointers to parameter
+    ///                                  shared pointers. For each pair (k,v) in the map, parameter
+    ///                                  k is replaced by parameter v, except if k==v or k is not a
+    ///                                  parameter bound by f, in which case the pair (k,v) is
+    ///                                  ignored.
+    /// \param body_replacement_map A mapping from node shared pointers to node shared pointers.
+    ///                             For each pair (k,v) in the map, node k is replaced by node v,
+    ///                             except if k==v, the pair (k,v) is ignored.
+    ///                             Note that if k is a parameter, its users will be redirected to
+    ///                             v, but k will _not_ be replaced in the function's parameter
+    ///                             list.
+    ///
+    /// Limitations:
+    ///
+    ///    - No check is made that the replaced nodes in `parameter_replacement_map` are actually
+    ///      among the bound parameters of `f`. (If a parameter appears in the map that is not
+    ///      bound by `f`, it will be silently ignored.)
+    ///    - If a parameter node appears as a key in both `parameter_replacement_map` _and_ in
+    ///      `body_replacement_map`, behavior is unspecified.
+    void replace_nodes(
+        const std::shared_ptr<Function>& f,
+        const std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<op::Parameter>>&
+            parameter_replacement_map,
+        const std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>>&
+            body_replacement_map);
 
     NodeVector find_common_args(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
+    /// Topological sort of nodes needed to compute root_nodes
     template <typename T>
-    std::list<std::shared_ptr<Node>> topological_sort(const T& nodes,
+    std::list<std::shared_ptr<Node>> topological_sort(T root_nodes,
                                                       bool include_control_deps = false)
     {
-        std::deque<ngraph::Node*> independent_nodes;
-        std::unordered_map<const ngraph::Node*, size_t> node_dependency_count;
-        std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>> node_map;
-        std::unordered_map<ngraph::Node*, std::set<Node*>> control_deps_users;
+        std::stack<Node*, std::vector<Node*>> nodes_to_do;
+        std::unordered_set<Node*> nodes_done;
+        std::list<std::shared_ptr<Node>> result;
 
-        for (auto node : nodes)
+        for (auto& node : root_nodes)
         {
-            //build an equivalent of node->get_users() but for control dependencies
-            size_t control_deps_count = 0;
-            if (include_control_deps)
-            {
-                for (auto cd : node->get_control_dependencies())
-                {
-                    control_deps_count++;
-                    control_deps_users[cd.get()].insert(node.get());
-                }
-            }
-
-            node_map[node.get()] = node;
-            size_t deps_count = node->get_input_size() + control_deps_count;
-            node_dependency_count[node.get()] = deps_count;
-            if (deps_count == 0)
-            {
-                independent_nodes.push_back(node.get());
-            }
+            nodes_to_do.push(node.get());
         }
-
-        std::list<std::shared_ptr<ngraph::Node>> result_list;
-        while (independent_nodes.size() > 0)
+        while (nodes_to_do.size() > 0)
         {
-            auto independent_node = independent_nodes.front();
-            result_list.push_back(node_map[independent_node]);
-            independent_nodes.pop_front();
-
-            for (const std::shared_ptr<Node>& user : independent_node->get_users())
+            Node* node = nodes_to_do.top();
+            if (nodes_done.count(node) == 0)
             {
-                if (--node_dependency_count[user.get()] == 0)
+                bool can_add = true;
+                size_t arg_count = node->get_input_size();
+                for (size_t i = 0; i < arg_count; ++i)
                 {
-                    independent_nodes.push_back(user.get());
-                }
-            }
-
-            if (include_control_deps)
-            {
-                auto cdit = control_deps_users.find(independent_node);
-                if (cdit != control_deps_users.end())
-                    for (auto cd_user : cdit->second)
+                    Node* dep = node->input(arg_count - i - 1).get_source_output().get_node();
+                    if (nodes_done.count(dep) == 0)
                     {
-                        node_dependency_count[cd_user] -= 1;
-                        size_t count = node_dependency_count[cd_user];
-                        if (count == 0)
+                        can_add = false;
+                        nodes_to_do.push(dep);
+                    }
+                }
+                if (include_control_deps)
+                {
+                    for (auto& depptr : node->get_control_dependencies())
+                    {
+                        Node* dep = depptr.get();
+                        if (nodes_done.count(dep) == 0)
                         {
-                            independent_nodes.push_back(cd_user);
+                            can_add = false;
+                            nodes_to_do.push(dep);
                         }
                     }
+                }
+                if (can_add)
+                {
+                    result.push_back(node->shared_from_this());
+                    nodes_to_do.pop();
+                    nodes_done.insert(node);
+                }
+            }
+            else
+            {
+                nodes_to_do.pop();
             }
         }
-
-        NGRAPH_CHECK(nodes.size() == result_list.size());
-        return result_list;
+        return result;
     }
 
-    // For cases, where `nodes` is a subset of the entire graph
+    /// Topological sort of just nodes
     template <typename T>
-    std::list<std::shared_ptr<Node>> subgraph_topological_sort(const T& nodes,
+    std::list<std::shared_ptr<Node>> subgraph_topological_sort(T nodes,
                                                                bool include_control_deps = false)
     {
-        std::deque<ngraph::Node*> independent_nodes;
-        std::unordered_map<const ngraph::Node*, size_t> node_dependency_count;
-        std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>> node_map;
-        std::unordered_map<ngraph::Node*, std::set<Node*>> control_deps_users;
-        std::unordered_set<std::shared_ptr<ngraph::Node>> nodes_set(nodes.begin(), nodes.end());
+        std::stack<Node*, std::vector<Node*>> nodes_to_do;
+        std::unordered_set<Node*> nodes_done;
+        std::unordered_set<Node*> nodes_to_emit;
+        std::list<std::shared_ptr<Node>> result;
 
-        for (auto node : nodes)
+        for (auto& node : nodes)
         {
-            //build an equivalent of node->get_users() but for control dependencies
-            size_t deps_count = 0;
-            if (include_control_deps)
+            nodes_to_emit.insert(node.get());
+            nodes_to_do.push(node.get());
+        }
+        // NB: Some centos versions implement std::list::size() by counting elements
+        size_t nodes_remaining = nodes_to_emit.size();
+        while (nodes_to_do.size() > 0 && nodes_remaining > 0)
+        {
+            Node* node = nodes_to_do.top();
+            if (nodes_done.count(node) == 0)
             {
-                for (auto cd : node->get_control_dependencies())
+                bool can_add = true;
+                size_t arg_count = node->get_input_size();
+                for (size_t i = 0; i < arg_count; ++i)
                 {
-                    if (nodes_set.count(cd) != 0)
+                    Node* dep = node->input(arg_count - i - 1).get_source_output().get_node();
+                    if (nodes_done.count(dep) == 0 && nodes_to_emit.count(node) != 0)
                     {
-                        control_deps_users[cd.get()].insert(node.get());
-                        deps_count++;
+                        can_add = false;
+                        nodes_to_do.push(dep);
                     }
                 }
-            }
-
-            node_map[node.get()] = node;
-            for (auto arg : node->get_arguments())
-            {
-                if (nodes_set.count(arg) != 0)
+                if (include_control_deps)
                 {
-                    deps_count++;
-                }
-            }
-
-            node_dependency_count[node.get()] = deps_count;
-            if (deps_count == 0)
-            {
-                independent_nodes.push_back(node.get());
-            }
-        }
-
-        std::list<std::shared_ptr<ngraph::Node>> result_list;
-        while (independent_nodes.size() > 0)
-        {
-            auto independent_node = independent_nodes.front();
-            result_list.push_back(node_map[independent_node]);
-            independent_nodes.pop_front();
-
-            for (const std::shared_ptr<Node>& user : independent_node->get_users())
-            {
-                if (--node_dependency_count[user.get()] == 0)
-                {
-                    independent_nodes.push_back(user.get());
-                }
-            }
-
-            if (include_control_deps)
-            {
-                auto cdit = control_deps_users.find(independent_node);
-                if (cdit != control_deps_users.end())
-                    for (auto cd_user : cdit->second)
+                    for (auto& depptr : node->get_control_dependencies())
                     {
-                        node_dependency_count[cd_user] -= 1;
-                        size_t count = node_dependency_count[cd_user];
-                        if (count == 0)
+                        Node* dep = depptr.get();
+                        if (nodes_done.count(dep) == 0)
                         {
-                            independent_nodes.push_back(cd_user);
+                            can_add = false;
+                            nodes_to_do.push(dep);
                         }
                     }
+                }
+                if (can_add)
+                {
+                    if (nodes_to_emit.count(node) != 0)
+                    {
+                        result.push_back(node->shared_from_this());
+                        nodes_remaining--;
+                    }
+                    nodes_to_do.pop();
+                    nodes_done.insert(node);
+                }
+            }
+
+            else
+            {
+                nodes_to_do.pop();
             }
         }
-
-        NGRAPH_CHECK(nodes.size() == result_list.size());
-        return result_list;
+        return result;
     }
 
     template <typename T>
     void validate_nodes_and_infer_types(const T& nodes)
     {
-        for (auto node : subgraph_topological_sort(nodes))
+        for (auto& node : subgraph_topological_sort(nodes))
         {
             node->revalidate_and_infer_types();
         }
@@ -233,7 +377,7 @@ namespace ngraph
     // Check if all paths from X to a result go through Y
     bool is_post_dominated(Node* X, Node* Y);
 
-    bool is_equal_to_const_value(std::string const_value, std::shared_ptr<Node> reduce_constant);
+    bool is_equal_to_const_value(std::string const_value, const Output<Node>& reduce_constant);
 
     // input nodes are cloned and returned
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
@@ -267,13 +411,15 @@ namespace ngraph
                                                     const element::Type& element_type,
                                                     const Shape& shape);
 
-    bool is_zero(std::shared_ptr<Node> reduce_constant);
+    bool is_zero(const Output<Node>& reduce_constant);
 
     NodeVector get_subgraph_outputs(const NodeVector& nodes,
                                     const NodeVector& exclusions,
-                                    bool ignore_unused = false);
+                                    bool ignore_unused = false,
+                                    bool ignore_output_duplicates = true);
 
-    // Extract sub-graph computing the `results`. Stops backward traversal at either a Parameter node
+    // Extract sub-graph computing the `results`. Stops backward traversal at either a Parameter
+    // node
     // or a node that belongs to args
     NodeVector extract_subgraph(const NodeVector& results, const NodeVector& args);
 
@@ -307,4 +453,11 @@ namespace ngraph
     /// \return A vector containing a handle for each output of src that is connected to an input
     ///         of `dst`.
     std::vector<Output<Node>> get_outputs_to(Node& src, Node& dst);
+
+    /// Checks the func for graph cycles starting from results going backwards, then from parameters
+    /// going forward.
+    /// It returns true if a cycle is found and the first cycle encountered.
+    bool check_for_cycles(const ngraph::Function* func,
+                          ngraph::NodeVector& cycle_nodes,
+                          bool& is_bkwd_cycle);
 }

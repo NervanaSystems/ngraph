@@ -15,13 +15,14 @@
 //*****************************************************************************
 
 #include "ngraph/op/one_hot.hpp"
-#include "ngraph/op/sum.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::OneHot::OneHot(const shared_ptr<Node>& arg, const PartialShape& shape, size_t one_hot_axis)
-    : Op("OneHot", check_single_output_args({arg}))
+constexpr NodeTypeInfo op::OneHot::type_info;
+
+op::OneHot::OneHot(const Output<Node>& arg, const PartialShape& shape, size_t one_hot_axis)
+    : Op({arg})
     , m_shape(shape)
     , m_one_hot_axis(one_hot_axis)
 {

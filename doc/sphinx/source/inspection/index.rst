@@ -6,11 +6,11 @@ Visualization Tools
 nGraph provides serialization and deserialization facilities, along with the 
 ability to create image formats or a PDF. 
 
-When visualization is enabled, a ``dot`` file gets generated, along with a 
-``png``. The default can be adjusted by setting the 
-``NGRAPH_VISUALIZE_TREE_OUTPUT_FORMAT`` flag to another format, like PDF. 
+When visualization is enabled, ``svg`` files for your graph get generated. The 
+default can be adjusted by setting the ``NGRAPH_VISUALIZE_TRACING_FORMAT`` 
+flag to another format, like PNG or PDF. 
 
-.. note:: Large graphs are usually not legible with formats like PDF.  
+.. note:: Large graphs are usually not legible with formats like PDF.
 
 Large graphs may require additional work to get into a human-readable format. 
 On the back end, very long edges will need to be cut to make (for example) a 

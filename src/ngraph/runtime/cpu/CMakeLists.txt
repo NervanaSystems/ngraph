@@ -16,9 +16,16 @@
 
 include(FindOpenMP)
 
+if (NGRAPH_CPU_STATIC_LIB_ENABLE)
+    set(LIBRARY_TYPE STATIC)
+else()
+    set(LIBRARY_TYPE SHARED)
+endif()
+
 set(SRC
     cpu_backend.cpp
     cpu_builder.cpp
+    cpu_builder_registry.cpp
     cpu_call_frame.cpp
     cpu_executor.cpp
     cpu_external_function.cpp
@@ -31,6 +38,7 @@ set(SRC
     cpu_visualize_tree.cpp
     cpu_cse.cpp
     cpu_debugger.cpp
+    cpu_debug_tracer.cpp
     builder/add.cpp
     builder/allreduce.cpp
     builder/avg_pool.cpp
@@ -45,6 +53,7 @@ set(SRC
     builder/convert_layout.cpp
     builder/convolution.cpp
     builder/dot.cpp
+    builder/dropout.cpp
     builder/embedding_lookup.cpp
     builder/erf.cpp
     builder/gather.cpp
@@ -63,11 +72,8 @@ set(SRC
     builder/reduce_function.cpp
     builder/replace_slice.cpp
     builder/quantization.cpp
-    builder/quantized_avg_pool.cpp
     builder/quantized_conv.cpp
-    builder/quantized_concat.cpp
     builder/quantized_dot.cpp
-    builder/quantized_max_pool.cpp
     builder/quantized_matmul.cpp
     builder/reshape.cpp
     builder/reverse.cpp
@@ -99,10 +105,10 @@ set(SRC
     op/conv_relu.cpp
     op/convert_layout.cpp
     op/deconv.cpp
+    op/dropout.cpp
     op/group_conv_bias.cpp
     op/halide_op.cpp
     op/leaky_relu.cpp
-    op/loop_kernel.cpp
     op/lstm.cpp
     op/matmul_bias.cpp
     op/max_pool_with_indices.cpp
@@ -115,15 +121,12 @@ set(SRC
     pass/cpu_fusion.cpp
     pass/cpu_horizontal_fusion.cpp
     pass/cpu_layout.cpp
-    pass/cpu_loop_kernel_fusion.cpp
     pass/cpu_mat_fusion.cpp
     pass/cpu_memory_assignment.cpp
     pass/cpu_memory_optimization.cpp
-    pass/cpu_mkldnn_primitive_build.cpp
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
     pass/cpu_workspace_insertion.cpp
-    ngraph_version.cpp
 )
 
 if (NOT NGRAPH_DEX_ONLY)
@@ -132,27 +135,41 @@ if (NOT NGRAPH_DEX_ONLY)
         cpu_emitter.cpp
         cpu_kernel_emitters.cpp
         cpu_kernel_utils.cpp
+        pass/cpu_mkldnn_primitive_build.cpp
         )
 endif()
 
 if (NGRAPH_HALIDE)
     set(SRC
         ${SRC}
+        builder/compiled_kernel.cpp
         builder/halide_op.cpp
-        builder/loop_kernel.cpp
         builder/halide_generators.cpp
         pass/halide_subgraph_extraction.cpp
+        )
+endif()
+
+if (NGRAPH_MLIR_ENABLE)
+    set(SRC
+        ${SRC}
+        builder/mlir_cpu_compiled_kernel.cpp
         )
 endif()
 
 if (NGRAPH_CPU_ENABLE)
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
-    add_library(cpu_backend SHARED ${SRC})
+    add_library(cpu_backend ${LIBRARY_TYPE} ${SRC})
+    if (NGRAPH_CPU_STATIC_LIB_ENABLE)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_CPU_STATIC_LIB_ENABLE")
+    endif()
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(cpu_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
+    endif()
+    if (NGRAPH_USE_LEGACY_MKLDNN)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_USE_LEGACY_MKLDNN")
     endif()
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
@@ -193,7 +210,8 @@ if (NGRAPH_CPU_ENABLE)
     target_compile_definitions(cpu_backend PRIVATE CPU_BACKEND_DLL_EXPORTS)
 
     add_dependencies(cpu_backend libmkldnn ext_eigen)
-    target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libtbb)
+   	target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libtbb)
+        
     if (NGRAPH_JSON_ENABLE)
         target_link_libraries(cpu_backend PUBLIC libjson)
     endif()
@@ -201,6 +219,7 @@ if (NGRAPH_CPU_ENABLE)
         target_link_libraries(cpu_backend PUBLIC codegen)
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
+
     if (NOT APPLE AND NOT MSVS)
         # CPU backend uses third-party libraries like Eigen that might be linked in and
         # exported by other DSOs as well. In the absence of versioning, this could lead to the
@@ -210,5 +229,21 @@ if (NGRAPH_CPU_ENABLE)
         set_property(TARGET cpu_backend APPEND PROPERTY LINK_FLAGS "-Wl,-Bsymbolic-functions -Wl,--exclude-libs=ALL")
     endif()
 
+    if (NGRAPH_MLIR_ENABLE)
+        # TODO: can we get away without LLVM/MLIR include path. 
+        # Currently mlir backend compiler.hpp include LLVM/MLIR files
+        get_directory_property(MLIR_LLVM_INCLUDEPATH
+                               DIRECTORY ${NGRAPH_MLIR_SOURCE_DIR}/compiler
+                               DEFINITION MLIR_LLVM_INCLUDEPATH)
+        
+        message(STATUS "Building CPU backend with MLIR")
+        add_dependencies(cpu_backend mlir_backend)
+        target_include_directories(cpu_backend PUBLIC ${MLIR_INCLUDE_PATHS} ${MLIR_LLVM_INCLUDE_PATH})
+        target_link_libraries(cpu_backend PUBLIC mlir_backend)
+        # TODO: Get rid of the compile time def, and move all MLIR code to separate src files
+        # and add them to cpu_backend here instead.
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_MLIR_ENABLE")
+    endif()
+    
     install(TARGETS cpu_backend DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

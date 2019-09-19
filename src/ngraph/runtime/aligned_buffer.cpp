@@ -18,22 +18,34 @@
 #include <memory>
 
 #include "ngraph/runtime/aligned_buffer.hpp"
+#include "ngraph/runtime/allocator.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
+using namespace std;
 
 runtime::AlignedBuffer::AlignedBuffer()
-    : m_allocated_buffer(nullptr)
+    : m_allocator(nullptr)
+    , m_allocated_buffer(nullptr)
     , m_aligned_buffer(nullptr)
     , m_byte_size(0)
 {
 }
 
-runtime::AlignedBuffer::AlignedBuffer(size_t byte_size, size_t alignment)
+runtime::AlignedBuffer::AlignedBuffer(size_t byte_size, size_t alignment, Allocator* allocator)
+    : m_allocator(allocator)
+    , m_byte_size(byte_size)
 {
     m_byte_size = std::max<size_t>(1, byte_size);
     size_t allocation_size = m_byte_size + alignment;
-    m_allocated_buffer = static_cast<char*>(ngraph_malloc(allocation_size));
+    if (allocator)
+    {
+        m_allocated_buffer = static_cast<char*>(m_allocator->malloc(allocation_size, alignment));
+    }
+    else
+    {
+        m_allocated_buffer = static_cast<char*>(malloc(allocation_size));
+    }
     m_aligned_buffer = m_allocated_buffer;
     size_t mod = size_t(m_aligned_buffer) % alignment;
 
@@ -44,10 +56,12 @@ runtime::AlignedBuffer::AlignedBuffer(size_t byte_size, size_t alignment)
 }
 
 runtime::AlignedBuffer::AlignedBuffer(AlignedBuffer&& other)
-    : m_allocated_buffer(other.m_allocated_buffer)
+    : m_allocator(other.m_allocator)
+    , m_allocated_buffer(other.m_allocated_buffer)
     , m_aligned_buffer(other.m_aligned_buffer)
     , m_byte_size(other.m_byte_size)
 {
+    other.m_allocator = nullptr;
     other.m_allocated_buffer = nullptr;
     other.m_aligned_buffer = nullptr;
     other.m_byte_size = 0;
@@ -57,7 +71,14 @@ runtime::AlignedBuffer::~AlignedBuffer()
 {
     if (m_allocated_buffer != nullptr)
     {
-        ngraph_free(m_allocated_buffer);
+        if (m_allocator)
+        {
+            m_allocator->free(m_allocated_buffer);
+        }
+        else
+        {
+            free(m_allocated_buffer);
+        }
     }
 }
 
@@ -65,9 +86,11 @@ runtime::AlignedBuffer& runtime::AlignedBuffer::operator=(AlignedBuffer&& other)
 {
     if (this != &other)
     {
+        m_allocator = other.m_allocator;
         m_allocated_buffer = other.m_allocated_buffer;
         m_aligned_buffer = other.m_aligned_buffer;
         m_byte_size = other.m_byte_size;
+        other.m_allocator = nullptr;
         other.m_allocated_buffer = nullptr;
         other.m_aligned_buffer = nullptr;
         other.m_byte_size = 0;

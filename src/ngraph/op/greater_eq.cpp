@@ -19,10 +19,12 @@
 using namespace std;
 using namespace ngraph;
 
-op::GreaterEq::GreaterEq(const shared_ptr<Node>& arg0,
-                         const shared_ptr<Node>& arg1,
-                         const AutoBroadcastSpec& autob)
-    : BinaryElementwiseComparison("GreaterEq", arg0, arg1, autob)
+constexpr NodeTypeInfo op::GreaterEq::type_info;
+
+op::GreaterEq::GreaterEq(const Output<Node>& arg0,
+                         const Output<Node>& arg1,
+                         const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseComparison(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }

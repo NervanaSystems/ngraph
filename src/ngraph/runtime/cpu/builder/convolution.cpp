@@ -55,6 +55,8 @@ namespace ngraph
                         mkldnn_emitter->get_convolution_forward_desc<ngraph::op::Convolution>(node);
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::Convolution>(node);
+                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+
                     size_t conv_index = mkldnn_emitter->convolution_forward_init();
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
@@ -65,11 +67,13 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
@@ -82,7 +86,9 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::CONVOLUTION);
                     };
                     functors.emplace_back(functor);
                 }
@@ -92,7 +98,7 @@ namespace ngraph
                         kernel;
 
                     SELECT_KERNEL_3ARGS(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::convolution);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::convolution)
 
                     auto window_movement_strides = convolution->get_window_movement_strides();
                     auto window_dilation_strides = convolution->get_window_dilation_strides();
@@ -113,7 +119,7 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         kernel(ctx->buffer_data[arg0_buffer_index],
                                ctx->buffer_data[arg1_buffer_index],
                                ctx->buffer_data[out_buffer_index],
@@ -125,7 +131,12 @@ namespace ngraph
                                padding_below,
                                padding_above,
                                data_dilation_strides,
-                               1.0f);
+                               nullptr,
+                               nullptr,
+                               nullptr,
+                               nullptr,
+                               nullptr,
+                               nullptr);
                     };
                     functors.emplace_back(functor);
                 }
@@ -149,6 +160,8 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::ConvolutionRelu>(
                             node);
+                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+
                     size_t conv_index = mkldnn_emitter->convolution_forward_init();
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
@@ -159,11 +172,13 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
@@ -176,7 +191,9 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::CONVOLUTIONRELU);
                     };
                     functors.emplace_back(functor);
                 }
@@ -205,6 +222,8 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::ConvolutionBias>(
                             node);
+                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
@@ -216,11 +235,13 @@ namespace ngraph
                                     arg1_buffer_index,
                                     arg2_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<true>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
@@ -235,7 +256,9 @@ namespace ngraph
                             ctx, deps[2], ctx->buffer_data[arg2_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[3], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::CONVOLUTIONBIAS);
                     };
                     functors.emplace_back(functor);
                 }
@@ -266,6 +289,8 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::ConvolutionBiasAdd>(node);
+                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
@@ -279,11 +304,13 @@ namespace ngraph
                                     arg2_buffer_index,
                                     arg3_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<true>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
@@ -305,7 +332,9 @@ namespace ngraph
                             ctx, deps[2], ctx->buffer_data[arg2_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[3], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::CONVOLUTIONBIASADD);
                     };
                     functors.emplace_back(functor);
                 }
@@ -335,6 +364,8 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::ConvolutionAdd>(
                             node);
+                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(false);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
@@ -347,11 +378,13 @@ namespace ngraph
                                     arg1_buffer_index,
                                     arg2_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
@@ -371,7 +404,9 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::CONVOLUTIONADD);
                     };
                     functors.emplace_back(functor);
                 }
@@ -402,6 +437,8 @@ namespace ngraph
                         ngraph::op::ConvolutionBackpropData>(node);
                     auto fwd_desc = mkldnn_emitter->get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBackpropData>(node);
+                    QUERY_SCRATCHPAD_2ARGS(convolution_backward_data, fwd_desc, bwd_desc);
+
                     // ConvolutionBackpropData needs 4 primitives: weights, diff_dst, diff_src,
                     // and convolution_backward_data.
                     auto conv_index = mkldnn_emitter->reserve_primitive_space(4);
@@ -414,11 +451,17 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_backward_data(
-                                ctx->mkldnn_primitives, bwd_desc, fwd_desc, deps, conv_index);
+                                ctx->mkldnn_memories,
+                                ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
+                                bwd_desc,
+                                fwd_desc,
+                                deps,
+                                conv_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -426,7 +469,12 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONVOLUTIONBACKPROPDATA);
                     };
                     functors.emplace_back(functor);
                 }
@@ -437,7 +485,7 @@ namespace ngraph
 
                     SELECT_KERNEL(kernel,
                                   out[0].get_element_type(),
-                                  runtime::cpu::kernel::convolution_backprop_in);
+                                  runtime::cpu::kernel::convolution_backprop_in)
                     auto& in_shape = convolution->get_data_batch_shape();
                     auto data_dilation_strides = convolution->get_data_dilation_strides_forward();
                     auto window_dilation_strides =
@@ -464,7 +512,7 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         kernel(ctx->buffer_data[arg1_buffer_index],
                                ctx->buffer_data[arg0_buffer_index],
                                ctx->buffer_data[out_buffer_index],
@@ -502,6 +550,8 @@ namespace ngraph
                         ngraph::op::ConvolutionBackpropFilters>(node);
                     auto fwd_desc = mkldnn_emitter->get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBackpropFilters>(node);
+                    QUERY_SCRATCHPAD_2ARGS(convolution_backward_weights, fwd_desc, bwd_desc);
+
                     // ConvolutionBackpropFilter needs 4 primitives: src, diff_dst, diff_weights,
                     // and convolution_backward_weights.
                     auto conv_index = mkldnn_emitter->reserve_primitive_space(4);
@@ -514,11 +564,17 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_backward_weights(
-                                ctx->mkldnn_primitives, bwd_desc, fwd_desc, deps, conv_index);
+                                ctx->mkldnn_memories,
+                                ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
+                                bwd_desc,
+                                fwd_desc,
+                                deps,
+                                conv_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -526,7 +582,12 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONVOLUTIONBACKPROPWEIGHTS);
                     };
                     functors.emplace_back(functor);
                 }
@@ -538,7 +599,7 @@ namespace ngraph
 
                     SELECT_KERNEL(kernel,
                                   out[0].get_element_type(),
-                                  runtime::cpu::kernel::convolution_backprop_filter);
+                                  runtime::cpu::kernel::convolution_backprop_filter)
 
                     auto& filters_shape = convolution->get_filters_shape();
                     auto window_dilation_strides =
@@ -564,7 +625,7 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         kernel(ctx->buffer_data[arg0_buffer_index],
                                ctx->buffer_data[arg1_buffer_index],
                                ctx->buffer_data[out_buffer_index],
@@ -598,8 +659,10 @@ namespace ngraph
                         ngraph::op::ConvolutionBiasBackpropFiltersBias>(node);
                     auto fwd_desc = mkldnn_emitter->get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBiasBackpropFiltersBias>(node);
-                    // ConvolutionBackpropFiltersBias needs 5 primitives: src, diff_dst, diff_weights,
-                    // diff_bias, and convolution_backward_weights.
+                    QUERY_SCRATCHPAD_2ARGS(convolution_backward_weights, fwd_desc, bwd_desc);
+
+                    // ConvolutionBackpropFiltersBias needs 5 primitives: src, diff_dst,
+                    // diff_weights, diff_bias, and convolution_backward_weights.
                     auto conv_index = mkldnn_emitter->reserve_primitive_space(5);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
@@ -611,11 +674,17 @@ namespace ngraph
                                     arg1_buffer_index,
                                     out0_buffer_index,
                                     out1_buffer_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) {
+                                                       CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_backward_weights_bias(
-                                ctx->mkldnn_primitives, bwd_desc, fwd_desc, deps, conv_index);
+                                ctx->mkldnn_memories,
+                                ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
+                                bwd_desc,
+                                fwd_desc,
+                                deps,
+                                conv_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -625,7 +694,12 @@ namespace ngraph
                             ctx, deps[2], ctx->buffer_data[out0_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[3], ctx->buffer_data[out1_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONVOLUTIONBACKPROPWEIGHTSBIAS);
                     };
                     functors.emplace_back(functor);
                 }
@@ -654,6 +728,8 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::GroupConvolution>(
                             node);
+                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+
                     size_t conv_index = mkldnn_emitter->convolution_forward_init();
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
@@ -664,11 +740,13 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
@@ -683,7 +761,9 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::GROUPCONVOLUTION);
                     };
                     functors.emplace_back(functor);
                 }
@@ -712,6 +792,8 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::GroupConvolutionBias>(node);
+                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
@@ -723,11 +805,13 @@ namespace ngraph
                                     arg1_buffer_index,
                                     arg2_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<true>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
@@ -742,7 +826,9 @@ namespace ngraph
                             ctx, deps[2], ctx->buffer_data[arg2_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[3], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::GROUPCONVOLUTIONBIAS);
                     };
                     functors.emplace_back(functor);
                 }
@@ -775,6 +861,7 @@ namespace ngraph
                             ->get_deconvolutionbias_forward_data<ngraph::op::DeconvolutionBias>(
                                 node);
                     auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    QUERY_SCRATCHPAD(deconvolution_forward, deconvbias_desc);
 
                     // DeconvolutionBias needs 5 primitives: weights, delta, bias, result,
                     // and deconvolutionbias.
@@ -789,14 +876,17 @@ namespace ngraph
                                     arg1_buffer_index,
                                     arg2_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_deconvolutionbias_forward(ctx->mkldnn_primitives,
-                                                                            deconvbias_desc,
-                                                                            deps,
-                                                                            conv_index,
-                                                                            weights_desc);
+                            mkldnn_emitter->build_deconvolutionbias_forward(
+                                ctx->mkldnn_memories,
+                                ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
+                                deconvbias_desc,
+                                deps,
+                                conv_index,
+                                weights_desc);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -806,7 +896,9 @@ namespace ngraph
                             ctx, deps[2], ctx->buffer_data[arg2_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[3], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::DECONVOLUTIONBIAS);
                     };
                     functors.emplace_back(functor);
                 }
@@ -816,17 +908,20 @@ namespace ngraph
                 }
             }
 
-            REGISTER_OP_BUILDER(Convolution);
-            REGISTER_OP_BUILDER(ConvolutionRelu);
-            REGISTER_OP_BUILDER(ConvolutionBias);
-            REGISTER_OP_BUILDER(ConvolutionBiasAdd);
-            REGISTER_OP_BUILDER(ConvolutionBackpropData);
-            REGISTER_OP_BUILDER(ConvolutionBackpropFilters);
-            REGISTER_OP_BUILDER(ConvolutionBiasBackpropFiltersBias);
-            REGISTER_OP_BUILDER(GroupConvolution);
-            REGISTER_OP_BUILDER(ConvolutionAdd);
-            REGISTER_OP_BUILDER(GroupConvolutionBias);
-            REGISTER_OP_BUILDER(DeconvolutionBias)
+            void register_builders_convolution_cpp()
+            {
+                REGISTER_OP_BUILDER(Convolution);
+                REGISTER_OP_BUILDER(ConvolutionRelu);
+                REGISTER_OP_BUILDER(ConvolutionBias);
+                REGISTER_OP_BUILDER(ConvolutionBiasAdd);
+                REGISTER_OP_BUILDER(ConvolutionBackpropData);
+                REGISTER_OP_BUILDER(ConvolutionBackpropFilters);
+                REGISTER_OP_BUILDER(ConvolutionBiasBackpropFiltersBias);
+                REGISTER_OP_BUILDER(GroupConvolution);
+                REGISTER_OP_BUILDER(ConvolutionAdd);
+                REGISTER_OP_BUILDER(GroupConvolutionBias);
+                REGISTER_OP_BUILDER(DeconvolutionBias);
+            }
         } // namespace cpu
     }     // namespace runtime
 } // namespace ngraph

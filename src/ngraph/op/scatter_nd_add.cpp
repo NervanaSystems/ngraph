@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@ using namespace ngraph;
 static int INPUTS = 0;
 static int INDICES = 1;
 static int UPDATES = 2;
+
+constexpr NodeTypeInfo op::ScatterNDAdd::type_info;
 
 shared_ptr<Node> op::ScatterNDAdd::copy_with_new_args(const NodeVector& new_args) const
 {

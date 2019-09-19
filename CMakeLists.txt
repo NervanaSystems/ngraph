@@ -40,8 +40,9 @@ include(var_functions)
 
 NGRAPH_GET_VERSION_LABEL()
 
-string(REGEX MATCH "([0-9?]+)\\.([0-9?]+)\\.([0-9?]+)(-rc\\.[0-9?]+)?" NGRAPH_VERSION_SHORT "${NGRAPH_VERSION_LABEL}")
+string(REGEX MATCH "([0-9?]+)\\.([0-9?]+)\\.([0-9?]+)(-(rc|dev)\\.[0-9?]+)?" NGRAPH_VERSION_SHORT "${NGRAPH_VERSION_LABEL}")
 string(REGEX REPLACE "-rc." "rc" NGRAPH_WHEEL_VERSION "${NGRAPH_VERSION_SHORT}")
+string(REGEX REPLACE "-dev." "dev" NGRAPH_WHEEL_VERSION "${NGRAPH_WHEEL_VERSION}")
 string(REGEX MATCH "([0-9?]+)\\.([0-9?]+)" NGRAPH_API_VERSION "${NGRAPH_VERSION_LABEL}")
 string(REGEX MATCH "[^v](.*)" NGRAPH_VERSION "${NGRAPH_VERSION_LABEL}")
 string(REPLACE "." ";" NGRAPH_VERSION_PARTS "${NGRAPH_VERSION_SHORT}")
@@ -114,7 +115,12 @@ if (APPLE)
     endif()
 endif()
 
-set(NGRAPH_CXX_STANDARD 11)
+if (NGRAPH_MLIR_ENABLE)
+    #MLIR uses the latest version of LLVM which requires C++14.
+    set(NGRAPH_CXX_STANDARD 14)
+else()
+    set(NGRAPH_CXX_STANDARD 11)
+endif()
 set(CMAKE_CXX_STANDARD ${NGRAPH_CXX_STANDARD})
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -162,11 +168,11 @@ ngraph_var(NGRAPH_USE_PREBUILT_LLVM DEFAULT "FALSE")
 option(NGRAPH_UNIT_TEST_ENABLE "Control the building of unit tests" TRUE)
 option(NGRAPH_TOOLS_ENABLE "Control the building of tool" TRUE)
 option(NGRAPH_CPU_ENABLE "Control the building of the CPU backend" TRUE)
+option(NGRAPH_USE_LEGACY_MKLDNN "Use legacy MKLDNN" TRUE)
+option(NGRAPH_MLIR_ENABLE "Control the building of MLIR backend" FALSE)
 option(NGRAPH_INTELGPU_ENABLE "Control the building of the Intel GPU backend with clDNN" FALSE)
-option(NGRAPH_GPU_ENABLE "Control the building of the GPU backend" FALSE)
 option(NGRAPH_INTERPRETER_ENABLE "Control the building of the INTERPRETER backend" TRUE)
 option(NGRAPH_NOP_ENABLE "Control the building of the NOP backend" TRUE)
-option(NGRAPH_GPUH_ENABLE "Control the building of the Hybrid GPU backend" FALSE)
 option(NGRAPH_GENERIC_CPU_ENABLE "Enable build nGraph for generic CPU backend" FALSE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_DEPRECATED_ENABLE "Enable compiler deprecation pragmas for deprecated APIs (recommended only for development use)" FALSE)
@@ -180,14 +186,23 @@ option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" ${PLAIDML_FOUND})
 option(NGRAPH_DISTRIBUTED_ENABLE "Enable distributed training using MLSL/OpenMPI" OFF)
 option(NGRAPH_FAST_MATH_ENABLE "Enable fast math" ON)
 option(NGRAPH_JSON_ENABLE "Enable JSON based serialization and tracing features" TRUE)
-option(NGRAPH_STATIC_LIB_ENABLE "Enable build nGraph static library" FALSE)
+option(NGRAPH_STATIC_LIB_ENABLE "Enable build nGraph as a static library" FALSE)
+option(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE "Enable build INTERPRETER backend as a static library" FALSE)
+option(NGRAPH_CPU_STATIC_LIB_ENABLE "Enable build CPU backend as a static library" FALSE)
+option(NGRAPH_PLAIDML_STATIC_LIB_ENABLE "Enable build PlaidML backend as a static library" FALSE)
+option(NGRAPH_DYNAMIC_COMPONENTS_ENABLE "Enable dynamic loading of components" TRUE)
 
 if (NGRAPH_CPU_ENABLE
         AND
-    ((NOT NGRAPH_GPU_ENABLE) AND (NOT NGRAPH_GPUH_ENABLE)
-        AND (NOT NGRAPH_GENERIC_CPU_ENABLE) AND (NOT NGRAPH_INTELGPU_ENABLE))
+    ((NOT NGRAPH_GENERIC_CPU_ENABLE) AND (NOT NGRAPH_INTELGPU_ENABLE))
    )
     set(NGRAPH_INTEL_CPU_ONLY_ENABLE ON)
+endif()
+
+if (NGRAPH_MLIR_ENABLE AND (NOT NGRAPH_DEX_ONLY))
+    #disable code-gen due to sym collision with LLVM
+    message(FATAL_ERROR "Cannot build with both MLIR and code-gen ON.\n"
+                        "Use -DNGRAPH_DEX_ONLY=ON and try again. \n")
 endif()
 
 if (NGRAPH_DISTRIBUTED_ENABLE)
@@ -206,10 +221,6 @@ if (NGRAPH_DISTRIBUTED_ENABLE)
                     "Invalid arguments passed to NGRAPH_DISTRIBUTED_ENABLE, must select  one of  MLSL, OMPI or OFF.\n"
                     "If using Intel CPU only backend, recommend Intel MLSL by setting -DNGRAPH_DISTRIBUTED_ENABLE=MLSL .\n")
     endif()
-endif()
-
-if (NGRAPH_GPUH_ENABLE)
-    set(NGRAPH_GPU_ENABLE TRUE)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
@@ -232,11 +243,11 @@ endmacro()
 NORMALIZE_BOOL(NGRAPH_UNIT_TEST_ENABLE)
 NORMALIZE_BOOL(NGRAPH_TOOLS_ENABLE)
 NORMALIZE_BOOL(NGRAPH_CPU_ENABLE)
+NORMALIZE_BOOL(NGRAPH_USE_LEGACY_MKLDNN)
+NORMALIZE_BOOL(NGRAPH_MLIR_ENABLE)
 NORMALIZE_BOOL(NGRAPH_INTELGPU_ENABLE)
-NORMALIZE_BOOL(NGRAPH_GPU_ENABLE)
 NORMALIZE_BOOL(NGRAPH_INTERPRETER_ENABLE)
 NORMALIZE_BOOL(NGRAPH_NOP_ENABLE)
-NORMALIZE_BOOL(NGRAPH_GPUH_ENABLE)
 NORMALIZE_BOOL(NGRAPH_GENERIC_CPU_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DEBUG_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DEPRECATED_ENABLE)
@@ -250,27 +261,38 @@ NORMALIZE_BOOL(NGRAPH_USE_PREBUILT_LLVM)
 NORMALIZE_BOOL(NGRAPH_PLAIDML_ENABLE)
 NORMALIZE_BOOL(NGRAPH_JSON_ENABLE)
 
-message(STATUS "NGRAPH_UNIT_TEST_ENABLE:        ${NGRAPH_UNIT_TEST_ENABLE}")
-message(STATUS "NGRAPH_TOOLS_ENABLE:            ${NGRAPH_TOOLS_ENABLE}")
-message(STATUS "NGRAPH_CPU_ENABLE:              ${NGRAPH_CPU_ENABLE}")
-message(STATUS "NGRAPH_INTELGPU_ENABLE:         ${NGRAPH_INTELGPU_ENABLE}")
-message(STATUS "NGRAPH_GPU_ENABLE:              ${NGRAPH_GPU_ENABLE}")
-message(STATUS "NGRAPH_INTERPRETER_ENABLE:      ${NGRAPH_INTERPRETER_ENABLE}")
-message(STATUS "NGRAPH_NOP_ENABLE:              ${NGRAPH_NOP_ENABLE}")
-message(STATUS "NGRAPH_GPUH_ENABLE:             ${NGRAPH_GPUH_ENABLE}")
-message(STATUS "NGRAPH_GENERIC_CPU_ENABLE:      ${NGRAPH_GENERIC_CPU_ENABLE}")
-message(STATUS "NGRAPH_DEBUG_ENABLE:            ${NGRAPH_DEBUG_ENABLE}")
-message(STATUS "NGRAPH_DEPRECATED_ENABLE:       ${NGRAPH_DEPRECATED_ENABLE}")
-message(STATUS "NGRAPH_ONNX_IMPORT_ENABLE:      ${NGRAPH_ONNX_IMPORT_ENABLE}")
-message(STATUS "NGRAPH_DEX_ONLY:                ${NGRAPH_DEX_ONLY}")
-message(STATUS "NGRAPH_ENABLE_CPU_CONV_AUTO:    ${NGRAPH_ENABLE_CPU_CONV_AUTO}")
-message(STATUS "NGRAPH_CODE_COVERAGE_ENABLE:    ${NGRAPH_CODE_COVERAGE_ENABLE}")
-message(STATUS "NGRAPH_LIB_VERSIONING_ENABLE:   ${NGRAPH_LIB_VERSIONING_ENABLE}")
-message(STATUS "NGRAPH_PYTHON_BUILD_ENABLE:     ${NGRAPH_PYTHON_BUILD_ENABLE}")
-message(STATUS "NGRAPH_USE_PREBUILT_LLVM:       ${NGRAPH_USE_PREBUILT_LLVM}")
-message(STATUS "NGRAPH_PLAIDML_ENABLE:          ${NGRAPH_PLAIDML_ENABLE}")
-message(STATUS "NGRAPH_DISTRIBUTED_ENABLE:      ${NGRAPH_DISTRIBUTED_ENABLE}")
-message(STATUS "NGRAPH_JSON_ENABLE:             ${NGRAPH_JSON_ENABLE}")
+NORMALIZE_BOOL(NGRAPH_STATIC_LIB_ENABLE)
+NORMALIZE_BOOL(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
+NORMALIZE_BOOL(NGRAPH_CPU_STATIC_LIB_ENABLE)
+NORMALIZE_BOOL(NGRAPH_DYNAMIC_COMPONENTS_ENABLE)
+
+message(STATUS "NGRAPH_CXX_STANDARD:                  ${NGRAPH_CXX_STANDARD}")
+message(STATUS "NGRAPH_UNIT_TEST_ENABLE:              ${NGRAPH_UNIT_TEST_ENABLE}")
+message(STATUS "NGRAPH_TOOLS_ENABLE:                  ${NGRAPH_TOOLS_ENABLE}")
+message(STATUS "NGRAPH_CPU_ENABLE:                    ${NGRAPH_CPU_ENABLE}")
+message(STATUS "NGRAPH_USE_LEGACY_MKLDNN:             ${NGRAPH_USE_LEGACY_MKLDNN}")
+message(STATUS "NGRAPH_MLIR_ENABLE:                   ${NGRAPH_MLIR_ENABLE}")
+message(STATUS "NGRAPH_INTELGPU_ENABLE:               ${NGRAPH_INTELGPU_ENABLE}")
+message(STATUS "NGRAPH_INTERPRETER_ENABLE:            ${NGRAPH_INTERPRETER_ENABLE}")
+message(STATUS "NGRAPH_NOP_ENABLE:                    ${NGRAPH_NOP_ENABLE}")
+message(STATUS "NGRAPH_GENERIC_CPU_ENABLE:            ${NGRAPH_GENERIC_CPU_ENABLE}")
+message(STATUS "NGRAPH_DEBUG_ENABLE:                  ${NGRAPH_DEBUG_ENABLE}")
+message(STATUS "NGRAPH_DEPRECATED_ENABLE:             ${NGRAPH_DEPRECATED_ENABLE}")
+message(STATUS "NGRAPH_ONNX_IMPORT_ENABLE:            ${NGRAPH_ONNX_IMPORT_ENABLE}")
+message(STATUS "NGRAPH_DEX_ONLY:                      ${NGRAPH_DEX_ONLY}")
+message(STATUS "NGRAPH_ENABLE_CPU_CONV_AUTO:          ${NGRAPH_ENABLE_CPU_CONV_AUTO}")
+message(STATUS "NGRAPH_CODE_COVERAGE_ENABLE:          ${NGRAPH_CODE_COVERAGE_ENABLE}")
+message(STATUS "NGRAPH_LIB_VERSIONING_ENABLE:         ${NGRAPH_LIB_VERSIONING_ENABLE}")
+message(STATUS "NGRAPH_PYTHON_BUILD_ENABLE:           ${NGRAPH_PYTHON_BUILD_ENABLE}")
+message(STATUS "NGRAPH_USE_PREBUILT_LLVM:             ${NGRAPH_USE_PREBUILT_LLVM}")
+message(STATUS "NGRAPH_PLAIDML_ENABLE:                ${NGRAPH_PLAIDML_ENABLE}")
+message(STATUS "NGRAPH_DISTRIBUTED_ENABLE:            ${NGRAPH_DISTRIBUTED_ENABLE}")
+message(STATUS "NGRAPH_JSON_ENABLE:                   ${NGRAPH_JSON_ENABLE}")
+message(STATUS "NGRAPH_STATIC_LIB_ENABLE:             ${NGRAPH_STATIC_LIB_ENABLE}")
+message(STATUS "NGRAPH_INTERPRETER_STATIC_LIB_ENABLE: ${NGRAPH_INTERPRETER_STATIC_LIB_ENABLE}")
+message(STATUS "NGRAPH_CPU_STATIC_LIB_ENABLE:         ${NGRAPH_CPU_STATIC_LIB_ENABLE}")
+message(STATUS "NGRAPH_PLAIDML_STATIC_LIB_ENABLE:     ${NGRAPH_PLAIDML_STATIC_LIB_ENABLE}")
+message(STATUS "NGRAPH_DYNAMIC_COMPONENTS_ENABLE:     ${NGRAPH_DYNAMIC_COMPONENTS_ENABLE}")
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
@@ -297,11 +319,12 @@ set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DOCDIR}")
 set(NGRAPH_INSTALL_BIN "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}")
 if (LINUX)
     if (DEFINED NGRAPH_RPATH)
+        set(CMAKE_BUILD_RPATH "$ORIGIN:${NGRAPH_RPATH}")
         set(CMAKE_INSTALL_RPATH "$ORIGIN:${NGRAPH_RPATH}")
     else()
+        set(CMAKE_BUILD_RPATH "$ORIGIN")
         set(CMAKE_INSTALL_RPATH "$ORIGIN")
     endif()
-    set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 endif()
 
 #-----------------------------------------------------------------------------------------------
@@ -374,6 +397,23 @@ if (NGRAPH_CPU_ENABLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")
 endif()
 
+if (NGRAPH_USE_LEGACY_MKLDNN)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_USE_LEGACY_MKLDNN")
+endif()
+
+if (NGRAPH_MLIR_ENABLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_MLIR_ENABLE")
+    set(NGRAPH_MLIR_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/contrib/mlir)
+endif()
+
+if (NGRAPH_STATIC_LIB_ENABLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_STATIC_LIB_ENABLE")
+endif()
+
+if (NGRAPH_DYNAMIC_COMPONENTS_ENABLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_DYNAMIC_COMPONENTS_ENABLE")
+endif()
+
 if (NGRAPH_PLAIDML_ENABLE)
     find_package(PlaidML CONFIG)
     if (NOT PLAIDML_FOUND)
@@ -396,17 +436,31 @@ if (NOT DEFINED NGRAPH_TBB_ENABLE)
     set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
 endif()
 
-add_custom_target(style-check
-    COMMAND ${CMAKE_COMMAND}
-    -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-    -P ${CMAKE_MODULE_PATH}style_check.cmake
-)
+# Since UNIX and APPLE support Bash we can use a Bash script to do the clang-format functions
+# This is much faster than the cmake method
+if (UNIX OR APPLE)
+    add_custom_target(style-check COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/check-code-format.sh)
+    add_custom_target(style-apply COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/apply-code-format.sh)
+    add_custom_target(style COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/apply-code-format.sh)
+else()
+    add_custom_target(style-check
+        COMMAND ${CMAKE_COMMAND}
+        -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+        -P ${CMAKE_MODULE_PATH}style_check.cmake
+    )
 
-add_custom_target(style-apply
-    COMMAND ${CMAKE_COMMAND}
-    -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-    -P ${CMAKE_MODULE_PATH}style_apply.cmake
-)
+    add_custom_target(style-apply
+        COMMAND ${CMAKE_COMMAND}
+        -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+        -P ${CMAKE_MODULE_PATH}style_apply.cmake
+    )
+
+    add_custom_target(style
+        COMMAND ${CMAKE_COMMAND}
+        -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+        -P ${CMAKE_MODULE_PATH}style_apply.cmake
+    )
+endif()
 
 add_custom_target(fix-mode
     COMMAND ${CMAKE_COMMAND}
@@ -490,13 +544,21 @@ if(NGRAPH_CPU_ENABLE OR NGRAPH_GENERIC_CPU_ENABLE)
     include(cmake/external_eigen.cmake)
 endif()
 if(NGRAPH_CPU_ENABLE)
-    include(cmake/external_mkldnn.cmake)
+    if(NGRAPH_USE_LEGACY_MKLDNN)
+        include(cmake/external_mkldnn.cmake)
+        set(NGRAPH_DEX_ONLY TRUE)
+    else()
+        include(cmake/external_mkldnn_v1.cmake)
+    endif()
+endif()
+if (NGRAPH_MLIR_ENABLE)
+    include(cmake/external_mlir.cmake)
 endif()
 if(NGRAPH_INTELGPU_ENABLE)
     include(cmake/external_cldnn.cmake)
 endif()
 
-if ((NGRAPH_GPU_ENABLE OR NGRAPH_CPU_ENABLE) AND NOT NGRAPH_DEX_ONLY)
+if (NGRAPH_CPU_ENABLE AND NOT NGRAPH_DEX_ONLY)
     set(NGRAPH_CODEGEN_ENABLE TRUE)
 else()
     set(NGRAPH_CODEGEN_ENABLE FALSE)
@@ -508,7 +570,7 @@ if(NGRAPH_CODEGEN_ENABLE)
     elseif (NOT MSVS)
         include(cmake/external_llvm.cmake)
     else()
-        message(FATAL_ERROR "CODEGEN not support on Windows!")
+        message(FATAL_ERROR "CODEGEN is not supported on Windows!")
     endif()
 endif()
 

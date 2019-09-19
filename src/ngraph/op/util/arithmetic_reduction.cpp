@@ -39,10 +39,15 @@ op::util::ArithmeticReduction::ArithmeticReduction(const Output<Node>& arg,
 {
 }
 
+bool op::util::ArithmeticReduction::reduction_axes_constant() const
+{
+    return input_value(1).get_node()->is_type<op::Constant>();
+}
+
 const AxisSet op::util::ArithmeticReduction::get_reduction_axes() const
 {
     AxisSet axes;
-    if (auto const_op = dynamic_pointer_cast<op::Constant>(get_argument(1)))
+    if (auto const_op = as_type<op::Constant>(input_value(1).get_node()))
     {
         axes = const_op->get_axis_set_val();
     }
@@ -64,7 +69,7 @@ void op::util::ArithmeticReduction::validate_and_infer_types()
 
     PartialShape result_shape{PartialShape::dynamic()};
 
-    if (input_rank.is_static())
+    if (input_rank.is_static() && reduction_axes_constant())
     {
         std::vector<Dimension> dims;
 
@@ -92,6 +97,8 @@ void op::util::ArithmeticReduction::validate_and_infer_types()
 
         result_shape = PartialShape(dims);
     }
+
+    set_input_is_relevant_to_shape(1);
 
     set_output_type(0, get_input_element_type(0), result_shape);
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ TEST(event_tracing, event_file)
     // Set the environment variable to ensure logging
     ngraph::Event::enable_event_tracing();
     std::vector<std::thread> threads;
-    std::mutex mtx;
     for (auto i = 0; i < 10; i++)
     {
         int id = i;

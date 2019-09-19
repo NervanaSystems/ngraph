@@ -15,16 +15,13 @@
 //*****************************************************************************
 
 #include "ngraph/op/sum.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/op/broadcast.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-const string op::Sum::type_name{"Sum"};
-
-op::Sum::Sum()
-{
-}
+constexpr NodeTypeInfo op::Sum::type_info;
 
 op::Sum::Sum(const Output<Node>& arg, const AxisSet& reduction_axes)
     : ArithmeticReduction(arg, reduction_axes)
@@ -48,8 +45,13 @@ void op::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
-    auto& x_shape = input(0).get_shape();
+    auto x = input_value(0);
+    auto& x_shape = x.get_shape();
 
     adjoints.add_delta(x, make_shared<op::Broadcast>(delta, x_shape, get_reduction_axes()));
+}
+
+shared_ptr<Node> op::Sum::get_default_value() const
+{
+    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
 }

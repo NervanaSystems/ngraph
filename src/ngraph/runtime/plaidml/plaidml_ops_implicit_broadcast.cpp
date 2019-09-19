@@ -30,9 +30,11 @@ namespace ngraph
     }
 }
 
-ngraph::runtime::plaidml::op::ImplicitBroadcast::ImplicitBroadcast(std::shared_ptr<Node> input,
+constexpr ngraph::NodeTypeInfo ngraph::runtime::plaidml::op::ImplicitBroadcast::type_info;
+
+ngraph::runtime::plaidml::op::ImplicitBroadcast::ImplicitBroadcast(const Output<Node>& input,
                                                                    const Shape& shape)
-    : Op{"ImplicitBroadcast", {input}}
+    : Op{{input}}
     , m_shape{shape}
 {
     constructor_validate_and_infer_types();

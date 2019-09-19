@@ -41,24 +41,7 @@
 #include <CPP/softmax.hpp>
 #include <CPP/topology.hpp>
 
-#include "ngraph/pass/algebraic_simplification.hpp"
-#include "ngraph/pass/batch_fusion.hpp"
-#include "ngraph/pass/core_fusion.hpp"
-#include "ngraph/pass/cse.hpp"
-#include "ngraph/pass/fused_op_decomposition.hpp"
-#include "ngraph/pass/get_output_element_elimination.hpp"
-#include "ngraph/pass/implicit_broadcast_elimination.hpp"
-#include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/nop_elimination.hpp"
-#include "ngraph/pass/reshape_elimination.hpp"
-#include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_executable.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
-#include "ngraph/runtime/intelgpu/visualize_tree.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_backend_visibility.hpp"
 
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
@@ -86,10 +69,13 @@
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
-#include "ngraph/op/fused/hard_sigmoid.hpp"
-#include "ngraph/op/fused/leaky_relu.hpp"
+#include "ngraph/op/fused/group_conv_transpose.hpp"
+#include "ngraph/op/fused/gru_cell.hpp"
+#include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/mvn.hpp"
-#include "ngraph/op/fused/normalize.hpp"
+#include "ngraph/op/fused/normalize_l2.hpp"
+#include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/shuffle_channels.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
@@ -119,12 +105,37 @@
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/batch_fusion.hpp"
+#include "ngraph/pass/core_fusion.hpp"
+#include "ngraph/pass/cse.hpp"
+#include "ngraph/pass/fused_op_decomposition.hpp"
+#include "ngraph/pass/get_output_element_elimination.hpp"
+#include "ngraph/pass/implicit_broadcast_elimination.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/nop_elimination.hpp"
+#include "ngraph/pass/reshape_elimination.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_executable.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
+#include "ngraph/runtime/intelgpu/visualize_tree.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 using intelgpu_space = runtime::intelgpu::IntelGPULayout;
+
+extern "C" INTELGPU_BACKEND_API void ngraph_register_intelgpu_backend()
+{
+    runtime::BackendManager::register_backend("INTELGPU", [](const std::string& config) {
+        return std::make_shared<runtime::intelgpu::IntelGPUBackend>();
+    });
+}
 
 // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
 // Abs,
@@ -460,7 +471,7 @@ shared_ptr<runtime::Executable>
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
@@ -1815,7 +1826,8 @@ shared_ptr<runtime::Executable>
 
                 if ((pad_below.at(0) == pad_above.at(0)) && (pad_below.at(1) == pad_above.at(1)))
                 {
-                    // symmetric padding case temporally excluded (custom kernel executed) due to stability issues
+                    // symmetric padding case temporally excluded (custom kernel executed) due to
+                    // stability issues
                     const CoordinateDiff& pad_below_for = conv_op->get_padding_below_forward();
                     input_offset_xy = -pad_below_for.at(0);
                 }
@@ -2053,6 +2065,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::DepthToSpace:
         case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::DynPad:
+        case OP_TYPEID::DynReplaceSlice:
         case OP_TYPEID::DynReshape:
         case OP_TYPEID::DynSlice:
         case OP_TYPEID::Elu:
@@ -2061,15 +2074,19 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::FakeQuantize:
         case OP_TYPEID::Gather:
         case OP_TYPEID::GatherND:
+        case OP_TYPEID::Gelu:
         case OP_TYPEID::GenerateMask:
         case OP_TYPEID::GRN:
+        case OP_TYPEID::GroupConvolutionTranspose:
+        case OP_TYPEID::GRUCell:
         case OP_TYPEID::HardSigmoid:
-        case OP_TYPEID::LeakyRelu:
+        case OP_TYPEID::LSTMCell:
+        case OP_TYPEID::MatMul:
         case OP_TYPEID::MVN:
-        case OP_TYPEID::Normalize:
+        case OP_TYPEID::NormalizeL2:
         case OP_TYPEID::PRelu:
         case OP_TYPEID::Passthrough:
-        case OP_TYPEID::QuantizedAvgPool:
+        case OP_TYPEID::RNNCell:
         case OP_TYPEID::QuantizedConvolution:
         case OP_TYPEID::QuantizedConvolutionBias:
         case OP_TYPEID::QuantizedConvolutionBiasAdd:
@@ -2077,12 +2094,14 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::QuantizedConvolutionRelu:
         case OP_TYPEID::QuantizedDot:
         case OP_TYPEID::QuantizedDotBias:
-        case OP_TYPEID::QuantizedMaxPool:
+        case OP_TYPEID::Recv:
+        case OP_TYPEID::Range:
         case OP_TYPEID::ReplaceSlice:
         case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::ScaleShift:
         case OP_TYPEID::ScatterAdd:
         case OP_TYPEID::ScatterNDAdd:
+        case OP_TYPEID::Send:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::ShuffleChannels:
         case OP_TYPEID::SpaceToDepth:
@@ -2093,12 +2112,13 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Tile:
         case OP_TYPEID::Transpose:
         case OP_TYPEID::Unsqueeze:
+        case OP_TYPEID::Xor:
         default:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
                                  "' in IntelGPU back end.");
         }
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
         }
@@ -2181,12 +2201,17 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::DepthToSpace:
     case OP_TYPEID::Elu:
     case OP_TYPEID::FakeQuantize:
+    case OP_TYPEID::Gelu:
     case OP_TYPEID::Gemm:
     case OP_TYPEID::GRN:
-    case OP_TYPEID::LeakyRelu:
+    case OP_TYPEID::GroupConvolutionTranspose:
+    case OP_TYPEID::GRUCell:
+    case OP_TYPEID::LSTMCell:
+    case OP_TYPEID::MatMul:
     case OP_TYPEID::MVN:
-    case OP_TYPEID::Normalize:
+    case OP_TYPEID::NormalizeL2:
     case OP_TYPEID::PRelu:
+    case OP_TYPEID::RNNCell:
     case OP_TYPEID::ScaleShift:
     case OP_TYPEID::ShuffleChannels:
     case OP_TYPEID::SpaceToDepth:

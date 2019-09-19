@@ -449,7 +449,7 @@ void pass::CoreFusion::construct_reshape_broadcast()
         auto reshape1_m = static_pointer_cast<op::Reshape>(broadcast_m->get_argument(0));
         auto input_m = m.get_pattern_map()[input];
 
-        //it doesn't seem to make sense to support shapes : [0] or [1]
+        // it doesn't seem to make sense to support shapes : [0] or [1]
         if (input_m->get_shape().size() != 1 || input_m->get_shape().at(0) < 2)
         {
             NGRAPH_DEBUG << "input_m isn't a scalar or contains zero dimension";
@@ -458,8 +458,8 @@ void pass::CoreFusion::construct_reshape_broadcast()
 
         size_t dim = input_m->get_shape().at(0);
 
-        //We are going to support the most common case where broadcast doesn't add 1-dimensions
-        //since it's also very simple to implement
+        // We are going to support the most common case where broadcast doesn't add 1-dimensions
+        // since it's also very simple to implement
         size_t dim_one_count = 0;
         for (auto d : reshape1_m->get_shape())
         {
@@ -503,13 +503,13 @@ void pass::CoreFusion::construct_reshape_broadcast()
     this->add_matcher(m, callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
-//   conv(56w3s1)                        conv(28w3s2)
-//	      |                           	    |
+//   conv(56w3s1)                       conv(28w3s2)
+//	      |                                |
 //   conv(56w1s1)              ==>      conv(28w1s1)
 //       |                                 |
-//elt------------56               elt------------pool(28s2)
-// |            |                  |               |
-//conv(28w1s2) conv(28w1s2)     conv(28w1s1)  conv(28w1s1)
+// elt------------56               elt------------pool(28s2)
+//   |            |                  |               |
+// conv(28w1s2) conv(28w1s2)     conv(28w1s1)  conv(28w1s1)
 void pass::CoreFusion::construct_optimized_strided_conv()
 {
     Shape win_size_1{1, 1, 1, 1};
@@ -570,7 +570,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
         {
             if (is_used(n.get()))
             {
-                if (dynamic_pointer_cast<op::Convolution>(n) == nullptr)
+                if (!n->is_type<op::Convolution>())
                 {
                     NGRAPH_DEBUG << "Not all live users of element wise operation are Convolution";
                     return false;
@@ -821,16 +821,15 @@ void pass::CoreFusion::construct_zero_padded_reshaped_conv()
         pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
 
-        auto pad_value_op = std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[pad_value]);
+        auto pad_value_op = as_type_ptr<ngraph::op::Constant>(pattern_map[pad_value]);
         if (!pad_value_op)
         {
             NGRAPH_DEBUG << "Pad value must be a constant";
             return false;
         }
 
-        const auto& matched_conv =
-            std::static_pointer_cast<ngraph::op::Convolution>(pattern_map[conv_label]);
-        const auto& matched_pad = std::static_pointer_cast<ngraph::op::Pad>(pattern_map[pad_label]);
+        const auto& matched_conv = as_type_ptr<ngraph::op::Convolution>(pattern_map[conv_label]);
+        const auto& matched_pad = as_type_ptr<ngraph::op::Pad>(pattern_map[pad_label]);
         const auto& matched_reshape =
             std::static_pointer_cast<ngraph::op::Reshape>(pattern_map[reshape_label]);
 
@@ -905,7 +904,7 @@ void pass::CoreFusion::construct_zero_padded_conv()
         pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
 
-        auto pad_value_op = std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[pad_value]);
+        auto pad_value_op = as_type_ptr<ngraph::op::Constant>(pattern_map[pad_value]);
         if (!pad_value_op)
         {
             NGRAPH_DEBUG << "Pad value must be a constant";
@@ -976,7 +975,7 @@ void pass::CoreFusion::construct_zero_padded_conv_backprop_filters()
         pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
 
-        auto pad_value_op = std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[pad_value]);
+        auto pad_value_op = as_type_ptr<ngraph::op::Constant>(pattern_map[pad_value]);
         if (!pad_value_op)
         {
             NGRAPH_DEBUG << "Pad value must be a constant";
@@ -1036,7 +1035,7 @@ void pass::CoreFusion::construct_conv_bias()
     auto pbcast = make_shared<op::Broadcast>(pbias, shape, AxisSet{0, 1, 2, 3});
     auto pbcast_label = make_shared<pattern::op::Label>(pbcast, nullptr, NodeVector{pbcast});
     auto reshape_pred = [](shared_ptr<Node> node) -> bool {
-        if (auto reshape = dynamic_pointer_cast<op::Reshape>(node))
+        if (auto reshape = as_type_ptr<op::Reshape>(node))
         {
             auto ishape = reshape->get_input_shape(0);
             auto oshape = reshape->get_shape();
@@ -1066,7 +1065,7 @@ void pass::CoreFusion::construct_conv_bias()
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        auto conv_m = dynamic_pointer_cast<op::Convolution>(m.get_match_root()->get_argument(0));
+        auto conv_m = as_type_ptr<op::Convolution>(m.get_match_root()->get_argument(0));
 
         if (conv_m == nullptr)
         {
@@ -1138,7 +1137,7 @@ void pass::CoreFusion::construct_conv_bias_add()
 
         auto add_m = m.get_match_root();
         auto pattern_map = m.get_pattern_map();
-        auto conv_m = dynamic_pointer_cast<op::ConvolutionBias>(add_m->get_argument(1));
+        auto conv_m = as_type_ptr<op::ConvolutionBias>(add_m->get_argument(1));
         auto add_input_m = add_m->get_argument(0);
 
         if (!conv_m)

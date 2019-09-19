@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <mkldnn.hpp>
 #include "ngraph/op/op.hpp"
 #include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 #include "ngraph/runtime/cpu/op/rnn_utils.hpp"
@@ -25,34 +26,43 @@ namespace ngraph
 {
     namespace op
     {
-        // This is RNN op, which is formed by the fusion of multiple RNN cells ( LSTM/ GRU/ vanilla RNN)
-        // across multiple time slices
+        // This is RNN op, which is formed by the fusion of multiple RNN cells ( LSTM/ GRU/ vanilla
+        // RNN) across multiple time slices
 
         // INPUTS:
-        // [0] - {X0, X1...., Xt} input tensor of layout TNC, Shape{sequence length*batch_size, feature_size}
-        // [1] - recurrent state tensors {ht_1 | ct_1} of Shape{sequence length*batch_size, feature_size}
-        // [2] - initializer for the input weights matrix, used for the linear transformation of the inputs.
-        // [3] - initializer for the recurrent weights matrix, used for the linear transformation of the recurrent state.
+        // [0] - {X0, X1...., Xt} input tensor of layout TNC, Shape{sequence length*batch_size,
+        //       feature_size}
+        // [1] - recurrent state tensors {ht_1 | ct_1} of Shape{sequence length*batch_size,
+        //       feature_size}
+        // [2] - initializer for the input weights matrix, used for the linear transformation of the
+        //       inputs.
+        // [3] - initializer for the recurrent weights matrix, used for the linear transformation of
+        //       the recurrent state.
         // [4] - Initializer for the bias vector w.r.to inputs + hidden state (ibh_bias + hbh_bias)
         // number_of_timesteps - number of unrolled cells up to timestep t.
         // num_gates_per_cell - number of gates per RNN cell, LSTM = 4, GRU = 3, vanilla RNN = 1
         // src_sequence_length - this will be same as number_of_timesteps
         // src_layer_feature_size - feature size w.r.to input tensor
         // src_iter_feature_size - feature size w.r.to hidden state
-        // num_cell_states - number of recurrent state tensor states , LSTM = 2, GRU = 1, vanilla RNN = 1
+        // num_cell_states - number of recurrent state tensor states , LSTM = 2, GRU = 1, vanilla
+        // RNN = 1
 
         // OUTPUT VALUE: A tuple with the following structure:
         //   [0] - ht, output tensor with shape (sequence_length*batch_size, feature_size) .
-        //   [1] - {ht | ct} output recurrent state tensor with the same shape as states i.e (sequence_length*batch_size, feature_size)
+        //   [1] - {ht | ct} output recurrent state tensor with the same shape as states i.e
+        //         (sequence_length*batch_size, feature_size)
 
         class Rnn : public Op
         {
         public:
-            CPU_BACKEND_API Rnn(std::shared_ptr<Node> src_layer,
-                                std::shared_ptr<Node> src_iter,
-                                std::shared_ptr<Node> weights_layer,
-                                std::shared_ptr<Node> weights_iter,
-                                std::shared_ptr<Node> bias,
+            static constexpr NodeTypeInfo type_info{"Rnn", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+#if MKLDNN_VERSION_MAJOR < 1
+            CPU_BACKEND_API Rnn(const Output<Node>& src_layer,
+                                const Output<Node>& src_iter,
+                                const Output<Node>& weights_layer,
+                                const Output<Node>& weights_iter,
+                                const Output<Node>& bias,
                                 size_t num_timesteps,
                                 size_t num_gates_per_cell,
                                 size_t src_sequence_length,
@@ -60,6 +70,21 @@ namespace ngraph
                                 size_t direction,
                                 size_t num_fused_layers,
                                 ngraph::runtime::cpu::rnn_utils::rnntype rnn_type);
+#else
+            CPU_BACKEND_API Rnn(const Output<Node>& src_layer,
+                                const Output<Node>& src_iter,
+                                const Output<Node>& src_iter_c,
+                                const Output<Node>& weights_layer,
+                                const Output<Node>& weights_iter,
+                                const Output<Node>& bias,
+                                size_t num_timesteps,
+                                size_t num_gates_per_cell,
+                                size_t src_sequence_length,
+                                size_t num_cell_states,
+                                size_t direction,
+                                size_t num_fused_layers,
+                                ngraph::runtime::cpu::rnn_utils::rnntype rnn_type);
+#endif
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

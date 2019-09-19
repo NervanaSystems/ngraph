@@ -70,7 +70,7 @@ namespace ngraph
                                         offset,
                                         arg_buffer_index,
                                         out_buffer_index](CPURuntimeContext* ctx,
-                                                          CPUExecutionContext* ectx) {
+                                                          CPUExecutionContext* /* ectx */) {
                             if (ctx->buffer_data[out_buffer_index] <
                                     ctx->buffer_data[arg_buffer_index] ||
                                 ctx->buffer_data[out_buffer_index] >=
@@ -93,6 +93,8 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    QUERY_SCRATCHPAD_4ARGS(slice, input_desc, result_desc, lower_bounds, out_shape);
+
                     // Slice needs 3 primitives: input, result, and reorder.
                     auto slice_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(slice_index);
@@ -105,10 +107,12 @@ namespace ngraph
                                     slice_index,
                                     arg_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_slice(ctx->mkldnn_primitives,
+                            mkldnn_emitter->build_slice(ctx->mkldnn_memories,
+                                                        ctx->mkldnn_primitives,
+                                                        ctx->mkldnn_scratchpad_mds,
                                                         input_desc,
                                                         result_desc,
                                                         lower_bounds,
@@ -120,7 +124,9 @@ namespace ngraph
                             ctx, deps[0], ctx->buffer_data[arg_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, slice_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, slice_index, deps, cpu::mkldnn_utils::OpType::SLICE);
                     };
 
                     functors.emplace_back(functor);
@@ -135,7 +141,7 @@ namespace ngraph
                         SELECT_KERNEL_BY_RANK(kernel,
                                               args[0].get_element_type(),
                                               arg_shape.size(),
-                                              runtime::cpu::kernel::strided_slice);
+                                              runtime::cpu::kernel::strided_slice)
 
                         auto functor = [&,
                                         kernel,
@@ -165,7 +171,7 @@ namespace ngraph
                         SELECT_KERNEL_BY_RANK(kernel,
                                               args[0].get_element_type(),
                                               arg_shape.size(),
-                                              runtime::cpu::kernel::slice);
+                                              runtime::cpu::kernel::slice)
 
                         auto functor = [&,
                                         kernel,
@@ -187,7 +193,7 @@ namespace ngraph
                 }
             }
 
-            REGISTER_OP_BUILDER(Slice);
+            void register_builders_slice_cpp() { REGISTER_OP_BUILDER(Slice); }
         }
     }
 }

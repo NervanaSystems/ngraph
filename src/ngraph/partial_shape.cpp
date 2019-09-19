@@ -275,3 +275,16 @@ bool PartialShape::broadcast_merge_into(PartialShape& dst,
         return success;
     }
 }
+
+bool PartialShape::all_non_negative() const
+{
+    for (auto& d : m_dimensions)
+    {
+        if (d.is_static() && int64_t(d) < 0)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}

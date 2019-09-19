@@ -58,20 +58,19 @@ std::shared_ptr<Function>
             continue;
         }
 
-        NodeVector new_args = old_node->get_arguments();
-
-        for (size_t i = 0; i < new_args.size(); i++)
+        OutputVector new_args;
+        for (auto input : old_node->inputs())
         {
-            new_args[i] = m[new_args[i].get()];
+            auto output = input.get_source_output();
+            new_args.push_back(output.for_node(m[output.get_node()]));
         }
-
-        m[old_node.get()] = old_node->copy_with_new_args(new_args);
+        m[old_node.get()] = old_node->copy_with_new_inputs(new_args);
     }
 
     ParameterVector new_parameters = f->get_parameters();
     for (size_t i = 0; i < new_parameters.size(); i++)
     {
-        new_parameters[i] = std::dynamic_pointer_cast<op::Parameter>(m[new_parameters[i].get()]);
+        new_parameters[i] = as_type_ptr<op::Parameter>(m[new_parameters[i].get()]);
 
         // If the replacement for a Parameter is not itself a Parameter, we must have replaced it
         // with a constant. We will insert a dead Parameter into the clone's parameters, in order

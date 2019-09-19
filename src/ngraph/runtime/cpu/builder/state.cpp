@@ -42,11 +42,11 @@ namespace ngraph
                 size_t element_count = out[0].get_size();
 
                 auto arg2_buffer_index =
-                    external_function->get_buffer_index(args[2].get_name()); //use_seed
+                    external_function->get_buffer_index(args[2].get_name()); // use_seed
                 auto arg3_buffer_index =
-                    external_function->get_buffer_index(args[3].get_name()); //seed
+                    external_function->get_buffer_index(args[3].get_name()); // seed
                 auto arg4_buffer_index =
-                    external_function->get_buffer_index(args[4].get_name()); //prob
+                    external_function->get_buffer_index(args[4].get_name()); // prob
 
                 auto seed_attr = gm->get_use_seed() ? gm->get_seed() : 0;
                 auto index = external_function->add_state(
@@ -62,7 +62,7 @@ namespace ngraph
                                arg2_buffer_index,
                                arg3_buffer_index,
                                arg4_buffer_index](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
+                                                  CPUExecutionContext* /* ectx */) {
                         bool training = static_cast<bool>(
                             static_cast<float*>(ctx->buffer_data[arg_buffer_index])[0]);
                         // TODO: get shape when required
@@ -101,7 +101,7 @@ namespace ngraph
                                arg2_buffer_index,
                                arg3_buffer_index,
                                arg4_buffer_index](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
+                                                  CPUExecutionContext* /* ectx */) {
                         bool training = static_cast<bool>(
                             static_cast<double*>(ctx->buffer_data[arg_buffer_index])[0]);
                         // TODO: get shape when required
@@ -139,7 +139,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(GenerateMask);
+            void register_builders_state_cpp() { REGISTER_OP_BUILDER(GenerateMask); }
         }
     }
 }

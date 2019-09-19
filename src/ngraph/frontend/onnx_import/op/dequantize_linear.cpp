@@ -14,15 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cstddef>
 #include <cstdint>
-#include <iterator>
 #include <memory>
 
-#include "exceptions.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/make_constant.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/shape.hpp"
@@ -87,7 +83,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

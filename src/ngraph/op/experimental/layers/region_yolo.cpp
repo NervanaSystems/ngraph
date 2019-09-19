@@ -19,7 +19,9 @@
 using namespace std;
 using namespace ngraph;
 
-op::RegionYolo::RegionYolo(const shared_ptr<Node>& input,
+constexpr NodeTypeInfo op::RegionYolo::type_info;
+
+op::RegionYolo::RegionYolo(const Output<Node>& input,
                            const size_t num_coords,
                            const size_t num_classes,
                            const size_t num_regions,
@@ -27,7 +29,7 @@ op::RegionYolo::RegionYolo(const shared_ptr<Node>& input,
                            const vector<int64_t>& mask,
                            const int axis,
                            const int end_axis)
-    : Op("RegionYolo", check_single_output_args({input}))
+    : Op({input})
     , m_num_coords(num_coords)
     , m_num_classes(num_classes)
     , m_num_regions(num_regions)
@@ -55,11 +57,11 @@ void op::RegionYolo::validate_and_infer_types()
         if (m_do_softmax)
         {
             size_t flat_dim = 1;
-            for (size_t i = 0; i < m_axis; i++)
+            for (int64_t i = 0; i < m_axis; i++)
             {
                 output_shape.push_back(input_shape[i]);
             }
-            for (size_t i = m_axis; i < end_axis + 1; i++)
+            for (int64_t i = m_axis; i < end_axis + 1; i++)
             {
                 flat_dim *= input_shape[i];
             }

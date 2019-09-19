@@ -50,7 +50,7 @@ namespace ngraph
                     SELECT_KERNEL_BY_RANK(kernel,
                                           args[0].get_element_type(),
                                           arg_shape.size(),
-                                          runtime::cpu::kernel::reverse_sequence_sli32);
+                                          runtime::cpu::kernel::reverse_sequence_sli32)
                 }
                 else
                 {
@@ -79,7 +79,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(ReverseSequence);
+            void register_builders_reverse_sequence_cpp() { REGISTER_OP_BUILDER(ReverseSequence); }
         }
     }
 }
