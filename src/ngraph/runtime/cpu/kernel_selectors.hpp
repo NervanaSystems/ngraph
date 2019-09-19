@@ -44,9 +44,9 @@
 #define EXPAND_ET11_AND_RANK7(K, KV, ET, R, S, ...)                                                \
     EXPAND_ET11(K, KV, ET, EXPAND_RANK7, R, S, ##__VA_ARGS__)
 #define EXPAND_RANK5_AND_ET4(K, KV, R, ET, S, ...)                                                 \
-    EXPAND_RANK5(K, KV, R, EXPAND_ET4, ET, S, ##__VA_ARGS__))
+    EXPAND_RANK5(K, KV, R, EXPAND_ET4, ET, S, ##__VA_ARGS__)
 #define EXPAND_RANK35_AND_ET4(K, KV, R1, R2, ET, S)                                                \
-    EXPAND_RANK3(K, KV, R1, EXPAND_RANK5_AND_ET4, R2, ET, S))
+    EXPAND_RANK3(K, KV, R1, EXPAND_RANK5_AND_ET4, R2, ET, S)
 #define EXPAND_ETS_AND_RANK7(K, KV, ET, R, S, ...)                                                 \
     EXPAND_ETS(K, KV, ET, EXPAND_RANK7, R, S, ##__VA_ARGS__)
 
