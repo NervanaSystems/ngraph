@@ -53,13 +53,14 @@ namespace ngraph
 
                     auto axis = node.get_attribute_value<std::int64_t>("axis", -1);
 
-                     // Accepted range for axis is [-r-1, r] where r = rank(indices). Validate against rank+1.
-                    std::size_t valid_axis =
-<<<<<<< HEAD
-                        common::validate_axis(node, axis, indices_shape.size(), -indices_shape.size()-1, indices_shape.size());
-=======
-                        common::validate_axis(node, axis, indices_shape.size() + 1);
->>>>>>> Added validation for axis/axes.
+                    // Accepted range for axis is [-r-1, r] where r = rank(indices). Validate
+                    // against rank+1.
+                    std::size_t valid_axis = common::validate_axis(node,
+                                                                   axis,
+                                                                   indices_shape.size(),
+                                                                   -indices_shape.size() - 1,
+                                                                   indices_shape.size());
+		    
 
                     auto constant_depth = std::dynamic_pointer_cast<ngraph::op::Constant>(depth);
 

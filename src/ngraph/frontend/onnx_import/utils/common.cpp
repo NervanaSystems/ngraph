@@ -48,23 +48,50 @@ namespace ngraph
 
             std::size_t validate_axis(const ngraph::onnx_import::Node& node,
                                       std::int64_t axis,
-                                      std::size_t tensor_rank)
+                                      std::int64_t tensor_rank)
             {
-                std::int64_t new_axis = axis;
+                // Accepted range of value for axis is [-tensor_rank, tensor_rank-1].
+                NGRAPH_CHECK(((axis >= -tensor_rank) && (axis <= tensor_rank - 1)),
+                             node.get_description(),
+                             "Parameter axis ",
+                             axis,
+                             " out of the tensor rank [-",
+                             tensor_rank,
+                             ", ",
+                             tensor_rank - 1,
+                             "].");
 
-                if (new_axis < 0)
+                if (axis < 0)
                 {
-                    new_axis = new_axis + tensor_rank;
-                    NGRAPH_CHECK(new_axis >= 0,
-                                 node.get_description(),
-                                 "Parameter axis out of the tensor rank.");
+                    axis = axis + tensor_rank;
                 }
 
-                NGRAPH_CHECK(new_axis < tensor_rank,
-                             node.get_description(),
-                             "Parameter axis out of the tensor rank.");
+                return static_cast<size_t>(axis);
+            }
 
-                return static_cast<size_t>(new_axis);
+            std::size_t validate_axis(const ngraph::onnx_import::Node& node,
+                                      std::int64_t axis,
+                                      std::int64_t tensor_rank,
+                                      std::int64_t axis_range_min,
+                                      std::int64_t axis_range_max)
+            {
+                // Accepted range of value for axis is [axis_range_min, axis_range_max].
+                NGRAPH_CHECK(((axis >= axis_range_min) && (axis <= axis_range_max)),
+                             node.get_description(),
+                             "Parameter axis ",
+                             axis,
+                             " out of the tensor rank [-",
+                             axis_range_min,
+                             ", ",
+                             axis_range_max,
+                             "].");
+
+                if (axis < 0)
+                {
+                    axis = axis + tensor_rank;
+                }
+
+                return static_cast<size_t>(axis);
             }
 
             std::vector<std::size_t> validate_axes(const ngraph::onnx_import::Node& node,
