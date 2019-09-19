@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 
@@ -29,8 +28,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"MaxPool", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a batched max pooling operation.
             MaxPool() = default;
 
@@ -123,10 +122,7 @@ namespace ngraph
             bool get_ceil_mode() const { return m_ceil_mode; }
             void set_ceil_mode(bool ceil_mode) { m_ceil_mode = ceil_mode; }
             /// \return The default value for MaxPool.
-            virtual std::shared_ptr<Node> get_default_value() const override
-            {
-                return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
-            }
+            virtual std::shared_ptr<Node> get_default_value() const override;
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -144,8 +140,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"MaxPoolBackprop", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             MaxPoolBackprop() = default;
 
             MaxPoolBackprop(const Output<Node>& arg_forward,

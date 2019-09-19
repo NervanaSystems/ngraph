@@ -45,7 +45,7 @@ int main(int argc, char** argv)
 {
     string input;
     string output;
-    for (size_t i = 1; i < argc; i++)
+    for (int i = 1; i < argc; i++)
     {
         string arg = argv[i];
         if (arg == "-o" || arg == "--output")

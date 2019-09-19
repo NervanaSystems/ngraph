@@ -41,24 +41,7 @@
 #include <CPP/softmax.hpp>
 #include <CPP/topology.hpp>
 
-#include "ngraph/pass/algebraic_simplification.hpp"
-#include "ngraph/pass/batch_fusion.hpp"
-#include "ngraph/pass/core_fusion.hpp"
-#include "ngraph/pass/cse.hpp"
-#include "ngraph/pass/fused_op_decomposition.hpp"
-#include "ngraph/pass/get_output_element_elimination.hpp"
-#include "ngraph/pass/implicit_broadcast_elimination.hpp"
-#include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/nop_elimination.hpp"
-#include "ngraph/pass/reshape_elimination.hpp"
-#include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_executable.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
-#include "ngraph/runtime/intelgpu/visualize_tree.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_backend_visibility.hpp"
 
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
@@ -122,12 +105,37 @@
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/batch_fusion.hpp"
+#include "ngraph/pass/core_fusion.hpp"
+#include "ngraph/pass/cse.hpp"
+#include "ngraph/pass/fused_op_decomposition.hpp"
+#include "ngraph/pass/get_output_element_elimination.hpp"
+#include "ngraph/pass/implicit_broadcast_elimination.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/nop_elimination.hpp"
+#include "ngraph/pass/reshape_elimination.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_executable.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
+#include "ngraph/runtime/intelgpu/visualize_tree.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 using intelgpu_space = runtime::intelgpu::IntelGPULayout;
+
+extern "C" INTELGPU_BACKEND_API void ngraph_register_intelgpu_backend()
+{
+    runtime::BackendManager::register_backend("INTELGPU", [](const std::string& config) {
+        return std::make_shared<runtime::intelgpu::IntelGPUBackend>();
+    });
+}
 
 // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
 // Abs,

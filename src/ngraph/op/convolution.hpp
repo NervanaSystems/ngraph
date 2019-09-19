@@ -17,7 +17,6 @@
 #pragma once
 
 #include "ngraph/coordinate_diff.hpp"
-#include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 
@@ -31,8 +30,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"Convolution", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a batched convolution operation.
             Convolution() = default;
             /// \brief Constructs a batched convolution operation.
@@ -180,10 +179,7 @@ namespace ngraph
             const PadType& get_pad_type() const { return m_pad_type; }
             void set_pad_type(const PadType& pad_type) { m_pad_type = pad_type; }
             /// \return The default value for Convolution.
-            virtual std::shared_ptr<Node> get_default_value() const override
-            {
-                return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
-            }
+            virtual std::shared_ptr<Node> get_default_value() const override;
 
         protected:
             Strides m_window_movement_strides;
@@ -199,8 +195,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"ConvolutionBackpropData", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a batched-convolution data batch-backprop operation.
             ConvolutionBackpropData() = default;
             /// \brief Constructs a batched-convolution data batch-backprop operation.
@@ -300,8 +296,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"ConvolutionBackpropFilters", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a batched-convolution filter-backprop operation.
             ConvolutionBackpropFilters() = default;
             /// \brief Constructs a batched-convolution filter-backprop operation.

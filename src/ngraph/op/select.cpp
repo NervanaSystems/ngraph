@@ -25,7 +25,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Select::type_name{"Select"};
+constexpr NodeTypeInfo op::Select::type_info;
 
 op::Select::Select(const Output<Node>& arg0, const Output<Node>& arg1, const Output<Node>& arg2)
     : Op({arg0, arg1, arg2})

@@ -67,7 +67,7 @@ namespace
     };
 
 // Conversion classes declarations
-#define MLIR_OP(OP)                                                                                \
+#define MLIR_OP(OP, INPLACE)                                                                       \
     class OP##Conversion : public NGraphOpLowering                                                 \
     {                                                                                              \
     public:                                                                                        \
@@ -83,6 +83,60 @@ namespace
 
 #include "op_lowerers.inc"
 
+    // FuncOp Conversion pattern
+    class FuncOpSignatureConversion : public ConversionPattern
+    {
+    public:
+        FuncOpSignatureConversion(MLIRContext* ctx, TypeConverter& converter)
+            : ConversionPattern(FuncOp::getOperationName(), 1, ctx)
+            , converter(converter)
+        {
+        }
+
+        /// Hook for derived classes to implement combined matching and rewriting.
+        PatternMatchResult matchAndRewrite(Operation* op,
+                                           ArrayRef<Value*> operands,
+                                           ConversionPatternRewriter& rewriter) const override
+        {
+            auto funcOp = cast<FuncOp>(op);
+            FunctionType type = funcOp.getType();
+
+            // Convert the original function arguments.
+            TypeConverter::SignatureConversion result(type.getNumInputs());
+            for (unsigned i = 0, e = type.getNumInputs(); i != e; ++i)
+            {
+                if (failed(converter.convertSignatureArg(i, type.getInput(i), result)))
+                {
+                    return matchFailure();
+                }
+            }
+
+            // Convert the original function results.
+            SmallVector<Type, 4> convertedResults;
+            if (failed(converter.convertTypes(type.getResults(), convertedResults)))
+            {
+                return matchFailure();
+            }
+
+            // Add result types as input args without mapping
+            result.addInputs(convertedResults);
+
+            // Create a new function with an updated signature.
+            auto newFuncOp = rewriter.cloneWithoutRegions(funcOp);
+            rewriter.inlineRegionBefore(funcOp.getBody(), newFuncOp.getBody(), newFuncOp.end());
+            newFuncOp.setType(
+                FunctionType::get(result.getConvertedTypes(), {/*void*/}, funcOp.getContext()));
+
+            // Tell the rewriter to convert the region signature.
+            rewriter.applySignatureConversion(&newFuncOp.getBody(), result);
+            rewriter.replaceOp(op, llvm::None);
+            return matchSuccess();
+        }
+
+        /// The type converter to use when rewriting the signature.
+        TypeConverter& converter;
+    };
+
     // Helpers
     template <typename RedOp>
     void lowerIndexReduction(Operation* op,
@@ -91,16 +145,16 @@ namespace
                              DialectLoweringPass& pass);
 
     template <typename OP>
-    void lower_binary_elementwise(Operation* op,
-                                  ArrayRef<Value*> operands,
-                                  PatternRewriter& rewriter,
-                                  DialectLoweringPass& pass);
+    void lowerBinaryElementwise(Operation* op,
+                                ArrayRef<Value*> operands,
+                                PatternRewriter& rewriter,
+                                DialectLoweringPass& pass);
 
     template <typename OP>
-    void lower_unary_elementwise(Operation* op,
-                                 ArrayRef<Value*> operands,
-                                 PatternRewriter& rewriter,
-                                 DialectLoweringPass& pass);
+    void lowerUnaryElementwise(Operation* op,
+                               ArrayRef<Value*> operands,
+                               PatternRewriter& rewriter,
+                               DialectLoweringPass& pass);
 
     ValueHandle createZeroConstant(mlir::Type type);
 
@@ -138,17 +192,18 @@ namespace
         void populateNGraphToAffineConversionPatterns(OwningRewritePatternList& patterns);
 
         void findOutputValues();
-        void processFakeInstrs();
         void insertNoAliasArgAttrs();
 
     private:
         NGraphTypeConverter typeConverter;
-        // Value holding mem manager passed pointer
-        SmallVector<Value*, 4> memMgrDefs;
         // List of temporary memrefs to deallocate at end of function
         SmallVector<Value*, 4> memRefsToDealloc;
-        // list of results values to add to func signature
-        SmallVector<Value*, 4> loweredOutputValues;
+
+        // Ops maybe assigned mem-refs in previous memory optimization passes.
+        // Track pre-assigned buffers  for each Value and re-use it if one is available.
+        using IdToMemRefMap = std::unordered_map<unsigned, Value*>;
+        IdToMemRefMap m_id_to_memref;
+
         ngmlir::MLIRCompiler& compiler;
     };
 
@@ -157,17 +212,14 @@ namespace
         // Create type converter and initialize conversion patterns.
         NGraphTypeConverter converter;
         OwningRewritePatternList patterns;
-        // Add default FuncOp type conversion. It replaces the incoming FuncOp with a *new* one
-        // with the converted types.
-        mlir::populateFuncOpTypeConversionPattern(patterns, &getContext(), typeConverter);
+
         populateNGraphToAffineConversionPatterns(patterns);
 
         // Create target that defines legal ops for nGraph dialect to be lowered to.
         ConversionTarget target(getContext());
-        // TODO: Remove NGFakeInputOp. We need to set NGFakeInputOp as legal op because we generate
-        // it as part of the lowering to affine/standard.
+
         target.addLegalDialect<AffineOpsDialect, StandardOpsDialect>();
-        target.addLegalOp<ModuleOp, ModuleTerminatorOp, NGFakeInputOp>();
+        target.addLegalOp<ModuleOp, ModuleTerminatorOp>();
         target.addDynamicallyLegalOp<FuncOp>([&](FuncOp op) {
             // FuncOp is legal only if types have been converted to Std types.
             return typeConverter.isSignatureLegal(op.getType());
@@ -184,18 +236,20 @@ namespace
             signalPassFailure();
         }
 
-        processFakeInstrs();
         insertNoAliasArgAttrs();
     }
 
     void DialectLoweringPass::populateNGraphToAffineConversionPatterns(
         OwningRewritePatternList& patterns)
     {
-#define MLIR_OP(OP) OP##Conversion,
-#define MLIR_LAST_OP(OP) OP##Conversion
+#define MLIR_OP(OP, INPLACE) OP##Conversion,
+#define MLIR_LAST_OP(OP, INPLACE) OP##Conversion
         patterns.insert<
 #include "op_lowerers.inc"
             >(&getContext(), *this);
+
+        // FuncOp pattern
+        patterns.insert<FuncOpSignatureConversion>(&getContext(), typeConverter);
     }
 
     void DialectLoweringPass::findOutputValues()
@@ -204,26 +258,23 @@ namespace
         auto f = getModule().lookupSymbol<mlir::FuncOp>("main");
         SmallVector<Value*, 4> outputList;
         unsigned outputCount = 0;
-
+        unsigned inputCount = f.getType().getNumInputs();
         // we find out output values by looking at returned values
         // any return should return all outputs of the subgraph
-        f.walk<NGReturnOp>([this, &outputCount](NGReturnOp ret) {
+        f.walk([this, &outputCount, inputCount](NGReturnOp ret) {
             for (unsigned i = 0; i < ret.getNumOperands(); i++)
             {
+                // annotate instructions defining outputs with the arg idx of the output
                 auto outputValue = ret.getOperand(i);
                 auto op = outputValue->getDefiningOp();
-                op->setAttr("graphOutputIdx",
-                            mlir::IntegerAttr::get(IntegerType::get(8, op->getContext()), i));
+
+                op->setAttr(
+                    "graphOutputIdx",
+                    mlir::IntegerAttr::get(IntegerType::get(32, op->getContext()), i + inputCount));
             }
             NGRAPH_CHECK(outputCount == 0 || outputCount == ret.getNumOperands(),
                          "Inconsistent returns in function");
-            outputCount = ret.getNumOperands();
         });
-        // will be populated with lowered output values later
-        // TODO: This resize is making debugging obscure. When the container is not populated due
-        // to a bug, null pointers are used by the consumer leading to a crash more difficult to
-        // root-cause. We should try to change the current approach or introduce verification code.
-        loweredOutputValues.resize(outputCount, nullptr);
     }
 
     SmallVector<Value*, 4> DialectLoweringPass::buildOutputDefs(Operation* op,
@@ -232,24 +283,41 @@ namespace
         SmallVector<Value*, 4> newResults;
         for (auto origResult : op->getResults())
         {
-            // create output def if this operation produces any sub-graph outputs
+            // find output arg if this operation produces any sub-graph outputs
             if (IntegerAttr attr = op->getAttrOfType<IntegerAttr>("graphOutputIdx"))
             {
-                unsigned argId = (int)attr.getInt();
-                auto fakeOp = rewriter.create<NGFakeInputOp>(
-                    op->getLoc(),
-                    typeConverter.convertType(origResult->getType()) /* convert to lowered type */
-                    );
-                // Fake instrution is short-lived. Verify here.
-                fakeOp.verify();
-                auto newResult = fakeOp.getResult();
-                newResults.push_back(newResult);
-                loweredOutputValues[argId] = newResult;
+                auto f = getModule().lookupSymbol<mlir::FuncOp>("main");
+                mlir::Block* entryBlock = &*(f.begin());
+                unsigned argId = (unsigned)attr.getInt();
+                newResults.push_back(entryBlock->getArgument(argId));
             }
             else
             {
                 auto tensorType = origResult->getType().cast<NGTensorType>();
-                auto newResult = createTempTensor(typeConverter.convertType(tensorType), rewriter);
+                Value* newResult;
+                Attribute bufferIdAttr = getBufferId(op);
+                if (!bufferIdAttr)
+                {
+                    // Allocate new memref
+                    newResult = createTempTensor(typeConverter.convertType(tensorType), rewriter);
+                }
+                else
+                {
+                    unsigned bufferId = bufferIdAttr.cast<IntegerAttr>().getInt();
+                    // Re-use a memref if it exist, else create a new one and update map
+                    IdToMemRefMap::iterator it = m_id_to_memref.find(bufferId);
+                    if (it == m_id_to_memref.end())
+                    {
+                        // create a new memref
+                        newResult =
+                            createTempTensor(typeConverter.convertType(tensorType), rewriter);
+                        m_id_to_memref[bufferId] = newResult;
+                    }
+                    else
+                    {
+                        newResult = it->second;
+                    }
+                }
                 newResults.push_back(newResult);
             }
         }
@@ -276,52 +344,6 @@ namespace
         // allocator call-back.
 
         return alloc;
-    }
-
-    void DialectLoweringPass::processFakeInstrs()
-    {
-        auto context = getModule().getContext();
-        auto f = getModule().lookupSymbol<mlir::FuncOp>("main");
-        mlir::Block* entryBlock = &*(f.begin());
-        auto oldFuncType = f.getType();
-        ArrayRef<mlir::Type> ipArgs = oldFuncType.getInputs();
-        ArrayRef<mlir::Type> opArgs = oldFuncType.getResults();
-        SmallVector<mlir::Type, 4> allArgs;
-
-        // Move all args as inputs in new type
-        for (auto type : ipArgs)
-        {
-            allArgs.push_back(type);
-        }
-        for (auto type : opArgs)
-        {
-            allArgs.push_back(type);
-            // add new value for result
-            entryBlock->addArgument(type);
-        }
-        // Mem Manager Ptr
-        auto indexType = mlir::IndexType::get(context);
-        allArgs.push_back(indexType);
-        entryBlock->addArgument(indexType);
-        // update type
-        auto newFuncType = mlir::FunctionType::get(allArgs, {}, context);
-        f.setType(newFuncType);
-
-        // RAUW fake outputs with result values
-        unsigned i = 0;
-        for (auto value : loweredOutputValues)
-        {
-            auto op = value->getDefiningOp();
-            NGRAPH_CHECK(isa<NGFakeInputOp>(op), "output value not defined by fake output?");
-            value->replaceAllUsesWith(entryBlock->getArgument(oldFuncType.getNumInputs() + i));
-            op->erase();
-            i++;
-        }
-        for (auto v : memMgrDefs)
-        {
-            v->replaceAllUsesWith(entryBlock->getArgument(compiler.get_mem_mgr_arg_id(f)));
-            v->getDefiningOp()->erase();
-        }
     }
 
     /// Add llvm.noalias attribute to all the memref function arguments. We know that this is safe
@@ -389,49 +411,49 @@ namespace
 
     REWRITER(NGAddOp)
     {
-        lower_binary_elementwise<mlir::NGAddOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGAddOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGSubOp)
     {
-        lower_binary_elementwise<mlir::NGSubOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGSubOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGMulOp)
     {
-        lower_binary_elementwise<mlir::NGMulOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGMulOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGDivOp)
     {
-        lower_binary_elementwise<mlir::NGDivOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGDivOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGGreaterOp)
     {
-        lower_binary_elementwise<mlir::NGGreaterOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGGreaterOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGLessOp)
     {
-        lower_binary_elementwise<mlir::NGLessOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGLessOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGMaxOp)
     {
-        lower_binary_elementwise<mlir::NGMaxOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGMaxOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGMinOp)
     {
-        lower_binary_elementwise<mlir::NGMinOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGMinOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
@@ -490,7 +512,7 @@ namespace
     // Negative
     REWRITER(NGNegOp)
     {
-        lower_unary_elementwise<mlir::NGNegOp>(op, operands, rewriter, pass);
+        lowerUnaryElementwise<mlir::NGNegOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
@@ -768,16 +790,6 @@ namespace
         auto padBelow = convolOp.padBelow().getValue();
         auto padAbove = convolOp.padBelow().getValue();
 
-        for (auto value : llvm::zip(padBelow, padAbove))
-        {
-            auto padAttr = std::get<0>(value);
-            NGRAPH_CHECK(padAttr.cast<IntegerAttr>().getInt() == 0,
-                         "No support for padding in convolution op");
-            padAttr = std::get<1>(value);
-            NGRAPH_CHECK(padAttr.cast<IntegerAttr>().getInt() == 0,
-                         "No support for padding in convolution op");
-        }
-
         Type elemTy = images->getType().cast<MemRefType>().getElementType();
 
         // Let Images shape be  [N, C_IN, D_1, ... D_f]
@@ -817,11 +829,13 @@ namespace
         //           Output[n, k, r_1, .. r_f] +=
         //             Images[n, c, i_1 + j_1, .. i_f + j_f] * Filters[k, c, j_1, .. j_f]
 
-        // TODO: With padding, we need to check (using IntegerSets) whether each spatial dim in
-        // Images lie within paddings
-        // If yes, we init value to zero, else load from MemRef.
-        // Q: Can this be done using a map from padded tensor to  unpadded one ? Will we load zero
-        // if OOB ?
+        // With padding, we check (using IntegerSets) whether each spatial dim in Images lie inside
+        // non-padded spatial region. If true, we perform the computation:
+        //
+        //         for <j_1 .. j_f> : <0 .. 0> -> <F_1 .. F_f>
+        //         if(indices in non-padded region):
+        //           Output[n, k, r_1, .. r_f] +=
+        //             Images[n, c, i_1 + j_1, .. i_f + j_f] * Filters[k, c, j_1, .. j_f]
 
         // Create view to write into result.
         MemRefView vRes(result), vImages(images), vFilters(filters);
@@ -846,6 +860,9 @@ namespace
         auto resSpatialIndices = makeIndexHandles(spatialRank);
         auto resSpatialIndicesPtrs = makeIndexHandlePointers(resSpatialIndices);
         SmallVector<int64_t, 4> resSteps, filtersSteps;
+        SmallVector<int, 4> padBelowIntValues;
+        bool withPadding = false;
+
         for (auto i = 0; i < spatialRank; i++)
         {
             // result spatial bounds and steps
@@ -855,6 +872,22 @@ namespace
             // image spatial bounds
             imgSpatialLbs.push_back(vImages.lb(i + 2));
             imgSpatialUbs.push_back(vImages.ub(i + 2));
+
+            // Check if we have any padding and collect pad values
+            IntegerAttr iAttr = padBelow[i].cast<IntegerAttr>();
+            int padValue = iAttr.getInt();
+            if (padValue)
+            {
+                withPadding = true;
+            }
+            padBelowIntValues.push_back(padValue);
+
+            iAttr = padAbove[i].cast<IntegerAttr>();
+            padValue = iAttr.getInt();
+            if (padValue)
+            {
+                withPadding = true;
+            }
         }
 
         NGRAPH_CHECK(vImages.rank() == vFilters.rank(), "Images and Filters have unequal ranks");
@@ -871,6 +904,42 @@ namespace
             filtersSpatialLbs.push_back(vFilters.lb(i + 2));
             filtersSpatialUbs.push_back(vFilters.ub(i + 2));
             filtersSteps.push_back(vFilters.step(i + 2));
+        }
+
+        IntegerSet nonPaddedRange;
+        if (withPadding)
+        {
+            // Create affine expressions and IntegerSet
+            // IntegerSet (d0, d1, .. d_N-1)[LB_0, LB_1, .. LB_N-1, UB_0, UB_1, .. UB_N-1], where
+            // for each dim:
+            //   (d_dim - padBelow[dim] - LB_dim >= 0),
+            //   (padBelow[dim] + UB_dim - d_dim - 1 >= 0)
+            SmallVector<AffineExpr, 4> affineExprs;
+            // Bool to indicate if expr is equality or inequality
+            SmallVector<bool, 4> isEq;
+
+            for (unsigned dim = 0; dim < spatialRank; dim++)
+            {
+                // i_dim
+                auto dimExpr = rewriter.getAffineDimExpr(dim);
+                auto imgLbExpr = rewriter.getAffineSymbolExpr(dim);
+
+                // expr1 : i_dim - padBelow[dim] - imgLB >= 0
+                auto padBelowExpr = rewriter.getAffineConstantExpr(padBelowIntValues[dim]);
+                affineExprs.push_back(dimExpr - padBelowExpr - imgLbExpr);
+                isEq.push_back(false);
+
+                // expr2: padBelow[dim] + imgUB - i_dim - 1 >= 0
+                auto imgUbExpr = rewriter.getAffineSymbolExpr(spatialRank + dim);
+                auto oneExpr = rewriter.getAffineConstantExpr(1);
+                affineExprs.push_back(padBelowExpr + imgUbExpr - dimExpr - oneExpr);
+                isEq.push_back(false);
+            }
+
+            NGRAPH_CHECK(affineExprs.size() == isEq.size() && isEq.size() == 2 * spatialRank,
+                         "Invalid number of expressions in the IntegerSet");
+            nonPaddedRange =
+                rewriter.getIntegerSet(spatialRank, 2 * spatialRank, affineExprs, isEq);
         }
 
         // Initialize output to zero
@@ -927,6 +996,8 @@ namespace
                                         filtersSteps)([&] {
                             SmallVector<IndexHandle, 4> imgIndices, filtersIndices;
                             // Image indices
+                            // Here we compute the virtual start index into the padded image.
+
                             imgIndices.push_back(n);
                             imgIndices.push_back(c);
                             for (auto i = 0; i < spatialRank; i++)
@@ -941,8 +1012,46 @@ namespace
                                                   filtersSpatialIndices.begin(),
                                                   filtersSpatialIndices.end());
 
-                            iRes(resIndices) =
-                                iRes(resIndices) + (iImages(imgIndices) * iFilters(filtersIndices));
+                            if (withPadding)
+                            {
+                                // if args : img dims, img lbs, img ubs
+                                SmallVector<IndexHandle, 4>::iterator it = imgIndices.begin();
+                                std::advance(it, 2);
+                                SmallVector<Value*, 4> affineIfArgs(it, imgIndices.end());
+                                affineIfArgs.insert(
+                                    affineIfArgs.end(), imgSpatialLbs.begin(), imgSpatialLbs.end());
+                                affineIfArgs.insert(
+                                    affineIfArgs.end(), imgSpatialUbs.begin(), imgSpatialUbs.end());
+
+                                auto affineIfOp =
+                                    rewriter.create<AffineIfOp>(rewriter.getUnknownLoc(),
+                                                                nonPaddedRange,
+                                                                affineIfArgs,
+                                                                /*withElseRegion=*/false);
+                                {
+                                    auto rewriter = affineIfOp.getThenBodyBuilder();
+                                    ScopedContext scope(rewriter, loc);
+                                    // We must subtract pad below before img load, since the
+                                    // physical image is not padded
+                                    SmallVector<IndexHandle, 4> adjustedImgIndices;
+                                    adjustedImgIndices.push_back(n);
+                                    adjustedImgIndices.push_back(c);
+                                    for (auto i = 0; i < spatialRank; i++)
+                                    {
+                                        adjustedImgIndices.push_back(IndexHandle(
+                                            imgIndices[2 + i] -
+                                            intrinsics::constant_index(padBelowIntValues[i])));
+                                    }
+                                    iRes(resIndices) =
+                                        iRes(resIndices) +
+                                        (iImages(adjustedImgIndices) * iFilters(filtersIndices));
+                                }
+                            }
+                            else
+                            {
+                                iRes(resIndices) = iRes(resIndices) +
+                                                   (iImages(imgIndices) * iFilters(filtersIndices));
+                            }
                         });
                     });
                 });
@@ -963,10 +1072,10 @@ namespace
 #undef REWRITER
     /// End of pattern matchers
     template <typename OP>
-    void lower_unary_elementwise(Operation* op,
-                                 ArrayRef<Value*> operands,
-                                 PatternRewriter& rewriter,
-                                 DialectLoweringPass& pass)
+    void lowerUnaryElementwise(Operation* op,
+                               ArrayRef<Value*> operands,
+                               PatternRewriter& rewriter,
+                               DialectLoweringPass& pass)
     {
         auto loc = cast<OP>(op).getLoc();
 
@@ -1012,10 +1121,10 @@ namespace
     }
 
     template <typename OP>
-    void lower_binary_elementwise(Operation* op,
-                                  ArrayRef<Value*> operands,
-                                  PatternRewriter& rewriter,
-                                  DialectLoweringPass& pass)
+    void lowerBinaryElementwise(Operation* op,
+                                ArrayRef<Value*> operands,
+                                PatternRewriter& rewriter,
+                                DialectLoweringPass& pass)
     {
         auto loc = cast<OP>(op).getLoc();
         auto result = pass.buildOutputDefs(op, rewriter)[0];
@@ -1151,7 +1260,9 @@ namespace
                 for (auto i = 0; i < vArg.rank(); i++)
                 {
                     if (i != axis)
+                    {
                         nonRedIVs.push_back(allIVs[i]);
+                    }
                 }
 
                 // Load current min index with integer data type and convert it to index data type.

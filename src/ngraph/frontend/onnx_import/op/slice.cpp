@@ -50,7 +50,7 @@ namespace ngraph
                     Shape lower_bounds(data_shape.size());
                     Shape upper_bounds = data_shape;
 
-                    for (auto idx = 0; idx < axes.size(); ++idx)
+                    for (size_t idx = 0; idx < axes.size(); ++idx)
                     {
                         size_t axis = axes.at(idx);
                         lower_bounds.at(axis) =
@@ -61,7 +61,7 @@ namespace ngraph
 
                     // Check for cases when start is greater than end and change them to "empty"
                     // slice.
-                    for (auto idx = 0; idx < lower_bounds.size(); ++idx)
+                    for (size_t idx = 0; idx < lower_bounds.size(); ++idx)
                     {
                         if (lower_bounds.at(idx) > upper_bounds.at(idx))
                         {

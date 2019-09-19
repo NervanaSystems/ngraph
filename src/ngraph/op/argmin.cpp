@@ -15,11 +15,12 @@
 //*****************************************************************************
 
 #include "ngraph/op/argmin.hpp"
+#include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-const string op::ArgMin::type_name{"ArgMin"};
+constexpr NodeTypeInfo op::ArgMin::type_info;
 
 op::ArgMin::ArgMin(const Output<Node>& arg, size_t axis, const element::Type& index_element_type)
     : op::util::IndexReduction(arg, axis, index_element_type)
