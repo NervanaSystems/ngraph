@@ -124,7 +124,7 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise_pdpd_dynamic)
     auto a = make_shared<op::Parameter>(element::f32, pshape_a);
     auto b = make_shared<op::Parameter>(element::f32, pshape_b);
 
-    const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec(op::AutoBroadcastType::PDPD);
+    const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec(op::AutoBroadcastType::PDPD, 1);
     auto f = make_shared<Function>(make_shared<op::Add>(a, b, autob), ParameterVector{a, b});
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
     auto ex = backend->compile(f);
