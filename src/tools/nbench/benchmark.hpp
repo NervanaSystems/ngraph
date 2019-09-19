@@ -28,5 +28,5 @@ std::vector<ngraph::runtime::PerformanceCounter> run_benchmark(std::shared_ptr<n
                                                                const std::string& backend_name,
                                                                size_t iterations,
                                                                bool timing_detail,
-                                                               int warmup_iterations,
+                                                               size_t warmup_iterations,
                                                                bool copy_data);

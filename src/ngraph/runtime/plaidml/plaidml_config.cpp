@@ -153,7 +153,7 @@ ngraph::runtime::plaidml::Config
         // Readability definitions
         auto is_opt = [=](const char* opt) {
             auto len = strlen(opt);
-            return (oname_end - oname_begin == len) && !strncmp(oname_begin, opt, len);
+            return (oname_end == oname_begin + len) && !strncmp(oname_begin, opt, len);
         };
 
         std::size_t oval_len = oval_end - oval_begin;
