@@ -50,21 +50,21 @@ namespace ngraph
                                       std::int64_t axis,
                                       std::size_t tensor_rank)
             {
-                NGRAPH_CHECK(llabs(axis) < tensor_rank,
-                             node.get_description(),
-                             "Parameter axis out of the tensor rank.");
+                std::int64_t new_axis = axis;
 
-                if (axis < 0)
+                if (new_axis < 0)
                 {
-                    std::int64_t new_axis = axis + static_cast<std::int64_t>(tensor_rank);
+                    new_axis = new_axis + tensor_rank;
                     NGRAPH_CHECK(new_axis >= 0,
                                  node.get_description(),
                                  "Parameter axis out of the tensor rank.");
-
-                    return static_cast<size_t>(new_axis);
                 }
 
-                return static_cast<size_t>(axis);
+                NGRAPH_CHECK(new_axis < tensor_rank,
+                             node.get_description(),
+                             "Parameter axis out of the tensor rank.");
+
+                return static_cast<size_t>(new_axis);
             }
 
             std::vector<std::size_t> validate_axes(const ngraph::onnx_import::Node& node,
