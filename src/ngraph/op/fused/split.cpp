@@ -47,7 +47,7 @@ void op::Split::pre_validate_and_infer_types()
 
     m_axis = adjust_axis_value(m_axis, shape.size());
     NODE_VALIDATION_CHECK(this,
-                          m_axis >= 0 && m_axis < shape.size(),
+                          m_axis >= 0 && m_axis < static_cast<int64_t>(shape.size()),
                           "The 'axis' parameter for Split has to point to one of the "
                           "input tensor's shape dimensions.");
 

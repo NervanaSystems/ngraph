@@ -116,27 +116,27 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_axis_3d_double)
     copy_data(a, vector<double>{-10, -20, -30, -40, -50, -60, -1, -2, -3, -4, -5, -6});
     auto result = backend->create_tensor(element::f64, shape);
 
-    auto d0 = expf(-10) + expf(-1);
-    auto d1 = expf(-20) + expf(-2);
-    auto d2 = expf(-30) + expf(-3);
-    auto d3 = expf(-40) + expf(-4);
-    auto d4 = expf(-50) + expf(-5);
-    auto d5 = expf(-60) + expf(-6);
+    auto d0 = exp(-10) + exp(-1);
+    auto d1 = exp(-20) + exp(-2);
+    auto d2 = exp(-30) + exp(-3);
+    auto d3 = exp(-40) + exp(-4);
+    auto d4 = exp(-50) + exp(-5);
+    auto d5 = exp(-60) + exp(-6);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    vector<double> expected{expf(-10) / d0,
-                            expf(-20) / d1,
-                            expf(-30) / d2,
-                            expf(-40) / d3,
-                            expf(-50) / d4,
-                            expf(-60) / d5,
-                            expf(-1) / d0,
-                            expf(-2) / d1,
-                            expf(-3) / d2,
-                            expf(-4) / d3,
-                            expf(-5) / d4,
-                            expf(-6) / d5};
+    vector<double> expected{exp(-10) / d0,
+                            exp(-20) / d1,
+                            exp(-30) / d2,
+                            exp(-40) / d3,
+                            exp(-50) / d4,
+                            exp(-60) / d5,
+                            exp(-1) / d0,
+                            exp(-2) / d1,
+                            exp(-3) / d2,
+                            exp(-4) / d3,
+                            exp(-5) / d4,
+                            exp(-6) / d5};
 
     EXPECT_TRUE(test::all_close(expected, read_vector<double>(result)));
 }

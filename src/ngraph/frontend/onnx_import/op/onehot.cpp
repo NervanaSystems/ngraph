@@ -56,7 +56,8 @@ namespace ngraph
                         axis += indices_shape.size() + 1;
                     }
 
-                    ASSERT_VALID_ARGUMENT(node, (axis >= 0) && (axis <= indices_shape.size()))
+                    ASSERT_VALID_ARGUMENT(
+                        node, (axis >= 0) && (axis <= static_cast<int64_t>(indices_shape.size())))
                         << "invalid 'axis' attribute: "
                         << node.get_attribute_value<std::int64_t>("axis", -1);
 
