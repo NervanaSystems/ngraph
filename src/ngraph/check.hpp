@@ -142,7 +142,7 @@ namespace ngraph
         if (!(check))                                                                              \
         {                                                                                          \
             ::std::stringstream ss___;                                                             \
-            ::ngraph::write_all_to_stream(ss___, ##__VA_ARGS__);                                   \
+            ::ngraph::write_all_to_stream(ss___, NVA_HELPER(__VA_ARGS__));                         \
             throw exc_class(                                                                       \
                 (::ngraph::CheckLocInfo{__FILE__, __LINE__, #check}), (ctx), ss___.str());         \
         }                                                                                          \
@@ -155,10 +155,30 @@ namespace ngraph
 ///            i.e., only if the `cond` evalutes to `false`.
 /// \throws ::ngraph::CheckFailure if `cond` is false.
 #define NGRAPH_CHECK(cond, ...)                                                                    \
-    NGRAPH_CHECK_HELPER(::ngraph::CheckFailure, "", (cond), ##__VA_ARGS__)
+    NGRAPH_CHECK_HELPER(::ngraph::CheckFailure, "", (cond), NVA_HELPER(__VA_ARGS__))
 
 /// \brief Macro to signal a code path that is unreachable in a successful execution. It's
 /// implemented with NGRAPH_CHECK macro.
 /// \param ... Additional error message that should describe why that execution path is unreachable.
 /// \throws ::ngraph::CheckFailure if the macro is executed.
 #define NGRAPH_UNREACHABLE(...) NGRAPH_CHECK(false, "Unreachable: ", ##__VA_ARGS__)
+
+// workaround for ##__VAR_ARGS__ with non-GCC compilers
+#define NVA_HELPER(...) NVA_REST_HELPER(NVA_NUM(__VA_ARGS__), __VA_ARGS__)
+#define NVA_REST_HELPER(qty, ...) NVA_REST_HELPER2(qty, __VA_ARGS__)
+#define NVA_REST_HELPER2(qty, ...) NVA_REST_HELPER_##qty(__VA_ARGS__)
+#define NVA_REST_HELPER_ONE(first) first
+#define NVA_REST_HELPER_TWOORMORE(first, ...) first, __VA_ARGS__
+#define NVA_NUM(...)                                                                               \
+    NVA_SELECT_10TH(__VA_ARGS__,                                                                   \
+                    TWOORMORE,                                                                     \
+                    TWOORMORE,                                                                     \
+                    TWOORMORE,                                                                     \
+                    TWOORMORE,                                                                     \
+                    TWOORMORE,                                                                     \
+                    TWOORMORE,                                                                     \
+                    TWOORMORE,                                                                     \
+                    TWOORMORE,                                                                     \
+                    ONE,                                                                           \
+                    throwaway)
+#define NVA_SELECT_10TH(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, ...) a10
