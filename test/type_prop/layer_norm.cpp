@@ -84,10 +84,6 @@ TEST(type_prop, layer_norm_bprop_element_type)
 {
     auto data = make_shared<op::Parameter>(element::i32, Shape{2, 4});
     auto delta = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto mean = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto variance = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto scale = make_shared<op::Parameter>(element::f32, Shape{4});
-    auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
     try
     {
         auto lnb = make_shared<op::LayerNormBackprop>(data, delta);
@@ -108,10 +104,6 @@ TEST(type_prop, layer_norm_bprop_begin_norm_axis)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     auto delta = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto mean = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto variance = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto scale = make_shared<op::Parameter>(element::f32, Shape{4});
-    auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
     try
     {
         auto lnb = make_shared<op::LayerNormBackprop>(data, delta, 2);
@@ -130,10 +122,6 @@ TEST(type_prop, layer_norm_bprop_delta)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     auto delta = make_shared<op::Parameter>(element::f32, Shape{4});
-    auto mean = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto variance = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto scale = make_shared<op::Parameter>(element::f32, Shape{4});
-    auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
     try
     {
         auto lnb = make_shared<op::LayerNormBackprop>(data, delta);
@@ -154,11 +142,9 @@ TEST(type_prop, layer_norm_bprop_stats)
     auto delta = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     auto mean = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     auto variance = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto scale = make_shared<op::Parameter>(element::f32, Shape{4});
-    auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
     try
     {
-        auto lnb = make_shared<op::LayerNormBackprop>(data, delta);
+        auto lnb = make_shared<op::LayerNormBackprop>(data, delta, mean, variance);
     }
     catch (const NodeValidationFailure& error)
     {
@@ -174,17 +160,14 @@ TEST(type_prop, layer_norm_bprop_affine)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     auto delta = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto mean = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto variance = make_shared<op::Parameter>(element::f32, Shape{2});
     auto scale = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
     try
     {
-        auto lnb = make_shared<op::LayerNormBackprop>(data, delta);
+        auto lnb = make_shared<op::LayerNormBackprop>(data, delta, scale);
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Scale and/or bias rank is incorrect"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Scale rank is incorrect"));
     }
     catch (...)
     {

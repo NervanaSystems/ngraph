@@ -1380,12 +1380,17 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             if (use_stats && use_affine)
             {
                 node = make_shared<op::LayerNormBackprop>(
-                    args[0], args[1], args[2], args[3], args[4], args[5], begin_norm_axis, epsilon);
+                    args[0], args[1], args[2], args[3], args[4], begin_norm_axis, epsilon);
             }
-            else if (use_stats || use_affine)
+            else if (use_stats)
             {
                 node = make_shared<op::LayerNormBackprop>(
-                    args[0], args[1], args[2], args[3], use_stats, begin_norm_axis, epsilon);
+                    args[0], args[1], args[2], args[3], begin_norm_axis, epsilon);
+            }
+            else if (use_affine)
+            {
+                node = make_shared<op::LayerNormBackprop>(
+                    args[0], args[1], args[2], begin_norm_axis, epsilon);
             }
             else
             {

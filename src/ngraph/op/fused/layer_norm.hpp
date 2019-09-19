@@ -38,8 +38,9 @@ namespace ngraph
             /// \param data Input tensor
             /// \param scale Scale tensor
             /// \param bias Bias tensor
-            /// \param epsilon Small number to add for stability of rsqrt
+            /// \param keep_stats Generated addition output mean and variance, default true
             /// \param begin_norm_axis Axis where normalization starts, default - -1
+            /// \param epsilon Small number to add for stability of rsqrt, default 1e-5
             LayerNorm(const Output<Node>& data,
                       const Output<Node>& scale,
                       const Output<Node>& bias,
@@ -91,22 +92,26 @@ namespace ngraph
             /// \param delta Delta tensor
             /// \param scale Scale tensor
             /// \param bias Bias tensor
-            /// \param epsilon Small number to add for stability of rsqrt
             /// \param begin_norm_axis Axis where normalization starts, default - -1
+            /// \param epsilon Small number to add for stability of rsqrt, default 1e-5
             LayerNormBackprop(const Output<Node>& data,
                               const Output<Node>& delta,
                               const Output<Node>& mean,
                               const Output<Node>& variance,
                               const Output<Node>& scale,
-                              const Output<Node>& bias,
                               int64_t begin_norm_axis = 1,
                               double epsilon = 1e-5);
 
             LayerNormBackprop(const Output<Node>& data,
                               const Output<Node>& delta,
-                              const Output<Node>& mean_scale,
-                              const Output<Node>& variance_bias,
-                              bool use_stats,
+                              const Output<Node>& mean,
+                              const Output<Node>& variance,
+                              int64_t begin_norm_axis = 1,
+                              double epsilon = 1e-5);
+
+            LayerNormBackprop(const Output<Node>& data,
+                              const Output<Node>& delta,
+                              const Output<Node>& scale,
                               int64_t begin_norm_axis = 1,
                               double epsilon = 1e-5);
 

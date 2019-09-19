@@ -247,7 +247,7 @@ void op::LayerNorm::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVe
             auto mean = outputs()[1];
             auto variance = outputs()[2];
             auto bprop = make_shared<op::LayerNormBackprop>(
-                data, delta, mean, variance, scale, bias, m_begin_norm_axis, m_epsilon);
+                data, delta, mean, variance, scale, m_begin_norm_axis, m_epsilon);
             adjoints.add_delta(data, bprop->outputs()[0]);
             adjoints.add_delta(scale, bprop->outputs()[1]);
             adjoints.add_delta(bias, bprop->outputs()[2]);
@@ -255,7 +255,7 @@ void op::LayerNorm::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVe
         else
         {
             auto bprop = make_shared<op::LayerNormBackprop>(
-                data, delta, scale, bias, false, m_begin_norm_axis, m_epsilon);
+                data, delta, scale, m_begin_norm_axis, m_epsilon);
             adjoints.add_delta(data, bprop->outputs()[0]);
             adjoints.add_delta(scale, bprop->outputs()[1]);
             adjoints.add_delta(bias, bprop->outputs()[2]);
@@ -268,7 +268,7 @@ void op::LayerNorm::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVe
             auto mean = outputs()[1];
             auto variance = outputs()[2];
             auto bprop = make_shared<op::LayerNormBackprop>(
-                data, delta, mean, variance, true, m_begin_norm_axis, m_epsilon);
+                data, delta, mean, variance, m_begin_norm_axis, m_epsilon);
             adjoints.add_delta(data, bprop->outputs()[0]);
         }
         else
@@ -285,10 +285,9 @@ op::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
                                          const Output<Node>& mean,
                                          const Output<Node>& variance,
                                          const Output<Node>& scale,
-                                         const Output<Node>& bias,
                                          int64_t begin_norm_axis,
                                          double epsilon)
-    : FusedOp({data, delta, mean, variance, scale, bias})
+    : FusedOp({data, delta, mean, variance, scale})
     , m_use_stats(true)
     , m_use_affine(true)
     , m_begin_norm_axis(begin_norm_axis)
@@ -299,14 +298,27 @@ op::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
 
 op::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
                                          const Output<Node>& delta,
-                                         const Output<Node>& mean_scale,
-                                         const Output<Node>& variance_bias,
-                                         bool use_stats,
+                                         const Output<Node>& mean,
+                                         const Output<Node>& variance,
                                          int64_t begin_norm_axis,
                                          double epsilon)
-    : FusedOp({data, delta, mean_scale, variance_bias})
-    , m_use_stats(use_stats)
-    , m_use_affine(!use_stats)
+    : FusedOp({data, delta, mean, variance})
+    , m_use_stats(true)
+    , m_use_affine(false)
+    , m_begin_norm_axis(begin_norm_axis)
+    , m_epsilon(epsilon)
+{
+    constructor_validate_and_infer_types();
+}
+
+op::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
+                                         const Output<Node>& delta,
+                                         const Output<Node>& scale,
+                                         int64_t begin_norm_axis,
+                                         double epsilon)
+    : FusedOp({data, delta, scale})
+    , m_use_stats(false)
+    , m_use_affine(true)
     , m_begin_norm_axis(begin_norm_axis)
     , m_epsilon(epsilon)
 {
@@ -358,11 +370,6 @@ NodeVector op::LayerNormBackprop::decompose_op() const
         if (scale_shape.is_dynamic())
         {
             throw ngraph_error("Scale needs to have static shape to decompose");
-        }
-        const PartialShape& bias_shape = get_input_partial_shape(m_use_stats ? 5 : 3);
-        if (bias_shape.is_dynamic())
-        {
-            throw ngraph_error("Bias needs to have static shape to decompose");
         }
     }
 
@@ -465,18 +472,17 @@ NodeVector op::LayerNormBackprop::decompose_op() const
 
 shared_ptr<Node> op::LayerNormBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2 && new_args.size() != 4 && new_args.size() != 6)
+    if (new_args.size() < 2 || new_args.size() > 5)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    if (new_args.size() == 6)
+    if (new_args.size() == 5)
     {
         return make_shared<LayerNormBackprop>(new_args.at(0),
                                               new_args.at(1),
                                               new_args.at(2),
                                               new_args.at(3),
                                               new_args.at(4),
-                                              new_args.at(5),
                                               m_begin_norm_axis,
                                               m_epsilon);
     }
@@ -486,9 +492,13 @@ shared_ptr<Node> op::LayerNormBackprop::copy_with_new_args(const NodeVector& new
                                               new_args.at(1),
                                               new_args.at(2),
                                               new_args.at(3),
-                                              m_use_stats,
                                               m_begin_norm_axis,
                                               m_epsilon);
+    }
+    else if (new_args.size() == 3)
+    {
+        return make_shared<LayerNormBackprop>(
+            new_args.at(0), new_args.at(1), new_args.at(2), m_begin_norm_axis, m_epsilon);
     }
     else
     {
@@ -543,17 +553,12 @@ void op::LayerNormBackprop::pre_validate_and_infer_types()
         if (m_use_affine)
         {
             const PartialShape& scale_shape = get_input_partial_shape(m_use_stats ? 4 : 2);
-            const PartialShape& bias_shape = get_input_partial_shape(m_use_stats ? 5 : 3);
             Rank scale_rank = scale_shape.rank();
-            Rank bias_rank = bias_shape.rank();
-            if (scale_rank.is_static() && bias_rank.is_static())
+            if (scale_rank.is_static())
             {
                 int64_t s_rank = static_cast<int64_t>(scale_rank);
-                int64_t b_rank = static_cast<int64_t>(bias_rank);
-                NODE_VALIDATION_CHECK(this,
-                                      s_rank == b_rank &&
-                                          ((s_rank == (d_rank - n_axis)) || s_rank == 1),
-                                      "Scale and/or bias rank is incorrect");
+                NODE_VALIDATION_CHECK(
+                    this, (s_rank == (d_rank - n_axis)) || s_rank == 1, "Scale rank is incorrect");
             }
         }
     }
