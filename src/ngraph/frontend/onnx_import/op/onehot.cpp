@@ -61,7 +61,7 @@ namespace ngraph
                         << "invalid 'axis' attribute: "
                         << node.get_attribute_value<std::int64_t>("axis", -1);
 
-                    auto constant_depth = std::dynamic_pointer_cast<ngraph::op::Constant>(depth);
+                    auto constant_depth = ngraph::as_type_ptr<ngraph::op::Constant>(depth);
 
                     ASSERT_VALID_ARGUMENT(node, constant_depth)
                         << "Only constant values for depth input are supported for the OneHot "

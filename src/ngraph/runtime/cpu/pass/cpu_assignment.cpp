@@ -769,11 +769,11 @@ namespace ngraph
                     (void)external_function;
                     auto qconv = static_cast<ngraph::op::QuantizedConvolution*>(node);
                     auto input_zero_point =
-                        dynamic_pointer_cast<ngraph::op::Constant>(qconv->get_argument(3));
+                        as_type_ptr<ngraph::op::Constant>(qconv->get_argument(3));
                     auto filter_zero_point =
-                        dynamic_pointer_cast<ngraph::op::Constant>(qconv->get_argument(5));
+                        as_type_ptr<ngraph::op::Constant>(qconv->get_argument(5));
                     auto output_zero_point =
-                        dynamic_pointer_cast<ngraph::op::Constant>(qconv->get_argument(7));
+                        as_type_ptr<ngraph::op::Constant>(qconv->get_argument(7));
                     if (node->get_input_element_type(0) == element::u8 &&
                         node->get_input_element_type(1) == element::i8)
                     {
