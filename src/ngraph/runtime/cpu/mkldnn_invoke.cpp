@@ -40,6 +40,7 @@ extern "C" void
                                                                 OpType /* type */,
                                                                 size_t sractchpad_size)
 {
+    (void)scratchpad_size;
     mkldnn::stream s(mkldnn::stream::kind::eager);
     try
     {
