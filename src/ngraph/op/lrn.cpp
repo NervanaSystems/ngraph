@@ -47,7 +47,7 @@ AxisSet op::LRN::get_reduction_axes() const
 {
     AxisSet axes{1}; // channel axis as default
     auto axes_input_node = input_value(1).get_node_shared_ptr();
-    if (auto const_op = dynamic_pointer_cast<op::Constant>(axes_input_node))
+    if (auto const_op = as_type_ptr<op::Constant>(axes_input_node))
     {
         axes = const_op->get_axis_set_val();
     }
@@ -85,8 +85,7 @@ void op::LRN::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(
         this,
-        static_cast<size_t>(axes_shape[0]) >= 0 &&
-            static_cast<size_t>(axes_shape[0]) <= static_cast<size_t>(input_shape_rank),
+        static_cast<size_t>(axes_shape[0]) <= static_cast<size_t>(input_shape_rank),
         "Number of elements of axes must be >= 0 and <= argument rank (axes_shape[0]: ",
         axes_shape[0],
         ").");

@@ -14,37 +14,14 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <iostream>
-#include <sstream>
+// NOTE: This file follows nGraph format style and MLIR naming convention since it does
+// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
 
-#include "uncomment.hpp"
+#pragma once
 
-using namespace std;
+#include <mlir/Pass/Pass.h>
 
-// start 23,749,645 in 1,912 files
-
-void skip_comment(istream& /* s */)
+namespace mlir
 {
-}
-
-string uncomment(const string& s)
-{
-    stringstream out;
-    for (size_t i = 0; i < s.size(); i++)
-    {
-        char c = s[i];
-        if (i < s.size() - 1 && c == '/' && s[i + 1] == '/')
-        {
-            while (i < s.size() && c != '\n')
-            {
-                c = s[++i];
-            }
-            out << "\n";
-        }
-        else
-        {
-            out << c;
-        }
-    }
-    return out.str();
+    std::unique_ptr<Pass> createMemoryOptimizationPass();
 }
