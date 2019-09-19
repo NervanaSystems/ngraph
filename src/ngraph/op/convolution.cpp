@@ -105,7 +105,7 @@ void op::v1::Convolution::validate_and_infer_types()
     result_shape =
         infer_convolution_forward(this,
                                   data_batch_shape,
-                                  Strides(static_cast<size_t>(data_batch_shape.rank()) - 2, 0),
+                                  Strides(static_cast<size_t>(data_batch_shape.rank()) - 2, 1),
                                   m_pads_begin,
                                   m_pads_end,
                                   filters_shape,
@@ -427,7 +427,7 @@ void op::v1::ConvolutionBackpropFilters::validate_and_infer_types()
     forward_result_shape =
         infer_convolution_forward(this,
                                   data_batch_shape,
-                                  Strides(static_cast<size_t>(data_batch_shape.rank()) - 2, 0),
+                                  Strides(static_cast<size_t>(data_batch_shape.rank()) - 2, 1),
                                   m_pads_begin,
                                   m_pads_end,
                                   m_filters_shape,
