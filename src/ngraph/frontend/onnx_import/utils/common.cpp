@@ -96,7 +96,7 @@ namespace ngraph
 
             std::vector<std::size_t> validate_axes(const ngraph::onnx_import::Node& node,
                                                    std::vector<std::int64_t> axes,
-                                                   std::size_t tensor_rank)
+                                                   std::int64_t tensor_rank)
             {
                 std::vector<std::size_t> new_axes;
 

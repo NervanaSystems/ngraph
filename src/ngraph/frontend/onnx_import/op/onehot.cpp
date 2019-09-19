@@ -56,7 +56,7 @@ namespace ngraph
                     // against rank+1.
                     std::size_t valid_axis = common::validate_axis(node,
                                                                    axis,
-                                                                   indices_shape.size(),
+                                                                   indices_shape.size() + 1,
                                                                    -indices_shape.size() - 1,
                                                                    indices_shape.size());
 
