@@ -782,8 +782,9 @@ namespace ngraph
         bool m_is_short;
     };
 }
-#define NODE_VALIDATION_CHECK(node, cond, ...)                                                     \
-    NGRAPH_CHECK_HELPER(::ngraph::NodeValidationFailure, (node), (cond), ##__VA_ARGS__)
+#define NODE_VALIDATION_CHECK(node, ...)                                                           \
+    NGRAPH_CHECK_HELPER(                                                                           \
+        ::ngraph::NodeValidationFailure, (node), (NVA_FIRST(__VA_ARGS__))NVA_REST(#__VA_ARGS__))
 
 namespace ngraph
 {

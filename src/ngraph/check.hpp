@@ -136,15 +136,16 @@ namespace ngraph
 // TODO(amprocte): refactor NGRAPH_CHECK_HELPER so we don't have to introduce a locally-scoped
 // variable (ss___) and risk shadowing.
 //
-#define NGRAPH_CHECK_HELPER(exc_class, ctx, check, ...)                                            \
+#define NGRAPH_CHECK_HELPER(exc_class, ctx, ...)                                                   \
     do                                                                                             \
     {                                                                                              \
-        if (!(check))                                                                              \
+        if (!(NVA_FIRST(__VA_ARGS__)))                                                             \
         {                                                                                          \
             ::std::stringstream ss___;                                                             \
-            ::ngraph::write_all_to_stream(ss___, NVA_HELPER(__VA_ARGS__));                         \
-            throw exc_class(                                                                       \
-                (::ngraph::CheckLocInfo{__FILE__, __LINE__, #check}), (ctx), ss___.str());         \
+            ::ngraph::write_all_to_stream(ss___ NVA_REST(#__VA_ARGS__));                           \
+            throw exc_class((::ngraph::CheckLocInfo{__FILE__, __LINE__, NVA_FIRST(#__VA_ARGS__)}), \
+                            (ctx),                                                                 \
+                            ss___.str());                                                          \
         }                                                                                          \
     } while (0)
 
@@ -154,21 +155,24 @@ namespace ngraph
 ///            stream-insertion operator. Note that the expressions here will be evaluated lazily,
 ///            i.e., only if the `cond` evalutes to `false`.
 /// \throws ::ngraph::CheckFailure if `cond` is false.
-#define NGRAPH_CHECK(cond, ...)                                                                    \
-    NGRAPH_CHECK_HELPER(::ngraph::CheckFailure, "", (cond), NVA_HELPER(__VA_ARGS__))
+#define NGRAPH_CHECK(...)                                                                          \
+    NGRAPH_CHECK_HELPER(::ngraph::CheckFailure, "", NVA_FIRST(__VA_ARGS__) NVA_REST(#__VA_ARGS__))
 
 /// \brief Macro to signal a code path that is unreachable in a successful execution. It's
 /// implemented with NGRAPH_CHECK macro.
 /// \param ... Additional error message that should describe why that execution path is unreachable.
 /// \throws ::ngraph::CheckFailure if the macro is executed.
-#define NGRAPH_UNREACHABLE(...) NGRAPH_CHECK(false, "Unreachable: ", ##__VA_ARGS__)
+#define NGRAPH_UNREACHABLE(...)                                                                    \
+    NGRAPH_CHECK(false, "Unreachable: ", NVA_FIRST(__VA_ARGS__) NVA_REST(#__VA_ARGS__))
 
 // workaround for ##__VAR_ARGS__ with non-GCC compilers
-#define NVA_HELPER(...) NVA_REST_HELPER(NVA_NUM(__VA_ARGS__), __VA_ARGS__)
+#define NVA_FIRST(...) NVA_FIRST_HELPER(__VA_ARGS__, throwaway)
+#define NVA_FIRST_HELPER(first, ...) first
+#define NVA_REST(...) NVA_REST_HELPER(NVA_NUM(__VA_ARGS__), __VA_ARGS__)
 #define NVA_REST_HELPER(qty, ...) NVA_REST_HELPER2(qty, __VA_ARGS__)
 #define NVA_REST_HELPER2(qty, ...) NVA_REST_HELPER_##qty(__VA_ARGS__)
-#define NVA_REST_HELPER_ONE(first) first
-#define NVA_REST_HELPER_TWOORMORE(first, ...) first, __VA_ARGS__
+#define NVA_REST_HELPER_ONE(first)
+#define NVA_REST_HELPER_TWOORMORE(first, ...) , __VA_ARGS__
 #define NVA_NUM(...)                                                                               \
     NVA_SELECT_10TH(__VA_ARGS__,                                                                   \
                     TWOORMORE,                                                                     \
