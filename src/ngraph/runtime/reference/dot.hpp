@@ -133,14 +133,19 @@ namespace ngraph
                             // Multiply and add to the sum.
                             if (is_quantized)
                             {
-                                sum +=
-                                    (arg0[arg0_transform.index(arg0_coord)] - *input0_zero_point) *
-                                    (arg1[arg1_transform.index(arg1_coord)] - *input1_zero_point);
+                                sum += (static_cast<ACCUMULATION>(
+                                            arg0[arg0_transform.index(arg0_coord)]) -
+                                        static_cast<ACCUMULATION>(*input0_zero_point)) *
+                                       (static_cast<ACCUMULATION>(
+                                            arg1[arg1_transform.index(arg1_coord)]) -
+                                        static_cast<ACCUMULATION>(*input1_zero_point));
                             }
                             else
                             {
-                                sum += arg0[arg0_transform.index(arg0_coord)] *
-                                       arg1[arg1_transform.index(arg1_coord)];
+                                sum += static_cast<ACCUMULATION>(
+                                           arg0[arg0_transform.index(arg0_coord)]) *
+                                       static_cast<ACCUMULATION>(
+                                           arg1[arg1_transform.index(arg1_coord)]);
                             }
                         }
 
@@ -148,8 +153,9 @@ namespace ngraph
                         {
                             float scale = *input0_scale * *input1_scale / *output_scale;
                             // Write the sum back.
-                            out[out_index] = static_cast<OUTPUT>(
-                                std::round(static_cast<float>(sum) * scale) + *output_zero_point);
+                            out[out_index] =
+                                static_cast<OUTPUT>(std::round(static_cast<float>(sum) * scale)) +
+                                *output_zero_point;
                         }
                         else
                         {
