@@ -62,6 +62,7 @@
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
+#include "ngraph/op/experimental/random_uniform.hpp"
 #include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/experimental/tile.hpp"
@@ -1550,21 +1551,37 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Pad:
         {
-            auto padding_below = node_js.at("padding_below").get<vector<ptrdiff_t>>();
-            auto padding_above = node_js.at("padding_above").get<vector<ptrdiff_t>>();
+            if (op_version == 0)
+            {
+                auto padding_below = node_js.at("padding_below").get<vector<ptrdiff_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<ptrdiff_t>>();
 
-            // This is a legacy field whose functionality is no longer supported. The new
-            // behavior is equivalent to interior padding of 0, so we will accept it under
-            // those conditions.
-            auto padding_interior = get_value<vector<size_t>>(node_js, "padding_interior");
-            NGRAPH_CHECK(std::all_of(padding_interior.begin(),
-                                     padding_interior.end(),
-                                     [](size_t s) { return s == 0; }),
-                         "Legacy padding_interior field must be zero everywhere.");
+                // This is a legacy field whose functionality is no longer supported. The new
+                // behavior is equivalent to interior padding of 0, so we will accept it under
+                // those conditions.
+                auto padding_interior = get_value<vector<size_t>>(node_js, "padding_interior");
+                NGRAPH_CHECK(std::all_of(padding_interior.begin(),
+                                         padding_interior.end(),
+                                         [](size_t s) { return s == 0; }),
+                             "Legacy padding_interior field must be zero everywhere.");
 
-            auto pad_mode = read_pad_mode(node_js);
+                auto pad_mode = read_pad_mode(node_js);
 
-            node = make_shared<op::Pad>(args[0], args[1], padding_below, padding_above, pad_mode);
+                node = make_shared<op::v0::Pad>(
+                    args[0], args[1], padding_below, padding_above, pad_mode);
+            }
+            if (op_version == 1)
+            {
+                auto pad_mode = read_pad_mode(node_js);
+                if (args.size() == 4)
+                {
+                    node = make_shared<op::v1::Pad>(args[0], args[1], args[2], args[3], pad_mode);
+                }
+                else
+                {
+                    node = make_shared<op::v1::Pad>(args[0], args[1], args[2], pad_mode);
+                }
+            }
             break;
         }
         case OP_TYPEID::Parameter:
@@ -1690,6 +1707,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             auto src_id = node_js.at("source_id").get<size_t>();
             node = make_shared<op::Recv>(args[0], src_id);
+            break;
+        }
+        case OP_TYPEID::RandomUniform:
+        {
+            auto fixed_seed = node_js.at("fixed_seed").get<uint64_t>();
+            node = make_shared<op::RandomUniform>(args[0], args[1], args[2], args[3], fixed_seed);
             break;
         }
         case OP_TYPEID::Range:
@@ -2675,10 +2698,18 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Pad:
     {
-        auto tmp = dynamic_cast<const op::Pad*>(&n);
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
-        node["pad_mode"] = tmp->get_pad_mode();
+        if (op_version == 0)
+        {
+            auto tmp = dynamic_cast<const op::v0::Pad*>(&n);
+            node["padding_below"] = tmp->get_padding_below();
+            node["padding_above"] = tmp->get_padding_above();
+            node["pad_mode"] = tmp->get_pad_mode();
+        }
+        if (op_version == 1)
+        {
+            auto tmp = dynamic_cast<const op::v1::Pad*>(&n);
+            node["pad_mode"] = tmp->get_pad_mode();
+        }
         break;
     }
     case OP_TYPEID::Parameter:
@@ -2769,6 +2800,12 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = dynamic_cast<const op::Recv*>(&n);
         node["source_id"] = tmp->get_src_id();
+        break;
+    }
+    case OP_TYPEID::RandomUniform:
+    {
+        auto tmp = dynamic_cast<const op::RandomUniform*>(&n);
+        node["fixed_seed"] = tmp->get_fixed_seed();
         break;
     }
     case OP_TYPEID::Range: { break;

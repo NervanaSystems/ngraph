@@ -24,17 +24,10 @@
 
 namespace ngraph
 {
-    // can be based on TensorSate to cache values instead of just caching seed
-    class RNGState : public State
+    class BernoulliRNGState : public State
     {
     public:
-        static RNGState* create_rng_state(unsigned int seed, double probability)
-        {
-            auto rng = new RNGState(seed, probability);
-            return rng;
-        }
-
-        RNGState(unsigned int seed, double probability)
+        BernoulliRNGState(unsigned int seed, double probability)
             : State()
             , m_generator(seed)
             , m_distribution(probability)
@@ -42,7 +35,7 @@ namespace ngraph
         }
         virtual void activate() override;
         virtual void deactivate() override;
-        virtual ~RNGState() override {}
+        virtual ~BernoulliRNGState() override {}
         std::mt19937& get_generator() { return m_generator; }
         std::bernoulli_distribution& get_distribution() { return m_distribution; }
     protected:

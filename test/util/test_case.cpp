@@ -29,7 +29,7 @@ void ngraph::test::NgraphTestCase::run(size_t tolerance_bits)
     auto handle = m_backend->compile(m_function);
     handle->call_with_validate(m_result_tensors, m_input_tensors);
 
-    for (int i = 0; i < m_expected_outputs.size(); ++i)
+    for (size_t i = 0; i < m_expected_outputs.size(); ++i)
     {
         const auto& result_tensor = m_result_tensors.at(i);
         const auto& expected_result_constant = m_expected_outputs.at(i);

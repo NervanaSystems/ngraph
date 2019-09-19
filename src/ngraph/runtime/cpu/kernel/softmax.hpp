@@ -38,7 +38,7 @@ namespace ngraph
                     Eigen::array<Eigen::Index, Rank> in_dims, rdims;
                     rdims.fill(1);
 
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         in_dims[i] = input_shape[i];
                     }
@@ -64,12 +64,12 @@ namespace ngraph
                     Eigen::array<Eigen::Index, AxisCount> axes;
                     rdims.fill(1);
 
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         in_dims[i] = input_shape[i];
                     }
 
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         if (softmax_axes.count(i))
                         {
@@ -80,12 +80,12 @@ namespace ngraph
                             rdims[i] = in_dims[i];
                         }
                     }
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         bcast[i] = in_dims[i] / rdims[i];
                     }
 
-                    int i = 0;
+                    size_t i = 0;
                     for (auto axis : softmax_axes)
                     {
                         axes[i++] = axis;
@@ -111,17 +111,17 @@ namespace ngraph
                     Eigen::IndexList<Eigen::type2index<Rank - 1>> axis;
                     rdims.fill(1);
 
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         in_dims[i] = input_shape[i];
                     }
 
-                    for (int i = 0; i < Rank - 1; i++)
+                    for (size_t i = 0; i < Rank - 1; i++)
                     {
                         rdims[i] = in_dims[i];
                     }
 
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         bcast[i] = in_dims[i] / rdims[i];
                     }

@@ -14,19 +14,4 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
-#include <map>
-#include <memory>
-#include <string>
-#include <vector>
-
-#include "ngraph/function.hpp"
-#include "ngraph/runtime/performance_counter.hpp"
-
-std::vector<ngraph::runtime::PerformanceCounter> run_benchmark(std::shared_ptr<ngraph::Function> f,
-                                                               const std::string& backend_name,
-                                                               size_t iterations,
-                                                               bool timing_detail,
-                                                               size_t warmup_iterations,
-                                                               bool copy_data);
+#include "ngraph/state/uniform_rng_state.hpp"
