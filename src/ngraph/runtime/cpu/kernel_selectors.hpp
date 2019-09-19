@@ -21,7 +21,7 @@
 // Selector Macros for builders to instantiate and pick kernels
 // All element types, ranks. Use for small/simple kernels
 #define SELECT_KERNEL(KV, ET, K) EXPAND_ET11_TEMP(K, KV, ET, KERNEL_CT)
-#define SELECT_KERNEL_3ARGS(KV, ET, K) EXPAND_ET11(K, KV, ET, KERNEL_CT_CT_CT)
+#define SELECT_KERNEL_3ARGS(KV, ET, K) EXPAND_ET11_TEMP(K, KV, ET, KERNEL_CT_CT_CT)
 #define SELECT_KERNEL_RANK(KV, CIT, COT, R, K) EXPAND_RANK7(K, KV, R, KERNEL_CIT_COT_R, CIT, COT)
 #define SELECT_KERNEL_ET_RANK(KV, ET, R, K) EXPAND_ET11_AND_RANK7(K, KV, ET, R, KERNEL_CT_R)
 
