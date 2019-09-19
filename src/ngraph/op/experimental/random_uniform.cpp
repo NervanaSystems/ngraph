@@ -81,9 +81,7 @@ void ngraph::op::RandomUniform::validate_and_infer_types()
 
     PartialShape result_shape;
 
-    auto result_shape_source_constant =
-        input(2).get_source_output().get_node()->as_type<op::Constant>();
-    if (result_shape_source_constant)
+    if (auto result_shape_source_constant = as_type<op::Constant>(input_value(2).get_node()))
     {
         result_shape = result_shape_source_constant->get_shape_val();
     }
