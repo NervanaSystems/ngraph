@@ -38,7 +38,7 @@ extern "C" void
                                                                 size_t primitive_index,
                                                                 std::vector<size_t>& deps,
                                                                 OpType type,
-                                                                size_t sractchpad_size)
+                                                                size_t scratchpad_size)
 {
     (void)scratchpad_size;
     mkldnn::stream s(mkldnn::stream::kind::eager);
