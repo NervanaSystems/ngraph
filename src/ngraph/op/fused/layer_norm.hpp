@@ -91,7 +91,6 @@ namespace ngraph
             /// \param variance Variance tensor from fprop
             /// \param delta Delta tensor
             /// \param scale Scale tensor
-            /// \param bias Bias tensor
             /// \param begin_norm_axis Axis where normalization starts, default - -1
             /// \param epsilon Small number to add for stability of rsqrt, default 1e-5
             LayerNormBackprop(const Output<Node>& data,
