@@ -50,7 +50,7 @@ namespace ngraph
                                       std::int64_t axis,
                                       std::size_t tensor_rank)
             {
-                NGRAPH_CHECK(abs(axis) < tensor_rank,
+                NGRAPH_CHECK(llabs(axis) < tensor_rank,
                              node.get_description(),
                              "Parameter axis out of the tensor rank.");
 

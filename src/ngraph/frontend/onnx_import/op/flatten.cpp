@@ -37,7 +37,6 @@ namespace ngraph
                         common::validate_axis(node, axis, data->get_shape().size() + 1);
 
                     return {ngraph::builder::flatten(data, valid_axis)};
-
                 }
 
             } // namespace set_1
