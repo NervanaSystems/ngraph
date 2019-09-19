@@ -115,7 +115,9 @@ endif()
 
 if (NOT TARGET protobuf::protoc)
     add_executable(protobuf::protoc IMPORTED)
-    target_include_directories(protobuf::protoc SYSTEM INTERFACE "${Protobuf_PROTOC_EXECUTABLE}")
+    set_target_properties(protobuf::protoc PROPERTIES
+        INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${Protobuf_PROTOC_EXECUTABLE}"
+        IMPORTED_LOCATION "${Protobuf_PROTOC_EXECUTABLE}")
     add_dependencies(protobuf::protoc ext_protobuf)
 endif()
 
