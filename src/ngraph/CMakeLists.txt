@@ -354,6 +354,8 @@ set (SRC
     op/fused/squared_difference.hpp
     op/fused/squeeze.cpp
     op/fused/squeeze.hpp
+    op/fused/strided_slice.cpp
+    op/fused/strided_slice.hpp
     op/fused/unsqueeze.cpp
     op/fused/unsqueeze.hpp
     op/util/activation_functions.cpp
