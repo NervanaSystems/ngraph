@@ -23,25 +23,33 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-class UnhandledOp : public ngraph::op::Op
+namespace
 {
-public:
-    UnhandledOp(const std::shared_ptr<Node>& arg)
-        : Op("Unsupported_op", check_single_output_args({arg}))
+    class UnhandledOp : public ngraph::op::Op
     {
-        constructor_validate_and_infer_types();
-    }
-    shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override
-    {
-        return make_shared<UnhandledOp>(new_args[0]);
-    }
+    public:
+        UnhandledOp(const Output<Node>& arg)
+            : Op({arg})
+        {
+            constructor_validate_and_infer_types();
+        }
+        shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override
+        {
+            return make_shared<UnhandledOp>(new_args[0]);
+        }
 
-protected:
-    void validate_and_infer_types() override
-    {
-        set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
-    }
-};
+    protected:
+        void validate_and_infer_types() override
+        {
+            set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
+        }
+
+        static constexpr NodeTypeInfo type_info{"UnhandledOp", 0};
+        const NodeTypeInfo& get_type_info() const override { return type_info; }
+    };
+
+    constexpr NodeTypeInfo UnhandledOp::type_info;
+}
 
 NGRAPH_TEST(${BACKEND_NAME}, unhandled_op)
 {

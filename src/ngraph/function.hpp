@@ -117,6 +117,16 @@ namespace ngraph
         /// \brief Returns true if any of the op's defined in the function contains partial shape
         bool is_dynamic() const;
 
+        /// \brief Replace the `parameter_index`th parameter of the function with `parameter`.
+        ///
+        /// All users of the `parameter_index`th parameter are redirected to `parameter`, and the
+        /// `parameter_index`th entry in the function parameter list is replaced with `parameter`.
+        ///
+        /// \param parameter_index The index of the parameter to replace.
+        /// \param parameter The parameter to substitute for the `parameter_index`th parameter.
+        void replace_parameter(size_t parameter_index,
+                               const std::shared_ptr<op::Parameter>& parameter);
+
     protected:
         ResultVector m_results;
         ParameterVector m_parameters;

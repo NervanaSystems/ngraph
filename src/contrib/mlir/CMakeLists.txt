@@ -14,4 +14,13 @@
 # limitations under the License.
 # ******************************************************************************
 
+# Common MLIR/LLVM setup for the sub-directories below
+
+include_directories(
+    ${NGRAPH_INCLUDE_PATH}
+    ${MLIR_LLVM_INCLUDE_PATH}
+    ${MLIR_INCLUDE_PATHS}
+)
+
 add_subdirectory(compiler)
+add_subdirectory(tools/ngraph-opt)

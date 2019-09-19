@@ -14,15 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-namespace ngraph
+#include "ngraph/op/dequantize.hpp"
+#include "pyngraph/ops/dequantize.hpp"
+
+namespace py = pybind11;
+
+void regclass_pyngraph_op_Dequantize(py::module m)
 {
-    namespace runtime
-    {
-        namespace interpreter
-        {
-            void static_initialize();
-        }
-    }
+    py::class_<ngraph::op::Dequantize, std::shared_ptr<ngraph::op::Dequantize>, ngraph::op::Op>
+        dequantize(m, "Dequantize");
+    dequantize.doc() = "ngraph.impl.op.Dequantize wraps ngraph::op::Dequantize";
+    dequantize.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                            const std::shared_ptr<ngraph::Node>&,
+                            const std::shared_ptr<ngraph::Node>&,
+                            const ngraph::element::Type&,
+                            const ngraph::AxisSet&>());
 }

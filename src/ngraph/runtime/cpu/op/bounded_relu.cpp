@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const std::string op::BoundedRelu::type_name{"BoundedRelu"};
+constexpr NodeTypeInfo op::BoundedRelu::type_info;
 
 op::BoundedRelu::BoundedRelu(const Output<Node>& arg, float alpha)
     : UnaryElementwiseArithmetic(arg)

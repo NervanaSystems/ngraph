@@ -48,29 +48,28 @@ using namespace ngraph::pass;
 
 int MLIRSubgraphExtractionPass::MLIRSubgraph::m_curr_graph_id = 0;
 
-template <typename T>
-void MLIRSubgraphExtractionPass::MLIRSubgraph::add_inputs(T& inputs)
+void MLIRSubgraphExtractionPass::MLIRSubgraph::add_inputs(NodeVector& inputs)
 {
     // inputs list are not exclusive, avoid duplication
     for (auto node : inputs)
     {
-        if (m_input_nodes.find(node) == m_input_nodes.end())
+        if (m_input_node_set.insert(node).second)
         {
-            m_input_nodes.insert(node);
+            m_input_node_vector.push_back(node);
         }
     }
 }
 
-template <typename T>
-void MLIRSubgraphExtractionPass::MLIRSubgraph::add_outputs(T& outputs)
+void MLIRSubgraphExtractionPass::MLIRSubgraph::add_outputs(NodeVector& outputs)
 {
-    m_output_nodes.insert(outputs.begin(), outputs.end());
+    m_output_nodes.insert(m_output_nodes.end(), outputs.begin(), outputs.end());
 }
 
 void MLIRSubgraphExtractionPass::MLIRSubgraph::add_node(std::shared_ptr<Node> node)
 {
-    NGRAPH_CHECK(m_nodes.find(node) == m_nodes.end(), "node added to graph before");
-    m_nodes.insert(node);
+    NGRAPH_CHECK(m_pass.m_node_to_graph.find(node) == m_pass.m_node_to_graph.end(),
+                 "node added to graph before");
+    m_nodes.emplace_back(node);
     m_pass.m_node_to_graph[node] = get_id();
 }
 
@@ -89,7 +88,7 @@ void MLIRSubgraphExtractionPass::MLIRSubgraph::merge(MLIRSubgraph& sg2)
     }
 
     // nodes  of sub-graphs are exclusive
-    m_nodes.insert(sg2.get_nodes().begin(), sg2.get_nodes().end());
+    m_nodes.insert(m_nodes.end(), sg2.get_nodes().begin(), sg2.get_nodes().end());
     // merge inputs
     add_inputs(sg2.get_inputs());
 
@@ -132,6 +131,7 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
     sanity_check(func, ck_nodes);
 #endif
 
+    clean_up();
     return true;
 }
 
@@ -437,50 +437,6 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
         }
     }
 
-    if (TI(ngraph::op::ArgMin) == TI(*node) || TI(ngraph::op::ArgMax) == TI(*node))
-    {
-        // TODO: Remove this when MLIR has float point cmp support
-        if (!node->input(0).get_element_type().is_integral())
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
-    }
-
-    if (TI(ngraph::op::Maximum) == TI(*node) || TI(ngraph::op::Minimum) == TI(*node))
-    {
-        // TODO: Remove this when MLIR has float point cmp support
-        if (!node->input(0).get_element_type().is_integral())
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
-    }
-
-    if (TI(ngraph::op::Greater) == TI(*node) || TI(ngraph::op::Less) == TI(*node))
-    {
-        // TODO: Remove this when MLIR has float point cmp support
-        if (!node->input(0).get_element_type().is_integral())
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
-    }
-
-    if (TI(ngraph::op::Negative) == TI(*node))
-    {
-        return true;
-    }
-
     if (TI(ngraph::op::Convolution) == TI(*node))
     {
         // No padding for now
@@ -490,12 +446,9 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
         auto data_dilation = conv_node->get_data_dilation_strides();
         auto window_dilation = conv_node->get_window_dilation_strides();
 
-        auto is_zero = [](size_t s) { return s == 0; };
         auto is_one = [](size_t s) { return s == 1; };
 
-        return std::all_of(pad_below.begin(), pad_below.end(), is_zero) &&
-               std::all_of(pad_above.begin(), pad_above.end(), is_zero) &&
-               std::all_of(data_dilation.begin(), data_dilation.end(), is_one) &&
+        return std::all_of(data_dilation.begin(), data_dilation.end(), is_one) &&
                std::all_of(window_dilation.begin(), window_dilation.end(), is_one);
     }
 
@@ -548,6 +501,12 @@ bool MLIRSubgraphExtractionPass::check_cycles(std::shared_ptr<Node> node,
             return true;
     }
     return false;
+}
+
+void MLIRSubgraphExtractionPass::clean_up()
+{
+    m_id_to_graph.clear();
+    m_node_to_graph.clear();
 }
 
 const std::set<std::type_index> MLIRSubgraphExtractionPass::m_supported_ops{

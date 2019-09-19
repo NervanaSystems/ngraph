@@ -53,7 +53,8 @@ bool ngraph::runtime::plaidml::PlaidML_Backend::is_supported(const Node& node) c
     return m_compiler.is_supported(node);
 }
 
-bool ngraph::runtime::plaidml::PlaidML_Backend::is_supported_property(const Property prop) const
+bool ngraph::runtime::plaidml::PlaidML_Backend::is_supported_property(
+    const Property /* prop */) const
 {
     return false;
 }

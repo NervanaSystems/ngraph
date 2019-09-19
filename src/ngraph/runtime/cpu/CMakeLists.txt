@@ -124,7 +124,6 @@ set(SRC
     pass/cpu_mat_fusion.cpp
     pass/cpu_memory_assignment.cpp
     pass/cpu_memory_optimization.cpp
-    pass/cpu_mkldnn_primitive_build.cpp
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
     pass/cpu_workspace_insertion.cpp
@@ -136,6 +135,7 @@ if (NOT NGRAPH_DEX_ONLY)
         cpu_emitter.cpp
         cpu_kernel_emitters.cpp
         cpu_kernel_utils.cpp
+        pass/cpu_mkldnn_primitive_build.cpp
         )
 endif()
 
@@ -167,6 +167,9 @@ if (NGRAPH_CPU_ENABLE)
         set_target_properties(cpu_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
+    endif()
+    if (NGRAPH_USE_LEGACY_MKLDNN)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_USE_LEGACY_MKLDNN")
     endif()
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
@@ -207,7 +210,8 @@ if (NGRAPH_CPU_ENABLE)
     target_compile_definitions(cpu_backend PRIVATE CPU_BACKEND_DLL_EXPORTS)
 
     add_dependencies(cpu_backend libmkldnn ext_eigen)
-    target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libtbb)
+   	target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libtbb)
+        
     if (NGRAPH_JSON_ENABLE)
         target_link_libraries(cpu_backend PUBLIC libjson)
     endif()
@@ -233,10 +237,8 @@ if (NGRAPH_CPU_ENABLE)
                                DEFINITION MLIR_LLVM_INCLUDEPATH)
         
         message(STATUS "Building CPU backend with MLIR")
-        message(STATUS "MLIR INCLUDE DIRS: ${MLIR_INCLUDE_PATHS}")
-        message(STATUS "LLVM INCLUDE DIRS: ${MLIR_LLVM_INCLUDEPATH}")
         add_dependencies(cpu_backend mlir_backend)
-        target_include_directories(cpu_backend PUBLIC ${MLIR_INCLUDE_PATHS} ${MLIR_LLVM_INCLUDEPATH})
+        target_include_directories(cpu_backend PUBLIC ${MLIR_INCLUDE_PATHS} ${MLIR_LLVM_INCLUDE_PATH})
         target_link_libraries(cpu_backend PUBLIC mlir_backend)
         # TODO: Get rid of the compile time def, and move all MLIR code to separate src files
         # and add them to cpu_backend here instead.

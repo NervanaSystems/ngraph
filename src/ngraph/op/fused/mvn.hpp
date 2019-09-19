@@ -30,8 +30,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"MVN", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             MVN() = default;
             /// \brief Constructs an MVN operation.
             ///
@@ -70,9 +70,9 @@ namespace ngraph
             bool get_normalize_variance() const { return m_normalize_variance; }
             AxisSet get_reduction_axes() const { return m_reduction_axes; }
         private:
-            const double m_eps;
-            const bool m_across_channels;
-            const bool m_normalize_variance;
+            double m_eps;
+            bool m_across_channels;
+            bool m_normalize_variance;
             AxisSet m_reduction_axes;
         };
     } // namespace op

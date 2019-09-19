@@ -34,7 +34,7 @@
     {                                                                                              \
         size_t size = out[0].get_size() * out[0].get_element_type().size();                        \
         auto functor = [&, size, arg_buffer_index, out_buffer_index](CPURuntimeContext* ctx,       \
-                                                                     CPUExecutionContext* ectx) {  \
+                                                                     CPUExecutionContext*) {       \
             memcpy(ctx->buffer_data[out_buffer_index], ctx->buffer_data[arg_buffer_index], size);  \
         };                                                                                         \
         functors.emplace_back(functor);                                                            \
@@ -186,4 +186,4 @@
                    reduction_axes,                                                                 \
                    ectx->arena);                                                                   \
     };                                                                                             \
-    functors.emplace_back(functor);
+    functors.emplace_back(functor)

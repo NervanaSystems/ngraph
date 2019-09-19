@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::CTCGreedyDecoder::type_name{"CTCGreedyDecoder"};
+constexpr NodeTypeInfo op::CTCGreedyDecoder::type_info;
 
 op::CTCGreedyDecoder::CTCGreedyDecoder(const Output<Node>& input,
                                        const Output<Node>& seq_len,

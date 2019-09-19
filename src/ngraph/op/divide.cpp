@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Divide::type_name{"Divide"};
+constexpr NodeTypeInfo op::Divide::type_info;
 
 op::Divide::Divide(const Output<Node>& arg0,
                    const Output<Node>& arg1,

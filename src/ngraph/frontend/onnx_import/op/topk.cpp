@@ -38,6 +38,7 @@ namespace ngraph
                     auto data = node.get_ng_inputs().at(0);
                     std::int64_t k{node.get_attribute_value<std::int64_t>("k")};
                     auto num_dimensions = data->get_shape().size();
+
                     std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
                     std::int64_t valid_axis = common::validate_axis(node, axis, num_dimensions);
 

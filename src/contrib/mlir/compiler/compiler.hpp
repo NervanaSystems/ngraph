@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and naming convention since it
-// exposes a public API to the rest of nGraph codebase.
+// NOTE: This file follows nGraph format style.
+// Follows nGraph naming convention for public APIs only, else MLIR naming convention.
 
 #pragma once
 
@@ -69,7 +69,7 @@ namespace ngraph
                 using TypeList = llvm::SmallVector<mlir::Type, 4>;
 
                 MLIRCompiler(const ngraph::op::CompiledKernel* compiled_kernel)
-                    : m_compiled_kernel(compiled_kernel)
+                    : m_compiledKernel(compiled_kernel)
                 {
                 }
 
@@ -77,12 +77,7 @@ namespace ngraph
                 void compile();
 
                 /// Executes a pre-compiled subgraph
-                void run(std::vector<void*>& external_tensors);
-
-                /// Returns the memory manager used by this sub-graph compiler.
-                MLIRMemMgr& get_mem_mgr() { return m_mem_mgr; }
-                /// Returns memory manager pointer argument ID in call interface.
-                unsigned get_mem_mgr_arg_id(mlir::FuncOp& func);
+                void run(std::vector<void*>& externalTensors);
 
             private:
                 struct TensorInfo
@@ -92,66 +87,66 @@ namespace ngraph
                 };
 
             private:
-                void build_ng_dialect_module();
-                void lower_ng_dialect();
+                void buildNgDialectModule();
+                void lowerNgDialect();
+                void optimizeNgDialect();
                 void optimize();
-                void bind_arguments(std::vector<void*>& external_tensors);
+                void bindArguments(std::vector<void*>& externalTensors);
                 void execute();
                 void cleanup();
 
-                mlir::Type get_mlir_type(const descriptor::Tensor* tensor);
-                mlir::Type get_mlir_type(const element::Type& type);
-                mlir::Type get_mlir_type(const ngraph::Node* node);
+                mlir::Type getMlirType(const descriptor::Tensor* tensor);
+                mlir::Type getMlirType(const element::Type& type);
+                mlir::Type getMlirType(const ngraph::Node* node);
 
-                TensorInfo get_tensor_value(descriptor::Tensor* tensor);
-                void update_tensor_value(descriptor::Tensor* tensor, mlir::Value* value);
+                TensorInfo getTensorValue(descriptor::Tensor* tensor);
+                void updateTensorValue(descriptor::Tensor* tensor, mlir::Value* value);
 
-                void build_ng_dialect();
+                void buildNgDialect();
 
                 template <typename Op>
-                static mlir::Operation* create_op(MLIRCompiler& compiler,
-                                                  const ngraph::Node* ng_node)
+                static mlir::Operation* createOp(MLIRCompiler& compiler, const ngraph::Node* ngNode)
                 {
-                    throw std::runtime_error("Unimplemented op '" + ng_node->description() +
+                    throw std::runtime_error("Unimplemented op '" + ngNode->description() +
                                              "' in MLIR Compiler");
                 }
 
                 // Generic op lowerer to ng dialect.
                 // Simply maps ngraph tensors to values and generate an OP. No op-specific logic.
                 template <typename Op>
-                mlir::Operation* create_generic_op(const ngraph::Node* ng_node);
+                mlir::Operation* createGenericOp(const ngraph::Node* ngNode);
 
                 template <typename RedOp>
-                mlir::Operation* create_index_reduction(const ngraph::Node* ng_node);
+                mlir::Operation* createIndexReduction(const ngraph::Node* ngNode);
 
-                void create_return();
+                void createReturn();
 
                 /// Helper to create memref arguments for MLIR function signature
-                llvm::SmallVector<void*, 8> allocate_memref_args();
+                llvm::SmallVector<void*, 8> allocateMemrefArgs();
 
                 /// Helper to allocate a mem ref object. Handles static shapes only for now.
-                mlir::StaticFloatMemRef* allocate_memref_descriptor();
+                mlir::StaticFloatMemRef* allocateMemrefDescriptor();
 
                 /// Helper to dump MLIR module into llvm::dbgs prepended by the message \p msg.
-                void dump_mlir_module(const std::string msg);
+                void dumpMlirModule(const std::string msg);
 
                 /// Converts nGraph shape-like types \p ng_shape to MLIR shape \p mlir_shape.
                 template <typename T>
-                void get_mlir_shape(T ng_shape, llvm::SmallVectorImpl<int64_t>& mlir_shape);
+                void getMlirShape(T ngShape, llvm::SmallVectorImpl<int64_t>& mlirShape);
 
                 /// Converts an ngraph shape to an I64 array attribute
                 template <typename T>
-                mlir::ArrayAttr get_shape_as_attr(T ng_shape);
+                mlir::ArrayAttr getShapeAsAttr(T ngShape);
 
             private:
                 // Sub-graph to be compiled and executed with MLIR.
-                const ngraph::op::CompiledKernel* m_compiled_kernel;
+                const ngraph::op::CompiledKernel* m_compiledKernel;
 
                 // Pointers to externally allocated memory for sub-graph's input and output tensors.
-                std::vector<void*>* m_external_tensors;
+                std::vector<void*>* m_externalTensors;
 
                 // Arguments for the MLIR function generated for the nGraph sub-graph.
-                llvm::SmallVector<void*, 8> m_invoke_args;
+                llvm::SmallVector<void*, 8> m_invokeArgs;
 
                 // MLIR context that holds all the MLIR information related to the sub-graph
                 // compilation.
@@ -169,14 +164,11 @@ namespace ngraph
 
                 // Maps tensor to the value it represents in the IR
                 // use for MLIR dialect gen
-                TensorToInfoMap m_tensor_to_value_map;
-                static const MLIRCompOpMap op_dispatcher;
-
-                // Memory manager for temp allocations inside JIT'ed code
-                MLIRMemMgr m_mem_mgr;
+                TensorToInfoMap m_tensorToValueMap;
+                static const MLIRCompOpMap opDispatcher;
 
                 // Optimization level used by MLIR and LLVM compilers.
-                static unsigned mlir_opt_level;
+                static unsigned mlirOptLevel;
 
                 // LLVM target machine to be used by this MLIR compiler instance to retrieve
                 // information about target features.
@@ -186,7 +178,7 @@ namespace ngraph
                 // machine or configuration flags.
                 // TODO: Move target machine to external nGraph backend when multiple backends start
                 // to use MLIR.
-                static std::unique_ptr<llvm::TargetMachine> target_machine;
+                static std::unique_ptr<llvm::TargetMachine> targetMachine;
             };
         }
     }

@@ -80,6 +80,7 @@
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize_l2.hpp"
 #include "ngraph/op/fused/prelu.hpp"
@@ -417,7 +418,7 @@ static void serialize_to_cpio(ostream& out, shared_ptr<ngraph::Function> func, s
 
     traverse_nodes(const_cast<Function*>(func.get()),
                    [&](shared_ptr<Node> node) {
-                       if (auto c = dynamic_pointer_cast<op::Constant>(node))
+                       if (auto c = node->as_type<op::Constant>())
                        {
                            uint32_t size =
                                static_cast<uint32_t>(shape_size(c->get_output_shape(0)) *
@@ -554,7 +555,7 @@ json JSONSerializer::serialize_function(const Function& f)
 template <typename T>
 T get_value(json js, const string& key)
 {
-    T rc;
+    T rc = {};
     auto it = js.find(key);
     if (it != js.end())
     {
@@ -623,8 +624,7 @@ ParameterVector JSONDeserializer::deserialize_parameter_vector(json json_paramet
     std::vector<std::shared_ptr<op::Parameter>> params;
     for (auto& param_ref : json_parameters)
     {
-        params.push_back(
-            dynamic_pointer_cast<op::Parameter>(deserialize_node_reference(param_ref)));
+        params.push_back(as_type_ptr<op::Parameter>(deserialize_node_reference(param_ref)));
     }
     return params;
 }
@@ -645,7 +645,7 @@ shared_ptr<Function> JSONDeserializer::deserialize_function(json func_js)
     for (auto& result_ref : func_result)
     {
         auto fr = deserialize_node_reference(result_ref);
-        if (auto res = std::dynamic_pointer_cast<op::Result>(fr))
+        if (auto res = as_type_ptr<op::Result>(fr))
         {
             result.push_back(res);
             // make sure we have `op::Result` on top of all outputs
@@ -719,15 +719,18 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         string node_name = node_js.at("name").get<string>();
         string node_op = node_js.at("op").get<string>();
         string friendly_name = get_value<string>(node_js, "friendly_name");
+        size_t op_version = get_value<size_t>(node_js, "op_version");
         vector<json> control_deps_inputs = get_value<vector<json>>(node_js, "control_deps");
         vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
         OutputVectorHelper args(deserialize_output_vector(node_js["inputs"]));
+
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
 #endif
+
         switch (get_typeid(node_op))
         {
         case OP_TYPEID::Abs:
@@ -1399,6 +1402,13 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                              input_forget);
             break;
         }
+        case OP_TYPEID::MatMul:
+        {
+            bool transpose_a = node_js.at("transpose_a").get<bool>();
+            bool transpose_b = node_js.at("transpose_b").get<bool>();
+            node = make_shared<op::MatMul>(args[0], args[1], transpose_a, transpose_b);
+            break;
+        }
         case OP_TYPEID::Max:
         {
             auto reduction_axes = deserialize_axis_set(node_js.at("reduction_axes"));
@@ -1540,21 +1550,37 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Pad:
         {
-            auto padding_below = node_js.at("padding_below").get<vector<ptrdiff_t>>();
-            auto padding_above = node_js.at("padding_above").get<vector<ptrdiff_t>>();
+            if (op_version == 0)
+            {
+                auto padding_below = node_js.at("padding_below").get<vector<ptrdiff_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<ptrdiff_t>>();
 
-            // This is a legacy field whose functionality is no longer supported. The new
-            // behavior is equivalent to interior padding of 0, so we will accept it under
-            // those conditions.
-            auto padding_interior = get_value<vector<size_t>>(node_js, "padding_interior");
-            NGRAPH_CHECK(std::all_of(padding_interior.begin(),
-                                     padding_interior.end(),
-                                     [](size_t s) { return s == 0; }),
-                         "Legacy padding_interior field must be zero everywhere.");
+                // This is a legacy field whose functionality is no longer supported. The new
+                // behavior is equivalent to interior padding of 0, so we will accept it under
+                // those conditions.
+                auto padding_interior = get_value<vector<size_t>>(node_js, "padding_interior");
+                NGRAPH_CHECK(std::all_of(padding_interior.begin(),
+                                         padding_interior.end(),
+                                         [](size_t s) { return s == 0; }),
+                             "Legacy padding_interior field must be zero everywhere.");
 
-            auto pad_mode = read_pad_mode(node_js);
+                auto pad_mode = read_pad_mode(node_js);
 
-            node = make_shared<op::Pad>(args[0], args[1], padding_below, padding_above, pad_mode);
+                node = make_shared<op::v0::Pad>(
+                    args[0], args[1], padding_below, padding_above, pad_mode);
+            }
+            if (op_version == 1)
+            {
+                auto pad_mode = read_pad_mode(node_js);
+                if (args.size() == 4)
+                {
+                    node = make_shared<op::v1::Pad>(args[0], args[1], args[2], args[3], pad_mode);
+                }
+                else
+                {
+                    node = make_shared<op::v1::Pad>(args[0], args[1], args[2], pad_mode);
+                }
+            }
             break;
         }
         case OP_TYPEID::Parameter:
@@ -1831,8 +1857,16 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Softmax:
         {
-            auto softmax_axes = deserialize_axis_set(node_js.at("softmax_axes"));
-            node = make_shared<op::Softmax>(args[0], softmax_axes);
+            if (op_version == 0)
+            {
+                auto softmax_axes = deserialize_axis_set(node_js.at("softmax_axes"));
+                node = make_shared<op::Softmax>(args[0], softmax_axes);
+            }
+            if (op_version == 1)
+            {
+                size_t softmax_axis = node_js.at("softmax_axis");
+                node = make_shared<op::v1::Softmax>(args[0], softmax_axis);
+            }
             break;
         }
         case OP_TYPEID::SpaceToDepth:
@@ -2028,6 +2062,9 @@ json JSONSerializer::serialize_node(const Node& n)
     m_nodes_serialized.insert(&n);
     json node;
     node["name"] = n.get_name();
+    auto op_version = n.get_version();
+    node["op_version"] = op_version;
+
     if (n.get_name() != n.get_friendly_name())
     {
         node["friendly_name"] = n.get_friendly_name();
@@ -2543,6 +2580,13 @@ json JSONSerializer::serialize_node(const Node& n)
         node["input_forget"] = tmp->get_input_forget();
         break;
     }
+    case OP_TYPEID::MatMul:
+    {
+        auto tmp = dynamic_cast<const op::MatMul*>(&n);
+        node["transpose_a"] = tmp->get_transpose_a();
+        node["transpose_b"] = tmp->get_transpose_b();
+        break;
+    }
     case OP_TYPEID::Max:
     {
         auto tmp = dynamic_cast<const op::Max*>(&n);
@@ -2647,10 +2691,18 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Pad:
     {
-        auto tmp = dynamic_cast<const op::Pad*>(&n);
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
-        node["pad_mode"] = tmp->get_pad_mode();
+        if (op_version == 0)
+        {
+            auto tmp = dynamic_cast<const op::v0::Pad*>(&n);
+            node["padding_below"] = tmp->get_padding_below();
+            node["padding_above"] = tmp->get_padding_above();
+            node["pad_mode"] = tmp->get_pad_mode();
+        }
+        if (op_version == 1)
+        {
+            auto tmp = dynamic_cast<const op::v1::Pad*>(&n);
+            node["pad_mode"] = tmp->get_pad_mode();
+        }
         break;
     }
     case OP_TYPEID::Parameter:
@@ -2881,8 +2933,16 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Softmax:
     {
-        auto tmp = dynamic_cast<const op::Softmax*>(&n);
-        node["softmax_axes"] = serialize_axis_set(tmp->get_axes());
+        if (op_version == 0)
+        {
+            auto tmp = dynamic_cast<const op::v0::Softmax*>(&n);
+            node["softmax_axes"] = serialize_axis_set(tmp->get_axes());
+        }
+        if (op_version == 1)
+        {
+            auto tmp = dynamic_cast<const op::v1::Softmax*>(&n);
+            node["softmax_axis"] = tmp->get_axis();
+        }
         break;
     }
     case OP_TYPEID::Tan: { break;

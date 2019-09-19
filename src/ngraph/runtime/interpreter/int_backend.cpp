@@ -14,51 +14,26 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/interpreter/int_backend.hpp"
+#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
+
+#include "ngraph/component_manager.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/runtime/interpreter/int_executable.hpp"
-#include "ngraph/runtime/interpreter/static_initialize.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-runtime::BackendConstructor* runtime::interpreter::get_backend_constructor_pointer()
+extern "C" INTERPRETER_BACKEND_API void ngraph_register_interpreter_backend()
 {
-    class INTBackendConstructor : public runtime::BackendConstructor
-    {
-    public:
-        std::shared_ptr<runtime::Backend> create(const std::string& config) override
-        {
-            return std::make_shared<runtime::interpreter::INTBackend>();
-        }
-    };
-
-    static unique_ptr<runtime::BackendConstructor> s_backend_constructor(
-        new INTBackendConstructor());
-    return s_backend_constructor.get();
-}
-
-#ifndef NGRAPH_INTERPRETER_STATIC_LIB_ENABLE
-extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
-{
-    return runtime::interpreter::get_backend_constructor_pointer();
-}
-#endif
-
-void runtime::interpreter::static_initialize()
-{
-    static bool s_is_initialized = false;
-    if (!s_is_initialized)
-    {
-        s_is_initialized = true;
-        BackendManager::register_backend("INTERPRETER",
-                                         runtime::interpreter::get_backend_constructor_pointer());
-    }
+    runtime::BackendManager::register_backend("INTERPRETER", [](const std::string& /* config */) {
+        return std::make_shared<runtime::interpreter::INTBackend>();
+    });
 }
 
 runtime::interpreter::INTBackend::INTBackend()

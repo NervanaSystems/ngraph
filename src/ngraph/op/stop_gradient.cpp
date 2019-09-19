@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::StopGradient::type_name{"StopGradient"};
+constexpr NodeTypeInfo op::StopGradient::type_info;
 
 op::StopGradient::StopGradient(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)

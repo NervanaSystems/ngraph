@@ -23,27 +23,10 @@ set(SRC
     memory_manager.cpp
     pass/mlir_subgraph_extraction.cpp
     pass/mlir_subgraph_extraction.hpp
+    pass/memory_optimization.cpp
 )
 
 add_library(mlir_backend SHARED ${SRC})
-
-message(STATUS "LLVM Directory: ${LLVM_DIR}")
-# Link LLVM and MLIR
-find_package(LLVM REQUIRED CONFIG)
-
-set(MLIR_LLVM_INCLUDEPATH ${LLVM_INCLUDE_DIRS})
-
-message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
-message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
-message(STATUS "LLVM RTTI is ${LLVM_ENABLE_RTTI}")
-add_definitions(${LLVM_DEFINITIONS})
-
-target_include_directories(mlir_backend PRIVATE ${LLVM_INCLUDE_DIRS})
-
-message(STATUS "MLIR Headers at : ${MLIR_INCLUDE_PATHS}")
-message(STATUS "LLVM Headers at : ${MLIR_LLVM_INCLUDEPATH}")
-
-target_include_directories(mlir_backend PRIVATE ${MLIR_INCLUDE_PATHS}) 
 
 llvm_map_components_to_libnames(llvm_libs support core irreader)
 
@@ -112,3 +95,5 @@ ngraph_tablegen(ops.cpp.inc -gen-op-defs)
 add_public_tablegen_target(ngraph_ops_gen)
 add_dependencies(mlir_backend ngraph_ops_gen)
 target_include_directories(mlir_backend PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+install(TARGETS mlir_backend DESTINATION ${NGRAPH_INSTALL_LIB})

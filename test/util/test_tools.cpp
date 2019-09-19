@@ -243,7 +243,7 @@ void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine
     }
     else if (et == element::f64)
     {
-        init_real_tv<double>(tv, engine, numeric_limits<float>::min(), 1.0f);
+        init_real_tv<double>(tv, engine, numeric_limits<double>::min(), 1.0);
     }
     else if (et == element::i8)
     {
