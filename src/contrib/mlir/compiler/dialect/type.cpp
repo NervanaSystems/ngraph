@@ -82,10 +82,14 @@ bool NGTensorType::isCompatible(NGTensorType& other) const
 {
     // Exact same tensor
     if (this == &other)
+    {
         return true;
+    }
     // different tensors, check if of same element type and compatible shapes
     if (getElementType() != other.getElementType())
+    {
         return false;
+    }
     // TODO: Handle dynamic ranks
     // MLIR MemRefType doesn't seem to support it at the moment.
     return isCompatibleShape(other);
@@ -97,7 +101,9 @@ bool NGTensorType::isCompatibleShape(NGTensorType& other) const
     auto otherShape = other.getShape();
 
     if (shape.size() != otherShape.size())
+    {
         return false;
+    }
 
     for (auto i = 0; i < shape.size(); i++)
     {
@@ -105,7 +111,9 @@ bool NGTensorType::isCompatibleShape(NGTensorType& other) const
         NGRAPH_CHECK(otherShape[i] >= -1, "Invalid tensor shape", otherShape[i]);
 
         if (shape[i] == -1 || otherShape[i] == -1 || shape[i] == otherShape[i])
+        {
             continue;
+        }
         return false;
     }
     return true;

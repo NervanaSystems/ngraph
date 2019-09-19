@@ -23,6 +23,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/pad.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 
@@ -127,7 +128,6 @@ namespace ngraph
         class MaxPoolWithIndices;
         class Reverse;
         class ReverseSequence;
-        class Pad;
         class MaxPoolWithIndicesBackprop;
         class Product;
         class Max;
@@ -166,20 +166,21 @@ namespace ngraph
             {
             public:
                 template <typename OP>
-                static void emit(CPU_ExternalFunction* external_function,
-                                 CodeWriter& writer,
+                static void emit(CPU_ExternalFunction* /* external_function */,
+                                 CodeWriter& /* writer */,
                                  const ngraph::Node* node,
-                                 const std::vector<TensorViewWrapper>& args,
-                                 const std::vector<TensorViewWrapper>& out)
+                                 const std::vector<TensorViewWrapper>& /* args */,
+                                 const std::vector<TensorViewWrapper>& /* out */)
                 {
                     throw std::runtime_error("Unimplemented op '" + node->description() +
                                              "' in CPU emitter");
                 }
-                static void nop(CPU_ExternalFunction* external_function,
-                                CodeWriter& writer,
-                                const ngraph::Node* node,
-                                const std::vector<TensorViewWrapper>& args,
-                                const std::vector<TensorViewWrapper>& out)
+
+                static void nop(CPU_ExternalFunction* /* external_function */,
+                                CodeWriter& /* writer */,
+                                const ngraph::Node* /* node */,
+                                const std::vector<TensorViewWrapper>& /* args */,
+                                const std::vector<TensorViewWrapper>& /* out */)
                 {
                 }
 

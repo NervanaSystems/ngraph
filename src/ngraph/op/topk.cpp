@@ -59,7 +59,7 @@ op::TopK::TopK(const Output<Node>& arg,
 size_t op::TopK::get_k() const
 {
     size_t k = 0;
-    if (auto const_op = dynamic_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr()))
+    if (auto const_op = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr()))
     {
         k = const_op->get_vector<int64_t>()[0];
     }
@@ -133,7 +133,7 @@ shared_ptr<Node> op::TopK::copy_with_new_args(const NodeVector& new_args) const
         new_args.at(0), new_args.at(1), m_top_k_axis, m_index_element_type, m_compute_max, m_sort);
 }
 
-void op::TopK::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::TopK::generate_adjoints(autodiff::Adjoints& /* adjoints */, const NodeVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }

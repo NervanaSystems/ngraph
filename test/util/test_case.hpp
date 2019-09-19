@@ -198,8 +198,8 @@ namespace ngraph
             std::vector<std::shared_ptr<ngraph::runtime::Tensor>> m_input_tensors;
             std::vector<std::shared_ptr<ngraph::runtime::Tensor>> m_result_tensors;
             std::vector<std::shared_ptr<ngraph::op::Constant>> m_expected_outputs;
-            int m_input_index = 0;
-            int m_output_index = 0;
+            size_t m_input_index = 0;
+            size_t m_output_index = 0;
             bool m_dump_results = false;
             int m_tolerance_bits = DEFAULT_DOUBLE_TOLERANCE_BITS;
         };

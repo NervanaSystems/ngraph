@@ -62,7 +62,7 @@ namespace ngraph
                                arg2_buffer_index,
                                arg3_buffer_index,
                                arg4_buffer_index](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
+                                                  CPUExecutionContext* /* ectx */) {
                         bool training = static_cast<bool>(
                             static_cast<float*>(ctx->buffer_data[arg_buffer_index])[0]);
                         // TODO: get shape when required
@@ -101,7 +101,7 @@ namespace ngraph
                                arg2_buffer_index,
                                arg3_buffer_index,
                                arg4_buffer_index](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
+                                                  CPUExecutionContext* /* ectx */) {
                         bool training = static_cast<bool>(
                             static_cast<double*>(ctx->buffer_data[arg_buffer_index])[0]);
                         // TODO: get shape when required
