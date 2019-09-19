@@ -2718,7 +2718,7 @@ json JSONSerializer::serialize_node(const Node& n)
             node["pads_begin"] = tmp->get_pads_begin();
             node["pads_end"] = tmp->get_pads_end();
             node["auto_pad"] = tmp->get_auto_pad();
-            node["rounding_type"] = tmp->get_rounding_mode();
+            node["rounding_type"] = tmp->get_rounding_type();
         }
         break;
     }

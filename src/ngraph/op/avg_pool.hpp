@@ -234,7 +234,7 @@ namespace ngraph
                 /// `[d1, dn]`
                 /// \param strides The strides.<br>
                 /// `[n]`
-                /// \param pads_begin The beggining of padding shape.<br>
+                /// \param pads_begin The beginning of padding shape.<br>
                 /// `[n]`
                 /// \param pads_end The end of padding shape.<br>
                 /// `[n]`
@@ -260,7 +260,7 @@ namespace ngraph
                 /// `[d1, dn]`
                 /// \param strides The strides.<br>
                 /// `[n]`
-                /// \param pads_begin The beggining of padding shape.<br>
+                /// \param pads_begin The beginning of padding shape.<br>
                 /// `[n]`
                 /// \param pads_end The end of padding shape.<br>
                 /// `[n]`
@@ -279,6 +279,7 @@ namespace ngraph
                         bool exclude_pad,
                         op::RoundingType rounding_type);
 
+                size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
@@ -293,7 +294,7 @@ namespace ngraph
                 /// \return The strides.
                 const Strides& get_strides() const;
                 void set_strides(const Strides& strides);
-                /// \return The beggining of padding shape.
+                /// \return The beginning of padding shape.
                 const Shape& get_pads_begin() const;
                 void set_pads_begin(const Shape& pads_begin);
                 /// \return The end of padding shape.
@@ -334,6 +335,7 @@ namespace ngraph
                                 const Shape& kernel,
                                 bool exclude_pad);
 
+                size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
