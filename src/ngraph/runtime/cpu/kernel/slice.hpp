@@ -99,13 +99,13 @@ namespace ngraph
                                const Strides& slice_strides,
                                const Shape& output_shape)
                 {
-                    reference::slice(static_cast<ElementType*>(input),
-                                     static_cast<ElementType*>(output),
-                                     input_shape,
-                                     lower_bounds,
-                                     upper_bounds,
-                                     slice_strides,
-                                     output_shape);
+                    reference::slice<ElementType>(static_cast<ElementType*>(input),
+                                                  static_cast<ElementType*>(output),
+                                                  input_shape,
+                                                  lower_bounds,
+                                                  upper_bounds,
+                                                  slice_strides,
+                                                  output_shape);
                 }
             }
         }

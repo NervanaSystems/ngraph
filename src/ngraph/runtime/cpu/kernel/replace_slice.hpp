@@ -112,14 +112,14 @@ namespace ngraph
                                        const Strides& slice_strides,
                                        const Shape& output_shape)
                 {
-                    reference::replace_slice(static_cast<ElementType*>(input0),
-                                             static_cast<ElementType*>(input1),
-                                             static_cast<ElementType*>(output),
-                                             input0_shape,
-                                             lower_bounds,
-                                             upper_bounds,
-                                             slice_strides,
-                                             output_shape);
+                    reference::replace_slice<ElementType>(static_cast<ElementType*>(input0),
+                                                          static_cast<ElementType*>(input1),
+                                                          static_cast<ElementType*>(output),
+                                                          input0_shape,
+                                                          lower_bounds,
+                                                          upper_bounds,
+                                                          slice_strides,
+                                                          output_shape);
                 }
             }
         }
