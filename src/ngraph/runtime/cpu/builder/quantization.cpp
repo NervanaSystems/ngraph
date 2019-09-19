@@ -359,7 +359,7 @@ namespace ngraph
                                         scales_size);
                                 for (size_t i = 0; i < scales_size; i++)
                                 {
-                                    dyn_scales[i] = 1.0 / dyn_scales[i];
+                                    dyn_scales[i] = 1.0f / dyn_scales[i];
                                 }
                                 // quantize across first dim (mask=2^0) if dyn_scales is a vector
                                 const int mask = scales_size == 1 ? 0 : 1;
@@ -387,7 +387,7 @@ namespace ngraph
                     {
                         auto scale = scale_const_op->get_vector<float>();
                         std::vector<float> scales;
-                        scales.push_back(1.0 / scale[0]);
+                        scales.push_back(1.0f / scale[0]);
                         size_t quantize_index = mkldnn_emitter->reserve_primitive_space(3);
                         auto& deps = mkldnn_emitter->get_primitive_deps(quantize_index);
 
