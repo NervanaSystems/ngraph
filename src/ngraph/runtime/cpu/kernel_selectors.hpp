@@ -48,7 +48,7 @@
 #define EXPAND_ETS_AND_RANK7(K, KV, ET, R, S, ...)                                                 \
     EXPAND_ETS(K, KV, ET, EXPAND_RANK7, R, S, ##__VA_ARGS__)
 
-#define EXPAND_S(x) x
+#define EXPAND_S(S) S // VS compiler workaround
 
 // Expander Macros that instantiate kernels for various element types and ranks
 #define EXPAND_ET4(K, KV, ET, S, ...)                                                              \
