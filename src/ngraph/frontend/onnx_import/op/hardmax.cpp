@@ -42,7 +42,6 @@ namespace ngraph
                     auto valid_axis = common::validate_axis(node, axis, input_shape.size());
 >>>>>>> Added validation for axis/axes.
 
-
                     // reshape to 2D - "batch size" x "input feature dimensions" (NxD)
                     const auto coerced_tensor = ngraph::builder::flatten(input, valid_axis);
                     const auto& coerced_shape = coerced_tensor->get_shape();
