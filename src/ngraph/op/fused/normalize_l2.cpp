@@ -80,7 +80,7 @@ AxisSet op::NormalizeL2::get_reduction_axes() const
 {
     AxisSet axes;
     auto axes_input_node = input_value(1).get_node_shared_ptr();
-    if (auto const_op = dynamic_pointer_cast<op::Constant>(axes_input_node))
+    if (auto const_op = as_type_ptr<op::Constant>(axes_input_node))
     {
         axes = const_op->get_axis_set_val();
     }

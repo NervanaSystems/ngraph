@@ -40,10 +40,9 @@ using namespace ngraph;
 
 bool is_supported_unary_op(std::shared_ptr<Node> n)
 {
-    return std::dynamic_pointer_cast<op::Abs>(n) || std::dynamic_pointer_cast<op::Ceiling>(n) ||
-           std::dynamic_pointer_cast<op::Floor>(n) || std::dynamic_pointer_cast<op::Negative>(n) ||
-           std::dynamic_pointer_cast<op::Not>(n) || std::dynamic_pointer_cast<op::Relu>(n) ||
-           std::dynamic_pointer_cast<op::Sign>(n) || std::dynamic_pointer_cast<op::Sqrt>(n);
+    return n->is_type<op::Abs>() || n->is_type<op::Ceiling>() || n->is_type<op::Floor>() ||
+           n->is_type<op::Negative>() || n->is_type<op::Not>() || n->is_type<op::Relu>() ||
+           n->is_type<op::Sign>() || n->is_type<op::Sqrt>();
 }
 
 template <class T>
@@ -52,7 +51,7 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
                                              NodeExecutorTy func)
 {
     // check sqrt arg
-    if (std::dynamic_pointer_cast<op::Sqrt>(unary))
+    if (unary->is_type<op::Sqrt>())
     {
         std::vector<T> values{constant->get_vector<T>()};
         if (std::any_of(values.begin(), values.end(), [](T i) { return i < T(0); }))
@@ -75,42 +74,42 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
     }
     else
     {
-        if (std::dynamic_pointer_cast<op::Abs>(unary))
+        if (unary->is_type<op::Abs>())
         {
             runtime::reference::abs<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-        else if (std::dynamic_pointer_cast<op::Ceiling>(unary))
+        else if (unary->is_type<op::Ceiling>())
         {
             runtime::reference::ceiling<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-        else if (std::dynamic_pointer_cast<op::Floor>(unary))
+        else if (unary->is_type<op::Floor>())
         {
             runtime::reference::floor<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-        else if (std::dynamic_pointer_cast<op::Negative>(unary))
+        else if (unary->is_type<op::Negative>())
         {
             runtime::reference::negate<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-        else if (std::dynamic_pointer_cast<op::Not>(unary))
+        else if (unary->is_type<op::Not>())
         {
             runtime::reference::logical_not<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-        else if (std::dynamic_pointer_cast<op::Relu>(unary))
+        else if (unary->is_type<op::Relu>())
         {
             runtime::reference::relu<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-        else if (std::dynamic_pointer_cast<op::Sign>(unary))
+        else if (unary->is_type<op::Sign>())
         {
             runtime::reference::sign<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-        else if (std::dynamic_pointer_cast<op::Sqrt>(unary))
+        else if (unary->is_type<op::Sqrt>())
         {
             runtime::reference::sqrt<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
@@ -129,8 +128,7 @@ void pass::ConstantFolding::construct_constant_unary()
     auto constant_label = make_shared<pattern::op::Label>(
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
     auto is_ue = [](std::shared_ptr<Node> n) {
-        return (pattern::has_class<op::util::UnaryElementwiseArithmetic>()(n) ||
-                pattern::has_class<op::Not>()(n));
+        return n->is_unary_elementwise_arithmetic() || pattern::has_class<op::Not>()(n);
     };
     auto ue = std::make_shared<pattern::op::Any>(constant_label, is_ue, NodeVector{constant_label});
 
@@ -140,7 +138,7 @@ void pass::ConstantFolding::construct_constant_unary()
 
         auto pattern_map = m.get_pattern_map();
 
-        auto constant_match = dynamic_pointer_cast<op::Constant>(pattern_map[constant_label]);
+        auto constant_match = as_type_ptr<op::Constant>(pattern_map[constant_label]);
         auto unary_match = m.get_match_root();
 
         if (!is_supported_unary_op(unary_match))

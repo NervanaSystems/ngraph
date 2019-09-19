@@ -69,11 +69,11 @@ namespace ngraph
                     Eigen::array<Eigen::Index, Rank1> in_dims;
                     Eigen::array<Eigen::Index, Rank2> out_dims;
 
-                    for (int i = 0; i < Rank1; i++)
+                    for (size_t i = 0; i < Rank1; i++)
                     {
                         in_dims[i] = inputs_shape[i];
                     }
-                    for (int i = 0; i < Rank2; i++)
+                    for (size_t i = 0; i < Rank2; i++)
                     {
                         out_dims[i] = output_shape[i];
                     }
@@ -86,7 +86,7 @@ namespace ngraph
                     auto indices_ptr = static_cast<IndicesType*>(indices);
                     auto indices_rank = indices_shape.size();
                     auto outer_loop_num = 1;
-                    for (int i = 0; i < axis; i++)
+                    for (size_t i = 0; i < axis; i++)
                     {
                         outer_loop_num *= inputs_shape[i];
                     }
@@ -109,13 +109,13 @@ namespace ngraph
                             get_indices(inputs_shape, i, indices_before_axis, axis);
 
                             // before axis
-                            for (int r = 0; r < axis; r++)
+                            for (size_t r = 0; r < axis; r++)
                             {
                                 in_extents[r] = 1;
                                 in_offsets[r] = indices_before_axis[r];
                             }
                             // from axis
-                            for (int r = axis; r < Rank1; r++)
+                            for (size_t r = axis; r < Rank1; r++)
                             {
                                 in_extents[r] = inputs_shape[r];
                                 in_offsets[r] = 0;
@@ -126,13 +126,13 @@ namespace ngraph
                             in_offsets[axis] = indices_ptr[0];
 
                             // before axis
-                            for (int r = 0; r < axis; r++)
+                            for (size_t r = 0; r < axis; r++)
                             {
                                 out_extents[r] = 1;
                                 out_offsets[r] = indices_before_axis[r];
                             }
                             // after axis
-                            for (int r = axis; r < Rank2; r++)
+                            for (size_t r = axis; r < Rank2; r++)
                             {
                                 out_extents[r] = output_shape[r];
                                 out_offsets[r] = 0;
@@ -146,7 +146,7 @@ namespace ngraph
                     else
                     {
                         size_t num_indices = 1;
-                        for (auto d : indices_shape)
+                        for (size_t d : indices_shape)
                         {
                             num_indices *= d;
                         }
@@ -154,7 +154,9 @@ namespace ngraph
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-                        for (int i = 0; i < outer_loop_num * num_indices; i++)
+                        // omp requires signed iterator
+                        for (int64_t i = 0; i < static_cast<int64_t>(outer_loop_num * num_indices);
+                             i++)
                         {
                             Eigen::array<Eigen::Index, Rank1> in_extents, in_offsets;
                             Eigen::array<Eigen::Index, Rank2> out_extents, out_offsets;
@@ -166,13 +168,13 @@ namespace ngraph
                             std::vector<int> indices_from_indices_arg(indices_rank);
 
                             // before axis
-                            for (int r = 0; r < axis; r++)
+                            for (size_t r = 0; r < axis; r++)
                             {
                                 in_extents[r] = 1;
                                 in_offsets[r] = indices_before_axis[r];
                             }
                             // from axis
-                            for (int r = axis; r < Rank1; r++)
+                            for (size_t r = axis; r < Rank1; r++)
                             {
                                 in_extents[r] = inputs_shape[r];
                                 in_offsets[r] = 0;
@@ -180,13 +182,13 @@ namespace ngraph
                             // at axis
                             in_extents[axis] = 1;
                             // before axis
-                            for (int r = 0; r < axis; r++)
+                            for (size_t r = 0; r < axis; r++)
                             {
                                 out_extents[r] = 1;
                                 out_offsets[r] = indices_before_axis[r];
                             }
                             // from axis
-                            for (int r = axis; r < Rank2; r++)
+                            for (size_t r = axis; r < Rank2; r++)
                             {
                                 out_extents[r] = output_shape[r];
                                 out_offsets[r] = 0;
@@ -201,7 +203,7 @@ namespace ngraph
                             // indices_from_indices_arg would contain indices at position 1 and 2
                             // for output slice offsets.
                             get_indices(indices_shape, k, indices_from_indices_arg, indices_rank);
-                            for (int j = 0; j < indices_rank; j++)
+                            for (size_t j = 0; j < indices_rank; j++)
                             {
                                 out_extents[j + axis] = 1;
                                 out_offsets[j + axis] = indices_from_indices_arg[j];
