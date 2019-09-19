@@ -74,47 +74,47 @@
 #define EXPAND_ET11(K, KV, ET, S, ...)                                                             \
     if (ET == element::boolean)                                                                    \
     {                                                                                              \
-        S(K, KV, ##__VA_ARGS__, char);                                                             \
+        EXPAND_S(S(K, KV, ##__VA_ARGS__, char));                                                   \
     }                                                                                              \
     else if (ET == element::f32)                                                                   \
     {                                                                                              \
-        S(K, KV, ##__VA_ARGS__, float);                                                            \
+        EXPAND_S(S(K, KV, ##__VA_ARGS__, float));                                                  \
     }                                                                                              \
     else if (ET == element::f64)                                                                   \
     {                                                                                              \
-        S(K, KV, ##__VA_ARGS__, double);                                                           \
+        EXPAND_S(S(K, KV, ##__VA_ARGS__, double));                                                 \
     }                                                                                              \
     else if (ET == element::i8)                                                                    \
     {                                                                                              \
-        S(K, KV, ##__VA_ARGS__, int8_t);                                                           \
+        EXPAND_S(S(K, KV, ##__VA_ARGS__, int8_t));                                                 \
     }                                                                                              \
     else if (ET == element::i16)                                                                   \
     {                                                                                              \
-        S(K, KV, ##__VA_ARGS__, int16_t);                                                          \
+        EXPAND_S(S(K, KV, ##__VA_ARGS__, int16_t));                                                \
     }                                                                                              \
     else if (ET == element::i32)                                                                   \
     {                                                                                              \
-        S(K, KV, ##__VA_ARGS__, int32_t);                                                          \
+        EXPAND_S(S(K, KV, ##__VA_ARGS__, int32_t));                                                \
     }                                                                                              \
     else if (ET == element::i64)                                                                   \
     {                                                                                              \
-        S(K, KV, ##__VA_ARGS__, int64_t);                                                          \
+        EXPAND_S(S(K, KV, ##__VA_ARGS__, int64_t));                                                \
     }                                                                                              \
     else if (ET == element::u8)                                                                    \
     {                                                                                              \
-        S(K, KV, ##__VA_ARGS__, uint8_t);                                                          \
+        EXPAND_S(S(K, KV, ##__VA_ARGS__, uint8_t));                                                \
     }                                                                                              \
     else if (ET == element::u16)                                                                   \
     {                                                                                              \
-        S(K, KV, ##__VA_ARGS__, uint16_t);                                                         \
+        EXPAND_S(S(K, KV, ##__VA_ARGS__, uint16_t));                                               \
     }                                                                                              \
     else if (ET == element::u32)                                                                   \
     {                                                                                              \
-        S(K, KV, ##__VA_ARGS__, uint32_t);                                                         \
+        EXPAND_S(S(K, KV, ##__VA_ARGS__, uint32_t));                                               \
     }                                                                                              \
     else if (ET == element::u64)                                                                   \
     {                                                                                              \
-        S(K, KV, ##__VA_ARGS__, uint64_t);                                                         \
+        EXPAND_S(S(K, KV, ##__VA_ARGS__, uint64_t));                                               \
     }                                                                                              \
     else                                                                                           \
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);
