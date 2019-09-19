@@ -639,36 +639,37 @@ mlir::Operation* MLIRCompiler::createGenericOp(const ngraph::Node* ngNode)
 {
     std::vector<mlir::Value*> arg_values;
     std::vector<mlir::Type> res_types;
-    auto input_map = m_compiled_kernel->get_input_map();
+    auto input_map = m_compiledKernel->get_input_map();
     std::shared_ptr<descriptor::Tensor> arg_tensor;
-    for (auto& arg : ng_node->get_arguments())
+    for (auto& arg_output : ngNode->input_values())
     {
-        if (std::dynamic_pointer_cast<ngraph::op::Parameter>(arg))
+        auto arg_output_node = arg_output.get_node();
+        if (as_type<op::Parameter>(arg_output_node))
         {
-            auto it = input_map.find(arg);
+            auto it = input_map.find(arg_output_node->shared_from_this());
             NGRAPH_CHECK(it != input_map.end(), "Parameter not in CK input map");
 
-            arg_tensor = m_compiled_kernel->get_argument(it->second)->get_output_tensor_ptr();
+            arg_tensor = m_compiledKernel->input_values().at(it->second).get_tensor_ptr();
         }
         else
         {
-            arg_tensor = arg->get_output_tensor_ptr();
+            arg_tensor = arg_output.get_tensor_ptr();
         }
 
-        auto arg_v = get_tensor_value(arg_tensor.get()).m_value;
+        auto arg_v = getTensorValue(arg_tensor.get()).m_value;
         arg_values.push_back(arg_v);
     }
 
     for (auto& output : ngNode->outputs())
     {
-        resTypes.push_back(getMlirType(output.get_tensor_ptr().get()));
+        res_types.push_back(getMlirType(output.get_tensor_ptr().get()));
     }
 
     return (m_builder->create<Op,
                               ArrayRef<mlir::Type>,
                               ArrayRef<mlir::Value*>,
                               ArrayRef<mlir::NamedAttribute>>(
-                mlir::UnknownLoc::get(&m_context), resTypes, argValues, {/* no attrs */}))
+                mlir::UnknownLoc::get(&m_context), res_types, arg_values, {/* no attrs */}))
         .getOperation();
 }
 

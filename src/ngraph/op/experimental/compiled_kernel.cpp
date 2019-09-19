@@ -45,7 +45,7 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
         OutputVector cur_args;
         for (auto a : n->input_values())
         {
-            if (dynamic_cast<ngraph::op::Parameter*>(a.get_node()))
+            if (as_type<op::Parameter>(a.get_node()))
             {
                 // dummy parameter
                 cur_args.push_back(a);
@@ -115,7 +115,7 @@ void ngraph::op::CompiledKernel::encapsulate_nodes()
         for (auto& input : arg_output.get_target_inputs())
         {
             auto user = input.get_node();
-            if (!dynamic_cast<ngraph::op::CompiledKernel*>(user) &&
+            if (!as_type<op::CompiledKernel>(user) &&
                 node_set.find(user->shared_from_this()) != node_set.end())
             {
                 arg_output.remove_target_input(input);
