@@ -16,6 +16,8 @@
 
 #pragma once
 
+// VS compiler treats __VA_ARGS__ as a single token argument rather than expanding it
+// so the macro below is a workaround to that
 #define EXPAND_MACRO(S) S // VS compiler workaround
 
 // Selector Macros for builders to instantiate and pick kernels
@@ -119,7 +121,12 @@
     else                                                                                           \
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);
 
-// Workaround since VS compiler doesn;t work well with variadic macros
+// Workaround since VS compiler doesn;t work well with variadic macros.
+// EXPAND_ET11 Takes variable arguments and since SELECT_KERNEL & SELECT_KERNEL_3ARGS
+// call into that macro without variable args, the VS compiler expands them as
+// KERNEL_CT(K, KV, ,) thus giving a syntax error. The VS compiler doesn't deal well with
+// igonring comma. Hence we have replicated EXPAND_ET11 and added EXPAND_ET11_FIXED_ARGS
+// for calls that dont have variable args.
 #define EXPAND_ET11_FIXED_ARGS(K, KV, ET, S)                                                       \
     if (ET == element::boolean)                                                                    \
     {                                                                                              \
