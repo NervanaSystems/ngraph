@@ -54,19 +54,19 @@
 #define EXPAND_ET4(K, KV, ET, S, ...)                                                              \
     if (ET == element::f32)                                                                        \
     {                                                                                              \
-        S(K, KV, ##__VA_ARGS__, float);                                                            \
+        EXPAND_S(S(K, KV, ##__VA_ARGS__, float));                                                  \
     }                                                                                              \
     else if (ET == element::f64)                                                                   \
     {                                                                                              \
-        S(K, KV, ##__VA_ARGS__, double);                                                           \
+        EXPAND_S(S(K, KV, ##__VA_ARGS__, double));                                                 \
     }                                                                                              \
     else if (ET == element::i8)                                                                    \
     {                                                                                              \
-        S(K, KV, ##__VA_ARGS__, int8_t);                                                           \
+        EXPAND_S(S(K, KV, ##__VA_ARGS__, int8_t));                                                 \
     }                                                                                              \
     else if (ET == element::u8)                                                                    \
     {                                                                                              \
-        S(K, KV, ##__VA_ARGS__, uint8_t);                                                          \
+        EXPAND_S(S(K, KV, ##__VA_ARGS__, uint8_t));                                                \
     }                                                                                              \
     else                                                                                           \
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);
@@ -171,33 +171,33 @@
 #define EXPAND_RANK3(K, KV, R, S, ...)                                                             \
     switch (R)                                                                                     \
     {                                                                                              \
-    case 1: S(K, KV, ##__VA_ARGS__, 1); break;                                                     \
-    case 2: S(K, KV, ##__VA_ARGS__, 2); break;                                                     \
-    case 3: S(K, KV, ##__VA_ARGS__, 3); break;                                                     \
+    case 1: EXPAND_S(S(K, KV, ##__VA_ARGS__, 1)); break;                                           \
+    case 2: EXPAND_S(S(K, KV, ##__VA_ARGS__, 2)); break;                                           \
+    case 3: EXPAND_S(S(K, KV, ##__VA_ARGS__, 3)); break;                                           \
     default: throw ngraph_error("Unsupported rank " + std::to_string(R) + " for kernel " #K);      \
     }
 
 #define EXPAND_RANK5(K, KV, R, S, ...)                                                             \
     switch (R)                                                                                     \
     {                                                                                              \
-    case 1: S(K, KV, ##__VA_ARGS__, 1); break;                                                     \
-    case 2: S(K, KV, ##__VA_ARGS__, 2); break;                                                     \
-    case 3: S(K, KV, ##__VA_ARGS__, 3); break;                                                     \
-    case 4: S(K, KV, ##__VA_ARGS__, 4); break;                                                     \
-    case 5: S(K, KV, ##__VA_ARGS__, 5); break;                                                     \
+    case 1: EXPAND_S(S(K, KV, ##__VA_ARGS__, 1)); break;                                           \
+    case 2: EXPAND_S(S(K, KV, ##__VA_ARGS__, 2)); break;                                           \
+    case 3: EXPAND_S(S(K, KV, ##__VA_ARGS__, 3)); break;                                           \
+    case 4: EXPAND_S(S(K, KV, ##__VA_ARGS__, 4)); break;                                           \
+    case 5: EXPAND_S(S(K, KV, ##__VA_ARGS__, 5)); break;                                           \
     default: throw ngraph_error("Unsupported rank " + std::to_string(R) + " for kernel " #K);      \
     }
 
 #define EXPAND_RANK7(K, KV, R, S, ...)                                                             \
     switch (R)                                                                                     \
     {                                                                                              \
-    case 1: S(K, KV, ##__VA_ARGS__, 1); break;                                                     \
-    case 2: S(K, KV, ##__VA_ARGS__, 2); break;                                                     \
-    case 3: S(K, KV, ##__VA_ARGS__, 3); break;                                                     \
-    case 4: S(K, KV, ##__VA_ARGS__, 4); break;                                                     \
-    case 5: S(K, KV, ##__VA_ARGS__, 5); break;                                                     \
-    case 6: S(K, KV, ##__VA_ARGS__, 6); break;                                                     \
-    case 7: S(K, KV, ##__VA_ARGS__, 7); break;                                                     \
+    case 1: EXPAND_S(S(K, KV, ##__VA_ARGS__, 1)); break;                                           \
+    case 2: EXPAND_S(S(K, KV, ##__VA_ARGS__, 2)); break;                                           \
+    case 3: EXPAND_S(S(K, KV, ##__VA_ARGS__, 3)); break;                                           \
+    case 4: EXPAND_S(S(K, KV, ##__VA_ARGS__, 4)); break;                                           \
+    case 5: EXPAND_S(S(K, KV, ##__VA_ARGS__, 5)); break;                                           \
+    case 6: EXPAND_S(S(K, KV, ##__VA_ARGS__, 6)); break;                                           \
+    case 7: EXPAND_S(S(K, KV, ##__VA_ARGS__, 7)); break;                                           \
     default: throw ngraph_error("Unsupported rank " + std::to_string(R) + " for kernel " #K);      \
     }
 
