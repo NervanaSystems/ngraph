@@ -90,7 +90,13 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     // We apply the same general-purposes passes as the CPU backend.
     pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>([](const Node& node) -> bool {
         if (node.description() == ngraph::op::GroupConvolution().description())
+        {
             return true;
+        }
+        else if (node.description() == ngraph::op::LayerNorm().description())
+        {
+            return true;
+        }
         return false;
     });
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
