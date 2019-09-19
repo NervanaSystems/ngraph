@@ -169,7 +169,7 @@ namespace ngraph
                 template <typename ElementType>
                 void ref_softmax(void* input, void* output, const Shape& shape, const AxisSet& axes)
                 {
-                    reference::softmax<ElementType>(static_cast<ElementType*>(input),
+                    reference::softmax<ElementType>(static_cast<const ElementType*>(input),
                                                     static_cast<ElementType*>(output),
                                                     shape,
                                                     axes);

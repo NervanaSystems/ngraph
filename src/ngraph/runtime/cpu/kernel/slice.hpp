@@ -99,7 +99,7 @@ namespace ngraph
                                const Strides& slice_strides,
                                const Shape& output_shape)
                 {
-                    reference::slice<ElementType>(static_cast<ElementType*>(input),
+                    reference::slice<ElementType>(static_cast<const ElementType*>(input),
                                                   static_cast<ElementType*>(output),
                                                   input_shape,
                                                   lower_bounds,
