@@ -24,15 +24,15 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Concat::type_info;
 
-op::Concat::Concat(const OutputVector& args, size_t concatenation_axis)
+op::Concat::Concat(const OutputVector& args, size_t axis)
     : Op(args)
-    , m_concatenation_axis(concatenation_axis)
+    , m_axis(axis)
 {
     constructor_validate_and_infer_types();
 }
 
-op::Concat::Concat(const NodeVector& args, size_t concatenation_axis)
-    : Concat(as_output_vector(args), concatenation_axis)
+op::Concat::Concat(const NodeVector& args, size_t axis)
+    : Concat(as_output_vector(args), axis)
 {
 }
 
@@ -44,16 +44,16 @@ void op::Concat::validate_and_infer_types()
     element::Type inputs_et{element::dynamic};
     Dimension concatenation_axis_output_dim{0};
 
-    for (auto i = 0; i < get_input_size(); i++)
+    for (uint64_t i = 0; i < get_input_size(); i++)
     {
         PartialShape this_input_shape = get_input_partial_shape(i);
         Dimension this_input_rank = this_input_shape.rank();
         if (this_input_rank.is_static())
         {
             NODE_VALIDATION_CHECK(this,
-                                  m_concatenation_axis < size_t(this_input_rank),
+                                  m_axis < size_t(this_input_rank),
                                   "Concatenation axis (",
-                                  m_concatenation_axis,
+                                  m_axis,
                                   ") is out of bounds for ",
                                   "argument ",
                                   i,
@@ -61,15 +61,15 @@ void op::Concat::validate_and_infer_types()
                                   this_input_shape,
                                   ".");
 
-            concatenation_axis_output_dim += this_input_shape[m_concatenation_axis];
-            this_input_shape[m_concatenation_axis] = Dimension::dynamic();
+            concatenation_axis_output_dim += this_input_shape[m_axis];
+            this_input_shape[m_axis] = Dimension::dynamic();
 
             NODE_VALIDATION_CHECK(
                 this,
                 PartialShape::merge_into(inputs_shape_scheme, this_input_shape),
                 "Argument shapes are inconsistent; they must have the same rank, and must have ",
                 "equal dimension everywhere except on the concatenation axis (axis ",
-                m_concatenation_axis,
+                m_axis,
                 ").");
 
             NODE_VALIDATION_CHECK(
@@ -87,7 +87,7 @@ void op::Concat::validate_and_infer_types()
 
     if (concatenated_shape.rank().is_static())
     {
-        concatenated_shape[m_concatenation_axis] = concatenation_axis_output_dim;
+        concatenated_shape[m_axis] = concatenation_axis_output_dim;
     }
 
     set_output_type(0, inputs_et, concatenated_shape);
@@ -96,7 +96,7 @@ void op::Concat::validate_and_infer_types()
 shared_ptr<Node> op::Concat::copy_with_new_args(const NodeVector& new_args) const
 {
     // TODO(amprocte): Should we check the new_args count here?
-    return make_shared<Concat>(new_args, m_concatenation_axis);
+    return make_shared<Concat>(new_args, m_axis);
 }
 
 void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
@@ -115,12 +115,12 @@ void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVecto
     {
         auto arg_shape = value.get_shape();
 
-        auto slice_width = arg_shape[m_concatenation_axis];
+        auto slice_width = arg_shape[m_axis];
 
         size_t next_pos = pos + slice_width;
 
-        arg_delta_slice_lower[m_concatenation_axis] = pos;
-        arg_delta_slice_upper[m_concatenation_axis] = next_pos;
+        arg_delta_slice_lower[m_axis] = pos;
+        arg_delta_slice_upper[m_axis] = next_pos;
 
         adjoints.add_delta(
             value,

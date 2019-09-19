@@ -46,7 +46,7 @@ op::v0::Softmax::Softmax(const Output<Node>& arg, const AxisSet& axes)
     for (auto axis : m_axes)
     {
         NODE_VALIDATION_CHECK(this,
-                              axis >= 0 && axis < static_cast<size_t>(input_shape.rank()),
+                              axis < static_cast<size_t>(input_shape.rank()),
                               "Reduction axis (",
                               axis,
                               ") is out of bounds (argument shape: ",
@@ -122,7 +122,7 @@ op::v1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
                           input_shape,
                           ").");
     NODE_VALIDATION_CHECK(this,
-                          axis >= 0 && axis < static_cast<size_t>(input_shape.rank()),
+                          axis < static_cast<size_t>(input_shape.rank()),
                           "Reduction axis (",
                           axis,
                           ") is out of bounds (argument shape: ",
@@ -141,7 +141,8 @@ shared_ptr<Node> op::v1::Softmax::copy_with_new_args(const NodeVector& new_args)
     return make_shared<op::v1::Softmax>(new_args.at(0), m_axis);
 }
 
-void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                        const NodeVector& /* deltas */)
 {
     throw ngraph_error("op::v1::Softmax::generate_adjoints function is not implemented yet");
 

@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-Strides ngraph::conv_default_strides(const Node* node,
+Strides ngraph::conv_default_strides(const Node* /* node */,
                                      const PartialShape& data_batch_shape,
                                      const PartialShape& filters_shape)
 {
@@ -42,7 +42,7 @@ Strides ngraph::conv_default_strides(const Node* node,
     return Strides(rank, 1);
 }
 
-CoordinateDiff ngraph::conv_default_padding(const Node* node,
+CoordinateDiff ngraph::conv_default_padding(const Node* /* node */,
                                             const PartialShape& data_batch_shape,
                                             const PartialShape& filters_shape)
 {
@@ -651,14 +651,14 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
         return PartialShape::dynamic();
     }
 
-    int max_dims = size_t(input_shape.rank()) + new_axis.size();
+    size_t max_dims = size_t(input_shape.rank()) + new_axis.size();
 
-    int bounds_size =
+    size_t bounds_size =
         lb.size() ? lb.size() : (ub.size() ? ub.size() : (str.size() ? str.size() : 0));
 
-    int ellipsis_pos1 = ellipsis_mask.size() ? *ellipsis_mask.begin() : max_dims;
+    size_t ellipsis_pos1 = ellipsis_mask.size() ? *ellipsis_mask.begin() : max_dims;
 
-    int ellipsis_pos2 = max_dims;
+    size_t ellipsis_pos2 = max_dims;
     bounds_size -= ellipsis_pos1;
     if (bounds_size > 0 && (max_dims - bounds_size) > ellipsis_pos1)
     {
@@ -671,13 +671,13 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
 
     std::vector<Dimension> out_dims;
 
-    int j = 0;
-    int k = 0;
-    int bj = 0;
-    int ej = 0;
-    int sj = 0;
+    size_t j = 0;
+    size_t k = 0;
+    size_t bj = 0;
+    size_t ej = 0;
+    size_t sj = 0;
 
-    for (int i = 0; i < max_dims; i++)
+    for (size_t i = 0; i < max_dims; i++)
     {
         if (i >= ellipsis_pos1 && i < ellipsis_pos2)
         {

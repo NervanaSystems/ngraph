@@ -238,7 +238,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
         // Get the inverse of the original transpose order
         // E.g., [0, 3, 1, 2] -> [0, 2, 3, 1]
         AxisVector inverse_order;
-        for (int i = 0; i < reshape_order.size(); i++)
+        for (size_t i = 0; i < reshape_order.size(); i++)
         {
             inverse_order.push_back(std::find(reshape_order.begin(), reshape_order.end(), i) -
                                     reshape_order.begin());

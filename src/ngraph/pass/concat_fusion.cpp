@@ -101,7 +101,7 @@ void pass::ConcatElimination::construct_concat_elimination()
         auto pattern_map = m.get_pattern_map();
         auto op = pattern_map[op_label];
 
-        auto root = std::dynamic_pointer_cast<op::Concat>(m.get_match_root());
+        auto root = as_type_ptr<op::Concat>(m.get_match_root());
         if (root && (root->get_input_shape(0) == root->get_output_shape(0)))
         {
             NGRAPH_DEBUG << " eliminated " << m.get_match_root() << "\n";
@@ -122,7 +122,7 @@ bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> f
     bool modify_graph = false;
     auto has_multiple_inputs = [](std::shared_ptr<Node> n) {
         auto input_size = n->get_input_size();
-        auto root = std::dynamic_pointer_cast<op::Concat>(n);
+        auto root = as_type_ptr<op::Concat>(n);
         return (root && input_size > 1);
     };
 
@@ -178,7 +178,7 @@ void ngraph::pass::SelfConcatFusion::construct_concat_patterns(
     if (matcher->match(n))
     {
         auto concat_op = matcher->get_pattern_map()[concat_op_label];
-        if (!std::dynamic_pointer_cast<op::Concat>(concat_op))
+        if (!concat_op->is_type<op::Concat>())
         {
             NGRAPH_DEBUG << "self_concat_fusion: Pattern matcher matched incorrect op. Matched "
                          << concat_op->get_name() << " instead of a self concat";

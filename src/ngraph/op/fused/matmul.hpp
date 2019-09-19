@@ -29,8 +29,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"MatMul", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             MatMul() = default;
             /// \brief Constructs an ScaleShift operation.
             ///
@@ -51,8 +51,8 @@ namespace ngraph
             bool get_transpose_a() const { return m_transpose_a; }
             bool get_transpose_b() const { return m_transpose_b; }
         private:
-            const bool m_transpose_a;
-            const bool m_transpose_b;
+            bool m_transpose_a;
+            bool m_transpose_b;
         };
     } // namespace op
 } // namespace ngraph
