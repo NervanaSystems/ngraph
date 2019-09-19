@@ -48,6 +48,8 @@
 #define EXPAND_ETS_AND_RANK7(K, KV, ET, R, S, ...)                                                 \
     EXPAND_ETS(K, KV, ET, EXPAND_RANK7, R, S, ##__VA_ARGS__)
 
+#define EXPAND_S(x) x
+
 // Expander Macros that instantiate kernels for various element types and ranks
 #define EXPAND_ET4(K, KV, ET, S, ...)                                                              \
     if (ET == element::f32)                                                                        \
@@ -201,7 +203,7 @@
 
 #if defined(NGRAPH_CPU_OPTIMIZE_boolean)
 #define BOOLEAN_EN 1
-#define BOOLEAN_SELECT(S, ...) S(__VA_ARGS__)
+#define BOOLEAN_SELECT(S, ...) EXPAND_S(S(__VA_ARGS__))
 #else
 #define BOOLEAN_EN 0
 #define BOOLEAN_SELECT(S, ...)
@@ -209,7 +211,7 @@
 
 #if defined(NGRAPH_CPU_OPTIMIZE_f32)
 #define F32_EN 1
-#define F32_SELECT(S, ...) S(__VA_ARGS__)
+#define F32_SELECT(S, ...) EXPAND_S(S(__VA_ARGS__))
 #else
 #define F32_EN 0
 #define F32_SELECT(S, ...)
@@ -217,7 +219,7 @@
 
 #if defined(NGRAPH_CPU_OPTIMIZE_f64)
 #define F64_EN 1
-#define F64_SELECT(S, ...) S(__VA_ARGS__)
+#define F64_SELECT(S, ...) EXPAND_S(S(__VA_ARGS__))
 #else
 #define F64_EN 0
 #define F64_SELECT(S, ...)
@@ -225,7 +227,7 @@
 
 #if defined(NGRAPH_CPU_OPTIMIZE_i8)
 #define I8_EN 1
-#define I8_SELECT(S, ...) S(__VA_ARGS__)
+#define I8_SELECT(S, ...) EXPAND_S(S(__VA_ARGS__))
 #else
 #define I8_EN 0
 #define I8_SELECT(S, ...)
@@ -233,7 +235,7 @@
 
 #if defined(NGRAPH_CPU_OPTIMIZE_i16)
 #define I16_EN 1
-#define I16_SELECT(S, ...) S(__VA_ARGS__)
+#define I16_SELECT(S, ...) EXPAND_S(S(__VA_ARGS__))
 #else
 #define I16_EN 0
 #define I16_SELECT(S, ...)
@@ -241,7 +243,7 @@
 
 #if defined(NGRAPH_CPU_OPTIMIZE_i32)
 #define I32_EN 1
-#define I32_SELECT(S, ...) S(__VA_ARGS__)
+#define I32_SELECT(S, ...) EXPAND_S(S(__VA_ARGS__))
 #else
 #define I32_EN 0
 #define I32_SELECT(S, ...)
@@ -249,7 +251,7 @@
 
 #if defined(NGRAPH_CPU_OPTIMIZE_i64)
 #define I64_EN 1
-#define I64_SELECT(S, ...) S(__VA_ARGS__)
+#define I64_SELECT(S, ...) EXPAND_S(S(__VA_ARGS__))
 #else
 #define I64_EN 0
 #define I64_SELECT(S, ...)
@@ -257,7 +259,7 @@
 
 #if defined(NGRAPH_CPU_OPTIMIZE_u8)
 #define U8_EN 1
-#define U8_SELECT(S, ...) S(__VA_ARGS__)
+#define U8_SELECT(S, ...) EXPAND_S(S(__VA_ARGS__))
 #else
 #define U8_EN 0
 #define U8_SELECT(S, ...)
@@ -265,7 +267,7 @@
 
 #if defined(NGRAPH_CPU_OPTIMIZE_u16)
 #define U16_EN 1
-#define U16_SELECT(S, ...) S(__VA_ARGS__)
+#define U16_SELECT(S, ...) EXPAND_S(S(__VA_ARGS__))
 #else
 #define U16_EN 0
 #define U16_SELECT(S, ...)
@@ -273,7 +275,7 @@
 
 #if defined(NGRAPH_CPU_OPTIMIZE_u32)
 #define U32_EN 1
-#define U32_SELECT(S, ...) S(__VA_ARGS__)
+#define U32_SELECT(S, ...) EXPAND_S(S(__VA_ARGS__))
 #else
 #define U32_EN 0
 #define U32_SELECT(S, ...)
@@ -281,7 +283,7 @@
 
 #if defined(NGRAPH_CPU_OPTIMIZE_u64)
 #define U64_EN 1
-#define U64_SELECT(S, ...) S(__VA_ARGS__)
+#define U64_SELECT(S, ...) EXPAND_S(S(__VA_ARGS__))
 #else
 #define U64_EN 0
 #define U64_SELECT(S, ...)
