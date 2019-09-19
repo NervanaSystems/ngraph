@@ -481,7 +481,7 @@ big, small {
 }
 
 @font-face {
-  font-family: 'Nunito Sans', sans-serif, sans;
+  font-family: Nunito, 'Nunito Sans', Helvetica, 'Helvetica Neue', sans, 'Open Sans';
   font-weight: normal;
   font-style: normal;
 
@@ -511,7 +511,7 @@ big, small {
 }
 
 .rst-content .admonition-title:before, .rst-content h1 .headerlink:before, .rst-content h2 .headerlink:before, .rst-content h3 .headerlink:before, .rst-content h4 .headerlink:before, .rst-content h5 .headerlink:before, .rst-content h6 .headerlink:before, .rst-content dl dt .headerlink:before, .rst-content p.caption .headerlink:before, .rst-content tt.download span:first-child:before, .rst-content code.download span:first-child:before, .icon:before, .wy-menu-vertical li span.toctree-expand:before, .wy-menu-vertical li.on a span.toctree-expand:before, .wy-menu-vertical li.current > a span.toctree-expand:before, .wy-dropdown .caret:before, .wy-inline-validate.wy-inline-validate-success .wy-input-context:before, .wy-inline-validate.wy-inline-validate-danger .wy-input-context:before, .wy-inline-validate.wy-inline-validate-warning .wy-input-context:before, .wy-inline-validate.wy-inline-validate-info .wy-input-context:before {
-  font-family: Nunito, "Nunito Sans", sans;
+  font-family: Nunito, 'Nunito Sans', sans;
   display: inline-block;
   font-style: normal;
   font-weight: normal;
@@ -1687,7 +1687,7 @@ code, .rst-content tt, .rst-content code {
   font-size: 100%;
   padding: 0 5px;
   font-family: Inconsolata-Regular, "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", "Courier New", Courier, monospace;
-  color: #253237;
+  color: #201c0f;
   overflow-x: auto;
 }
 code.code-large, .rst-content tt.code-large {
@@ -1769,10 +1769,10 @@ div[class^='highlight'] td.code {
 }
 
 code, p.caption { 
-  font-family: "Nunito Sans", sans, monospace;
+  font-family: monospace;
   color: #23221d;
   font-size: 0.99em;
-  line-height: 1.39em;
+  line-height: 1.31em;
   }
 
 
@@ -1799,10 +1799,9 @@ div[class^='highlight'] pre {
   padding: 12px 12px;
   font-family: 'Inconsolata-Regular', 'Courier New', Monaco, Consolas, "Lucida Console", monospace;
   font-size: 1.03em;
-  line-height: 1.13;
+  line-height: 1.05;
   display: block;
   overflow: wrap;
-  color: #999;
 }
 
   .linenodiv pre {
@@ -1858,7 +1857,7 @@ div[class^='highlight'] pre {
 }
 
 .c1 {
-  color: #999988;
+  color: #201c0f;
   font-style: italic;
 }
 
@@ -2367,7 +2366,7 @@ div[class^='highlight'] pre {
   font-size: 100%;
 }
 .rst-content .highlighted {
-  background: #F1C40F;
+  background: #F1C301;
   display: inline-block;
   font-weight: bold;
   padding: 0 6px;
@@ -2429,10 +2428,10 @@ div[class^='highlight'] pre {
   line-height: 1.0em;
 }
 .rst-content tt.literal, .rst-content tt.literal, .rst-content code.literal {
-  font-size: 103% !important;
+  font-size: 101% !important;
   color: #2e2b27;
   background-color: #fff;
-  line-height: 0.93em;
+  line-height: 0.8955em;
 }
 .rst-content tt.xref, a .rst-content tt, .rst-content tt.xref, .rst-content code.xref, a .rst-content tt, a .rst-content code {
   font-weight: bold;
@@ -2471,13 +2470,13 @@ div[class^='highlight'] pre {
 
 .rst-content dl:not(.docutils) tt.descname, .rst-content dl:not(.docutils) tt.descname, .rst-content dl:not(.docutils) code.descname {
   font-weight: normal;
-  line-height: 1.21em; /* 1.21 gigawatts in nano */
+  line-height: 1.1em; /* 1.21 gigawatts in nano */
 }
 
 .rst-content dl:not(.docutils) tt, .rst-content dl:not(.docutils) tt, .rst-content dl:not(.docutils) code {
   /* font-weight: bold; */
-  line-height: 1.21em;
-  font-size: 110%; 
+  line-height: 1.177em;
+  font-size: 103%; 
 }
 .rst-content dl:not(.docutils) dt:before {
   color: #d5dfb8;
@@ -2724,14 +2723,11 @@ span[id*='MathJax-Span'] {
 }
 .wy-menu-vertical li.on a, .wy-menu-vertical li.current > a {
   font-family: Nunito, 'Nunito Sans', Helvetica, 'Helvetica Neue', sans;
-  padding: 0.4045em 1.618em;
   position: relative;
-  /* color: #23221D; */
-  padding-left: 1.618em -4px;
+  padding-left: 1.1em;
   background-color: #fafbfd;
   color: #5c5955;
   border-right: 4px solid #FFA400;
-  border-left: 0.79em;
   margin-left: 23px;
 
 }
@@ -2800,7 +2796,7 @@ span[id*='MathJax-Span'] {
   margin-bottom: 0;
   display: none;
 }
-.wy-menu-vertical .local-toc li ul {
+.wy-menu-vertical . local-toc li ul {
   display: block;
 }
 .wy-menu-vertical li ul li a {
