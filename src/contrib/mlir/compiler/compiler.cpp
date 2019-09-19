@@ -121,6 +121,17 @@ static llvm::cl::opt<unsigned> clLoopTilingCacheSize(
         "inferred from the host CPU using for the cache level specified by "
         "-loop-tile-cache-level."));
 
+// *** Debug flags ***
+
+static llvm::cl::opt<bool>
+    clDumpObjectFile("dump-mlir-object-file",
+                     llvm::cl::desc("Dump MLIR JITted-compiled object to file specified with "
+                                    "-object-filename (<input file>.o by default)."));
+
+static llvm::cl::opt<std::string>
+    clObjectFilename("mlir-object-filename",
+                     llvm::cl::desc("Dump MLIR JITted-compiled object to file jitted_mlir.o"));
+
 #define COMPILE_OP_DECL(op_name)                                                                   \
     createOp<op_name>(MLIRCompiler & compiler, const ngraph::Node* ngNode)
 
@@ -729,6 +740,12 @@ void MLIRCompiler::execute()
     // Please, note that 'invoke' method is overloaded with a parameter pack version.
     // Make sure the MutableArrayRef version is invoked.
     auto invocationResult = m_engine->invoke("main", llvm::MutableArrayRef<void*>(m_invokeArgs));
+
+    if (clDumpObjectFile)
+    {
+        m_engine->dumpToObjectFile(clObjectFilename.empty() ? "jitted_mlir.o"
+                                                            : clObjectFilename.getValue());
+    }
     NGRAPH_CHECK(!invocationResult, "JIT invocation of 'main' failed\n");
 }
 
