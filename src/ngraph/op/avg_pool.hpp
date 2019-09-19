@@ -49,11 +49,10 @@ namespace ngraph
                 /// \param padding_above The above-padding shape.<br>
                 /// `[n]`
                 /// \param include_padding_in_avg_computation If true then averages include padding
-                ///  elements, each treated as the number zero.  If false, padding elements are
-                ///  entirely
-                ///  ignored when computing averages.
-                /// \param pad_type Padding type to use for additional padded dimensions
-                /// \param ceil_mode Whether to use ceiling while computing output shape.
+                /// elements, each treated as the number zero.  If false, padding elements are
+                /// entirely ignored when computing averages. \param pad_type Padding type to use
+                /// for additional padded dimensions \param ceil_mode Whether to use ceiling while
+                /// computing output shape.
                 AvgPool(const Output<Node>& arg,
                         const Shape& window_shape,
                         const Strides& window_movement_strides,
@@ -76,10 +75,9 @@ namespace ngraph
                 /// \param padding_above The above-padding shape.<br>
                 /// `[n]`
                 /// \param include_padding_in_avg_computation If true then averages include padding
-                ///  elements, each treated as the number zero.  If false, padding elements are
-                ///  entirely
-                ///  ignored when computing averages.
-                /// \param pad_type Padding type to use for additional padded dimensions
+                /// elements, each treated as the number zero.  If false, padding elements are
+                /// entirely ignored when computing averages. \param pad_type Padding type to use
+                /// for additional padded dimensions
                 AvgPool(const Output<Node>& arg,
                         const Shape& window_shape,
                         const Strides& window_movement_strides,
@@ -101,9 +99,8 @@ namespace ngraph
                 /// \param padding_above The above-padding shape.<br>
                 /// `[n]`
                 /// \param include_padding_in_avg_computation If true then averages include padding
-                ///  elements, each treated as the number zero.  If false, padding elements are
-                ///  entirely
-                ///  ignored when computing averages.
+                /// elements, each treated as the number zero.  If false, padding elements are
+                /// entirely ignored when computing averages.
                 AvgPool(const Output<Node>& arg,
                         const Shape& window_shape,
                         const Strides& window_movement_strides,
@@ -112,8 +109,7 @@ namespace ngraph
                         bool include_padding_in_avg_computation = false);
 
                 /// \brief Constructs a batched, unpadded average pooling operation (i.e., all
-                /// padding
-                ///        shapes are set to 0).
+                /// padding shapes are set to 0).
                 ///
                 /// \param arg The output producing the input data batch tensor.<br>
                 /// `[d1, ..., dn]`
@@ -126,7 +122,7 @@ namespace ngraph
                         const Strides& window_movement_strides);
 
                 /// \brief Constructs an unstrided batched convolution operation (i.e., all window
-                ///        movement strides are 1 and all padding shapes are set to 0).
+                /// movement strides are 1 and all padding shapes are set to 0).
                 ///
                 /// \param arg The output producing the input data batch tensor.<br>
                 /// `[d1, ..., dn]`
@@ -244,13 +240,11 @@ namespace ngraph
                 /// `[n]`
                 /// \param kernel The kernel shape.<br>
                 /// `[n]`
-                /// \param exclude_pad If false then averages include padding
-                ///  elements, each treated as the number zero.  If true, padding elements are
-                ///  entirely
-                ///  ignored when computing averages.
-                /// \param rounding_type Whether to use ceiling or floor rounding type while
-                /// computing output shape.
-                /// \param auto_pad Padding type to use for additional padded dimensions
+                /// \param exclude_pad If false then averages include padding elements, each treated
+                /// as the number zero.  If true, padding elements are entirely ignored when
+                /// computing averages. \param rounding_type Whether to use ceiling or floor
+                /// rounding type while computing output shape. \param auto_pad Padding type to use
+                /// for additional padded dimensions
                 AvgPool(const Output<Node>& arg,
                         const Strides& strides,
                         const Shape& pads_begin,
@@ -272,10 +266,9 @@ namespace ngraph
                 /// `[n]`
                 /// \param kernel The kernel shape.<br>
                 /// `[n]`
-                /// \param exclude_pad If false then averages include padding
-                ///  elements, each treated as the number zero.  If true, padding elements are
-                ///  entirely
-                ///  ignored when computing averages.
+                /// \param exclude_pad If false then averages include padding elements, each treated
+                /// as the number zero.  If true, padding elements are entirely ignored when
+                /// computing averages.
                 /// \param rounding_type Whether to use ceiling or floor rounding type while
                 /// computing output shape.
                 AvgPool(const Output<Node>& arg,
