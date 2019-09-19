@@ -29,6 +29,8 @@ TEST(type_prop, layer_norm_element_type)
     try
     {
         auto ln = make_shared<op::LayerNorm>(data, scale, bias);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect element type";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -50,6 +52,8 @@ TEST(type_prop, layer_norm_begin_norm_axis)
     try
     {
         auto ln = make_shared<op::LayerNorm>(data, scale, bias, false, 2);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect begin norm axis";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -69,6 +73,8 @@ TEST(type_prop, layer_norm_affine_rank)
     try
     {
         auto ln = make_shared<op::LayerNorm>(data, scale, bias);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect affine ranks";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -87,6 +93,8 @@ TEST(type_prop, layer_norm_bprop_element_type)
     try
     {
         auto lnb = make_shared<op::LayerNormBackprop>(data, delta);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect element type";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -107,6 +115,8 @@ TEST(type_prop, layer_norm_bprop_begin_norm_axis)
     try
     {
         auto lnb = make_shared<op::LayerNormBackprop>(data, delta, 2);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect begin norm axis";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -125,6 +135,8 @@ TEST(type_prop, layer_norm_bprop_delta)
     try
     {
         auto lnb = make_shared<op::LayerNormBackprop>(data, delta);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect delta rank";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -145,6 +157,8 @@ TEST(type_prop, layer_norm_bprop_stats)
     try
     {
         auto lnb = make_shared<op::LayerNormBackprop>(data, delta, mean, variance);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect stats rank";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -164,6 +178,8 @@ TEST(type_prop, layer_norm_bprop_affine)
     try
     {
         auto lnb = make_shared<op::LayerNormBackprop>(data, delta, scale);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect affine rank";
     }
     catch (const NodeValidationFailure& error)
     {
