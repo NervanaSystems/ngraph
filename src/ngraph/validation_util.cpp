@@ -698,7 +698,10 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                 ub = std::min(int64_t(input_shape[input_shape_idx]), ub);
 
                 // convert negative stride to positive
-                int64_t stride = strides[axis];
+                int64_t stride = 1;
+                if (strides.size() > axis)
+                    stride = strides[axis];
+
                 NODE_VALIDATION_CHECK(node, stride != 0, "Stride must be non-zero");
                 int64_t range = 0;
                 if(stride < 0){
