@@ -16,16 +16,16 @@
 
 #include <random>
 
+#include "bernoulli_rng_state.hpp"
 #include "except.hpp"
-#include "rng_state.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-void ngraph::RNGState::activate()
+void ngraph::BernoulliRNGState::activate()
 {
 }
 
-void ngraph::RNGState::deactivate()
+void ngraph::BernoulliRNGState::deactivate()
 {
 }

@@ -21,6 +21,7 @@
 
 #include "ngraph/code_writer.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/gather.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/sum.hpp"
@@ -91,7 +92,6 @@ namespace ngraph
         class ArgMin;
         class ArgMax;
         class TopK;
-        class Gather;
         class GatherND;
         class ScatterAdd;
         class ScatterNDAdd;
