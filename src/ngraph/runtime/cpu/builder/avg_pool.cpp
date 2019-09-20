@@ -55,7 +55,7 @@ namespace ngraph
                     auto avg_pool_desc =
                         mkldnn_emitter->get_avg_pooling_forward_desc<ngraph::op::AvgPool>(node,
                                                                                           false);
-                    size_t s_size = QUERY_SCRATCHPAD(pooling_forward, avg_pool_desc);
+                    size_t scratchpad_size = QUERY_SCRATCHPAD(pooling_forward, avg_pool_desc);
 
                     // AvgPool needs 3 primitives: input, result, and pooling_forward.
                     size_t avg_pool_index = mkldnn_emitter->reserve_primitive_space(3);
@@ -64,7 +64,7 @@ namespace ngraph
                     auto functor = [&,
                                     avg_pool_desc,
                                     avg_pool_index,
-                                    s_size,
+                                    scratchpad_size,
                                     arg0_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
                                                       CPUExecutionContext* ectx) {
@@ -83,7 +83,11 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, avg_pool_index, deps, cpu::mkldnn_utils::OpType::AVGPOOL, s_size);
+                            ctx,
+                            avg_pool_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::AVGPOOL,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -149,7 +153,7 @@ namespace ngraph
                     auto avg_pool_desc =
                         mkldnn_emitter->get_avg_pooling_backward_desc<ngraph::op::AvgPoolBackprop>(
                             node);
-                    size_t s_size = QUERY_SCRATCHPAD_2ARGS(
+                    size_t scratchpad_size = QUERY_SCRATCHPAD_2ARGS(
                         avg_pooling_backward, avg_pool_fwd_desc, avg_pool_desc);
 
                     // AvgPoolBackprop needs 3 primitives: input, result, and pooling_backward.
@@ -160,7 +164,7 @@ namespace ngraph
                                     avg_pool_desc,
                                     avg_pool_fwd_desc,
                                     avg_pool_index,
-                                    s_size,
+                                    scratchpad_size,
                                     delta_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
                                                       CPUExecutionContext* ectx) {
@@ -184,7 +188,7 @@ namespace ngraph
                             avg_pool_index,
                             deps,
                             cpu::mkldnn_utils::OpType::AVGPOOLBACKPROP,
-                            s_size);
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }

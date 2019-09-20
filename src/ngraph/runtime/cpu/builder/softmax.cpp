@@ -48,7 +48,7 @@ namespace ngraph
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto softmax_desc = mkldnn_emitter->get_softmax_forward_desc(node);
-                    size_t s_size = QUERY_SCRATCHPAD(softmax_forward, softmax_desc);
+                    size_t scratchpad_size = QUERY_SCRATCHPAD(softmax_forward, softmax_desc);
 
                     // Softmax needs 3 primitives: input, result, and softmax_forward.
                     size_t softmax_index = mkldnn_emitter->reserve_primitive_space(3);
@@ -57,7 +57,7 @@ namespace ngraph
                     auto functor = [&,
                                     softmax_desc,
                                     softmax_index,
-                                    s_size,
+                                    scratchpad_size,
                                     arg_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
                                                       CPUExecutionContext* ectx) {
@@ -76,7 +76,11 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, softmax_index, deps, cpu::mkldnn_utils::OpType::SOFTMAX, s_size);
+                            ctx,
+                            softmax_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::SOFTMAX,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }

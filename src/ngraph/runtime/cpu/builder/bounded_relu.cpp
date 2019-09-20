@@ -44,7 +44,7 @@ namespace ngraph
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto bounded_relu_desc = mkldnn_emitter->get_bounded_relu_desc(node);
-                    size_t s_size = QUERY_SCRATCHPAD(eltwise_forward, bounded_relu_desc);
+                    size_t scratchpad_size = QUERY_SCRATCHPAD(eltwise_forward, bounded_relu_desc);
 
                     // BoundedRelu needs 3 primitives: input, result, and eltwise_forward.
                     auto bounded_relu_index = mkldnn_emitter->reserve_primitive_space(3);
@@ -53,7 +53,7 @@ namespace ngraph
                     auto functor = [&,
                                     bounded_relu_desc,
                                     bounded_relu_index,
-                                    s_size,
+                                    scratchpad_size,
                                     input_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
                                                       CPUExecutionContext* ectx) {
@@ -76,7 +76,7 @@ namespace ngraph
                             bounded_relu_index,
                             deps,
                             cpu::mkldnn_utils::OpType::BOUNDEDRELU,
-                            s_size);
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }

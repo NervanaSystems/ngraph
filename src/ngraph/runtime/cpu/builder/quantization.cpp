@@ -53,7 +53,8 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    size_t s_size = QUERY_SCRATCHPAD_2ARGS(reorder, input_desc, result_desc);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(reorder, input_desc, result_desc);
 
                     auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
                         dequantize->get_argument(1));
@@ -62,7 +63,7 @@ namespace ngraph
                     {
                         auto arg1_buffer_index =
                             external_function->get_buffer_index(args[1].get_name());
-                        auto scales_size = shape_size(args[1].get_shape());
+                        auto scalescratchpad_size = shape_size(args[1].get_shape());
 
                         // Dequantize needs 3 primitives: input, result, and reorder.
                         size_t dequantize_index = mkldnn_emitter->reserve_primitive_space(3);
@@ -71,9 +72,9 @@ namespace ngraph
                         functor = [&,
                                    input_desc,
                                    result_desc,
-                                   scales_size,
+                                   scalescratchpad_size,
                                    dequantize_index,
-                                   s_size,
+                                   scratchpad_size,
                                    arg0_buffer_index,
                                    arg1_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
@@ -86,7 +87,7 @@ namespace ngraph
                                 dyn_scales.assign(
                                     static_cast<float*>(ctx->buffer_data[arg1_buffer_index]),
                                     static_cast<float*>(ctx->buffer_data[arg1_buffer_index]) +
-                                        scales_size);
+                                        scalescratchpad_size);
                                 mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_memories,
                                                                        ctx->mkldnn_primitives,
                                                                        ctx->mkldnn_scratchpad_mds,
@@ -106,7 +107,7 @@ namespace ngraph
                                 dequantize_index,
                                 deps,
                                 cpu::mkldnn_utils::OpType::DEQUANTIZE,
-                                s_size);
+                                scratchpad_size);
                         };
                         functors.emplace_back(functor);
                     }
@@ -123,7 +124,7 @@ namespace ngraph
                                    result_desc,
                                    scales,
                                    dequantize_index,
-                                   s_size,
+                                   scratchpad_size,
                                    arg0_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
                                                      CPUExecutionContext* ectx) {
@@ -148,7 +149,7 @@ namespace ngraph
                                 dequantize_index,
                                 deps,
                                 cpu::mkldnn_utils::OpType::DEQUANTIZE,
-                                s_size);
+                                scratchpad_size);
                         };
                         functors.emplace_back(functor);
                     }
@@ -335,7 +336,8 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    size_t s_size = QUERY_SCRATCHPAD_2ARGS(reorder, input_desc, result_desc);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(reorder, input_desc, result_desc);
 
                     auto scale_const_op =
                         std::dynamic_pointer_cast<ngraph::op::Constant>(quantize->get_argument(1));
@@ -343,7 +345,7 @@ namespace ngraph
                     {
                         auto arg1_buffer_index =
                             external_function->get_buffer_index(args[1].get_name());
-                        auto scales_size = shape_size(args[1].get_shape());
+                        auto scalescratchpad_size = shape_size(args[1].get_shape());
 
                         // Quantize needs 3 primitives: input, result, and reorder.
                         size_t quantize_index = mkldnn_emitter->reserve_primitive_space(3);
@@ -352,9 +354,9 @@ namespace ngraph
                         auto functor = [&,
                                         input_desc,
                                         result_desc,
-                                        scales_size,
+                                        scalescratchpad_size,
                                         quantize_index,
-                                        s_size,
+                                        scratchpad_size,
                                         arg0_buffer_index,
                                         arg1_buffer_index,
                                         out_buffer_index](CPURuntimeContext* ctx,
@@ -367,13 +369,13 @@ namespace ngraph
                                 dyn_scales.assign(
                                     static_cast<float*>(ctx->buffer_data[arg1_buffer_index]),
                                     static_cast<float*>(ctx->buffer_data[arg1_buffer_index]) +
-                                        scales_size);
-                                for (size_t i = 0; i < scales_size; i++)
+                                        scalescratchpad_size);
+                                for (size_t i = 0; i < scalescratchpad_size; i++)
                                 {
                                     dyn_scales[i] = 1.0 / dyn_scales[i];
                                 }
                                 // quantize across first dim (mask=2^0) if dyn_scales is a vector
-                                const int mask = scales_size == 1 ? 0 : 1;
+                                const int mask = scalescratchpad_size == 1 ? 0 : 1;
                                 mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_memories,
                                                                        ctx->mkldnn_primitives,
                                                                        ctx->mkldnn_scratchpad_mds,
@@ -394,7 +396,7 @@ namespace ngraph
                                 quantize_index,
                                 deps,
                                 cpu::mkldnn_utils::OpType::QUANTIZE,
-                                s_size);
+                                scratchpad_size);
                         };
                         functors.emplace_back(functor);
                     }
@@ -411,7 +413,7 @@ namespace ngraph
                                         result_desc,
                                         scales,
                                         quantize_index,
-                                        s_size,
+                                        scratchpad_size,
                                         arg0_buffer_index,
                                         out_buffer_index](CPURuntimeContext* ctx,
                                                           CPUExecutionContext* ectx) {
@@ -436,7 +438,7 @@ namespace ngraph
                                 quantize_index,
                                 deps,
                                 cpu::mkldnn_utils::OpType::QUANTIZE,
-                                s_size);
+                                scratchpad_size);
                         };
                         functors.emplace_back(functor);
                     }

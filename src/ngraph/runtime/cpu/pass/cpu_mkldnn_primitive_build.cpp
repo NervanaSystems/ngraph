@@ -91,7 +91,7 @@ namespace ngraph
 
                     // query scratchpad size
                     auto sum_pd = mkldnn_emitter.get_elementwise_add_desc(node);
-                    s_size = mkldnn_emitter.query_scratchpad_sum(sum_pd);
+                    scratchpad_size = mkldnn_emitter.query_scratchpad_sum(sum_pd);
 
                     // Add needs 4 primitives: input0, input1, result, and sum.
                     index = mkldnn_emitter.reserve_primitive_space(4);
@@ -140,7 +140,7 @@ namespace ngraph
                     std::string& construct_string,
                     std::vector<size_t>& deps,
                     size_t& index,
-                    size_t& s_size,
+                    size_t& scratchpad_size,
                     std::ofstream& desc_file)
                 {
                     const auto& out = node->get_outputs();
@@ -248,7 +248,7 @@ namespace ngraph
                                                                dst_layer_md,
                                                                dst_iter_md,
                                                                dst_iter_c_md);
-                    s_size = mkldnn_emitter.query_scratchpad_rnn_forward(rnn_desc);
+                    scratchpad_size = mkldnn_emitter.query_scratchpad_rnn_forward(rnn_desc);
 
                     // Lstm/Rnn needs 11 primitives: src_layer, src_iter, src_iter_c, weights_layer,
                     // weights_iter, bias,
@@ -330,15 +330,25 @@ namespace ngraph
                 template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Lstm)
                 {
-                    construct_primitive_build_string_rnn<Lstm>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                    construct_primitive_build_string_rnn<Lstm>(mkldnn_emitter,
+                                                               node,
+                                                               construct_string,
+                                                               deps,
+                                                               index,
+                                                               scratchpad_size,
+                                                               desc_file);
                 }
 
                 template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Rnn)
                 {
-                    construct_primitive_build_string_rnn<Rnn>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                    construct_primitive_build_string_rnn<Rnn>(mkldnn_emitter,
+                                                              node,
+                                                              construct_string,
+                                                              deps,
+                                                              index,
+                                                              scratchpad_size,
+                                                              desc_file);
                 }
 
                 template <typename OP>
@@ -348,7 +358,7 @@ namespace ngraph
                     std::string& construct_string,
                     std::vector<size_t>& deps,
                     size_t& index,
-                    size_t& s_size,
+                    size_t& scratchpad_size,
                     std::ofstream& desc_file,
                     const bool append_relu,
                     const bool training)
@@ -406,7 +416,7 @@ namespace ngraph
                         // query scratchpad size
                         auto batchnorm_desc =
                             mkldnn_emitter.get_batchnorm_forward_desc<OP>(node, true);
-                        s_size =
+                        scratchpad_size =
                             mkldnn_emitter.query_scratchpad_batchnorm_forward(batchnorm_desc, ops);
                     }
                     else
@@ -417,7 +427,7 @@ namespace ngraph
                         // query scratchpad size
                         auto batchnorm_desc =
                             mkldnn_emitter.get_batchnorm_forward_desc<OP>(node, false);
-                        s_size =
+                        scratchpad_size =
                             mkldnn_emitter.query_scratchpad_batchnorm_forward(batchnorm_desc, ops);
                     }
 
@@ -492,7 +502,7 @@ namespace ngraph
                         construct_string,
                         deps,
                         index,
-                        s_size,
+                        scratchpad_size,
                         desc_file,
                         false /*Append relu*/,
                         true /*Training*/);
@@ -508,7 +518,7 @@ namespace ngraph
                         construct_string,
                         deps,
                         index,
-                        s_size,
+                        scratchpad_size,
                         desc_file,
                         false /*Append relu*/,
                         false /*Training*/);
@@ -524,7 +534,7 @@ namespace ngraph
                         construct_string,
                         deps,
                         index,
-                        s_size,
+                        scratchpad_size,
                         desc_file,
                         true /*Append relu*/,
                         true /*Training*/);
@@ -540,7 +550,7 @@ namespace ngraph
                         construct_string,
                         deps,
                         index,
-                        s_size,
+                        scratchpad_size,
                         desc_file,
                         true /*Append relu*/,
                         false /*Training*/);
@@ -568,7 +578,7 @@ namespace ngraph
 
                     // query scratchpad size
                     auto batchnorm_desc = mkldnn_emitter.get_batchnorm_backward_desc(node);
-                    s_size = mkldnn_emitter.query_scratchpad_batchnorm_backward(
+                    scratchpad_size = mkldnn_emitter.query_scratchpad_batchnorm_backward(
                         batchnorm_desc, input_desc, eps);
 
                     // batchnorm backward needs 8 primitives: weights, input, mean, variance,
@@ -639,7 +649,7 @@ namespace ngraph
                     std::string& construct_string,
                     std::vector<size_t>& deps,
                     size_t& index,
-                    size_t& s_size,
+                    size_t& scratchpad_size,
                     std::ofstream& desc_file)
                 {
                     auto concat = static_cast<OP*>(node);
@@ -648,7 +658,7 @@ namespace ngraph
 
                     // query scratchpad size
                     auto concat_pd = mkldnn_emitter.get_concat_desc<OP>(node, nargs);
-                    s_size = mkldnn_emitter.query_scratchpad_concat(concat_pd);
+                    scratchpad_size = mkldnn_emitter.query_scratchpad_concat(concat_pd);
 
                     // Concat needs number of inputs plus 2 primitives; those two are for result and
                     // concat.
@@ -699,8 +709,13 @@ namespace ngraph
                 template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Concat)
                 {
-                    construct_primitive_build_string_concat<Concat>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                    construct_primitive_build_string_concat<Concat>(mkldnn_emitter,
+                                                                    node,
+                                                                    construct_string,
+                                                                    deps,
+                                                                    index,
+                                                                    scratchpad_size,
+                                                                    desc_file);
                 }
 
                 template <>
@@ -711,7 +726,7 @@ namespace ngraph
 
                     // query scratchpad size
                     auto lrn_desc = mkldnn_emitter.get_lrn_forward_desc(node);
-                    s_size = mkldnn_emitter.query_scratchpad_lrn_forward(lrn_desc);
+                    scratchpad_size = mkldnn_emitter.query_scratchpad_lrn_forward(lrn_desc);
 
                     // LRN needs 3 primitives: input, result, and lrn_forward.
                     index = mkldnn_emitter.reserve_primitive_space(3);
@@ -764,7 +779,7 @@ namespace ngraph
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    s_size = mkldnn_emitter.query_scratchpad_slice(
+                    scratchpad_size = mkldnn_emitter.query_scratchpad_slice(
                         input_desc, result_desc, lower_bounds, result_shape);
 
                     // sub memory desc
@@ -809,7 +824,7 @@ namespace ngraph
                     std::string& construct_string,
                     std::vector<size_t>& deps,
                     size_t& index,
-                    size_t& s_size,
+                    size_t& scratchpad_size,
                     std::ofstream& desc_file)
                 {
                     auto convolution = static_cast<const OP*>(node);
@@ -817,7 +832,7 @@ namespace ngraph
                     // query scratchpad size
                     auto conv_desc = mkldnn_emitter.get_convolution_forward_desc<OP>(node);
                     auto conv_attr = mkldnn_emitter.get_convolution_forward_attr<OP>(node);
-                    s_size =
+                    scratchpad_size =
                         mkldnn_emitter.query_scratchpad_convolution_forward(conv_desc, conv_attr);
 
                     Strides window_dilation_strides_adjusted;
@@ -926,24 +941,39 @@ namespace ngraph
                 template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Convolution)
                 {
-                    construct_primitive_build_string_conv<Convolution>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                    construct_primitive_build_string_conv<Convolution>(mkldnn_emitter,
+                                                                       node,
+                                                                       construct_string,
+                                                                       deps,
+                                                                       index,
+                                                                       scratchpad_size,
+                                                                       desc_file);
                 }
 
                 template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
                     QuantizedConvolution)
                 {
-                    construct_primitive_build_string_conv<QuantizedConvolution>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                    construct_primitive_build_string_conv<QuantizedConvolution>(mkldnn_emitter,
+                                                                                node,
+                                                                                construct_string,
+                                                                                deps,
+                                                                                index,
+                                                                                scratchpad_size,
+                                                                                desc_file);
                 }
 
                 template <>
                 void
                     MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(ConvolutionRelu)
                 {
-                    construct_primitive_build_string_conv<ConvolutionRelu>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                    construct_primitive_build_string_conv<ConvolutionRelu>(mkldnn_emitter,
+                                                                           node,
+                                                                           construct_string,
+                                                                           deps,
+                                                                           index,
+                                                                           scratchpad_size,
+                                                                           desc_file);
                 }
 
                 template <>
@@ -951,15 +981,26 @@ namespace ngraph
                     QuantizedConvolutionRelu)
                 {
                     construct_primitive_build_string_conv<QuantizedConvolutionRelu>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                        mkldnn_emitter,
+                        node,
+                        construct_string,
+                        deps,
+                        index,
+                        scratchpad_size,
+                        desc_file);
                 }
 
                 template <>
                 void
                     MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(ConvolutionBias)
                 {
-                    construct_primitive_build_string_conv<ConvolutionBias>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                    construct_primitive_build_string_conv<ConvolutionBias>(mkldnn_emitter,
+                                                                           node,
+                                                                           construct_string,
+                                                                           deps,
+                                                                           index,
+                                                                           scratchpad_size,
+                                                                           desc_file);
                 }
 
                 template <>
@@ -967,15 +1008,26 @@ namespace ngraph
                     QuantizedConvolutionBias)
                 {
                     construct_primitive_build_string_conv<QuantizedConvolutionBias>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                        mkldnn_emitter,
+                        node,
+                        construct_string,
+                        deps,
+                        index,
+                        scratchpad_size,
+                        desc_file);
                 }
 
                 template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
                     ConvolutionBiasAdd)
                 {
-                    construct_primitive_build_string_conv<ConvolutionBiasAdd>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                    construct_primitive_build_string_conv<ConvolutionBiasAdd>(mkldnn_emitter,
+                                                                              node,
+                                                                              construct_string,
+                                                                              deps,
+                                                                              index,
+                                                                              scratchpad_size,
+                                                                              desc_file);
                 }
 
                 template <>
@@ -983,14 +1035,25 @@ namespace ngraph
                     QuantizedConvolutionBiasAdd)
                 {
                     construct_primitive_build_string_conv<QuantizedConvolutionBiasAdd>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                        mkldnn_emitter,
+                        node,
+                        construct_string,
+                        deps,
+                        index,
+                        scratchpad_size,
+                        desc_file);
                 }
 
                 template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(ConvolutionAdd)
                 {
-                    construct_primitive_build_string_conv<ConvolutionAdd>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                    construct_primitive_build_string_conv<ConvolutionAdd>(mkldnn_emitter,
+                                                                          node,
+                                                                          construct_string,
+                                                                          deps,
+                                                                          index,
+                                                                          scratchpad_size,
+                                                                          desc_file);
                 }
 
                 template <>
@@ -998,23 +1061,39 @@ namespace ngraph
                     QuantizedConvolutionBiasSignedAdd)
                 {
                     construct_primitive_build_string_conv<QuantizedConvolutionBiasSignedAdd>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                        mkldnn_emitter,
+                        node,
+                        construct_string,
+                        deps,
+                        index,
+                        scratchpad_size,
+                        desc_file);
                 }
 
                 template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
                     GroupConvolution)
                 {
-                    construct_primitive_build_string_conv<GroupConvolution>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                    construct_primitive_build_string_conv<GroupConvolution>(mkldnn_emitter,
+                                                                            node,
+                                                                            construct_string,
+                                                                            deps,
+                                                                            index,
+                                                                            scratchpad_size,
+                                                                            desc_file);
                 }
 
                 template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
                     GroupConvolutionBias)
                 {
-                    construct_primitive_build_string_conv<GroupConvolutionBias>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                    construct_primitive_build_string_conv<GroupConvolutionBias>(mkldnn_emitter,
+                                                                                node,
+                                                                                construct_string,
+                                                                                deps,
+                                                                                index,
+                                                                                scratchpad_size,
+                                                                                desc_file);
                 }
 
                 template <typename OP>
@@ -1024,7 +1103,7 @@ namespace ngraph
                     std::string& construct_string,
                     std::vector<size_t>& deps,
                     size_t& index,
-                    size_t& s_size,
+                    size_t& scratchpad_size,
                     std::ofstream& desc_file)
                 {
                     auto has_bias = false;
@@ -1038,8 +1117,8 @@ namespace ngraph
                     auto bwd_desc = mkldnn_emitter.get_convolution_backward_weights_desc<OP>(node);
                     auto fwd_desc =
                         mkldnn_emitter.get_convolution_forward_desc_for_backward_op<OP>(node);
-                    s_size = mkldnn_emitter.query_scratchpad_convolution_backward_weights(fwd_desc,
-                                                                                          bwd_desc);
+                    scratchpad_size = mkldnn_emitter.query_scratchpad_convolution_backward_weights(
+                        fwd_desc, bwd_desc);
 
                     Strides window_dilation_strides_adjusted;
                     for (size_t s : convolution->get_window_dilation_strides_forward())
@@ -1145,8 +1224,13 @@ namespace ngraph
                     ConvolutionBackpropFilters)
                 {
                     construct_primitive_build_string_conv_backward_filters<
-                        ConvolutionBackpropFilters>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                        ConvolutionBackpropFilters>(mkldnn_emitter,
+                                                    node,
+                                                    construct_string,
+                                                    deps,
+                                                    index,
+                                                    scratchpad_size,
+                                                    desc_file);
                 }
 
                 template <>
@@ -1154,8 +1238,13 @@ namespace ngraph
                     ConvolutionBiasBackpropFiltersBias)
                 {
                     construct_primitive_build_string_conv_backward_filters<
-                        ConvolutionBiasBackpropFiltersBias>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                        ConvolutionBiasBackpropFiltersBias>(mkldnn_emitter,
+                                                            node,
+                                                            construct_string,
+                                                            deps,
+                                                            index,
+                                                            scratchpad_size,
+                                                            desc_file);
                 }
 
                 template <>
@@ -1169,8 +1258,8 @@ namespace ngraph
                         ngraph::op::ConvolutionBackpropData>(node);
                     auto fwd_desc = mkldnn_emitter.get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBackpropData>(node);
-                    s_size = mkldnn_emitter.query_scratchpad_convolution_backward_data(fwd_desc,
-                                                                                       bwd_desc);
+                    scratchpad_size = mkldnn_emitter.query_scratchpad_convolution_backward_data(
+                        fwd_desc, bwd_desc);
 
                     Strides window_dilation_strides_adjusted;
                     for (size_t s : convolution->get_window_dilation_strides_forward())
@@ -1261,7 +1350,8 @@ namespace ngraph
                         mkldnn_emitter
                             .get_deconvolutionbias_forward_data<ngraph::op::DeconvolutionBias>(
                                 node);
-                    s_size = mkldnn_emitter.query_scratchpad_deconvolution_forward(deconvbias_desc);
+                    scratchpad_size =
+                        mkldnn_emitter.query_scratchpad_deconvolution_forward(deconvbias_desc);
 
                     // For dilation, MKLDNN wants to know how many elements to insert between, not
                     // how far
@@ -1356,7 +1446,7 @@ namespace ngraph
                     std::string& construct_string,
                     std::vector<size_t>& deps,
                     size_t& index,
-                    size_t& s_size,
+                    size_t& scratchpad_size,
                     std::ofstream& desc_file)
                 {
                     auto pool = static_cast<const OP*>(node);
@@ -1367,7 +1457,8 @@ namespace ngraph
                     auto max_pool_desc =
                         mkldnn_emitter.get_max_pooling_forward_desc<ngraph::op::MaxPool>(node,
                                                                                          false);
-                    s_size = mkldnn_emitter.query_scratchpad_pooling_forward(max_pool_desc);
+                    scratchpad_size =
+                        mkldnn_emitter.query_scratchpad_pooling_forward(max_pool_desc);
 
                     auto window_shape = pool->get_window_shape();
                     auto window_strides = pool->get_window_movement_strides();
@@ -1420,7 +1511,7 @@ namespace ngraph
                     std::string& construct_string,
                     std::vector<size_t>& deps,
                     size_t& index,
-                    size_t& s_size,
+                    size_t& scratchpad_size,
                     std::ofstream& desc_file)
                 {
                     auto pool = static_cast<const OP*>(node);
@@ -1432,7 +1523,8 @@ namespace ngraph
                     auto avg_pool_desc =
                         mkldnn_emitter.get_avg_pooling_forward_desc<ngraph::op::AvgPool>(node,
                                                                                          false);
-                    s_size = mkldnn_emitter.query_scratchpad_pooling_forward(avg_pool_desc);
+                    scratchpad_size =
+                        mkldnn_emitter.query_scratchpad_pooling_forward(avg_pool_desc);
 
                     auto window_shape = pool->get_window_shape();
                     auto window_strides = pool->get_window_movement_strides();
@@ -1490,15 +1582,25 @@ namespace ngraph
                 template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(MaxPool)
                 {
-                    construct_primitive_build_string_max_pool<MaxPool>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                    construct_primitive_build_string_max_pool<MaxPool>(mkldnn_emitter,
+                                                                       node,
+                                                                       construct_string,
+                                                                       deps,
+                                                                       index,
+                                                                       scratchpad_size,
+                                                                       desc_file);
                 }
 
                 template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(AvgPool)
                 {
-                    construct_primitive_build_string_avg_pool<AvgPool>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                    construct_primitive_build_string_avg_pool<AvgPool>(mkldnn_emitter,
+                                                                       node,
+                                                                       construct_string,
+                                                                       deps,
+                                                                       index,
+                                                                       scratchpad_size,
+                                                                       desc_file);
                 }
 
                 template <>
@@ -1516,7 +1618,8 @@ namespace ngraph
                     // query scratchpad size
                     auto max_pool_desc = mkldnn_emitter.get_max_pooling_with_indices_forward_desc<
                         ngraph::op::MaxPoolWithIndices>(node);
-                    s_size = mkldnn_emitter.query_scratchpad_pooling_forward(max_pool_desc);
+                    scratchpad_size =
+                        mkldnn_emitter.query_scratchpad_pooling_forward(max_pool_desc);
 
                     // MaxPoolWithIndices needs 4 primitives: input, result, workspace, and
                     // pooling_forward.
@@ -1584,8 +1687,8 @@ namespace ngraph
                     auto avg_pool_desc =
                         mkldnn_emitter.get_avg_pooling_backward_desc<ngraph::op::AvgPoolBackprop>(
                             node);
-                    s_size = mkldnn_emitter.query_scratchpad_avg_pooling_backward(avg_pool_fwd_desc,
-                                                                                  avg_pool_desc);
+                    scratchpad_size = mkldnn_emitter.query_scratchpad_avg_pooling_backward(
+                        avg_pool_fwd_desc, avg_pool_desc);
 
                     // AvgPoolBackprop needs 3 primitives: diff_dst, diff_src, and pooling_backward.
                     index = mkldnn_emitter.reserve_primitive_space(3);
@@ -1662,8 +1765,8 @@ namespace ngraph
                     auto bwd_pool_desc =
                         mkldnn_emitter.get_max_pooling_backward_desc<ngraph::op::MaxPoolBackprop>(
                             node);
-                    s_size = mkldnn_emitter.query_scratchpad_max_pooling_backward(fwd_pool_desc,
-                                                                                  bwd_pool_desc);
+                    scratchpad_size = mkldnn_emitter.query_scratchpad_max_pooling_backward(
+                        fwd_pool_desc, bwd_pool_desc);
 
                     // MaxPoolBackprop needs 6 primitives: fprop_src, diff_dst, diff_src, workspace
                     // pooling forward, and pooling_backward.
@@ -1765,8 +1868,9 @@ namespace ngraph
                         mkldnn_emitter
                             .get_max_pooling_backward_desc<ngraph::op::MaxPoolWithIndicesBackprop>(
                                 node);
-                    s_size = mkldnn_emitter.query_scratchpad_max_pooling_with_indices_backward(
-                        fwd_pool_desc, bwd_pool_desc);
+                    scratchpad_size =
+                        mkldnn_emitter.query_scratchpad_max_pooling_with_indices_backward(
+                            fwd_pool_desc, bwd_pool_desc);
 
                     // MaxPoolWithIndicesBackprop needs 4 primitives: diff_dst, fprop_workspace,
                     // diff_src
@@ -1889,7 +1993,8 @@ namespace ngraph
                     }
 
                     // query scratchpad size
-                    s_size = mkldnn_emitter.query_scratchpad_reorder(input_desc, result_desc);
+                    scratchpad_size =
+                        mkldnn_emitter.query_scratchpad_reorder(input_desc, result_desc);
 
                     // ConvertLayout needs 3 primitives: input, result, and reorder.
                     index = mkldnn_emitter.reserve_primitive_space(3);
@@ -1931,7 +2036,8 @@ namespace ngraph
                     // query scratchpad size
                     auto bwd_desc = mkldnn_emitter.get_relu_backward_desc(node);
                     auto fwd_desc = mkldnn_emitter.get_relu_forward_desc(node);
-                    s_size = mkldnn_emitter.query_scratchpad_eltwise_backward(fwd_desc, bwd_desc);
+                    scratchpad_size =
+                        mkldnn_emitter.query_scratchpad_eltwise_backward(fwd_desc, bwd_desc);
 
                     // ReluBackprop needs 4 primitives: input, delta, result, and eltwise_backward.
                     index = mkldnn_emitter.reserve_primitive_space(4);
@@ -1988,7 +2094,7 @@ namespace ngraph
 
                     // query scratchpad size
                     auto relu_desc = mkldnn_emitter.get_relu_forward_desc(node);
-                    s_size = mkldnn_emitter.query_scratchpad_eltwise_forward(relu_desc);
+                    scratchpad_size = mkldnn_emitter.query_scratchpad_eltwise_forward(relu_desc);
 
                     // Relu needs 3 primitives: input, result, and eltwise_forward.
                     index = mkldnn_emitter.reserve_primitive_space(3);
@@ -2036,7 +2142,8 @@ namespace ngraph
 
                     // query scratchpad size
                     auto leaky_relu_desc = mkldnn_emitter.get_leaky_relu_desc(node);
-                    s_size = mkldnn_emitter.query_scratchpad_eltwise_forward(leaky_relu_desc);
+                    scratchpad_size =
+                        mkldnn_emitter.query_scratchpad_eltwise_forward(leaky_relu_desc);
 
                     // CPULeakyRelu needs 3 primitives: input, result, and eltwise_forward.
                     index = mkldnn_emitter.reserve_primitive_space(3);
@@ -2084,7 +2191,8 @@ namespace ngraph
 
                     // query scratchpad size
                     auto bounded_relu_desc = mkldnn_emitter.get_bounded_relu_desc(node);
-                    s_size = mkldnn_emitter.query_scratchpad_eltwise_forward(bounded_relu_desc);
+                    scratchpad_size =
+                        mkldnn_emitter.query_scratchpad_eltwise_forward(bounded_relu_desc);
 
                     // BoundedRelu needs 3 primitives: input, result, and eltwise_forward.
                     index = mkldnn_emitter.reserve_primitive_space(3);
@@ -2130,7 +2238,7 @@ namespace ngraph
 
                     // query scratchpad size
                     auto sigmoid_desc = mkldnn_emitter.get_sigmoid_forward_desc(node, false);
-                    s_size = mkldnn_emitter.query_scratchpad_eltwise_forward(sigmoid_desc);
+                    scratchpad_size = mkldnn_emitter.query_scratchpad_eltwise_forward(sigmoid_desc);
 
                     // Sigmoid needs 3 primitives: input, result, and eltwise_forward.
                     index = mkldnn_emitter.reserve_primitive_space(3);
@@ -2178,7 +2286,8 @@ namespace ngraph
                     // query scratchpad size
                     auto fwd_desc = mkldnn_emitter.get_sigmoid_forward_desc(node, true);
                     auto bwd_desc = mkldnn_emitter.get_sigmoid_backward_desc(node);
-                    s_size = mkldnn_emitter.query_scratchpad_eltwise_backward(fwd_desc, bwd_desc);
+                    scratchpad_size =
+                        mkldnn_emitter.query_scratchpad_eltwise_backward(fwd_desc, bwd_desc);
 
                     // SigmoidBackprop needs 4 primitives: input, delta, result, and
                     // eltwise_backward.
@@ -2243,7 +2352,7 @@ namespace ngraph
 
                     // query scratchpad size
                     auto softmax_desc = mkldnn_emitter.get_softmax_forward_desc(node);
-                    s_size = mkldnn_emitter.query_scratchpad_softmax_forward(softmax_desc);
+                    scratchpad_size = mkldnn_emitter.query_scratchpad_softmax_forward(softmax_desc);
 
                     // Softmax needs 3 primitives: input, result, and softmax_forward.
                     index = mkldnn_emitter.reserve_primitive_space(3);
@@ -2286,7 +2395,8 @@ namespace ngraph
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     // query scratchpad size
-                    s_size = mkldnn_emitter.query_scratchpad_reorder(input_desc, result_desc);
+                    scratchpad_size =
+                        mkldnn_emitter.query_scratchpad_reorder(input_desc, result_desc);
 
                     // Quantize needs 3 primitives: input, result, and reorder.
                     index = mkldnn_emitter.reserve_primitive_space(3);
@@ -2325,7 +2435,8 @@ namespace ngraph
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     // query scratchpad size
-                    s_size = mkldnn_emitter.query_scratchpad_reorder(input_desc, result_desc);
+                    scratchpad_size =
+                        mkldnn_emitter.query_scratchpad_reorder(input_desc, result_desc);
 
                     // Dequantize needs 3 primitives: input, result, and reorder.
                     index = mkldnn_emitter.reserve_primitive_space(3);
@@ -2364,7 +2475,7 @@ namespace ngraph
                     std::string& construct_string,
                     std::vector<size_t>& deps,
                     size_t& index,
-                    size_t& s_size,
+                    size_t& scratchpad_size,
                     std::ofstream& desc_file)
                 {
                     auto has_bias = false;
@@ -2381,7 +2492,7 @@ namespace ngraph
                     // query scratchpad size
                     auto ip_desc = mkldnn_emitter.get_inner_product_forward_desc<OP>(node);
                     auto ip_attr = mkldnn_emitter.get_inner_product_forward_attr<OP>(node);
-                    s_size = mkldnn_emitter.query_scratchpad_ip_forward(ip_desc, ip_attr);
+                    scratchpad_size = mkldnn_emitter.query_scratchpad_ip_forward(ip_desc, ip_attr);
 
                     if (has_bias)
                     {
@@ -2465,7 +2576,13 @@ namespace ngraph
                     QuantizedDotBias)
                 {
                     construct_primitive_build_string_inner_product<QuantizedDotBias>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                        mkldnn_emitter,
+                        node,
+                        construct_string,
+                        deps,
+                        index,
+                        scratchpad_size,
+                        desc_file);
                 }
 
                 template <>
@@ -2473,7 +2590,13 @@ namespace ngraph
                     MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(QuantizedMatmul)
                 {
                     construct_primitive_build_string_inner_product<QuantizedMatmul>(
-                        mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                        mkldnn_emitter,
+                        node,
+                        construct_string,
+                        deps,
+                        index,
+                        scratchpad_size,
+                        desc_file);
                 }
             }
         }
@@ -2580,12 +2703,12 @@ bool MKLDNNPrimitiveBuildPass::run_on_call_graph(const std::list<std::shared_ptr
             std::string construct_string;
             std::vector<size_t> deps;
             size_t index;
-            size_t s_size;
+            size_t scratchpad_size;
             handler->second(
-                m_mkldnn_emitter, node, construct_string, deps, index, s_size, desc_file);
+                m_mkldnn_emitter, node, construct_string, deps, index, scratchpad_size, desc_file);
             m_node_primitive_string_deps_index_size_map[node] =
                 std::tuple<std::string, std::vector<size_t>, size_t, size_t>(
-                    construct_string, deps, index, s_size);
+                    construct_string, deps, index, scratchpad_size);
         }
     }
 

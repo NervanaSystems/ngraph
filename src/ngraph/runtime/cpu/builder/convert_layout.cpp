@@ -43,7 +43,7 @@ namespace ngraph
                 auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                 auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                size_t s_size = 0;
+                size_t scratchpad_size = 0;
 
 #if MKLDNN_VERSION_MAJOR < 1
                 if (input_desc.data.format == mkldnn_nchw &&
@@ -133,7 +133,7 @@ namespace ngraph
                         mkldnn::memory::format_tag::goihw);
                 }
 
-                s_size = mkldnn_emitter->query_scratchpad_reorder(input_desc, result_desc);
+                scratchpad_size = mkldnn_emitter->query_scratchpad_reorder(input_desc, result_desc);
 #endif
                 // ConvertLayout needs 3 primitives: input, result, and reorder.
                 size_t reorder_index = mkldnn_emitter->reserve_primitive_space(3);
@@ -142,7 +142,7 @@ namespace ngraph
                                 input_desc,
                                 result_desc,
                                 reorder_index,
-                                s_size,
+                                scratchpad_size,
                                 arg_buffer_index,
                                 out_buffer_index](CPURuntimeContext* ctx,
                                                   CPUExecutionContext* ectx) {
@@ -162,7 +162,11 @@ namespace ngraph
                         ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                        ctx, reorder_index, deps, cpu::mkldnn_utils::OpType::CONVERTLAYOUT, s_size);
+                        ctx,
+                        reorder_index,
+                        deps,
+                        cpu::mkldnn_utils::OpType::CONVERTLAYOUT,
+                        scratchpad_size);
                 };
                 functors.emplace_back(functor);
             }
