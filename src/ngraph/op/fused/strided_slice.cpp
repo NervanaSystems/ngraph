@@ -64,6 +64,30 @@ op::StridedSlice::StridedSlice(const Output<Node>& data,
 
 void op::StridedSlice::pre_validate_and_infer_types()
 {
+    const auto& begin_mask_et = get_input_element_type(1);
+    const auto& end_mask_et = get_input_element_type(2);
+    NODE_VALIDATION_CHECK(this,
+                          begin_mask_et.compatible(element::Type_t::i64),
+                          "Begin mask must have element type i64.");
+    NODE_VALIDATION_CHECK(this,
+                          end_mask_et.compatible(element::Type_t::i64),
+                          "End mask must have element type i64.");
+
+    const vector<size_t> attr_sizes = { m_begin_mask.size(), m_end_mask.size(), m_new_axis_mask.size(), m_shrink_axis_mask.size(), m_ellipsis_mask.size()};
+    const auto are_attr_sizes_eq = std::all_of(attr_sizes.begin(), attr_sizes.end(),
+        [&attr_sizes](size_t s) {return s == 0 || attr_sizes[0] == s; });
+    NODE_VALIDATION_CHECK(this,
+                          are_attr_sizes_eq,
+                          "All maks of StridedSlice should have the same size");
+
+    const auto mask_size = m_begin_mask.size();
+    const auto& data_rank = get_input_partial_shape(0).rank();
+    if (data_rank.is_static())
+    {
+        NODE_VALIDATION_CHECK(this,
+            static_cast<size_t>(data_rank) == mask_size,
+            "Data rank must be equal mask size");
+    }
 }
 
 NodeVector op::StridedSlice::decompose_op() const
@@ -84,8 +108,8 @@ NodeVector op::StridedSlice::decompose_op() const
     }
     else
     {
-        const auto added_axes =
-            std::count_if(m_new_axis_mask.begin(), m_new_axis_mask.end(), [](size_t i) { return i == 1; });
+        const auto added_axes = std::count_if(
+            m_new_axis_mask.begin(), m_new_axis_mask.end(), [](size_t i) { return i == 1; });
         const auto shrinked_axes = std::count_if(
             m_shrink_axis_mask.begin(), m_shrink_axis_mask.end(), [](size_t i) { return i == 1; });
         const auto stride_size = m_begin_mask.size() + added_axes - shrinked_axes;

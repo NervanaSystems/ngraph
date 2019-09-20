@@ -91,6 +91,7 @@
 #include "ngraph/op/fused/split.hpp"
 #include "ngraph/op/fused/squared_difference.hpp"
 #include "ngraph/op/fused/squeeze.hpp"
+#include "ngraph/op/fused/strided_slice.hpp"
 #include "ngraph/op/fused/unsqueeze.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
@@ -1866,6 +1867,38 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Split>(args[0], axis, splits);
             break;
         }
+        case OP_TYPEID::StridedSlice:
+        {
+            auto begin_mask = node_js.at("begin_mask").get<set<size_t>>();
+            auto end_mask = node_js.at("end_mask").get<set<size_t>>();
+            auto new_axis_mask = node_js.at("new_axis_mask").get<set<size_t>>();
+            auto shrink_axis_mask = node_js.at("shrink_axis_mask").get<set<size_t>>();
+            auto ellipsis_mask = node_js.at("ellipsis_mask").get<set<size_t>>();
+            if (args.size() == 3)
+            {
+                node = make_shared<op::StridedSlice>(args[0],
+                                                     args[1],
+                                                     args[2],
+                                                     begin_mask,
+                                                     end_mask,
+                                                     new_axis_mask,
+                                                     shrink_axis_mask,
+                                                     ellipsis_mask);
+            }
+            if (args.size() == 4)
+            {
+                node = make_shared<op::StridedSlice>(args[0],
+                                                     args[1],
+                                                     args[2],
+                                                     args[3],
+                                                     begin_mask,
+                                                     end_mask,
+                                                     new_axis_mask,
+                                                     shrink_axis_mask,
+                                                     ellipsis_mask);
+            }
+            break;
+        }
         case OP_TYPEID::Sqrt:
         {
             node = make_shared<op::Sqrt>(args[0]);
@@ -2882,6 +2915,16 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Split*>(&n);
         node["axis"] = tmp->get_axis();
         node["splits"] = tmp->get_splits();
+        break;
+    }
+    case OP_TYPEID::StridedSlice:
+    {
+        auto tmp = dynamic_cast<const op::StridedSlice*>(&n);
+        node["begin_mask"] = tmp->get_begin_mask();
+        node["end_mask"] = tmp->get_end_mask();
+        node["new_axis_mask"] = tmp->get_new_axis_mask();
+        node["shrink_axis_mask"] = tmp->get_shrink_axis_mask();
+        node["ellipsis_mask"] = tmp->get_ellipsis_mask();
         break;
     }
     case OP_TYPEID::Sqrt: { break;

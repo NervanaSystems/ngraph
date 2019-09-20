@@ -149,6 +149,7 @@ set(SRC
     type_prop/split.cpp
     type_prop/squared_difference.cpp
     type_prop/squeeze.cpp
+    type_prop/strided_slice.cpp
     type_prop/sum.cpp
     type_prop/tile.cpp
     type_prop/top_k.cpp

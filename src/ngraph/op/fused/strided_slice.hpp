@@ -56,6 +56,11 @@ namespace ngraph
                          const AxisSet& shrink_axis_mask = AxisSet{},
                          const AxisSet& ellipsis_mask = AxisSet{});
 
+            const AxisSet& get_begin_mask() const { return m_begin_mask; }
+            const AxisSet& get_end_mask() const { return m_end_mask; }
+            const AxisSet& get_new_axis_mask() const { return m_new_axis_mask; }
+            const AxisSet& get_shrink_axis_mask() const { return m_shrink_axis_mask; }
+            const AxisSet& get_ellipsis_mask() const { return m_ellipsis_mask; }
             NodeVector decompose_op() const override;
             void pre_validate_and_infer_types() override;
 
