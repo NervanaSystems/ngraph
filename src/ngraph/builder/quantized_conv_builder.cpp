@@ -55,23 +55,31 @@ namespace ngraph
             auto filter_zero_point = op::Constant::create(filters.get_element_type(), Shape{}, {0});
 
             return make_shared<op::QuantizedConvolution>(
-                input,
-                filters,
-                window_movement_strides,
-                window_dilation_strides,
-                padding_below,
-                padding_above,
-                data_dilation_strides,
-                input_scale,
-                input_zero_point,
-                filter_scale,
-                filter_zero_point,
-                output_scale,
-                filter_zero_point, // output type will be same as filter
-                output_type,
-                input_axes,
-                filter_axes,
-                output_axes);
+                       input,
+                       filters,
+                       window_movement_strides,
+                       window_dilation_strides,
+                       padding_below,
+                       padding_above,
+                       data_dilation_strides,
+                       input_scale,
+                       input_zero_point,
+                       filter_scale,
+                       filter_zero_point,
+                       output_scale,
+                       filter_zero_point, // output type will be same as filter
+                       output_type,
+                       input_axes,
+                       filter_axes,
+                       output_axes)
+                ->add_provenance_group_members_above({input,
+                                                      filters,
+                                                      min_input,
+                                                      max_input,
+                                                      min_filter,
+                                                      max_filter,
+                                                      min_output,
+                                                      max_output});
         }
 
         shared_ptr<Node> QuantizedConvolutionBiasBuilder(const Output<Node>& input,

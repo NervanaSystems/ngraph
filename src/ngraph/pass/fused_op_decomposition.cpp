@@ -36,8 +36,19 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
             // Op supported by backend. Do not decompose
             return modified;
         }
-
+        // Capture the input values as a base for provenance
+        OutputVector base_input_values;
+        for (auto input : fused_op->inputs())
+        {
+            base_input_values.push_back(input.get_source_output());
+        }
         auto subgraph_outputs = fused_op->decompose_op();
+        // Transfer the new provenance tags to the newly created ops
+        auto provenance_tags = fused_op->get_provenance_tags();
+        for (auto subgraph : subgraph_outputs)
+        {
+            subgraph->add_provenance_tags_above(base_input_values, provenance_tags);
+        }
         // Run recursively untill no more fused ops
         auto subgraph = extract_subgraph(subgraph_outputs, fused_op->get_arguments());
         for (auto subgraph_node : subgraph)
@@ -50,7 +61,6 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
         {
             for (size_t j = 0; j < output_node->get_outputs().size(); j++, i++)
             {
-                // TODO: Provenance
                 set<descriptor::Input*> fop_users{begin(fused_op->get_outputs().at(i).get_inputs()),
                                                   end(fused_op->get_outputs().at(i).get_inputs())};
                 for (auto fop_user : fop_users)
