@@ -417,10 +417,25 @@ namespace ngraph
         /// Set device placement
         void set_placement_index(size_t placement);
 
-        const std::set<std::string>& get_provenance_tags() const;
+        const std::unordered_set<std::string>& get_provenance_tags() const;
         void add_provenance_tag(const std::string& tag);
-        void add_provenance_tags(const std::set<std::string>& tag_set);
+        template <typename T>
+        void add_provenance_tags(T tag_set)
+        {
+            for (auto tag : tag_set)
+            {
+                add_provenance_tag(tag);
+            }
+        }
+        /// \brief Adds tag_set to this node and all intermediate nodes above base
+        void add_provenance_tags_above(const OutputVector& base,
+                                       const std::unordered_set<std::string>& tag_set);
         void remove_provenance_tag(const std::string& tag);
+        /// \brief Add node to additional nodes that receive tags
+        void add_provenance_group_member(const std::shared_ptr<Node>& node);
+        /// \brief Add all nodes between this node and nodes in base as additional nodes to receive
+        /// provenance tags.
+        std::shared_ptr<Node> add_provenance_group_members_above(const OutputVector& base);
 
         // to be used when nodes are replaced
         void merge_provenance_tags_from(const std::shared_ptr<const Node>& source);
@@ -482,7 +497,8 @@ namespace ngraph
         std::string m_unique_name;
         NGRAPH_API
         static std::atomic<size_t> m_next_instance_id;
-        std::set<std::string> m_provenance_tags;
+        std::unordered_set<std::string> m_provenance_tags;
+        std::set<std::shared_ptr<Node>> m_provenance_group;
         std::deque<descriptor::Input> m_inputs;
         std::deque<descriptor::Output> m_outputs;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
