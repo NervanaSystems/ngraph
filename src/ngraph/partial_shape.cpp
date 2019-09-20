@@ -254,10 +254,6 @@ bool PartialShape::broadcast_merge_into(PartialShape& dst,
     {
     case op::AutoBroadcastType::NUMPY:
     {
-        NGRAPH_CHECK(autob.m_type == op::AutoBroadcastType::NUMPY ||
-                         autob.m_type == op::AutoBroadcastType::PDPD,
-                     "Unsupported auto broadcast type");
-
         if (dst.rank().is_dynamic() || src.rank().is_dynamic())
         {
             dst = PartialShape::dynamic();
@@ -284,7 +280,46 @@ bool PartialShape::broadcast_merge_into(PartialShape& dst,
         }
     }
     break;
-    case op::AutoBroadcastType::PDPD: { return true;
+    case op::AutoBroadcastType::PDPD:
+    {
+        if (dst.rank().is_dynamic() || src.rank().is_dynamic())
+        {
+            return true;
+        }
+        else
+        {
+            // Ranks are both static.
+            auto dst_rank = size_t(dst.rank());
+            auto src_rank = size_t(src.rank());
+            if (dst_rank == src_rank && dst.compatible(src))
+                return true;
+
+            int64_t axis = autob.m_axis;
+            if (axis < -1)
+            {
+                return false;
+            }
+            if (axis == -1)
+            {
+                axis = dst_rank - src_rank;
+            }
+
+            size_t len = src_rank;
+            while (len > 0 && src[len - 1].is_static() && size_t(src[len - 1]) == 1)
+            {
+                --len;
+            }
+
+            for (size_t i = axis; i < axis + len; ++i)
+            {
+                if (!(dst[i].compatible(src[i - axis])))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
     break;
     default: throw ngraph_error("Unsupported auto broadcast type");

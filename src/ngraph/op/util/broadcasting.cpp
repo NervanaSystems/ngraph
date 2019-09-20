@@ -184,15 +184,16 @@ static std::shared_ptr<ngraph::Node> broadcast_node_pdpd_style(
     const std::shared_ptr<ngraph::Node>& value, const ngraph::Shape& output_shape, int64_t axis)
 {
     auto value_shape = value->get_shape();
+    auto trimmed_value_shape = value_shape;
 
     if (axis == -1)
     {
         axis = output_shape.size() - value_shape.size();
     }
 
-    while (value_shape.size() > 0 && value_shape.back() == 1)
+    while (trimmed_value_shape.size() > 0 && trimmed_value_shape.back() == 1)
     {
-        value_shape.pop_back();
+        trimmed_value_shape.pop_back();
     }
 
     size_t pre = 1, mid = ngraph::shape_size(value_shape), post = 1;
@@ -201,12 +202,12 @@ static std::shared_ptr<ngraph::Node> broadcast_node_pdpd_style(
         pre *= output_shape[i];
     }
 
-    for (size_t i = axis + value_shape.size(); i < output_shape.size(); ++i)
+    for (size_t i = axis + trimmed_value_shape.size(); i < output_shape.size(); ++i)
     {
         post *= output_shape[i];
     }
 
-    std::vector<size_t> value_order(value->get_shape().size());
+    std::vector<size_t> value_order(value_shape.size());
     std::iota(std::begin(value_order), std::end(value_order), 0);
     auto value_reshape = std::make_shared<ngraph::op::Reshape>(
         value, ngraph::AxisVector(value_order), ngraph::Shape{mid});
