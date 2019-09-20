@@ -73,7 +73,7 @@ namespace ngraph
                     Eigen::array<Eigen::IndexPair<size_t>, Rank> padding;
                     Eigen::array<Eigen::Index, Rank> indices;
 
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         out_dims[i] = output_shape[i];
                         in_dims[i] = input_shape[i];

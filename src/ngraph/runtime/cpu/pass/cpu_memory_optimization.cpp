@@ -71,7 +71,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             auto shape = concat->get_input_shape(0);
             auto axis = concat->get_concatenation_axis();
             auto product = 1;
-            for (int i = 0; i < axis; i++)
+            for (size_t i = 0; i < axis; i++)
             {
                 product *= shape[i];
             }
