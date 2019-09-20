@@ -52,7 +52,7 @@ namespace ngraph
                                     builder::ContractionOutput{"SelVal"}
                                         .add_indices([&](
                                             std::back_insert_iterator<std::list<std::string>> out) {
-                                            for (auto idx = 0; idx < dim_limit; ++idx)
+                                            for (size_t idx = 0; idx < dim_limit; ++idx)
                                             {
                                                 out =
                                                     (idx == this->op().get_reduction_axis() ? "rd"
@@ -62,7 +62,7 @@ namespace ngraph
                                         })
                                         .add_dims([&](
                                             std::back_insert_iterator<std::list<std::string>> out) {
-                                            for (auto idx = 0; idx < dim_limit; ++idx)
+                                            for (size_t idx = 0; idx < dim_limit; ++idx)
                                             {
                                                 if (idx == this->op().get_reduction_axis())
                                                 {
@@ -86,7 +86,7 @@ namespace ngraph
                                     builder::ContractionOutput{"SelIdx"}
                                         .add_indices([&](
                                             std::back_insert_iterator<std::list<std::string>> out) {
-                                            for (auto idx = 0; idx < dim_limit; ++idx)
+                                            for (size_t idx = 0; idx < dim_limit; ++idx)
                                             {
                                                 if (idx != this->op().get_reduction_axis())
                                                 {
@@ -96,7 +96,7 @@ namespace ngraph
                                         })
                                         .add_dims([&](
                                             std::back_insert_iterator<std::list<std::string>> out) {
-                                            for (auto idx = 0; idx < dim_limit; ++idx)
+                                            for (size_t idx = 0; idx < dim_limit; ++idx)
                                             {
                                                 if (idx != this->op().get_reduction_axis())
                                                 {
