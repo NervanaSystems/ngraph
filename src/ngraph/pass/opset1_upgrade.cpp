@@ -19,8 +19,12 @@
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/pad.hpp"
+#include "ngraph/op/product.hpp"
+#include "ngraph/op/reduce_prod.hpp"
+#include "ngraph/op/reduce_sum.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/softmax.hpp"
+#include "ngraph/op/sum.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -110,6 +114,24 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 
         auto replacement_node =
             make_shared<op::v1::Softmax>(node->input(0).get_source_output(), axes.to_vector()[0]);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Product:
+    {
+        bool keep_dims = false;
+        auto replacement_node = make_shared<op::v1::ReduceProd>(
+            node->input(0).get_source_output(), node->input(1).get_source_output(), keep_dims);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Sum:
+    {
+        bool keep_dims = false;
+        auto replacement_node = make_shared<op::v1::ReduceSum>(
+            node->input(0).get_source_output(), node->input(1).get_source_output(), keep_dims);
         replace_node(node, replacement_node);
         modified = true;
         break;
