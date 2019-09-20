@@ -369,12 +369,7 @@ void Node::add_provenance_tags_above(const OutputVector& base, const std::set<st
         {
             continue;
         }
-        std::cerr << "Really adding tags {";
-        for (auto s : tag_set){
-            cerr << s << ", ";
-        }
-        cerr << "} to " << *node << std::endl;
-        add_provenance_tags(tag_set);
+        node->add_provenance_tags(tag_set);
         for (auto input : node->inputs())
         {
             todo.push_back(input.get_source_output().get_node());

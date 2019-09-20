@@ -45,13 +45,8 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
         auto subgraph_outputs = fused_op->decompose_op();
         // Transfer the new provenance tags to the newly created ops
         auto provenance_tags = fused_op->get_provenance_tags();
-        for (auto tag : provenance_tags)
-        {
-            std::cerr << "TAG: " << tag << std::endl;
-        }
         for (auto subgraph : subgraph_outputs)
         {
-            std::cerr << "Adding tags to " << *subgraph << std::endl;
             subgraph->add_provenance_tags_above(base_input_values, provenance_tags);
         }
         // Run recursively untill no more fused ops
@@ -66,7 +61,6 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
         {
             for (size_t j = 0; j < output_node->get_outputs().size(); j++, i++)
             {
-                // TODO: Provenance
                 set<descriptor::Input*> fop_users{begin(fused_op->get_outputs().at(i).get_inputs()),
                                                   end(fused_op->get_outputs().at(i).get_inputs())};
                 for (auto fop_user : fop_users)

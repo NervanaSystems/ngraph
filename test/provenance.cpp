@@ -418,7 +418,6 @@ TEST(provenance, fused)
     manager.register_pass<pass::FusedOpDecomposition>();
     manager.run_passes(f);
     traverse_nodes(f, [&](const std::shared_ptr<Node>& node) {
-        cerr << "Traverse: " << *node << endl;
         if (node == p1)
         {
             EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"P1"}));
