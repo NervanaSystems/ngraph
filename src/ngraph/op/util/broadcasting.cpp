@@ -172,6 +172,20 @@ static std::shared_ptr<ngraph::Node>
     return std::make_shared<ngraph::op::Broadcast>(broadcasted_value, output_shape, broadcast_axes);
 }
 
+/// \brief      Broadcast input node.
+///
+/// \param[in]  value         The input Node to be broadcast.
+/// \param[in]  output_shape  The output shape.
+/// \param[in]  axis          The start index to align with output_shape
+///
+/// \return     The broadcasted Node.
+///
+static std::shared_ptr<ngraph::Node> broadcast_node_pdpd_style(
+    const std::shared_ptr<ngraph::Node>& value, const ngraph::Shape& output_shape, int64_t axis)
+{
+    return value;
+}
+
 namespace ngraph
 {
     namespace op
@@ -413,6 +427,22 @@ namespace ngraph
                 calculate_broadcast_axes(left_shape, new_right_shape, start_match_axis));
 
             return {left, broadcast_right};
+        }
+
+        NodeVector pdpd_style_broadcast(const NodeVector& inputs, int64_t axis)
+        {
+            if (inputs.size() <= 1)
+            {
+                return inputs;
+            }
+
+            NodeVector broadcasted_inputs{inputs[0]};
+            for (std::size_t i = 1; i < inputs.size(); ++i)
+            {
+                broadcasted_inputs.push_back(
+                    broadcast_node_pdpd_style(inputs[i], inputs[0]->get_shape(), axis));
+            }
+            return broadcasted_inputs;
         }
 
         AxisSet calculate_broadcast_axes(const Shape& output_shape,
