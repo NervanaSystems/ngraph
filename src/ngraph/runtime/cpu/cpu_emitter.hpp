@@ -22,6 +22,7 @@
 #include "ngraph/code_writer.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/gather.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
@@ -92,7 +93,6 @@ namespace ngraph
         class ArgMin;
         class ArgMax;
         class TopK;
-        class Gather;
         class GatherND;
         class ScatterAdd;
         class ScatterNDAdd;
