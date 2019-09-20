@@ -50,14 +50,15 @@ namespace ngraph
                 auto padding_above = pad->get_padding_above();
                 auto pad_mode = pad->get_pad_mode();
 
-                if (pad_mode == ngraph::op::PadMode::CONSTANT)
+                if (pad_mode == ngraph::op::PadMode::CONSTANT &&
+                    is_optimized_et(args[0].get_element_type()))
                 {
                     std::function<decltype(runtime::cpu::kernel::pad_and_slice<float, 1>)> kernel;
 
-                    SELECT_KERNEL_BY_RANK(kernel,
-                                          args[0].get_element_type(),
-                                          arg_shape.size(),
-                                          runtime::cpu::kernel::pad_and_slice)
+                    SELECT_ETS_AND_RANK7(kernel,
+                                         args[0].get_element_type(),
+                                         arg_shape.size(),
+                                         runtime::cpu::kernel::pad_and_slice);
 
                     auto functor = [&,
                                     kernel,
@@ -122,14 +123,15 @@ namespace ngraph
                 auto padding_above = pad->get_padding_above();
                 auto pad_mode = pad->get_pad_mode();
 
-                if (pad_mode == ngraph::op::PadMode::CONSTANT)
+                if (pad_mode == ngraph::op::PadMode::CONSTANT &&
+                    is_optimized_et(pad->get_input_element_type(0)))
                 {
                     std::function<decltype(runtime::cpu::kernel::pad_and_slice<float, 1>)> kernel;
 
-                    SELECT_KERNEL_BY_RANK(kernel,
-                                          pad->get_input_element_type(0),
-                                          arg_shape.size(),
-                                          runtime::cpu::kernel::pad_and_slice)
+                    SELECT_ETS_AND_RANK7(kernel,
+                                         pad->get_input_element_type(0),
+                                         arg_shape.size(),
+                                         runtime::cpu::kernel::pad_and_slice);
 
                     auto functor = [kernel, arg_shape, out_shape, padding_below, padding_above](
                         const std::vector<void*>& inputs, std::vector<void*>& outputs) {

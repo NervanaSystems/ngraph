@@ -67,7 +67,9 @@ namespace ngraph
                     return;
                 }
 
-                if (arg0_shape.empty() || arg1_shape.empty())
+                if ((arg0_shape.empty() || arg1_shape.empty()) &&
+                    is_optimized_et(args[0].get_element_type()) &&
+                    is_optimized_et(args[1].get_element_type()))
                 {
                     auto first = (arg0_shape.empty() ? args[0] : args[1]);
                     auto second = (arg0_shape.empty() ? args[1] : args[0]);
@@ -78,8 +80,7 @@ namespace ngraph
 
                     std::function<decltype(runtime::cpu::kernel::dot_scalar<float>)> kernel;
 
-                    SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_scalar)
+                    SELECT_ETS(kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_scalar);
 
                     auto element_count = shape_size(second.get_shape());
 
@@ -101,12 +102,13 @@ namespace ngraph
                 }
 
                 if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1) &&
-                    reduction_axes_count == 1)
+                    reduction_axes_count == 1 && is_optimized_et(args[0].get_element_type()) &&
+                    is_optimized_et(args[1].get_element_type()))
                 {
                     std::function<decltype(runtime::cpu::kernel::dot_1d_1d_1rd<float>)> kernel;
 
-                    SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_1d_1d_1rd)
+                    SELECT_ETS(
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_1d_1d_1rd);
 
                     auto functor = [&,
                                     kernel,
@@ -130,12 +132,13 @@ namespace ngraph
                 }
 
                 if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1) &&
-                    reduction_axes_count == 1)
+                    reduction_axes_count == 1 && is_optimized_et(args[0].get_element_type()) &&
+                    is_optimized_et(args[1].get_element_type()))
                 {
                     std::function<decltype(runtime::cpu::kernel::dot_2d_1d_1rd<float>)> kernel;
 
-                    SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_2d_1d_1rd)
+                    SELECT_ETS(
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_2d_1d_1rd);
 
                     auto functor = [&,
                                     kernel,
@@ -159,12 +162,13 @@ namespace ngraph
                 }
 
                 if ((arg0_shape.size() == 1) && (arg1_shape.size() == 2) &&
-                    reduction_axes_count == 1)
+                    reduction_axes_count == 1 && is_optimized_et(args[0].get_element_type()) &&
+                    is_optimized_et(args[1].get_element_type()))
                 {
                     std::function<decltype(runtime::cpu::kernel::dot_1d_2d_1rd<float>)> kernel;
 
-                    SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_1d_2d_1rd)
+                    SELECT_ETS(
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_1d_2d_1rd);
 
                     auto functor = [&,
                                     kernel,
