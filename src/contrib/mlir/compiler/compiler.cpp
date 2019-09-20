@@ -637,39 +637,39 @@ namespace ngraph
 template <typename Op>
 mlir::Operation* MLIRCompiler::createGenericOp(const ngraph::Node* ngNode)
 {
-    std::vector<mlir::Value*> arg_values;
-    std::vector<mlir::Type> res_types;
-    auto input_map = m_compiledKernel->get_input_map();
-    std::shared_ptr<descriptor::Tensor> arg_tensor;
-    for (auto& arg_output : ngNode->input_values())
+    std::vector<mlir::Value*> argValues;
+    std::vector<mlir::Type> resTypes;
+    auto inputMap = m_compiledKernel->get_input_map();
+    std::shared_ptr<descriptor::Tensor> argTensor;
+    for (auto& argOutput : ngNode->input_values())
     {
-        auto arg_output_node = arg_output.get_node();
-        if (as_type<op::Parameter>(arg_output_node))
+        auto argOutputNode = argOutput.get_node();
+        if (as_type<op::Parameter>(argOutputNode))
         {
-            auto it = input_map.find(arg_output_node->shared_from_this());
-            NGRAPH_CHECK(it != input_map.end(), "Parameter not in CK input map");
+            auto it = inputMap.find(argOutputNode->shared_from_this());
+            NGRAPH_CHECK(it != inputMap.end(), "Parameter not in CK input map");
 
-            arg_tensor = m_compiledKernel->input_values().at(it->second).get_tensor_ptr();
+            argTensor = m_compiledKernel->input_values().at(it->second).get_tensor_ptr();
         }
         else
         {
-            arg_tensor = arg_output.get_tensor_ptr();
+            argTensor = argOutput.get_tensor_ptr();
         }
 
-        auto arg_v = getTensorValue(arg_tensor.get()).m_value;
-        arg_values.push_back(arg_v);
+        auto argV = getTensorValue(argTensor.get()).m_value;
+        argValues.push_back(argV);
     }
 
     for (auto& output : ngNode->outputs())
     {
-        res_types.push_back(getMlirType(output.get_tensor_ptr().get()));
+        resTypes.push_back(getMlirType(output.get_tensor_ptr().get()));
     }
 
     return (m_builder->create<Op,
                               ArrayRef<mlir::Type>,
                               ArrayRef<mlir::Value*>,
                               ArrayRef<mlir::NamedAttribute>>(
-                mlir::UnknownLoc::get(&m_context), res_types, arg_values, {/* no attrs */}))
+                mlir::UnknownLoc::get(&m_context), resTypes, argValues, {/* no attrs */}))
         .getOperation();
 }
 
