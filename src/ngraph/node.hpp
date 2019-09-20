@@ -373,6 +373,10 @@ namespace ngraph
         void add_provenance_tag(const std::string& tag);
         void add_provenance_tags(const std::set<std::string>& tag_set);
         void remove_provenance_tag(const std::string& tag);
+        /// \brief Add node to additional nodes that receive tags
+        void add_provenance_group_member(const std::shared_ptr<Node>& node);
+        /// \brief Add all nodes between this node and nodes in base as additinal nodes to receive proveance tags.
+        std::shared_ptr<Node> add_provenance_group_members_above(const OutputVector& base);
 
         // to be used when nodes are replaced
         void merge_provenance_tags_from(const std::shared_ptr<const Node>& source);
@@ -428,6 +432,7 @@ namespace ngraph
         NGRAPH_API
         static std::atomic<size_t> m_next_instance_id;
         std::set<std::string> m_provenance_tags;
+        std::set<std::shared_ptr<Node>> m_provenance_group;
         std::deque<descriptor::Input> m_inputs;
         std::deque<descriptor::Output> m_outputs;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;

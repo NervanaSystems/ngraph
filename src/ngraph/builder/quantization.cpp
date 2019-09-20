@@ -60,7 +60,8 @@ namespace ngraph
 
             auto zero = make_constant(quant_type, shape, 0);
             auto scale = quantization_util::get_scale(min, max, quant_type, true);
-            return make_shared<op::Quantize>(input, scale, zero, quant_type, axes, round_mode);
+            return make_shared<op::Quantize>(input, scale, zero, quant_type, axes, round_mode)
+                ->add_provenance_group_members_above({input, min, max});
         }
 
         shared_ptr<Node> ScaledDequantize(const Output<Node>& input,
@@ -89,7 +90,8 @@ namespace ngraph
 
             auto zero = make_constant(quant_type, shape, 0);
             auto scale = quantization_util::get_scale(min, max, quant_type);
-            return make_shared<op::Dequantize>(input, scale, zero, real_type, axes);
+            return make_shared<op::Dequantize>(input, scale, zero, real_type, axes)
+                ->add_provenance_group_members_above({input, min, max});
         }
 
         shared_ptr<Node> ScaledQuantizedConcat(const NodeVector& args,
@@ -123,8 +125,21 @@ namespace ngraph
                                               AxisSet{},
                                               op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
             }
-
-            return make_shared<op::QuantizedConcat>(rescaled_args, concatenation_axis);
+            OutputVector base;
+            for (auto node : args)
+            {
+                base.push_back(node);
+            }
+            for (auto node : mins)
+            {
+                base.push_back(node);
+            }
+            for (auto node : maxs)
+            {
+                base.push_back(node);
+            }
+            return make_shared<op::QuantizedConcat>(rescaled_args, concatenation_axis)
+                ->add_provenance_group_members_above(base);
         }
 
         shared_ptr<Node> ScaledQuantizedAvgPool(const Output<Node>& input,
@@ -141,7 +156,8 @@ namespace ngraph
                                                      window_movement_strides,
                                                      padding_below,
                                                      padding_above,
-                                                     include_padding_in_avg_computation);
+                                                     include_padding_in_avg_computation)
+                ->add_provenance_group_members_above({input});
         }
 
         shared_ptr<Node> ScaledQuantizedConvolutionBias(const Output<Node>& input,
@@ -187,7 +203,16 @@ namespace ngraph
                                                              padding_above,
                                                              data_dilation_strides,
                                                              requantization_scale,
-                                                             with_relu);
+                                                             with_relu)
+                ->add_provenance_group_members_above({input,
+                                                      filters,
+                                                      bias,
+                                                      min_input,
+                                                      max_input,
+                                                      min_filter,
+                                                      max_filter,
+                                                      min_output,
+                                                      max_output});
         }
 
         shared_ptr<Node> ScaledQuantizedConvolutionRelu(const Output<Node>& input,
@@ -214,7 +239,15 @@ namespace ngraph
                                                              padding_below,
                                                              padding_above,
                                                              data_dilation_strides,
-                                                             requantization_scale);
+                                                             requantization_scale)
+                ->add_provenance_group_members_above({input,
+                                                      filters,
+                                                      min_input,
+                                                      max_input,
+                                                      min_filter,
+                                                      max_filter,
+                                                      min_output,
+                                                      max_output});
         }
 
         shared_ptr<Node> ScaledQuantizedMaxPool(const Output<Node>& input,
@@ -226,7 +259,8 @@ namespace ngraph
                                                 const Output<Node>& /* max */)
         {
             return make_shared<op::QuantizedMaxPool>(
-                input, window_shape, window_movement_strides, padding_below, padding_above);
+                       input, window_shape, window_movement_strides, padding_below, padding_above)
+                ->add_provenance_group_members_above({input});
         }
 
         shared_ptr<Node> ScaledQuantizedConvolutionBiasAdd(const Output<Node>& input,
@@ -280,7 +314,19 @@ namespace ngraph
                                                                 data_dilation_strides,
                                                                 requantization_scale,
                                                                 sum_scale,
-                                                                with_relu);
+                                                                with_relu)
+                ->add_provenance_group_members_above({input,
+                                                      filters,
+                                                      bias,
+                                                      sum_input,
+                                                      min_input,
+                                                      max_input,
+                                                      min_filter,
+                                                      max_filter,
+                                                      min_output,
+                                                      max_output,
+                                                      min_sum_input,
+                                                      max_sum_input});
         }
 
         shared_ptr<Node>
@@ -340,7 +386,19 @@ namespace ngraph
                                                                             data_dilation_strides,
                                                                             requantization_scale,
                                                                             sum_scale,
-                                                                            with_relu);
+                                                                            with_relu)
+                             ->add_provenance_group_members_above({input,
+                                                                   filters,
+                                                                   bias,
+                                                                   sum_input,
+                                                                   min_input,
+                                                                   max_input,
+                                                                   min_filter,
+                                                                   max_filter,
+                                                                   min_output,
+                                                                   max_output,
+                                                                   min_sum_input,
+                                                                   max_sum_input});
             return make_shared<op::Convert>(qconv, element::u8);
         }
 
@@ -381,7 +439,9 @@ namespace ngraph
                     bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
             }
             return make_shared<op::QuantizedDotBias>(
-                input, filters, mybias, requantization_scale, requantize, with_relu);
+                       input, filters, mybias, requantization_scale, requantize, with_relu)
+                ->add_provenance_group_members_above(
+                    {min_input, max_input, min_filter, max_filter, min_output, max_output});
         }
 
         shared_ptr<Node> ScaledQuantizedDot(const Output<Node>& input,
@@ -406,7 +466,15 @@ namespace ngraph
                                                  with_relu ? element::u8 : element::i8,
                                                  requantize);
             return make_shared<op::QuantizedDot>(
-                input, filters, requantization_scale, requantize, with_relu);
+                       input, filters, requantization_scale, requantize, with_relu)
+                ->add_provenance_group_members_above({input,
+                                                      filters,
+                                                      min_input,
+                                                      max_input,
+                                                      min_filter,
+                                                      max_filter,
+                                                      min_output,
+                                                      max_output});
         }
     } // namespace builder
 } // namespace ngraph

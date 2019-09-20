@@ -318,6 +318,40 @@ void Node::set_placement_index(size_t placement)
     m_placement_index = placement;
 }
 
+void Node::add_provenance_group_member(const shared_ptr<Node>& node)
+{
+    m_provenance_group.insert(node);
+}
+
+shared_ptr<Node> Node::add_provenance_group_members_above(const OutputVector& base)
+{
+    set<Node*> base_set;
+    for (auto& output : base)
+    {
+        base_set.insert(output.get_node());
+    }
+    vector<Node*> todo;
+    for (auto input : inputs())
+    {
+        todo.push_back(input.get_source_output().get_node());
+    }
+    while (!todo.empty())
+    {
+        Node* node = todo.back();
+        todo.pop_back();
+        if (base_set.count(node) > 0 || !node->m_provenance_group.empty())
+        {
+            continue;
+        }
+        add_provenance_group_member(node->shared_from_this());
+        for (auto input : node->inputs())
+        {
+            todo.push_back(input.get_source_output().get_node());
+        }
+    }
+    return shared_from_this();
+}
+
 const std::set<std::string>& Node::get_provenance_tags() const
 {
     return m_provenance_tags;
@@ -326,6 +360,10 @@ const std::set<std::string>& Node::get_provenance_tags() const
 void Node::add_provenance_tag(const std::string& tag)
 {
     m_provenance_tags.insert(tag);
+    for (auto node : m_provenance_group)
+    {
+        node->add_provenance_tag(tag);
+    }
 }
 
 void Node::add_provenance_tags(const std::set<std::string>& tag_set)
