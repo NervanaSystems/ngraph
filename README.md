@@ -36,7 +36,7 @@ seen performance boosts running workloads that are not included on the list of
 Additionally we have integrated nGraph with [PlaidML] to provide deep learning 
 performance acceleration on Intel, nVidia, & AMD GPUs. More details on current 
 architecture of the nGraph Compiler stack can be found in [Architecture and features],
-and recent changes to the stack are explained in [Release Notes].
+and recent changes to the stack are explained in the [Release Notes].
 
 ## What is nGraph Compiler? 
 
@@ -50,14 +50,8 @@ deep learning accelerators: Intel® Nervana™ Neural Network Processor for Lear
 Inference respectively.  Future plans for supporting addtional deep learning frameworks 
 and backends are outlined in the [ecosystem] section. 
 
-![](doc/sphinx/source/graphics/ngpipelines.png)
+![](doc/sphinx/source/graphics/nGraph_main.png)
 
-
-While the ecosystem shown above is all functioning, we have validated 
-performance for deep learning inference on CPU processors, such as Intel® Xeon® 
-for the Beta release of nGraph. The Gold release is targeted for June 2019; it 
-will feature broader workload coverage including quantized graphs (int8) and 
-will implement support for dynamic shapes. 
 
 Our documentation has extensive information about how to use nGraph Compiler 
 stack to create an nGraph computational graph, integrate custom frameworks, 
@@ -77,9 +71,10 @@ to improve it:
 * In the case of a larger feature, create a test.
 * Submit a [pull request].
 * Make sure your PR passes all CI tests. Note: You can test locally with `make check`.
-* We will review your contribution and, if any additional fixes or
-  modifications are necessary, may provide feedback to guide you. When
-  accepted, your pull request will be merged to the repository.
+
+ We will review your contribution and, if any additional fixes or modifications are 
+ necessary, may provide feedback to guide you. When accepted, your pull request will 
+ be merged to the repository.
 
 
 [Ecosystem]: ./ecosystem-overview.md
@@ -96,7 +91,7 @@ to improve it:
 [contrib guide]: https://www.ngraph.ai/documentation/contributing/guide
 [pull request]: https://github.com/NervanaSystems/ngraph/pulls
 [how to import]: https://www.ngraph.ai/tutorials/onnx-tutorial#import-a-model-with-onnx-and-ngraph
-[ngraph_wireframes_with_notice]: doc/sphinx/source/graphics/ngpipelines.png "nGraph wireframe"
+[ngraph_wireframes_with_notice]: doc/sphinx/source/graphics/nGraph_main.png "nGraph components"
 [build-status]: https://travis-ci.org/NervanaSystems/ngraph/branches
 [build-status-badge]: https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master
 [PlaidML]: https://github.com/plaidml/plaidml
