@@ -63,6 +63,7 @@ Not currently a comprehensive list.
    * :doc:`power`
    * :doc:`product`
    * :doc:`quantize`
+   * :doc:`random_uniform`
    * :doc:`relu`
    * :doc:`result`
    * :doc:`shape_of`
@@ -136,6 +137,7 @@ Not currently a comprehensive list.
    power.rst
    product.rst
    quantize.rst
+   random_uniform.rst
    relu.rst
    result.rst
    shape_of.rst

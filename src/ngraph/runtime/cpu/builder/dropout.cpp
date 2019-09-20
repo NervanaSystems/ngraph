@@ -17,7 +17,6 @@
 #include "ngraph/runtime/cpu/op/dropout.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/kernel/dropout.hpp"
-#include "ngraph/state/rng_state.hpp"
 
 using namespace std;
 using namespace ngraph;

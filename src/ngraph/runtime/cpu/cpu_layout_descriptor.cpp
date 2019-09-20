@@ -64,7 +64,7 @@ namespace ngraph
                     throw ngraph_error("Indices have incorrect rank");
                 }
                 size_t result = 0;
-                for (int i = 0; i < indices.size(); i++)
+                for (size_t i = 0; i < indices.size(); i++)
                 {
                     result += m_strides[i] * indices[i];
                 }
