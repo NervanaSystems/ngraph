@@ -721,14 +721,8 @@ std::tuple<element::Type, PartialShape>
                                       PartialShape::merge_into(pshape, get_input_partial_shape(i)),
                                       "Argument shapes are inconsistent.");
             }
-            else if (autob.m_type == op::AutoBroadcastType::NUMPY)
-            {
-                NODE_VALIDATION_CHECK(
-                    this,
-                    PartialShape::broadcast_merge_into(pshape, get_input_partial_shape(i), autob),
-                    "Argument shapes are inconsistent.");
-            }
-            else if (autob.m_type == op::AutoBroadcastType::PDPD)
+            else if (autob.m_type == op::AutoBroadcastType::NUMPY ||
+                     autob.m_type == op::AutoBroadcastType::PDPD)
             {
                 NODE_VALIDATION_CHECK(
                     this,
