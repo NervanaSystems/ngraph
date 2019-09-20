@@ -124,6 +124,7 @@ set(SRC
     type_prop/gru_cell.cpp
     type_prop/hard_sigmoid.cpp
     type_prop/index_reduction.cpp
+    type_prop/layer_norm.cpp
     type_prop/lrn.cpp
     type_prop/lstm_cell.cpp
     type_prop/matmul.cpp
@@ -272,6 +273,7 @@ set(MULTI_TEST_SRC
     backend/gather.in.cpp
     backend/gelu.in.cpp
     backend/generate_mask.in.cpp
+    backend/layer_norm.in.cpp
     backend/log.in.cpp
     backend/logical_and.in.cpp
     backend/logical_or.in.cpp
