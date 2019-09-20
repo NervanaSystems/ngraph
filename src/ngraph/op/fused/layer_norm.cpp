@@ -451,7 +451,9 @@ NodeVector op::LayerNormBackprop::decompose_op() const
         auto d_scale = make_shared<op::Sum>(delta * norm, pre_reduction_axes);
         if (scale_flattened)
         {
-            AxisVector flatten_axes = AxisVector(post_reduction_axes);
+            std::vector<size_t> flatten_axes_vector(shape.size() - n_axis);
+            std::iota(flatten_axes_vector.begin(), flatten_axes_vector.end(), 0);
+            AxisVector flatten_axes = AxisVector(flatten_axes_vector);
             Shape reshape_shape(shape.begin() + m_begin_norm_axis, shape.end());
             size_t reshape_size = shape_size(reshape_shape);
             auto flatten_d_scale =

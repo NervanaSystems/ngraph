@@ -71,7 +71,7 @@ NGRAPH_TEST(${BACKEND_NAME}, layer_norm_affine_stats)
     auto mean = backend->create_tensor(element::f32, Shape{2});
     auto var = backend->create_tensor(element::f32, Shape{2});
 
-    // Expected results
+    // Expected results (Manually computed)
     vector<float> exp_norm{-2.658364534378051758f,
                            -3.447211742401123047f,
                            -1.105576276779174805f,
@@ -125,7 +125,7 @@ NGRAPH_TEST(${BACKEND_NAME}, layer_norm_bprop_affine_stats)
     auto d_scale = backend->create_tensor(element::f32, Shape{4});
     auto d_bias = backend->create_tensor(element::f32, Shape{4});
 
-    // Expected results
+    // Expected results (Manually compute)
     vector<float> exp_d_data{-0.1341624855995178223f,
                              -0.04472083225846290588f,
                              0.4919326305389404297f,
@@ -173,7 +173,7 @@ NGRAPH_TEST(${BACKEND_NAME}, layer_norm_bprop_affine)
     auto d_scale = backend->create_tensor(element::f32, Shape{4});
     auto d_bias = backend->create_tensor(element::f32, Shape{4});
 
-    // Expected results
+    // Expected results (Manually computed)
     vector<float> exp_d_data{-0.1341624855995178223f,
                              -0.04472083225846290588f,
                              0.4919326305389404297f,
