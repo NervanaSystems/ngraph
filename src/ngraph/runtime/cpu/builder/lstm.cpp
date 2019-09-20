@@ -123,7 +123,7 @@ namespace ngraph
                 };
                 functors.emplace_back(functor);
 #else
-                size_t s_size = mkldnn_emitter->query_scratchpad_rnn_forward(lstm_desc);
+                size_t scratchpad_size = mkldnn_emitter->query_scratchpad_rnn_forward(lstm_desc);
 
                 auto src_iter_c_buffer_index =
                     external_function->get_buffer_index(args[2].get_name());
@@ -146,7 +146,7 @@ namespace ngraph
                 auto functor = [&,
                                 lstm_desc,
                                 lstm_index,
-                                s_size,
+                                scratchpad_size,
                                 src_layer_buffer_index,
                                 src_iter_buffer_index,
                                 src_iter_c_buffer_index,
@@ -189,7 +189,7 @@ namespace ngraph
                         ctx, deps[9], ctx->mkldnn_workspaces[deps[10]]);
 
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                        ctx, lstm_index, deps, cpu::mkldnn_utils::OpType::LSTM, s_size);
+                        ctx, lstm_index, deps, cpu::mkldnn_utils::OpType::LSTM, scratchpad_size);
                 };
                 functors.emplace_back(functor);
 #endif
