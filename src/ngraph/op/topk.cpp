@@ -192,11 +192,12 @@ void op::v1::TopK::validate_and_infer_types()
 
     if (output_shape.rank().is_static())
     {
-        NODE_VALIDATION_CHECK(this,
-                              m_axis < static_cast<size_t>(output_shape.rank()),
-                              "TopK axis (",
-                              m_axis,
-                              ") is out of bounds.");
+        NODE_VALIDATION_CHECK(
+            this,
+            m_axis >= 0 && static_cast<size_t>(m_axis) < static_cast<size_t>(output_shape.rank()),
+            "TopK axis (",
+            m_axis,
+            ") is out of bounds.");
 
         if (k != 0)
         {
@@ -263,7 +264,7 @@ size_t op::v1::TopK::validate_and_get_k(const shared_ptr<op::Constant>& k_consta
     return static_cast<size_t>(k_const_contents[0]);
 }
 
-void op::v1::TopK::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v1::TopK::generate_adjoints(autodiff::Adjoints& /*adjoints*/, const NodeVector& /*deltas*/)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }
