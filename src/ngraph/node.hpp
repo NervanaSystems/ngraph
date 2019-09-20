@@ -783,8 +783,7 @@ namespace ngraph
     };
 }
 #define NODE_VALIDATION_CHECK(node, ...)                                                           \
-    NGRAPH_CHECK_HELPER(                                                                           \
-        ::ngraph::NodeValidationFailure, (node), (NVA_FIRST(__VA_ARGS__))NVA_REST(#__VA_ARGS__))
+    NGRAPH_CHECK_HELPER(::ngraph::NodeValidationFailure, (node), __VA_ARGS__)
 
 namespace ngraph
 {
