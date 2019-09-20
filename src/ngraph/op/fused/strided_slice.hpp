@@ -17,6 +17,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/util/attr_types.hpp"
@@ -40,38 +41,40 @@ namespace ngraph
                          const Output<Node>& begin,
                          const Output<Node>& end,
                          const Output<Node>& stride,
-                         const AxisSet& begin_mask,
-                         const AxisSet& end_mask,
-                         const AxisSet& new_axis_mask = AxisSet{},
-                         const AxisSet& shrink_axis_mask = AxisSet{},
-                         const AxisSet& ellipsis_mask = AxisSet{});
+                         const std::vector<int64_t>& begin_mask,
+                         const std::vector<int64_t>& end_mask,
+                         const std::vector<int64_t>& new_axis_mask = std::vector<int64_t>{},
+                         const std::vector<int64_t>& shrink_axis_mask = std::vector<int64_t>{},
+                         const std::vector<int64_t>& ellipsis_mask = std::vector<int64_t>{});
 
             // TODO DOC
             StridedSlice(const Output<Node>& data,
                          const Output<Node>& begin,
                          const Output<Node>& end,
-                         const AxisSet& begin_mask,
-                         const AxisSet& end_mask,
-                         const AxisSet& new_axis_mask = AxisSet{},
-                         const AxisSet& shrink_axis_mask = AxisSet{},
-                         const AxisSet& ellipsis_mask = AxisSet{});
+                         const std::vector<int64_t>& begin_mask,
+                         const std::vector<int64_t>& end_mask,
+                         const std::vector<int64_t>& new_axis_mask = std::vector<int64_t>{},
+                         const std::vector<int64_t>& shrink_axis_mask = std::vector<int64_t>{},
+                         const std::vector<int64_t>& ellipsis_mask = std::vector<int64_t>{});
 
-            const AxisSet& get_begin_mask() const { return m_begin_mask; }
-            const AxisSet& get_end_mask() const { return m_end_mask; }
-            const AxisSet& get_new_axis_mask() const { return m_new_axis_mask; }
-            const AxisSet& get_shrink_axis_mask() const { return m_shrink_axis_mask; }
-            const AxisSet& get_ellipsis_mask() const { return m_ellipsis_mask; }
+            const std::vector<int64_t>& get_begin_mask() const { return m_begin_mask; }
+            const std::vector<int64_t>& get_end_mask() const { return m_end_mask; }
+            const std::vector<int64_t>& get_new_axis_mask() const { return m_new_axis_mask; }
+            const std::vector<int64_t>& get_shrink_axis_mask() const { return m_shrink_axis_mask; }
+            const std::vector<int64_t>& get_ellipsis_mask() const { return m_ellipsis_mask; }
             NodeVector decompose_op() const override;
             void pre_validate_and_infer_types() override;
 
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
         private:
-            AxisSet m_begin_mask;
-            AxisSet m_end_mask;
-            AxisSet m_new_axis_mask;
-            AxisSet m_shrink_axis_mask;
-            AxisSet m_ellipsis_mask;
+            AxisSet convert_mask_to_axis_set(const std::vector<int64_t>& mask) const;
+
+            std::vector<int64_t> m_begin_mask;
+            std::vector<int64_t> m_end_mask;
+            std::vector<int64_t> m_new_axis_mask;
+            std::vector<int64_t> m_shrink_axis_mask;
+            std::vector<int64_t> m_ellipsis_mask;
         };
     }
 }

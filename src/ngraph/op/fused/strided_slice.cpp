@@ -29,11 +29,11 @@ op::StridedSlice::StridedSlice(const Output<Node>& data,
                                const Output<Node>& begin,
                                const Output<Node>& end,
                                const Output<Node>& stride,
-                               const AxisSet& begin_mask,
-                               const AxisSet& end_mask,
-                               const AxisSet& new_axis_mask,
-                               const AxisSet& shrink_axis_mask,
-                               const AxisSet& ellipsis_mask)
+                               const std::vector<int64_t>& begin_mask,
+                               const std::vector<int64_t>& end_mask,
+                               const std::vector<int64_t>& new_axis_mask,
+                               const std::vector<int64_t>& shrink_axis_mask,
+                               const std::vector<int64_t>& ellipsis_mask)
     : FusedOp({data, begin, end, stride})
     , m_begin_mask{begin_mask}
     , m_end_mask{end_mask}
@@ -47,11 +47,11 @@ op::StridedSlice::StridedSlice(const Output<Node>& data,
 op::StridedSlice::StridedSlice(const Output<Node>& data,
                                const Output<Node>& begin,
                                const Output<Node>& end,
-                               const AxisSet& begin_mask,
-                               const AxisSet& end_mask,
-                               const AxisSet& new_axis_mask,
-                               const AxisSet& shrink_axis_mask,
-                               const AxisSet& ellipsis_mask)
+                               const std::vector<int64_t>& begin_mask,
+                               const std::vector<int64_t>& end_mask,
+                               const std::vector<int64_t>& new_axis_mask,
+                               const std::vector<int64_t>& shrink_axis_mask,
+                               const std::vector<int64_t>& ellipsis_mask)
     : FusedOp({data, begin, end})
     , m_begin_mask{begin_mask}
     , m_end_mask{end_mask}
@@ -68,26 +68,92 @@ void op::StridedSlice::pre_validate_and_infer_types()
     const auto& end_mask_et = get_input_element_type(2);
     NODE_VALIDATION_CHECK(this,
                           begin_mask_et.compatible(element::Type_t::i64),
-                          "Begin mask must have element type i64.");
+                          "Begin mask must have element type i64, but has ",
+                          begin_mask_et);
     NODE_VALIDATION_CHECK(this,
                           end_mask_et.compatible(element::Type_t::i64),
-                          "End mask must have element type i64.");
+                          "End mask must have element type i64, but has ",
+                          end_mask_et);
 
-    const vector<size_t> attr_sizes = { m_begin_mask.size(), m_end_mask.size(), m_new_axis_mask.size(), m_shrink_axis_mask.size(), m_ellipsis_mask.size()};
-    const auto are_attr_sizes_eq = std::all_of(attr_sizes.begin(), attr_sizes.end(),
-        [&attr_sizes](size_t s) {return s == 0 || attr_sizes[0] == s; });
-    NODE_VALIDATION_CHECK(this,
-                          are_attr_sizes_eq,
-                          "All maks of StridedSlice should have the same size");
+    auto are_mask_elem_in_range = [](size_t e) { return e == 0 || e == 1; };
+    NODE_VALIDATION_CHECK(
+        this,
+        std::all_of(m_begin_mask.begin(), m_begin_mask.end(), are_mask_elem_in_range)
+        && std::all_of(m_end_mask.begin(), m_end_mask.end(), are_mask_elem_in_range)
+        && std::all_of(m_new_axis_mask.begin(), m_new_axis_mask.end(), are_mask_elem_in_range)
+        && std::all_of(m_shrink_axis_mask.begin(), m_shrink_axis_mask.end(), are_mask_elem_in_range)
+        && std::all_of(m_ellipsis_mask.begin(), m_ellipsis_mask.end(), are_mask_elem_in_range),
+        "All maks elements of StridedSlice should have be 0 or 1");
+
+    const vector<size_t> attr_sizes = {m_begin_mask.size(),
+                                       m_end_mask.size(),
+                                       m_new_axis_mask.size(),
+                                       m_shrink_axis_mask.size(),
+                                       m_ellipsis_mask.size()};
+    const auto are_attr_sizes_eq =
+        std::all_of(attr_sizes.begin(), attr_sizes.end(), [&attr_sizes](size_t s) {
+            return s == 0 || attr_sizes[0] == s;
+        });
+    NODE_VALIDATION_CHECK(
+        this, are_attr_sizes_eq, "All maks of StridedSlice should have the same size");
 
     const auto mask_size = m_begin_mask.size();
     const auto& data_rank = get_input_partial_shape(0).rank();
     if (data_rank.is_static())
     {
-        NODE_VALIDATION_CHECK(this,
-            static_cast<size_t>(data_rank) == mask_size,
-            "Data rank must be equal mask size");
+        NODE_VALIDATION_CHECK(
+            this, static_cast<size_t>(data_rank) == mask_size, "Data rank must be equal mask size");
     }
+    const auto& begin_shape = get_input_partial_shape(1);
+    if (begin_shape.rank().is_static())
+    {
+        NODE_VALIDATION_CHECK(this,
+                              static_cast<size_t>(begin_shape.rank()) == 1,
+                              "Begin input must be 1D (begin rank: ",
+                              begin_shape.rank(),
+                              ").");
+    }
+    if (begin_shape[0].is_static())
+    {
+        NODE_VALIDATION_CHECK(this,
+                              static_cast<size_t>(begin_shape[0]) == mask_size,
+                              "Begin input must have: ",
+                              mask_size,
+                              " elements, but have: ",
+                              begin_shape[0]);
+    }
+
+    const auto& end_shape = get_input_partial_shape(2);
+    if (end_shape.rank().is_static())
+    {
+        NODE_VALIDATION_CHECK(this,
+                              static_cast<size_t>(end_shape.rank()) == 1,
+                              "End input must be 1D (end rank: ",
+                              end_shape.rank(),
+                              ").");
+    }
+    if (end_shape[0].is_static())
+    {
+        NODE_VALIDATION_CHECK(this,
+                              static_cast<size_t>(end_shape[0]) == mask_size,
+                              "End input must have: ",
+                              mask_size,
+                              " elements, but have: ",
+                              end_shape[0]);
+    }
+}
+
+AxisSet op::StridedSlice::convert_mask_to_axis_set(const std::vector<int64_t>& mask) const
+{
+    AxisSet axis_set{};
+    for (auto i = 0; i < mask.size(); ++i)
+    {
+        if (mask[i] == 1)
+        {
+            axis_set.emplace(i);
+        }
+    }
+    return axis_set;
 }
 
 NodeVector op::StridedSlice::decompose_op() const
@@ -96,15 +162,16 @@ NodeVector op::StridedSlice::decompose_op() const
     const auto stride_value_provided = get_input_size() == 4;
     if (stride_value_provided)
     {
-        strided_slice_result = make_shared<op::DynSlice>(input_value(0),
-                                                         input_value(1),
-                                                         input_value(2),
-                                                         input_value(3),
-                                                         m_begin_mask,
-                                                         m_end_mask,
-                                                         m_new_axis_mask,
-                                                         m_shrink_axis_mask,
-                                                         m_ellipsis_mask);
+        strided_slice_result =
+            make_shared<op::DynSlice>(input_value(0),
+                                      input_value(1),
+                                      input_value(2),
+                                      input_value(3),
+                                      convert_mask_to_axis_set(m_begin_mask),
+                                      convert_mask_to_axis_set(m_end_mask),
+                                      convert_mask_to_axis_set(m_new_axis_mask),
+                                      convert_mask_to_axis_set(m_shrink_axis_mask),
+                                      convert_mask_to_axis_set(m_ellipsis_mask));
     }
     else
     {
@@ -116,15 +183,16 @@ NodeVector op::StridedSlice::decompose_op() const
         ;
         const auto stride =
             op::Constant::create(element::i64, Shape{stride_size}, vector<int64_t>(stride_size, 1));
-        strided_slice_result = make_shared<op::DynSlice>(input_value(0),
-                                                         input_value(1),
-                                                         input_value(2),
-                                                         stride,
-                                                         m_begin_mask,
-                                                         m_end_mask,
-                                                         m_new_axis_mask,
-                                                         m_shrink_axis_mask,
-                                                         m_ellipsis_mask);
+        strided_slice_result =
+            make_shared<op::DynSlice>(input_value(0),
+                                      input_value(1),
+                                      input_value(2),
+                                      stride,
+                                      convert_mask_to_axis_set(m_begin_mask),
+                                      convert_mask_to_axis_set(m_end_mask),
+                                      convert_mask_to_axis_set(m_new_axis_mask),
+                                      convert_mask_to_axis_set(m_shrink_axis_mask),
+                                      convert_mask_to_axis_set(m_ellipsis_mask));
     }
 
     return as_node_vector({strided_slice_result});

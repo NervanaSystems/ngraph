@@ -1869,11 +1869,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::StridedSlice:
         {
-            auto begin_mask = node_js.at("begin_mask").get<set<size_t>>();
-            auto end_mask = node_js.at("end_mask").get<set<size_t>>();
-            auto new_axis_mask = node_js.at("new_axis_mask").get<set<size_t>>();
-            auto shrink_axis_mask = node_js.at("shrink_axis_mask").get<set<size_t>>();
-            auto ellipsis_mask = node_js.at("ellipsis_mask").get<set<size_t>>();
+            auto begin_mask = node_js.at("begin_mask").get<vector<int64_t>>();
+            auto end_mask = node_js.at("end_mask").get<vector<int64_t>>();
+            auto new_axis_mask = node_js.at("new_axis_mask").get<vector<int64_t>>();
+            auto shrink_axis_mask = node_js.at("shrink_axis_mask").get<vector<int64_t>>();
+            auto ellipsis_mask = node_js.at("ellipsis_mask").get<vector<int64_t>>();
             if (args.size() == 3)
             {
                 node = make_shared<op::StridedSlice>(args[0],
