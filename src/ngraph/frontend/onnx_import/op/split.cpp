@@ -19,6 +19,7 @@
 
 #include "ngraph/op/fused/split.hpp"
 #include "op/split.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -33,13 +34,15 @@ namespace ngraph
                     const auto input = node.get_ng_inputs().at(0);
                     const auto outputs_number = node.get_output_names().size();
                     const auto axis = node.get_attribute_value<int64_t>("axis", 0);
+                    std::size_t valid_axis =
+                        common::validate_axis(node, axis, input->get_shape().size());
 
                     try
                     {
                         const auto length_parts =
                             node.get_attribute_value<std::vector<std::size_t>>("split");
                         const auto fused_split =
-                            std::make_shared<ngraph::op::Split>(input, axis, length_parts);
+                            std::make_shared<ngraph::op::Split>(input, valid_axis, length_parts);
 
                         return fused_split->decompose_op();
                     }
@@ -49,7 +52,7 @@ namespace ngraph
                         // the 'split' attribute - this means we should split the input tensor
                         // into same-length parts equal to the number of node outputs
                         const auto fused_split =
-                            std::make_shared<ngraph::op::Split>(input, axis, outputs_number);
+                            std::make_shared<ngraph::op::Split>(input, valid_axis, outputs_number);
 
                         return fused_split->decompose_op();
                     }
