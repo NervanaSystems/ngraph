@@ -437,7 +437,7 @@ INSTANTIATE_TEST_CASE_P(type_prop,
                                           RangeParams{1, 22, 2, PartialShape{11}},
                                           RangeParams{0, 0, 1, PartialShape{0}},
                                           RangeParams{1, 0, 2, PartialShape{0}}),
-                        ::testing::PrintToStringParamName());
+                        PrintToDummyParamName());
 
 struct RangeTestWithNegatives : ::testing::TestWithParam<RangeParams>
 {
@@ -490,7 +490,7 @@ INSTANTIATE_TEST_CASE_P(type_prop,
                                           RangeParams{-19, 19, 1, PartialShape{38}},
                                           RangeParams{-19, 19, 3, PartialShape{13}},
                                           RangeParams{20, -19, 1, PartialShape{0}}),
-                        ::testing::PrintToStringParamName());
+                        PrintToDummyParamName());
 
 struct RangeTestFloating : ::testing::TestWithParam<RangeParams>
 {
@@ -521,4 +521,4 @@ INSTANTIATE_TEST_CASE_P(type_prop,
                         ::testing::Values(RangeParams{0, 1, 0.25, PartialShape{4}},
                                           RangeParams{-1, 1, 0.25, PartialShape{8}},
                                           RangeParams{-1, 0.875, 0.25, PartialShape{8}}),
-                        ::testing::PrintToStringParamName());
+                        PrintToDummyParamName());

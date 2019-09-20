@@ -546,7 +546,7 @@ INSTANTIATE_TEST_CASE_P(
                               {}},
         DynReplaceSliceParams{
             {1, 2, 3}, {3}, {3}, {0}, {1, 1, 2}, {0, 0, 1}, {2, 2, 2}, {}, {}, {}, {0}, {2}, {1}}),
-    ::testing::PrintToStringParamName());
+    PrintToDummyParamName());
 
 void DynReplaceSlice_Test_Shape_Except(const shared_ptr<Node>& param_0,
                                        const shared_ptr<Node>& param_1,
