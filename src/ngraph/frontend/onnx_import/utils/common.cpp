@@ -51,22 +51,7 @@ namespace ngraph
                                       std::int64_t tensor_rank)
             {
                 // Accepted range of value for axis is [-tensor_rank, tensor_rank-1].
-                NGRAPH_CHECK(((axis >= -tensor_rank) && (axis <= tensor_rank - 1)),
-                             node.get_description(),
-                             "Parameter axis ",
-                             axis,
-                             " out of the tensor rank [-",
-                             tensor_rank,
-                             ", ",
-                             tensor_rank - 1,
-                             "].");
-
-                if (axis < 0)
-                {
-                    axis = axis + tensor_rank;
-                }
-
-                return static_cast<size_t>(axis);
+                return validate_axis(node, axis, tensor_rank, -tensor_rank, tensor_rank - 1);
             }
 
             std::size_t validate_axis(const ngraph::onnx_import::Node& node,

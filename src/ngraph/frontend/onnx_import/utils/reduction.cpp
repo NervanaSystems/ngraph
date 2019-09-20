@@ -35,6 +35,7 @@ namespace ngraph
                         node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
                     std::vector<std::size_t> valid_reduction_axes = common::validate_axes(
                         node, reduction_axes, node.get_ng_inputs().at(0)->get_shape().size());
+
                     if (reduction_axes.empty())
                     {
                         valid_reduction_axes =
@@ -53,6 +54,10 @@ namespace ngraph
                 auto data_shape = ng_input->get_shape();
 
                 auto reduction_axes = detail::get_reduction_axes(node);
+
+                ASSERT_VALID_ARGUMENT(node, reduction_axes.size() <= data_shape.size())
+                    << "provided reduction axes count (" << reduction_axes.size()
+                    << ") is larger than input tensor rank (" << data_shape.size() << ")";
 
                 std::shared_ptr<ngraph::Node> op_node =
                     reduction_function(ng_input, reduction_axes);
