@@ -17,14 +17,13 @@
 #pragma once
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/op/op.hpp"
 #include "ngraph/op/util/arithmetic_reduction.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        namespace v0
+        namespace v1
         {
             // clang-format off
             /// \brief Tensor sum operation.
@@ -58,9 +57,10 @@ namespace ngraph
             ///
             /// ## Parameters
             ///
-            /// |                      | Description                              |
-            /// | -------------------- | ---------------------------------------- |
-            /// | `reduction_axes`     | The axes to eliminate through summation. |
+            /// |                      | Description                                            |
+            /// | -------------------- | ----------------------------------------               |
+            /// | `reduction_axes`     | The axes to eliminate through summation.               |
+            /// | `keep_dims`          | If set to 1 it holds axes that are used for reduction. |
             ///
             /// ## Inputs
             ///
@@ -74,25 +74,29 @@ namespace ngraph
             /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
             /// | \f$N[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by summation. |
             // clang-format off
-            class Sum : public util::ArithmeticReduction
+            class ReduceSum : public util::ArithmeticReduction
             {
             public:
                 NGRAPH_API
-                static constexpr NodeTypeInfo type_info{ "Sum", 0 };
+                static constexpr NodeTypeInfo type_info{"Sum", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a summation operation.
-                Sum() = default;
+                ReduceSum() = default;
                 /// \brief Constructs a summation operation.
                 ///
                 /// \param arg The tensor to be summed.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
-                Sum(const Output<Node>& arg, const AxisSet& reduction_axes);
-                /// \brief Constructs a summation operation.
-                ///
-                /// \param arg The tensor to be summed.
-                /// \param reduction_axes The axis positions (0-based) to be eliminated.
-                Sum(const Output<Node>& arg, const Output<Node>& reduction_axes);
+                /// \param keep_dims If set to 1 it holds axes that are used for reduction.
+                ReduceSum(const Output<Node>& arg,
+                          const Output<Node>& reduction_axes,
+                          bool keep_dims = false);
 
+                void validate_and_infer_types() override;
+
+                size_t get_version() const override { return 1; }
+                /// \return If set to 1 it holds axes that are used for reduction.
+                /// For each such axis, output dimension is equal to 1.
+                bool get_keep_dims() const { return m_keep_dims; }
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -101,10 +105,11 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                    const NodeVector& deltas) override;
+                                               const NodeVector& deltas) override;
+
+            private:
+                bool m_keep_dims;
             };
         }
-        // default opset version
-        using v0::Sum;
     }
 }
