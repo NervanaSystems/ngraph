@@ -186,9 +186,10 @@ option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" ${PLAIDML_FOUND})
 option(NGRAPH_DISTRIBUTED_ENABLE "Enable distributed training using MLSL/OpenMPI" OFF)
 option(NGRAPH_FAST_MATH_ENABLE "Enable fast math" ON)
 option(NGRAPH_JSON_ENABLE "Enable JSON based serialization and tracing features" TRUE)
-option(NGRAPH_STATIC_LIB_ENABLE "Enable build nGraph static library" FALSE)
-option(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE "Enable build INTERPRETER backend static library" FALSE)
-option(NGRAPH_CPU_STATIC_LIB_ENABLE "Enable build CPU backend static library" FALSE)
+option(NGRAPH_STATIC_LIB_ENABLE "Enable build nGraph as a static library" FALSE)
+option(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE "Enable build INTERPRETER backend as a static library" FALSE)
+option(NGRAPH_CPU_STATIC_LIB_ENABLE "Enable build CPU backend as a static library" FALSE)
+option(NGRAPH_PLAIDML_STATIC_LIB_ENABLE "Enable build PlaidML backend as a static library" FALSE)
 option(NGRAPH_DYNAMIC_COMPONENTS_ENABLE "Enable dynamic loading of components" TRUE)
 
 if (NGRAPH_CPU_ENABLE
@@ -290,6 +291,7 @@ message(STATUS "NGRAPH_JSON_ENABLE:                   ${NGRAPH_JSON_ENABLE}")
 message(STATUS "NGRAPH_STATIC_LIB_ENABLE:             ${NGRAPH_STATIC_LIB_ENABLE}")
 message(STATUS "NGRAPH_INTERPRETER_STATIC_LIB_ENABLE: ${NGRAPH_INTERPRETER_STATIC_LIB_ENABLE}")
 message(STATUS "NGRAPH_CPU_STATIC_LIB_ENABLE:         ${NGRAPH_CPU_STATIC_LIB_ENABLE}")
+message(STATUS "NGRAPH_PLAIDML_STATIC_LIB_ENABLE:     ${NGRAPH_PLAIDML_STATIC_LIB_ENABLE}")
 message(STATUS "NGRAPH_DYNAMIC_COMPONENTS_ENABLE:     ${NGRAPH_DYNAMIC_COMPONENTS_ENABLE}")
 
 #-----------------------------------------------------------------------------------------------

@@ -23,7 +23,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::SpaceToDepth::type_name{"SpaceToDepth"};
+constexpr NodeTypeInfo op::SpaceToDepth::type_info;
 
 op::SpaceToDepth::SpaceToDepth(const Output<Node>& data, const size_t block_size)
     : FusedOp({data})

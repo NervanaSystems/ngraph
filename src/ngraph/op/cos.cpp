@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Cos::type_name{"Cos"};
+constexpr NodeTypeInfo op::Cos::type_info;
 
 op::Cos::Cos(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)

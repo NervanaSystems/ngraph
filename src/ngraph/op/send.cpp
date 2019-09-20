@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Send::type_name{"Send"};
+constexpr NodeTypeInfo op::Send::type_info;
 
 op::Send::Send(const Output<Node>& arg, int dest_id)
     : Op({arg})

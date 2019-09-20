@@ -17,7 +17,7 @@
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/reference/generate_mask.hpp"
-#include "ngraph/state/rng_state.hpp"
+#include "ngraph/state/bernoulli_rng_state.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -50,7 +50,7 @@ namespace ngraph
 
                 auto seed_attr = gm->get_use_seed() ? gm->get_seed() : 0;
                 auto index = external_function->add_state(
-                    ngraph::RNGState::create_rng_state(seed_attr, gm->get_probability()));
+                    new ngraph::BernoulliRNGState(seed_attr, gm->get_probability()));
 
                 if (args[0].get_element_type() == element::f32)
                 {
@@ -62,7 +62,7 @@ namespace ngraph
                                arg2_buffer_index,
                                arg3_buffer_index,
                                arg4_buffer_index](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
+                                                  CPUExecutionContext* /* ectx */) {
                         bool training = static_cast<bool>(
                             static_cast<float*>(ctx->buffer_data[arg_buffer_index])[0]);
                         // TODO: get shape when required
@@ -77,7 +77,7 @@ namespace ngraph
                             reference::generate_mask(
                                 static_cast<float*>(ctx->buffer_data[out_buffer_index]),
                                 element_count,
-                                static_cast<RNGState*>(ctx->states[index]),
+                                static_cast<BernoulliRNGState*>(ctx->states[index]),
                                 training);
                         }
                         else
@@ -101,7 +101,7 @@ namespace ngraph
                                arg2_buffer_index,
                                arg3_buffer_index,
                                arg4_buffer_index](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
+                                                  CPUExecutionContext* /* ectx */) {
                         bool training = static_cast<bool>(
                             static_cast<double*>(ctx->buffer_data[arg_buffer_index])[0]);
                         // TODO: get shape when required
@@ -116,7 +116,7 @@ namespace ngraph
                             reference::generate_mask(
                                 static_cast<double*>(ctx->buffer_data[out_buffer_index]),
                                 element_count,
-                                static_cast<RNGState*>(ctx->states[index]),
+                                static_cast<BernoulliRNGState*>(ctx->states[index]),
                                 training);
                         }
                         else

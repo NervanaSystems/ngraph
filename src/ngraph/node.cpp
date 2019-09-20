@@ -32,6 +32,8 @@
 using namespace std;
 using namespace ngraph;
 
+constexpr NodeTypeInfo Node::type_info;
+
 atomic<size_t> Node::m_next_instance_id(0);
 
 Node::Node(size_t output_size)
@@ -91,7 +93,7 @@ std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i, bool for_
 {
     for (auto in : output(i).get_target_inputs())
     {
-        if (in.get_node()->description() == op::GetOutputElement::type_name)
+        if (in.get_node()->is_type<op::GetOutputElement>())
         {
             return in.get_node()->shared_from_this();
         }
@@ -103,7 +105,7 @@ std::shared_ptr<Node>
     Node::copy_with_new_inputs(const OutputVector& inputs,
                                const std::vector<std::shared_ptr<Node>>& control_dependencies) const
 {
-    bool for_get_output_element = (description() == op::GetOutputElement::type_name);
+    bool for_get_output_element = is_type<op::GetOutputElement>();
     NodeVector args;
     for (const Output<Node>& input : inputs)
     {
@@ -259,7 +261,7 @@ const std::deque<descriptor::Output>& Node::get_outputs() const
 
 bool Node::is_parameter() const
 {
-    return dynamic_cast<const op::Parameter*>(this) != nullptr;
+    return is_type<op::Parameter>();
 }
 
 bool Node::is_output() const
@@ -274,6 +276,12 @@ bool Node::is_constant() const
 
 const std::string& Node::description() const
 {
+    if (m_node_type.size() == 0)
+    {
+        // Terrible transitional kludge to keep description working while we change
+        // type_name to const_char and virtual description() to virtual get_type_name()
+        const_cast<Node*>(this)->m_node_type = get_type_name();
+    }
     return m_node_type;
 }
 
@@ -320,7 +328,7 @@ void Node::set_placement_index(size_t placement)
     m_placement_index = placement;
 }
 
-const std::unordered_set<std::string>& Node::get_provenance_tags() const
+const std::set<std::string>& Node::get_provenance_tags() const
 {
     return m_provenance_tags;
 }
@@ -328,6 +336,14 @@ const std::unordered_set<std::string>& Node::get_provenance_tags() const
 void Node::add_provenance_tag(const std::string& tag)
 {
     m_provenance_tags.insert(tag);
+}
+
+void Node::add_provenance_tags(const std::set<std::string>& tag_set)
+{
+    for (auto tag : tag_set)
+    {
+        add_provenance_tag(tag);
+    }
 }
 
 void Node::remove_provenance_tag(const std::string& tag)
@@ -444,6 +460,12 @@ void Node::clear_control_dependents()
     {
         (*m_control_dependents.begin())->remove_control_dependency(shared_from_this());
     }
+}
+
+const op::AutoBroadcastSpec& Node::get_autob() const
+{
+    static op::AutoBroadcastSpec s_spec;
+    return s_spec;
 }
 
 namespace ngraph

@@ -34,8 +34,8 @@ namespace ngraph
         class BatchMatMulTranspose : public Op
         {
         public:
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"BatchMatMulTranspose", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a batch of matmul product operation.
             ///
             /// \param arg0 The node producing the first argument.
