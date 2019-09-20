@@ -18,7 +18,7 @@
 
 #include <random>
 
-#include "ngraph/state/bernoulli_rng_state.hpp"
+#include "ngraph/state/uniform_rng_state.hpp"
 
 namespace ngraph
 {
@@ -27,31 +27,24 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            void generate_mask(T* out,
-                               size_t count,
-                               ngraph::BernoulliRNGState* rng_state,
-                               bool training)
+            void random_uniform(
+                T* out, T min_val, T max_val, size_t count, ngraph::UniformRNGState* rng_state)
             {
                 auto& gen = rng_state->get_generator();
                 auto& bd = rng_state->get_distribution();
 
                 for (size_t i = 0; i < count; i++)
                 {
-                    out[i] = training ? static_cast<T>(bd(gen)) : static_cast<T>(1);
+                    out[i] = static_cast<T>(bd(gen)) * (max_val - min_val) + min_val;
                 }
             }
 
             template <typename T>
-            void generate_mask_no_state(
-                T* out, size_t count, bool training, uint32_t seed, double prob)
+            void random_uniform_with_fixed_seed(
+                T* out, T min_val, T max_val, size_t count, size_t fixed_seed)
             {
-                std::mt19937 gen(seed);
-                std::bernoulli_distribution bd(prob);
-
-                for (size_t i = 0; i < count; i++)
-                {
-                    out[i] = training ? static_cast<T>(bd(gen)) : static_cast<T>(1);
-                }
+                ngraph::UniformRNGState rng_state(fixed_seed);
+                random_uniform(out, min_val, max_val, count, &rng_state);
             }
         }
     }

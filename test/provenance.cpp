@@ -29,7 +29,7 @@ using namespace std;
 using namespace ngraph;
 using ::testing::Return;
 
-using ProvSet = std::unordered_set<std::string>;
+using ProvSet = std::set<std::string>;
 
 TEST(provenance, provenance)
 {
@@ -231,7 +231,7 @@ TEST(provenance, provenance)
     //
     //   A{tag_a}          B{tag_b}
     //         |             |
-    //   E{tag_c, tag_d}     |
+    //      E{tag_c}         |
     //           |           |
     //          D{tag_c, tag_d}
     //
@@ -258,7 +258,7 @@ TEST(provenance, provenance)
         replace_node(c, d);
 
         EXPECT_EQ(d->get_provenance_tags(), (ProvSet{"tag_c", "tag_d"}));
-        EXPECT_EQ(e->get_provenance_tags(), (ProvSet{"tag_c", "tag_d"}));
+        EXPECT_EQ(e->get_provenance_tags(), (ProvSet{"tag_c"}));
     }
 
     //
@@ -310,6 +310,6 @@ TEST(provenance, provenance)
         replace_node(c, d);
 
         EXPECT_EQ(d->get_provenance_tags(), (ProvSet{"tag_c", "tag_d"}));
-        EXPECT_EQ(e->get_provenance_tags(), (ProvSet{"tag_c", "tag_d", "tag_e"}));
+        EXPECT_EQ(e->get_provenance_tags(), (ProvSet{"tag_c", "tag_e"}));
     }
 }

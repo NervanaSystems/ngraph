@@ -22,6 +22,7 @@
 #include "ngraph/code_writer.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/gather.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
@@ -91,7 +92,6 @@ namespace ngraph
         class ArgMin;
         class ArgMax;
         class TopK;
-        class Gather;
         class GatherND;
         class ScatterAdd;
         class ScatterNDAdd;

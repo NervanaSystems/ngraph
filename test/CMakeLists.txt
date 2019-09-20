@@ -70,6 +70,7 @@ set(SRC
     nop_elimination.cpp
     op.cpp
     opset_pass/convolution_opset_pass.cpp
+    opset_pass/gather_opset_pass.cpp
     opset_pass/pad_opset_pass.cpp
     opset_pass/softmax_opset_pass.cpp
     partial_shape.cpp
@@ -134,6 +135,7 @@ set(SRC
     type_prop/quantize.cpp
     type_prop/quantized_convolution.cpp
     type_prop/quantized_dot.cpp
+    type_prop/random_uniform.cpp
     type_prop/range.cpp
     type_prop/replace_slice.cpp
     type_prop/reshape.cpp
@@ -290,6 +292,7 @@ set(MULTI_TEST_SRC
     backend/quantize_dequantize.in.cpp
     backend/quantized_convolution.in.cpp
     backend/quantized_dot.in.cpp
+    backend/random_uniform.in.cpp
     backend/range.in.cpp
     backend/relu.in.cpp
     backend/replace_slice.in.cpp

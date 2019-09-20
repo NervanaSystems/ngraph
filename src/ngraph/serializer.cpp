@@ -62,6 +62,7 @@
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
+#include "ngraph/op/experimental/random_uniform.hpp"
 #include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/experimental/tile.hpp"
@@ -1255,8 +1256,15 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Gather:
         {
-            auto axis = node_js.at("axis").get<size_t>();
-            node = make_shared<op::Gather>(args[0], args[1], axis);
+            if (op_version == 0)
+            {
+                auto axis = node_js.at("axis").get<size_t>();
+                node = make_shared<op::v0::Gather>(args[0], args[1], axis);
+            }
+            if (op_version == 1)
+            {
+                node = make_shared<op::v1::Gather>(args[0], args[1], args[2]);
+            }
             break;
         }
         case OP_TYPEID::GatherND:
@@ -1748,6 +1756,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             auto src_id = node_js.at("source_id").get<size_t>();
             node = make_shared<op::Recv>(args[0], src_id);
+            break;
+        }
+        case OP_TYPEID::RandomUniform:
+        {
+            auto fixed_seed = node_js.at("fixed_seed").get<uint64_t>();
+            node = make_shared<op::RandomUniform>(args[0], args[1], args[2], args[3], fixed_seed);
             break;
         }
         case OP_TYPEID::Range:
@@ -2516,8 +2530,11 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Gather:
     {
-        auto tmp = dynamic_cast<const op::Gather*>(&n);
-        node["axis"] = tmp->get_axis();
+        if (op_version == 0)
+        {
+            auto tmp = dynamic_cast<const op::v0::Gather*>(&n);
+            node["axis"] = tmp->get_axis();
+        }
         break;
     }
     case OP_TYPEID::GatherND: { break;
@@ -2871,6 +2888,12 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = dynamic_cast<const op::Recv*>(&n);
         node["source_id"] = tmp->get_src_id();
+        break;
+    }
+    case OP_TYPEID::RandomUniform:
+    {
+        auto tmp = dynamic_cast<const op::RandomUniform*>(&n);
+        node["fixed_seed"] = tmp->get_fixed_seed();
         break;
     }
     case OP_TYPEID::Range: { break;
