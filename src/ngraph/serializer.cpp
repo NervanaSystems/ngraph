@@ -2335,7 +2335,6 @@ json JSONSerializer::serialize_node(const Node& n)
             node["padding_above"] = tmp->get_padding_above();
             node["data_dilation_strides"] = tmp->get_data_dilation_strides();
             node["pad_type"] = tmp->get_pad_type();
-            break;
         }
         if (op_version == 1)
         {
@@ -2345,8 +2344,8 @@ json JSONSerializer::serialize_node(const Node& n)
             node["pads_begin"] = tmp->get_pads_begin();
             node["pads_end"] = tmp->get_pads_end();
             node["auto_pad"] = tmp->get_auto_pad();
-            break;
         }
+        break;
     }
     case OP_TYPEID::ConvolutionBackpropData:
     {
@@ -2359,7 +2358,6 @@ json JSONSerializer::serialize_node(const Node& n)
             node["padding_below_forward"] = tmp->get_padding_below_forward();
             node["padding_above_forward"] = tmp->get_padding_above_forward();
             node["data_dilation_strides_forward"] = tmp->get_data_dilation_strides_forward();
-            break;
         }
         if (op_version == 1)
         {
@@ -2369,8 +2367,8 @@ json JSONSerializer::serialize_node(const Node& n)
             node["dilations"] = tmp->get_dilations();
             node["pads_begin"] = tmp->get_pads_begin();
             node["pads_end"] = tmp->get_pads_end();
-            break;
         }
+        break;
     }
     case OP_TYPEID::ConvolutionBackpropFilters:
     {
@@ -2383,7 +2381,6 @@ json JSONSerializer::serialize_node(const Node& n)
             node["padding_below_forward"] = tmp->get_padding_below_forward();
             node["padding_above_forward"] = tmp->get_padding_above_forward();
             node["data_dilation_strides_forward"] = tmp->get_data_dilation_strides_forward();
-            break;
         }
         if (op_version == 1)
         {
@@ -2393,8 +2390,8 @@ json JSONSerializer::serialize_node(const Node& n)
             node["dilations"] = tmp->get_dilations();
             node["pads_begin"] = tmp->get_pads_begin();
             node["pads_end"] = tmp->get_pads_end();
-            break;
         }
+        break;
     }
     case OP_TYPEID::ConvolutionBias:
     {
