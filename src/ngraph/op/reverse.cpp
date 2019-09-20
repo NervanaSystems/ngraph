@@ -116,11 +116,6 @@ void op::v1::Reverse::validate_and_infer_types()
 
         if (m_mode == Mode::MASK)
         {
-            NODE_VALIDATION_CHECK(
-                this,
-                static_cast<size_t>(rev_axes_rank) == 1,
-                "The reversed_axes input rank needs to be equal to 1 in 'mask' mode.");
-
             if (input_rank.is_static() && rev_axes_shape[0].is_static())
             {
                 const auto rev_axes_mask_elems_count = static_cast<size_t>(rev_axes_shape[0]);
@@ -149,7 +144,7 @@ void op::v1::Reverse::validate_and_infer_types()
                 const AxisSet rev_axes = rev_axes_constant->get_axis_set_val();
 
                 NODE_VALIDATION_CHECK(this,
-                                      rev_axes.size() < rank,
+                                      rev_axes.size() <= rank,
                                       "Too many axes(",
                                       rev_axes,
                                       ") have been provided for given input shape(",
