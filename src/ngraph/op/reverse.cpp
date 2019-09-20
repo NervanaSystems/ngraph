@@ -71,7 +71,7 @@ void op::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
     adjoints.add_delta(x, make_shared<op::Reverse>(delta, m_reversed_axes));
 }
 
-const string op::v1::Reverse::type_name{"Reverse"};
+constexpr NodeTypeInfo op::v1::Reverse::type_info;
 
 op::v1::Reverse::Reverse(const Output<Node>& data,
                          const Output<Node>& reversed_axes,
