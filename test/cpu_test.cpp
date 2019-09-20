@@ -2160,6 +2160,7 @@ TEST(cpu_test, tensor_copy_from_different_layout)
     EXPECT_EQ((vector<uint8_t>{1, 4, 2, 5, 3, 6}), read_vector<uint8_t>(b));
 }
 
+#if MKLDNN_VERSION_MAJOR >= 1
 TEST(cpu_test, max_pool_bf16)
 {
     Shape shape_a{1, 1, 3, 5};
@@ -2253,3 +2254,4 @@ TEST(cpu_test, convolution_simple_bf16)
     c->write(fp_dst, shape_size(shape_r) * 4);
     EXPECT_TRUE(test::all_close_f(vector<float>{expected_result}, read_vector<float>(c)));
 }
+#endif
