@@ -46,6 +46,19 @@ namespace ngraph
                     const auto time_axis = node.get_attribute_value<int64_t>("time_axis", 0);
                     std::size_t valid_time_axis =
                         common::validate_axis(node, time_axis, data->get_shape().size());
+
+                    NGRAPH_CHECK(valid_batch_axis == 0 || valid_batch_axis == 1,
+                                 "Allowed values of the 'batch_axis' attribute for ReverseSequence "
+                                 "operator are 0 and 1");
+
+                    NGRAPH_CHECK(valid_time_axis == 0 || valid_time_axis == 1,
+                                 "Allowed values of the 'time_axis' attribute for ReverseSequence "
+                                 "operator are 0 and 1");
+
+                    NGRAPH_CHECK(valid_batch_axis != valid_time_axis,
+                                 "'batch_axis' and 'time_axis' attributes of the ReverseSequence "
+                                 "operator can't point to the same dimension");
+
                     return {std::make_shared<ngraph::op::ReverseSequence>(
                         data, sequence_lengths_i32, valid_batch_axis, valid_time_axis)};
                 }
