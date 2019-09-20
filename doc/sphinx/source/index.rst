@@ -25,7 +25,7 @@ nGraph Compiler stack
 
   nGraph Compiler stack documentation for version |version|.
 
-<<<<<<< Updated upstream
+
    Documentation for the latest (master) development branch can be found 
    at https://ngraph.nervanasys.com/docs/latest 
    .. https://docs.ngraph.ai/
