@@ -63,7 +63,7 @@ namespace ngraph
                     {
                         auto arg1_buffer_index =
                             external_function->get_buffer_index(args[1].get_name());
-                        auto scalescratchpad_size = shape_size(args[1].get_shape());
+                        auto scales_size = shape_size(args[1].get_shape());
 
                         // Dequantize needs 3 primitives: input, result, and reorder.
                         size_t dequantize_index = mkldnn_emitter->reserve_primitive_space(3);
@@ -72,7 +72,7 @@ namespace ngraph
                         functor = [&,
                                    input_desc,
                                    result_desc,
-                                   scalescratchpad_size,
+                                   scales_size,
                                    dequantize_index,
                                    scratchpad_size,
                                    arg0_buffer_index,
@@ -87,7 +87,7 @@ namespace ngraph
                                 dyn_scales.assign(
                                     static_cast<float*>(ctx->buffer_data[arg1_buffer_index]),
                                     static_cast<float*>(ctx->buffer_data[arg1_buffer_index]) +
-                                        scalescratchpad_size);
+                                        scales_size);
                                 mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_memories,
                                                                        ctx->mkldnn_primitives,
                                                                        ctx->mkldnn_scratchpad_mds,
@@ -345,7 +345,7 @@ namespace ngraph
                     {
                         auto arg1_buffer_index =
                             external_function->get_buffer_index(args[1].get_name());
-                        auto scalescratchpad_size = shape_size(args[1].get_shape());
+                        auto scales_size = shape_size(args[1].get_shape());
 
                         // Quantize needs 3 primitives: input, result, and reorder.
                         size_t quantize_index = mkldnn_emitter->reserve_primitive_space(3);
@@ -354,7 +354,7 @@ namespace ngraph
                         auto functor = [&,
                                         input_desc,
                                         result_desc,
-                                        scalescratchpad_size,
+                                        scales_size,
                                         quantize_index,
                                         scratchpad_size,
                                         arg0_buffer_index,
@@ -369,13 +369,13 @@ namespace ngraph
                                 dyn_scales.assign(
                                     static_cast<float*>(ctx->buffer_data[arg1_buffer_index]),
                                     static_cast<float*>(ctx->buffer_data[arg1_buffer_index]) +
-                                        scalescratchpad_size);
-                                for (size_t i = 0; i < scalescratchpad_size; i++)
+                                        scales_size);
+                                for (size_t i = 0; i < scales_size; i++)
                                 {
                                     dyn_scales[i] = 1.0 / dyn_scales[i];
                                 }
                                 // quantize across first dim (mask=2^0) if dyn_scales is a vector
-                                const int mask = scalescratchpad_size == 1 ? 0 : 1;
+                                const int mask = scales_size == 1 ? 0 : 1;
                                 mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_memories,
                                                                        ctx->mkldnn_primitives,
                                                                        ctx->mkldnn_scratchpad_mds,
