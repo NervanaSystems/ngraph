@@ -1952,15 +1952,10 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             {
                 const auto axis = node_js.at("axis").get<size_t>();
                 const auto mode = node_js.at("mode").get<op::v1::TopK::Mode>();
-                const auto sort = node_js.at("sort").get<op::v1::TopK::SortType>();
-                const auto k = node_js.at("k").get<size_t>();
+                const auto sort_type = node_js.at("sort_type").get<op::v1::TopK::SortType>();
                 const auto index_element_type = read_element_type(node_js.at("index_element_type"));
-                auto topk = make_shared<op::v1::TopK>(args[0], args[1], axis, mode, sort);
+                auto topk = make_shared<op::v1::TopK>(args[0], args[1], axis, mode, sort_type);
                 topk->set_index_element_type(index_element_type);
-                if (k != 0)
-                {
-                    topk->set_k(k);
-                }
                 node = move(topk);
             }
             break;
@@ -3007,7 +3002,7 @@ json JSONSerializer::serialize_node(const Node& n)
             const auto tmp = dynamic_cast<const op::v1::TopK*>(&n);
             node["axis"] = tmp->get_axis();
             node["mode"] = tmp->get_mode();
-            node["sort"] = tmp->get_sort();
+            node["sort_type"] = tmp->get_sort_type();
             node["index_element_type"] = write_element_type(tmp->get_index_element_type());
         }
 

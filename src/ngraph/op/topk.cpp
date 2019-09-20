@@ -138,7 +138,7 @@ void op::TopK::generate_adjoints(autodiff::Adjoints& /* adjoints */, const NodeV
     throw ngraph_error("Forward-propagation-only operation");
 }
 
-const string op::v1::TopK::type_name{"TopK"};
+constexpr NodeTypeInfo op::v1::TopK::type_info;
 
 op::v1::TopK::TopK(const Output<Node>& data,
                    const Output<Node>& k,
@@ -148,7 +148,7 @@ op::v1::TopK::TopK(const Output<Node>& data,
     : Op{{data, k}}
     , m_axis{axis}
     , m_mode{mode_from_string(mode)}
-    , m_sort{sort_from_string(sort)}
+    , m_sort{sort_type_from_string(sort)}
     , m_index_element_type{element::i32}
 {
     constructor_validate_and_infer_types();
@@ -178,9 +178,8 @@ void op::v1::TopK::validate_and_infer_types()
                           "Input rank must be greater than 0.");
 
     const auto& k_partial_shape = get_input_partial_shape(1);
-    NODE_VALIDATION_CHECK(this,
-                          k_partial_shape.is_static() && k_partial_shape.to_shape().size() == 0,
-                          "The 'K' input must be a scalar.");
+    NODE_VALIDATION_CHECK(
+        this, k_partial_shape.rank().compatible(0), "The 'K' input must be a scalar.");
 
     size_t k = 0;
     if (input_value(1).get_node_shared_ptr()->is_constant())
@@ -290,7 +289,7 @@ op::v1::TopK::Mode op::v1::TopK::mode_from_string(const std::string& mode) const
     return allowed_values.at(mode);
 }
 
-op::v1::TopK::SortType op::v1::TopK::sort_from_string(const std::string& sort) const
+op::v1::TopK::SortType op::v1::TopK::sort_type_from_string(const std::string& sort) const
 {
     static const std::map<std::string, SortType> allowed_values = {
         {"none", SortType::NONE},
@@ -321,5 +320,5 @@ size_t op::v1::TopK::get_k() const
 void op::v1::TopK::set_k(size_t k)
 {
     this->input(1).replace_source_output(
-        op::Constant::create(element::i64, Shape{1}, {k})->output(0));
+        op::Constant::create(element::i64, Shape{}, {k})->output(0));
 }

@@ -118,8 +118,8 @@ namespace ngraph
                 };
 
                 NGRAPH_API
-                static const std::string type_name;
-                const std::string& description() const override { return type_name; }
+                static constexpr NodeTypeInfo type_info{"TopK", 1};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a TopK operation
                 TopK() = default;
                 /// \brief Constructs a TopK operation with two outputs: values and indices.
@@ -155,14 +155,18 @@ namespace ngraph
                 void set_axis(const size_t axis) { m_axis = axis; }
                 Mode get_mode() const { return m_mode; }
                 void set_mode(const Mode mode) { m_mode = mode; }
-                SortType get_sort() const { return m_sort; }
-                void set_sort(const SortType sort) { m_sort = sort; }
+                SortType get_sort_type() const { return m_sort; }
+                void set_sort_type(const SortType sort) { m_sort = sort; }
                 element::Type get_index_element_type() const { return m_index_element_type; }
                 void set_index_element_type(const element::Type& index_element_type)
                 {
                     m_index_element_type = index_element_type;
                 }
 
+                /// \brief Returns the value of K, if available
+                ///
+                /// \note If the second input to this op is a constant, the value is retrieved
+                ///       and returned. If the input is not constant(dynamic) this method returns 0
                 size_t get_k() const;
                 void set_k(size_t k);
 
@@ -179,7 +183,7 @@ namespace ngraph
                                                  const element::Type& k_element_type) const;
 
                 Mode mode_from_string(const std::string& mode) const;
-                SortType sort_from_string(const std::string& sort) const;
+                SortType sort_type_from_string(const std::string& sort) const;
 
                 template <typename T>
                 size_t validate_and_get_k(const std::shared_ptr<op::Constant>& k_constant) const;
