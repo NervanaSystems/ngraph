@@ -155,7 +155,7 @@ namespace ngraph
                     }
                 }
 
-                SELECT_KERNEL_BY_RANK(kernel,
+                SELECT_KERNEL_ET_RANK(kernel,
                                       broadcast->get_input_element_type(0),
                                       out_rank,
                                       runtime::cpu::kernel::broadcast)
