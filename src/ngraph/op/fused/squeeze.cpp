@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Squeeze::type_name{"Squeeze"};
+constexpr NodeTypeInfo op::Squeeze::type_info;
 
 op::Squeeze::Squeeze(const Output<Node>& data, const Output<Node>& axes)
     : FusedOp({data, axes})
@@ -43,7 +43,7 @@ NodeVector op::Squeeze::decompose_op() const
                           "doesn't support 'axes' input of other type than a Constant.");
 
     // Get value of axes from Constant
-    auto axes_constant = dynamic_pointer_cast<op::Constant>(axes_node);
+    auto axes_constant = as_type_ptr<op::Constant>(axes_node);
     auto axes = axes_constant->get_vector<size_t>();
 
     auto data_shape = data.get_shape();

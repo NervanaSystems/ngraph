@@ -16,7 +16,9 @@
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/pad.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/topk.hpp"
 
@@ -79,6 +81,38 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 #endif
     switch (get_typeid(node))
     {
+    case OP_TYPEID::Gather:
+    {
+        auto tmp = dynamic_cast<const op::v0::Gather*>(node.get());
+        int64_t axis = tmp->get_axis();
+
+        auto axis_node = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{axis});
+        auto replacement_node = make_shared<op::v1::Gather>(
+            node->input(0).get_source_output(), node->input(1).get_source_output(), axis_node);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Pad:
+    {
+        auto tmp = dynamic_cast<const op::v0::Pad*>(node.get());
+        auto padding_below = tmp->get_padding_below();
+        auto pads_begin_node =
+            make_shared<op::Constant>(element::i64, Shape{padding_below.size()}, padding_below);
+        auto padding_above = tmp->get_padding_above();
+        auto pads_end_node =
+            make_shared<op::Constant>(element::i64, Shape{padding_above.size()}, padding_above);
+
+        auto replacement_node = make_shared<op::v1::Pad>(node->input(0).get_source_output(),
+                                                         pads_begin_node,
+                                                         pads_end_node,
+                                                         node->input(1).get_source_output(),
+                                                         tmp->get_pad_mode());
+
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::Softmax:
     {
         auto tmp = dynamic_cast<const op::v0::Softmax*>(node.get());
@@ -125,9 +159,9 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 
         replace_node(node, replacement_node);
         modified = true;
-
         break;
     }
+
     default: break;
     }
 #if defined(__clang__)

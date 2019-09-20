@@ -356,3 +356,45 @@ TEST(serialize, opset1_softmax)
     EXPECT_EQ(g_softmax->description(), "Softmax");
     EXPECT_EQ(g_softmax->get_version(), 1);
 }
+
+TEST(serialize, opset1_gather)
+{
+    auto params = make_shared<op::Parameter>(element::f32, Shape{5, 6});
+    auto indices = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto axis = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto gather_v1 = make_shared<op::v1::Gather>(params, indices, axis);
+
+    auto result = make_shared<op::Result>(gather_v1);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{params, indices, axis});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_gather = g_result->input(0).get_source_output().get_node_shared_ptr();
+
+    EXPECT_EQ(g_gather->description(), "Gather");
+    EXPECT_EQ(g_gather->get_version(), 1);
+}
+
+TEST(serialize, opset1_pad)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{4, 5, 6});
+    auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto pads_end = make_shared<op::Parameter>(element::i64, Shape{2});
+    auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
+    auto pad_mode = op::PadMode::EDGE;
+    auto pad = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value, pad_mode);
+
+    auto result = make_shared<op::Result>(pad);
+    auto f = make_shared<Function>(ResultVector{result},
+                                   ParameterVector{arg, pads_begin, pads_end, arg_pad_value});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_pad = g_result->input(0).get_source_output().get_node_shared_ptr();
+
+    EXPECT_EQ(g_pad->description(), "Pad");
+    EXPECT_EQ(g_pad->get_version(), 1);
+    EXPECT_EQ(dynamic_cast<const op::v1::Pad*>(g_pad.get())->get_pad_mode(), pad_mode);
+}

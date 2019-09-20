@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::OneHot::type_name{"OneHot"};
+constexpr NodeTypeInfo op::OneHot::type_info;
 
 op::OneHot::OneHot(const Output<Node>& arg, const PartialShape& shape, size_t one_hot_axis)
     : Op({arg})

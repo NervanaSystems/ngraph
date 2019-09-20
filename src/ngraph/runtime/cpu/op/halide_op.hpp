@@ -32,8 +32,8 @@ namespace ngraph
                 class HalideOp : public ngraph::op::Op
                 {
                 public:
-                    static const std::string type_name;
-                    const std::string& description() const override { return type_name; }
+                    static constexpr NodeTypeInfo type_info{"HalideOp", 0};
+                    const NodeTypeInfo& get_type_info() const override { return type_info; }
                     HalideOp(const OutputVector& args,
                              const std::list<Output<Node>>& ops,
                              const element::Type& out_type,

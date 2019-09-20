@@ -152,14 +152,20 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     {
         auto common_args = ngraph::find_common_args(target, replacement);
 
-        auto set_replacement_prov = [replacement](std::shared_ptr<Node> node) {
-            replacement->merge_provenance_tags_from(node);
+        std::set<string> removed_subgraph_tags;
+
+        auto set_replacement_prov = [&removed_subgraph_tags](std::shared_ptr<Node> node) {
+            for (auto tag : node->get_provenance_tags())
+            {
+                removed_subgraph_tags.insert(tag);
+            }
         };
 
         traverse_nodes({target}, set_replacement_prov, false, common_args);
+        replacement->add_provenance_tags(removed_subgraph_tags);
 
-        auto set_prov_new_nodes = [replacement](std::shared_ptr<Node> node) {
-            node->merge_provenance_tags_from(replacement);
+        auto set_prov_new_nodes = [&removed_subgraph_tags](std::shared_ptr<Node> node) {
+            node->add_provenance_tags(removed_subgraph_tags);
         };
 
         traverse_nodes({replacement}, set_prov_new_nodes, false, common_args);
@@ -306,7 +312,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function&
     ResultVector cloned_results;
     for (shared_ptr<Node> node : func.get_results())
     {
-        auto result = std::dynamic_pointer_cast<op::Result>(node_map.at(node.get()));
+        auto result = as_type_ptr<op::Result>(node_map.at(node.get()));
         if (!result)
         {
             throw ngraph_error("Results should be of type op::Result");
@@ -316,7 +322,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function&
     std::vector<std::shared_ptr<op::Parameter>> cloned_params;
     for (auto param : func.get_parameters())
     {
-        cloned_params.push_back(std::dynamic_pointer_cast<op::Parameter>(node_map.at(param.get())));
+        cloned_params.push_back(as_type_ptr<op::Parameter>(node_map.at(param.get())));
     }
 
     // create and return cloned function
@@ -325,7 +331,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function&
 
 bool ngraph::is_equal_to_const_value(std::string const_value, const Output<Node>& reduce_constant)
 {
-    if (auto rc = dynamic_pointer_cast<ngraph::op::Constant>(reduce_constant.get_node_shared_ptr()))
+    if (auto rc = as_type_ptr<ngraph::op::Constant>(reduce_constant.get_node_shared_ptr()))
     {
         auto cshape = rc->get_shape();
         size_t n = shape_size(cshape);
@@ -756,7 +762,7 @@ bool ngraph::check_for_cycles(const ngraph::Function* func,
         {
             is_bkwd_cycle = true;
             return true;
-        };
+        }
     }
 
     for (auto param : func->get_parameters())
@@ -768,7 +774,7 @@ bool ngraph::check_for_cycles(const ngraph::Function* func,
         {
             is_bkwd_cycle = false;
             return true;
-        };
+        }
     }
     // no cycles
     return false;

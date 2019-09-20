@@ -28,8 +28,8 @@ namespace ngraph
         class ConvolutionRelu : public Op
         {
         public:
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"ConvolutionRelu", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             CPU_BACKEND_API ConvolutionRelu(const std::shared_ptr<op::Convolution>& conv);
 
             CPU_BACKEND_API ConvolutionRelu(const Output<Node>& data_batch,
