@@ -73,12 +73,21 @@ namespace ngraph
 
                     auto dot = make_shared<op::Dot>(dq_input0, dq_input1, 1);
                     return make_shared<op::Quantize>(
-                        dot,
-                        output_scale,
-                        output_zero_point,
-                        output_zero_point.get_element_type(),
-                        axes,
-                        op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
+                               dot,
+                               output_scale,
+                               output_zero_point,
+                               output_zero_point.get_element_type(),
+                               axes,
+                               op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN)
+                        ->add_provenance_group_members_above({input0,
+                                                              input1,
+                                                              input0_scale,
+                                                              input0_zero_point,
+                                                              input1_scale,
+                                                              input1_scale,
+                                                              input1_zero_point,
+                                                              output_scale,
+                                                              output_zero_point});
                 }
             }
 
@@ -86,7 +95,8 @@ namespace ngraph
                                                           const Output<Node>& input1)
             {
                 auto output_scale = make_constant(element::f32, Shape{}, 1);
-                return make_shared<op::QuantizedDot>(input0, input1, output_scale, false, false);
+                return make_shared<op::QuantizedDot>(input0, input1, output_scale, false, false)
+                    ->add_provenance_group_members_above({input0, input1});
             }
 
             shared_ptr<Node> QuantizedLinearMatmulInteger(const Output<Node>& input0,
@@ -124,12 +134,14 @@ namespace ngraph
 
                     const auto dot = make_shared<op::Dot>(dq_input0, dq_input1, 1);
                     return make_shared<op::Quantize>(
-                        dot,
-                        output_scale,
-                        output_zero_point,
-                        output_zero_point->get_element_type(),
-                        axes,
-                        op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
+                               dot,
+                               output_scale,
+                               output_zero_point,
+                               output_zero_point->get_element_type(),
+                               axes,
+                               op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN)
+                        ->add_provenance_group_members_above(
+                            {input0, input1, input0_zero_point, input1_zero_point});
                 }
             }
         }

@@ -64,7 +64,8 @@ namespace ngraph
                     values->get_shape(),
                     vector<float>(shape_size(values->get_shape()), 1.f / p_norm));
 
-                return {make_shared<op::Power>(values, inv_p_node)};
+                return {make_shared<op::Power>(values, inv_p_node)
+                            ->add_provenance_group_members_above({value})};
             }
         }
 
@@ -80,7 +81,8 @@ namespace ngraph
             shared_ptr<Node> non_zero_values = make_shared<op::Convert>(
                 make_shared<op::NotEqual>(value, zero_node), value.get_element_type());
 
-            return make_shared<op::Sum>(non_zero_values, reduction_axes);
+            return make_shared<op::Sum>(non_zero_values, reduction_axes)
+                ->add_provenance_group_members_above({value});
         }
 
         shared_ptr<Node>
@@ -94,7 +96,7 @@ namespace ngraph
                                      values->get_shape(),
                                      vector<float>(shape_size(values->get_shape()), bias))};
 
-            return values + bias_node;
+            return (values + bias_node)->add_provenance_group_members_above({value});
         }
 
         shared_ptr<Node>
@@ -107,7 +109,8 @@ namespace ngraph
                                      values->get_shape(),
                                      vector<float>(shape_size(values->get_shape()), bias))};
 
-            return {make_shared<op::Sqrt>(values + bias_node)};
+            return {make_shared<op::Sqrt>(values + bias_node)
+                        ->add_provenance_group_members_above({value})};
         }
 
         shared_ptr<Node> lp_norm(const Output<Node>& value,
