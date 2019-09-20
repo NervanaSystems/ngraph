@@ -372,6 +372,9 @@ namespace ngraph
         const std::set<std::string>& get_provenance_tags() const;
         void add_provenance_tag(const std::string& tag);
         void add_provenance_tags(const std::set<std::string>& tag_set);
+        /// \brief Adds tag_set to this node and all intermediate nodes above base
+        void add_provenance_tags_above(const OutputVector& base,
+                                       const std::set<std::string>& tag_set);
         void remove_provenance_tag(const std::string& tag);
         /// \brief Add node to additional nodes that receive tags
         void add_provenance_group_member(const std::shared_ptr<Node>& node);

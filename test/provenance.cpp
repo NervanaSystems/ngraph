@@ -25,6 +25,8 @@
 #include "ngraph/builder/norm.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/fused_op_decomposition.hpp"
+#include "ngraph/pass/manager.hpp"
 #include "ngraph/provenance.hpp"
 
 using namespace std;
@@ -402,4 +404,31 @@ TEST(provenance, builder)
             EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"norm"}));
         }
     }
+}
+
+TEST(provenance, fused)
+{
+    auto p1 = make_shared<op::Parameter>(element::f32, PartialShape{2, 3, 4});
+    p1->add_provenance_tag("P1");
+    auto g = make_shared<op::Gelu>(p1);
+    g->add_provenance_tag("G");
+    auto r = make_shared<op::Result>(g);
+    auto f = make_shared<Function>(ResultVector{r}, ParameterVector{p1});
+    pass::Manager manager;
+    manager.register_pass<pass::FusedOpDecomposition>();
+    manager.run_passes(f);
+    traverse_nodes(f, [&](const std::shared_ptr<Node>& node) {
+        cerr << "Traverse: " << *node << endl;
+        if (node == p1)
+        {
+            EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"P1"}));
+        }
+        else if (node == r)
+        {
+        }
+        else
+        {
+            EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"G"}));
+        }
+    });
 }

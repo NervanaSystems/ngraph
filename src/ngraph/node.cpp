@@ -348,8 +348,39 @@ shared_ptr<Node> Node::add_provenance_group_members_above(const OutputVector& ba
         {
             todo.push_back(input.get_source_output().get_node());
         }
+        base_set.insert(node);
     }
     return shared_from_this();
+}
+
+void Node::add_provenance_tags_above(const OutputVector& base, const std::set<std::string>& tag_set)
+{
+    set<Node*> base_set;
+    for (auto& output : base)
+    {
+        base_set.insert(output.get_node());
+    }
+    vector<Node*> todo{this};
+    while (!todo.empty())
+    {
+        Node* node = todo.back();
+        todo.pop_back();
+        if (base_set.count(node) > 0)
+        {
+            continue;
+        }
+        std::cerr << "Really adding tags {";
+        for (auto s : tag_set){
+            cerr << s << ", ";
+        }
+        cerr << "} to " << *node << std::endl;
+        add_provenance_tags(tag_set);
+        for (auto input : node->inputs())
+        {
+            todo.push_back(input.get_source_output().get_node());
+        }
+        base_set.insert(node);
+    }
 }
 
 const std::set<std::string>& Node::get_provenance_tags() const
