@@ -121,7 +121,8 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, const Output<Node>&
     auto flattened_dims = make_shared<op::Concat>(NodeVector{row_dims_prod, col_dims_prod}, 0);
 
     // result := DynReshape(value, flattened_dims)
-    return make_shared<op::DynReshape>(value, flattened_dims);
+    return make_shared<op::DynReshape>(value, flattened_dims)
+        ->add_provenance_group_members_above({value});
 }
 
 shared_ptr<Node> builder::squeeze(const Output<Node>& value, vector<size_t> axes)
@@ -169,5 +170,6 @@ shared_ptr<Node> builder::expand_dims(const Output<Node>& value, size_t axis)
     advance(empty_axis_it, axis);
     output_shape.insert(empty_axis_it, 1);
     return make_shared<op::Reshape>(
-        value, get_default_order(value.get_shape().size()), output_shape);
+               value, get_default_order(value.get_shape().size()), output_shape)
+        ->add_provenance_group_members_above({value});
 }

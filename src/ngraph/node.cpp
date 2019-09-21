@@ -355,7 +355,8 @@ shared_ptr<Node> Node::add_provenance_group_members_above(const OutputVector& ba
     return shared_from_this();
 }
 
-void Node::add_provenance_tags_above(const OutputVector& base, const std::set<std::string>& tag_set)
+void Node::add_provenance_tags_above(const OutputVector& base,
+                                     const std::unordered_set<std::string>& tag_set)
 {
     set<Node*> base_set;
     for (auto& output : base)

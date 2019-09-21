@@ -129,7 +129,16 @@ namespace ngraph
                                                              padding_above,
                                                              data_dilation_strides,
                                                              requantization_scale,
-                                                             with_relu);
+                                                             with_relu)
+                ->add_provenance_group_members_above({input,
+                                                      filters,
+                                                      bias,
+                                                      min_input,
+                                                      max_input,
+                                                      min_filter,
+                                                      max_filter,
+                                                      min_output,
+                                                      max_output});
         }
 
         shared_ptr<Node> QuantizedConvolutionReluBuilder(const Output<Node>& input,
@@ -160,7 +169,15 @@ namespace ngraph
                                                              padding_below,
                                                              padding_above,
                                                              data_dilation_strides,
-                                                             requantization_scale);
+                                                             requantization_scale)
+                ->add_provenance_group_members_above({input,
+                                                      filters,
+                                                      min_input,
+                                                      max_input,
+                                                      min_filter,
+                                                      max_filter,
+                                                      min_output,
+                                                      max_output});
         }
 
         shared_ptr<Node> QuantizedConvolutionBiasAddBuilder(const Output<Node>& input,
@@ -218,7 +235,19 @@ namespace ngraph
                                                                 data_dilation_strides,
                                                                 requantization_scale,
                                                                 sum_scale,
-                                                                with_relu);
+                                                                with_relu)
+                ->add_provenance_group_members_above({input,
+                                                      filters,
+                                                      bias,
+                                                      sum_input,
+                                                      min_input,
+                                                      max_input,
+                                                      min_filter,
+                                                      max_filter,
+                                                      min_output,
+                                                      max_output,
+                                                      min_sum_input,
+                                                      max_sum_input});
         }
 
         shared_ptr<Node>
@@ -283,7 +312,19 @@ namespace ngraph
                                                                             requantization_scale,
                                                                             sum_scale,
                                                                             with_relu);
-            return make_shared<op::Convert>(qconv, element::u8);
-        }
+            return make_shared<op::Convert>(qconv, element::u8)
+                ->add_provenance_group_members_above({input,
+                                                      filters,
+                                                      bias,
+                                                      sum_input,
+                                                      min_input,
+                                                      max_input,
+                                                      min_filter,
+                                                      max_filter,
+                                                      min_output,
+                                                      max_output,
+                                                      min_sum_input,
+                                                      max_sum_input});
+        };
     }
 }

@@ -117,39 +117,41 @@ namespace ngraph
             case BiasMode::MAX:
             {
                 result = make_shared<op::Sqrt>(make_shared<op::Maximum>(values, bias_node));
+                break;
             }
             case BiasMode::ADD:
             default: result = make_shared<op::Sqrt>(values + bias_node);
             }
-            return result->add_provenance_group_member({value});
+            return result->add_provenance_group_members_above({value});
         }
-    }
 
-    shared_ptr<Node>
-        lp_norm(const Output<Node>& value, const AxisSet& reduction_axes, size_t p_norm, float bias)
-    {
-        // The number of non-zero elements
-        if (p_norm == 0)
+        shared_ptr<Node> lp_norm(const Output<Node>& value,
+                                 const AxisSet& reduction_axes,
+                                 size_t p_norm,
+                                 float bias)
         {
-            return l0_norm(value, reduction_axes);
+            // The number of non-zero elements
+            if (p_norm == 0)
+            {
+                return l0_norm(value, reduction_axes);
+            }
+            //  sum of absolute values.
+            else if (p_norm == 1)
+            {
+                return l1_norm(value, reduction_axes, bias);
+            }
+            // sqrt of sum of squares - Euclidean norm
+            else if (p_norm == 2)
+            {
+                return l2_norm(value, reduction_axes, bias);
+            }
+            // generic case
+            else
+            {
+                return detail::lp_norm(value, p_norm, reduction_axes, bias);
+            }
         }
-        //  sum of absolute values.
-        else if (p_norm == 1)
-        {
-            return l1_norm(value, reduction_axes, bias);
-        }
-        // sqrt of sum of squares - Euclidean norm
-        else if (p_norm == 2)
-        {
-            return l2_norm(value, reduction_axes, bias);
-        }
-        // generic case
-        else
-        {
-            return detail::lp_norm(value, p_norm, reduction_axes, bias);
-        }
-    }
 
-} // namespace builder
+    } // namespace builder
 
 } // namespace ngraph
