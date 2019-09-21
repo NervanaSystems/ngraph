@@ -175,9 +175,9 @@ namespace ngraph
 #define NVA_REST_HELPER(exc_class, ctx, qty, ...) NVA_REST_HELPER2(exc_class, ctx, qty, __VA_ARGS__)
 #define NVA_REST_HELPER2(exc_class, ctx, qty, ...)                                                 \
     NVA_REST_HELPER_##qty(exc_class, ctx, __VA_ARGS__)
-#define NVA_REST_HELPER_A(exc_class, ctx, first) NGRAPH_CHECK_HELPER_NO(exc_class, ctx, first)
+#define NVA_REST_HELPER_A(exc_class, ctx, first) NGRAPH_CHECK_HELPER_NO(exc_class, ctx, (first))
 #define NVA_REST_HELPER_B(exc_class, ctx, first, ...)                                              \
-    NGRAPH_CHECK_HELPER_ALL(exc_class, ctx, first, __VA_ARGS__)
+    NGRAPH_CHECK_HELPER_ALL(exc_class, ctx, (first), __VA_ARGS__)
 #define NVA_NUM(...)                                                                               \
     NVA_SELECT_NTH(__VA_ARGS__,                                                                    \
                    B,                                                                              \
