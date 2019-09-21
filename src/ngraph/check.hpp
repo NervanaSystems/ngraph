@@ -136,7 +136,7 @@ namespace ngraph
 // TODO(amprocte): refactor NGRAPH_CHECK_HELPER so we don't have to introduce a locally-scoped
 // variable (ss___) and risk shadowing.
 //
-#define NGRAPH_CHECK_HELPER_ALL(exc_class, ctx, check, ...)                                        \
+#define NGRAPH_CHECK_HELPER2(exc_class, ctx, check, ...)                                           \
     do                                                                                             \
     {                                                                                              \
         if (!(check))                                                                              \
@@ -148,7 +148,7 @@ namespace ngraph
         }                                                                                          \
     } while (0)
 
-#define NGRAPH_CHECK_HELPER_NO(exc_class, ctx, check)                                              \
+#define NGRAPH_CHECK_HELPER1(exc_class, ctx, check)                                                \
     do                                                                                             \
     {                                                                                              \
         if (!(check))                                                                              \
@@ -171,64 +171,71 @@ namespace ngraph
 /// \throws ::ngraph::CheckFailure if the macro is executed.
 #define NGRAPH_UNREACHABLE(...) NGRAPH_CHECK(false, "Unreachable: ", __VA_ARGS__)
 #define NGRAPH_CHECK_HELPER(exc_class, ctx, ...)                                                   \
-    NVA_REST_HELPER(exc_class, ctx, NVA_NUM(__VA_ARGS__), __VA_ARGS__)
-#define NVA_REST_HELPER(exc_class, ctx, qty, ...) NVA_REST_HELPER2(exc_class, ctx, qty, __VA_ARGS__)
-#define NVA_REST_HELPER2(exc_class, ctx, qty, ...)                                                 \
-    NVA_REST_HELPER_##qty(exc_class, ctx, __VA_ARGS__)
-#define NVA_REST_HELPER_A(exc_class, ctx, first) NGRAPH_CHECK_HELPER_NO(exc_class, ctx, (first))
-#define NVA_REST_HELPER_B(exc_class, ctx, first, ...)                                              \
-    NGRAPH_CHECK_HELPER_ALL(exc_class, ctx, (first), __VA_ARGS__)
-#define NVA_NUM(...)                                                                               \
-    NVA_SELECT_NTH(__VA_ARGS__,                                                                    \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   B,                                                                              \
-                   A,                                                                              \
-                   throwaway)
-#define NVA_SELECT_NTH(a1,                                                                         \
-                       a2,                                                                         \
-                       a3,                                                                         \
-                       a4,                                                                         \
-                       a5,                                                                         \
-                       a6,                                                                         \
-                       a7,                                                                         \
-                       a8,                                                                         \
-                       a9,                                                                         \
-                       a10,                                                                        \
-                       a11,                                                                        \
-                       a12,                                                                        \
-                       a13,                                                                        \
-                       a14,                                                                        \
-                       a15,                                                                        \
-                       a16,                                                                        \
-                       a17,                                                                        \
-                       a18,                                                                        \
-                       a19,                                                                        \
-                       a20,                                                                        \
-                       a21,                                                                        \
-                       a22,                                                                        \
-                       a23,                                                                        \
-                       a24,                                                                        \
-                       a25,                                                                        \
-                       ...)                                                                        \
-    a25
+    CALL_OVERLOAD(NGRAPH_CHECK_HELPER, exc_class, ctx, __VA_ARGS__)
+
+#define GLUE(x, y) x y
+
+#define RETURN_ARG_COUNT(_1_,                                                                      \
+                         _2_,                                                                      \
+                         _3_,                                                                      \
+                         _4_,                                                                      \
+                         _5_,                                                                      \
+                         _6,                                                                       \
+                         _7,                                                                       \
+                         _8,                                                                       \
+                         _9,                                                                       \
+                         _10,                                                                      \
+                         _11,                                                                      \
+                         _12,                                                                      \
+                         _13,                                                                      \
+                         _14,                                                                      \
+                         _15,                                                                      \
+                         _16,                                                                      \
+                         _17,                                                                      \
+                         _18,                                                                      \
+                         _19,                                                                      \
+                         _20,                                                                      \
+                         _21,                                                                      \
+                         _22,                                                                      \
+                         _23,                                                                      \
+                         _24,                                                                      \
+                         _25,                                                                      \
+                         count,                                                                    \
+                         ...)                                                                      \
+    count
+#define EXPAND_ARGS(args) RETURN_ARG_COUNT args
+#define COUNT_ARGS_MAXN(...)                                                                       \
+    EXPAND_ARGS((__VA_ARGS__,                                                                      \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 1,                                                                                \
+                 0))
+
+#define OVERLOAD_MACRO2(name, count) name##count
+#define OVERLOAD_MACRO1(name, count) OVERLOAD_MACRO2(name, count)
+#define OVERLOAD_MACRO(name, count) OVERLOAD_MACRO1(name, count)
+
+#define CALL_OVERLOAD(name, exc_class, ctx, ...)                                                   \
+    GLUE(OVERLOAD_MACRO(name, COUNT_ARGS_MAXN(__VA_ARGS__)), (exc_class, ctx, __VA_ARGS__))
