@@ -33,7 +33,7 @@ using namespace std;
 using namespace ngraph;
 using ::testing::Return;
 
-using ProvSet = std::set<std::string>;
+using ProvSet = std::unordered_set<std::string>;
 
 TEST(provenance, provenance)
 {
