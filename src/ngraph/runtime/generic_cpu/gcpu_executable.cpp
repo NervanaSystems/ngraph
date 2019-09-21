@@ -110,7 +110,7 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
     for (size_t output_count = 0; output_count < get_results().size(); ++output_count)
     {
         auto output = get_results()[output_count];
-        if (!dynamic_pointer_cast<op::Result>(output))
+        if (!is_type<op::Result>(output))
         {
             throw ngraph_error("One of function's outputs isn't op::Result");
         }

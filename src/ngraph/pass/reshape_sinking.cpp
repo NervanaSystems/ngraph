@@ -174,7 +174,7 @@ void swim(Input<Node> input, shared_ptr<op::Reshape> reshape)
             NGRAPH_DEBUG << "Propagating reshape " << describe_reshape(csw.reshape) << " for "
                          << n->get_name() << " to " << n->get_argument(0);
         }
-        else if (n->is_type<op::Broadcast>())
+        else if (is_type<op::Broadcast>(n))
         {
             auto old_broadcast = static_pointer_cast<op::Broadcast>(n);
             auto broadcast_axes = old_broadcast->get_broadcast_axes();

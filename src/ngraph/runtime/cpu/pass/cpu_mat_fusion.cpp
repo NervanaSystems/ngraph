@@ -423,7 +423,7 @@ std::shared_ptr<Node> fuse_batch_mat_mul_transpose(const std::shared_ptr<Node>& 
                 auto& input_node = pattern_map[input[i]];
                 do
                 {
-                    if (std::dynamic_pointer_cast<op::Reshape>(iter) != nullptr)
+                    if (is_type<op::Reshape>(iter))
                     {
                         ++reshape_count[i];
                         if (reshape_count[i] == num_expected_reshape_with_trans)

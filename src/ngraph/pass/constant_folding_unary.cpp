@@ -40,9 +40,9 @@ using namespace ngraph;
 
 bool is_supported_unary_op(std::shared_ptr<Node> n)
 {
-    return n->is_type<op::Abs>() || n->is_type<op::Ceiling>() || n->is_type<op::Floor>() ||
-           n->is_type<op::Negative>() || n->is_type<op::Not>() || n->is_type<op::Relu>() ||
-           n->is_type<op::Sign>() || n->is_type<op::Sqrt>();
+    return is_type<op::Abs>(n) || is_type<op::Ceiling>(n) || is_type<op::Floor>(n) ||
+           is_type<op::Negative>(n) || is_type<op::Not>(n) || is_type<op::Relu>(n) ||
+           is_type<op::Sign>(n) || is_type<op::Sqrt>(n);
 }
 
 template <class T>
@@ -51,7 +51,7 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
                                              NodeExecutorTy func)
 {
     // check sqrt arg
-    if (unary->is_type<op::Sqrt>())
+    if (is_type<op::Sqrt>(unary))
     {
         std::vector<T> values{constant->get_vector<T>()};
         if (std::any_of(values.begin(), values.end(), [](T i) { return i < T(0); }))
@@ -74,42 +74,42 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
     }
     else
     {
-        if (unary->is_type<op::Abs>())
+        if (is_type<op::Abs>(unary))
         {
             runtime::reference::abs<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-        else if (unary->is_type<op::Ceiling>())
+        else if (is_type<op::Ceiling>(unary))
         {
             runtime::reference::ceiling<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-        else if (unary->is_type<op::Floor>())
+        else if (is_type<op::Floor>(unary))
         {
             runtime::reference::floor<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-        else if (unary->is_type<op::Negative>())
+        else if (is_type<op::Negative>(unary))
         {
             runtime::reference::negate<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-        else if (unary->is_type<op::Not>())
+        else if (is_type<op::Not>(unary))
         {
             runtime::reference::logical_not<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-        else if (unary->is_type<op::Relu>())
+        else if (is_type<op::Relu>(unary))
         {
             runtime::reference::relu<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-        else if (unary->is_type<op::Sign>())
+        else if (is_type<op::Sign>(unary))
         {
             runtime::reference::sign<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-        else if (unary->is_type<op::Sqrt>())
+        else if (is_type<op::Sqrt>(unary))
         {
             runtime::reference::sqrt<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
