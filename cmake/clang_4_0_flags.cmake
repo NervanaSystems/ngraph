@@ -22,7 +22,7 @@ add_compile_options(-pedantic-errors)
 # whitelist errors here
 #add_compile_options(-Weverything)
 add_compile_options(-Wall)
-add_compile_options(-Wno-gnu-zero-variadic-macro-arguments)
+# add_compile_options(-Wno-gnu-zero-variadic-macro-arguments)
 #add_compile_options(-Wno-c++98-compat-pedantic)
 #add_compile_options(-Wno-weak-vtables)
 #add_compile_options(-Wno-global-constructors)

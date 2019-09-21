@@ -136,15 +136,24 @@ namespace ngraph
 // TODO(amprocte): refactor NGRAPH_CHECK_HELPER so we don't have to introduce a locally-scoped
 // variable (ss___) and risk shadowing.
 //
-#define NGRAPH_CHECK_HELPER(exc_class, ctx, check, ...)                                            \
+#define NGRAPH_CHECK_HELPER_ALL(exc_class, ctx, check, ...)                                        \
     do                                                                                             \
     {                                                                                              \
         if (!(check))                                                                              \
         {                                                                                          \
             ::std::stringstream ss___;                                                             \
-            ::ngraph::write_all_to_stream(ss___, ##__VA_ARGS__);                                   \
+            ::ngraph::write_all_to_stream(ss___, __VA_ARGS__);                                     \
             throw exc_class(                                                                       \
                 (::ngraph::CheckLocInfo{__FILE__, __LINE__, #check}), (ctx), ss___.str());         \
+        }                                                                                          \
+    } while (0)
+
+#define NGRAPH_CHECK_HELPER_NO(exc_class, ctx, check)                                              \
+    do                                                                                             \
+    {                                                                                              \
+        if (!(check))                                                                              \
+        {                                                                                          \
+            throw exc_class((::ngraph::CheckLocInfo{__FILE__, __LINE__, #check}), (ctx), "");      \
         }                                                                                          \
     } while (0)
 
@@ -161,3 +170,65 @@ namespace ngraph
 /// \param ... Additional error message that should describe why that execution path is unreachable.
 /// \throws ::ngraph::CheckFailure if the macro is executed.
 #define NGRAPH_UNREACHABLE(...) NGRAPH_CHECK(false, "Unreachable: ", __VA_ARGS__)
+#define NGRAPH_CHECK_HELPER(exc_class, ctx, ...)                                                   \
+    NVA_REST_HELPER(exc_class, ctx, NVA_NUM(__VA_ARGS__), __VA_ARGS__)
+#define NVA_REST_HELPER(exc_class, ctx, qty, ...) NVA_REST_HELPER2(exc_class, ctx, qty, __VA_ARGS__)
+#define NVA_REST_HELPER2(exc_class, ctx, qty, ...)                                                 \
+    NVA_REST_HELPER_##qty(exc_class, ctx, __VA_ARGS__)
+#define NVA_REST_HELPER_A(exc_class, ctx, first) NGRAPH_CHECK_HELPER_NO(exc_class, ctx, first)
+#define NVA_REST_HELPER_B(exc_class, ctx, first, ...)                                              \
+    NGRAPH_CHECK_HELPER_ALL(exc_class, ctx, first, __VA_ARGS__)
+#define NVA_NUM(...)                                                                               \
+    NVA_SELECT_NTH(__VA_ARGS__,                                                                    \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   B,                                                                              \
+                   A,                                                                              \
+                   throwaway)
+#define NVA_SELECT_NTH(a1,                                                                         \
+                       a2,                                                                         \
+                       a3,                                                                         \
+                       a4,                                                                         \
+                       a5,                                                                         \
+                       a6,                                                                         \
+                       a7,                                                                         \
+                       a8,                                                                         \
+                       a9,                                                                         \
+                       a10,                                                                        \
+                       a11,                                                                        \
+                       a12,                                                                        \
+                       a13,                                                                        \
+                       a14,                                                                        \
+                       a15,                                                                        \
+                       a16,                                                                        \
+                       a17,                                                                        \
+                       a18,                                                                        \
+                       a19,                                                                        \
+                       a20,                                                                        \
+                       a21,                                                                        \
+                       a22,                                                                        \
+                       a23,                                                                        \
+                       a24,                                                                        \
+                       a25,                                                                        \
+                       ...)                                                                        \
+    a25
