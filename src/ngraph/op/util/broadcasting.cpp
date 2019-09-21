@@ -180,17 +180,23 @@ static std::shared_ptr<ngraph::Node>
 ///
 /// \return     The broadcasted Node.
 ///
-static std::shared_ptr<ngraph::Node> broadcast_node_pdpd_style(
-    const std::shared_ptr<ngraph::Node>& value, const ngraph::Shape& output_shape, int64_t axis)
+static std::shared_ptr<ngraph::Node> broadcast_value_pdpd_style(
+    const ngraph::Output<ngraph::Node>& value, const ngraph::Shape& output_shape, int64_t axis)
 {
-    auto value_shape = value->get_shape();
-    auto trimmed_value_shape = value_shape;
+    auto value_shape = value.get_shape();
+
+    // If node already has the required shape, return original node
+    if (output_shape == value_shape)
+    {
+        return value.as_single_output_node();
+    }
 
     if (axis == -1)
     {
         axis = output_shape.size() - value_shape.size();
     }
 
+    auto trimmed_value_shape = value_shape;
     while (trimmed_value_shape.size() > 0 && trimmed_value_shape.back() == 1)
     {
         trimmed_value_shape.pop_back();
@@ -207,18 +213,14 @@ static std::shared_ptr<ngraph::Node> broadcast_node_pdpd_style(
         post *= output_shape[i];
     }
 
-    std::vector<size_t> value_order(value_shape.size());
-    std::iota(std::begin(value_order), std::end(value_order), 0);
     auto value_reshape = std::make_shared<ngraph::op::Reshape>(
-        value, ngraph::AxisVector(value_order), ngraph::Shape{mid});
+        value, ngraph::get_default_order(value_shape.size()), ngraph::Shape{mid});
 
     auto value_bcast = std::make_shared<ngraph::op::Broadcast>(
         value_reshape, ngraph::Shape{pre, mid, post}, ngraph::AxisSet{0, 2});
 
-    std::vector<size_t> bcast_order(value_bcast->get_shape().size());
-    std::iota(std::begin(bcast_order), std::end(bcast_order), 0);
     std::shared_ptr<ngraph::Node> value_bcast_reshape = std::make_shared<ngraph::op::Reshape>(
-        value_bcast, ngraph::AxisVector(bcast_order), output_shape);
+        value_bcast, ngraph::get_default_order(value_bcast->get_shape().size()), output_shape);
 
     return value_bcast_reshape;
 }
@@ -477,7 +479,7 @@ namespace ngraph
             for (std::size_t i = 1; i < inputs.size(); ++i)
             {
                 broadcasted_inputs.push_back(
-                    broadcast_node_pdpd_style(inputs[i], inputs[0]->get_shape(), axis));
+                    broadcast_value_pdpd_style(inputs[i], inputs[0]->get_shape(), axis));
             }
             return broadcasted_inputs;
         }
