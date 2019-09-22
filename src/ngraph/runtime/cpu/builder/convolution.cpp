@@ -67,7 +67,7 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
@@ -98,7 +98,7 @@ namespace ngraph
                         kernel;
 
                     SELECT_KERNEL_3ARGS(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::convolution);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::convolution)
 
                     auto window_movement_strides = convolution->get_window_movement_strides();
                     auto window_dilation_strides = convolution->get_window_dilation_strides();
@@ -119,7 +119,7 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         kernel(ctx->buffer_data[arg0_buffer_index],
                                ctx->buffer_data[arg1_buffer_index],
                                ctx->buffer_data[out_buffer_index],
@@ -172,7 +172,7 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
@@ -235,7 +235,7 @@ namespace ngraph
                                     arg1_buffer_index,
                                     arg2_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<true>(
@@ -304,7 +304,7 @@ namespace ngraph
                                     arg2_buffer_index,
                                     arg3_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<true>(
@@ -378,7 +378,7 @@ namespace ngraph
                                     arg1_buffer_index,
                                     arg2_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
@@ -451,7 +451,7 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_backward_data(
@@ -485,7 +485,7 @@ namespace ngraph
 
                     SELECT_KERNEL(kernel,
                                   out[0].get_element_type(),
-                                  runtime::cpu::kernel::convolution_backprop_in);
+                                  runtime::cpu::kernel::convolution_backprop_in)
                     auto& in_shape = convolution->get_data_batch_shape();
                     auto data_dilation_strides = convolution->get_data_dilation_strides_forward();
                     auto window_dilation_strides =
@@ -512,7 +512,7 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         kernel(ctx->buffer_data[arg1_buffer_index],
                                ctx->buffer_data[arg0_buffer_index],
                                ctx->buffer_data[out_buffer_index],
@@ -564,7 +564,7 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_backward_weights(
@@ -599,7 +599,7 @@ namespace ngraph
 
                     SELECT_KERNEL(kernel,
                                   out[0].get_element_type(),
-                                  runtime::cpu::kernel::convolution_backprop_filter);
+                                  runtime::cpu::kernel::convolution_backprop_filter)
 
                     auto& filters_shape = convolution->get_filters_shape();
                     auto window_dilation_strides =
@@ -625,7 +625,7 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         kernel(ctx->buffer_data[arg0_buffer_index],
                                ctx->buffer_data[arg1_buffer_index],
                                ctx->buffer_data[out_buffer_index],
@@ -674,7 +674,7 @@ namespace ngraph
                                     arg1_buffer_index,
                                     out0_buffer_index,
                                     out1_buffer_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) {
+                                                       CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_backward_weights_bias(
@@ -740,7 +740,7 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
@@ -805,7 +805,7 @@ namespace ngraph
                                     arg1_buffer_index,
                                     arg2_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<true>(
@@ -876,7 +876,7 @@ namespace ngraph
                                     arg1_buffer_index,
                                     arg2_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_deconvolutionbias_forward(

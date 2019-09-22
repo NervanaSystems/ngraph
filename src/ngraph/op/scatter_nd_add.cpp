@@ -24,7 +24,7 @@ static int INPUTS = 0;
 static int INDICES = 1;
 static int UPDATES = 2;
 
-const string op::ScatterNDAdd::type_name{"ScatterNDAdd"};
+constexpr NodeTypeInfo op::ScatterNDAdd::type_info;
 
 shared_ptr<Node> op::ScatterNDAdd::copy_with_new_args(const NodeVector& new_args) const
 {

@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::NotEqual::type_name{"NotEqual"};
+constexpr NodeTypeInfo op::NotEqual::type_info;
 
 op::NotEqual::NotEqual(const Output<Node>& arg0,
                        const Output<Node>& arg1,

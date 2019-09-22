@@ -18,6 +18,7 @@
 
 #include <mkldnn.hpp>
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 #include "ngraph/runtime/cpu/op/rnn_utils.hpp"
 #include "ngraph/util.hpp"
 
@@ -28,8 +29,9 @@ namespace ngraph
         class Lstm : public Op
         {
         public:
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            CPU_BACKEND_API
+            static constexpr NodeTypeInfo type_info{"Lstm", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
 // INPUTS:
 // [0] - {Xt} input tensor of layout TNC, Shape{sequence length*batch_size,
 //       feature_size}

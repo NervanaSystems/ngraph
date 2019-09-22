@@ -26,7 +26,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::GroupConvolutionTranspose::type_name{"GroupConvolutionTranspose"};
+constexpr NodeTypeInfo op::GroupConvolutionTranspose::type_info;
 
 op::GroupConvolutionTranspose::GroupConvolutionTranspose(const Output<Node>& data,
                                                          const Output<Node>& filters,
@@ -178,7 +178,7 @@ void op::GroupConvolutionTranspose::pre_validate_and_infer_types()
                 out_shape.erase(std::begin(out_shape), std::begin(out_shape) + 2);
             }
 
-            for (int i = 0; i < num_spatial_dims; ++i)
+            for (uint64_t i = 0; i < num_spatial_dims; ++i)
             {
                 int total_padding = m_strides[i] * (data_shape[i + 2] - 1) +
                                     m_dilations[i] * (filters_shape[i + 2] - 1) - out_shape[i] +
@@ -327,8 +327,8 @@ NodeVector op::GroupConvolutionTranspose::decompose_op() const
     }
 }
 
-void op::GroupConvolutionTranspose::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                      const NodeVector& deltas)
+void op::GroupConvolutionTranspose::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                                      const NodeVector& /* deltas */)
 {
     throw ngraph_error(
         "Generating adjoints is not yet implemented for GroupConvolutionTranspose node.");

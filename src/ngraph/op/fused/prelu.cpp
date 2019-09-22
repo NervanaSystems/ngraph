@@ -27,7 +27,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::PRelu::type_name{"PRelu"};
+constexpr NodeTypeInfo op::PRelu::type_info;
 
 op::PRelu::PRelu(const Output<Node>& data, const Output<Node>& slope)
     : FusedOp({data, slope})
