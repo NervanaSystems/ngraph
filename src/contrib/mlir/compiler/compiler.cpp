@@ -46,6 +46,7 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "pass/memory_optimization.hpp"
 
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
@@ -92,6 +93,11 @@ static llvm::cl::opt<bool> clPrintIRAfterAll(
 
 // *** Optimization flags ***
 
+static llvm::cl::opt<bool> clEnableNgInPlaceMemoryOpt(
+    "ng-inplace-mem-opt",
+    llvm::cl::init(false),
+    llvm::cl::desc("Enable ngraph dialect in-place memory optimization pass"));
+
 static llvm::cl::opt<bool>
     clEnableAffineLoopFusion("affine-loop-fusion",
                              llvm::cl::init(false),
@@ -114,6 +120,17 @@ static llvm::cl::opt<unsigned> clLoopTilingCacheSize(
         "Cache size to use in affine loop tiling. If not zero, it overrides the cache-size "
         "inferred from the host CPU using for the cache level specified by "
         "-loop-tile-cache-level."));
+
+// *** Debug flags ***
+
+static llvm::cl::opt<bool>
+    clDumpObjectFile("dump-mlir-object-file",
+                     llvm::cl::desc("Dump MLIR JITted-compiled object to file specified with "
+                                    "-object-filename (<input file>.o by default)."));
+
+static llvm::cl::opt<std::string>
+    clObjectFilename("mlir-object-filename",
+                     llvm::cl::desc("Dump MLIR JITted-compiled object to file jitted_mlir.o"));
 
 #define COMPILE_OP_DECL(op_name)                                                                   \
     createOp<op_name>(MLIRCompiler & compiler, const ngraph::Node* ngNode)
@@ -184,6 +201,7 @@ void MLIRCompiler::init_mlir()
 void MLIRCompiler::compile()
 {
     buildNgDialectModule();
+    optimizeNgDialect();
     lowerNgDialect();
 }
 
@@ -666,6 +684,18 @@ mlir::Operation* MLIRCompiler::createIndexReduction(const ngraph::Node* ngNode)
     op->setAttr("axes", redAxesAttr);
     return op;
 }
+
+void MLIRCompiler::optimizeNgDialect()
+{
+    mlir::PassManager pm(&m_context);
+    mlir::applyPassManagerCLOptions(pm);
+    if (clEnableNgInPlaceMemoryOpt)
+    {
+        pm.addPass(mlir::createMemoryOptimizationPass());
+    }
+    pm.run(m_module.get());
+}
+
 // Binds MLIR function arguments to the proper values. This includes externally allocated tensors
 // helpers to be used inside the function.
 void MLIRCompiler::bindArguments(std::vector<void*>& externalTensors)
@@ -710,6 +740,12 @@ void MLIRCompiler::execute()
     // Please, note that 'invoke' method is overloaded with a parameter pack version.
     // Make sure the MutableArrayRef version is invoked.
     auto invocationResult = m_engine->invoke("main", llvm::MutableArrayRef<void*>(m_invokeArgs));
+
+    if (clDumpObjectFile)
+    {
+        m_engine->dumpToObjectFile(clObjectFilename.empty() ? "jitted_mlir.o"
+                                                            : clObjectFilename.getValue());
+    }
     NGRAPH_CHECK(!invocationResult, "JIT invocation of 'main' failed\n");
 }
 

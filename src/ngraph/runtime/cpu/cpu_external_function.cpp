@@ -566,7 +566,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 #include "ngraph/runtime/reference/topk.hpp"
 #include "ngraph/runtime/reference/xor.hpp"
 #include "ngraph/shape.hpp"
-#include "ngraph/state/rng_state.hpp"
+#include "ngraph/state/bernoulli_rng_state.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/util.hpp"
 
@@ -638,7 +638,7 @@ using namespace ngraph::runtime;
     writer << "// Declare all constants\n";
     for (shared_ptr<Node> node : ordered_ops)
     {
-        ngraph::op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
+        ngraph::op::Constant* c = as_type<ngraph::op::Constant>(node.get());
         if (c)
         {
             m_active_constants.push_back(node);
@@ -699,7 +699,7 @@ using namespace ngraph::runtime;
     set<descriptor::Tensor*> constants;
     for (shared_ptr<Node> node : ordered_ops)
     {
-        if (dynamic_cast<ngraph::op::Constant*>(node.get()))
+        if (is_type<ngraph::op::Constant>(node))
         {
             shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
             constants.insert(tv.get());
@@ -1169,7 +1169,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
             // TODO (pthoreho) : For MKLDNN > V1.0, change mkldnn kernel integration to compute for
             // LSTMCell
             // with peephole as well.
-            if (std::dynamic_pointer_cast<ngraph::op::Constant>(node.get_argument(6)) != nullptr)
+            if (is_type<ngraph::op::Constant>(node.get_argument(6)))
             {
                 return true;
             }
@@ -1707,7 +1707,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
 
     executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {
         cpu::Timestamp start_ts, end_ts;
-        int profiler_count = 0;
+        uint64_t profiler_count = 0;
 
         if (ctx->first_iteration)
         {

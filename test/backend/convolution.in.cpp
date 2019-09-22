@@ -99,3 +99,40 @@ NGRAPH_TEST(${BACKEND_NAME}, convolution_simple)
     handle->call_with_validate({result}, {a, b});
     EXPECT_TRUE(test::all_close_f(vector<float>{expected_result}, read_vector<float>(result)));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, convolution_simple_padding)
+{
+    Shape shape_a{1, 1, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{1, 1, 1, 1};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{1, 1, 5, 5};
+    auto conv1 = make_shared<op::Convolution>(A,
+                                              B,
+                                              Strides{1, 1},
+                                              Strides{1, 1},
+                                              CoordinateDiff{1, 1},
+                                              CoordinateDiff{2, 2},
+                                              Strides{1, 1});
+
+    auto f = make_shared<Function>(conv1, ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1.0f, 2.0f, 3.0f, 4.0f});
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, vector<float>{2.0f});
+    auto result = backend->create_tensor(element::f32, shape_r);
+    // clang-format off
+    vector<float> expected_result{0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+                                  0.0f, 2.0f, 4.0f, 0.0f, 0.0f,
+                                  0.0f, 6.0f, 8.0f, 0.0f, 0.0f,
+                                  0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+                                  0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    // clang-format on
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    EXPECT_TRUE(test::all_close_f(vector<float>{expected_result}, read_vector<float>(result)));
+}

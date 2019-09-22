@@ -18,6 +18,7 @@
 
 #include <mkldnn.hpp>
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 #include "ngraph/runtime/cpu/op/rnn_utils.hpp"
 #include "ngraph/util.hpp"
 
@@ -28,6 +29,7 @@ namespace ngraph
         class Lstm : public Op
         {
         public:
+            CPU_BACKEND_API
             static constexpr NodeTypeInfo type_info{"Lstm", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
 // INPUTS:

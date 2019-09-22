@@ -67,8 +67,7 @@ TEST(reshape_sinking, edge_splitting)
     pass_manager.register_pass<pass::VisualizeTree>("after.png");
     pass_manager.run_passes(func);
     ASSERT_EQ(func->get_results().at(1)->get_argument(0), sum);
-    auto new_reshape =
-        std::dynamic_pointer_cast<op::Reshape>(func->get_results().at(0)->get_argument(0));
+    auto new_reshape = as_type_ptr<op::Reshape>(func->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_reshape);
     ASSERT_EQ(new_reshape->get_shape(), shape_nchw);
 }
