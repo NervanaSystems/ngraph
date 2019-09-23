@@ -50,7 +50,6 @@ packages, scripts, and other files that use licensing.
    frameworks/validated/list.rst
    frameworks/generic-configs.rst
 
-
 .. toctree::
    :maxdepth: 1
    :caption: nGraph Core
@@ -61,6 +60,7 @@ packages, scripts, and other files that use licensing.
    nGraph Core Ops <ops/index.rst>
    core/constructing-graphs/index.rst
    core/passes/passes.rst
+   quantize/index.rst
 
    
 .. toctree::
