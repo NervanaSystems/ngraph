@@ -408,7 +408,8 @@ namespace ngraph
                          (arg0_rank == 5 && max_pool->get_window_shape().size() == 3)) &&
                         (node->get_input_element_type(0) == element::f32 ||
                          node->get_input_element_type(0) == element::u8 ||
-                         node->get_input_element_type(0) == element::i8))
+                         node->get_input_element_type(0) == element::i8 ||
+                         node->get_input_element_type(0) == element::bf16))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
