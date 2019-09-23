@@ -59,7 +59,7 @@ TEST(core_fusion, core_fusion_pass_basic)
     pass_manager.register_pass<pass::CoreFusion>();
     auto func = make_shared<Function>(graph, ParameterVector{B});
     pass_manager.run_passes(func);
-    ASSERT_NE(std::dynamic_pointer_cast<op::Relu>(graph->get_argument(0)), nullptr);
+    ASSERT_NE(as_type_ptr<op::Relu>(graph->get_argument(0)), nullptr);
 }
 
 #ifndef NGRAPH_JSON_DISABLE
@@ -181,7 +181,7 @@ TEST(core_fusion, reshape_broadcast_graph_optimized)
     pass_manager.run_passes(optimized_f);
 
     auto new_broadcast =
-        std::dynamic_pointer_cast<op::Broadcast>(optimized_f->get_results().at(0)->get_argument(0));
+        as_type_ptr<op::Broadcast>(optimized_f->get_results().at(0)->get_argument(0));
     EXPECT_EQ(new_broadcast->get_argument(0), input);
     EXPECT_EQ(new_broadcast->get_broadcast_axes(), (AxisSet{0, 1, 3, 4, 5}));
 }
@@ -199,7 +199,7 @@ TEST(core_fusion, reshape_broadcast_adds_one)
     pass_manager.run_passes(optimized_f);
 
     auto new_broadcast =
-        std::dynamic_pointer_cast<op::Broadcast>(optimized_f->get_results().at(0)->get_argument(0));
+        as_type_ptr<op::Broadcast>(optimized_f->get_results().at(0)->get_argument(0));
     EXPECT_EQ(new_broadcast, broadcast);
     EXPECT_EQ(new_broadcast->get_argument(0), reshape1);
 }
@@ -217,7 +217,7 @@ TEST(core_fusion, reshape_broadcast_wrong_reshape)
     pass_manager.run_passes(optimized_f);
 
     auto new_broadcast =
-        std::dynamic_pointer_cast<op::Broadcast>(optimized_f->get_results().at(0)->get_argument(0));
+        as_type_ptr<op::Broadcast>(optimized_f->get_results().at(0)->get_argument(0));
     EXPECT_EQ(new_broadcast, broadcast);
     EXPECT_EQ(new_broadcast->get_argument(0), reshape1);
 }
@@ -268,10 +268,8 @@ TEST(core_fusion, sparsity_opt_56x56)
     auto func = make_shared<Function>(NodeVector{conv_s2_1, conv_s2_2}, params);
     pass_manager.run_passes(func);
     auto results = func->get_results();
-    auto t_eltwise_conv1 =
-        std::dynamic_pointer_cast<op::Convolution>(results.at(0)->get_argument(0));
-    auto t_eltwise_conv2 =
-        std::dynamic_pointer_cast<op::Convolution>(results.at(1)->get_argument(0));
+    auto t_eltwise_conv1 = as_type_ptr<op::Convolution>(results.at(0)->get_argument(0));
+    auto t_eltwise_conv2 = as_type_ptr<op::Convolution>(results.at(1)->get_argument(0));
     ASSERT_TRUE(t_eltwise_conv1);
     ASSERT_TRUE(t_eltwise_conv2);
     ASSERT_EQ(t_eltwise_conv1->get_window_movement_strides(), stride_1);
@@ -687,8 +685,7 @@ TEST(batch_fusion, group_convolution_fusion)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::BatchFusion>();
     pass_manager.run_passes(f);
-    auto gc =
-        std::dynamic_pointer_cast<op::GroupConvolution>(f->get_results().at(0)->get_argument(0));
+    auto gc = as_type_ptr<op::GroupConvolution>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(gc);
 }
 

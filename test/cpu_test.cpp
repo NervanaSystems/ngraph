@@ -1101,8 +1101,7 @@ TEST(cpu_test, constant_reshape)
     ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const =
-        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     const vector<float> values_out = new_const->get_vector<float>();
 
@@ -1127,8 +1126,7 @@ TEST(cpu_test, constant_reshape_permute)
     ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const =
-        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     const vector<double> values_out = new_const->get_vector<double>();
 
@@ -1154,8 +1152,7 @@ TEST(cpu_test, constant_broadcast)
     ASSERT_EQ(count_ops_of_type<op::Broadcast>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const =
-        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int>();
 
@@ -1185,8 +1182,7 @@ TEST(cpu_test, constant_pad_exterior)
     ASSERT_EQ(count_ops_of_type<op::Pad>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const =
-        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int>();
 
@@ -1197,8 +1193,7 @@ TEST(cpu_test, constant_pad_exterior)
 template <typename T>
 static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t pos)
 {
-    auto new_const =
-        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(pos)->get_argument(0));
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(pos)->get_argument(0));
     return new_const->get_vector<T>();
 }
 

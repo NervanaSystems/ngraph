@@ -33,12 +33,8 @@ namespace ngraph
                 {
                     NodeVector inputs{node.get_ng_inputs()};
                     std::int64_t axis = node.get_attribute_value<std::int64_t>("axis");
-
                     size_t valid_axis =
-                        common::convert_negative_axis(axis, inputs.at(0)->get_shape().size());
-
-                    ASSERT_VALID_ARGUMENT(node, valid_axis >= 0)
-                        << "Incorrect value of axis attribute: " << axis;
+                        common::validate_axis(node, axis, inputs.at(0)->get_shape().size());
 
                     return {std::make_shared<ngraph::op::Concat>(inputs, valid_axis)};
                 }

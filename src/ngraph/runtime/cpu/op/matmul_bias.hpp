@@ -27,6 +27,7 @@ namespace ngraph
         class MatmulBias : public Op
         {
         public:
+            CPU_BACKEND_API
             static constexpr NodeTypeInfo type_info{"MatmulBias", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             CPU_BACKEND_API MatmulBias(const Output<Node>& W,
