@@ -15,7 +15,7 @@ support for this bridge.
 ONNX on its own is not a framework; however, it can be used with nGraph's
 :doc:`../python_api/index` to import and execute ONNX models.
 
-.. figure:: ../graphics/FWBridgesnGraph.png
+.. figure:: ../graphics/fw-bridges.svg
    :width: 960px
    :alt: JiT compiling of a computation
 

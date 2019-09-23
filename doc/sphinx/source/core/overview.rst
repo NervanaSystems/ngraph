@@ -5,7 +5,7 @@
 Overview
 ========
 
-.. figure:: ../graphics/WholeStack.png
+.. figure:: ../graphics/whole-stack.svg
    :width: 960px
    :alt: The whole stack
 
@@ -26,7 +26,7 @@ are some common patterns: a fairly typical example for a graph-based framework
 is illustrated here, and consists of basically two phases: a **clustering** 
 phase and a **translation** phase.
 
-.. figure:: ../graphics/translation-flow-to-ng-fofx.png
+.. figure:: ../graphics/translation-flow.svg
    :alt: The whole stack
 
    Translation flow to an nGraph function 

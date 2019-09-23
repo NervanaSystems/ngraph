@@ -72,7 +72,7 @@ graph, but the choice of operations in the graph may not be optimal.
 
 .. _figure-A:
 
-.. figure:: graphics/kernel-problem-1.png
+.. figure:: graphics/constant-folding.svg
    :width: 100%
    :alt:
 
@@ -97,7 +97,7 @@ diagram.
 
 .. _figure-B:
 
-.. figure:: graphics/kernel-problem-2.png
+.. figure:: graphics/kernel-increase.svg
    :width: 100%
    :alt:
 
@@ -131,7 +131,7 @@ work for what will ultimately be a fragile setup that is costly to maintain.
 
 .. _figure-C:
 
-.. figure:: graphics/kernel-problem-3.png
+.. figure:: graphics/number-of-kernels-increase.png
    :width: 100%
    :alt:
 
