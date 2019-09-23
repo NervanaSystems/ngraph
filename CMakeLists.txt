@@ -369,17 +369,17 @@ if (NGRAPH_CODE_COVERAGE_ENABLE)
 endif()
 
 # Enable build target CPU features
-if(NOT WIN32 AND NOT ARM AND NOT AARCH64)
-    set(NGRAPH_TARGET_ARCH native CACHE
-        STRING "Target CPU architecture to build for. Defaults to the native CPU architecture")
+# if(NOT WIN32 AND NOT ARM AND NOT AARCH64)
+#     set(NGRAPH_TARGET_ARCH native CACHE
+#         STRING "Target CPU architecture to build for. Defaults to the native CPU architecture")
 
-    if (NOT "${NGRAPH_TARGET_ARCH}" STREQUAL "native")
-        message(WARNING
-            "Build target architecture was overridden. The resulting build might not work correctly on the host CPU.")
-    endif()
+#     if (NOT "${NGRAPH_TARGET_ARCH}" STREQUAL "native")
+#         message(WARNING
+#             "Build target architecture was overridden. The resulting build might not work correctly on the host CPU.")
+#     endif()
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=${NGRAPH_TARGET_ARCH}")
-endif()
+#     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=${NGRAPH_TARGET_ARCH}")
+# endif()
 
 if (DEFINED NGRAPH_TUNE_ARCH)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=${NGRAPH_TUNE_ARCH}")
