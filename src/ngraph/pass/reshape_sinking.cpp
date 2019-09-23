@@ -266,16 +266,10 @@ static void materialize_shapes(shared_ptr<Node> n,
                                ReshapeMap& reorders,
                                set<shared_ptr<Node>>& reshapes_to_delete)
 {
-    // skip multiple output nodes and deal with GOEs exclusively
-    if (n->get_output_size() > 1)
-    {
-        return;
-    }
-
     for (size_t i = 0; i < n->get_arguments().size(); i++)
     {
         // materialize all pending reshapes, flush pending reshapes
-        auto arg = n->get_argument(i);
+        auto arg = n->get_arguments().at(i);
         if (reorders.count(arg) != 0)
         {
             auto arg_reshape = reorders.at(arg);
@@ -291,7 +285,10 @@ static void materialize_shapes(shared_ptr<Node> n,
             // no swimming up
         }
     }
-    write_reshapemap(reorders, n, create_default_reshape(n));
+    if (n->get_output_size() == 1)
+    {
+        write_reshapemap(reorders, n, create_default_reshape(n));
+    }
 }
 
 static void sink_reshape(shared_ptr<op::Reshape> reshape,
