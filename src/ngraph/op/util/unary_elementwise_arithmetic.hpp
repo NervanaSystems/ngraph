@@ -67,6 +67,7 @@ namespace ngraph
 
             public:
                 void validate_and_infer_types() override;
+                bool is_unary_elementwise_arithmetic() const override { return true; }
             };
         }
     }

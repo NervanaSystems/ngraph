@@ -35,7 +35,7 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            void batch_norm_inference(double eps,
+            void batch_norm_inference(float eps,
                                       const T* gamma,
                                       const T* beta,
                                       const T* input,
@@ -63,7 +63,7 @@ namespace ngraph
             }
 
             template <typename T>
-            void batch_norm_training(double eps,
+            void batch_norm_training(float eps,
                                      const T* gamma,
                                      const T* beta,
                                      const T* input,
@@ -125,7 +125,7 @@ namespace ngraph
             }
 
             template <typename T>
-            void batch_norm_backprop(double eps,
+            void batch_norm_backprop(float eps,
                                      const T* gamma,
                                      const T* /* beta */,
                                      const T* input,
@@ -160,7 +160,7 @@ namespace ngraph
                 // gammad[c:C] = gamma[c]*inv_sqrt[c]
                 // normed[., c:C, ...] = (input[., c, ...]-mu)*gammad[c]+beta[c]
 
-                for (auto c = 0; c < num_channels; ++c)
+                for (uint64_t c = 0; c < num_channels; ++c)
                 {
                     start_corner[channel_axis] = c;
                     end_corner[channel_axis] = c + 1;
@@ -169,7 +169,7 @@ namespace ngraph
                     T delta_beta_sum = 0;
                     T var = variance[c];
                     T mu = mean[c];
-                    T var_eps = var + eps;
+                    T var_eps = var + static_cast<T>(eps);
                     T sqrt_var_eps = std::sqrt(var_eps);
                     T inv_sqrt_var_eps = 1 / sqrt_var_eps;
                     T gammad = gamma[c] * inv_sqrt_var_eps;

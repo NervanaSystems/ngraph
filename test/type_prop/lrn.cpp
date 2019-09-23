@@ -24,7 +24,7 @@ using namespace ngraph;
 TEST(type_prop, lrn_invalid_arg_rank)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2});
-    double alpha = 0.1f, beta = 0.2f, bias = 0.3f;
+    double alpha = 0.1, beta = 0.2, bias = 0.3;
     size_t size = 3;
     try
     {
@@ -42,7 +42,7 @@ TEST(type_prop, lrn_invalid_axes_rank)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
     auto axes = make_shared<op::Parameter>(element::f32, Shape{1, 2});
-    double alpha = 0.1f, beta = 0.2f, bias = 0.3f;
+    double alpha = 0.1, beta = 0.2, bias = 0.3;
     size_t size = 3;
     try
     {
@@ -82,7 +82,7 @@ TEST(type_prop, lrn_incorrect_axes_value)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{3, 4});
-    double alpha = 0.1f, beta = 0.2f, bias = 0.3f;
+    double alpha = 0.1, beta = 0.2, bias = 0.3;
     size_t size = 3;
     try
     {

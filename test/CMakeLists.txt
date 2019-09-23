@@ -69,7 +69,12 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
+    opset_pass/sum_opset_pass.cpp
+    opset_pass/product_opset_pass.cpp
     opset_pass/softmax_opset_pass.cpp
+    opset_pass/softmax_opset_pass.cpp
+    opset_pass/gather_opset_pass.cpp
+    opset_pass/pad_opset_pass.cpp
     partial_shape.cpp
     pass.cpp
     pass_liveness.cpp
@@ -132,6 +137,7 @@ set(SRC
     type_prop/quantize.cpp
     type_prop/quantized_convolution.cpp
     type_prop/quantized_dot.cpp
+    type_prop/random_uniform.cpp
     type_prop/range.cpp
     type_prop/replace_slice.cpp
     type_prop/reshape.cpp
@@ -150,6 +156,8 @@ set(SRC
     type_prop/squared_difference.cpp
     type_prop/squeeze.cpp
     type_prop/sum.cpp
+    type_prop/reduce_prod.cpp
+    type_prop/reduce_sum.cpp
     type_prop/tile.cpp
     type_prop/top_k.cpp
     type_prop/transpose.cpp
@@ -288,6 +296,7 @@ set(MULTI_TEST_SRC
     backend/quantize_dequantize.in.cpp
     backend/quantized_convolution.in.cpp
     backend/quantized_dot.in.cpp
+    backend/random_uniform.in.cpp
     backend/range.in.cpp
     backend/relu.in.cpp
     backend/replace_slice.in.cpp

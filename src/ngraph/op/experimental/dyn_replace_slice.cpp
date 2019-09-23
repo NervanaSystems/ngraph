@@ -107,9 +107,9 @@ void op::DynReplaceSlice::validate_and_infer_types()
     set_input_is_relevant_to_shape(3);
     set_input_is_relevant_to_shape(4);
 
-    auto lower_bounds = dynamic_pointer_cast<op::Constant>(input_value(2).get_node_shared_ptr());
-    auto upper_bounds = dynamic_pointer_cast<op::Constant>(input_value(3).get_node_shared_ptr());
-    auto strides = dynamic_pointer_cast<op::Constant>(input_value(4).get_node_shared_ptr());
+    auto lower_bounds = as_type_ptr<op::Constant>(input_value(2).get_node_shared_ptr());
+    auto upper_bounds = as_type_ptr<op::Constant>(input_value(3).get_node_shared_ptr());
+    auto strides = as_type_ptr<op::Constant>(input_value(4).get_node_shared_ptr());
 
     // TODO(amprocte): We can get a bit more information here about the ranks of arg and
     // replacement by inspecting the attributes.
