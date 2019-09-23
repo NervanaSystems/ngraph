@@ -124,12 +124,12 @@ static llvm::cl::opt<unsigned> clLoopTilingCacheSize(
 // *** Debug flags ***
 
 static llvm::cl::opt<bool>
-    clDumpObjectFile("dump-mlir-object-file",
+    clDumpObjectFile("ngraph-dump-mlir-object-file",
                      llvm::cl::desc("Dump MLIR JITted-compiled object to file specified with "
                                     "-object-filename (<input file>.o by default)."));
 
 static llvm::cl::opt<std::string>
-    clObjectFilename("mlir-object-filename",
+    clObjectFilename("ngraph-mlir-object-filename",
                      llvm::cl::desc("Dump MLIR JITted-compiled object to file jitted_mlir.o"));
 
 #define COMPILE_OP_DECL(op_name)                                                                   \
