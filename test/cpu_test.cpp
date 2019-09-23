@@ -57,14 +57,22 @@
 using namespace ngraph;
 using namespace std;
 
-class UnhandledOp : public ngraph::op::Abs
+namespace
 {
-public:
-    UnhandledOp(const std::shared_ptr<Node>& arg)
-        : Abs(arg)
+    class UnhandledOp : public ngraph::op::Abs
     {
-    }
-};
+    public:
+        UnhandledOp(const std::shared_ptr<Node>& arg)
+            : Abs(arg)
+        {
+        }
+
+        static constexpr NodeTypeInfo type_info{"UnhandledOp", 0};
+        const NodeTypeInfo& get_type_info() const override { return type_info; }
+    };
+
+    constexpr NodeTypeInfo UnhandledOp::type_info;
+}
 
 static void compare_backends(const std::shared_ptr<Function>& f1,
                              const std::shared_ptr<Function>& f2,
@@ -1093,8 +1101,7 @@ TEST(cpu_test, constant_reshape)
     ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const =
-        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     const vector<float> values_out = new_const->get_vector<float>();
 
@@ -1119,8 +1126,7 @@ TEST(cpu_test, constant_reshape_permute)
     ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const =
-        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     const vector<double> values_out = new_const->get_vector<double>();
 
@@ -1146,8 +1152,7 @@ TEST(cpu_test, constant_broadcast)
     ASSERT_EQ(count_ops_of_type<op::Broadcast>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const =
-        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int>();
 
@@ -1177,8 +1182,7 @@ TEST(cpu_test, constant_pad_exterior)
     ASSERT_EQ(count_ops_of_type<op::Pad>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const =
-        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int>();
 
@@ -1189,8 +1193,7 @@ TEST(cpu_test, constant_pad_exterior)
 template <typename T>
 static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t pos)
 {
-    auto new_const =
-        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(pos)->get_argument(0));
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(pos)->get_argument(0));
     return new_const->get_vector<T>();
 }
 
@@ -2152,6 +2155,7 @@ TEST(cpu_test, tensor_copy_from_different_layout)
     EXPECT_EQ((vector<uint8_t>{1, 4, 2, 5, 3, 6}), read_vector<uint8_t>(b));
 }
 
+#if MKLDNN_VERSION_MAJOR >= 1
 TEST(cpu_test, max_pool_bf16)
 {
     Shape shape_a{1, 1, 3, 5};
@@ -2163,7 +2167,7 @@ TEST(cpu_test, max_pool_bf16)
 
     // input data
     vector<float> a_data = {
-        0.5, 1.5, 0.5, 2.5, 1.5, 0.5, 3.5, 2.5, 0.5, 0.5, 2.5, 0.5, 0.5, 0.5, 1.5};
+        0.5f, 1.5f, 0.5f, 2.5f, 1.5f, 0.5f, 3.5f, 2.5f, 0.5f, 0.5f, 2.5f, 0.5f, 0.5f, 0.5f, 1.5f};
 
     // allocate memory for destination
     int size = a_data.size() * sizeof(float) / 2;
@@ -2189,7 +2193,7 @@ TEST(cpu_test, max_pool_bf16)
                           shape_size(shape_r));
     auto b = backend->create_tensor(element::f32, shape_r);
     b->write(fp_dst, shape_size(shape_r) * 4);
-    EXPECT_EQ((vector<float>{3.5, 3.5, 2.5, 3.5, 3.5, 2.5}), read_vector<float>(b));
+    EXPECT_EQ((vector<float>{3.5f, 3.5f, 2.5f, 3.5f, 3.5f, 2.5f}), read_vector<float>(b));
 }
 
 TEST(cpu_test, convolution_simple_bf16)
@@ -2347,3 +2351,4 @@ TEST(cpu_test, simple_subgraph_bf16)
     d->write(fp_dst, shape_size(shape_r) * 4);
     EXPECT_TRUE(test::all_close_f(vector<float>{expected_result}, read_vector<float>(d)));
 }
+#endif

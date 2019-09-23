@@ -14,18 +14,32 @@
 // limitations under the License.
 //*****************************************************************************
 
+#pragma once
+
+#include <functional>
+#include <memory>
 #include <random>
 
-#include "except.hpp"
-#include "rng_state.hpp"
+#include "state.hpp"
 
-using namespace std;
-using namespace ngraph;
-
-void ngraph::RNGState::activate()
+namespace ngraph
 {
-}
-
-void ngraph::RNGState::deactivate()
-{
+    class BernoulliRNGState : public State
+    {
+    public:
+        BernoulliRNGState(unsigned int seed, double probability)
+            : State()
+            , m_generator(seed)
+            , m_distribution(probability)
+        {
+        }
+        virtual void activate() override;
+        virtual void deactivate() override;
+        virtual ~BernoulliRNGState() override {}
+        std::mt19937& get_generator() { return m_generator; }
+        std::bernoulli_distribution& get_distribution() { return m_distribution; }
+    protected:
+        std::mt19937 m_generator;
+        std::bernoulli_distribution m_distribution;
+    };
 }

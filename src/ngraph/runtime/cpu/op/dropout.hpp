@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 #include "ngraph/util.hpp"
 
 namespace ngraph
@@ -26,8 +27,9 @@ namespace ngraph
         class Dropout : public Op
         {
         public:
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            CPU_BACKEND_API
+            static constexpr NodeTypeInfo type_info{"Dropout", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             Dropout(const Output<Node>& input,
                     const Output<Node>& gm_const,
                     const Output<Node>& use_seed,

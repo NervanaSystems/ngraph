@@ -26,7 +26,7 @@
 using namespace std;
 using namespace ngraph;
 
-const std::string op::DeconvolutionBias::type_name{"DeconvolutionBias"};
+constexpr NodeTypeInfo op::DeconvolutionBias::type_info;
 
 op::DeconvolutionBias::DeconvolutionBias(const Shape& data_batch_shape,
                                          const Output<Node>& filters,
@@ -156,8 +156,8 @@ void op::DeconvolutionBias::validate_and_infer_types()
     set_output_type(0, forward_result_et, m_data_batch_shape);
 }
 
-void op::DeconvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
-                                              const NodeVector& deltas)
+void op::DeconvolutionBias::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                              const NodeVector& /* deltas */)
 {
     throw ngraph_error("DeconvolutionBias generate_adjoints not supported implemented");
 }

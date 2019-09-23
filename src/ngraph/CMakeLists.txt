@@ -54,6 +54,7 @@ set (SRC
     builder/tensor_mask.hpp
     check.hpp
     code_writer.hpp
+    component_manager.hpp
     coordinate.cpp
     coordinate.hpp
     coordinate_diff.cpp
@@ -195,6 +196,8 @@ set (SRC
     op/experimental/layers/reorg_yolo.cpp
     op/experimental/layers/roi_pooling.hpp
     op/experimental/layers/roi_pooling.cpp
+    op/experimental/random_uniform.hpp
+    op/experimental/random_uniform.cpp
     op/floor.cpp
     op/floor.hpp
     op/gather.cpp
@@ -249,6 +252,10 @@ set (SRC
     op/power.hpp
     op/product.cpp
     op/product.hpp
+    op/reduce_prod.cpp
+    op/reduce_prod.hpp
+    op/reduce_sum.cpp
+    op/reduce_sum.hpp
     op/quantize.cpp
     op/quantize.hpp
     op/quantized_convolution.cpp
@@ -506,7 +513,10 @@ set (SRC
     slice_plan.hpp
     specialize_function.cpp
     specialize_function.hpp
-    state/rng_state.cpp
+    state/bernoulli_rng_state.cpp
+    state/bernoulli_rng_state.hpp
+    state/uniform_rng_state.cpp
+    state/uniform_rng_state.hpp
     strides.cpp
     strides.hpp
     type/bfloat16.cpp

@@ -30,8 +30,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"GenerateMask", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a GenerateMask node with a given shape, seed,
             /// probability and training/inference mode
             GenerateMask() = default;
@@ -77,8 +77,8 @@ namespace ngraph
             void validate_and_infer_types() override;
 
         protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override
+            virtual void generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                           const NodeVector& /* deltas */) override
             {
             }
 

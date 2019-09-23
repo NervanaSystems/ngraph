@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Add::type_name{"Add"};
+constexpr NodeTypeInfo op::Add::type_info;
 
 op::Add::Add(const Output<Node>& arg0,
              const Output<Node>& arg1,

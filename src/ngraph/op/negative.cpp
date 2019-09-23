@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Negative::type_name{"Negative"};
+constexpr NodeTypeInfo op::Negative::type_info;
 
 op::Negative::Negative(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)

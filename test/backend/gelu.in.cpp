@@ -112,7 +112,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gelu_backprop_factor_f32)
     auto result = backend->create_tensor(element::f32, shape);
 
     std::transform(input.begin(), input.end(), input.begin(), [](float x) -> float {
-        return static_cast<float>(gelu_backprop_factor(x));
+        return static_cast<float>(gelu_backprop_factor(static_cast<double>(x)));
     });
 
     auto handle = backend->compile(f);
@@ -177,5 +177,5 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_gelu_f64)
     vector<double> input{-4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0};
     copy_data(a, input);
 
-    EXPECT_TRUE(autodiff_numeric_compare<double>(backend.get(), make_graph, {a}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<double>(backend.get(), make_graph, {a}, .01, .01));
 }
