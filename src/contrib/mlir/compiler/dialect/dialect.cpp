@@ -78,7 +78,7 @@ mlir::Type NGraphOpsDialect::parseType(llvm::StringRef tyData, mlir::Location lo
 
         return NGTensorType::get(context, elem_ty, shape);
     }
-    
+
     return (emitError(loc, "Unknown nGraph type: " + origTypeStr), Type());
 }
 

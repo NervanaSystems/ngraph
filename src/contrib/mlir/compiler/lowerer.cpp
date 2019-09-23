@@ -19,7 +19,6 @@
 
 #include "lowerer.hpp"
 
-#include "compiler.hpp"
 #include "dialect/ops.hpp"
 #include "dialect/type.hpp"
 #include "ngraph/assertion.hpp"
@@ -35,6 +34,9 @@
 #include <mlir/Transforms/DialectConversion.h>
 
 #include <map>
+
+#define PASS_NAME "convert-ngraph-to-affine"
+#define DEBUG_TYPE PASS_NAME
 
 // anonymous namespace
 // no need to expose any of the following outside of this file
@@ -171,15 +173,12 @@ namespace
     };
 
     /// Dialect Lowering Pass to affine ops
-    class DialectLoweringPass : public ModulePass<DialectLoweringPass>
+    class DialectLoweringPass : public FunctionPass<DialectLoweringPass>
     {
     public:
-        DialectLoweringPass(ngmlir::MLIRCompiler& compiler)
-            : compiler(compiler)
-        {
-        }
+        DialectLoweringPass() {}
+        void runOnFunction() override;
 
-        void runOnModule() override;
         SmallVector<Value*, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
         Value* createTempTensor(Type type, PatternRewriter& rewriter);
 
@@ -203,11 +202,9 @@ namespace
         // Track pre-assigned buffers  for each Value and re-use it if one is available.
         using IdToMemRefMap = std::unordered_map<unsigned, Value*>;
         IdToMemRefMap m_id_to_memref;
-
-        ngmlir::MLIRCompiler& compiler;
     };
 
-    void DialectLoweringPass::runOnModule()
+    void DialectLoweringPass::runOnFunction()
     {
         // Create type converter and initialize conversion patterns.
         NGraphTypeConverter converter;
@@ -230,7 +227,7 @@ namespace
         // results. This is used to find the arg_id that a defined value maps to if it is an output
         findOutputValues();
 
-        if (failed(applyFullConversion(getModule(), target, std::move(patterns), &converter)))
+        if (failed(applyFullConversion(getFunction(), target, std::move(patterns), &converter)))
         {
             emitError(mlir::UnknownLoc::get(&getContext()), "Error lowering nGraph dialect\n");
             signalPassFailure();
@@ -255,7 +252,7 @@ namespace
     void DialectLoweringPass::findOutputValues()
     {
         // get original function
-        auto f = getModule().lookupSymbol<mlir::FuncOp>("main");
+        auto f = getFunction();
         SmallVector<Value*, 4> outputList;
         unsigned outputCount = 0;
         unsigned inputCount = f.getType().getNumInputs();
@@ -286,7 +283,7 @@ namespace
             // find output arg if this operation produces any sub-graph outputs
             if (IntegerAttr attr = op->getAttrOfType<IntegerAttr>("graphOutputIdx"))
             {
-                auto f = getModule().lookupSymbol<mlir::FuncOp>("main");
+                auto f = getFunction();
                 mlir::Block* entryBlock = &*(f.begin());
                 unsigned argId = (unsigned)attr.getInt();
                 newResults.push_back(entryBlock->getArgument(argId));
@@ -350,7 +347,7 @@ namespace
     /// by nGraph op semantics.
     void DialectLoweringPass::insertNoAliasArgAttrs()
     {
-        auto func = getModule().lookupSymbol<mlir::FuncOp>("main");
+        auto func = getFunction();
         unsigned int argIdx = 0;
         for (auto* arg : func.getArguments())
         {
@@ -1315,8 +1312,11 @@ namespace
 
 namespace mlir
 {
-    std::unique_ptr<Pass> createDialectLoweringPass(ngraph::runtime::ngmlir::MLIRCompiler* compiler)
+    std::unique_ptr<Pass> createDialectLoweringPass()
     {
-        return std::make_unique<DialectLoweringPass>(*compiler);
+        return std::make_unique<DialectLoweringPass>();
     }
 } // namespace mlir
+
+static PassRegistration<DialectLoweringPass> pass(PASS_NAME,
+                                                  "Convert nGraph dialect to affine dialect");
