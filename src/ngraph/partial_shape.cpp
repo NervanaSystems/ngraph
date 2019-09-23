@@ -322,7 +322,7 @@ bool PartialShape::broadcast_merge_into(PartialShape& dst,
         }
     }
     break;
-    default: throw ngraph_error("Unsupported auto broadcast type");
+    default: NGRAPH_CHECK(false, "Unsupported auto broadcast type: ", autob.m_type);
     }
 }
 
