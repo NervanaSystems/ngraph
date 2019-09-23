@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ namespace ngraph
 {
     namespace op
     {
+        // clang-format off
         /// \brief Elementwise square root operation.
         ///
         /// ## Inputs
@@ -35,13 +36,18 @@ namespace ngraph
         /// | Type                   | Description                                                                           |
         /// | ---------------------- | ------------------------------------------------------------------------------------- |
         /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \sqrt{\texttt{arg}[i_1,\dots,i_n]}\f$ |
+        // clang-format on
         class Sqrt : public util::UnaryElementwiseArithmetic
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"Sqrt", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a square operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Sqrt(const std::shared_ptr<Node>& arg);
+            Sqrt(const Output<Node>& arg);
+            Sqrt() = default;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

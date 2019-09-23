@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,8 +20,11 @@
 using namespace std;
 using namespace ngraph;
 
-op::Relu::Relu(shared_ptr<Node> arg)
-    : UnaryElementwiseArithmetic("Relu", {arg})
+constexpr NodeTypeInfo op::Relu::type_info;
+constexpr NodeTypeInfo op::ReluBackprop::type_info;
+
+op::Relu::Relu(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }
@@ -33,7 +36,7 @@ shared_ptr<Node> op::Relu::copy_with_new_args(const NodeVector& new_args) const
 }
 
 op::ReluBackprop::ReluBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
-    : BinaryElementwiseArithmetic("ReluBackprop", arg, delta)
+    : BinaryElementwiseArithmetic(arg, delta)
 {
     constructor_validate_and_infer_types();
 }
@@ -49,5 +52,5 @@ void op::Relu::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector&
     auto delta = deltas.at(0);
 
     auto backprop = make_shared<op::ReluBackprop>(shared_from_this(), delta);
-    adjoints.add_delta(get_argument(0), backprop);
+    adjoints.add_delta(input_value(0), backprop);
 }

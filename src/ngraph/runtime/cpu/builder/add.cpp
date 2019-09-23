@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,32 +38,45 @@ namespace ngraph
                 {
                     auto& functors = external_function->get_functors();
 
-                    vector<float> scale_vector(2, 1);
-                    vector<mkldnn::memory::primitive_desc> inputs_pd;
-
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input0_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto input1_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    inputs_pd.push_back(mkldnn::memory::primitive_desc(
-                        input0_data_desc, runtime::cpu::executor::global_cpu_engine));
-                    inputs_pd.push_back(mkldnn::memory::primitive_desc(
-                        input1_data_desc, runtime::cpu::executor::global_cpu_engine));
+                    auto sum_pd = mkldnn_emitter->get_elementwise_add_desc(node);
+                    QUERY_SCRATCHPAD(sum, sum_pd);
 
-                    size_t add_index = mkldnn_emitter->build_elementwise_add(
-                        input0_data_desc, input1_data_desc, result_desc, scale_vector, inputs_pd);
+                    // Add needs 4 primitives: input0, input1, result, and sum.
+                    size_t add_index = mkldnn_emitter->reserve_primitive_space(4);
                     auto& deps = mkldnn_emitter->get_primitive_deps(add_index);
 
-                    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                    auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                    auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                    auto arg0_buffer_index =
+                        external_function->get_buffer_index(args[0].get_name());
+                    auto arg1_buffer_index =
+                        external_function->get_buffer_index(args[1].get_name());
+                    auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
-                    auto functor = [&, add_index](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, add_index);
+                    auto functor = [&,
+                                    sum_pd,
+                                    add_index,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->build_elementwise_add(ctx->mkldnn_memories,
+                                                                  ctx->mkldnn_primitives,
+                                                                  ctx->mkldnn_scratchpad_mds,
+                                                                  sum_pd,
+                                                                  deps,
+                                                                  add_index);
+                        }
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[out_buffer_index]);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, add_index, deps, cpu::mkldnn_utils::OpType::ADD);
                     };
                     functors.emplace_back(functor);
                 }
@@ -73,7 +86,7 @@ namespace ngraph
                 }
             }
 
-            REGISTER_OP_BUILDER(Add);
+            void register_builders_add_cpp() { REGISTER_OP_BUILDER(Add); }
         }
     }
 }

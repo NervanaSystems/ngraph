@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,12 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
-op::BoundedRelu::BoundedRelu(shared_ptr<Node> arg, float alpha)
-    : Op("BoundedRelu", check_single_output_args({arg}))
+constexpr NodeTypeInfo op::BoundedRelu::type_info;
+
+op::BoundedRelu::BoundedRelu(const Output<Node>& arg, float alpha)
+    : UnaryElementwiseArithmetic(arg)
     , m_alpha(alpha)
 {
     constructor_validate_and_infer_types();
-    set_output_type(0, arg->get_element_type(), arg->get_shape());
+    set_output_type(0, arg.get_element_type(), arg.get_shape());
 }
 
 shared_ptr<Node> op::BoundedRelu::copy_with_new_args(const NodeVector& new_args) const

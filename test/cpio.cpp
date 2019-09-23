@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+
+#include <memory>
 
 #include <gtest/gtest.h>
 
@@ -40,25 +42,25 @@ TEST(cpio, read)
 
     {
         int index = 0;
-        char* data = static_cast<char*>(malloc(file_info[index].get_size()));
-        reader.read(file_info[index].get_name(), data, file_info[index].get_size());
-        string content = string(data, file_info[index].get_size());
+        auto data = unique_ptr<char>(new char[file_info[index].get_size()]);
+        reader.read(file_info[index].get_name(), data.get(), file_info[index].get_size());
+        string content = string(data.get(), file_info[index].get_size());
         EXPECT_STREQ(content.c_str(), "12345");
     }
 
     {
         int index = 1;
-        char* data = static_cast<char*>(malloc(file_info[index].get_size()));
-        reader.read(file_info[index].get_name(), data, file_info[index].get_size());
-        string content = string(data, file_info[index].get_size());
+        auto data = unique_ptr<char>(new char[file_info[index].get_size()]);
+        reader.read(file_info[index].get_name(), data.get(), file_info[index].get_size());
+        string content = string(data.get(), file_info[index].get_size());
         EXPECT_STREQ(content.c_str(), "this is a test");
     }
 
     {
         int index = 2;
-        char* data = static_cast<char*>(malloc(file_info[index].get_size()));
-        reader.read(file_info[index].get_name(), data, file_info[index].get_size());
-        string content = string(data, file_info[index].get_size());
+        auto data = unique_ptr<char>(new char[file_info[index].get_size()]);
+        reader.read(file_info[index].get_name(), data.get(), file_info[index].get_size());
+        string content = string(data.get(), file_info[index].get_size());
         EXPECT_STREQ(content.c_str(), "the quick brown fox jumped over the lazy dog");
     }
 }
@@ -90,17 +92,17 @@ TEST(cpio, write)
 
         {
             int index = 0;
-            char* data = static_cast<char*>(malloc(file_info[index].get_size()));
-            reader.read(file_info[index].get_name(), data, file_info[index].get_size());
-            string content = string(data, file_info[index].get_size());
+            auto data = unique_ptr<char>(new char[file_info[index].get_size()]);
+            reader.read(file_info[index].get_name(), data.get(), file_info[index].get_size());
+            string content = string(data.get(), file_info[index].get_size());
             EXPECT_STREQ(content.c_str(), s1.c_str());
         }
 
         {
             int index = 1;
-            char* data = static_cast<char*>(malloc(file_info[index].get_size()));
-            reader.read(file_info[index].get_name(), data, file_info[index].get_size());
-            string content = string(data, file_info[index].get_size());
+            auto data = unique_ptr<char>(new char[file_info[index].get_size()]);
+            reader.read(file_info[index].get_name(), data.get(), file_info[index].get_size());
+            string content = string(data.get(), file_info[index].get_size());
             EXPECT_STREQ(content.c_str(), s2.c_str());
         }
     }

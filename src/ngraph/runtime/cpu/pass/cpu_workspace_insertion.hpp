@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,9 +15,10 @@
 
 #pragma once
 
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pattern/matcher.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -33,7 +34,8 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::cpu::pass::CPUWorkspaceInsertion : public ngraph::pass::FunctionPass
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUWorkspaceInsertion
+    : public ngraph::pass::FunctionPass
 {
 public:
     CPUWorkspaceInsertion(ngraph::NodeVector& indices_list, bool return_indices = true)

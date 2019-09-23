@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,7 +34,6 @@ sys.setdlopenflags(flags)
 
 from _pyngraph import Function
 from _pyngraph import Node
-from _pyngraph import NodeVector
 from _pyngraph import Type
 from _pyngraph import Shape
 from _pyngraph import Strides

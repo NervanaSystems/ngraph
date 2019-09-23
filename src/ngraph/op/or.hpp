@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,22 +29,27 @@ namespace ngraph
         class Or : public util::BinaryElementwiseLogical
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"Or", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a logical-or operation.
             ///
             /// \param arg0 Node that produces the first input tensor.<br>
             /// `[d0, ...]`
             /// \param arg1 Node that produces the second input tensor.<br>
             /// `[d0, ...]`
+            /// \param auto_broadcast Auto broadcast specification
             ///
             /// Output `[d0, ...]`
             ///
-            Or(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+            Or(const Output<Node>& arg0,
+               const Output<Node>& arg1,
+               const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-        protected:
-            virtual bool is_commutative() override { return true; }
+            virtual bool is_commutative() const override { return true; }
         };
     }
 }

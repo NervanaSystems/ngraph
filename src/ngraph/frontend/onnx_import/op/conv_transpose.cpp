@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,23 +14,21 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <cstddef>
 #include <cstdint>
 #include <iterator>
 #include <memory>
 #include <vector>
 
 #include "ngraph/coordinate_diff.hpp"
+#include "ngraph/frontend/onnx_import/exceptions.hpp"
 #include "ngraph/frontend/onnx_import/op/conv_transpose.hpp"
-#include "ngraph/frontend/onnx_import/utils/broadcasting.hpp"
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
 #include "ngraph/op/add.hpp"
-#include "ngraph/op/broadcast.hpp"
-#include "ngraph/op/convolution.hpp"
-#include "ngraph/op/divide.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/subtract.hpp"
+#include "ngraph/op/fused/group_conv_transpose.hpp"
+#include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
-#include "ngraph/strides.hpp"
 
 namespace ngraph
 {
@@ -53,10 +51,10 @@ namespace ngraph
                     auto strides = convpool::get_strides(node);
                     auto dilations = convpool::get_dilations(node);
                     auto paddings = convpool::get_pads(node);
-                    ngraph::CoordinateDiff padding_below = paddings.first;
-                    ngraph::CoordinateDiff padding_above = paddings.second;
+                    ngraph::op::PadType auto_pad_type = convpool::get_auto_pad(node);
+                    CoordinateDiff padding_below = paddings.first;
+                    CoordinateDiff padding_above = paddings.second;
 
-                    Strides data_dilation_strides(num_spatial_dims, 1);
                     std::vector<std::int64_t> output_shape{
                         node.get_attribute_value<std::vector<std::int64_t>>("output_shape", {})};
 
@@ -64,67 +62,50 @@ namespace ngraph
                         node.get_attribute_value<std::vector<std::int64_t>>(
                             "output_padding", std::vector<std::int64_t>(num_spatial_dims, 0))};
 
-                    Shape data_batch_shape(data_shape.size(), 1);
-                    data_batch_shape[0] = data_shape[0];
-                    data_batch_shape[1] = weights_shape[1];
+                    int64_t groups{node.get_attribute_value<int64_t>("group", 1)};
 
+                    ASSERT_VALID_ARGUMENT(
+                        node,
+                        ((groups >= 0) &&
+                         (groups <= static_cast<int64_t>(data->get_shape().at(1))) &&
+                         (groups <= static_cast<int64_t>(filters->get_shape().at(0)))))
+                        << "incorrect value of 'group' attribute: " << groups;
+
+                    std::size_t n_data_channels{data_shape.at(1)};
+                    std::size_t n_filters_channels{weights_shape.at(0)};
+
+                    ASSERT_VALID_ARGUMENT(node, n_data_channels % groups == 0)
+                        << "provided group attribute value must be a multiple of data channels "
+                           "count.";
+                    ASSERT_VALID_ARGUMENT(node, n_filters_channels % groups == 0)
+                        << "provided group attribute value must be a multiple of filter channels "
+                           "count.";
+
+                    std::shared_ptr<ngraph::Node> conv_node;
                     if (!output_shape.empty())
                     {
-                        if (output_shape.size() > num_spatial_dims)
-                        {
-                            output_shape.erase(std::begin(output_shape),
-                                               std::begin(output_shape) + 2);
-                        }
-                        for (int i = 0; i < num_spatial_dims; ++i)
-                        {
-                            padding_below[i] = (strides[i] * (data_shape[i + 2] - 1) +
-                                                dilations[i] * (weights_shape[i + 2] - 1) -
-                                                data_dilation_strides[i] *
-                                                    (output_shape[i] - output_padding[i] - 1)) /
-                                               2;
-                            if (static_cast<int>(padding_below[i]) < 0)
-                            {
-                                output_padding[i] = -static_cast<int>(padding_below[i]);
-                                padding_below[i] = 0;
-                            }
-                            padding_above[i] = padding_below[i];
-                            data_batch_shape[i + 2] = output_shape[i];
-                        }
+                        conv_node = std::make_shared<ngraph::op::GroupConvolutionTranspose>(
+                            data,
+                            filters,
+                            strides,
+                            dilations,
+                            CoordinateDiff(std::begin(output_padding), std::end(output_padding)),
+                            Shape(std::begin(output_shape), std::end(output_shape)),
+                            groups);
                     }
                     else
                     {
-                        for (int i = 0; i < num_spatial_dims && output_shape.empty(); ++i)
-                        {
-                            // Calculating spatial dims of data output shape for ngraph conv backprop op
-                            // | s(ds-1) + d(ws-1) - pb - pa |
-                            // | --------------------------- | + 1 + op
-                            // | _           dds           _ |
-                            //
-                            // d - dilation
-                            // ds - data shape
-                            // dds - data dilation strides
-                            // op - output padding
-                            // pa - padding above
-                            // pb - padding below
-                            // s - strides
-                            // ws - weights shape
-                            data_batch_shape[i + 2] = (strides[i] * (data_shape[i + 2] - 1) +
-                                                       dilations[i] * (weights_shape[i + 2] - 1) -
-                                                       padding_below[i] - padding_above[i]) /
-                                                          data_dilation_strides[i] +
-                                                      1 + output_padding[i];
-                        }
+                        conv_node = std::make_shared<ngraph::op::GroupConvolutionTranspose>(
+                            data,
+                            filters,
+                            strides,
+                            dilations,
+                            padding_below,
+                            padding_above,
+                            CoordinateDiff(std::begin(output_padding), std::end(output_padding)),
+                            groups,
+                            auto_pad_type);
                     }
-
-                    auto conv_node = std::make_shared<ngraph::op::ConvolutionBackpropData>(
-                        data_batch_shape,
-                        filters,
-                        data,
-                        strides,
-                        dilations,
-                        padding_below,
-                        padding_above,
-                        data_dilation_strides);
 
                     // no bias param
                     if (inputs.size() < 3)
@@ -135,12 +116,13 @@ namespace ngraph
                     auto bias = inputs.at(2);
 
                     return {std::make_shared<ngraph::op::Add>(
-                        conv_node, make_broadcast_node(bias, conv_node->get_shape(), 1))};
+                        conv_node,
+                        ngraph::op::make_broadcast_node(bias, conv_node->get_shape(), 1))};
                 }
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

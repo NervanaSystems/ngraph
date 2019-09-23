@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,11 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <onnx-ml.pb.h>
+#include <onnx/onnx_pb.h>
 
 #include "attribute.hpp"
 #include "graph.hpp"
 #include "node.hpp"
+#include "null_node.hpp"
 #include "tensor.hpp"
 
 namespace ngraph
@@ -49,6 +50,9 @@ namespace ngraph
             const std::string& description() const;
             const std::vector<std::reference_wrapper<const std::string>>& get_output_names() const;
             const std::string& output(int index) const;
+            std::size_t get_outputs_size() const;
+
+            bool has_attribute(const std::string& name) const;
 
             template <typename T>
             T get_attribute_value(const std::string& name, T default_value) const;
@@ -82,6 +86,16 @@ namespace ngraph
         const std::string& Node::Impl::output(int index) const
         {
             return m_node_proto->output(index);
+        }
+
+        std::size_t Node::Impl::get_outputs_size() const { return m_output_names.size(); }
+        bool Node::Impl::has_attribute(const std::string& name) const
+        {
+            auto it = std::find_if(
+                std::begin(m_attributes), std::end(m_attributes), [&](const Attribute& attribute) {
+                    return attribute.get_name() == name;
+                });
+            return it != std::end(m_attributes);
         }
 
         template <typename T>
@@ -122,7 +136,14 @@ namespace ngraph
             NodeVector result;
             for (const auto& name : m_node_proto->input())
             {
-                result.push_back(m_graph->get_ng_node_from_cache(name));
+                if (!name.empty())
+                {
+                    result.push_back(m_graph->get_ng_node_from_cache(name));
+                }
+                else
+                {
+                    result.push_back(std::make_shared<NullNode>());
+                }
             }
             return result;
         }
@@ -174,6 +195,12 @@ namespace ngraph
         }
 
         const std::string& Node::output(int index) const { return m_pimpl->output(index); }
+        std::size_t Node::get_outputs_size() const { return m_pimpl->get_outputs_size(); }
+        bool Node::has_attribute(const std::string& name) const
+        {
+            return m_pimpl->has_attribute(name);
+        }
+
         template <>
         float Node::get_attribute_value(const std::string& name, float default_value) const
         {
@@ -244,6 +271,15 @@ namespace ngraph
                                       std::vector<std::size_t> default_value) const
         {
             return m_pimpl->template get_attribute_value<std::vector<std::size_t>>(
+                name, std::move(default_value));
+        }
+
+        template <>
+        std::vector<std::string>
+            Node::get_attribute_value(const std::string& name,
+                                      std::vector<std::string> default_value) const
+        {
+            return m_pimpl->template get_attribute_value<std::vector<std::string>>(
                 name, std::move(default_value));
         }
 

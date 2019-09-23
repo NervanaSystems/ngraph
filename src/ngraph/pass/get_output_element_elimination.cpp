@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,12 +35,11 @@ using namespace std;
 bool pass::GetOutputElementElimination::run_on_node(shared_ptr<Node> n)
 {
     bool optimized = false;
-    for (auto& input : n->get_inputs())
+    for (auto& input : n->inputs())
     {
-        if (auto goe = dynamic_pointer_cast<op::GetOutputElement>(input.get_output().get_node()))
+        if (auto goe = dynamic_cast<op::GetOutputElement*>(input.get_source_output().get_node()))
         {
-            auto multi = goe->get_inputs().at(0).get_output().get_node();
-            input.replace_output(goe->get_inputs().at(goe->get_n()).get_output());
+            input.replace_source_output(goe->input(0).get_source_output());
             // we don't need to fix anything w.r.t GetOutputElement as it will become unreachable
             optimized = true;
         }

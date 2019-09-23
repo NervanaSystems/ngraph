@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,9 +15,11 @@
 //*****************************************************************************
 
 #pragma once
+#if defined(NGRAPH_ONNX_IMPORT_ENABLE)
 
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
 void regmodule_pyngraph_onnx_import(py::module m);
+#endif

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #pragma once
 
 #include <atomic>
+#include <cstring>
 #include <deque>
 #include <iostream>
 #include <memory>
@@ -28,38 +29,43 @@
 #include <unordered_set>
 #include <vector>
 
-#include "ngraph/assertion.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/check.hpp"
+#include "ngraph/coordinate.hpp"
+#include "ngraph/deprecated.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/placement.hpp"
+#include "ngraph/strides.hpp"
 
 namespace ngraph
 {
-    namespace pass
-    {
-        class GetOutputElementElimination;
-    }
+    template <typename NodeType>
+    class Input;
+
+    template <typename NodeType>
+    class Output;
+
+    class Node;
+    using NodeVector = std::vector<std::shared_ptr<Node>>;
+    using OutputVector = std::vector<Output<Node>>;
+
+    class Function;
+
     namespace op
     {
-        class Parameter;
-        class Result;
+        struct AutoBroadcastSpec;
+        class Constant;
+    } // namespace op
+
+    namespace autodiff
+    {
+        class Adjoints;
     }
 
-    void replace_node_users_arguments(std::shared_ptr<Node> target,
-                                      std::shared_ptr<Node> replacement);
-
-    std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
-        insert_result_parameter_split(const std::shared_ptr<Node>& src_node,
-                                      const std::shared_ptr<Node>& dst_node);
-
-    void insert_new_node_between(const std::shared_ptr<Node>& src_node,
-                                 const std::shared_ptr<Node>& dst_node,
-                                 const std::shared_ptr<Node>& new_node);
-
-    std::string node_validation_assertion_string(const Node* node);
+    std::string node_validation_failure_loc_string(const Node* node);
 
     const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
                                                          size_t i);
@@ -68,25 +74,46 @@ namespace ngraph
     const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
                                                          size_t i);
     const NodeVector& check_single_output_args(const NodeVector& args);
+
+    OutputVector as_output_vector(const NodeVector& args);
+    NodeVector as_node_vector(const OutputVector& values);
+
+    /// Alias useful for cloning
+    using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
+
+    struct TypeInfo
+    {
+        const char* name;
+        uint64_t version;
+    };
+
+    using NodeTypeInfo = TypeInfo;
+
+    /// Tests if a node is of op type T
+    template <typename NodeType, typename T>
+    bool is_type(T value)
+    {
+        return &value->get_type_info() == &NodeType::type_info;
+    }
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
-    /// view or a (possibly empty) tuple of values.
+    /// or a (possibly empty) tuple of values.
     class Node : public std::enable_shared_from_this<Node>
     {
-        // So Adjoints can call generate_adjoints
+        // For access to generate_adjoints.
         friend class autodiff::Adjoints;
-        friend class descriptor::Input;
-        friend void replace_node_users_arguments(std::shared_ptr<Node> target,
-                                                 std::shared_ptr<Node> replacement);
-        friend std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
-            insert_result_parameter_split(const std::shared_ptr<Node>& src_node,
-                                          const std::shared_ptr<Node>& dst_node);
-        friend void insert_new_node_between(const std::shared_ptr<Node>& src_node,
-                                            const std::shared_ptr<Node>& dst_node,
-                                            const std::shared_ptr<Node>& new_node);
 
-        friend class ngraph::pass::GetOutputElementElimination;
+        // For access to m_outputs.
+        friend class descriptor::Input;
+
+        // For access to m_inputs and m_outputs.
+        template <typename NodeType>
+        friend class Input;
+
+        // For access to m_outputs.
+        template <typename NodeType>
+        friend class Output;
 
     protected:
         /// Throws if the node is invalid.
@@ -95,133 +122,289 @@ namespace ngraph
         // Called in constructors during transition
         void constructor_validate_and_infer_types();
 
-        std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args();
-        void validate_and_infer_elementwise_arithmetic();
-        void validate_and_infer_elementwise_logical();
+        std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args(
+            const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec());
+        void validate_and_infer_elementwise_arithmetic(
+            const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec());
+        void validate_and_infer_elementwise_logical(
+            const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec());
 
-        // Temporary hack while partial shape propagation is being implemented. If any input has
-        // dynamic shape or dynamic element type, sets all outputs to have a shape of dynamic
-        // rank and dynamic element type. Ops where we haven't yet implemented partial shape
-        // propagation can add this boilerplate at the top of their validate_and_infer_types():
-        //
-        //   if (validate_punt_if_dynamic())
-        //   {
-        //       return;
-        //   }
-        bool validate_punt_if_dynamic();
+        /// \brief Construct an unitialized Node
+        Node() {}
+        /// \brief Construct an unitialized Node
+        /// \param output_size Number of outputs for this node
+        Node(size_t output_size);
 
+        /// \brief Constructor for Node subclasses that have metaclasses.
+        /// \param arguments Output i will connect to input i
+        /// \param output_size Number of outputs for this node
+        Node(const OutputVector& arguments, size_t output_size = 1);
+
+        /// \brief Construct a node with arguments. Will be deprecated.
         Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
 
-        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
+        /// \brief Constructor for Node subclasses that have metaclasses. Will be deprecated.
+        /// \param arguments The 0th output of node i will connect to input i
+        /// \param output_size Number of outputs for this node
+        Node(const NodeVector& arguments, size_t output_size = 1);
+
+        virtual void generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                       const NodeVector& /* deltas */)
+        {
+        }
+        /// \brief Moves nodes that would be deleted from inputs to nodes to avoid stack overflows
+        /// on deep networks.
+        void safe_delete(NodeVector& nodes, bool recurse);
+
     public:
+        NGRAPH_API
+        static constexpr NodeTypeInfo type_info{"Node", 0};
+
         virtual ~Node();
+
+        virtual bool is_unary_elementwise_arithmetic() const { return false; }
+        virtual bool is_binary_elementwise_arithmetic() const { return false; }
+        virtual bool is_binary_elementwise_comparison() const { return false; }
+        virtual bool is_binary_elementwise_logical() const { return false; }
+        /// \returns true if node supports autobroadcast operations
+        virtual bool supports_auto_broadcast() const { return false; }
+        /// \returns the autobroadcasr spec
+        virtual const op::AutoBroadcastSpec& get_autob() const;
+        /// \returns true if the node can decompose
+        virtual bool supports_decompose() const { return false; }
+        /// \brief Decomposes the FusedOp into a sub-graph consisting of core ngraph ops
+        ///
+        /// \return A vector of nodes comprising the sub-graph. The order of output
+        ///         tensors must match the match output tensors of the FusedOp
+        virtual NodeVector decompose_op() const { return NodeVector(); }
+        /// Returns the NodeTypeInfo for the node's class.
+        /// During transition to type_info, returns a dummy type_info for Node if the class
+        /// has not been updated yet.
+        virtual const NodeTypeInfo& get_type_info() const { return type_info; }
+        virtual const char* get_type_name() const
+        {
+            auto& info = get_type_info();
+            if (is_type<Node>(this))
+            {
+                // Transitional definition
+                return description().c_str();
+            }
+            return info.name;
+        }
+        /// Sets/replaces the arguments with new arguments.
+        void set_arguments(const NodeVector& arguments);
+        /// Sets/replaces the arguments with new arguments.
+        void set_arguments(const OutputVector& arguments);
+        /// Sets/replaces the arguments with new arguments.
+        void set_argument(size_t position, const Output<Node>& argument);
+
+        /// Sets the number of outputs
+        void set_output_size(size_t output_size);
+
         void revalidate_and_infer_types() { validate_and_infer_types(); }
         // Called after transition
         void delayed_validate_and_infer_types();
 
-        /// The class name, must not contain spaces
-        std::string description() const { return m_node_type; }
-        const std::string& get_friendly_name() const;
+        /// \brief Get the string name for the type of the node, such as `Add` or `Multiply`.
+        ///        The class name, must not contain spaces as it is used for codegen.
+        /// \returns A const reference to the node's type name
+        virtual const std::string& description() const;
+        /// \brief Get the unique name of the node.
+        /// \returns A const reference to the node's unique name.
         const std::string& get_name() const;
-        void set_name(const std::string& name);
+
+        /// \brief Sets a friendly name for a node. This does not overwrite the unique name
+        ///        of the node and is retrieved via get_friendly_name(). Used mainly for debugging.
+        ///        The friendly name may be set exactly once.
+        /// \param name is the friendly name to set
+        void set_friendly_name(const std::string& name);
+
+        /// \brief Gets the friendly name for a node. If no friendly name has been set via
+        ///        set_friendly_name then the node's unique name is returned.
+        /// \returns A const reference to the node's friendly name.
+        const std::string& get_friendly_name() const;
+
         /// Return true if this has the same implementing class as node. This
         /// will be used by the pattern matcher when comparing a pattern
         /// graph against the graph.
         bool is_same_op_type(const std::shared_ptr<Node>& node) const
         {
-            Node* n = node.get();
-            return std::type_index(typeid(*this)) == std::type_index(typeid(*n));
+            return description() == node->description();
         }
 
+        /// \brief Marks an input as being relevant or irrelevant to the output shapes of this
+        ///        node.
+        /// \param i The index of the input to mark as relevant or irrelevant.
+        /// \param relevant true if the input is relevant to output shapes, false otherwise.
+        ///
+        /// This is used by the shape specialization pass to know which nodes must be statically
+        /// evaluated in order to complete shape specialization. (For example, the shape input of
+        /// DynReshape must be evaluated statically in order for the output shape to be
+        /// determined.) By default, all inputs are marked as shape-irrelevant. Overrides of
+        /// validate_and_infer_types should call this function to mark shape-relevant inputs.
+        // TODO(amprocte): should be protected
+        void set_input_is_relevant_to_shape(size_t i, bool relevant = true);
+
+        /// \brief Marks an input as being relevant or irrelevant to the output values of this
+        ///        node.
+        /// \param i The index of the input to mark as relevant or irrelevant.
+        /// \param relevant true if the input is relevant to output values, false otherwise.
+        ///
+        /// This is used by the shape specialization pass to cut short evaluation in cases where
+        /// an input value does not actually have any effect on the output value of the node. (As
+        /// of this writing, the only example of this is ShapeOf.) By default, all inputs are
+        /// marked as value-relevant. Overrides of validate_and_infer_types should call this
+        /// function to mark value-irrelevant inputs.
+        // TODO(amprocte): should be protected
+        void set_input_is_relevant_to_value(size_t i, bool relevant = true);
+
+        // TODO(amprocte): should this be protected?
         void set_output_type(size_t i,
                              const element::Type& element_type,
                              const PartialShape& pshape);
 
-        bool is_parameter() const;
+        virtual bool is_parameter() const { return false; }
         virtual bool is_output() const;
         virtual bool is_constant() const;
-        virtual bool is_commutative() { return false; }
+        virtual bool is_null() const { return false; }
+        virtual bool is_op() const { return false; }
+        virtual bool is_commutative() const { return false; }
+        virtual bool is_dynamic() const;
+        virtual bool has_state() const { return false; }
         size_t get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
         virtual std::ostream& write_short_description(std::ostream&) const;
         virtual std::ostream& write_long_description(std::ostream&) const;
 
-        // TODO: Deprecate
-        std::deque<descriptor::Input>& get_inputs() { return m_inputs; }
-        // TODO: Deprecate
-        const std::deque<descriptor::Input>& get_inputs() const { return m_inputs; }
-        // Deprecated
-        // TODO: Remove from unit tests.
-        std::deque<descriptor::Output>& get_outputs();
-        // Deprecated
-        // TODO: Remove from unit tests.
-        const std::deque<descriptor::Output>& get_outputs() const;
+        std::deque<descriptor::Input>& get_inputs() NGRAPH_DEPRECATED("use inputs() instead")
+        {
+            return m_inputs;
+        }
+        const std::deque<descriptor::Input>& get_inputs() const
+            NGRAPH_DEPRECATED("use inputs() instead")
+        {
+            return m_inputs;
+        }
+        std::deque<descriptor::Output>& get_outputs() NGRAPH_DEPRECATED("use outputs() instead");
+        const std::deque<descriptor::Output>& get_outputs() const
+            NGRAPH_DEPRECATED("use outputs() instead");
 
         /// Get control dependencies registered on the node
-        const std::set<std::shared_ptr<Node>>& get_control_dependencies() const;
+        const std::vector<std::shared_ptr<Node>>& get_control_dependencies() const;
 
+        /// Get nodes dependent on this node
+        const std::vector<Node*>& get_control_dependents() const;
+
+        /// This node cannot execute until node executes
         void add_control_dependency(std::shared_ptr<Node> node);
 
-        void remove_control_dependency(std::shared_ptr<Node> node)
-        {
-            m_control_dependencies.erase(node);
-        }
+        /// Remove the dependency of this node on node
+        void remove_control_dependency(std::shared_ptr<Node> node);
 
-        /// Returns the number of outputs on the for the node.
+        /// Remove all dependencies from this node
+        void clear_control_dependencies();
+
+        /// Remove this node as a dependency from all dependent nodes
+        void clear_control_dependents();
+
+        /// This node absorbs the control dependencies of source_node
+        void add_node_control_dependencies(std::shared_ptr<Node> source_node);
+
+        /// This node becomes a dependent of every node dependent on source_node
+        void add_node_control_dependents(std::shared_ptr<Node> source_node);
+
+        /// Returns the number of outputs from the node.
         size_t get_output_size() const;
 
         /// Returns the element type for output i
+        // TODO: deprecate in favor of node->output(i).get_element_type()
         const element::Type& get_output_element_type(size_t i) const;
 
         /// Checks that there is exactly one output and returns its element type
+        // TODO: deprecate in favor of node->output(0).get_element_type() with a suitable check in
+        // the calling code, or updates to the calling code if it is making an invalid assumption
+        // of only one output.
         const element::Type& get_element_type() const;
 
         /// Returns the shape for output i
+        // TODO: deprecate in favor of node->output(i).get_shape()
         const Shape& get_output_shape(size_t i) const;
 
         /// Returns the partial shape for output i
         const PartialShape& get_output_partial_shape(size_t i) const;
 
+        std::shared_ptr<Node> get_output_as_single_output_node(size_t i,
+                                                               bool for_get_output_element = true);
+
         /// Checks that there is exactly one output and returns its shape
+        // TODO: deprecate in favor of node->output(0).get_shape() with a suitable check in the
+        // calling code, or updates to the calling code if it is making an invalid assumption of
+        // only one output.
         const Shape& get_shape() const;
 
         /// Returns the tensor for output i
-        descriptor::Tensor& get_output_tensor(size_t i) const;
+        descriptor::Tensor& get_output_tensor(size_t i) const
+            NGRAPH_DEPRECATED("use node->output(i).get_tensor() instead");
+
+        /// Returns the tensor name for output i
+        const std::string& get_output_tensor_name(size_t i) const;
 
         /// Checks that there is exactly one output and returns its tensor.
-        descriptor::Tensor& get_output_tensor() const;
+        descriptor::Tensor& get_output_tensor() const NGRAPH_DEPRECATED(
+            "use node->output(0).get_tensor() instead; insert a check that the node has only one "
+            "output, or update calling code not to assume only one output");
 
-        /// Returns the tensor view of output i
-        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr(size_t i) const;
+        /// Returns the tensor of output i
+        // TODO: Investigate whether this really needs to be shared_ptr. If so, we'll need a
+        // replacement in Output.
+        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr(size_t i) const
+            NGRAPH_DEPRECATED("use &node->output(i).get_tensor() instead");
 
-        /// Checks that there is exactly one output and returns its tensor view.
-        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const;
+        /// Checks that there is exactly one output and returns its tensor.
+        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const NGRAPH_DEPRECATED(
+            "use &node->output(i).get_tensor() instead; insert a check that the node has only one "
+            "output, or update calling code not to assume only one output");
 
         /// Returns the set of inputs using output i
-        const std::set<descriptor::Input*>& get_output_inputs(size_t i) const;
+        const std::vector<descriptor::Input*>& get_output_inputs(size_t i) const
+            NGRAPH_DEPRECATED("use node->output(i).get_target_inputs() instead");
 
         /// Returns the number of inputs for the op
         size_t get_input_size() const;
 
         /// Returns the element type of input i
+        // TODO: deprecate in favor of node->input(i).get_element_type()
         const element::Type& get_input_element_type(size_t i) const;
 
         /// Returns the shape of input i
+        // TODO: deprecate in favor of node->input(i).get_shape()
         const Shape& get_input_shape(size_t i) const;
 
         /// Returns the partial shape of input i
+        // TODO: deprecate in favor of node->input(i).get_partial_shape()
         const PartialShape& get_input_partial_shape(size_t i) const;
+
+        /// Returns the tensor name for input i
+        const std::string& get_input_tensor_name(size_t i) const;
 
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
         std::unordered_set<descriptor::Tensor*> liveness_free_list;
 
+        // Will be deprecated
         virtual NodeVector get_arguments() const;
-
+        // Will be deprecated
         std::shared_ptr<Node> get_argument(size_t index) const;
 
+    protected:
+        // Will be replaced with an OutputVector version
         virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const = 0;
 
-        virtual std::vector<std::shared_ptr<Function>> get_functions() const;
+    public:
+        std::shared_ptr<Node> copy_with_new_inputs(const OutputVector& new_args) const;
+
+        std::shared_ptr<Node> copy_with_new_inputs(
+            const OutputVector& inputs,
+            const std::vector<std::shared_ptr<Node>>& control_dependencies) const;
 
         /// True if this and node have one output with same element type and shape
         bool has_same_type(std::shared_ptr<const Node> node) const;
@@ -233,48 +416,448 @@ namespace ngraph
         void set_placement(Placement placement);
 
         /// Get device placement
-        size_t get_placement_size() const;
+        size_t get_placement_index() const;
 
         /// Set device placement
-        void set_placement(size_t placement);
+        void set_placement_index(size_t placement);
 
-        /// Get input descriptor that is connected to src
-        descriptor::Input* get_input_from(const std::shared_ptr<Node>& src);
+        const std::set<std::string>& get_provenance_tags() const;
+        void add_provenance_tag(const std::string& tag);
+        void add_provenance_tags(const std::set<std::string>& tag_set);
+        void remove_provenance_tag(const std::string& tag);
 
-        /// Get ouput descriptor that outputs to dst
-        descriptor::Output* get_output_to(const std::shared_ptr<Node>& dst);
+        // to be used when nodes are replaced
+        void merge_provenance_tags_from(const std::shared_ptr<const Node>& source);
 
         /// Get all the nodes that uses the current node
         NodeVector get_users(bool check_is_used = false) const;
 
+        /// \return Version of this node
+        virtual size_t get_version() const { return 0; }
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
         /// Use instance ids for comparison instead of memory addresses to improve determinism
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
-    protected:
-        std::set<std::shared_ptr<Node>> m_control_dependencies;
-        void set_output_size(size_t n);
+        static const size_t placement_invalid = -1;
 
+        /// \return A vector containing a handle for each of this node's inputs, in order.
+        // TODO: Rename to get_inputs()?
+        std::vector<Input<Node>> inputs();
+
+        /// \return A vector containing a handle for each of this node's inputs, in order.
+        std::vector<Input<const Node>> inputs() const;
+
+        /// \return A vector containing the values for each input
+        std::vector<Output<Node>> input_values() const;
+
+        /// \return A vector containing a handle for each of this node's outputs, in order.
+        // TODO: Rename to get_outputs()?
+        std::vector<Output<Node>> outputs();
+
+        /// \return A vector containing a handle for each of this node's outputs, in order.
+        std::vector<Output<const Node>> outputs() const;
+
+        /// \return A handle to the `input_index`th input of this node.
+        /// \throw std::out_of_range if the node does not have at least `input_index+1` inputs.
+        Input<Node> input(size_t input_index);
+
+        /// \return A handle to the `input_index`th input of this node.
+        /// \throw std::out_of_range if the node does not have at least `input_index+1` inputs.
+        Input<const Node> input(size_t input_index) const;
+
+        Output<Node> input_value(size_t input_index) const;
+
+        /// \return A handle to the `output_index`th output of this node.
+        /// \throw std::out_of_range if the node does not have at least `output_index+1` outputs.
+        Output<Node> output(size_t output_index);
+
+        /// \return A handle to the `output_index`th output of this node.
+        /// \throw std::out_of_range if the node does not have at least `output_index+1` outputs.
+        Output<const Node> output(size_t output_index) const;
+
+    private:
+        descriptor::Input& get_input_descriptor(size_t position);
+        descriptor::Output& get_output_descriptor(size_t position);
+
+        std::vector<Node*> m_control_dependents;
+        std::vector<std::shared_ptr<Node>> m_control_dependencies;
         std::string m_node_type;
-        size_t m_instance_id;
-        std::string m_name;
-        const std::string m_unique_name;
+        size_t m_instance_id{m_next_instance_id.fetch_add(1)};
+        std::string m_friendly_name;
+        std::string m_unique_name;
+        NGRAPH_API
         static std::atomic<size_t> m_next_instance_id;
+        std::set<std::string> m_provenance_tags;
         std::deque<descriptor::Input> m_inputs;
         std::deque<descriptor::Output> m_outputs;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
-        size_t m_placement_size = 0;
+        size_t m_placement_index = placement_invalid;
     };
 
-    class NodeValidationError : public AssertionFailure
+    /// Casts a Node* to a NodeType* if it is of type NodeType, nullptr otherwise
+    template <typename NodeType>
+    NodeType* as_type(Node* node)
+    {
+        return is_type<NodeType>(node) ? static_cast<NodeType*>(node) : nullptr;
+    }
+
+    /// Casts a Node* to a NodePtr* if it is of type NodePtr, nullptr otherwise
+    template <typename NodeType>
+    const NodeType* as_type(const Node* node)
+    {
+        return is_type<NodeType>(node) ? static_cast<const NodeType*>(node) : nullptr;
+    }
+
+    /// Casts a Node to a shared_ptr<NodePtr> if it is of type NodePtr, nullptr otherwise
+    template <typename NodeType>
+    std::shared_ptr<NodeType> as_type_ptr(std::shared_ptr<Node> node_ptr)
+    {
+        return is_type<NodeType>(node_ptr) ? std::static_pointer_cast<NodeType>(node_ptr)
+                                           : std::shared_ptr<NodeType>();
+    }
+
+    /// Casts a Node to a shared_ptr<NodePtr> if it is of type NodePtr, nullptr otherwise
+    template <typename NodeType>
+    std::shared_ptr<const NodeType> as_type_ptr(std::shared_ptr<const Node> node_ptr)
+    {
+        return is_type<NodeType>(node_ptr) ? std::static_pointer_cast<NodeType>(node_ptr)
+                                           : std::shared_ptr<NodeType>();
+    }
+
+    /// \brief A handle for one of a node's inputs.
+    template <typename NodeType>
+    class Input
     {
     public:
-        NodeValidationError(std::string what)
-            : AssertionFailure(what)
+        /// \brief Constructs a Input.
+        /// \param node Pointer to the node for the input handle.
+        /// \param index The index of the input.
+        Input(NodeType* node, size_t index)
+            : m_node(node)
+            , m_index(index)
         {
         }
-        NodeValidationError(const char* what)
-            : AssertionFailure(what)
+
+        /// \return A pointer to the node referenced by this input handle.
+        NodeType* get_node() const { return m_node; }
+        /// \return The index of the input referred to by this input handle.
+        size_t get_index() const { return m_index; }
+        /// \return The element type of the input referred to by this input handle.
+        const element::Type& get_element_type() const
+        {
+            return m_node->get_input_element_type(m_index);
+        }
+        /// \return The shape of the input referred to by this input handle.
+        const Shape& get_shape() const { return m_node->get_input_shape(m_index); }
+        /// \return The partial shape of the input referred to by this input handle.
+        const PartialShape& get_partial_shape() const
+        {
+            return m_node->get_input_partial_shape(m_index);
+        }
+        /// \return A handle to the output that is connected to this input.
+        Output<Node> get_source_output() const;
+        /// \return A reference to the tensor descriptor for this input.
+        descriptor::Tensor& get_tensor() const
+        {
+            return m_node->m_inputs.at(m_index).get_output().get_tensor();
+        }
+        /// \return A shared pointer to the tensor descriptor for this input.
+        std::shared_ptr<descriptor::Tensor> get_tensor_ptr() const
+        {
+            return m_node->m_inputs.at(m_index).get_output().get_tensor_ptr();
+        }
+        /// \return true if this input is relevant to its node's output shapes; else false.
+        bool get_is_relevant_to_shapes() const
+        {
+            return m_node->m_inputs.at(m_index).get_is_relevant_to_shape();
+        }
+        /// \return true if this input is relevant to its node's output values; else false.
+        bool get_is_relevant_to_values() const
+        {
+            return m_node->m_inputs.at(m_index).get_is_relevant_to_value();
+        }
+
+        /// \brief Replaces the source output of this input.
+        /// \param new_source_output A handle for the output that will replace this input's source.
+        void replace_source_output(const Output<Node>& new_source_output) const;
+
+        bool operator==(const Input& other) const
+        {
+            return m_node == other.m_node && m_index == other.m_index;
+        }
+        bool operator!=(const Input& other) const { return !(*this == other); }
+        bool operator<(const Input& other) const
+        {
+            return m_node < other.m_node || (m_node == other.m_node && m_index < other.m_index);
+        }
+        bool operator>(const Input& other) const
+        {
+            return m_node > other.m_node || (m_node == other.m_node && m_index > other.m_index);
+        }
+        bool operator<=(const Input& other) const { return !(*this > other); }
+        bool operator>=(const Input& other) const { return !(*this < other); }
+    private:
+        NodeType* const m_node;
+        const size_t m_index;
+    };
+
+    /// \brief A handle for one of a node's outputs.
+    template <typename NodeType = Node>
+    class Output
+    {
+    public:
+        /// \brief Constructs a Output.
+        /// \param node A pointer to the node for the output handle.
+        /// \param index The index of the output.
+        Output(NodeType* node, size_t index)
+            : m_node(node->shared_from_this())
+            , m_index(index)
+        {
+        }
+
+        /// \brief Constructs a Output.
+        /// \param node A `shared_ptr` to the node for the output handle.
+        /// \param index The index of the output.
+        ///
+        /// TODO: Make a plan to deprecate this.
+        Output(const std::shared_ptr<NodeType>& node, size_t index)
+            : m_node(node)
+            , m_index(index)
+        {
+        }
+
+        /// \brief Constructs a Output, referencing the zeroth output of the node.
+        /// \param node A `shared_ptr` to the node for the output handle.
+        template <typename T>
+        Output(const std::shared_ptr<T>& node)
+            : Output(node, 0)
+        {
+        }
+
+        /// A null output
+        Output() = default;
+
+        /// This output position for a different node
+        Output<NodeType> for_node(const std::shared_ptr<NodeType>& node)
+        {
+            return Output(node, m_index);
+        }
+
+        /// \return A pointer to the node referred to by this output handle.
+        NodeType* get_node() const { return m_node.get(); }
+        /// \return A `shared_ptr` to the node referred to by this output handle.
+        ///
+        /// TODO: Make a plan to deprecate this.
+        std::shared_ptr<NodeType> get_node_shared_ptr() const { return m_node; }
+        /// \return A useable shared pointer to this output. If index 0, the node,
+        /// otherwise find or create a GOE.
+        std::shared_ptr<Node> as_single_output_node(bool for_get_output_element = true) const
+            NGRAPH_DEPRECATED("Transitional.")
+        {
+            return m_node->get_output_as_single_output_node(m_index, for_get_output_element);
+        }
+
+        /// \return The index of the output referred to by this output handle.
+        size_t get_index() const { return m_index; }
+        /// \return A reference to the tensor descriptor for this output.
+        descriptor::Tensor& get_tensor() const
+        {
+            return m_node->m_outputs.at(m_index).get_tensor();
+        }
+        /// \return A shared point to the tensor ptr for this output.
+        std::shared_ptr<descriptor::Tensor> get_tensor_ptr() const
+        {
+            return m_node->m_outputs.at(m_index).get_tensor_ptr();
+        }
+        /// \return The element type of the output referred to by this output handle.
+        const element::Type& get_element_type() const
+        {
+            return m_node->get_output_element_type(m_index);
+        }
+        /// \return The shape of the output referred to by this output handle.
+        const Shape& get_shape() const { return m_node->get_output_shape(m_index); }
+        /// \return The partial shape of the output referred to by this output handle.
+        const PartialShape& get_partial_shape() const
+        {
+            return m_node->get_output_partial_shape(m_index);
+        }
+
+        /// \return A set containing handles for all inputs targeted by the output referenced by
+        ///        this output handle.
+        std::set<Input<Node>> get_target_inputs() const;
+
+        /// \brief Removes a target input from the output referenced by this output handle.
+        /// \param target_input The target input to remove.
+        ///
+        // TODO(amprocte): Investigate whether this really ought to be public.
+        void remove_target_input(const Input<Node>& target_input) const;
+
+        bool operator==(const Output& other) const
+        {
+            return m_node == other.m_node && m_index == other.m_index;
+        }
+        bool operator!=(const Output& other) const { return !(*this == other); }
+        bool operator<(const Output& other) const
+        {
+            return m_node < other.m_node || (m_node == other.m_node && m_index < other.m_index);
+        }
+        bool operator>(const Output& other) const
+        {
+            return m_node > other.m_node || (m_node == other.m_node && m_index > other.m_index);
+        }
+        bool operator<=(const Output& other) const { return !(*this > other); }
+        bool operator>=(const Output& other) const { return !(*this < other); }
+    private:
+        std::shared_ptr<NodeType> m_node;
+        size_t m_index{0};
+    };
+
+    inline Input<Node> Node::input(size_t input_index)
+    {
+        if (input_index >= m_inputs.size())
+        {
+            throw std::out_of_range("node input index is out of range");
+        }
+
+        return Input<Node>(this, input_index);
+    }
+
+    inline Output<Node> Node::input_value(size_t input_index) const
+    {
+        return input(input_index).get_source_output();
+    }
+
+    inline Input<const Node> Node::input(size_t input_index) const
+    {
+        if (input_index >= m_inputs.size())
+        {
+            throw std::out_of_range("node input index is out of range");
+        }
+
+        return Input<const Node>(this, input_index);
+    }
+
+    inline Output<Node> Node::output(size_t output_index)
+    {
+        if (output_index >= m_outputs.size())
+        {
+            throw std::out_of_range("node output index is out of range");
+        }
+
+        return Output<Node>(this, output_index);
+    }
+
+    inline Output<const Node> Node::output(size_t output_index) const
+    {
+        if (output_index >= m_outputs.size())
+        {
+            throw std::out_of_range("node output index is out of range");
+        }
+
+        return Output<const Node>(this, output_index);
+    }
+
+    template <typename NodeType>
+    Output<Node> Input<NodeType>::get_source_output() const
+    {
+        auto& output_descriptor = m_node->m_inputs.at(m_index).get_output();
+        return Output<Node>(output_descriptor.get_node(), output_descriptor.get_index());
+    }
+
+    template <typename NodeType>
+    void Input<NodeType>::replace_source_output(const Output<Node>& new_source_output) const
+    {
+        m_node->m_inputs.at(m_index).replace_output(new_source_output.get_node_shared_ptr(),
+                                                    new_source_output.get_index());
+    }
+
+    template <typename NodeType>
+    std::set<Input<Node>> Output<NodeType>::get_target_inputs() const
+    {
+        std::set<Input<Node>> result;
+
+        for (auto& input : m_node->m_outputs.at(m_index).get_inputs())
+        {
+            result.emplace(input->get_raw_pointer_node(), input->get_index());
+        }
+
+        return result;
+    }
+
+    template <typename NodeType>
+    void Output<NodeType>::remove_target_input(const Input<Node>& target_input) const
+    {
+        m_node->m_outputs.at(m_index).remove_input(
+            &(target_input.get_node()->m_inputs.at(target_input.get_index())));
+    }
+
+    inline std::vector<Input<Node>> Node::inputs()
+    {
+        std::vector<Input<Node>> result;
+
+        for (size_t i = 0; i < get_input_size(); i++)
+        {
+            result.emplace_back(this, i);
+        }
+
+        return result;
+    }
+
+    inline std::vector<Output<Node>> Node::input_values() const
+    {
+        std::vector<Output<Node>> result;
+
+        for (size_t i = 0; i < get_input_size(); i++)
+        {
+            result.emplace_back(input(i).get_source_output());
+        }
+
+        return result;
+    }
+
+    inline std::vector<Input<const Node>> Node::inputs() const
+    {
+        std::vector<Input<const Node>> result;
+
+        for (size_t i = 0; i < get_input_size(); i++)
+        {
+            result.emplace_back(this, i);
+        }
+
+        return result;
+    }
+
+    inline std::vector<Output<Node>> Node::outputs()
+    {
+        std::vector<Output<Node>> result;
+
+        for (size_t i = 0; i < get_output_size(); i++)
+        {
+            result.emplace_back(shared_from_this(), i);
+        }
+
+        return result;
+    }
+
+    inline std::vector<Output<const Node>> Node::outputs() const
+    {
+        std::vector<Output<const Node>> result;
+
+        for (size_t i = 0; i < get_output_size(); i++)
+        {
+            result.emplace_back(shared_from_this(), i);
+        }
+
+        return result;
+    }
+
+    class NodeValidationFailure : public CheckFailure
+    {
+    public:
+        NodeValidationFailure(const CheckLocInfo& check_loc_info,
+                              const Node* node,
+                              const std::string& explanation)
+            : CheckFailure(check_loc_info, node_validation_failure_loc_string(node), explanation)
         {
         }
     };
@@ -297,13 +880,23 @@ namespace ngraph
         const Node& m_node;
         bool m_is_short;
     };
-
-    void check_new_args_count(const Node* node, const NodeVector& new_args);
 }
+#define NODE_VALIDATION_CHECK(node, cond, ...)                                                     \
+    NGRAPH_CHECK_HELPER(::ngraph::NodeValidationFailure, (node), (cond), ##__VA_ARGS__)
 
-#define NODE_VALIDATION_ASSERT(node, cond)                                                         \
-    NGRAPH_ASSERT_STREAM_WITH_LOC(                                                                 \
-        ::ngraph::NodeValidationError, cond, ::ngraph::node_validation_assertion_string(node))
-#define NODE_VALIDATION_FAIL(node)                                                                 \
-    NGRAPH_FAIL_STREAM_WITH_LOC(::ngraph::NodeValidationError,                                     \
-                                ::ngraph::node_validation_assertion_string(node))
+namespace ngraph
+{
+    template <typename T>
+    void check_new_args_count(const Node* node, T new_args)
+    {
+        NODE_VALIDATION_CHECK(node,
+                              new_args.size() == node->get_arguments().size(),
+                              "copy_with_new_args() expected ",
+                              node->get_arguments().size(),
+                              " argument",
+                              (node->get_arguments().size() == 1 ? "" : "s"),
+                              " but got ",
+                              new_args.size());
+    }
+
+} // namespace ngraph

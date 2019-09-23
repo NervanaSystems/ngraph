@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,12 +15,21 @@
 //*****************************************************************************
 
 #include "ngraph/op/max.hpp"
+#include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::Max::Max(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
-    : ArithmeticReduction("Max", arg, reduction_axes)
+constexpr NodeTypeInfo op::Max::type_info;
+
+op::Max::Max(const Output<Node>& arg, const AxisSet& reduction_axes)
+    : ArithmeticReduction(arg, reduction_axes)
+{
+    constructor_validate_and_infer_types();
+}
+
+op::Max::Max(const Output<Node>& arg, const Output<Node>& reduction_axes)
+    : ArithmeticReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
 }
@@ -28,5 +37,46 @@ op::Max::Max(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
 shared_ptr<Node> op::Max::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Max>(new_args.at(0), m_reduction_axes);
+    return make_shared<Max>(new_args.at(0), new_args.at(1));
+}
+
+shared_ptr<Node> op::Max::get_default_value() const
+{
+    switch (get_element_type())
+    {
+    case element::Type_t::boolean:
+        return make_constant_from_string("0", get_element_type(), get_shape());
+    case element::Type_t::bf16:
+    case element::Type_t::f16:
+    case element::Type_t::f32:
+    case element::Type_t::f64:
+        return make_constant_from_string("-INFINITY", get_element_type(), get_shape());
+    case element::Type_t::i8:
+        return make_constant_from_string(
+            to_string(numeric_limits<int8_t>::min()), get_element_type(), get_shape());
+    case element::Type_t::i16:
+        return make_constant_from_string(
+            to_string(numeric_limits<int16_t>::min()), get_element_type(), get_shape());
+    case element::Type_t::i32:
+        return make_constant_from_string(
+            to_string(numeric_limits<int32_t>::min()), get_element_type(), get_shape());
+    case element::Type_t::i64:
+        return make_constant_from_string(
+            to_string(numeric_limits<int64_t>::min()), get_element_type(), get_shape());
+    case element::Type_t::u8:
+        return make_constant_from_string(
+            to_string(numeric_limits<uint8_t>::min()), get_element_type(), get_shape());
+    case element::Type_t::u16:
+        return make_constant_from_string(
+            to_string(numeric_limits<uint16_t>::min()), get_element_type(), get_shape());
+    case element::Type_t::u32:
+        return make_constant_from_string(
+            to_string(numeric_limits<uint32_t>::min()), get_element_type(), get_shape());
+    case element::Type_t::u64:
+        return make_constant_from_string(
+            to_string(numeric_limits<uint64_t>::min()), get_element_type(), get_shape());
+    case element::Type_t::undefined:
+    case element::Type_t::dynamic:
+    default: throw runtime_error("Max default value not defined for type");
+    }
 }

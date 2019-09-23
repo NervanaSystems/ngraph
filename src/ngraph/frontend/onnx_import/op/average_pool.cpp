@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,9 +15,8 @@
 //*****************************************************************************
 
 #include "ngraph/node.hpp"
-#include "ngraph/node_vector.hpp"
 #include "ngraph/op/avg_pool.hpp"
-#include "utils/convpool.hpp"
+#include "utils/pooling_factory.hpp"
 
 namespace ngraph
 {
@@ -29,12 +28,12 @@ namespace ngraph
             {
                 NodeVector average_pool(const Node& node)
                 {
-                    return convpool::make_ng_pool<ngraph::op::AvgPool>(node);
+                    return pooling::PoolingFactory(node).make_pooling_op<ngraph::op::AvgPool>();
                 }
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

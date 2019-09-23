@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ public:
     CommonSubexpressionElimination()
         : FunctionPass()
     {
+        set_property(PassProperty::REQUIRE_STATIC_SHAPE, true);
     }
 
     CommonSubexpressionElimination(
@@ -41,6 +42,7 @@ public:
         : FunctionPass()
         , m_backend_cse_handlers(backend_cse_handlers)
     {
+        set_property(PassProperty::REQUIRE_STATIC_SHAPE, true);
     }
 
     std::unordered_map<std::type_index,

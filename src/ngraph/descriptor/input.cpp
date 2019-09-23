@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,18 +22,37 @@
 using namespace ngraph;
 using namespace descriptor;
 
-Input::Input(Node* node, size_t index, Output& output)
+descriptor::Input::Input(Node* node, size_t index, Output& output)
     : m_node(node)
     , m_index(index)
     , m_output(&output)
+    , m_is_relevant_to_shape(false)
+    , m_is_relevant_to_value(true)
 {
     m_src_node = std::shared_ptr<Node>(output.get_node());
     output.add_input(this);
 }
 
-void Input::replace_output(Output& new_output)
+descriptor::Input::Input(Node* node, size_t index)
+    : m_node(node)
+    , m_index(index)
+    , m_output(nullptr)
+    , m_is_relevant_to_shape(false)
+    , m_is_relevant_to_value(true)
 {
-    m_output->remove_input(this);
+}
+
+descriptor::Input::~Input()
+{
+    remove_output();
+}
+
+void descriptor::Input::replace_output(Output& new_output)
+{
+    if (m_output != nullptr)
+    {
+        m_output->remove_input(this);
+    }
     new_output.add_input(this);
     m_output = &new_output;
     m_src_node = std::shared_ptr<Node>(new_output.get_node());
@@ -49,47 +68,57 @@ void Input::replace_output(Output& new_output)
     }
 }
 
-void Input::replace_output(std::shared_ptr<Node> node, size_t i)
+void descriptor::Input::replace_output(std::shared_ptr<Node> node, size_t i)
 {
     replace_output(node->m_outputs.at(i));
 }
 
-std::shared_ptr<Node> Input::get_node() const
+void descriptor::Input::remove_output()
+{
+    if (m_output != nullptr)
+    {
+        m_output->remove_input(this);
+        m_src_node = nullptr;
+        m_output = nullptr;
+    }
+}
+
+std::shared_ptr<Node> descriptor::Input::get_node() const
 {
     return m_node->shared_from_this();
 }
 
-const Tensor& Input::get_tensor() const
+const Tensor& descriptor::Input::get_tensor() const
 {
     return m_output->get_tensor();
 }
 
-Tensor& Input::get_tensor()
+Tensor& descriptor::Input::get_tensor()
 {
     return m_output->get_tensor();
 }
 
-std::shared_ptr<const Tensor> Input::get_tensor_ptr() const
+std::shared_ptr<const Tensor> descriptor::Input::get_tensor_ptr() const
 {
     return m_output->get_tensor_ptr();
 }
 
-std::shared_ptr<Tensor> Input::get_tensor_ptr()
+std::shared_ptr<Tensor> descriptor::Input::get_tensor_ptr()
 {
     return m_output->get_tensor_ptr();
 }
 
-const Shape& Input::get_shape() const
+const Shape& descriptor::Input::get_shape() const
 {
     return m_output->get_shape();
 }
 
-const PartialShape& Input::get_partial_shape() const
+const PartialShape& descriptor::Input::get_partial_shape() const
 {
     return m_output->get_partial_shape();
 }
 
-const element::Type& Input::get_element_type() const
+const element::Type& descriptor::Input::get_element_type() const
 {
     return m_output->get_element_type();
 }

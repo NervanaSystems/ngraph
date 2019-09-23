@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,62 +24,66 @@ include(ExternalProject)
 SET(GTEST_GIT_REPO_URL https://github.com/google/googletest.git)
 SET(GTEST_GIT_LABEL release-1.8.1)
 
-set(COMPILE_FLAGS -fPIC)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    if (DEFINED NGRAPH_USE_CXX_ABI)
-        set(COMPILE_FLAGS "${COMPILE_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI}")
-    endif()    
+set(GMOCK_OUTPUT_DIR ${EXTERNAL_PROJECTS_ROOT}/gtest/build/googlemock)
+set(GTEST_OUTPUT_DIR ${GMOCK_OUTPUT_DIR}/gtest)
+
+if(WIN32)
+    list(APPEND GTEST_CMAKE_ARGS
+        -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE=${GTEST_OUTPUT_DIR}
+        -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG=${GTEST_OUTPUT_DIR}
+        -Dgtest_force_shared_crt=TRUE
+    )
 endif()
 
-# The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
-if (${CMAKE_VERSION} VERSION_LESS 3.2)
-    ExternalProject_Add(
-        ext_gtest
-        PREFIX gtest
-        GIT_REPOSITORY ${GTEST_GIT_REPO_URL}
-        GIT_TAG ${GTEST_GIT_LABEL}
-        # Disable install step
-        INSTALL_COMMAND ""
-        UPDATE_COMMAND ""
-        CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                   -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                   -DCMAKE_CXX_FLAGS=${COMPILE_FLAGS}
-        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/tmp"
-        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/stamp"
-        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/download"
-        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/src"
-        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/build"
-        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest"
-        EXCLUDE_FROM_ALL TRUE
-        )
+if(LINUX)
+    # workaround for compile error
+    # related: https://github.com/intel/mkl-dnn/issues/55
+    set(GTEST_CXX_FLAGS "-Wno-unused-result ${CMAKE_CXX_FLAGS}")
 else()
-    ExternalProject_Add(
-        ext_gtest
-        PREFIX gtest
-        GIT_REPOSITORY ${GTEST_GIT_REPO_URL}
-        GIT_TAG ${GTEST_GIT_LABEL}
-        # Disable install step
-        INSTALL_COMMAND ""
-        UPDATE_COMMAND ""
-        CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                   -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                   -DCMAKE_CXX_FLAGS=${COMPILE_FLAGS}
-        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/tmp"
-        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/stamp"
-        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/download"
-        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/src"
-        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/build"
-        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest"
-        BUILD_BYPRODUCTS "${EXTERNAL_PROJECTS_ROOT}/gtest/build/googlemock/gtest/libgtest.a"
-        EXCLUDE_FROM_ALL TRUE
-        )
+    set(GTEST_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 endif()
+
+ExternalProject_Add(
+    ext_gtest
+    PREFIX gtest
+    GIT_REPOSITORY ${GTEST_GIT_REPO_URL}
+    GIT_TAG ${GTEST_GIT_LABEL}
+    # Disable install step
+    INSTALL_COMMAND ""
+    UPDATE_COMMAND ""
+    CMAKE_GENERATOR ${CMAKE_GENERATOR}
+    CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
+    CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
+    CMAKE_ARGS
+        ${NGRAPH_FORWARD_CMAKE_ARGS}
+        -DCMAKE_CXX_FLAGS=${GTEST_CXX_FLAGS}
+        ${GTEST_CMAKE_ARGS}
+    BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/build"
+    EXCLUDE_FROM_ALL TRUE
+    )
 
 #------------------------------------------------------------------------------
 
 ExternalProject_Get_Property(ext_gtest SOURCE_DIR BINARY_DIR)
 
 add_library(libgtest INTERFACE)
-add_dependencies(libgtest ext_gtest)
-target_include_directories(libgtest SYSTEM INTERFACE ${SOURCE_DIR}/googletest/include)
-target_link_libraries(libgtest INTERFACE ${BINARY_DIR}/googlemock/gtest/libgtest.a)
+add_dependencies(libgtest ext_gtest ext_gmock)
+target_include_directories(libgtest SYSTEM INTERFACE
+    ${SOURCE_DIR}/googletest/include
+    ${SOURCE_DIR}/googlemock/include)
+
+if(LINUX OR APPLE)
+    target_link_libraries(libgtest INTERFACE
+        debug ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtestd${CMAKE_STATIC_LIBRARY_SUFFIX}
+        debug ${GMOCK_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmockd${CMAKE_STATIC_LIBRARY_SUFFIX}
+        optimized ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}
+        optimized ${GMOCK_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX})
+elseif(WIN32)
+    target_link_libraries(libgtest INTERFACE
+        debug ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtestd${CMAKE_STATIC_LIBRARY_SUFFIX}
+        debug ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmockd${CMAKE_STATIC_LIBRARY_SUFFIX}
+        optimized ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}
+        optimized ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX})
+else()
+    message(FATAL_ERROR "libgtest: Unsupported platform.")
+endif()

@@ -3,7 +3,7 @@ set -e
 set -u
 
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -38,26 +38,23 @@ if ! CLANG_FORMAT_PROG="$(which "${CLANG_FORMAT_BASENAME}")"; then
 fi
 
 clang_format_lib_verify_version "${CLANG_FORMAT_PROG}" "${REQUIRED_CLANG_FORMAT_VERSION}"
-bash_lib_status "Verified that '${CLANG_FORMAT_PROG}' has version '${REQUIRED_CLANG_FORMAT_VERSION}'"
+echo "Verified that '${CLANG_FORMAT_PROG}' has version '${REQUIRED_CLANG_FORMAT_VERSION}'"
 
 pushd "${THIS_SCRIPT_DIR}/.."
 
-declare PYBIND_WRAPPER="python/pyngraph"
-
 declare ROOT_SUBDIR
-for ROOT_SUBDIR in src doc/examples test ${PYBIND_WRAPPER}; do
+for ROOT_SUBDIR in src test doc/examples python/pyngraph; do
     if ! [[ -d "${ROOT_SUBDIR}" ]]; then
-	    bash_lib_status "In directory '$(pwd)', no subdirectory named '${ROOT_SUBDIR}' was found."
+        echo "In directory '$(pwd)', no subdirectory named '${ROOT_SUBDIR}' was found."
     else
-        bash_lib_status "About to format C/C++ code in directory tree '$(pwd)/${ROOT_SUBDIR}' ..."
+        echo "About to format C/C++ code in directory tree '$(pwd)/${ROOT_SUBDIR}' ..."
 
         # Note that we restrict to "-type f" to exclude symlinks. Emacs sometimes
         # creates dangling symlinks with .cpp/.hpp suffixes as a sort of locking
         # mechanism, and this confuses clang-format.
         find "${ROOT_SUBDIR}" -type f -and \( -name '*.cpp' -or -name '*.hpp' \) | xargs "${CLANG_FORMAT_PROG}" -i -style=file
-        find "${ROOT_SUBDIR}" -type f -and \( -name '*.cpp' -or -name '*.hpp' -or -name 'CMakeLists.txt' \) | xargs chmod 0644 
 
-        bash_lib_status "Done."
+        echo "Done."
     fi
 done
 

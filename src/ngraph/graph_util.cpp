@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cassert>
-#include <deque>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -26,13 +24,13 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/node_vector.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
-#include "ngraph/placement.hpp"
-#include "ngraph/result_vector.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
+#include "ngraph/provenance.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -64,76 +62,73 @@ void ngraph::traverse_nodes(const Function* p,
     traverse_nodes(nodes, f, include_control_deps);
 }
 
-// This version of traverses directly from input/output nodes to perform functions on
-// graphs that are not wrapped by functions. Most useful for finding parameters of a graph
-// directly from the result nodes, not from function parameters.
-void ngraph::traverse_nodes(const NodeVector& io_nodes,
+void ngraph::traverse_nodes(const NodeVector& subgraph_results,
                             std::function<void(std::shared_ptr<Node>)> f,
-                            bool include_control_deps)
+                            bool include_control_deps,
+                            const NodeVector& subgraph_params)
 {
-    std::unordered_set<std::shared_ptr<Node>> instances_seen;
-    std::deque<std::shared_ptr<Node>> stack;
-
-    for (auto r : io_nodes)
+    std::unordered_set<Node*> instances_seen;
+    std::stack<Node*, std::vector<Node*>> stack;
+    for (auto& node_ptr : subgraph_params)
     {
-        stack.push_front(r);
+        instances_seen.insert(node_ptr.get());
+    }
+    for (auto& node_ptr : subgraph_results)
+    {
+        stack.push(node_ptr.get());
     }
 
     while (stack.size() > 0)
     {
-        std::shared_ptr<Node> n = stack.front();
-        if (instances_seen.count(n) == 0)
+        Node* n = stack.top();
+        stack.pop();
+        if (instances_seen.insert(n).second)
         {
-            instances_seen.insert(n);
-            f(n);
-        }
-        stack.pop_front();
-        for (auto arg : n->get_arguments())
-        {
-            if (instances_seen.count(arg) == 0)
+            f(n->shared_from_this());
+            for (auto input : n->inputs())
             {
-                stack.push_front(arg);
+                stack.push(input.get_source_output().get_node());
             }
-        }
 
-        if (include_control_deps)
-        {
-            for (auto cdep : n->get_control_dependencies())
+            if (include_control_deps)
             {
-                if (instances_seen.count(cdep) == 0)
+                for (auto& cdep : n->get_control_dependencies())
                 {
-                    stack.push_front(cdep);
+                    stack.push(cdep.get());
                 }
             }
         }
     }
 }
 
-void ngraph::traverse_functions(std::shared_ptr<ngraph::Function> p,
-                                std::function<void(shared_ptr<Function>)> f)
+NodeVector ngraph::find_common_args(std::shared_ptr<Node> node1, std::shared_ptr<Node> node2)
 {
-    std::unordered_set<shared_ptr<Function>> instances_seen;
-    deque<shared_ptr<Function>> stack;
+    std::unordered_set<std::shared_ptr<Node>> node1_args;
 
-    stack.push_front(p);
+    auto compute_node1_args = [&node1_args](const std::shared_ptr<Node> node) {
+        node1_args.insert(node);
+    };
 
-    while (stack.size() > 0)
+    traverse_nodes({node1}, compute_node1_args, false, NodeVector{});
+
+    std::unordered_set<std::shared_ptr<Node>> node2_args;
+
+    auto compute_node2_args = [&node2_args](const std::shared_ptr<Node> node) {
+        node2_args.insert(node);
+    };
+
+    traverse_nodes({node2}, compute_node2_args, false, NodeVector{});
+
+    NodeVector common_args;
+    for (auto e : node1_args)
     {
-        shared_ptr<Function> func = stack.front();
-        if (instances_seen.find(func) == instances_seen.end())
+        if (node2_args.count(e) > 0)
         {
-            instances_seen.insert(func);
-            f(func);
-        }
-        stack.pop_front();
-        for (shared_ptr<Node> op : func->get_ops())
-        {
-            for (shared_ptr<Function> fp : op->get_functions())
-            {
-                stack.push_front(fp);
-            }
+            common_args.push_back(e);
         }
     }
+
+    return common_args;
 }
 
 void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)
@@ -143,25 +138,79 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
         throw ngraph_error("Result nodes cannot be replaced.");
     }
 
-    if (target->get_users().empty())
-    {
-        throw ngraph_error("replacing an unreachable node");
-    }
+    NGRAPH_CHECK(!target->get_users().empty(),
+                 "Attempted to replace unreachable node '",
+                 *target,
+                 "'. Replacement: '",
+                 *replacement,
+                 "'");
 
     // Fix input/output descriptors
-    assert(target->get_outputs().size() == replacement->get_outputs().size());
+    NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
+
+    if (ngraph::get_provenance_enabled())
+    {
+        auto common_args = ngraph::find_common_args(target, replacement);
+
+        std::set<string> removed_subgraph_tags;
+
+        auto set_replacement_prov = [&removed_subgraph_tags](std::shared_ptr<Node> node) {
+            for (auto tag : node->get_provenance_tags())
+            {
+                removed_subgraph_tags.insert(tag);
+            }
+        };
+
+        traverse_nodes({target}, set_replacement_prov, false, common_args);
+        replacement->add_provenance_tags(removed_subgraph_tags);
+
+        auto set_prov_new_nodes = [&removed_subgraph_tags](std::shared_ptr<Node> node) {
+            node->add_provenance_tags(removed_subgraph_tags);
+        };
+
+        traverse_nodes({replacement}, set_prov_new_nodes, false, common_args);
+    }
 
     // For each of target's output O with replacement output O_rep:
     //     For each O's connected downstream input I:
     //         Change I's connected upstream output to O_rep
-    for (size_t i = 0; i < target->get_outputs().size(); i++)
+    for (size_t i = 0; i < target->get_output_size(); i++)
     {
-        auto& target_output = target->get_outputs().at(i);
-        std::set<ngraph::descriptor::Input*> copy_inputs{begin(target_output.get_inputs()),
-                                                         end(target_output.get_inputs())};
-        for (auto input : copy_inputs)
+        for (auto& input : target->output(i).get_target_inputs())
         {
-            input->replace_output(replacement->get_outputs().at(i));
+            input.replace_source_output(replacement->output(i));
+        }
+    }
+
+    replacement->add_node_control_dependents(target);
+    target->clear_control_dependents();
+}
+
+void ngraph::replace_nodes(
+    const std::shared_ptr<Function>& f,
+    const unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Parameter>>&
+        parameter_replacement_map,
+    const unordered_map<shared_ptr<Node>, shared_ptr<Node>>& body_replacement_map)
+{
+    auto& params = f->get_parameters();
+
+    for (size_t i = 0; i < params.size(); i++)
+    {
+        if (parameter_replacement_map.count(params[i]) != 0 &&
+            parameter_replacement_map.at(params[i]) != params[i])
+        {
+            f->replace_parameter(i, parameter_replacement_map.at(params[i]));
+        }
+    }
+
+    for (auto& kv : body_replacement_map)
+    {
+        auto& k = kv.first;
+        auto& v = kv.second;
+
+        if (k != v)
+        {
+            f->replace_node(k, v);
         }
     }
 }
@@ -170,58 +219,30 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
 bool ngraph::is_post_dominated(Node* X, Node* Y)
 {
     std::unordered_set<Node*> visited;
-    std::deque<Node*> stack;
-    stack.push_front(X);
+    std::stack<Node*, std::vector<Node*>> stack;
+    stack.push(X);
 
     while (stack.size() > 0)
     {
-        ngraph::Node* curr = stack.front();
+        ngraph::Node* curr = stack.top();
         visited.insert(curr);
         if (curr->is_output())
         {
             return false;
         }
-        stack.pop_front();
+        stack.pop();
         if (curr != Y)
         {
-            for (auto next : curr->get_users())
+            for (const auto& next : curr->get_users())
             {
                 if (visited.count(next.get()) == 0)
                 {
-                    stack.push_front(next.get());
+                    stack.push(next.get());
                 }
             }
         }
     }
     return true;
-}
-
-void ngraph::NodeMap::update(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> val)
-{
-    if (!exists(orig))
-    {
-        throw ngraph_error("Node doesn't exist!");
-    }
-    m_node_map[orig] = val;
-}
-
-void ngraph::NodeMap::add(std::shared_ptr<ngraph::Node> orig,
-                          std::shared_ptr<ngraph::Node> replacement)
-{
-    if (exists(orig))
-    {
-        throw ngraph_error("NodeMap: key already exists");
-    }
-    m_node_map[orig] = replacement;
-}
-
-std::shared_ptr<ngraph::Node> ngraph::NodeMap::get(std::shared_ptr<ngraph::Node> orig) const
-{
-    if (!exists(orig))
-    {
-        throw ngraph_error("NodeMap: key does not exist");
-    }
-    return m_node_map.at(orig);
 }
 
 std::list<std::shared_ptr<ngraph::Node>>
@@ -231,22 +252,37 @@ std::list<std::shared_ptr<ngraph::Node>>
     auto sorted_nodes = topological_sort(nodes, true);
     for (auto node : sorted_nodes)
     {
-        if (!node_map.exists(node))
+        if (node_map.count(node.get()) == 0)
         {
             // get (already) cloned arguments and clone the node
-            NodeVector cloned_args;
-            for (auto arg : node->get_arguments())
+            OutputVector cloned_args;
+            for (auto input : node->inputs())
             {
-                cloned_args.push_back(node_map.get(arg));
+                Output<Node> output = input.get_source_output();
+                cloned_args.push_back(output.for_node(node_map.at(output.get_node())));
             }
-            auto cloned_node = node->copy_with_new_args(cloned_args);
+            std::vector<std::shared_ptr<Node>> cloned_dependencies;
+            for (auto& dependency : node->get_control_dependencies())
+            {
+                shared_ptr<Node>& dependent = node_map.at(dependency.get());
+                if (find(cloned_dependencies.begin(), cloned_dependencies.end(), dependent) ==
+                    cloned_dependencies.end())
+                {
+                    cloned_dependencies.push_back(dependent);
+                }
+            }
+            auto cloned_node = node->copy_with_new_inputs(cloned_args, cloned_dependencies);
+            if (node->get_friendly_name() != node->get_name())
+            {
+                // There is a friendly name for this node so copy it
+                cloned_node->set_friendly_name(node->get_friendly_name());
+            }
 
-            //copy control dependencies
-            for (auto cdep : node->get_control_dependencies())
+            for (auto tag : node->get_provenance_tags())
             {
-                cloned_node->add_control_dependency(node_map.get(cdep));
+                cloned_node->add_provenance_tag(tag);
             }
-            node_map.add(node, cloned_node);
+            node_map[node.get()] = cloned_node;
         }
     }
 
@@ -255,7 +291,7 @@ std::list<std::shared_ptr<ngraph::Node>>
     std::list<std::shared_ptr<ngraph::Node>> cloned_nodes;
     for (auto node : nodes)
     {
-        cloned_nodes.push_back(node_map.get(node));
+        cloned_nodes.push_back(node_map.at(node.get()));
     }
     return cloned_nodes;
 }
@@ -276,7 +312,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function&
     ResultVector cloned_results;
     for (shared_ptr<Node> node : func.get_results())
     {
-        auto result = std::dynamic_pointer_cast<op::Result>(node_map.get(node));
+        auto result = as_type_ptr<op::Result>(node_map.at(node.get()));
         if (!result)
         {
             throw ngraph_error("Results should be of type op::Result");
@@ -286,16 +322,16 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function&
     std::vector<std::shared_ptr<op::Parameter>> cloned_params;
     for (auto param : func.get_parameters())
     {
-        cloned_params.push_back(std::dynamic_pointer_cast<op::Parameter>(node_map.get(param)));
+        cloned_params.push_back(as_type_ptr<op::Parameter>(node_map.at(param.get())));
     }
 
     // create and return cloned function
     return std::make_shared<ngraph::Function>(cloned_results, cloned_params);
 }
 
-bool ngraph::is_equal_to_const_value(std::string const_value, std::shared_ptr<Node> reduce_constant)
+bool ngraph::is_equal_to_const_value(std::string const_value, const Output<Node>& reduce_constant)
 {
-    if (auto rc = dynamic_pointer_cast<ngraph::op::Constant>(reduce_constant))
+    if (auto rc = as_type_ptr<ngraph::op::Constant>(reduce_constant.get_node_shared_ptr()))
     {
         auto cshape = rc->get_shape();
         size_t n = shape_size(cshape);
@@ -343,43 +379,28 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
     par_node->set_placement(dst_node->get_placement());
 
     // Fix input / output among src, dst and par
-    descriptor::Input* dst_input = dst_node->get_input_from(src_node);
-    descriptor::Output* src_output = src_node->get_output_to(dst_node);
-    src_output->remove_input(dst_input);    // Remove [0]
-    dst_input->replace_output(par_node, 0); // Remove [0] (again), add [8], remove [1], add [9]
+    std::vector<Input<Node>> dst_inputs = get_inputs_from(*src_node, *dst_node);
+    NGRAPH_CHECK(dst_inputs.size() == 1,
+                 "insert_result_parameter_split encountered more than "
+                 "one input between the source and destination nodes");
+    auto& dst_input = dst_inputs[0];
+
+    std::vector<Output<Node>> src_outputs = get_outputs_to(*src_node, *dst_node);
+    NGRAPH_CHECK(src_outputs.size() == 1,
+                 "insert_result_parameter_split encountered more than "
+                 "one output between the source and destination nodes");
+    auto& src_output = src_outputs[0];
+
+    // Remove [0]
+    src_output.remove_target_input(dst_input);
+
+    // Remove [0] (again), add [8], remove [1], add [9]
+    dst_input.replace_source_output(par_node->output(0));
 
     // Add res node
-    shared_ptr<op::Result> res_node = make_shared<op::Result>(src_node); // Add [4], [5], [6], [7]
+    // Add [4], [5], [6], [7]
+    shared_ptr<op::Result> res_node = make_shared<op::Result>(src_node);
     res_node->set_placement(src_node->get_placement());
-
-    return make_pair(res_node, par_node);
-}
-
-// Suffix *_size  as a part of function name is temporary, this suffix
-//  will be removed when the backends move to the latest Hybrid backend
-pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
-    ngraph::insert_result_parameter_split_size(const shared_ptr<Node>& src_node,
-                                               const shared_ptr<Node>& dst_node)
-{
-    if (src_node->get_output_size() != 1)
-    {
-        throw ngraph_error("Multiple output per op not supported in graph partition yet.");
-    }
-
-    // Make parameter node
-    shared_ptr<op::Parameter> par_node = make_shared<op::Parameter>(
-        src_node->get_output_element_type(0), src_node->get_output_shape(0));
-    par_node->set_placement(dst_node->get_placement_size());
-
-    // Fix input / output among src, dst and par
-    descriptor::Input* dst_input = dst_node->get_input_from(src_node);
-    descriptor::Output* src_output = src_node->get_output_to(dst_node);
-    src_output->remove_input(dst_input);    // Remove [0]
-    dst_input->replace_output(par_node, 0); // Remove [0] (again), add [8], remove [1], add [9]
-
-    // Add res node
-    shared_ptr<op::Result> res_node = make_shared<op::Result>(src_node); // Add [4], [5], [6], [7]
-    res_node->set_placement(src_node->get_placement_size());
 
     return make_pair(res_node, par_node);
 }
@@ -429,58 +450,21 @@ void ngraph::insert_new_node_between(const shared_ptr<Node>& src_node,
                                      const shared_ptr<Node>& new_node)
 {
     // Fix input / output
-    descriptor::Input* dst_input = dst_node->get_input_from(src_node);
-    descriptor::Output* src_output = src_node->get_output_to(dst_node);
-    src_output->remove_input(dst_input);    // Remove [0]
-    dst_input->replace_output(new_node, 0); // Remove [0] (again), add [8], remove [1], add [9]
-}
+    std::vector<Input<Node>> dst_inputs = get_inputs_from(*src_node, *dst_node);
+    NGRAPH_CHECK(dst_inputs.size() == 1,
+                 "insert_new_node_between encountered more than one "
+                 "input between the source and destination nodes");
+    auto& dst_input = dst_inputs[0];
 
-// Assert that nodes in the function is colocated and return that placement
-Placement ngraph::get_colocated_function_placement(shared_ptr<Function> func)
-{
-    Placement function_placement = Placement::DEFAULT;
-    traverse_nodes(func, [&](shared_ptr<Node> node) {
-        Placement node_placement = node->get_placement();
-        if (node_placement == Placement::DEFAULT)
-        {
-            throw ngraph_error("Node should have a device placement, not Placement::DEFAULT");
-        }
-        if (function_placement == Placement::DEFAULT)
-        {
-            // First time seeing a node
-            function_placement = node->get_placement();
-        }
-        else if (function_placement != node_placement)
-        {
-            throw ngraph_error("Function contains nodes of two different placements");
-        }
-    });
-    return function_placement;
-}
+    std::vector<Output<Node>> src_outputs = get_outputs_to(*src_node, *dst_node);
+    NGRAPH_CHECK(src_outputs.size() == 1,
+                 "insert_new_node_between encountered more than one "
+                 "output between the source and destination nodes");
+    auto& src_output = src_outputs[0];
 
-// Suffix *_size  as a part of function name is temporary, this suffix
-//  will be removed when the backends move to the latest Hybrid backend
-// Assert that nodes in the function is colocated and return that placement
-size_t ngraph::get_colocated_function_placement_size(shared_ptr<Function> func)
-{
-    auto ops = func->get_ops();
-
-    //it's okay to not do Placement::DEFAULT check; the same node will be checked in the loop below
-    size_t function_placement = ops.front()->get_placement_size();
-    for (auto op : ops)
-    {
-        size_t node_placement = op->get_placement_size();
-        if (node_placement == 0)
-        {
-            throw ngraph_error("Node should have a device placement, not Placement::DEFAULT");
-        }
-        if (function_placement != node_placement)
-        {
-            throw ngraph_error("Function contains nodes of two different placements");
-        }
-    }
-
-    return function_placement;
+    src_output.remove_target_input(dst_input); // Remove [0]
+    dst_input.replace_source_output(
+        new_node->output(0)); // Remove [0] (again), add [8], remove [1], add [9]
 }
 
 std::shared_ptr<Node> ngraph::make_zero(const element::Type& element_type, const Shape& shape)
@@ -506,7 +490,7 @@ std::shared_ptr<Node> ngraph::make_constant_from_string(std::string val,
     return std::make_shared<op::Constant>(element_type, shape, cvals);
 }
 
-bool ngraph::is_zero(std::shared_ptr<Node> reduce_constant)
+bool ngraph::is_zero(const Output<Node>& reduce_constant)
 {
     auto result_bool = is_equal_to_const_value("0", reduce_constant);
     return result_bool;
@@ -520,7 +504,8 @@ bool ngraph::is_one(std::shared_ptr<Node> reduce_constant)
 
 NodeVector ngraph::get_subgraph_outputs(const NodeVector& nodes,
                                         const NodeVector& exclusions,
-                                        bool ignore_unused)
+                                        bool ignore_unused,
+                                        bool ignore_output_duplicates)
 {
     std::set<shared_ptr<Node>> exclusions_set(exclusions.begin(), exclusions.end());
     std::set<shared_ptr<Node>> nodes_set(nodes.begin(), nodes.end());
@@ -534,9 +519,13 @@ NodeVector ngraph::get_subgraph_outputs(const NodeVector& nodes,
             continue;
         }
 
-        for (auto u : n->get_users())
+        for (const auto& u : n->get_users())
         {
-            if (nodes_set.count(u) == 0 && (!ignore_unused || is_used(u.get())))
+            bool add_output = nodes_set.count(u) == 0 && (!ignore_unused || is_used(u.get()));
+            // check if output is already captured
+            add_output &= (ignore_output_duplicates ||
+                           std::find(outputs.begin(), outputs.end(), n) == outputs.end());
+            if (add_output)
             {
                 outputs.push_back(n);
             }
@@ -545,15 +534,22 @@ NodeVector ngraph::get_subgraph_outputs(const NodeVector& nodes,
     return outputs;
 }
 
+NodeVector ngraph::extract_subgraph(const NodeVector& results, const NodeVector& args)
+{
+    NodeVector subgraph;
+    traverse_nodes(results, [&](std::shared_ptr<Node> n) { subgraph.push_back(n); }, true, args);
+    return subgraph;
+}
+
 bool ngraph::is_used(Node* node)
 {
     std::unordered_set<Node*> instances_seen;
-    std::deque<Node*> stack;
-    stack.push_front(node);
+    std::stack<Node*, std::vector<Node*>> stack;
+    stack.push(node);
 
     while (stack.size() > 0)
     {
-        ngraph::Node* n = stack.front();
+        ngraph::Node* n = stack.top();
         if (instances_seen.count(n) == 0)
         {
             if (n->is_output())
@@ -562,12 +558,12 @@ bool ngraph::is_used(Node* node)
             }
             instances_seen.insert(n);
         }
-        stack.pop_front();
-        for (auto arg : n->get_users())
+        stack.pop();
+        for (const auto& arg : n->get_users())
         {
             if (instances_seen.count(arg.get()) == 0)
             {
-                stack.push_front(arg.get());
+                stack.push(arg.get());
             }
         }
     }
@@ -577,7 +573,7 @@ bool ngraph::is_used(Node* node)
 size_t ngraph::get_user_count(Node* node)
 {
     size_t count = 0;
-    for (auto node_user : node->get_users())
+    for (const auto& node_user : node->get_users())
     {
         count += is_used(node_user.get());
     }
@@ -586,17 +582,18 @@ size_t ngraph::get_user_count(Node* node)
 
 bool ngraph::possibly_overwritten(Node* node)
 {
-    for (const descriptor::Output& output : node->get_outputs())
+    for (auto& output : node->outputs())
     {
-        for (const descriptor::Input* input : output.get_inputs())
+        for (auto& input : output.get_target_inputs())
         {
-            if (auto op = std::dynamic_pointer_cast<ngraph::op::Op>(input->get_node()))
+            if (input.get_node()->is_op())
             {
+                auto op = static_cast<ngraph::op::Op*>(input.get_node());
                 if (auto op_annotations = op->get_op_annotations())
                 {
                     for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                     {
-                        if (input->get_index() == oi_pair.input && oi_pair.destructive)
+                        if (input.get_index() == oi_pair.input && oi_pair.destructive)
                         {
                             return true;
                         }
@@ -623,5 +620,162 @@ bool ngraph::is_valid_rank(const std::shared_ptr<Node>& node, std::vector<size_t
             return true;
         }
     }
+    return false;
+}
+
+bool ngraph::compare_constants(const std::shared_ptr<Node>& n1, const std::shared_ptr<Node>& n2)
+{
+    if (!(n1->is_constant() && n2->is_constant()))
+    {
+        return false;
+    }
+
+    if (static_pointer_cast<op::Constant>(n1)->get_value_strings() !=
+        static_pointer_cast<op::Constant>(n2)->get_value_strings())
+    {
+        return false;
+    }
+
+    return true;
+}
+
+void ngraph::plot_graph(
+    std::shared_ptr<Function> f,
+    const std::string& filename,
+    std::function<void(const Node& node, std::vector<std::string>& attributes)> attributes)
+{
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<ngraph::pass::VisualizeTree>(filename, attributes);
+    pass_manager.run_passes(f);
+}
+
+std::vector<Input<Node>> ngraph::get_inputs_from(Node& src, Node& dst)
+{
+    std::vector<Input<Node>> result;
+
+    for (auto& input : dst.inputs())
+    {
+        if (input.get_source_output().get_node() == &src)
+        {
+            result.push_back(input);
+        }
+    }
+
+    return result;
+}
+
+std::vector<Output<Node>> ngraph::get_outputs_to(Node& src, Node& dst)
+{
+    std::vector<Output<Node>> result;
+
+    for (auto& output : src.outputs())
+    {
+        bool targets_dst = false;
+
+        for (auto& input : output.get_target_inputs())
+        {
+            if (input.get_node() == &dst)
+            {
+                targets_dst = true;
+                break;
+            }
+        }
+
+        if (targets_dst)
+        {
+            result.push_back(output);
+        }
+    }
+
+    return result;
+}
+
+static bool check_for_cycles_bkwd(std::shared_ptr<ngraph::Node> node,
+                                  std::deque<std::shared_ptr<ngraph::Node>>& path,
+                                  std::unordered_set<std::shared_ptr<ngraph::Node>>& path_set,
+                                  ngraph::NodeVector& cycle_nodes)
+{
+    path.push_back(node);
+    path_set.insert(node);
+    for (auto& input : node->inputs())
+    {
+        auto arg = input.get_source_output().get_node_shared_ptr();
+        if (path_set.find(arg) != path_set.end())
+        {
+            for (auto it : path)
+            {
+                cycle_nodes.push_back(it);
+            }
+            // last node
+            cycle_nodes.push_back(arg);
+            return true;
+        }
+        if (check_for_cycles_bkwd(arg, path, path_set, cycle_nodes))
+        {
+            return true;
+        }
+    }
+    path_set.erase(path.back());
+    path.pop_back();
+    return false;
+}
+
+static bool check_for_cycles_fwd(std::shared_ptr<ngraph::Node> node,
+                                 std::deque<std::shared_ptr<ngraph::Node>>& path,
+                                 std::unordered_set<std::shared_ptr<ngraph::Node>>& path_set,
+                                 ngraph::NodeVector& cycle_nodes)
+{
+    path.push_back(node);
+    path_set.insert(node);
+    for (auto& arg : node->get_users())
+    {
+        if (path_set.find(arg) != path_set.end())
+        {
+            for (auto it : path)
+            {
+                cycle_nodes.push_back(it);
+            }
+            // last node
+            cycle_nodes.push_back(arg);
+            return true;
+        }
+        if (check_for_cycles_fwd(arg, path, path_set, cycle_nodes))
+        {
+            return true;
+        }
+    }
+    path_set.erase(path.back());
+    path.pop_back();
+    return false;
+}
+
+bool ngraph::check_for_cycles(const ngraph::Function* func,
+                              ngraph::NodeVector& cycle_nodes,
+                              bool& is_bkwd_cycle)
+{
+    for (auto res : func->get_results())
+    {
+        std::deque<std::shared_ptr<Node>> path;
+        // mirror of path stack for faster cycle check
+        std::unordered_set<std::shared_ptr<Node>> path_set;
+        if (check_for_cycles_bkwd(res, path, path_set, cycle_nodes))
+        {
+            is_bkwd_cycle = true;
+            return true;
+        }
+    }
+
+    for (auto param : func->get_parameters())
+    {
+        std::deque<std::shared_ptr<Node>> path;
+        // mirror of path stack for faster cycle check
+        std::unordered_set<std::shared_ptr<Node>> path_set;
+        if (check_for_cycles_fwd(param, path, path_set, cycle_nodes))
+        {
+            is_bkwd_cycle = false;
+            return true;
+        }
+    }
+    // no cycles
     return false;
 }

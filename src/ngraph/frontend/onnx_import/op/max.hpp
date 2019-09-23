@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 #pragma once
 
 #include "core/node.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "utils/variadic.hpp"
 
@@ -36,7 +36,16 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+            namespace set_8
+            {
+                inline NodeVector max(const Node& node)
+                {
+                    return variadic::make_ng_variadic_op_with_broadcast<ngraph::op::Maximum>(node);
+                }
+
+            } // namespace set_8
+
+        } // namespace op
 
     } // namespace onnx_import
 

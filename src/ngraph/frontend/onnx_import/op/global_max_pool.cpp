@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,9 +15,8 @@
 //*****************************************************************************
 
 #include "ngraph/node.hpp"
-#include "ngraph/node_vector.hpp"
 #include "ngraph/op/max_pool.hpp"
-#include "utils/convpool.hpp"
+#include "utils/pooling_factory.hpp"
 
 namespace ngraph
 {
@@ -29,7 +28,8 @@ namespace ngraph
             {
                 NodeVector global_max_pool(const Node& node)
                 {
-                    return convpool::make_ng_pool<ngraph::op::MaxPool>(node);
+                    return pooling::GlobalPoolingFactory(node)
+                        .make_pooling_op<ngraph::op::MaxPool>();
                 }
 
             } // namespace set_1

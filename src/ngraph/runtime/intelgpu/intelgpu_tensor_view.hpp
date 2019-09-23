@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,19 +38,17 @@ public:
     IntelGPUTensorView(const element::Type& element_type,
                        const Shape& shape,
                        const cldnn::engine& backend_engine,
-                       void* memory_pointer = nullptr);
+                       void* memory_pointer);
 
     /// \brief Write bytes directly into the tensor
     /// \param p Pointer to source of data
-    /// \param tensor_offset Offset into tensor storage to begin writing. Must be element-aligned.
     /// \param n Number of bytes to write, must be integral number of elements.
-    void write(const void* p, size_t tensor_offset, size_t n) override;
+    void write(const void* p, size_t n) override;
 
     /// \brief Read bytes directly from the tensor
     /// \param p Pointer to destination for data
-    /// \param tensor_offset Offset into tensor storage to begin reading. Must be element-aligned.
     /// \param n Number of bytes to read, must be integral number of elements.
-    void read(void* p, size_t tensor_offset, size_t n) const override;
+    void read(void* p, size_t n) const override;
 
     cldnn::memory* get_data_ptr() { return ocl_memory.get(); }
 private:

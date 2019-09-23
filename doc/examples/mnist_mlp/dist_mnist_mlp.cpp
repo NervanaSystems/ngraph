@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -73,8 +73,7 @@ size_t accuracy_count(const std::shared_ptr<runtime::Tensor>& t_softmax,
 }
 
 float test_accuracy(MNistDataLoader& loader,
-                    std::shared_ptr<runtime::Backend> backend,
-                    std::shared_ptr<Function> function,
+                    std::shared_ptr<runtime::Executable> exec,
                     const std::shared_ptr<runtime::Tensor>& t_X,
                     const std::shared_ptr<runtime::Tensor>& t_Y,
                     const std::shared_ptr<runtime::Tensor>& t_softmax,
@@ -96,8 +95,7 @@ float test_accuracy(MNistDataLoader& loader,
         t_Y->write(loader.get_label_floats(),
                    0,
                    loader.get_label_batch_size() * sizeof(float));
-        backend->call(
-            function, {t_softmax}, {t_X, t_W0, t_b0, t_W1, t_b1});
+        exec->call({t_softmax}, {t_X, t_W0, t_b0, t_W1, t_b1});
         size_t acc = accuracy_count(t_softmax, t_Y);
         acc_count += acc;
         sample_count += batch_size;
@@ -106,7 +104,7 @@ float test_accuracy(MNistDataLoader& loader,
            static_cast<float>(sample_count);
 }
 
-int main(int argc, const char* argv[])
+int main(int argc, char* argv[])
 {
     ngraph::Distributed dist;
 
@@ -177,8 +175,8 @@ int main(int argc, const char* argv[])
     auto delta = -learning_rate * loss;
 
     // Updates
-    ngraph::autodiff::Adjoints adjoints(NodeVector{loss},
-                                        NodeVector{delta});
+    ngraph::autodiff::Adjoints adjoints(OutputVector{loss},
+                                        OutputVector{delta});
     auto grad_W0 = adjoints.backprop_node(W0);
     auto grad_b0 = adjoints.backprop_node(b0);
     auto grad_W1 = adjoints.backprop_node(W1);
@@ -229,20 +227,25 @@ int main(int argc, const char* argv[])
     auto t_softmax = make_output_tensor(backend, softmax, 0);
 
     // Train
-    // X, Y, learning_rate, W0, b0, W1, b1 -> loss, softmax, W0_next, b0_next, W1_next, b1_next
+    // X, Y, learning_rate, W0, b0, W1, b1
+    //    -> loss, softmax, W0_next, b0_next, W1_next, b1_next
     NodeMap train_node_map;
     auto train_function = clone_function(
         Function(
-            NodeVector{loss, softmax, W0_next, b0_next, W1_next, b1_next},
+            OutputVector{
+                loss, softmax, W0_next, b0_next, W1_next, b1_next},
             ParameterVector{X, Y, N, learning_rate, W0, b0, W1, b1}),
         train_node_map);
+    auto train_exec = backend->compile(train_function);
 
     // Plain inference
     // X, W0, b0, W1, b1 -> softmax
     NodeMap inference_node_map;
-    auto inference_function = clone_function(
-        Function(NodeVector{softmax}, ParameterVector{X, W0, b0, W1, b1}),
-        inference_node_map);
+    auto inference_function =
+        clone_function(Function(OutputVector{softmax},
+                                ParameterVector{X, W0, b0, W1, b1}),
+                       inference_node_map);
+    auto inference_exec = backend->compile(inference_function);
 
     set_scalar(t_learning_rate, .03f);
 
@@ -256,8 +259,7 @@ int main(int argc, const char* argv[])
         t_Y->write(train_loader.get_label_floats(),
                    0,
                    train_loader.get_label_batch_size() * sizeof(float));
-        backend->call(
-            train_function,
+        train_exec->call(
             {t_loss,
              t_softmax,
              t_W0_next,
@@ -274,17 +276,15 @@ int main(int argc, const char* argv[])
         if (train_loader.get_epoch() != last_epoch)
         {
             last_epoch = train_loader.get_epoch();
-            std::cout << "Test accuracy: "
-                      << test_accuracy(test_loader,
-                                       backend,
-                                       inference_function,
-                                       t_X,
-                                       t_Y,
-                                       t_softmax,
-                                       t_W0,
-                                       t_b0,
-                                       t_W1,
-                                       t_b1)
+            std::cout << "Test accuracy: " << test_accuracy(test_loader,
+                                                            inference_exec,
+                                                            t_X,
+                                                            t_Y,
+                                                            t_softmax,
+                                                            t_W0,
+                                                            t_b0,
+                                                            t_W1,
+                                                            t_b1)
                       << std::endl;
         }
     }

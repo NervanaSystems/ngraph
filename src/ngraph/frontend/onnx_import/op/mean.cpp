@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,8 @@ namespace ngraph
                     auto sum = variadic::make_ng_variadic_op<ngraph::op::Add>(node).front();
                     auto shape = sum->get_shape();
 
-                    // Create a Constant representing the number of inputs with the same shape as sum
+                    // Create a Constant representing the number of inputs with the same shape as
+                    // sum
                     auto count = ngraph::op::Constant::create(
                         sum->get_element_type(),
                         shape,
@@ -44,7 +45,27 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+            namespace set_8
+            {
+                NodeVector mean(const Node& node)
+                {
+                    auto sum =
+                        variadic::make_ng_variadic_op_with_broadcast<ngraph::op::Add>(node).front();
+                    auto shape = sum->get_shape();
+
+                    // Create a Constant representing the number of inputs with the same shape as
+                    // sum
+                    auto count = ngraph::op::Constant::create(
+                        sum->get_element_type(),
+                        shape,
+                        std::vector<int>(shape_size(shape), node.get_ng_inputs().size()));
+
+                    return {sum / count};
+                }
+
+            } // namespace set_8
+
+        } // namespace op
 
     } // namespace onnx_import
 

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ namespace ngraph
                 BUILD_REDUCTION_FUNCTOR(Product, product);
             }
 
-            REGISTER_OP_BUILDER(Product);
+            void register_builders_product_cpp() { REGISTER_OP_BUILDER(Product); }
         }
     }
 }

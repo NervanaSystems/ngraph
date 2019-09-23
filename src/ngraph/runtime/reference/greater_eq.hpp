@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,20 @@ namespace ngraph
                 {
                     out[i] = arg0[i] >= arg1[i];
                 }
+            }
+
+            template <typename T>
+            void greater_eq(const T* arg0,
+                            const T* arg1,
+                            char* out,
+                            const Shape& arg0_shape,
+                            const Shape& arg1_shape,
+                            const op::AutoBroadcastSpec& broadcast_spec)
+            {
+                autobroadcast_binop(
+                    arg0, arg1, out, arg0_shape, arg1_shape, broadcast_spec, [](T x, T y) -> T {
+                        return x >= y;
+                    });
             }
         }
     }

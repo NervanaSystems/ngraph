@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <random>
+#include <vector>
 
 // CBLAS types and wrappers
 
@@ -124,9 +126,12 @@ namespace mkl
 
 namespace ngraph
 {
-    class Shape;
     class AxisSet;
     class AxisVector;
+    class Coordinate;
+    class CoordinateDiff;
+    class Shape;
+    class Strides;
 
     namespace runtime
     {
@@ -139,8 +144,8 @@ namespace ngraph
                                     float* pad_value,
                                     const Shape& input_shape,
                                     const Shape& output_shape,
-                                    const Shape& padding_below,
-                                    const Shape& padding_above,
+                                    const CoordinateDiff& padding_below,
+                                    const CoordinateDiff& padding_above,
                                     int arena);
 
                 void reduce_sum_all_1d_float32(float* input,
@@ -195,6 +200,78 @@ namespace ngraph
                                            const AxisVector& input_axis_order,
                                            const Shape& output_shape,
                                            int arena);
+
+                template <typename ElementType, unsigned int Rank>
+                void update_slice(void* input0,
+                                  void* input1,
+                                  void* output,
+                                  const Shape& input0_shape,
+                                  const Shape& input1_shape,
+                                  const Coordinate& lower_bounds,
+                                  int arena);
+
+                template <typename ElementType, unsigned int Rank>
+                void strided_update_slice(void* input0,
+                                          void* input1,
+                                          void* output,
+                                          const Shape& input0_shape,
+                                          const Shape& input1_shape,
+                                          const Coordinate& lower_bounds,
+                                          const Coordinate& upper_bounds,
+                                          const Strides& slice_strides,
+                                          int arena);
+
+                template <typename ElementType>
+                void erf(void* input0, void* output, size_t count, int arena);
+
+                template <typename ElementType>
+                void reference_erf(void* arg, void* out, size_t count);
+
+                template <typename ElementType>
+                void tile_rank_0(void* input, void* output, size_t repeats);
+
+                template <typename ElementType, unsigned int Rank>
+                void tile(void* input,
+                          void* output,
+                          const Shape& input_shape,
+                          const Shape& output_shape,
+                          int arena);
+
+                template <typename ElementType,
+                          typename IndicesType,
+                          unsigned int Rank1,
+                          unsigned int Rank2>
+                void gather(void* inputs,
+                            void* indices,
+                            void* output,
+                            const Shape& inputs_shape,
+                            const Shape& indices_shape,
+                            const Shape& output_shape,
+                            size_t axis,
+                            int arena);
+
+                template <typename ElementType,
+                          typename IndicesType,
+                          unsigned int Rank1,
+                          unsigned int Rank2>
+                void scatter_add(void* inputs,
+                                 void* indices,
+                                 void* updates,
+                                 void* output,
+                                 const Shape& inputs_shape,
+                                 const Shape& indices_shape,
+                                 const Shape& updates_shape,
+                                 int arena);
+
+                template <typename T>
+                void generate_dropout(T* input,
+                                      T* out0,
+                                      T* out1_mask,
+                                      size_t nelems,
+                                      bool training,
+                                      const double value,
+                                      const std::vector<std::minstd_rand>& vmsr,
+                                      const bool use_seed);
             }
         }
     }

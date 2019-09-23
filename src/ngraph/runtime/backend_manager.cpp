@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #else
 #include <dlfcn.h>
@@ -30,21 +30,31 @@
 using namespace std;
 using namespace ngraph;
 
-#ifdef WIN32
+#ifdef NGRAPH_DYNAMIC_COMPONENTS_ENABLE
+#ifdef _WIN32
 #define CLOSE_LIBRARY(a) FreeLibrary(a)
 #define DLSYM(a, b) GetProcAddress(a, b)
+#define DLERROR() ""
 #else
 #define CLOSE_LIBRARY(a) dlclose(a)
 #define DLSYM(a, b) dlsym(a, b)
+string DLERROR()
+{
+    const char* error = dlerror();
+    return error == nullptr ? "" : error;
+}
+#endif
+#else
+#define DLERROR() ""
 #endif
 
-unordered_map<string, runtime::new_backend_t>& runtime::BackendManager::get_registry()
+unordered_map<string, runtime::BackendConstructor>& runtime::BackendManager::get_registry()
 {
-    static unordered_map<string, new_backend_t> s_registered_backend;
+    static unordered_map<string, BackendConstructor> s_registered_backend;
     return s_registered_backend;
 }
 
-void runtime::BackendManager::register_backend(const string& name, new_backend_t new_backend)
+void runtime::BackendManager::register_backend(const string& name, BackendConstructor new_backend)
 {
     get_registry()[name] = new_backend;
 }
@@ -66,9 +76,8 @@ vector<string> runtime::BackendManager::get_registered_backends()
     return rc;
 }
 
-unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::string& config)
+shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::string& config)
 {
-    runtime::Backend* backend = nullptr;
     string type = config;
 
     // strip off attributes, IE:CPU becomes IE
@@ -78,61 +87,65 @@ unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
         type = type.substr(0, colon);
     }
 
-    auto registry = get_registry();
+    auto& registry = get_registry();
     auto it = registry.find(type);
-    if (it != registry.end())
-    {
-        new_backend_t new_backend = it->second;
-        backend = new_backend(config.c_str());
-    }
-    else
+    string error;
+#ifdef NGRAPH_DYNAMIC_COMPONENTS_ENABLE
+    if (it == registry.end())
     {
         DL_HANDLE handle = open_shared_library(type);
         if (!handle)
         {
-            stringstream ss;
-            ss << "Backend '" << type << "' not registered. Error:" << dlerror();
-            throw runtime_error(ss.str());
+            error = DLERROR();
         }
-        function<const char*()> get_ngraph_version_string =
-            reinterpret_cast<const char* (*)()>(DLSYM(handle, "get_ngraph_version_string"));
-        if (!get_ngraph_version_string)
+        else
         {
-            CLOSE_LIBRARY(handle);
-            throw runtime_error("Backend '" + type +
-                                "' does not implement get_ngraph_version_string");
+            DLERROR(); // Clear any pending errors
+            string register_function_name =
+                string("ngraph_register_") + to_lower(type) + "_backend";
+            auto register_function =
+                reinterpret_cast<void (*)()>(DLSYM(handle, register_function_name.c_str()));
+            if (register_function)
+            {
+                register_function();
+                it = registry.find(type);
+            }
+            else
+            {
+                error = DLERROR();
+                CLOSE_LIBRARY(handle);
+                stringstream ss;
+                ss << "Failed to find symbol 'get_backend_constructor_pointer' in backend library."
+                   << endl;
+                if (error.size() > 0)
+                {
+                    ss << "\nError: " << error;
+                }
+                error = ss.str();
+            }
         }
-
-        function<runtime::Backend*(const char*)> new_backend =
-            reinterpret_cast<runtime::Backend* (*)(const char*)>(DLSYM(handle, "new_backend"));
-        if (!new_backend)
-        {
-            CLOSE_LIBRARY(handle);
-            throw runtime_error("Backend '" + type + "' does not implement new_backend");
-        }
-
-        backend = new_backend(config.c_str());
     }
-    return unique_ptr<runtime::Backend>(backend);
-}
-
-// This doodad finds the full path of the containing shared library
-static string find_my_file()
-{
-#ifdef WIN32
-    return ".";
-#else
-    Dl_info dl_info;
-    dladdr(reinterpret_cast<void*>(find_my_file), &dl_info);
-    return dl_info.dli_fname;
 #endif
+
+    if (it == registry.end())
+    {
+        stringstream ss;
+        ss << "Backend '" << type << "' not registered.";
+        if (error.size() > 0)
+        {
+            ss << "\n  Error: " << DLERROR();
+        }
+        throw runtime_error(ss.str());
+    }
+    return it->second(config);
 }
 
 DL_HANDLE runtime::BackendManager::open_shared_library(string type)
 {
-    string ext = SHARED_LIB_EXT;
-
     DL_HANDLE handle = nullptr;
+#ifdef NGRAPH_DYNAMIC_COMPONENTS_ENABLE
+    string lib_prefix = SHARED_LIB_PREFIX;
+    string lib_suffix = SHARED_LIB_SUFFIX;
 
     // strip off attributes, IE:CPU becomes IE
     auto colon = type.find(":");
@@ -141,13 +154,28 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
         type = type.substr(0, colon);
     }
 
-    string library_name = "lib" + to_lower(type) + "_backend" + string(SHARED_LIB_EXT);
-    string my_directory = file_util::get_directory(find_my_file());
+    string library_name = lib_prefix + to_lower(type) + "_backend" + lib_suffix;
+    string my_directory =
+        file_util::get_directory(Backend::get_backend_shared_library_search_directory());
     string library_path = file_util::path_join(my_directory, library_name);
-#ifdef WIN32
+#ifdef _WIN32
+    SetDllDirectory((LPCSTR)my_directory.c_str());
     handle = LoadLibrary(library_path.c_str());
 #else
+    DLERROR(); // Clear any pending errors
     handle = dlopen(library_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
+#endif
+    string error = DLERROR();
+    if (!handle)
+    {
+        stringstream ss;
+        ss << "Unable to find backend '" << type << "' as file '" << library_path << "'";
+        if (error.size() > 0)
+        {
+            ss << "\nOpen error message '" << error << "'";
+        }
+        throw runtime_error(ss.str());
+    }
 #endif
     return handle;
 }
@@ -155,34 +183,42 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
 map<string, string> runtime::BackendManager::get_registered_device_map()
 {
     map<string, string> rc;
-    string my_directory = file_util::get_directory(find_my_file());
+#ifdef NGRAPH_DYNAMIC_COMPONENTS_ENABLE
+    string my_directory =
+        file_util::get_directory(Backend::get_backend_shared_library_search_directory());
     vector<string> backend_list;
 
     auto f = [&](const string& file, bool is_dir) {
-        string name = file_util::get_file_name(file);
-        string backend_name;
-        if (is_backend_name(name, backend_name))
+        if (!is_dir)
         {
-            rc.insert({to_upper(backend_name), file});
+            string name = file_util::get_file_name(file);
+            string backend_name;
+            if (is_backend_name(name, backend_name))
+            {
+                rc.insert({to_upper(backend_name), file});
+            }
         }
     };
     file_util::iterate_files(my_directory, f, false, true);
+#endif
     return rc;
 }
 
 bool runtime::BackendManager::is_backend_name(const string& file, string& backend_name)
 {
-    string name = file_util::get_file_name(file);
-    string ext = SHARED_LIB_EXT;
     bool rc = false;
-    if (!name.compare(0, 3, "lib"))
+    string name = file_util::get_file_name(file);
+    string lib_prefix = SHARED_LIB_PREFIX;
+    string lib_suffix = SHARED_LIB_SUFFIX;
+    if ((name.size() > lib_prefix.size() + lib_suffix.size()) &
+        !name.compare(0, lib_prefix.size(), lib_prefix))
     {
-        if (!name.compare(name.size() - ext.size(), ext.size(), ext))
+        if (!name.compare(name.size() - lib_suffix.size(), lib_suffix.size(), lib_suffix))
         {
             auto pos = name.find("_backend");
             if (pos != name.npos)
             {
-                backend_name = name.substr(3, pos - 3);
+                backend_name = name.substr(lib_prefix.size(), pos - lib_prefix.size());
                 rc = true;
             }
         }

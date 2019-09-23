@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,19 +26,14 @@ namespace ngraph
         namespace plaidml
         {
             template <typename O>
-            class IndexReductionImpl : public BaseImpl<O>
+            class IndexReductionBase : public OpImpl<O>
             {
-            public:
-                IndexReductionImpl(Build* build, const O& op)
-                    : BaseImpl<O>{build, op}
-                {
-                }
-
+            protected:
                 void build_index_reduction(const char* agg_op);
             };
 
             template <typename O>
-            void IndexReductionImpl<O>::build_index_reduction(const char* agg_op)
+            void IndexReductionBase<O>::build_index_reduction(const char* agg_op)
             {
                 this->check_inputs(1);
                 this->check_outputs(1);
@@ -57,7 +52,7 @@ namespace ngraph
                                     builder::ContractionOutput{"SelVal"}
                                         .add_indices([&](
                                             std::back_insert_iterator<std::list<std::string>> out) {
-                                            for (auto idx = 0; idx < dim_limit; ++idx)
+                                            for (size_t idx = 0; idx < dim_limit; ++idx)
                                             {
                                                 out =
                                                     (idx == this->op().get_reduction_axis() ? "rd"
@@ -67,7 +62,7 @@ namespace ngraph
                                         })
                                         .add_dims([&](
                                             std::back_insert_iterator<std::list<std::string>> out) {
-                                            for (auto idx = 0; idx < dim_limit; ++idx)
+                                            for (size_t idx = 0; idx < dim_limit; ++idx)
                                             {
                                                 if (idx == this->op().get_reduction_axis())
                                                 {
@@ -80,8 +75,8 @@ namespace ngraph
                                             }
                                         }))
                                 .set(builder::ContractionInput{"I"}.add_indices("d", 0, dim_limit)))
-                        .add( // Compare the input against the (broadcasted) max values, and select the indices
-                            // where the max val occurs
+                        .add( // Compare the input against the (broadcasted) max values, and select
+                              // the indices where the max val occurs
                             builder::Elementwise{"SelValIdxs",
                                                  "I == SelVal ? index(I, " + reduction_axis_str +
                                                      ") : D" + reduction_axis_str})
@@ -91,7 +86,7 @@ namespace ngraph
                                     builder::ContractionOutput{"SelIdx"}
                                         .add_indices([&](
                                             std::back_insert_iterator<std::list<std::string>> out) {
-                                            for (auto idx = 0; idx < dim_limit; ++idx)
+                                            for (size_t idx = 0; idx < dim_limit; ++idx)
                                             {
                                                 if (idx != this->op().get_reduction_axis())
                                                 {
@@ -101,7 +96,7 @@ namespace ngraph
                                         })
                                         .add_dims([&](
                                             std::back_insert_iterator<std::list<std::string>> out) {
-                                            for (auto idx = 0; idx < dim_limit; ++idx)
+                                            for (size_t idx = 0; idx < dim_limit; ++idx)
                                             {
                                                 if (idx != this->op().get_reduction_axis())
                                                 {
@@ -117,37 +112,20 @@ namespace ngraph
                         .finalize());
             }
 
-            template <>
-            struct ParentImpl<op::ArgMax>
-            {
-                using Type = IndexReductionImpl<op::ArgMax>;
-            };
-
-            template <>
-            struct ParentImpl<op::ArgMin>
-            {
-                using Type = IndexReductionImpl<op::ArgMin>;
-            };
-
-            // ArgMax computes the maximum index along a tensor axis.
-            template <>
-            void Impl<op::ArgMax>::operator()()
-            {
-                build_index_reduction(">");
-            }
-
-            // ArgMin computes the minimum index along a tensor axis.
-            template <>
-            void Impl<op::ArgMin>::operator()()
-            {
-                build_index_reduction("<");
-            }
-
-            namespace
-            {
-                Impl<op::ArgMax>::Registration register_argmax;
-                Impl<op::ArgMin>::Registration register_argmin;
-            }
+            NGRAPH_PLAIDML_OP_CLASS(ImplArgMax, IndexReductionBase<op::ArgMax>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplArgMin, IndexReductionBase<op::ArgMin>);
         }
     }
+}
+
+// ArgMax computes the maximum index along a tensor axis.
+void ngraph::runtime::plaidml::ImplArgMax::Apply()
+{
+    build_index_reduction(">");
+}
+
+// ArgMin computes the minimum index along a tensor axis.
+void ngraph::runtime::plaidml::ImplArgMin::Apply()
+{
+    build_index_reduction("<");
 }

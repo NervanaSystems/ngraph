@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,6 +62,7 @@ namespace ngraph
                                  CPUExecutionContext* ectx);
 #endif
                     int get_num_thread_pools() { return m_num_thread_pools; }
+                    int get_num_cores() { return m_num_cores; }
                 private:
                     std::vector<std::unique_ptr<Eigen::ThreadPool>> m_thread_pools;
                     std::vector<std::unique_ptr<Eigen::ThreadPoolDevice>> m_thread_pool_devices;
@@ -69,6 +70,7 @@ namespace ngraph
                     std::vector<tbb::task_arena> m_tbb_arenas;
 #endif
                     int m_num_thread_pools;
+                    int m_num_cores;
                 };
 
                 extern CPUExecutor& GetCPUExecutor();

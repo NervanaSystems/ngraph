@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
 #include <memory>
 
 #include "ngraph/node.hpp"
-#include "ngraph/node_vector.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 #include "ngraph/util.hpp"
 
 namespace ngraph
@@ -30,10 +30,13 @@ namespace ngraph
         class BatchNormTrainingRelu : public Op
         {
         public:
-            BatchNormTrainingRelu(double eps,
-                                  std::shared_ptr<Node> gamma,
-                                  std::shared_ptr<Node> beta,
-                                  std::shared_ptr<Node> input);
+            CPU_BACKEND_API
+            static constexpr NodeTypeInfo type_info{"BatchNormTrainingRelu", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            CPU_BACKEND_API BatchNormTrainingRelu(double eps,
+                                                  const Output<Node>& gamma,
+                                                  const Output<Node>& beta,
+                                                  const Output<Node>& input);
 
             double get_eps_value() const { return m_epsilon; }
             virtual std::shared_ptr<Node>
@@ -57,12 +60,15 @@ namespace ngraph
         class BatchNormInferenceRelu : public Op
         {
         public:
+            CPU_BACKEND_API
+            static constexpr NodeTypeInfo type_info{"BatchNormInferenceRelu", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             BatchNormInferenceRelu(double eps,
-                                   std::shared_ptr<ngraph::Node> gamma,
-                                   std::shared_ptr<ngraph::Node> beta,
-                                   std::shared_ptr<ngraph::Node> input,
-                                   std::shared_ptr<ngraph::Node> mean,
-                                   std::shared_ptr<ngraph::Node> variance);
+                                   const Output<ngraph::Node>& gamma,
+                                   const Output<ngraph::Node>& beta,
+                                   const Output<ngraph::Node>& input,
+                                   const Output<ngraph::Node>& mean,
+                                   const Output<ngraph::Node>& variance);
 
             double get_eps_value() const { return m_epsilon; }
             virtual std::shared_ptr<Node>

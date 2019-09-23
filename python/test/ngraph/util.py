@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,10 +15,10 @@
 # ******************************************************************************
 
 import numpy as np
-import pytest
 import ngraph as ng
-
-from string import ascii_uppercase
+from ngraph.utils.types import NumericData
+from typing import Any, Callable, List
+import test
 
 
 def _get_numpy_dtype(scalar):
@@ -27,14 +27,17 @@ def _get_numpy_dtype(scalar):
 
 def get_runtime():
     """Return runtime object."""
-    backend_name = pytest.config.getoption('backend', default='CPU')
-    return ng.runtime(backend_name=backend_name)
+    return ng.runtime(backend_name=test.BACKEND_NAME)
 
 
 def run_op_node(input_data, op_fun, *args):
+    # type: (NumericData, Callable, *Any) -> List[NumericData]
     """Run computation on node performing `op_fun`.
 
     `op_fun` has to accept a node as an argument.
+
+    This function converts passed raw input data to nGraph Constant Node and that form is passed
+    to `op_fun`.
 
     :param input_data: The input data for performed computation.
     :param op_fun: The function handler for operation we want to carry out.
@@ -45,14 +48,8 @@ def run_op_node(input_data, op_fun, *args):
     comp_args = []
     op_fun_args = []
     comp_inputs = []
-    for idx, data in enumerate(input_data):
-        if np.isscalar(data):
-            op_fun_args.append(ng.constant(data, _get_numpy_dtype(data)))
-        else:
-            node = ng.parameter(data.shape, name=ascii_uppercase[idx], dtype=data.dtype)
-            op_fun_args.append(node)
-            comp_args.append(node)
-            comp_inputs.append(data)
+    for data in input_data:
+        op_fun_args.append(ng.constant(data, _get_numpy_dtype(data)))
     op_fun_args.extend(args)
     node = op_fun(*op_fun_args)
     computation = runtime.computation(node, *comp_args)
@@ -60,9 +57,14 @@ def run_op_node(input_data, op_fun, *args):
 
 
 def run_op_numeric_data(input_data, op_fun, *args):
+    # type: (NumericData, Callable, *Any) -> List[NumericData]
     """Run computation on node performing `op_fun`.
 
     `op_fun` has to accept a scalar or an array.
+
+    This function passess input data AS IS. This mean that in case they're a scalar (integral,
+    or floating point value) or a NumPy's ndarray object they will be automatically converted
+    to nGraph's Constant Nodes.
 
     :param input_data: The input data for performed computation.
     :param op_fun: The function handler for operation we want to carry out.

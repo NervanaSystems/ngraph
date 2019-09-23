@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,57 +31,92 @@ vector<float> read_float_vector(shared_ptr<runtime::Tensor> tv)
     if (element_type == element::boolean)
     {
         vector<char> vec = read_vector<char>(tv);
-        float_vec = vector<float>(vec.begin(), vec.end());
+        // Changed from vector ctor to explicit for loop to add static_cast
+        // This silences MSVC warnings
+        for (char value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
     }
     else if (element_type == element::f32)
     {
         vector<float> vec = read_vector<float>(tv);
-        float_vec = vector<float>(vec.begin(), vec.end());
+        for (float value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
     }
     else if (element_type == element::f64)
     {
         vector<double> vec = read_vector<double>(tv);
-        float_vec = vector<float>(vec.begin(), vec.end());
+        for (double value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
     }
     else if (element_type == element::i8)
     {
         vector<int8_t> vec = read_vector<int8_t>(tv);
-        float_vec = vector<float>(vec.begin(), vec.end());
+        for (int8_t value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
     }
     else if (element_type == element::i16)
     {
         vector<int16_t> vec = read_vector<int16_t>(tv);
-        float_vec = vector<float>(vec.begin(), vec.end());
+        for (int16_t value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
     }
     else if (element_type == element::i32)
     {
         vector<int32_t> vec = read_vector<int32_t>(tv);
-        float_vec = vector<float>(vec.begin(), vec.end());
+        for (int32_t value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
     }
     else if (element_type == element::i64)
     {
         vector<int64_t> vec = read_vector<int64_t>(tv);
-        float_vec = vector<float>(vec.begin(), vec.end());
+        for (int64_t value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
     }
     else if (element_type == element::u8)
     {
         vector<uint8_t> vec = read_vector<uint8_t>(tv);
-        float_vec = vector<float>(vec.begin(), vec.end());
+        for (uint8_t value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
     }
     else if (element_type == element::u16)
     {
         vector<uint16_t> vec = read_vector<uint16_t>(tv);
-        float_vec = vector<float>(vec.begin(), vec.end());
+        for (uint16_t value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
     }
     else if (element_type == element::u32)
     {
         vector<uint32_t> vec = read_vector<uint32_t>(tv);
-        float_vec = vector<float>(vec.begin(), vec.end());
+        for (uint32_t value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
     }
     else if (element_type == element::u64)
     {
         vector<uint64_t> vec = read_vector<uint64_t>(tv);
-        float_vec = vector<float>(vec.begin(), vec.end());
+        for (uint64_t value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
     }
     else
     {
@@ -160,7 +195,7 @@ void init_int_tv<char>(ngraph::runtime::Tensor* tv,
     {
         element = static_cast<char>(dist(engine));
     }
-    tv->write(vec.data(), 0, vec.size() * sizeof(char));
+    tv->write(vec.data(), vec.size() * sizeof(char));
 }
 
 template <>
@@ -176,7 +211,7 @@ void init_int_tv<int8_t>(ngraph::runtime::Tensor* tv,
     {
         element = static_cast<int8_t>(dist(engine));
     }
-    tv->write(vec.data(), 0, vec.size() * sizeof(int8_t));
+    tv->write(vec.data(), vec.size() * sizeof(int8_t));
 }
 
 template <>
@@ -192,7 +227,7 @@ void init_int_tv<uint8_t>(ngraph::runtime::Tensor* tv,
     {
         element = static_cast<uint8_t>(dist(engine));
     }
-    tv->write(vec.data(), 0, vec.size() * sizeof(uint8_t));
+    tv->write(vec.data(), vec.size() * sizeof(uint8_t));
 }
 
 void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine)
@@ -208,7 +243,7 @@ void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine
     }
     else if (et == element::f64)
     {
-        init_real_tv<double>(tv, engine, numeric_limits<float>::min(), 1.0f);
+        init_real_tv<double>(tv, engine, numeric_limits<double>::min(), 1.0);
     }
     else if (et == element::i8)
     {
@@ -249,16 +284,73 @@ void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine
 }
 
 template <>
-void print_results(std::vector<char>& ref_data, std::vector<char>& actual_data, size_t max_results)
+string get_results_str(const std::vector<char>& ref_data,
+                       const std::vector<char>& actual_data,
+                       size_t max_results)
 {
+    stringstream ss;
     size_t num_results = std::min(static_cast<size_t>(max_results), ref_data.size());
-    std::cout << "First " << num_results << " results";
+    ss << "First " << num_results << " results";
     for (size_t i = 0; i < num_results; ++i)
     {
-        std::cout << "\n"
-                  << std::setw(4) << i << " ref: " << std::setw(16) << std::left
-                  << static_cast<int>(ref_data[i]) << "  actual: " << std::setw(16) << std::left
-                  << static_cast<int>(actual_data[i]);
+        ss << std::endl
+           << std::setw(4) << i << " ref: " << std::setw(16) << std::left
+           << static_cast<int>(ref_data[i]) << "  actual: " << std::setw(16) << std::left
+           << static_cast<int>(actual_data[i]);
     }
-    std::cout << std::endl;
+    ss << std::endl;
+
+    return ss.str();
+}
+
+#ifndef NGRAPH_JSON_DISABLE
+std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, file_name);
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    return func;
+}
+#endif
+
+::testing::AssertionResult test_ordered_ops(shared_ptr<Function> f, const NodeVector& required_ops)
+{
+    unordered_set<Node*> seen;
+    for (auto& node_ptr : f->get_ordered_ops())
+    {
+        Node* node = node_ptr.get();
+        if (seen.count(node) > 0)
+        {
+            return ::testing::AssertionFailure() << "Duplication in ordered ops";
+        }
+        size_t arg_count = node->get_input_size();
+        for (size_t i = 0; i < arg_count; ++i)
+        {
+            Node* dep = node->input(i).get_source_output().get_node();
+            if (seen.count(dep) == 0)
+            {
+                return ::testing::AssertionFailure() << "Argument " << *dep
+                                                     << " does not occur before op" << *node;
+            }
+        }
+        for (auto& dep_ptr : node->get_control_dependencies())
+        {
+            if (seen.count(dep_ptr.get()) == 0)
+            {
+                return ::testing::AssertionFailure() << "Control dependency " << *dep_ptr
+                                                     << " does not occur before op" << *node;
+            }
+        }
+        seen.insert(node);
+    }
+    for (auto& node_ptr : required_ops)
+    {
+        if (seen.count(node_ptr.get()) == 0)
+        {
+            return ::testing::AssertionFailure() << "Required op " << *node_ptr
+                                                 << "does not occur in ordered ops";
+        }
+    }
+    return ::testing::AssertionSuccess();
 }

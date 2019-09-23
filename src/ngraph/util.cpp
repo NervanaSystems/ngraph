@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include <algorithm>
-#include <cassert>
 #include <deque>
 #include <forward_list>
 #include <iomanip>
@@ -23,11 +22,13 @@
 #include <numeric>
 #include <unordered_set>
 
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/result_vector.hpp"
+#include "ngraph/op/result.hpp"
+#include "ngraph/partial_shape.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/util.hpp"
@@ -160,22 +161,23 @@ size_t ngraph::hash_combine(const std::vector<size_t>& list)
     return seed;
 }
 
-void* ngraph::aligned_alloc(size_t alignment, size_t size)
+void* ngraph::ngraph_malloc(size_t size)
 {
-#ifdef __APPLE__
-    return new uint64_t[round_up(size, sizeof(uint64_t)) / sizeof(uint64_t)];
-#else
-    return ::aligned_alloc(alignment, size);
-#endif
+    auto ptr = malloc(size);
+    if (size != 0 && !ptr)
+    {
+        NGRAPH_ERR << "malloc failed to allocate memory of size " << size;
+        throw std::bad_alloc();
+    }
+    return ptr;
 }
 
-void ngraph::aligned_free(void* p)
+void ngraph::ngraph_free(void* ptr)
 {
-#ifdef __APPLE__
-    delete[] reinterpret_cast<uint64_t*>(p);
-#else
-    free(p);
-#endif
+    if (ptr)
+    {
+        free(ptr);
+    }
 }
 
 size_t ngraph::round_up(size_t size, size_t alignment)
@@ -201,7 +203,6 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
 
     // Create a fprop_cache object to store the results of this analysis
     FpropCache fprop_cache;
-    fprop_cache.node_param_map = std::make_shared<NodeMap>();
 
     // Traverse bprop to find all of the nodes in the bprop graph
     std::unordered_set<std::shared_ptr<Node>> in_bprop;
@@ -226,9 +227,8 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
             if (in_bprop.count(node) != 0 &&
                 std::find(bprop_inputs.begin(), bprop_inputs.end(), node) == bprop_inputs.end())
             {
-                fprop_cache.node_param_map->add(
-                    node,
-                    std::make_shared<op::Parameter>(node->get_element_type(), node->get_shape()));
+                fprop_cache.node_param_map[node.get()] =
+                    std::make_shared<op::Parameter>(node->get_element_type(), node->get_shape());
             }
         });
 
@@ -236,13 +236,13 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     // intermediate parameters from fprop_cache. This breaks connections in the
     // bprop graph such that only intermediate values from fprop needed by bprop
     // are still connected to the bprop graph as parameters
-    ngraph::clone_nodes(bprop->get_ops(), *(fprop_cache.node_param_map));
+    ngraph::clone_nodes(bprop->get_ops(), fprop_cache.node_param_map);
 
     // invert the fprop_cache cloned node map for easy back and for acces.
-    std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>> inverted_node_map;
-    for (auto kv : fprop_cache.node_param_map->get_node_map())
+    std::unordered_map<Node*, Node*> inverted_node_map;
+    for (auto kv : fprop_cache.node_param_map)
     {
-        inverted_node_map[kv.second] = kv.first;
+        inverted_node_map[kv.second.get()] = kv.first;
     }
 
     // get cloned bprop results
@@ -250,7 +250,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     NodeVector result_nodes;
     for (auto node : bprop->get_results())
     {
-        auto result = std::dynamic_pointer_cast<op::Result>(fprop_cache.node_param_map->get(node));
+        auto result = as_type_ptr<op::Result>(fprop_cache.node_param_map.at(node.get()));
         if (!result)
         {
             throw ngraph_error("Expected op::Result values for op::Result keys in node_param_map");
@@ -266,14 +266,14 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
         for (auto param : bprop_inputs)
         {
             bprop_input_params.push_back(
-                std::dynamic_pointer_cast<op::Parameter>(fprop_cache.node_param_map->get(param)));
+                as_type_ptr<op::Parameter>(fprop_cache.node_param_map.at(param.get())));
         }
 
         // add the cached fprop nodes as inputs to bprop
         for (auto x : fprop_cache.fprop_output_nodes)
         {
             bprop_input_params.push_back(
-                std::dynamic_pointer_cast<op::Parameter>(fprop_cache.node_param_map->get(x)));
+                as_type_ptr<op::Parameter>(fprop_cache.node_param_map.at(x)));
         }
         return bprop_input_params;
     };
@@ -285,12 +285,12 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     ngraph::traverse_nodes(
         result_nodes,
         [&cloned_bprop_inputs, &fprop_cache, &inverted_node_map](std::shared_ptr<Node> node) {
-            auto pnode = std::dynamic_pointer_cast<op::Parameter>(node);
+            auto pnode = as_type_ptr<op::Parameter>(node);
             if (pnode != nullptr &&
                 std::find(cloned_bprop_inputs.begin(), cloned_bprop_inputs.end(), pnode) ==
                     cloned_bprop_inputs.end())
             {
-                fprop_cache.fprop_output_nodes.push_back(inverted_node_map.at(node));
+                fprop_cache.fprop_output_nodes.push_back(inverted_node_map.at(node.get()));
             }
         },
         false /* no control dependencies */);
@@ -298,9 +298,10 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     // create the new outputs for fprop and the new fprop function
     ResultVector fprop_outputs = fprop->get_results();
 
-    for (auto fpir : fprop_cache.fprop_output_nodes)
+    for (auto fpirn : fprop_cache.fprop_output_nodes)
     {
-        if (std::dynamic_pointer_cast<op::Result>(fpir))
+        auto fpir = fpirn->shared_from_this();
+        if (as_type_ptr<op::Result>(fpir))
         {
             throw ngraph_error("Expected op::Result in fprop->get_results()");
         }
@@ -438,7 +439,7 @@ void ngraph::check_fp_values_isnan(const char* name, const float* array, size_t 
 {
     for (size_t i = 0; i < n; i++)
     {
-        if (std::isinf(array[i]))
+        if (std::isnan(array[i]))
         {
             throw std::runtime_error("Discovered NaN in '" + string(name) + "'");
         }
@@ -449,20 +450,41 @@ void ngraph::check_fp_values_isnan(const char* name, const double* array, size_t
 {
     for (size_t i = 0; i < n; i++)
     {
-        if (std::isinf(array[i]))
+        if (std::isnan(array[i]))
         {
             throw std::runtime_error("Discovered NaN in '" + string(name) + "'");
         }
     }
 }
 
+bool ngraph::is_valid_permutation(ngraph::AxisVector permutation, ngraph::Rank rank)
+{
+    std::vector<bool> axis_occurs(permutation.size(), false);
+
+    for (auto& axis : permutation)
+    {
+        axis_occurs[axis] = true;
+    }
+
+    for (size_t axis = 0; axis < permutation.size(); axis++)
+    {
+        if (!axis_occurs[axis])
+        {
+            return false;
+        }
+    }
+
+    return (rank.is_dynamic() || permutation.size() == static_cast<size_t>(rank));
+}
+
 template <typename T>
 T ngraph::apply_permutation(T input, AxisVector order)
 {
-    if (input.size() != order.size())
-    {
-        throw "input and order sizes don't match!";
-    }
+    NGRAPH_CHECK(is_valid_permutation(order, input.size()),
+                 "Permutation ",
+                 order,
+                 " is not valid for ",
+                 input);
 
     T output(input.size());
 
@@ -476,6 +498,42 @@ T ngraph::apply_permutation(T input, AxisVector order)
 
 template AxisVector ngraph::apply_permutation<AxisVector>(AxisVector input, AxisVector order);
 template Shape ngraph::apply_permutation<Shape>(Shape input, AxisVector order);
+template ngraph::Coordinate ngraph::apply_permutation<ngraph::Coordinate>(ngraph::Coordinate input,
+                                                                          ngraph::AxisVector order);
+template ngraph::CoordinateDiff
+    ngraph::apply_permutation<ngraph::CoordinateDiff>(ngraph::CoordinateDiff input,
+                                                      ngraph::AxisVector order);
+template ngraph::Strides ngraph::apply_permutation<ngraph::Strides>(ngraph::Strides input,
+                                                                    ngraph::AxisVector order);
+
+namespace ngraph
+{
+    template <>
+    PartialShape apply_permutation(PartialShape input, AxisVector order)
+    {
+        NGRAPH_CHECK(is_valid_permutation(order, input.rank()),
+                     "Permutation ",
+                     order,
+                     " is not valid for ",
+                     input);
+
+        // Here's the special part: if AxisVector is a viable permutation of _some_ rank, and input
+        // has dynamic rank, we just stick with dynamic rank.
+        if (input.rank().is_dynamic())
+        {
+            return input;
+        }
+
+        PartialShape output{PartialShape::dynamic(order.size())};
+
+        for (size_t i = 0; i < order.size(); i++)
+        {
+            output[i] = input[order.at(i)];
+        }
+
+        return output;
+    }
+}
 
 AxisVector ngraph::get_default_order(const Shape& shape)
 {
@@ -497,4 +555,60 @@ AxisVector ngraph::get_permutation_to_default_order(const AxisVector& axis_order
         out.at(axis_order[i]) = i;
     }
     return out;
+}
+
+void ngraph::parse_version_string(
+    std::string version, size_t& major, size_t& minor, size_t& patch, string& extra)
+{
+    // Since regex is broken in gcc 4.8 I will just manually parse the version string
+    // Version strings look like `0.25.0-rc.0+7c32240` or `v0.25.0-rc.0+7c32240`
+    size_t start;
+    size_t end;
+    extra = "";
+    start = (version[0] == 'v' ? 1 : 0);
+    end = version.find_first_of('.', start);
+    string major_str = version.substr(start, end - start);
+    start = end + 1;
+
+    end = version.find_first_of('.', start);
+    string minor_str = version.substr(start, end - start);
+    start = end + 1;
+
+    end = version.find_first_of("-+", start);
+    string patch_str = version.substr(start, end - start);
+    start = end;
+
+    if (start != string::npos)
+    {
+        extra = version.substr(start);
+    }
+
+    size_t err;
+    bool error = false;
+    try
+    {
+        major = stoi(major_str, &err);
+        if (err != major_str.size())
+        {
+            error = true;
+        }
+        minor = stoi(minor_str, &err);
+        if (err != minor_str.size())
+        {
+            error = true;
+        }
+        patch = stoi(patch_str, &err);
+        if (err != patch_str.size())
+        {
+            error = true;
+        }
+    }
+    catch (...)
+    {
+        error = true;
+    }
+    if (error)
+    {
+        throw runtime_error("Error parsing version string '" + version + "'");
+    }
 }

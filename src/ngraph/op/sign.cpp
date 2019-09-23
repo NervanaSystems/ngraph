@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,8 +19,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Sign::Sign(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Sign", arg)
+constexpr NodeTypeInfo op::Sign::type_info;
+
+op::Sign::Sign(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }

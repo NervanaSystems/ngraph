@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,8 +31,11 @@ namespace ngraph
             class Skip : public Pattern
             {
             public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"patternSkip", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Skip(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)
-                    : Pattern("Skip", NodeVector{arg}, predicate)
+                    : Pattern(NodeVector{arg}, predicate)
                 {
                     set_output_type(0, arg->get_element_type(), arg->get_output_partial_shape(0));
                 }

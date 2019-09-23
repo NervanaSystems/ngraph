@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,9 +31,24 @@ descriptor::Tensor::Tensor(const element::Type& element_type,
 {
 }
 
+descriptor::Tensor::Tensor(const element::Type& element_type,
+                           const PartialShape& pshape,
+                           Node* node,
+                           size_t node_output_number)
+    : m_element_type(element_type)
+    , m_shape(pshape.is_static() ? pshape.to_shape() : Shape{})
+    , m_partial_shape(pshape)
+    , m_node(node)
+    , m_node_output_number(node_output_number)
+{
+}
+
 void descriptor::Tensor::set_tensor_type(const element::Type& element_type,
                                          const PartialShape& pshape)
 {
+    NGRAPH_CHECK(pshape.all_non_negative(),
+                 "set_tensor_type called on a PartialShape containing negative dimensions: ",
+                 pshape);
     if (pshape.is_static())
     {
         m_shape = pshape.to_shape();
@@ -84,15 +99,27 @@ size_t descriptor::Tensor::size() const
 void descriptor::Tensor::set_tensor_layout(
     const std::shared_ptr<layout::TensorLayout>& tensor_layout)
 {
-    if (tensor_layout->get_shape() != get_shape())
-    {
-        throw ngraph_error("Setting tensor's layout to a layout with a different shape.");
-    }
-    if (tensor_layout->get_element_type() != get_element_type())
-    {
-        throw ngraph_error("Setting tensor's layout to a layout with a different element type.");
-    }
+    NGRAPH_CHECK(tensor_layout->get_shape() == get_shape(),
+                 "Setting tensor's layout to a layout with a different shape : ",
+                 get_shape(),
+                 " -> ",
+                 tensor_layout->get_shape());
+    NGRAPH_CHECK(tensor_layout->get_element_type() == get_element_type(),
+                 "Setting tensor's layout to a layout with a different element type : ",
+                 get_element_type(),
+                 " -> ",
+                 tensor_layout->get_element_type());
     m_tensor_layout = tensor_layout;
+}
+
+const std::string& descriptor::Tensor::get_name() const
+{
+    if (m_name.empty() && m_node != nullptr)
+    {
+        const_cast<Tensor*>(this)->m_name =
+            m_node->get_name() + "_" + to_string(m_node_output_number);
+    }
+    return m_name;
 }
 
 ostream& operator<<(ostream& out, const descriptor::Tensor& tensor)

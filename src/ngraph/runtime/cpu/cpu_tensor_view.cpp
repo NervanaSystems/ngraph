@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,10 +20,12 @@
 #include "cpu_tensor_view.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/except.hpp"
+#include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/util.hpp"
 
 using namespace mkldnn;
 using namespace ngraph;
@@ -34,9 +36,8 @@ using namespace std;
 
 runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
                                            const Shape& shape,
-                                           void* memory_pointer,
-                                           const string& name)
-    : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, name))
+                                           void* memory_pointer)
+    : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, ""))
     , buffer(nullptr)
     , aligned_buffer(nullptr)
 {
@@ -55,11 +56,7 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
     else if (buffer_size > 0)
     {
         size_t allocation_size = buffer_size + BufferAlignment;
-        auto ptr = malloc(allocation_size);
-        if (!ptr)
-        {
-            throw ngraph_error("Error allocating CPU Tensor View memory");
-        }
+        auto ptr = ngraph_malloc(allocation_size);
         buffer = static_cast<char*>(ptr);
 
 // GCC major versions below 5 do not implement C++11 std::align
@@ -76,15 +73,14 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
 }
 
 runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
-                                           const Shape& shape,
-                                           const string& name)
-    : CPUTensorView(element_type, shape, nullptr, name)
+                                           const Shape& shape)
+    : CPUTensorView(element_type, shape, nullptr)
 {
 }
 
 runtime::cpu::CPUTensorView::~CPUTensorView()
 {
-    free(buffer);
+    ngraph_free(buffer);
 }
 
 char* runtime::cpu::CPUTensorView::get_data_ptr()
@@ -97,19 +93,19 @@ const char* runtime::cpu::CPUTensorView::get_data_ptr() const
     return aligned_buffer;
 }
 
-void runtime::cpu::CPUTensorView::write(const void* source, size_t tensor_offset, size_t n)
+void runtime::cpu::CPUTensorView::write(const void* source, size_t n)
 {
-    if (tensor_offset + n > buffer_size)
+    if (n > buffer_size)
     {
         throw out_of_range("write access past end of tensor");
     }
     char* target = get_data_ptr();
-    memcpy(&target[tensor_offset], source, n);
+    memcpy(target, source, n);
 }
 
-void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_t n) const
+void runtime::cpu::CPUTensorView::read(void* target, size_t n) const
 {
-    if (tensor_offset + n > buffer_size)
+    if (n > buffer_size)
     {
         throw out_of_range("read access past end of tensor");
     }
@@ -146,15 +142,68 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
         auto output_desc = mkldnn_utils::create_blocked_mkldnn_md(
             this->get_shape(), cpu_tvl->get_strides(), this->get_element_type());
 
+#if MKLDNN_VERSION_MAJOR < 1
         memory input{{input_desc, executor::global_cpu_engine}, aligned_buffer};
         memory output{{output_desc, executor::global_cpu_engine}, target};
         reorder prim{input, output};
         mkldnn::stream s(mkldnn::stream::kind::eager);
         s.submit({prim}).wait();
+#else
+        memory input{input_desc, executor::global_cpu_engine, aligned_buffer};
+        memory output{output_desc, executor::global_cpu_engine, target};
+        reorder prim{input, output};
+        mkldnn::stream s(executor::global_cpu_engine);
+        prim.execute(s, {{MKLDNN_ARG_SRC, input}, {MKLDNN_ARG_DST, output}});
+        s.wait();
+#endif
     }
     else
     {
         const char* source = get_data_ptr();
-        memcpy(target, &source[tensor_offset], n);
+        memcpy(target, source, n);
+    }
+}
+
+void runtime::cpu::CPUTensorView::copy_from(const ngraph::runtime::Tensor& source)
+{
+    if (get_element_count() != source.get_element_count())
+    {
+        throw invalid_argument("runtime::cpu::CPUTensorView::copy_from element count must match");
+    }
+
+    if (get_element_type() != source.get_element_type())
+    {
+        throw invalid_argument("runtime::cpu::CPUTensorView::copy_from element types must match");
+    }
+
+    if (auto cpu_source = dynamic_cast<const runtime::cpu::CPUTensorView*>(&source))
+    {
+        auto this_tl =
+            dynamic_cast<ngraph::runtime::cpu::LayoutDescriptor*>(this->get_tensor_layout().get());
+        auto other_tl =
+            dynamic_cast<ngraph::runtime::cpu::LayoutDescriptor*>(source.get_tensor_layout().get());
+        if ((this_tl != nullptr) && (other_tl != nullptr) && (*this_tl == *other_tl))
+        {
+            // Direct copy
+            memcpy(get_data_ptr(), cpu_source->get_data_ptr(), get_size_in_bytes());
+        }
+        else
+        {
+            // This will copy the data in native/row-major layout
+            source.read(get_data_ptr(), get_size_in_bytes());
+            // Set default layout
+            m_descriptor->set_tensor_layout(
+                std::make_shared<runtime::cpu::LayoutDescriptor>(*m_descriptor));
+        }
+    }
+    else
+    {
+        auto size = get_size_in_bytes();
+        AlignedBuffer tmp_buffer{size, static_cast<size_t>(BufferAlignment)};
+        source.read(tmp_buffer.get_ptr(), size);
+        write(tmp_buffer.get_ptr(), size);
+        // Set default layout
+        m_descriptor->set_tensor_layout(
+            std::make_shared<runtime::cpu::LayoutDescriptor>(*m_descriptor));
     }
 }

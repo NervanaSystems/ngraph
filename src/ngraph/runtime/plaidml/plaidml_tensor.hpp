@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,8 +42,8 @@ public:
                    void* memory);
     ~PlaidML_Tensor() final {}
     const vertexai::plaidml::tensor<char>& tensor() const { return m_tensor; }
-    void write(const void* p, size_t tensor_offset, size_t n) final;
-    void read(void* p, size_t tensor_offset, size_t n) const final;
+    void write(const void* p, size_t n) final;
+    void read(void* p, size_t n) const final;
 
     // Copy the backing memory to the tensor, if needed.
     void sync_input();

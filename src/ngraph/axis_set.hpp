@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,6 +58,11 @@ namespace ngraph
         {
             static_cast<std::set<size_t>*>(this)->operator=(v);
             return *this;
+        }
+
+        std::vector<int64_t> to_vector() const
+        {
+            return std::vector<int64_t>(this->begin(), this->end());
         }
     };
 

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,16 +29,22 @@ void op::util::validate_conv_shapes(const Node* node,
                                     const Shape& data_shape,
                                     const Shape& filters_shape)
 {
-    NODE_VALIDATION_ASSERT(node, data_shape[1] == filters_shape[1])
-        << "Number of channels for data and filters do not match (data num channels: "
-        << data_shape[1] << ", filters num channels: " << filters_shape[1] << ").";
+    NODE_VALIDATION_CHECK(
+        node,
+        data_shape[1] == filters_shape[1],
+        "Number of channels for data and filters do not match (data num channels: ",
+        data_shape[1],
+        ", filters num channels: ",
+        filters_shape[1],
+        ").");
 }
 
+constexpr NodeTypeInfo op::ConvolutionAdd::type_info;
+
 op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
-                                   const std::shared_ptr<Node>& sum_input,
+                                   const Output<Node>& sum_input,
                                    bool with_relu)
-    : Op("ConvolutionAdd",
-         check_single_output_args({conv->get_argument(0), conv->get_argument(1), sum_input}))
+    : Op({conv->input(0).get_source_output(), conv->input(1).get_source_output(), sum_input})
     , m_window_movement_strides(conv->get_window_movement_strides())
     , m_window_dilation_strides(conv->get_window_dilation_strides())
     , m_padding_below(conv->get_padding_below())
@@ -47,21 +53,20 @@ op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
     , m_with_relu(with_relu)
 {
     constructor_validate_and_infer_types();
-    util::validate_conv_shapes(
-        this, conv->get_argument(0)->get_shape(), conv->get_argument(1)->get_shape());
+    util::validate_conv_shapes(this, conv->input(0).get_shape(), conv->input(1).get_shape());
     set_output_type(0, conv->get_element_type(), conv->get_shape());
 }
 
-op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<Node>& data_batch,
-                                   const std::shared_ptr<Node>& filters,
-                                   const std::shared_ptr<Node>& sum_input,
+op::ConvolutionAdd::ConvolutionAdd(const Output<Node>& data_batch,
+                                   const Output<Node>& filters,
+                                   const Output<Node>& sum_input,
                                    const Strides& window_movement_strides,
                                    const Strides& window_dilation_strides,
                                    const CoordinateDiff& padding_below,
                                    const CoordinateDiff& padding_above,
                                    const Strides& data_dilation_strides,
                                    bool with_relu)
-    : Op("ConvolutionAdd", check_single_output_args({data_batch, filters, sum_input}))
+    : Op({data_batch, filters, sum_input})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -71,17 +76,22 @@ op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<Node>& data_batch,
 {
     constructor_validate_and_infer_types();
 
-    auto& data_batch_shape = data_batch->get_shape();
-    auto& data_batch_et = data_batch->get_element_type();
-    auto& filters_shape = filters->get_shape();
-    auto& filters_et = filters->get_element_type();
+    auto& data_batch_shape = data_batch.get_shape();
+    auto& data_batch_et = data_batch.get_element_type();
+    auto& filters_shape = filters.get_shape();
+    auto& filters_et = filters.get_element_type();
 
     //
     // Make sure data batch and filter element types match.
     //
-    NODE_VALIDATION_ASSERT(this, data_batch_et == filters_et)
-        << "Element types for data_batch and filters do not match (data batch element type: "
-        << data_batch_et << ", filters element type: " << filters_et << ").";
+    NODE_VALIDATION_CHECK(
+        this,
+        data_batch_et == filters_et,
+        "Element types for data_batch and filters do not match (data batch element type: ",
+        data_batch_et,
+        ", filters element type: ",
+        filters_et,
+        ").");
 
     util::validate_conv_shapes(this, data_batch_shape, filters_shape);
     set_output_type(0,
@@ -105,8 +115,11 @@ op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<Node>& data_batch,
 
 std::shared_ptr<Node> op::ConvolutionAdd::copy_with_new_args(const NodeVector& new_args) const
 {
-    NODE_VALIDATION_ASSERT(this, new_args.size() == 3)
-        << "New arg size is not 3 (new args size: " << new_args.size() << ").";
+    NODE_VALIDATION_CHECK(this,
+                          new_args.size() == 3,
+                          "New arg size is not 3 (new args size: ",
+                          new_args.size(),
+                          ").");
 
     return std::shared_ptr<Node>(new ConvolutionAdd(new_args.at(0),
                                                     new_args.at(1),

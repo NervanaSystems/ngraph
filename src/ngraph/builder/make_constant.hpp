@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/type/float16.hpp"
 
 namespace ngraph
 {
@@ -39,6 +40,13 @@ namespace ngraph
             {
                 val = std::make_shared<ngraph::op::Constant>(
                     type, ngraph::Shape{}, std::vector<double>{static_cast<double>(num)});
+            }
+            else if (type == element::f16)
+            {
+                val = std::make_shared<ngraph::op::Constant>(
+                    type,
+                    ngraph::Shape{},
+                    std::vector<ngraph::float16>{ngraph::float16(static_cast<float>(num))});
             }
             else if (type == element::i64)
             {

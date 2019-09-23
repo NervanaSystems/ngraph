@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ namespace ngraph
                      const AxisSet& reduction_axes)
             {
                 T minval = std::numeric_limits<T>::has_infinity
-                               ? -std::numeric_limits<T>::infinity()
+                               ? T(-std::numeric_limits<T>::infinity())
                                : std::numeric_limits<T>::min();
 
                 CoordinateTransform output_transform(out_shape);

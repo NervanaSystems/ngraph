@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,21 +14,42 @@
 # limitations under the License.
 # ******************************************************************************
 import pytest
+import test
 
 
 def pytest_addoption(parser):
     parser.addoption('--backend', default='INTERPRETER',
-                     choices=['INTERPRETER', 'CPU', 'GPU', 'NNP', 'PlaidML'],
+                     choices=['INTERPRETER', 'CPU', 'GPU', 'NNP', 'PlaidML', 'INTELGPU'],
                      help='Select from available backends')
 
 
-def pass_method(*args, **kwargs):
-    pass
-
-
 def pytest_configure(config):
-    config.gpu_skip = pytest.mark.skipif(config.getvalue('backend') == 'GPU')
-    config.cpu_skip = pytest.mark.skipif(config.getvalue('backend') == 'CPU')
-    config.nnp_skip = pytest.mark.skipif(config.getvalue('backend') == 'NNP')
-    config.interpreter_skip = pytest.mark.skipif(config.getvalue('backend') == 'INTERPRETER')
-    config.plaidml_skip = pytest.mark.skipif(config.getvalue('backend') == 'PlaidML')
+    backend_name = config.getvalue('backend')
+    test.BACKEND_NAME = backend_name
+
+
+def pytest_collection_modifyitems(config, items):
+    backend_name = config.getvalue('backend')
+
+    keywords = {
+        'GPU': 'skip_on_gpu',
+        'CPU': 'skip_on_cpu',
+        'NNP': 'skip_on_nnp',
+        'INTERPRETER': 'skip_on_interpreter',
+        'PlaidML': 'skip_on_plaidml',
+        'INTELGPU': 'skip_on_intelgpu',
+    }
+
+    skip_markers = {
+        'GPU': pytest.mark.skip(reason='Skipping test on the GPU backend.'),
+        'CPU': pytest.mark.skip(reason='Skipping test on the CPU backend.'),
+        'NNP': pytest.mark.skip(reason='Skipping test on the NNP backend.'),
+        'INTERPRETER': pytest.mark.skip(reason='Skipping test on the INTERPRETER backend.'),
+        'PlaidML': pytest.mark.skip(reason='Skipping test on the PlaidML backend.'),
+        'INTELGPU': pytest.mark.skip(reason='Skipping test on the INTELGPU backend.'),
+    }
+
+    for item in items:
+        skip_this_backend = keywords[backend_name]
+        if skip_this_backend in item.keywords:
+            item.add_marker(skip_markers[backend_name])

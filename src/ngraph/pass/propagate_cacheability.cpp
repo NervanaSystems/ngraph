@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,16 +20,17 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/util/op_annotations.hpp"
-#include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 
+using namespace std;
 using namespace ngraph;
 
-bool ngraph::pass::PropagateCacheability::run_on_function(std::shared_ptr<Function> function)
+bool pass::PropagateCacheability::run_on_function(shared_ptr<Function> function)
 {
     for (auto& node : function->get_ordered_ops())
     {
-        if (auto op = std::dynamic_pointer_cast<op::Op>(node))
+        if (node->is_op())
         {
+            auto op = static_pointer_cast<op::Op>(node);
             NGRAPH_DEBUG << "propagate cacheability: node is " << node->get_name();
             auto op_annotations = op->get_op_annotations();
             if (!op_annotations)
@@ -38,13 +39,9 @@ bool ngraph::pass::PropagateCacheability::run_on_function(std::shared_ptr<Functi
                 op_annotations = op_annotations_factory();
                 op->set_op_annotations(op_annotations);
             }
-            if (std::dynamic_pointer_cast<op::Constant>(node))
+            if (node->is_parameter())
             {
-                op_annotations->set_cacheable(true);
-                NGRAPH_DEBUG << "propagate cacheability: cacheability is 1";
-            }
-            else if (auto parameter = std::dynamic_pointer_cast<op::Parameter>(node))
-            {
+                auto parameter = static_pointer_cast<op::Parameter>(node);
                 op_annotations->set_cacheable(parameter->get_cacheable());
                 NGRAPH_DEBUG << "propagate cacheability: cacheability is "
                              << parameter->get_cacheable();
@@ -52,13 +49,15 @@ bool ngraph::pass::PropagateCacheability::run_on_function(std::shared_ptr<Functi
             else
             {
                 bool cacheable = true;
-                for (auto arg : node->get_arguments())
+                for (auto input : node->inputs())
                 {
-                    NGRAPH_DEBUG << "propagate cacheability: arg is " << arg->get_name();
-                    if (auto arg_op = std::dynamic_pointer_cast<op::Op>(arg))
+                    auto input_value_node = input.get_source_output().get_node_shared_ptr();
+                    NGRAPH_DEBUG << "propagate cacheability: arg is " << *input_value_node;
+                    if (input_value_node->is_op())
                     {
+                        auto arg_op = static_pointer_cast<op::Op>(input_value_node);
                         auto arg_op_annotations = arg_op->get_op_annotations();
-                        NGRAPH_ASSERT(arg_op_annotations);
+                        NGRAPH_CHECK(arg_op_annotations);
                         if (!arg_op_annotations->is_cacheable())
                         {
                             cacheable = false;

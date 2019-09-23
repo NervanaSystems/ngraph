@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,21 @@
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
 
 using namespace ngraph;
+
+op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic()
+    : Op()
+{
+}
+
+op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const Output<Node>& arg)
+    : Op({arg})
+{
+}
+
+op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::shared_ptr<Node>& arg)
+    : Op(check_single_output_args({arg}))
+{
+}
 
 op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::string& node_type,
                                                                  const std::shared_ptr<Node>& arg)

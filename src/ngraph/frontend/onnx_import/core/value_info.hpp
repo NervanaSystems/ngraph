@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,14 +16,15 @@
 
 #pragma once
 
-#include <onnx-ml.pb.h>
+#include <onnx/onnx_pb.h>
 
 #include "ngraph/op/constant.hpp"
-#include "ngraph/parameter_vector.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "node.hpp"
 #include "tensor.hpp"
+#include "utils/common.hpp"
 #include "weight.hpp"
 
 namespace ngraph
@@ -41,16 +42,8 @@ namespace ngraph
                     {
                     }
                 };
-                struct unsupported_element_type : ngraph_error
-                {
-                    explicit unsupported_element_type(onnx::TensorProto_DataType type)
-                        : ngraph_error{"unsupported value info element type: " +
-                                       onnx::TensorProto_DataType_Name(type)}
-                    {
-                    }
-                };
-            }
-        }
+            } // namespace value_info
+        }     // namespace error
 
         class ValueInfo
         {
@@ -82,24 +75,8 @@ namespace ngraph
                 {
                     throw error::value_info::unspecified_element_type{};
                 }
-                switch (m_value_info_proto->type().tensor_type().elem_type())
-                {
-                case onnx::TensorProto_DataType::TensorProto_DataType_BOOL: return element::boolean;
-                case onnx::TensorProto_DataType::TensorProto_DataType_FLOAT:
-                case onnx::TensorProto_DataType::TensorProto_DataType_FLOAT16: return element::f32;
-                case onnx::TensorProto_DataType::TensorProto_DataType_DOUBLE: return element::f64;
-                case onnx::TensorProto_DataType::TensorProto_DataType_INT8: return element::i8;
-                case onnx::TensorProto_DataType::TensorProto_DataType_INT16: return element::i16;
-                case onnx::TensorProto_DataType::TensorProto_DataType_INT32: return element::i32;
-                case onnx::TensorProto_DataType::TensorProto_DataType_INT64: return element::i64;
-                case onnx::TensorProto_DataType::TensorProto_DataType_UINT8: return element::u8;
-                case onnx::TensorProto_DataType::TensorProto_DataType_UINT16: return element::u16;
-                case onnx::TensorProto_DataType::TensorProto_DataType_UINT32: return element::u32;
-                case onnx::TensorProto_DataType::TensorProto_DataType_UINT64: return element::u64;
-                default:
-                    throw error::value_info::unsupported_element_type{
-                        m_value_info_proto->type().tensor_type().elem_type()};
-                }
+                return common::get_ngraph_element_type(
+                    m_value_info_proto->type().tensor_type().elem_type());
             }
 
             std::shared_ptr<ngraph::Node>
@@ -137,42 +114,7 @@ namespace ngraph
 
             std::shared_ptr<op::Constant> get_ng_constant(const Tensor& tensor) const
             {
-                switch (m_value_info_proto->type().tensor_type().elem_type())
-                {
-                case onnx::TensorProto_DataType::TensorProto_DataType_BOOL:
-                    return make_ng_constant<bool>(element::boolean, tensor);
-                case onnx::TensorProto_DataType::TensorProto_DataType_FLOAT:
-                case onnx::TensorProto_DataType::TensorProto_DataType_FLOAT16:
-                    return make_ng_constant<float>(element::f32, tensor);
-                case onnx::TensorProto_DataType::TensorProto_DataType_DOUBLE:
-                    return make_ng_constant<double>(element::f64, tensor);
-                case onnx::TensorProto_DataType::TensorProto_DataType_INT8:
-                    return make_ng_constant<int8_t>(element::i8, tensor);
-                case onnx::TensorProto_DataType::TensorProto_DataType_INT16:
-                    return make_ng_constant<int16_t>(element::i16, tensor);
-                case onnx::TensorProto_DataType::TensorProto_DataType_INT32:
-                    return make_ng_constant<int32_t>(element::i32, tensor);
-                case onnx::TensorProto_DataType::TensorProto_DataType_INT64:
-                    return make_ng_constant<int64_t>(element::i64, tensor);
-                case onnx::TensorProto_DataType::TensorProto_DataType_UINT8:
-                    return make_ng_constant<uint8_t>(element::u8, tensor);
-                case onnx::TensorProto_DataType::TensorProto_DataType_UINT16:
-                    return make_ng_constant<uint16_t>(element::u16, tensor);
-                case onnx::TensorProto_DataType::TensorProto_DataType_UINT32:
-                    return make_ng_constant<uint32_t>(element::u32, tensor);
-                case onnx::TensorProto_DataType::TensorProto_DataType_UINT64:
-                    return make_ng_constant<uint64_t>(element::u64, tensor);
-                default:
-                    throw error::value_info::unsupported_element_type{
-                        m_value_info_proto->type().tensor_type().elem_type()};
-                }
-            }
-
-            template <typename T>
-            std::shared_ptr<op::Constant> make_ng_constant(const element::Type& type,
-                                                           const Tensor& tensor) const
-            {
-                return std::make_shared<op::Constant>(type, m_shape, tensor.get_data<T>());
+                return tensor.get_ng_constant();
             }
 
         private:

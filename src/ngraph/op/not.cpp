@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,8 +20,10 @@
 using namespace ngraph;
 using namespace std;
 
-op::Not::Not(const shared_ptr<Node>& arg)
-    : Op("Not", check_single_output_args({arg}))
+constexpr NodeTypeInfo op::Not::type_info;
+
+op::Not::Not(const Output<Node>& arg)
+    : Op({arg})
 {
     constructor_validate_and_infer_types();
 }

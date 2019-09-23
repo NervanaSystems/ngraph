@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,29 +16,28 @@
 
 #include <functional>
 #include <memory>
-#include <utility>
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/dot.hpp"
-#include "ngraph/op/multiply.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/op/sum.hpp"
 #include "ngraph/shape.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::Dot::Dot(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
+constexpr NodeTypeInfo op::Dot::type_info;
+
+op::Dot::Dot(const Output<Node>& arg0, const Output<Node>& arg1)
     : Dot(arg0, arg1, 0, false)
 {
 }
 
-op::Dot::Dot(const shared_ptr<Node>& arg0,
-             const shared_ptr<Node>& arg1,
+op::Dot::Dot(const Output<Node>& arg0,
+             const Output<Node>& arg1,
              size_t reduction_axes_count,
              bool has_reduction_axes_count)
-    : Op("Dot", check_single_output_args({arg0, arg1}))
+    : Op({arg0, arg1})
     , m_reduction_axes_count(reduction_axes_count)
     , m_has_reduction_axes_count(has_reduction_axes_count)
 {
@@ -49,11 +48,14 @@ void op::Dot::validate_and_infer_types()
 {
     element::Type result_et;
 
-    NODE_VALIDATION_ASSERT(
-        this, element::Type::merge(result_et, get_input_element_type(0), get_input_element_type(1)))
-        << "Arguments do not have the same element type (arg0 element type: "
-        << get_input_element_type(0) << ", arg1 element type: " << get_input_element_type(1)
-        << ").";
+    NODE_VALIDATION_CHECK(
+        this,
+        element::Type::merge(result_et, get_input_element_type(0), get_input_element_type(1)),
+        "Arguments do not have the same element type (arg0 element type: ",
+        get_input_element_type(0),
+        ", arg1 element type: ",
+        get_input_element_type(1),
+        ").");
 
     const PartialShape& arg0_shape = get_input_partial_shape(0);
     const PartialShape& arg1_shape = get_input_partial_shape(1);
@@ -82,17 +84,27 @@ void op::Dot::validate_and_infer_types()
 
     PartialShape result_shape;
 
-    NODE_VALIDATION_ASSERT(this,
-                           reduction_axes_ambiguous || arg0_shape.rank().is_dynamic() ||
-                               m_reduction_axes_count <= size_t(arg0_shape.rank()))
-        << "Reduction axes count (" << m_reduction_axes_count
-        << ") is too large (arg0 shape: " << arg0_shape << ", arg1 shape: " << arg1_shape << ").";
+    NODE_VALIDATION_CHECK(this,
+                          reduction_axes_ambiguous || arg0_shape.rank().is_dynamic() ||
+                              m_reduction_axes_count <= size_t(arg0_shape.rank()),
+                          "Reduction axes count (",
+                          m_reduction_axes_count,
+                          ") is too large (arg0 shape: ",
+                          arg0_shape,
+                          ", arg1 shape: ",
+                          arg1_shape,
+                          ").");
 
-    NODE_VALIDATION_ASSERT(this,
-                           reduction_axes_ambiguous || arg1_shape.rank().is_dynamic() ||
-                               m_reduction_axes_count <= size_t(arg1_shape.rank()))
-        << "Reduction axes count (" << m_reduction_axes_count
-        << ") is too large (arg0 shape: " << arg0_shape << ", arg1 shape: " << arg1_shape << ").";
+    NODE_VALIDATION_CHECK(this,
+                          reduction_axes_ambiguous || arg1_shape.rank().is_dynamic() ||
+                              m_reduction_axes_count <= size_t(arg1_shape.rank()),
+                          "Reduction axes count (",
+                          m_reduction_axes_count,
+                          ") is too large (arg0 shape: ",
+                          arg0_shape,
+                          ", arg1 shape: ",
+                          arg1_shape,
+                          ").");
 
     if (!reduction_axes_ambiguous && arg0_shape.rank().is_static() && arg1_shape.rank().is_static())
     {
@@ -101,12 +113,20 @@ void op::Dot::validate_and_infer_types()
             size_t axis_index_arg0 = size_t(arg0_shape.rank()) - m_reduction_axes_count + i;
             size_t axis_index_arg1 = i;
 
-            NODE_VALIDATION_ASSERT(
-                this, arg0_shape[axis_index_arg0].compatible(arg1_shape[axis_index_arg1]))
-                << "Paired axes (axis " << axis_index_arg0 << " from arg0, axis " << axis_index_arg1
-                << " from arg1) do not have same length (arg0 shape: " << arg0_shape
-                << ", arg1 shape: " << arg1_shape
-                << ", reduction axes count: " << m_reduction_axes_count << ").";
+            NODE_VALIDATION_CHECK(
+                this,
+                arg0_shape[axis_index_arg0].compatible(arg1_shape[axis_index_arg1]),
+                "Paired axes (axis ",
+                axis_index_arg0,
+                " from arg0, axis ",
+                axis_index_arg1,
+                " from arg1) do not have same length (arg0 shape: ",
+                arg0_shape,
+                ", arg1 shape: ",
+                arg1_shape,
+                ", reduction axes count: ",
+                m_reduction_axes_count,
+                ").");
         }
 
         std::vector<Dimension> result_dims(size_t(arg0_shape.rank()) + size_t(arg1_shape.rank()) -
@@ -133,7 +153,7 @@ void op::Dot::validate_and_infer_types()
     set_output_type(0, result_et, result_shape);
 }
 
-shared_ptr<op::Reshape> make_reshape_axes_to_front(const shared_ptr<Node>& n,
+shared_ptr<op::Reshape> make_reshape_axes_to_front(const Output<Node>& n,
                                                    const Shape& front_shape,
                                                    const Shape& back_shape)
 {
@@ -159,11 +179,11 @@ void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
 {
     auto delta = deltas.at(0);
 
-    auto x = get_inputs().at(0).get_output().get_node();
-    auto y = get_inputs().at(1).get_output().get_node();
+    auto x = input_value(0);
+    auto y = input_value(1);
 
-    auto x_shape = x->get_shape();         // shape IJ
-    auto y_shape = y->get_shape();         // shape JK
+    auto x_shape = x.get_shape();          // shape IJ
+    auto y_shape = y.get_shape();          // shape JK
     auto delta_shape = delta->get_shape(); // shape IK
 
     Shape I_shape;

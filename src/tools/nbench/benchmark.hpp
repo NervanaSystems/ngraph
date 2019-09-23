@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,13 +24,9 @@
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
 
-/// performance test utilities
-std::multimap<size_t, std::string>
-    aggregate_timing(const std::vector<ngraph::runtime::PerformanceCounter>& perf_data);
-
 std::vector<ngraph::runtime::PerformanceCounter> run_benchmark(std::shared_ptr<ngraph::Function> f,
                                                                const std::string& backend_name,
                                                                size_t iterations,
                                                                bool timing_detail,
-                                                               int warmup_iterations,
+                                                               size_t warmup_iterations,
                                                                bool copy_data);

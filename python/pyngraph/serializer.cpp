@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,10 +25,6 @@ namespace py = pybind11;
 
 void regclass_pyngraph_Serializer(py::module m)
 {
-    /*
-    std::string serialize(std::shared_ptr<ngraph::Function>,
-                          size_t indent = 0);
-    */
     m.def("serialize",
           (std::string(*)(std::shared_ptr<ngraph::Function>, size_t)) & ngraph::serialize,
           py::arg(),

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,24 +43,27 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
-                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
-
-                const OP* batchnorm = static_cast<const OP*>(node);
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto arg2_buffer_index = external_function->get_buffer_index(args[2].get_name());
+                auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
 // Kill clang diagnostics bug
+#if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-braces"
+#endif
 
                 array<size_t, 2> weight_sizes{
                     args[0].get_size() * args[0].get_element_type().size(),
                     args[1].get_size() * args[1].get_element_type().size()};
 
+#if defined(__clang__)
 #pragma clang diagnostic pop
+#endif
 
-                shared_ptr<uint8_t> stacked_weights(new uint8_t[weight_sizes[0] + weight_sizes[1]]);
+                shared_ptr<uint8_t> stacked_weights(new uint8_t[weight_sizes[0] + weight_sizes[1]],
+                                                    std::default_delete<uint8_t[]>());
 
                 const float ops_scale = 1.f;
                 const float ops_alpha = -0.f; // relu negative slope
@@ -75,86 +78,140 @@ namespace ngraph
 
                 if (training && args.size() == 3)
                 {
-                    auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
-                    auto& out2_tensor = external_function->get_tensor_data(out[2].get_name());
+                    auto out1_buffer_index = external_function->get_buffer_index(out[1].get_name());
+                    auto out2_buffer_index = external_function->get_buffer_index(out[2].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+                    auto batchnorm_desc =
+                        mkldnn_emitter->get_batchnorm_forward_desc<OP>(node, true);
+                    QUERY_SCRATCHPAD_2ARGS(batchnorm_forward, batchnorm_desc, ops);
+
                     auto weights_shape = Shape{2, args[0].get_size()};
                     auto weights_desc = mkldnn_emitter->build_memory_descriptor(
-                        weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
-                    auto results_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto mean_desc = mkldnn_utils::get_output_mkldnn_md(node, 1);
-                    auto variance_desc = mkldnn_utils::get_output_mkldnn_md(node, 2);
+                        weights_shape, args[0].get_element_type(), mkldnn::memory::FORMAT::nc);
 
-                    auto batchnorm_index =
-                        mkldnn_emitter->build_batchnorm_forward(input_desc,
-                                                                weights_desc,
-                                                                results_desc,
-                                                                mean_desc,
-                                                                variance_desc,
-                                                                batchnorm->get_eps_value(),
-                                                                false,
-                                                                training,
-                                                                ops);
-
+                    // batchnorm forward needs 6 primitives: input, weights, result, mean,
+                    // variance, and batch_normalization_forward.
+                    auto batchnorm_index = mkldnn_emitter->reserve_primitive_space(6);
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
-                    auto functor = [&, batchnorm_index, stacked_weights, weight_sizes](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        memcpy(stacked_weights.get(), arg0_tensor, weight_sizes[0]);
-                        memcpy(
-                            stacked_weights.get() + weight_sizes[0], arg1_tensor, weight_sizes[1]);
 
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg2_tensor);
+                    auto functor = [&,
+                                    batchnorm_desc,
+                                    weights_desc,
+                                    training,
+                                    ops,
+                                    batchnorm_index,
+                                    stacked_weights,
+                                    weight_sizes,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    arg2_buffer_index,
+                                    out0_buffer_index,
+                                    out1_buffer_index,
+                                    out2_buffer_index](CPURuntimeContext* ctx,
+                                                       CPUExecutionContext* /* ectx */) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->build_batchnorm_forward(ctx->mkldnn_memories,
+                                                                    ctx->mkldnn_primitives,
+                                                                    ctx->mkldnn_scratchpad_mds,
+                                                                    batchnorm_desc,
+                                                                    weights_desc,
+                                                                    training,
+                                                                    deps,
+                                                                    batchnorm_index,
+                                                                    ops);
+                        }
+                        memcpy(stacked_weights.get(),
+                               ctx->buffer_data[arg0_buffer_index],
+                               weight_sizes[0]);
+                        memcpy(stacked_weights.get() + weight_sizes[0],
+                               ctx->buffer_data[arg1_buffer_index],
+                               weight_sizes[1]);
+
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg2_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], stacked_weights.get());
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[4], out2_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[out0_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[3], ctx->buffer_data[out1_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[4], ctx->buffer_data[out2_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, batchnorm_index);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, batchnorm_index, deps, cpu::mkldnn_utils::OpType::BATCHNORM3ARGS);
                     };
                     functors.emplace_back(functor);
                 }
                 else
                 {
-                    auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
-                    auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
+                    auto arg3_buffer_index =
+                        external_function->get_buffer_index(args[3].get_name());
+                    auto arg4_buffer_index =
+                        external_function->get_buffer_index(args[4].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto batchnorm_desc =
+                        mkldnn_emitter->get_batchnorm_forward_desc<OP>(node, false);
+
+                    QUERY_SCRATCHPAD_2ARGS(batchnorm_forward, batchnorm_desc, ops);
+
                     auto weights_shape = Shape{2, args[0].get_size()};
-                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
                     auto weights_desc = mkldnn_emitter->build_memory_descriptor(
-                        weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
-                    auto mean_desc = mkldnn_utils::get_input_mkldnn_md(node, 3);
-                    auto variance_desc = mkldnn_utils::get_input_mkldnn_md(node, 4);
-                    auto results_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                        weights_shape, args[0].get_element_type(), mkldnn::memory::FORMAT::nc);
 
-                    auto batchnorm_index =
-                        mkldnn_emitter->build_batchnorm_forward(input_desc,
-                                                                weights_desc,
-                                                                results_desc,
-                                                                mean_desc,
-                                                                variance_desc,
-                                                                batchnorm->get_eps_value(),
-                                                                true,
-                                                                training,
-                                                                ops);
-
+                    // batchnorm forward needs 6 primitives: input, weights, result, mean,
+                    // variance, and batch_normalization_forward.
+                    auto batchnorm_index = mkldnn_emitter->reserve_primitive_space(6);
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
 
-                    auto functor = [&, batchnorm_index, stacked_weights, weight_sizes](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        memcpy(stacked_weights.get(), arg0_tensor, weight_sizes[0]);
-                        memcpy(
-                            stacked_weights.get() + weight_sizes[0], arg1_tensor, weight_sizes[1]);
+                    auto functor = [&,
+                                    batchnorm_desc,
+                                    weights_desc,
+                                    training,
+                                    ops,
+                                    batchnorm_index,
+                                    stacked_weights,
+                                    weight_sizes,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    arg2_buffer_index,
+                                    arg3_buffer_index,
+                                    arg4_buffer_index,
+                                    out0_buffer_index](CPURuntimeContext* ctx,
+                                                       CPUExecutionContext* /* ectx */) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->build_batchnorm_forward(ctx->mkldnn_memories,
+                                                                    ctx->mkldnn_primitives,
+                                                                    ctx->mkldnn_scratchpad_mds,
+                                                                    batchnorm_desc,
+                                                                    weights_desc,
+                                                                    training,
+                                                                    deps,
+                                                                    batchnorm_index,
+                                                                    ops);
+                        }
+                        memcpy(stacked_weights.get(),
+                               ctx->buffer_data[arg0_buffer_index],
+                               weight_sizes[0]);
+                        memcpy(stacked_weights.get() + weight_sizes[0],
+                               ctx->buffer_data[arg1_buffer_index],
+                               weight_sizes[1]);
 
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg2_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg3_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg4_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg2_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[arg3_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[arg4_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], stacked_weights.get());
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[4], out0_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[4], ctx->buffer_data[out0_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, batchnorm_index);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, batchnorm_index, deps, cpu::mkldnn_utils::OpType::BATCHNORM5ARGS);
                     };
                     functors.emplace_back(functor);
                 }
@@ -177,27 +234,42 @@ namespace ngraph
 
                         SELECT_KERNEL(kernel,
                                       args[0].get_element_type(),
-                                      runtime::cpu::kernel::batch_norm_training);
+                                      runtime::cpu::kernel::batch_norm_training)
 
                         auto arg2_shape = args[2].get_shape();
-                        auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                        auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                        auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                        auto arg0_buffer_index =
+                            external_function->get_buffer_index(args[0].get_name());
+                        auto arg1_buffer_index =
+                            external_function->get_buffer_index(args[1].get_name());
+                        auto arg2_buffer_index =
+                            external_function->get_buffer_index(args[2].get_name());
 
-                        auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
-                        auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
-                        auto& out2_tensor = external_function->get_tensor_data(out[2].get_name());
+                        auto out0_buffer_index =
+                            external_function->get_buffer_index(out[0].get_name());
+                        auto out1_buffer_index =
+                            external_function->get_buffer_index(out[1].get_name());
+                        auto out2_buffer_index =
+                            external_function->get_buffer_index(out[2].get_name());
                         auto eps = batchnorm->get_eps_value();
 
-                        auto functor = [&, kernel, arg2_shape, eps](CPURuntimeContext* ctx,
-                                                                    CPUExecutionContext* ectx) {
+                        auto functor = [&,
+                                        kernel,
+                                        arg2_shape,
+                                        eps,
+                                        arg0_buffer_index,
+                                        arg1_buffer_index,
+                                        arg2_buffer_index,
+                                        out0_buffer_index,
+                                        out1_buffer_index,
+                                        out2_buffer_index](CPURuntimeContext* ctx,
+                                                           CPUExecutionContext* /* ectx */) {
                             kernel(eps,
-                                   arg0_tensor,
-                                   arg1_tensor,
-                                   arg2_tensor,
-                                   out0_tensor,
-                                   out1_tensor,
-                                   out2_tensor,
+                                   ctx->buffer_data[arg0_buffer_index],
+                                   ctx->buffer_data[arg1_buffer_index],
+                                   ctx->buffer_data[arg2_buffer_index],
+                                   ctx->buffer_data[out0_buffer_index],
+                                   ctx->buffer_data[out1_buffer_index],
+                                   ctx->buffer_data[out2_buffer_index],
                                    arg2_shape);
                         };
                         functors.emplace_back(functor);
@@ -211,27 +283,42 @@ namespace ngraph
 
                         SELECT_KERNEL(kernel,
                                       args[0].get_element_type(),
-                                      runtime::cpu::kernel::batch_norm_inference);
+                                      runtime::cpu::kernel::batch_norm_inference)
 
                         auto arg2_shape = args[2].get_shape();
-                        auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                        auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                        auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
-                        auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
-                        auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
+                        auto arg0_buffer_index =
+                            external_function->get_buffer_index(args[0].get_name());
+                        auto arg1_buffer_index =
+                            external_function->get_buffer_index(args[1].get_name());
+                        auto arg2_buffer_index =
+                            external_function->get_buffer_index(args[2].get_name());
+                        auto arg3_buffer_index =
+                            external_function->get_buffer_index(args[3].get_name());
+                        auto arg4_buffer_index =
+                            external_function->get_buffer_index(args[4].get_name());
 
-                        auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+                        auto out0_buffer_index =
+                            external_function->get_buffer_index(out[0].get_name());
                         auto eps = batchnorm->get_eps_value();
 
-                        auto functor = [&, kernel, arg2_shape, eps](CPURuntimeContext* ctx,
-                                                                    CPUExecutionContext* ectx) {
+                        auto functor = [&,
+                                        kernel,
+                                        arg2_shape,
+                                        eps,
+                                        arg0_buffer_index,
+                                        arg1_buffer_index,
+                                        arg2_buffer_index,
+                                        arg3_buffer_index,
+                                        arg4_buffer_index,
+                                        out0_buffer_index](CPURuntimeContext* ctx,
+                                                           CPUExecutionContext* /* ectx */) {
                             kernel(eps,
-                                   arg0_tensor,
-                                   arg1_tensor,
-                                   arg2_tensor,
-                                   arg3_tensor,
-                                   arg4_tensor,
-                                   out0_tensor,
+                                   ctx->buffer_data[arg0_buffer_index],
+                                   ctx->buffer_data[arg1_buffer_index],
+                                   ctx->buffer_data[arg2_buffer_index],
+                                   ctx->buffer_data[arg3_buffer_index],
+                                   ctx->buffer_data[arg4_buffer_index],
+                                   ctx->buffer_data[out0_buffer_index],
                                    arg2_shape);
                         };
                         functors.emplace_back(functor);
@@ -259,27 +346,41 @@ namespace ngraph
 
                     SELECT_KERNEL(kernel,
                                   args[0].get_element_type(),
-                                  runtime::cpu::kernel::batch_norm_inference);
+                                  runtime::cpu::kernel::batch_norm_inference)
 
                     auto arg2_shape = args[2].get_shape();
-                    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                    auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                    auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
-                    auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
-                    auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
+                    auto arg0_buffer_index =
+                        external_function->get_buffer_index(args[0].get_name());
+                    auto arg1_buffer_index =
+                        external_function->get_buffer_index(args[1].get_name());
+                    auto arg2_buffer_index =
+                        external_function->get_buffer_index(args[2].get_name());
+                    auto arg3_buffer_index =
+                        external_function->get_buffer_index(args[3].get_name());
+                    auto arg4_buffer_index =
+                        external_function->get_buffer_index(args[4].get_name());
 
-                    auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+                    auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
                     auto eps = batchnorm->get_eps_value();
 
-                    auto functor = [&, kernel, arg2_shape, eps](CPURuntimeContext* ctx,
-                                                                CPUExecutionContext* ectx) {
+                    auto functor = [&,
+                                    kernel,
+                                    arg2_shape,
+                                    eps,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    arg2_buffer_index,
+                                    arg3_buffer_index,
+                                    arg4_buffer_index,
+                                    out0_buffer_index](CPURuntimeContext* ctx,
+                                                       CPUExecutionContext* /* ectx */) {
                         kernel(eps,
-                               arg0_tensor,
-                               arg1_tensor,
-                               arg2_tensor,
-                               arg3_tensor,
-                               arg4_tensor,
-                               out0_tensor,
+                               ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[arg1_buffer_index],
+                               ctx->buffer_data[arg2_buffer_index],
+                               ctx->buffer_data[arg3_buffer_index],
+                               ctx->buffer_data[arg4_buffer_index],
+                               ctx->buffer_data[out0_buffer_index],
                                arg2_shape);
                     };
                     functors.emplace_back(functor);
@@ -294,79 +395,118 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::BatchNormTrainingBackprop)
             {
-                const ngraph::op::BatchNormTrainingBackprop* batchnorm =
-                    static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
-
                 auto& functors = external_function->get_functors();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
-                auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
-                auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
-                auto& arg5_tensor = external_function->get_tensor_data(args[5].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto arg2_buffer_index = external_function->get_buffer_index(args[2].get_name());
+                auto arg3_buffer_index = external_function->get_buffer_index(args[3].get_name());
+                auto arg4_buffer_index = external_function->get_buffer_index(args[4].get_name());
+                auto arg5_buffer_index = external_function->get_buffer_index(args[5].get_name());
 
-                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
-                auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
-                auto& out2_tensor = external_function->get_tensor_data(out[2].get_name());
+                auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
+                auto out1_buffer_index = external_function->get_buffer_index(out[1].get_name());
+                auto out2_buffer_index = external_function->get_buffer_index(out[2].get_name());
 
 // Kill clang diagnostics bug
+#if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-braces"
+#endif
 
                 array<size_t, 2> weight_sizes{
                     args[0].get_size() * args[0].get_element_type().size(),
                     args[1].get_size() * args[1].get_element_type().size()};
 
+#if defined(__clang__)
 #pragma clang diagnostic pop
-                shared_ptr<uint8_t> stacked_weights(new uint8_t[weight_sizes[0] + weight_sizes[1]]);
-                shared_ptr<uint8_t> stacked_dweights(
-                    new uint8_t[weight_sizes[0] + weight_sizes[1]]);
+#endif
+                shared_ptr<uint8_t> stacked_weights(new uint8_t[weight_sizes[0] + weight_sizes[1]],
+                                                    std::default_delete<uint8_t[]>());
+                shared_ptr<uint8_t> stacked_dweights(new uint8_t[weight_sizes[0] + weight_sizes[1]],
+                                                     std::default_delete<uint8_t[]>());
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto batchnorm_desc = mkldnn_emitter->get_batchnorm_backward_desc(node);
                 auto weights_shape = Shape{2, args[0].get_size()};
                 auto weights_desc = mkldnn_emitter->build_memory_descriptor(
-                    weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
-                auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
-                auto mean_desc = mkldnn_utils::get_input_mkldnn_md(node, 3);
-                auto variance_desc = mkldnn_utils::get_input_mkldnn_md(node, 4);
-                auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 5);
-                auto dinput_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    weights_shape, args[0].get_element_type(), mkldnn::memory::FORMAT::nc);
                 auto dweights_desc = mkldnn_emitter->build_memory_descriptor(
-                    weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
+                    weights_shape, args[0].get_element_type(), mkldnn::memory::FORMAT::nc);
+                auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
 
-                auto batchnorm_index =
-                    mkldnn_emitter->build_batchnorm_backward(weights_desc,
-                                                             input_desc,
-                                                             mean_desc,
-                                                             variance_desc,
-                                                             delta_desc,
-                                                             dinput_desc,
-                                                             dweights_desc,
-                                                             batchnorm->get_eps_value());
-
+                // batchnorm backward needs 8 primitives: weights, input, mean, variance,
+                // dinput, dweights, and batch_normalization_backward.
+                auto batchnorm_index = mkldnn_emitter->reserve_primitive_space(8);
                 auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
 
+                const ngraph::op::BatchNormTrainingBackprop* batchnorm =
+                    static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
+                auto eps = batchnorm->get_eps_value();
+                (void)eps; // Use depends on mkl-dnn version
+                QUERY_SCRATCHPAD_3ARGS(batchnorm_backward, batchnorm_desc, input_desc, eps);
+
                 auto functor = [&,
+                                batchnorm_desc,
+                                input_desc,
+                                weights_desc,
+                                dweights_desc,
                                 batchnorm_index,
                                 stacked_weights,
                                 stacked_dweights,
-                                weight_sizes](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                    memcpy(stacked_weights.get(), arg0_tensor, weight_sizes[0]);
-                    memcpy(stacked_weights.get() + weight_sizes[0], arg1_tensor, weight_sizes[1]);
+                                weight_sizes,
+                                arg0_buffer_index,
+                                arg1_buffer_index,
+                                arg2_buffer_index,
+                                arg3_buffer_index,
+                                arg4_buffer_index,
+                                arg5_buffer_index,
+                                out0_buffer_index,
+                                out1_buffer_index,
+                                out2_buffer_index](CPURuntimeContext* ctx,
+                                                   CPUExecutionContext* /* ectx */) {
+                    if (ctx->first_iteration)
+                    {
+                        mkldnn_emitter->build_batchnorm_backward(ctx->mkldnn_memories,
+                                                                 ctx->mkldnn_primitives,
+                                                                 ctx->mkldnn_scratchpad_mds,
+                                                                 batchnorm_desc,
+                                                                 input_desc,
+                                                                 weights_desc,
+                                                                 dweights_desc,
+                                                                 eps,
+                                                                 deps,
+                                                                 batchnorm_index);
+                    }
+                    memcpy(stacked_weights.get(),
+                           ctx->buffer_data[arg0_buffer_index],
+                           weight_sizes[0]);
+                    memcpy(stacked_weights.get() + weight_sizes[0],
+                           ctx->buffer_data[arg1_buffer_index],
+                           weight_sizes[1]);
 
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], stacked_weights.get());
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg2_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg3_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], arg4_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[4], arg5_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[5], out0_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[1], ctx->buffer_data[arg2_buffer_index]);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[2], ctx->buffer_data[arg3_buffer_index]);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[3], ctx->buffer_data[arg4_buffer_index]);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[4], ctx->buffer_data[arg5_buffer_index]);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[5], ctx->buffer_data[out0_buffer_index]);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[6], stacked_dweights.get());
 
-                    cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, batchnorm_index);
+                    cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                        ctx, batchnorm_index, deps, cpu::mkldnn_utils::OpType::BATCHNORMBACKPROP);
 
-                    memcpy(out1_tensor, stacked_dweights.get(), weight_sizes[0]);
-                    memcpy(out2_tensor, stacked_dweights.get() + weight_sizes[0], weight_sizes[1]);
+                    memcpy(ctx->buffer_data[out1_buffer_index],
+                           stacked_dweights.get(),
+                           weight_sizes[0]);
+                    memcpy(ctx->buffer_data[out2_buffer_index],
+                           stacked_dweights.get() + weight_sizes[0],
+                           weight_sizes[1]);
                 };
                 functors.emplace_back(functor);
             }
@@ -393,11 +533,14 @@ namespace ngraph
                     external_function, node, args, out, true, false);
             }
 
-            REGISTER_OP_BUILDER(BatchNormTraining);
-            REGISTER_OP_BUILDER(BatchNormInference);
-            REGISTER_OP_BUILDER(BatchNormTrainingRelu);
-            REGISTER_OP_BUILDER(BatchNormInferenceRelu);
-            REGISTER_OP_BUILDER(BatchNormTrainingBackprop);
+            void register_builders_batch_norm_cpp()
+            {
+                REGISTER_OP_BUILDER(BatchNormTraining);
+                REGISTER_OP_BUILDER(BatchNormInference);
+                REGISTER_OP_BUILDER(BatchNormTrainingRelu);
+                REGISTER_OP_BUILDER(BatchNormInferenceRelu);
+                REGISTER_OP_BUILDER(BatchNormTrainingBackprop);
+            }
         }
     }
 }

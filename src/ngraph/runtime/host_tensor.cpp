@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,10 +18,14 @@
 #include <memory>
 
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
+#include "ngraph/runtime/chrome_trace.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph;
 using namespace std;
+
+static const size_t alignment = 64;
 
 runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
                                 const Shape& shape,
@@ -43,8 +47,8 @@ runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
     }
     else if (m_buffer_size > 0)
     {
-        size_t allocation_size = m_buffer_size + runtime::alignment;
-        m_allocated_buffer_pool = static_cast<char*>(malloc(allocation_size));
+        size_t allocation_size = m_buffer_size + alignment;
+        m_allocated_buffer_pool = static_cast<char*>(ngraph_malloc(allocation_size));
         m_aligned_buffer_pool = m_allocated_buffer_pool;
         size_t mod = size_t(m_aligned_buffer_pool) % alignment;
         if (mod != 0)
@@ -61,11 +65,23 @@ runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
 {
 }
 
+runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type, const Shape& shape)
+    : HostTensor(element_type, shape, nullptr, "")
+{
+}
+
+runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
+                                const Shape& shape,
+                                void* memory_pointer)
+    : HostTensor(element_type, shape, memory_pointer, "")
+{
+}
+
 runtime::HostTensor::~HostTensor()
 {
     if (m_allocated_buffer_pool != nullptr)
     {
-        free(m_allocated_buffer_pool);
+        ngraph_free(m_allocated_buffer_pool);
     }
 }
 
@@ -79,22 +95,25 @@ const char* runtime::HostTensor::get_data_ptr() const
     return m_aligned_buffer_pool;
 }
 
-void runtime::HostTensor::write(const void* source, size_t tensor_offset, size_t n)
+void runtime::HostTensor::write(const void* source, size_t n)
 {
-    if (tensor_offset + n > m_buffer_size)
+    runtime::event::Duration d1("write", "HostTensor");
+
+    if (n > m_buffer_size)
     {
         throw out_of_range("write access past end of tensor");
     }
     char* target = get_data_ptr();
-    memcpy(&target[tensor_offset], source, n);
+    memcpy(target, source, n);
 }
 
-void runtime::HostTensor::read(void* target, size_t tensor_offset, size_t n) const
+void runtime::HostTensor::read(void* target, size_t n) const
 {
-    if (tensor_offset + n > m_buffer_size)
+    runtime::event::Duration d1("read", "HostTensor");
+    if (n > m_buffer_size)
     {
         throw out_of_range("read access past end of tensor");
     }
     const char* source = get_data_ptr();
-    memcpy(target, &source[tensor_offset], n);
+    memcpy(target, source, n);
 }

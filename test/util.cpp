@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,8 @@
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/all_close.hpp"
 #include "util/autodiff/backprop_function.hpp"
@@ -100,6 +102,10 @@ TEST(DISABLED_util, dump)
     dump(cout, text.data(), text.size());
 }
 
+#ifdef _WIN32
+#include "windows.h"
+#define usleep(a) Sleep(a / 1000)
+#endif
 TEST(util, stopwatch)
 {
     stopwatch t1;
@@ -168,27 +174,9 @@ TEST(util, traverse_functions)
     auto C = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C}, "f");
 
-    // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
-    auto X = make_shared<op::Parameter>(element::f32, shape);
-    auto Y = make_shared<op::Parameter>(element::f32, shape);
-    auto Z = make_shared<op::Parameter>(element::f32, shape);
-    auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}) +
-                                       make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}),
-                                   ParameterVector{X, Y, Z},
-                                   "g");
-
-    // Now make "h(X,Y,Z) = g(X,Y,Z) + g(X,Y,Z)"
-    auto X1 = make_shared<op::Parameter>(element::f32, shape);
-    auto Y1 = make_shared<op::Parameter>(element::f32, shape);
-    auto Z1 = make_shared<op::Parameter>(element::f32, shape);
-    auto h = make_shared<Function>(make_shared<op::FunctionCall>(g, NodeVector{X1, Y1, Z1}) +
-                                       make_shared<op::FunctionCall>(g, NodeVector{X1, Y1, Z1}),
-                                   ParameterVector{X1, Y1, Z1},
-                                   "h");
-
     vector<Function*> functions;
-    traverse_functions(h, [&](shared_ptr<Function> fp) { functions.push_back(fp.get()); });
-    ASSERT_EQ(3, functions.size());
+    traverse_functions(f, [&](shared_ptr<Function> fp) { functions.push_back(fp.get()); });
+    ASSERT_EQ(1, functions.size());
 }
 
 class CloneTest : public ::testing::Test
@@ -228,7 +216,7 @@ public:
         auto cloneit = clone.begin();
         while (origit != orig.end() && cloneit != clone.end())
         {
-            if (*cloneit != nm.get_node_map().at(*origit))
+            if (*cloneit != nm.at((*origit).get()))
             {
                 return false;
             }
@@ -244,11 +232,11 @@ TEST_F(CloneTest, clone_nodes_full)
     auto cloned_nodes = clone_nodes(nodes, node_map);
     ASSERT_TRUE(CompareNodeVector(nodes, cloned_nodes, node_map));
 
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.get(A)));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.get(B)));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.get(C)));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Add>(node_map.get(AplusB)));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Multiply>(node_map.get(AplusBtimesC)));
+    ASSERT_NE(nullptr, as_type_ptr<op::Parameter>(node_map.at(A.get())));
+    ASSERT_NE(nullptr, as_type_ptr<op::Parameter>(node_map.at(B.get())));
+    ASSERT_NE(nullptr, as_type_ptr<op::Parameter>(node_map.at(C.get())));
+    ASSERT_NE(nullptr, as_type_ptr<op::Add>(node_map.at(AplusB.get())));
+    ASSERT_NE(nullptr, as_type_ptr<op::Multiply>(node_map.at(AplusBtimesC.get())));
 
     auto sorted_nodes = topological_sort(nodes);
     auto sorted_cloned_nodes = topological_sort(cloned_nodes);
@@ -259,13 +247,13 @@ TEST_F(CloneTest, clone_nodes_partial)
 {
     // map A -> A' prior to clone
     auto Aprime = make_shared<op::Parameter>(element::f32, shape);
-    node_map.add(A, Aprime);
+    node_map[A.get()] = Aprime;
 
     auto cloned_nodes = clone_nodes(nodes, node_map);
     ASSERT_TRUE(CompareNodeVector(nodes, cloned_nodes, node_map));
 
     // ensure A -> A' after clone
-    ASSERT_EQ(Aprime, node_map.get(A));
+    ASSERT_EQ(Aprime, node_map.at(A.get()));
 }
 
 TEST_F(CloneTest, clone_function_full)
@@ -404,4 +392,263 @@ TEST(graph_util, test_subgraph_topological_sort_control_dependencies)
     auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A, D}, true);
     std::list<std::shared_ptr<Node>> expected{A, D, add, mul};
     ASSERT_EQ(expected, sorted);
+}
+
+TEST(util, enum_mask_construction)
+{
+    enum class Type : uint32_t
+    {
+        a = 0x1,
+        b = 1 << 1,
+        c = 1 << 2,
+        d = 1 << 3
+    };
+    {
+        EnumMask<Type> m;
+        EXPECT_EQ(0, m.value());
+    }
+    {
+        EnumMask<Type> m(Type::c);
+        EXPECT_EQ(static_cast<uint32_t>(Type::c), m.value());
+    }
+    {
+        EnumMask<Type> a(Type::c);
+        EnumMask<Type> b{a};
+        EXPECT_EQ(a.value(), b.value());
+    }
+    {
+        EnumMask<Type> a{Type::a, Type::c, Type::d};
+        EXPECT_EQ((static_cast<uint32_t>(Type::a) | static_cast<uint32_t>(Type::c) |
+                   static_cast<uint32_t>(Type::d)),
+                  a.value());
+    }
+}
+
+TEST(util, enum_mask_set_clear)
+{
+    enum class Type : uint32_t
+    {
+        a = 0x1,
+        b = 1 << 1,
+        c = 1 << 2,
+        d = 1 << 3
+    };
+    EnumMask<Type> m;
+    m.set(Type::b);
+    EXPECT_EQ(static_cast<uint32_t>(Type::b), m.value());
+    m.set(Type::c);
+    EXPECT_EQ(static_cast<uint32_t>(Type::b) | static_cast<uint32_t>(Type::c), m.value());
+    m.clear(Type::b);
+    EXPECT_EQ(static_cast<uint32_t>(Type::c), m.value());
+    m.clear_all();
+    EXPECT_EQ(0, m.value());
+    m.set(Type::d);
+    m.set(Type::b);
+    EXPECT_EQ(true, m.is_set(Type::d));
+    EXPECT_EQ(false, m.is_set(Type::a));
+    EXPECT_EQ(true, m.is_set(Type::b));
+    EXPECT_EQ(false, m.is_set(Type::c));
+    EXPECT_EQ(false, m.is_set({Type::a, Type::b}));
+    EXPECT_EQ(false, m.is_set({Type::c, Type::d}));
+    EXPECT_EQ(false, m.is_set({Type::a, Type::c}));
+    EXPECT_EQ(true, m.is_set({Type::b, Type::d}));
+    EXPECT_EQ(false, m.is_clear(Type::d));
+    EXPECT_EQ(true, m.is_clear(Type::a));
+    EXPECT_EQ(false, m.is_clear(Type::b));
+    EXPECT_EQ(true, m.is_clear(Type::c));
+    EXPECT_EQ(false, m.is_clear({Type::c, Type::d}));
+    EXPECT_EQ(false, m.is_clear({Type::a, Type::b}));
+    EXPECT_EQ(true, m.is_clear({Type::a, Type::c}));
+    EXPECT_EQ(false, m.is_clear({Type::b, Type::d}));
+
+    EXPECT_EQ(true, m.is_any_set({Type::a, Type::b}));
+    EXPECT_EQ(true, m.is_any_set({Type::a, Type::d}));
+    EXPECT_EQ(true, m.is_any_set({Type::b, Type::c}));
+    EXPECT_EQ(true, m.is_any_set({Type::c, Type::d}));
+    EXPECT_EQ(false, m.is_any_set({Type::a, Type::c}));
+    EXPECT_EQ(true, m.is_any_clear({Type::c, Type::d}));
+    EXPECT_EQ(true, m.is_any_clear({Type::a, Type::b}));
+    EXPECT_EQ(true, m.is_any_clear({Type::a, Type::c}));
+    EXPECT_EQ(true, m.is_any_clear({Type::b, Type::c}));
+    EXPECT_EQ(false, m.is_any_clear({Type::b, Type::d}));
+
+    m.set(Type::a);
+    EXPECT_EQ(false, m.is_clear(Type::a));
+    EXPECT_EQ(false, m.is_clear(Type::b));
+    EXPECT_EQ(true, m.is_clear(Type::c));
+    EXPECT_EQ(false, m.is_clear(Type::d));
+}
+
+TEST(util, enum_mask_operators)
+{
+    enum class Type : uint32_t
+    {
+        a = 0x1,
+        b = 1 << 1,
+        c = 1 << 2,
+        d = 1 << 3
+    };
+    EnumMask<Type> m;
+    m = Type::b;
+    EXPECT_EQ(static_cast<uint32_t>(Type::b), m.value());
+    EXPECT_EQ(true, m[Type::b]);
+    EXPECT_EQ(false, m[Type::a]);
+    EXPECT_EQ(false, m[Type::c]);
+    m |= Type::c;
+    EXPECT_EQ(static_cast<uint32_t>(Type::b) | static_cast<uint32_t>(Type::c), m.value());
+    m &= Type::d;
+    EXPECT_EQ(0, m.value());
+
+    m |= Type::a;
+    m |= Type::c;
+    EXPECT_EQ(true, m.is_set(Type::a));
+    EXPECT_EQ(false, m.is_set(Type::b));
+    EXPECT_EQ(true, m.is_set(Type::c));
+    EXPECT_EQ(false, m.is_set(Type::d));
+    EXPECT_EQ(true, m.is_any_set(Type::a));
+    EXPECT_EQ(false, m.is_any_set(Type::b));
+    EXPECT_EQ(true, m.is_any_set(Type::c));
+    EXPECT_EQ(false, m.is_any_set(Type::d));
+    EXPECT_EQ(true, m.is_any_set({Type::a, Type::c}));
+    EXPECT_EQ(false, m.is_any_set({Type::b, Type::d}));
+
+    EnumMask<Type> n;
+    n = m | n;
+    EXPECT_EQ(m, n);
+    n = m & n;
+    EXPECT_EQ(m, n);
+    bool r = (n == m);
+    EXPECT_EQ(true, r);
+    r = (n != m);
+    EXPECT_EQ(false, r);
+    n.clear_all();
+    n = {Type::a, Type::b};
+    r = (n == m);
+    EXPECT_EQ(false, r);
+    r = (n != m);
+    EXPECT_EQ(true, r);
+    n = m & n;
+    EXPECT_EQ(static_cast<uint32_t>(Type::a), n.value());
+    n = m | Type::b;
+    EXPECT_EQ(true, n.is_set(Type::a));
+    EXPECT_EQ(true, n.is_set(Type::b));
+    EXPECT_EQ(true, n.is_set(Type::c));
+    EXPECT_EQ(false, n.is_set(Type::d));
+    EXPECT_EQ(false, n[Type::d]);
+    EXPECT_EQ(true, n[Type::b]);
+}
+
+TEST(graph, huge)
+{
+    std::vector<std::weak_ptr<Node>> weak_nodes;
+    {
+        auto param = make_shared<op::Parameter>(element::f32, Shape{3, 3});
+        std::shared_ptr<Node> n = param;
+        for (size_t i = 0; i < 1000000; i++)
+        {
+            n = make_shared<op::Negative>(n);
+        }
+        auto f = make_shared<Function>(NodeVector{n}, ParameterVector{param});
+        f->map_unordered_ops(
+            [&weak_nodes](Node* node) { weak_nodes.push_back(node->shared_from_this()); });
+    }
+
+    for (auto& weak_node : weak_nodes)
+    {
+        EXPECT_TRUE(weak_node.expired());
+    }
+}
+
+TEST(util, apply_permutation)
+{
+    ASSERT_EQ(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{2, 1, 0, 3}), (Shape{2, 1, 0, 3}));
+}
+
+TEST(util, apply_permutation_too_short_fails)
+{
+    ASSERT_THROW(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{0, 1, 2}), CheckFailure);
+}
+
+TEST(util, apply_permutation_too_long_fails)
+{
+    ASSERT_THROW(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{0, 1, 2, 3, 3}), CheckFailure);
+}
+
+TEST(util, apply_permutation_oob_axis_fails)
+{
+    ASSERT_THROW(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{0, 1, 2, 4}), CheckFailure);
+}
+
+TEST(util, apply_permutation_repeated_axis_fails)
+{
+    ASSERT_THROW(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{0, 1, 2, 2}), CheckFailure);
+}
+
+TEST(util, apply_permutation_pshape)
+{
+    ASSERT_TRUE(
+        apply_permutation(PartialShape{0, Dimension::dynamic(), 2, 3}, AxisVector{2, 1, 0, 3})
+            .same_scheme(PartialShape{2, Dimension::dynamic(), 0, 3}));
+}
+
+TEST(util, apply_permutation_pshape_rank_dynamic)
+{
+    ASSERT_TRUE(apply_permutation(PartialShape::dynamic(), AxisVector{2, 1, 0, 3})
+                    .same_scheme(PartialShape::dynamic()));
+}
+
+TEST(util, apply_permutation_pshape_too_short_fails)
+{
+    ASSERT_THROW(
+        apply_permutation(PartialShape{0, Dimension::dynamic(), 2, 3}, AxisVector{0, 1, 2}),
+        CheckFailure);
+}
+
+TEST(util, apply_permutation_pshape_too_long_fails)
+{
+    ASSERT_THROW(
+        apply_permutation(PartialShape{0, Dimension::dynamic(), 2, 3}, AxisVector{0, 1, 2, 3, 3}),
+        CheckFailure);
+}
+
+TEST(util, apply_permutation_pshape_oob_axis_fails)
+{
+    ASSERT_THROW(
+        apply_permutation(PartialShape{0, Dimension::dynamic(), 2, 3}, AxisVector{0, 1, 2, 4}),
+        CheckFailure);
+}
+
+TEST(util, apply_permutation_pshape_repeated_axis_fails)
+{
+    ASSERT_THROW(
+        apply_permutation(PartialShape{0, Dimension::dynamic(), 2, 3}, AxisVector{0, 1, 2, 2}),
+        CheckFailure);
+}
+
+TEST(util, apply_permutation_pshape_rank_dynamic_inviable_permutation_fails)
+{
+    ASSERT_THROW(apply_permutation(PartialShape::dynamic(), AxisVector{0, 1, 2, 2}), CheckFailure);
+}
+
+TEST(util, clone_function_friendly_name)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
+
+    A->set_friendly_name("A");
+    B->set_friendly_name("B");
+
+    auto g = clone_function(*f);
+
+    bool found_A = false;
+    bool found_B = false;
+    for (auto parameter : g->get_parameters())
+    {
+        found_A |= parameter->get_friendly_name() == "A";
+        found_B |= parameter->get_friendly_name() == "B";
+    }
+    EXPECT_TRUE(found_A);
+    EXPECT_TRUE(found_B);
 }

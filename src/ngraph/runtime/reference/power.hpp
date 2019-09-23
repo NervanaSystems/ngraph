@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,9 @@
 #include <cmath>
 #include <cstddef>
 
+#include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/shape.hpp"
+
 namespace ngraph
 {
     namespace runtime
@@ -32,6 +35,20 @@ namespace ngraph
                 {
                     out[i] = std::pow(arg0[i], arg1[i]);
                 }
+            }
+
+            template <typename T>
+            void power(const T* arg0,
+                       const T* arg1,
+                       T* out,
+                       const Shape& arg0_shape,
+                       const Shape& arg1_shape,
+                       const op::AutoBroadcastSpec& broadcast_spec)
+            {
+                autobroadcast_binop(
+                    arg0, arg1, out, arg0_shape, arg1_shape, broadcast_spec, [](T x, T y) -> T {
+                        return std::pow(x, y);
+                    });
             }
         }
     }

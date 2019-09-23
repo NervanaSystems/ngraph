@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,9 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 #include <algorithm>
+#include <limits>
 #include <map>
 
-#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_utils.hpp"
 #include "ngraph/util.hpp"
@@ -40,7 +41,7 @@ string emit_bracketed_string(T data)
 }
 
 // Convert a buffer into a C-style multi-index array
-string recast_tmp_var(codegen::CodeWriter& writer,
+string recast_tmp_var(CodeWriter& writer,
                       const string& element_type,
                       const string& arg_name,
                       const Shape& arg_shape,
@@ -57,8 +58,7 @@ string recast_tmp_var(codegen::CodeWriter& writer,
 // write openings to for loops, for variables in the order of top,
 // where each loop ranges from bottom[i] to top[i]
 // creates index variables for each loop and returns them
-vector<string>
-    open_for_loops(codegen::CodeWriter& writer, const Shape& top, const Shape& bottom = {})
+vector<string> open_for_loops(CodeWriter& writer, const Shape& top, const Shape& bottom = {})
 {
     Shape new_bottom;
     if (bottom.size() == 0)
@@ -97,8 +97,8 @@ vector<string>
 
     return index_vars;
 }
-//close the for loops created by open_for_loops
-void close_for_loops(codegen::CodeWriter& writer, const vector<string>& index_vars)
+// close the for loops created by open_for_loops
+void close_for_loops(CodeWriter& writer, const vector<string>& index_vars)
 {
     for (size_t i = index_vars.size(); i-- > 0;)
     {
@@ -107,7 +107,7 @@ void close_for_loops(codegen::CodeWriter& writer, const vector<string>& index_va
     }
 }
 
-void ngraph::runtime::cpu::kernel::emit_broadcast(codegen::CodeWriter& writer,
+void ngraph::runtime::cpu::kernel::emit_broadcast(CodeWriter& writer,
                                                   const string& element_type,
                                                   const string& arg0, // replacement context
                                                   const string& out,
@@ -141,7 +141,7 @@ void ngraph::runtime::cpu::kernel::emit_broadcast(codegen::CodeWriter& writer,
 //
 // For the reference kernel this is based on, see ngraph/runtime/reference/concat.hpp.
 //
-void ngraph::runtime::cpu::kernel::emit_concat(codegen::CodeWriter& writer,
+void ngraph::runtime::cpu::kernel::emit_concat(CodeWriter& writer,
                                                const string& element_type,
                                                const vector<string>& args,
                                                const string& out,
@@ -174,7 +174,7 @@ void ngraph::runtime::cpu::kernel::emit_concat(codegen::CodeWriter& writer,
     }
 }
 
-void ngraph::runtime::cpu::kernel::emit_replace_slice(codegen::CodeWriter& writer,
+void ngraph::runtime::cpu::kernel::emit_replace_slice(CodeWriter& writer,
                                                       const string& element_type,
                                                       const string& arg0, // replacement context
                                                       const string& arg1, // replacement value
@@ -197,7 +197,7 @@ void ngraph::runtime::cpu::kernel::emit_replace_slice(codegen::CodeWriter& write
 }
 
 void ngraph::runtime::cpu::kernel::emit_replace_slice_inplace(
-    codegen::CodeWriter& writer,
+    CodeWriter& writer,
     const string& element_type,
     const string& arg0, // replacement context
     const string& arg1, // replacement value
@@ -214,7 +214,7 @@ void ngraph::runtime::cpu::kernel::emit_replace_slice_inplace(
     emit_pointwise_copy(writer, element_type, arg1, arg0, input_transform, output_transform);
 }
 
-void ngraph::runtime::cpu::kernel::emit_slice(codegen::CodeWriter& writer,
+void ngraph::runtime::cpu::kernel::emit_slice(CodeWriter& writer,
                                               const string& element_type,
                                               const string& arg0, // replacement context
                                               const string& out,
@@ -258,7 +258,7 @@ void ngraph::runtime::cpu::kernel::emit_slice(codegen::CodeWriter& writer,
     close_for_loops(writer, index_vars);
 }
 
-void ngraph::runtime::cpu::kernel::emit_reshape(codegen::CodeWriter& writer,
+void ngraph::runtime::cpu::kernel::emit_reshape(CodeWriter& writer,
                                                 const string& element_type,
                                                 const string& arg0, // replacement context
                                                 const string& out,
@@ -334,7 +334,7 @@ struct SumHeuristic
     }
 
     string get_thread_safe_dest() const { return m_thread_safe_dest; }
-    void emit_omp(codegen::CodeWriter& writer, const size_t loop_index) const
+    void emit_omp(CodeWriter& writer, const size_t loop_index) const
     {
         if (!m_skip_parallel_for && loop_index == m_parallel_for_index)
         {
@@ -355,7 +355,7 @@ struct SumHeuristic
             writer << "\n";
         }
     }
-    void emit_thread_local(codegen::CodeWriter& writer,
+    void emit_thread_local(CodeWriter& writer,
                            const size_t loop_index,
                            const vector<string>& out_indexes,
                            const Shape& out_shape,
@@ -375,7 +375,7 @@ struct SumHeuristic
             m_thread_safe_dest += emit_bracketed_string(out_indexes);
         }
     }
-    void emit_thread_local_finalize(codegen::CodeWriter& writer,
+    void emit_thread_local_finalize(CodeWriter& writer,
                                     const size_t loop_index,
                                     const vector<string>& index_vars,
                                     const vector<string>& out_indexes,
@@ -495,7 +495,7 @@ private:
     bool m_skip_parallel_for{false};
 };
 
-void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
+void ngraph::runtime::cpu::kernel::emit_sum(CodeWriter& writer,
                                             const string& element_type,
                                             const string& arg0, // replacement context
                                             const string& out,
@@ -529,7 +529,7 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
     // If we don't have a zero index in the input, perform the sum
     if (find(arg0_shape.begin(), arg0_shape.end(), 0) == arg0_shape.end())
     {
-        // create the the interation variables without writing the for loops
+        // create the interation variables without writing the for loops
         vector<string> index_vars;
 
         for (size_t i = 0; i < arg0_shape.size(); i++)
@@ -574,7 +574,7 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
         }
     }
 }
-void ngraph::runtime::cpu::kernel::emit_reduce(codegen::CodeWriter& writer,
+void ngraph::runtime::cpu::kernel::emit_reduce(CodeWriter& writer,
                                                const string& element_type,
                                                const string& arg0, // replacement context
                                                const string& arg1,
@@ -604,7 +604,7 @@ void ngraph::runtime::cpu::kernel::emit_reduce(codegen::CodeWriter& writer,
     // If we don't have a zero index in the input, perform the sum
     if (find(arg0_shape.begin(), arg0_shape.end(), 0) == arg0_shape.end())
     {
-        // create the the interation variables without writing the for loops
+        // create the interation variables without writing the for loops
         vector<string> index_vars;
         for (size_t i = 0; i < arg0_shape.size(); i++)
         {
@@ -614,7 +614,7 @@ void ngraph::runtime::cpu::kernel::emit_reduce(codegen::CodeWriter& writer,
 
         // calculate the output indexes based on what's being reduced
         vector<string> out_indexes;
-        size_t outer_arg_index = -1;
+        size_t outer_arg_index = std::numeric_limits<size_t>::max();
         for (size_t i = 0; i < index_vars.size(); ++i)
         {
             if (reduction_axes.count(i) == 0)
@@ -628,7 +628,7 @@ void ngraph::runtime::cpu::kernel::emit_reduce(codegen::CodeWriter& writer,
         }
 
         // make the first output shape our outer loop, optimize with openmp
-        if (outer_arg_index != -1)
+        if (outer_arg_index != std::numeric_limits<size_t>::max())
         {
             writer << start_index_loop(
                 index_vars[outer_arg_index], 0, arg0_shape[outer_arg_index], true);

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,8 +23,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Reverse::Reverse(const shared_ptr<Node>& arg, const AxisSet& reversed_axes)
-    : Op("Reverse", check_single_output_args({arg}))
+constexpr NodeTypeInfo op::Reverse::type_info;
+
+op::Reverse::Reverse(const Output<Node>& arg, const AxisSet& reversed_axes)
+    : Op({arg})
     , m_reversed_axes(reversed_axes)
 {
     constructor_validate_and_infer_types();
@@ -40,9 +42,13 @@ void op::Reverse::validate_and_infer_types()
         // Make sure all reversed axis indices are valid.
         for (size_t axis : m_reversed_axes)
         {
-            NODE_VALIDATION_ASSERT(this, axis < size_t(input_rank))
-                << "Reverse axis (" << axis << ") is out of bounds (argument shape: " << input_shape
-                << ").";
+            NODE_VALIDATION_CHECK(this,
+                                  axis < size_t(input_rank),
+                                  "Reverse axis (",
+                                  axis,
+                                  ") is out of bounds (argument shape: ",
+                                  input_shape,
+                                  ").");
         }
     }
 
@@ -59,7 +65,7 @@ void op::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = input_value(0);
 
     adjoints.add_delta(x, make_shared<op::Reverse>(delta, m_reversed_axes));
 }

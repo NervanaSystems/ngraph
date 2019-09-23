@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,9 +43,8 @@ TEST(tensor, size)
 
         pass_manager.run_passes(f0);
 
-        auto& outputs = arg0->get_outputs();
-        ASSERT_EQ(1, outputs.size());
-        descriptor::Tensor& output = outputs[0].get_tensor();
+        ASSERT_EQ(1, arg0->get_output_size());
+        descriptor::Tensor& output = arg0->output(0).get_tensor();
         EXPECT_EQ(2 * 3 * 4, output.size());
     }
 
@@ -56,9 +55,8 @@ TEST(tensor, size)
 
         pass_manager.run_passes(f0);
 
-        auto& outputs = arg0->get_outputs();
-        ASSERT_EQ(1, outputs.size());
-        descriptor::Tensor& output = outputs[0].get_tensor();
+        ASSERT_EQ(1, arg0->get_output_size());
+        descriptor::Tensor& output = arg0->output(0).get_tensor();
         EXPECT_EQ(1 * 4, output.size());
     }
 
@@ -69,45 +67,11 @@ TEST(tensor, size)
 
         pass_manager.run_passes(f0);
 
-        auto& outputs = arg0->get_outputs();
-        ASSERT_EQ(1, outputs.size());
-        descriptor::Tensor& output = outputs[0].get_tensor();
+        ASSERT_EQ(1, arg0->get_output_size());
+        descriptor::Tensor& output = arg0->output(0).get_tensor();
         EXPECT_EQ(1 * 4, output.size());
     }
 }
-
-template <typename T>
-void test_read_write(const vector<T>& x)
-{
-    auto backend = runtime::Backend::create("INTERPRETER");
-
-    auto a = backend->create_tensor(element::from<T>(), Shape{2, x.size()});
-
-    vector<T> result(2 * x.size());
-
-    a->write(&x[0], 0, x.size() * sizeof(T));
-    copy(x.begin(), x.end(), result.begin());
-    a->write(&x[0], x.size() * sizeof(T), x.size() * sizeof(T));
-    copy(x.begin(), x.end(), result.begin() + x.size());
-
-    vector<T> af_vector(2 * x.size());
-    a->read(af_vector.data(), 0, af_vector.size() * sizeof(T));
-    ASSERT_EQ(af_vector, result);
-
-    vector<T> result1(x.size());
-    vector<T> result2(x.size());
-    copy(result.begin() + 1, result.begin() + 1 + x.size(), result1.begin());
-    a->read(&result2[0], sizeof(T), sizeof(T) * x.size());
-    ASSERT_EQ(result1, result2);
-}
-
-#if defined(NGRAPH_INTERPRETER_ENABLE)
-TEST(tensor, read_write)
-{
-    test_read_write<float>({1.0, 3.0, 5.0});
-    test_read_write<int64_t>({-1, 2, 4});
-}
-#endif
 
 TEST(tensor, output_flag)
 {

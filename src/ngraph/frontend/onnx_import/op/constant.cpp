@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 #include "ngraph/op/constant.hpp"
 #include "core/node.hpp"
 #include "core/tensor.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
@@ -48,7 +48,7 @@ namespace ngraph
                     inline std::shared_ptr<ngraph::op::Constant>
                         make_ng_constant<Tensor::Type::float16>(const Tensor& tensor)
                     {
-                        return __make_ng_constant<float>(element::f32, tensor);
+                        return __make_ng_constant<ngraph::float16>(element::f16, tensor);
                     }
 
                     template <>
@@ -67,6 +67,20 @@ namespace ngraph
 
                     template <>
                     inline std::shared_ptr<ngraph::op::Constant>
+                        make_ng_constant<Tensor::Type::int8>(const Tensor& tensor)
+                    {
+                        return __make_ng_constant<int8_t>(element::i8, tensor);
+                    }
+
+                    template <>
+                    inline std::shared_ptr<ngraph::op::Constant>
+                        make_ng_constant<Tensor::Type::int16>(const Tensor& tensor)
+                    {
+                        return __make_ng_constant<int16_t>(element::i16, tensor);
+                    }
+
+                    template <>
+                    inline std::shared_ptr<ngraph::op::Constant>
                         make_ng_constant<Tensor::Type::int32>(const Tensor& tensor)
                     {
                         return __make_ng_constant<int32_t>(element::i32, tensor);
@@ -77,6 +91,20 @@ namespace ngraph
                         make_ng_constant<Tensor::Type::int64>(const Tensor& tensor)
                     {
                         return __make_ng_constant<int64_t>(element::i64, tensor);
+                    }
+
+                    template <>
+                    inline std::shared_ptr<ngraph::op::Constant>
+                        make_ng_constant<Tensor::Type::uint8>(const Tensor& tensor)
+                    {
+                        return __make_ng_constant<uint8_t>(element::u8, tensor);
+                    }
+
+                    template <>
+                    inline std::shared_ptr<ngraph::op::Constant>
+                        make_ng_constant<Tensor::Type::uint16>(const Tensor& tensor)
+                    {
+                        return __make_ng_constant<uint16_t>(element::u16, tensor);
                     }
 
                     template <>
@@ -103,8 +131,12 @@ namespace ngraph
                             MAKE_NG_CONSTANT(Tensor::Type::float16);
                             MAKE_NG_CONSTANT(Tensor::Type::float32);
                             MAKE_NG_CONSTANT(Tensor::Type::float64);
+                            MAKE_NG_CONSTANT(Tensor::Type::int8);
+                            MAKE_NG_CONSTANT(Tensor::Type::int16);
                             MAKE_NG_CONSTANT(Tensor::Type::int32);
                             MAKE_NG_CONSTANT(Tensor::Type::int64);
+                            MAKE_NG_CONSTANT(Tensor::Type::uint8);
+                            MAKE_NG_CONSTANT(Tensor::Type::uint16);
                             MAKE_NG_CONSTANT(Tensor::Type::uint32);
                             MAKE_NG_CONSTANT(Tensor::Type::uint64);
                         default: throw error::tensor::invalid_data_type{tensor};
@@ -119,7 +151,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

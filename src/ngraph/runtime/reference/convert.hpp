@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,9 +27,18 @@ namespace ngraph
             template <typename TI, typename TO>
             void convert(const TI* arg, TO* out, size_t count)
             {
-                for (size_t i = 0; i < count; i++)
+                for (size_t i = 0; i < count; ++i)
                 {
                     out[i] = static_cast<TO>(arg[i]);
+                }
+            }
+
+            template <typename T>
+            void convert_to_bool(const T* arg, char* out, size_t count)
+            {
+                for (size_t i = 0; i < count; ++i)
+                {
+                    out[i] = static_cast<char>(static_cast<bool>(arg[i]));
                 }
             }
         }

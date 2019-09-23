@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,8 +15,9 @@
 //*****************************************************************************
 
 #pragma once
-#include "group_conv.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -27,16 +28,19 @@ namespace ngraph
         class GroupConvolutionBias : public Op
         {
         public:
+            CPU_BACKEND_API
+            static constexpr NodeTypeInfo type_info{"GroupConvolutionBias", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             GroupConvolutionBias(const std::shared_ptr<op::GroupConvolution>& conv,
-                                 const std::shared_ptr<Node>& bias,
+                                 const Output<Node>& bias,
                                  const size_t groups,
                                  const Shape& output_shape,
                                  bool with_relu,
                                  float alpha = 1.0);
 
-            GroupConvolutionBias(const std::shared_ptr<Node>& data_batch,
-                                 const std::shared_ptr<Node>& filters,
-                                 const std::shared_ptr<Node>& bias,
+            GroupConvolutionBias(const Output<Node>& data_batch,
+                                 const Output<Node>& filters,
+                                 const Output<Node>& bias,
                                  const Strides& window_movement_strides,
                                  const Strides& window_dilation_strides,
                                  const CoordinateDiff& padding_below,
@@ -53,9 +57,9 @@ namespace ngraph
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
-            std::shared_ptr<Node> get_bias() { return get_argument(2); }
-            std::shared_ptr<Node> get_filters() { return get_argument(1); }
-            std::shared_ptr<Node> get_data_batch() { return get_argument(0); }
+            Output<Node> get_bias() { return input(2).get_source_output(); }
+            Output<Node> get_filters() { return input(1).get_source_output(); }
+            Output<Node> get_data_batch() { return input(0).get_source_output(); }
             size_t get_groups() const { return m_groups; }
             bool with_relu() const { return m_with_relu; }
             float get_alpha() const { return m_alpha; }

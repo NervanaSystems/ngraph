@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,12 +18,22 @@
 #include <memory>
 #include <sstream>
 
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/type/element_type.hpp"
 
 using namespace ngraph;
 using namespace std;
+
+op::Op::Op(const NodeVector& args)
+    : Node(args)
+{
+}
+
+op::Op::Op(const OutputVector& args)
+    : Node(args)
+{
+}
 
 op::Op::Op(const std::string& node_type, const NodeVector& args)
     : Node(node_type, args)

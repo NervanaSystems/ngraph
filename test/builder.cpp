@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,8 @@ shared_ptr<runtime::Tensor>
     auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->create_tensor(element::f32, shape_rt);
-    backend->call_with_validate(f, {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
 
     return result;
 }
@@ -51,7 +52,8 @@ shared_ptr<runtime::Tensor> make_reduce_result_true(
     auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->create_tensor(element::f32, shape_rt);
-    backend->call_with_validate(f, {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
 
     return result;
 }
@@ -68,7 +70,8 @@ shared_ptr<runtime::Tensor> make_reduce_result_false(
     auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->create_tensor(element::f32, shape_rt);
-    backend->call_with_validate(f, {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
 
     return result;
 }
@@ -109,27 +112,25 @@ TEST(builder, numpy_transpose)
     // 2D Transpose
     Shape shape{2, 4};
     auto param = make_shared<op::Parameter>(element::f32, shape);
-    auto transposed = dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param));
+    auto transposed = as_type_ptr<op::Reshape>(builder::numpy_transpose(param));
     EXPECT_EQ(Shape({4, 2}), transposed->get_output_shape());
 
     // Multidimensional Transpose
     shape = Shape{2, 4, 8};
     param = make_shared<op::Parameter>(element::f32, shape);
-    transposed = dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param));
+    transposed = as_type_ptr<op::Reshape>(builder::numpy_transpose(param));
     EXPECT_EQ(Shape({8, 4, 2}), transposed->get_output_shape());
 
     // Dimshuffle
     shape = Shape{2, 4, 8};
     param = make_shared<op::Parameter>(element::f32, shape);
-    transposed =
-        dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param, AxisVector{2, 0, 1}));
+    transposed = as_type_ptr<op::Reshape>(builder::numpy_transpose(param, AxisVector{2, 0, 1}));
     EXPECT_EQ(Shape({8, 2, 4}), transposed->get_output_shape());
 
     // Bad Orders
+    EXPECT_ANY_THROW(as_type_ptr<op::Reshape>(builder::numpy_transpose(param, AxisVector{2})));
     EXPECT_ANY_THROW(
-        dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param, AxisVector{2})));
-    EXPECT_ANY_THROW(
-        dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param, AxisVector{2, 2, 1})));
+        as_type_ptr<op::Reshape>(builder::numpy_transpose(param, AxisVector{2, 2, 1})));
 }
 
 TEST(builder, tensor_mask)
@@ -148,7 +149,8 @@ TEST(builder, tensor_mask)
     copy_data(sequence_lengths_data, vector<uint32_t>{1, 3, 2});
     auto result = backend->create_tensor(element::boolean, mask_shape);
 
-    backend->call_with_validate(f, {result}, {sequence_lengths_data});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {sequence_lengths_data});
     vector<char> expected{1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0};
 
     EXPECT_EQ(expected, read_vector<char>(result));

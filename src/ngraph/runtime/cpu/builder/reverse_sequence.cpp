@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,9 +34,9 @@ namespace ngraph
 
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& seq_len_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto seq_len_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 auto arg_shape = args[0].get_shape();
 
@@ -47,10 +47,10 @@ namespace ngraph
 
                 if (args[1].get_element_type() == element::i32)
                 {
-                    SELECT_KERNEL_BY_RANK(kernel,
+                    SELECT_KERNEL_ET_RANK(kernel,
                                           args[0].get_element_type(),
                                           arg_shape.size(),
-                                          runtime::cpu::kernel::reverse_sequence_sli32);
+                                          runtime::cpu::kernel::reverse_sequence_sli32)
                 }
                 else
                 {
@@ -59,20 +59,27 @@ namespace ngraph
                                        " requires a kernel instantiation to handle this type");
                 }
 
-                auto functor = [&, kernel, arg_shape, batch_axis, sequence_axis](
-                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                    kernel(arg_tensor,
-                           out_tensor,
+                auto functor = [&,
+                                kernel,
+                                arg_shape,
+                                batch_axis,
+                                sequence_axis,
+                                arg_buffer_index,
+                                seq_len_buffer_index,
+                                out_buffer_index](CPURuntimeContext* ctx,
+                                                  CPUExecutionContext* ectx) {
+                    kernel(ctx->buffer_data[arg_buffer_index],
+                           ctx->buffer_data[out_buffer_index],
                            arg_shape,
                            batch_axis,
                            sequence_axis,
-                           seq_len_tensor,
+                           ctx->buffer_data[seq_len_buffer_index],
                            ectx->arena);
                 };
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(ReverseSequence);
+            void register_builders_reverse_sequence_cpp() { REGISTER_OP_BUILDER(ReverseSequence); }
         }
     }
 }

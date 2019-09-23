@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,27 +35,35 @@ TEST(pass_manager, add)
 
     auto graph = make_test_graph();
     size_t node_count = 0;
-    traverse_nodes(graph, [&](shared_ptr<Node> node) { node_count++; });
+    traverse_nodes(graph, [&](shared_ptr<Node> /* node */) { node_count++; });
     pass_manager.run_passes(graph);
     auto sorted = graph->get_ordered_ops();
     EXPECT_EQ(node_count, sorted.size());
     EXPECT_TRUE(validate_list(sorted));
 }
 
-TEST(pass_manager, module_add_function)
+namespace
 {
-    // First create "f(A,B,C) = (A+B)*C".
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
+    class DummyPass : public pass::FunctionPass
+    {
+    public:
+        DummyPass()
+            : FunctionPass()
+        {
+        }
+        bool run_on_function(std::shared_ptr<ngraph::Function> /* f */) override { return false; }
+    };
+}
 
-    // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
-    auto X = make_shared<op::Parameter>(element::f32, shape);
-    auto Y = make_shared<op::Parameter>(element::f32, shape);
-    auto Z = make_shared<op::Parameter>(element::f32, shape);
-    auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}) +
-                                       make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}),
-                                   ParameterVector{X, Y, Z});
+// Regression test: We've had an issue in the past where enabling per-pass validation and
+// per-pass serialization at the same time causes a crash.
+TEST(pass_manager, serialize_with_revalidate_does_not_crash)
+{
+    pass::Manager pass_manager;
+    pass_manager.set_per_pass_validation(true);
+    pass_manager.set_pass_serialization(true);
+    pass_manager.register_pass<DummyPass>();
+
+    auto graph = make_test_graph();
+    pass_manager.run_passes(graph);
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,8 +21,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Sqrt::Sqrt(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Sqrt", arg)
+constexpr NodeTypeInfo op::Sqrt::type_info;
+
+op::Sqrt::Sqrt(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }
@@ -37,7 +39,7 @@ void op::Sqrt::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector&
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = input_value(0);
 
     adjoints.add_delta(x, delta / (shared_from_this() + shared_from_this()));
 }

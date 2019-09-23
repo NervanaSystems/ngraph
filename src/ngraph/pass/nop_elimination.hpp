@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ namespace ngraph
         class NopElimination : public FunctionPass
         {
         public:
+            NopElimination() { set_property(PassProperty::REQUIRE_STATIC_SHAPE, true); }
             bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
         };
     }

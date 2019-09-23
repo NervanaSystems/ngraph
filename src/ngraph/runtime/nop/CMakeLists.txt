@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
 
 if (NGRAPH_NOP_ENABLE)
     add_library(nop_backend SHARED nop_backend.cpp)
+    target_compile_definitions(nop_backend PRIVATE NOP_BACKEND_EXPORTS)
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(nop_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
     endif()
     target_link_libraries(nop_backend PUBLIC ngraph)
-    set_target_properties(nop_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
     install(TARGETS nop_backend
         LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"

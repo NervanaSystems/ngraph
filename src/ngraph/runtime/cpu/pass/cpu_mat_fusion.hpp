@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -26,15 +27,27 @@ namespace ngraph
         {
             namespace pass
             {
-                class CPURnnMatFusion : public ngraph::pass::FunctionPass
+                class CPU_BACKEND_API CPURnnMatFusion : public ngraph::pass::FunctionPass
                 {
                 public:
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                    virtual bool
+                        run_on_function(std::shared_ptr<ngraph::Function> function) override;
                 };
-                class CPUBatchFusion : public ngraph::pass::FunctionPass
+                class CPU_BACKEND_API CPUBatchFusion : public ngraph::pass::FunctionPass
                 {
                 public:
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                    typedef ngraph::pass::FusionType FusionType;
+                    typedef ngraph::pass::FusionTypeMask FusionTypeMask;
+                    CPUBatchFusion(FusionTypeMask fusions = FusionType::ALL_FUSIONS)
+                        : FunctionPass()
+                        , m_fusion_type(fusions)
+                    {
+                    }
+                    virtual bool
+                        run_on_function(std::shared_ptr<ngraph::Function> function) override;
+
+                private:
+                    FusionTypeMask m_fusion_type;
                 };
             }
         }

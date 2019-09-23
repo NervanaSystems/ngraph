@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -56,26 +56,34 @@ from _pyngraph.op import Constant
 """ Retrieve Constant inner data.
 
     Internally uses PyBind11 Numpy's buffer protocol.
-    
+
     :return Numpy array containing internally stored constant data.
 """
 Constant.get_data = lambda self: np.array(self, copy=True)
 
+from _pyngraph.op import Clamp
 from _pyngraph.op import Convert
 from _pyngraph.op import Convolution
 from _pyngraph.op import ConvolutionBackpropData
 from _pyngraph.op import ConvolutionBackpropFilters
 from _pyngraph.op import Cos
 from _pyngraph.op import Cosh
+from _pyngraph.op import DepthToSpace
+from _pyngraph.op import Dequantize
 from _pyngraph.op import Divide
 from _pyngraph.op import Dot
+from _pyngraph.op import Elu
 from _pyngraph.op import Equal
 from _pyngraph.op import Exp
+from _pyngraph.op import FakeQuantize
 from _pyngraph.op import Floor
-from _pyngraph.op import FunctionCall
+from _pyngraph.op import Gelu
+from _pyngraph.op import Gemm
 from _pyngraph.op import GetOutputElement
 from _pyngraph.op import Greater
 from _pyngraph.op import GreaterEq
+from _pyngraph.op import GRN
+from _pyngraph.op import HardSigmoid
 from _pyngraph.op import Less
 from _pyngraph.op import LessEq
 from _pyngraph.op import Log
@@ -87,6 +95,7 @@ from _pyngraph.op import MaxPoolBackprop
 from _pyngraph.op import Min
 from _pyngraph.op import Minimum
 from _pyngraph.op import Multiply
+from _pyngraph.op import MVN
 from _pyngraph.op import Negative
 from _pyngraph.op import Not
 from _pyngraph.op import NotEqual
@@ -96,22 +105,31 @@ from _pyngraph.op import Or
 from _pyngraph.op import Pad
 from _pyngraph.op import Parameter
 from _pyngraph.op import Power
+from _pyngraph.op import PRelu
 from _pyngraph.op import Product
-from _pyngraph.op import Reduce
+from _pyngraph.op import Quantize
+from _pyngraph.op import QuantizedConvolution
+from _pyngraph.op import QuantizedDot
 from _pyngraph.op import Relu
 from _pyngraph.op import ReluBackprop
 from _pyngraph.op import ReplaceSlice
 from _pyngraph.op import Reshape
 from _pyngraph.op import Reverse
+from _pyngraph.op import ScaleShift
 from _pyngraph.op import Select
+from _pyngraph.op import ShuffleChannels
 from _pyngraph.op import Sign
 from _pyngraph.op import Sin
 from _pyngraph.op import Sinh
 from _pyngraph.op import Slice
 from _pyngraph.op import Softmax
+from _pyngraph.op import SpaceToDepth
 from _pyngraph.op import Sqrt
+from _pyngraph.op import SquaredDifference
+from _pyngraph.op import Squeeze
 from _pyngraph.op import Subtract
 from _pyngraph.op import Sum
 from _pyngraph.op import Tan
 from _pyngraph.op import Tanh
 from _pyngraph.op import TopK
+from _pyngraph.op import Unsqueeze

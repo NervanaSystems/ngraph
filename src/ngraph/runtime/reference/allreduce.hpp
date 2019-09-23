@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,7 @@
 
 #pragma once
 
-#ifdef NGRAPH_DISTRIBUTED
-
-#include <mpi.h>
-#include "ngraph/type/element_type.hpp"
+#include "ngraph/distributed.hpp"
 
 namespace ngraph
 {
@@ -28,23 +25,14 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            void allreduce(const T* arg, T* out, const element::Type element_type, int count)
+            void allreduce(T* arg,
+                           T* out,
+                           const element::Type_t element_type,
+                           const reduction::Type reduce_type,
+                           int count)
             {
-                auto data_type = MPI_FLOAT;
-
-                if (element_type == element::f32)
-                {
-                    data_type = MPI_FLOAT;
-                }
-                else if (element_type == element::f64)
-                {
-                    data_type = MPI_DOUBLE;
-                }
-
-                MPI_Allreduce(arg, out, count, data_type, MPI_SUM, MPI_COMM_WORLD);
+                get_distributed_interface()->all_reduce(arg, out, element_type, reduce_type, count);
             }
         }
     }
 }
-
-#endif

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,25 +14,24 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <numeric>
-
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/get_output_element.hpp"
-#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(const std::shared_ptr<Node>& data_batch,
-                                                       const std::shared_ptr<Node>& filters,
+constexpr NodeTypeInfo op::QuantizedConvolutionRelu::type_info;
+
+op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(const Output<Node>& data_batch,
+                                                       const Output<Node>& filters,
                                                        const Strides& window_movement_strides,
                                                        const Strides& window_dilation_strides,
                                                        const CoordinateDiff& padding_below,
                                                        const CoordinateDiff& padding_above,
                                                        const Strides& data_dilation_strides,
-                                                       const std::shared_ptr<Node> scale)
-    : Op("QuantizedConvolutionRelu", check_single_output_args({data_batch, filters, scale}))
+                                                       const Output<Node>& scale)
+    : Op({data_batch, filters, scale})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -41,8 +40,8 @@ op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(const std::shared_ptr<Nod
 {
     constructor_validate_and_infer_types();
 
-    auto& data_batch_shape = data_batch->get_shape();
-    auto& filters_shape = filters->get_shape();
+    auto& data_batch_shape = data_batch.get_shape();
+    auto& filters_shape = filters.get_shape();
 
     set_output_type(0,
                     element::u8,
@@ -63,20 +62,19 @@ op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(const std::shared_ptr<Nod
                                                          ));
 }
 
-std::shared_ptr<Node>
-    op::QuantizedConvolutionRelu::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::QuantizedConvolutionRelu::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 3)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    return std::shared_ptr<Node>(new QuantizedConvolutionRelu(new_args.at(0),
-                                                              new_args.at(1),
-                                                              get_window_movement_strides(),
-                                                              get_window_dilation_strides(),
-                                                              get_padding_below(),
-                                                              get_padding_above(),
-                                                              get_data_dilation_strides(),
-                                                              new_args.at(2)));
+    return shared_ptr<Node>(new QuantizedConvolutionRelu(new_args.at(0),
+                                                         new_args.at(1),
+                                                         get_window_movement_strides(),
+                                                         get_window_dilation_strides(),
+                                                         get_padding_below(),
+                                                         get_padding_above(),
+                                                         get_data_dilation_strides(),
+                                                         new_args.at(2)));
 }

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ******************************************************************************
-# Copyright 2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,9 +28,9 @@ function run() {
     set -e
 
     cd ./dockerfiles
-    docker build --build-arg http_proxy=$http_proxy --build-arg https_proxy=$https_proxy -f=./ubuntu-16_04.dockerfile -t ngraph-onnx:ubuntu-16_04 .
+    docker build --build-arg http_proxy=$http_proxy --build-arg https_proxy=$https_proxy -f=./ubuntu_16_04.dockerfile -t ngraph-onnx:ubuntu-16_04 .
 
-    cd "${CI_PATH}"    
+    cd "${CI_PATH}"
     if [[ -z $(docker ps -a | grep -i "${DOCKER_CONTAINER}") ]];
     then
         docker run -h "$(hostname)" --privileged --name "${DOCKER_CONTAINER}" -v "${REPO_ROOT}":/root \
@@ -38,8 +38,8 @@ function run() {
         BUILD="TRUE"
     fi
 
-    if [[ "${BUILD}" == "TRUE" ]]; 
-    then         
+    if [[ "${BUILD}" == "TRUE" ]];
+    then
         BUILD_NGRAPH_CMD='cd /root && \
             mkdir -p ./build && \
             cd ./build && \
@@ -61,25 +61,25 @@ function run() {
 
     CLONE_CMD='cd /root &&\
         if [[ -z $(ls /root/ngraph-onnx 2>/dev/null) ]]; then
-            git clone '"${NGRAPH_ONNX_REPO}"'; 
+            git clone '"${NGRAPH_ONNX_REPO}"';
         fi'
     docker exec "${DOCKER_CONTAINER}" bash -c "${CLONE_CMD}"
     NGRAPH_WHL=$(docker exec ${DOCKER_CONTAINER} find /root/python/dist/ -name "ngraph*.whl")
-    docker exec -e TOX_INSTALL_NGRAPH_FROM="${NGRAPH_WHL}" NGRAPH_BACKEND=CPU "${DOCKER_CONTAINER}" tox -c /root/ngraph-onnx/
-    docker exec -e TOX_INSTALL_NGRAPH_FROM="${NGRAPH_WHL}" NGRAPH_BACKEND=INTEPRETER "${DOCKER_CONTAINER}" tox -c /root/ngraph-onnx/
+    docker exec -e TOX_INSTALL_NGRAPH_FROM="${NGRAPH_WHL}" -e NGRAPH_BACKEND=CPU "${DOCKER_CONTAINER}" tox -c /root/ngraph-onnx/
+    docker exec -e TOX_INSTALL_NGRAPH_FROM="${NGRAPH_WHL}" -e NGRAPH_BACKEND=INTEPRETER "${DOCKER_CONTAINER}" tox -c /root/ngraph-onnx/
 }
 
 # Function cleanup() removes items related to nGraph, created during script execution
 function cleanup_ngraph() {
     set -x
-    
+
     docker exec "${DOCKER_CONTAINER}" bash -c 'rm -rf /root/build/* /root/ngraph_dist /root/python/dist'
 }
 
 # Function cleanup() removes items created during script execution
 function cleanup() {
     set -x
-    
+
     docker exec "${DOCKER_CONTAINER}" bash -c "rm -rf /root/ngraph_dist /root/ngraph-onnx/.tox /root/ngraph-onnx/.onnx \
                     /root/ngraph-onnx/__pycache__ /root/ngraph-onnx/ngraph_onnx.egg-info /root/ngraph-onnx/cpu_codegen"
     docker exec "${DOCKER_CONTAINER}" bash -c 'rm -rf $(find /root/ -user root)'
@@ -91,12 +91,12 @@ for i in "$@"
 do
     case $i in
         --help*)
-            printf "Script builds nGraph and runs tox tests inside docker container. 
+            printf "Script builds nGraph and runs tox tests inside docker container.
             Every execution after first run is going to run tox tests again.
             To rebuild nGraph and run tests again use --rebuild parameter.
-            
+
             Following parameters are available:
-    
+
             --help      displays this message
             --cleanup   removes docker container and files created during script execution
             --rebuild   rebuilds nGraph and runs tox tests

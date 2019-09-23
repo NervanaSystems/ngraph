@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,45 +18,53 @@
 #include <tbb/tbb_stddef.h>
 #endif
 
+#include "cpu_backend_visibility.h"
+
+#include "ngraph/component_manager.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
+#include "ngraph/runtime/cpu/cpu_builder_registry.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/cpu/static_initialize.hpp"
 #include "ngraph/util.hpp"
+
+#ifdef NGRAPH_MLIR_ENABLE
+#include "contrib/mlir/compiler/compiler.hpp"
+#endif
 
 using namespace ngraph;
 using namespace std;
 
-extern "C" runtime::Backend* new_backend(const char* configuration_string)
+extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend()
 {
+    runtime::BackendManager::register_backend("CPU", [](const std::string& /* config */) {
+        static bool is_initialized = false;
+        if (!is_initialized)
+        {
 #if defined(NGRAPH_TBB_ENABLE)
-    // Force TBB to link to the backend
-    tbb::TBB_runtime_interface_version();
+            // Force TBB to link to the backend
+            tbb::TBB_runtime_interface_version();
 #endif
-    return new runtime::cpu::CPU_Backend();
+            ngraph::runtime::cpu::register_builders();
+            is_initialized = true;
+        }
+        return make_shared<runtime::cpu::CPU_Backend>();
+    });
 }
 
-extern "C" void delete_backend(runtime::Backend* backend)
+runtime::cpu::CPU_Backend::~CPU_Backend()
 {
-    delete backend;
+    m_exec_map.clear();
 }
-
-namespace
-{
-    static class CPUStaticInit
-    {
-    public:
-        CPUStaticInit() { runtime::BackendManager::register_backend("CPU", new_backend); }
-        ~CPUStaticInit() {}
-    } s_cpu_static_init;
-}
-
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
-    const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function)
+    const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function,
+    ngraph::pass::PassConfig& pass_config,
+    Allocator* allocator)
 {
-    return external_function->make_call_frame();
+    return external_function->make_call_frame(pass_config, allocator);
 }
 
 shared_ptr<runtime::Tensor>
@@ -71,47 +79,80 @@ shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor(
     return make_shared<runtime::cpu::CPUTensorView>(element_type, shape, memory_pointer);
 }
 
-bool runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func)
+shared_ptr<runtime::Executable>
+    runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func, bool performance_counters_enabled)
 {
-    FunctionInstance& instance = m_function_map[func];
+    ngraph::pass::PassConfig pass_config;
+    return compile(func, pass_config, performance_counters_enabled);
+}
+
+shared_ptr<runtime::Executable>
+    runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func,
+                                       ngraph::pass::PassConfig& pass_config,
+                                       bool performance_counters_enabled)
+{
+#ifdef NGRAPH_MLIR_ENABLE
+    if (std::getenv("NGRAPH_MLIR") != nullptr)
+    {
+        // Initialize MLIR compiler
+        ngmlir::MLIRCompiler::init_mlir();
+    }
+#endif
+
+    shared_ptr<runtime::Executable> rc;
+    // we will protect the access to map (m_exec_map) across multiple threads by creating a
+    // lock_gaurd
+    // m_exec_map_mutex will be released once the object `guard` goes out of scope
+    {
+        std::lock_guard<std::mutex> guard(m_exec_map_mutex);
+        auto it = m_exec_map.find(func);
+        if (it != m_exec_map.end())
+        {
+            rc = it->second;
+            return rc;
+        }
+    }
+    rc = make_shared<CPU_Executable>(
+        func, pass_config, get_host_memory_allocator(), performance_counters_enabled);
+    {
+        std::lock_guard<std::mutex> guard(m_exec_map_mutex);
+        m_exec_map.insert({func, rc});
+        return rc;
+    }
+}
+
+runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Function> func,
+                                             ngraph::pass::PassConfig& pass_config,
+                                             Allocator* allocator,
+                                             bool performance_counters_enabled)
+{
+    FunctionInstance& instance = m_function_instance;
     if (instance.m_external_function == nullptr)
     {
         instance.m_external_function = make_shared<CPU_ExternalFunction>(func);
-        instance.m_external_function->m_emit_timing = instance.m_performance_counters_enabled;
-        auto cf = instance.m_external_function->make_call_frame();
+        instance.m_external_function->m_emit_timing = performance_counters_enabled;
+        auto cf = instance.m_external_function->make_call_frame(pass_config, allocator);
         instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
     }
-    return true;
+    set_parameters_and_results(*func);
 }
 
-std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
-    runtime::cpu::CPU_Backend::get_call_frame(std::shared_ptr<Function> func)
+std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Executable::get_call_frame()
 {
-    bool rc = true;
-    FunctionInstance& instance = m_function_map[func];
-    if (instance.m_external_function == nullptr)
-    {
-        rc = compile(func);
-    }
-
-    if (!rc)
-    {
-        throw ngraph_error("couldn't compile a function");
-    }
-
+    FunctionInstance& instance = m_function_instance;
     return instance.m_call_frame;
 }
 
-bool runtime::cpu::CPU_Backend::call(shared_ptr<Function> func,
-                                     const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                     const vector<shared_ptr<runtime::Tensor>>& inputs)
+bool runtime::cpu::CPU_Executable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                        const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     bool rc = true;
 
-    FunctionInstance& instance = m_function_map[func];
+    FunctionInstance& instance = m_function_instance;
     if (instance.m_external_function == nullptr)
     {
-        rc = compile(func);
+        NGRAPH_INFO;
+        throw runtime_error("compile() must be called before call().");
     }
 
     instance.m_call_frame->call(outputs, inputs);
@@ -119,35 +160,63 @@ bool runtime::cpu::CPU_Backend::call(shared_ptr<Function> func,
     return rc;
 }
 
-void runtime::cpu::CPU_Backend::remove_compiled_function(shared_ptr<Function> func)
+void runtime::cpu::CPU_Backend::remove_compiled_function(shared_ptr<Executable> exec)
 {
-    m_function_map.erase(func);
-}
-
-void runtime::cpu::CPU_Backend::enable_performance_data(shared_ptr<Function> func, bool enable)
-{
-    FunctionInstance& instance = m_function_map[func];
-    if (instance.m_external_function != nullptr)
+    std::lock_guard<std::mutex> guard(m_exec_map_mutex);
+    for (auto it = m_exec_map.begin(); it != m_exec_map.end(); ++it)
     {
-        throw runtime_error("Performance data collection must be enabled prior to compiling.");
-    }
-    instance.m_performance_counters_enabled = enable;
-}
-
-vector<runtime::PerformanceCounter>
-    runtime::cpu::CPU_Backend::get_performance_data(shared_ptr<Function> func) const
-{
-    vector<runtime::PerformanceCounter> rc;
-    auto it = m_function_map.find(func);
-    if (it != m_function_map.end())
-    {
-        const FunctionInstance& instance = it->second;
-        if (instance.m_external_function != nullptr)
+        if (it->second == exec)
         {
-            rc.insert(rc.end(),
-                      instance.m_external_function->get_perf_counters().begin(),
-                      instance.m_external_function->get_perf_counters().end());
+            m_exec_map.erase(it);
+            break;
         }
     }
+}
+
+runtime::Allocator* runtime::cpu::CPU_Backend::get_host_memory_allocator()
+{
+    if (!m_allocator)
+    {
+        return runtime::get_default_allocator();
+    }
+    return m_allocator;
+}
+
+void runtime::cpu::CPU_Backend::set_host_memory_allocator(Allocator* allocator)
+{
+    if (m_allocator)
+    {
+        // Resources allocated with the existing allocator might still be around and expect it
+        // to be available for freeing. We cannot switch to the new allocator
+        throw ngraph_error(
+            "Allocator already exists. Changing allocators mid-execution is not permitted.");
+    }
+    m_allocator = allocator;
+}
+
+vector<runtime::PerformanceCounter> runtime::cpu::CPU_Executable::get_performance_data() const
+{
+    vector<runtime::PerformanceCounter> rc;
+    const FunctionInstance& instance = m_function_instance;
+    if (instance.m_external_function != nullptr)
+    {
+        rc.insert(rc.end(),
+                  instance.m_external_function->get_perf_counters().begin(),
+                  instance.m_external_function->get_perf_counters().end());
+    }
     return rc;
+}
+
+bool runtime::cpu::CPU_Backend::is_supported(const Node& /* op */) const
+{
+    return true;
+}
+bool runtime::cpu::CPU_Backend::is_supported_property(const Property prop) const
+{
+    if (prop == Property::memory_attach)
+    {
+        return true;
+    }
+
+    return false;
 }

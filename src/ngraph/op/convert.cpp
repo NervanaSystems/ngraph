@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,8 +21,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Convert::Convert(const shared_ptr<Node>& arg, const element::Type& element_type)
-    : Op("Convert", check_single_output_args({arg}))
+constexpr NodeTypeInfo op::Convert::type_info;
+
+op::Convert::Convert(const Output<Node>& arg, const element::Type& element_type)
+    : Op({arg})
     , m_element_type(element_type)
 {
     constructor_validate_and_infer_types();
@@ -43,7 +45,7 @@ void op::Convert::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = input_value(0);
 
-    adjoints.add_delta(x, make_shared<op::Convert>(delta, x->get_element_type()));
+    adjoints.add_delta(x, make_shared<op::Convert>(delta, x.get_element_type()));
 }

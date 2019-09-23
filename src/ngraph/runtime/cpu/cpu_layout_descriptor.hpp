@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 
 #include <mkldnn.hpp>
 
+#include "cpu_backend_visibility.h"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/shape.hpp"
 
@@ -32,7 +33,7 @@ namespace ngraph
     {
         namespace cpu
         {
-            class LayoutDescriptor : public ngraph::descriptor::layout::TensorLayout
+            class CPU_BACKEND_API LayoutDescriptor : public ngraph::descriptor::layout::TensorLayout
             {
             public:
                 LayoutDescriptor(const ngraph::descriptor::Tensor& tv);
@@ -49,7 +50,12 @@ namespace ngraph
                 void set_mkldnn_md(const mkldnn::memory::desc& md);
                 bool is_mkldnn_layout() const
                 {
+#if MKLDNN_VERSION_MAJOR < 1
                     return m_mkldnn_md.data.format != mkldnn::memory::format::format_undef;
+#else
+                    return static_cast<mkldnn::memory::format_kind>(m_mkldnn_md.data.format_kind) !=
+                           mkldnn::memory::format_kind::undef;
+#endif
                 }
                 bool is_row_major_layout();
 

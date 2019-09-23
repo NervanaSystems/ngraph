@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,29 +15,56 @@
 //*****************************************************************************
 
 #include "ngraph/op/max_pool.hpp"
-#include "ngraph/function.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/greater.hpp"
-#include "ngraph/op/select_and_scatter.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
+constexpr NodeTypeInfo op::MaxPool::type_info;
+
+op::MaxPool::MaxPool(const Output<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides,
                      const Shape& padding_below,
-                     const Shape& padding_above)
-    : Op("MaxPool", check_single_output_args({arg}))
+                     const Shape& padding_above,
+                     const PadType& pad_type,
+                     bool ceil_mode)
+    : Op({arg})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
+    , m_pad_type(pad_type)
+    , m_ceil_mode(ceil_mode)
 {
     constructor_validate_and_infer_types();
+}
+
+op::MaxPool::MaxPool(const Output<Node>& arg,
+                     const Shape& window_shape,
+                     const Strides& window_movement_strides,
+                     const Shape& padding_below,
+                     const Shape& padding_above,
+                     const PadType& pad_type)
+    : MaxPool(
+          arg, window_shape, window_movement_strides, padding_below, padding_above, pad_type, false)
+{
+}
+
+op::MaxPool::MaxPool(const Output<Node>& arg,
+                     const Shape& window_shape,
+                     const Strides& window_movement_strides,
+                     const Shape& padding_below,
+                     const Shape& padding_above)
+    : MaxPool(arg,
+              window_shape,
+              window_movement_strides,
+              padding_below,
+              padding_above,
+              PadType::EXPLICIT)
+{
 }
 
 void op::MaxPool::validate_and_infer_types()
@@ -59,6 +86,23 @@ void op::MaxPool::validate_and_infer_types()
 
     const PartialShape& arg_shape = get_input_partial_shape(0);
 
+    if (m_pad_type == PadType::SAME_UPPER || m_pad_type == PadType::SAME_LOWER)
+    {
+        if (arg_shape.is_static())
+        {
+            CoordinateDiff padding_above, padding_below;
+            infer_auto_padding(arg_shape.to_shape(),
+                               m_window_shape,
+                               m_window_movement_strides,
+                               Strides(m_window_shape.size(), 1), // No dilation
+                               m_pad_type,
+                               padding_above,
+                               padding_below);
+            m_padding_above = Shape(padding_above.begin(), padding_above.end());
+            m_padding_below = Shape(padding_below.begin(), padding_below.end());
+        }
+    }
+
     // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for
     // now still take Shape (no negative padding).
     CoordinateDiff padding_below(m_padding_below.begin(), m_padding_below.end());
@@ -72,17 +116,18 @@ void op::MaxPool::validate_and_infer_types()
                                                   padding_above,
                                                   m_window_shape,
                                                   m_window_movement_strides,
-                                                  true));
+                                                  true,
+                                                  m_ceil_mode));
 }
 
-op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
+op::MaxPool::MaxPool(const Output<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides)
     : MaxPool(arg, window_shape, window_movement_strides, Shape(), Shape())
 {
 }
 
-op::MaxPool::MaxPool(const shared_ptr<Node>& arg, const Shape& window_shape)
+op::MaxPool::MaxPool(const Output<Node>& arg, const Shape& window_shape)
     : MaxPool(arg, window_shape, Strides(), Shape(), Shape())
 {
 }
@@ -94,16 +139,24 @@ shared_ptr<Node> op::MaxPool::copy_with_new_args(const NodeVector& new_args) con
                                 m_window_shape,
                                 m_window_movement_strides,
                                 m_padding_below,
-                                m_padding_above);
+                                m_padding_above,
+                                m_pad_type,
+                                m_ceil_mode);
 }
 
-op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
-                                     const shared_ptr<Node>& delta,
+constexpr NodeTypeInfo op::MaxPoolBackprop::type_info;
+shared_ptr<Node> op::MaxPool::get_default_value() const
+{
+    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
+}
+
+op::MaxPoolBackprop::MaxPoolBackprop(const Output<Node>& arg_forward,
+                                     const Output<Node>& delta,
                                      const Shape& window_shape,
                                      const Strides& window_movement_strides,
                                      const Shape& padding_below,
                                      const Shape& padding_above)
-    : Op("MaxPoolBackprop", check_single_output_args({arg_forward, delta}))
+    : Op({arg_forward, delta})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
@@ -112,14 +165,14 @@ op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
     constructor_validate_and_infer_types();
 }
 
-op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
-                                     const shared_ptr<Node>& delta,
-                                     const shared_ptr<Node>& result_forward,
+op::MaxPoolBackprop::MaxPoolBackprop(const Output<Node>& arg_forward,
+                                     const Output<Node>& delta,
+                                     const Output<Node>& result_forward,
                                      const Shape& window_shape,
                                      const Strides& window_movement_strides,
                                      const Shape& padding_below,
                                      const Shape& padding_above)
-    : Op("MaxPoolBackprop", check_single_output_args({arg_forward, delta, result_forward}))
+    : Op({arg_forward, delta, result_forward})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
@@ -135,9 +188,13 @@ void op::MaxPoolBackprop::validate_and_infer_types()
 
     element::Type result_et;
 
-    NODE_VALIDATION_ASSERT(this, element::Type::merge(result_et, forward_arg_et, delta_et))
-        << "Element types for forward argument (" << forward_arg_et << ") and delta (" << delta_et
-        << ") do not match.";
+    NODE_VALIDATION_CHECK(this,
+                          element::Type::merge(result_et, forward_arg_et, delta_et),
+                          "Element types for forward argument (",
+                          forward_arg_et,
+                          ") and delta (",
+                          delta_et,
+                          ") do not match.");
 
     // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for
     // now still take Shape (no negative padding).
@@ -156,9 +213,15 @@ void op::MaxPoolBackprop::validate_and_infer_types()
 
     const PartialShape& delta_shape = get_input_partial_shape(1);
 
-    NODE_VALIDATION_ASSERT(this, forward_result_shape.compatible(delta_shape))
-        << "Inferred forward output shape does not match delta shape (inferred forward output "
-        << "shape: " << forward_result_shape << ", delta shape: " << delta_shape << ").";
+    NODE_VALIDATION_CHECK(
+        this,
+        forward_result_shape.compatible(delta_shape),
+        "Inferred forward output shape does not match delta shape (inferred forward output ",
+        "shape: ",
+        forward_result_shape,
+        ", delta shape: ",
+        delta_shape,
+        ").");
 
     // TODO(amprocte): We may technically be able to infer some extra information from
     // forward_result_shape that was not present in the forward arg shape---namely batch size and
@@ -169,7 +232,7 @@ void op::MaxPoolBackprop::validate_and_infer_types()
 shared_ptr<Node> op::MaxPoolBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    if (this->get_arguments().size() == 3)
+    if (this->get_input_size() == 3)
     {
         return make_shared<op::MaxPoolBackprop>(new_args.at(0),
                                                 new_args.at(1),
@@ -190,9 +253,14 @@ shared_ptr<Node> op::MaxPoolBackprop::copy_with_new_args(const NodeVector& new_a
 
 void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    if (m_ceil_mode)
+    {
+        throw ngraph_error("Autodiff not supported on MaxPool with ceil_mode set");
+    }
+
     auto delta = deltas.at(0);
 
-    auto operand = get_argument(0);
+    auto operand = input_value(0);
     auto backprop =
         make_shared<op::MaxPoolBackprop>(operand,
                                          delta,

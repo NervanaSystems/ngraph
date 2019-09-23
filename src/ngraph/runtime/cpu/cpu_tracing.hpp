@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,9 @@
 #include <vector>
 
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#ifndef NGRAPH_JSON_DISABLE
 #include "nlohmann/json.hpp"
+#endif
 
 namespace ngraph
 {
@@ -65,8 +67,9 @@ namespace ngraph
                 {
                 }
             };
-
+#ifndef NGRAPH_JSON_DISABLE
             void to_json(nlohmann::json& json, const TraceEvent& event);
+#endif
 
             void GenerateTimeline(const std::vector<OpAttributes>& op_attrs,
                                   int64_t* op_durations,

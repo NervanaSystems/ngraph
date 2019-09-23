@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ int main()
     auto t1 = (a + b) * c;
 
     // Make the function
-    auto f = std::make_shared<Function>(NodeVector{t1},
+    auto f = std::make_shared<Function>(OutputVector{t1},
                                         ParameterVector{a, b, c});
 
     // Get the backend
@@ -54,7 +54,8 @@ int main()
     t_c->write(&v_c, 0, sizeof(v_c));
 
     // Invoke the function
-    backend->call(f, {t_result}, {t_a, t_b, t_c});
+    auto exec = backend->compile(f);
+    exec->call({t_result}, {t_a, t_b, t_c});
 
     // Get the result
     float r[2][3];

@@ -1,5 +1,4 @@
-.. ---------------------------------------------------------------------------
-.. Copyright 2018 Intel Corporation
+.. Copyright 2017-2019 Intel Corporation
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
@@ -13,123 +12,95 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-
-.. This documentation is available online at 
-.. https://ngraph.nervanasys.com/docs/latest
-
-
-Welcome
-=======
-
-See the latest :doc:`project/release-notes`. 
+######################
+nGraph Compiler stack 
+######################
 
 
-.. figure:: graphics/599px-Intel-ngraph-ecosystem.png
-   :width: 599px
+.. _ngraph_home:
 
+.. only:: release
 
-nGraph is an open-source C++ library, compiler stack, and runtime accelerator 
-for software engineering in the :abbr:`Deep Learning (DL)` ecosystem. nGraph 
-simplifies development and makes it possible to design, write, compile, and
-deploy :abbr:`Deep Neural Network (DNN)`-based solutions that can be adapted and 
-deployed across many frameworks and backends. A more detailed explanation, as
-well as a high-level overview, can be found on our project :doc:`project/about`.  
-For more generalized discussion on the ecosystem, see the `ecosystem`_ document.
+  nGraph Compiler stack documentation for version |version|.
 
+   Documentation for the latest (master) development branch can be found 
+   at https://ngraph.nervanasys.com/docs/latest 
+   .. https://docs.ngraph.ai/
 
-.. _quickstart:
+.. only:: (development or daily)
 
-Quick Start
-===========
+   nGraph Compiler stack documentation for the master tree under development 
+   (version |version|).
 
-We have many documentation pages to help you get started.  
+For information about the releases, see the :doc:`../project/release-notes`. 
 
-* **TensorFlow or MXNet users** can get started with :doc:`framework-integration-guides`; see also: 
+The nGraph Library and Compiler stack are provided under the `Apache 2.0 license`_ 
+(found in the LICENSE file in the project's `repo`_). It may also import or reference 
+packages, scripts, and other files that use licensing.
 
-   * `TensorFlow bridge to nGraph`_ 
-   * `Compiling MXNet with nGraph`_ 
+.. _Apache 2.0 license: https://github.com/NervanaSystems/ngraph/blob/master/LICENSE
+.. _repo: https://github.com/NervanaSystems/ngraph
 
-* **Data scientists** interested in the `ONNX`_ format will find the 
-  `nGraph ONNX companion tool`_ of interest. 
-
-* **Framework authors and architects** will likely want to :doc:`buildlb` 
-  and learn how nGraph can be used to :doc:`howto/execute`. For examples 
-  of generic configurations or optimizations available when designing or 
-  bridging a framework directly with nGraph, see :doc:`frameworks/generic`.
-
-* To start learning about nGraph's set of **Core ops** and how they can 
-  be used with Ops from other frameworks, go to :doc:`ops/index`.
-
-* **Optimization pass writers** will find :doc:`fusion/index` useful. Also 
-  look for our upcoming documentation on :term:`quantization`.
-
-* For details about **PlaidML integration** and other nGraph runtime APIs, 
-  see the section :doc:`programmable/index`.
-
-.. csv-table::
-   :header: "Framework", "Bridge Available?", "ONNX Support?"
-   :widths: 27, 10, 10
-
-   TensorFlow, Yes, Yes
-   MXNet, Yes, Yes
-   PaddlePaddle, Coming Soon, Yes
-   PyTorch, No, Yes
-   Other, Write your own, Custom
-
-
-.. csv-table::
-   :header: "Backend", "Current support", "Future nGraph support"
-   :widths: 35, 10, 10
-
-   Intel® Architecture Processors (CPUs), Yes, Yes
-   Intel® Nervana™ Neural Network Processor (NNPs), Yes, Yes
-   Intel® Architecture GPUs, Yes, Yes 
-   AMD\* GPUs, via PlaidML, Yes
-   :abbr:`Field Programmable Gate Arrays (FPGA)` (FPGAs), Coming soon, Yes
-   NVIDIA\* GPUs, via PlaidML, Some 
-   Intel Movidius™ Myriad™ 2 (VPU), Coming soon, Yes
-
-
-.. note:: The code in this repo is under active development as we're continually 
-   adding support for more kinds of DL models and ops, compiler optimizations, 
-   and backend optimizations.
-
-
-=======
-
-Contents
-========
 
 .. toctree::
    :maxdepth: 1
-   :name: tocmaster
-   :caption: Documentation
+   :caption: Getting Started
+   
+   frameworks/index.rst
+   frameworks/validated/list.rst
+   frameworks/generic-configs.rst
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: nGraph Core
 
    buildlb.rst
-   graph-basics.rst
-   howto/index.rst
-   ops/index.rst
-   framework-integration-guides.rst
-   frameworks/index.rst
-   fusion/index.rst
-   programmable/index.rst
-   distr/index.rst
-   python_api/index.rst
-   project/index.rst
+   core/overview.rst
+   core/fusion/index.rst
+   nGraph Core Ops <ops/index.rst>
+   core/constructing-graphs/index.rst
+   core/passes/passes.rst
 
+   
+.. toctree::
+   :maxdepth: 1
+   :caption: nGraph Python API
+
+   python_api/index.rst
+
+   
+.. toctree::
+   :maxdepth: 1
+   :caption: Backend Developers
+
+   backends/index.rst
+   backends/cpp-api.rst
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Inspecting Graphs
+
+   inspection/index.rst
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Project Metadata
+
+   project/release-notes.rst
+   project/introduction.rst
+   project/contribution-guide.rst
+   project/doc-contributor-README.rst
+   project/index.rst
+   project/extras/index.rst 
+   glossary.rst
+
+.. only:: html
 
 Indices and tables
 ==================
 
-   * :ref:`search`   
+   * :ref:`search`
    * :ref:`genindex`
-
-
-
-.. _nGraph ONNX companion tool: https://github.com/NervanaSystems/ngraph-onnx
-.. _ONNX: http://onnx.ai
-.. _Movidius: https://www.movidius.com/
-.. _contributions: https://github.com/NervanaSystems/ngraph#how-to-contribute
-.. _TensorFlow bridge to nGraph: https://github.com/NervanaSystems/ngraph-tf/blob/master/README.md
-.. _Compiling MXNet with nGraph: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/README.md
-.. _ecosystem: https://github.com/NervanaSystems/ngraph/blob/master/ecosystem-overview.md

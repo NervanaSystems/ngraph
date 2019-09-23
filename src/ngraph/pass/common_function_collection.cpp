@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,8 +52,9 @@ bool pass::CommonFunctionCollection::run_on_module(vector<shared_ptr<Function>>&
             {
                 continue;
             }
-            if (auto op = std::dynamic_pointer_cast<op::Op>(n))
+            if (n->is_op())
             {
+                auto op = std::static_pointer_cast<op::Op>(n);
                 auto annotations = op->get_op_annotations();
                 // If an op is passed through, do not add it to the common function
                 // collection so that the emitter can decide to eliminate it if desired

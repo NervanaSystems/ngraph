@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 SET(JSON_GIT_REPO_URL https://github.com/nlohmann/json)
-SET(JSON_GIT_LABEL v3.4.0)
+SET(JSON_GIT_LABEL v3.5.0)
 
 ExternalProject_Add(
     ext_json

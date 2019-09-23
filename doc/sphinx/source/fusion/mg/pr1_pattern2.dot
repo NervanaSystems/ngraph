@@ -1,8 +1,0 @@
-digraph G {
-    Label_0 -> Negative_1 -> Negative_2;
-    Label_0 [shape=ellipse color=black]
-    Negative_1 [shape=ellipse color=black]
-    Negative_2 [shape=ellipse color=black]
-}
-
-

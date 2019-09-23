@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,11 +19,13 @@
 using namespace std;
 using namespace ngraph;
 
-op::Slice::Slice(const shared_ptr<Node>& arg,
+constexpr NodeTypeInfo op::Slice::type_info;
+
+op::Slice::Slice(const Output<Node>& arg,
                  const Coordinate& lower_bounds,
                  const Coordinate& upper_bounds,
                  const Strides& strides)
-    : Op("Slice", check_single_output_args({arg}))
+    : Op({arg})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
     , m_strides(strides)
@@ -31,10 +33,10 @@ op::Slice::Slice(const shared_ptr<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::Slice::Slice(const shared_ptr<Node>& arg,
+op::Slice::Slice(const Output<Node>& arg,
                  const Coordinate& lower_bounds,
                  const Coordinate& upper_bounds)
-    : Op("Slice", check_single_output_args({arg}))
+    : Op({arg})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
     , m_strides(Strides())
@@ -51,40 +53,68 @@ void op::Slice::validate_and_infer_types()
         m_strides = Strides(m_lower_bounds.size(), 1);
     }
 
-    NODE_VALIDATION_ASSERT(this,
-                           m_lower_bounds.size() == m_upper_bounds.size() &&
-                               m_lower_bounds.size() == m_strides.size())
-        << "Ranks of lower bounds (" << m_lower_bounds << "), upper bounds (" << m_upper_bounds
-        << ") and strides (" << m_strides << ") do not match.";
+    NODE_VALIDATION_CHECK(this,
+                          m_lower_bounds.size() == m_upper_bounds.size() &&
+                              m_lower_bounds.size() == m_strides.size(),
+                          "Ranks of lower bounds (",
+                          m_lower_bounds,
+                          "), upper bounds (",
+                          m_upper_bounds,
+                          ") and strides (",
+                          m_strides,
+                          ") do not match.");
 
     size_t output_rank = m_upper_bounds.size();
 
     for (size_t i = 0; i < output_rank; i++)
     {
-        NODE_VALIDATION_ASSERT(this, m_lower_bounds[i] <= m_upper_bounds[i])
-            << "Lower bound for slice is greater than upper bound at axis " << i
-            << " (lower bounds: " << m_lower_bounds << ", upper bounds: " << m_upper_bounds << ").";
+        NODE_VALIDATION_CHECK(this,
+                              m_lower_bounds[i] <= m_upper_bounds[i],
+                              "Lower bound for slice is greater than upper bound at axis ",
+                              i,
+                              " (lower bounds: ",
+                              m_lower_bounds,
+                              ", upper bounds: ",
+                              m_upper_bounds,
+                              ").");
 
-        NODE_VALIDATION_ASSERT(this, m_strides[i] != 0) << "Stride for slice is zero at axis " << i
-                                                        << " (strides: " << m_strides << ").";
+        NODE_VALIDATION_CHECK(this,
+                              m_strides[i] != 0,
+                              "Stride for slice is zero at axis ",
+                              i,
+                              " (strides: ",
+                              m_strides,
+                              ").");
     }
 
     const PartialShape& input_shape = get_input_partial_shape(0);
     Dimension input_rank = input_shape.rank();
 
-    NODE_VALIDATION_ASSERT(this, input_rank.is_dynamic() || size_t(input_rank) == output_rank)
-        << "Input rank does not match the rank of the lower bounds (" << m_lower_bounds
-        << "), upper bounds (" << m_upper_bounds << "), and strides (" << m_strides << ").";
+    NODE_VALIDATION_CHECK(this,
+                          input_rank.is_dynamic() || size_t(input_rank) == output_rank,
+                          "Input rank does not match the rank of the lower bounds (",
+                          m_lower_bounds,
+                          "), upper bounds (",
+                          m_upper_bounds,
+                          "), and strides (",
+                          m_strides,
+                          ").");
 
     std::vector<Dimension> result_dims(output_rank);
 
     for (size_t i = 0; i < output_rank; i++)
     {
-        NODE_VALIDATION_ASSERT(this,
-                               input_rank.is_dynamic() || input_shape[i].is_dynamic() ||
-                                   m_upper_bounds[i] <= size_t(input_shape[i]))
-            << "Upper bound for slice at axis " << i << " is out of range "
-            << "(upper bounds: " << m_upper_bounds << ", argument shape: " << input_shape << ").";
+        NODE_VALIDATION_CHECK(this,
+                              input_rank.is_dynamic() || input_shape[i].is_dynamic() ||
+                                  m_upper_bounds[i] <= size_t(input_shape[i]),
+                              "Upper bound for slice at axis ",
+                              i,
+                              " is out of range ",
+                              "(upper bounds: ",
+                              m_upper_bounds,
+                              ", argument shape: ",
+                              input_shape,
+                              ").");
 
         size_t result_axis_size = m_upper_bounds[i] - m_lower_bounds[i];
         result_axis_size =
@@ -105,7 +135,7 @@ void op::Slice::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector
 {
     auto delta = deltas.at(0);
 
-    auto x = get_inputs().at(0).get_output().get_node();
+    auto x = input_value(0);
 
     adjoints.add_delta_to_slice(x, delta, m_lower_bounds, m_upper_bounds, m_strides);
 }

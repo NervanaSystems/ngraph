@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,8 +19,12 @@
 using namespace std;
 using namespace ngraph;
 
-op::Less::Less(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-    : BinaryElementwiseComparison("Less", arg0, arg1)
+constexpr NodeTypeInfo op::Less::type_info;
+
+op::Less::Less(const Output<Node>& arg0,
+               const Output<Node>& arg1,
+               const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseComparison(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }
@@ -28,5 +32,5 @@ op::Less::Less(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
 shared_ptr<Node> op::Less::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Less>(new_args.at(0), new_args.at(1));
+    return make_shared<Less>(new_args.at(0), new_args.at(1), this->get_autob());
 }

@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ from typing import List, Union
 import numpy as np
 
 from ngraph.impl import Function, Node, Shape, serialize, util
-from ngraph.impl.runtime import Backend, Tensor
+from ngraph.impl.runtime import Backend, Executable, Tensor
 from ngraph.utils.types import get_dtype, NumericData
 from ngraph.exceptions import UserInputError
 
@@ -43,7 +43,7 @@ class Runtime:
         self.backend = Backend.create(backend_name)
 
     def __repr__(self):  # type: () -> str
-        return '<Runtime: Backend=\'{}\'>'.format(self.backend_name)
+        return "<Runtime: Backend='{}'>".format(self.backend_name)
 
     def computation(self, node_or_function, *inputs):
         # type: (Union[Node, Function], *Node) -> 'Computation'
@@ -67,6 +67,8 @@ class Computation(object):
         self.runtime = runtime
         self.function = ng_function
         self.parameters = ng_function.get_parameters()
+        self.results = ng_function.get_results()
+        self.handle = self.runtime.backend.compile(self.function)
 
         self.tensor_views = []  # type: List[Tensor]
         for parameter in self.parameters:
@@ -74,29 +76,32 @@ class Computation(object):
             element_type = parameter.get_element_type()
             self.tensor_views.append(runtime.backend.create_tensor(element_type, shape))
 
+        self.result_views = []  # type: List[Tensor]
+        for result in self.results:
+            shape = result.get_shape()
+            element_type = result.get_element_type()
+            self.result_views.append(runtime.backend.create_tensor(element_type, shape))
+
     def __repr__(self):  # type: () -> str
         params_string = ', '.join([param.name for param in self.parameters])
         return '<Computation: {}({})>'.format(self.function.get_name(), params_string)
 
-    def __call__(self, *input_values):  # type: (*NumericData) -> NumericData
+    def __call__(self, *input_values):  # type: (*NumericData) -> List[NumericData]
         """Run computation on input values and return result."""
         for tensor_view, value in zip(self.tensor_views, input_values):
             if not isinstance(value, np.ndarray):
                 value = np.array(value)
             Computation._write_ndarray_to_tensor_view(value, tensor_view)
 
-        result_element_type = self.function.get_output_element_type(0)
-        result_shape = self.function.get_output_shape(0)
-        result_dtype = get_dtype(result_element_type)
+        self.handle.call(self.result_views, self.tensor_views)
 
-        result_view = self.runtime.backend.create_tensor(result_element_type, result_shape)
-        result_arr = np.empty(result_shape, dtype=result_dtype)
+        results = []
+        for result_view in self.result_views:
+            result = np.ndarray(result_view.shape, dtype=get_dtype(result_view.element_type))
+            Computation._read_tensor_view_to_ndarray(result_view, result)
+            results.append(result)
 
-        self.runtime.backend.call(self.function, [result_view], self.tensor_views)
-
-        Computation._read_tensor_view_to_ndarray(result_view, result_arr)
-        result_arr = result_arr.reshape(result_shape)
-        return result_arr
+        return results
 
     def serialize(self, indent=0):  # type: (int) -> str
         """Serialize function (compute graph) to a JSON string.
@@ -115,7 +120,7 @@ class Computation(object):
         # type: (np.ndarray, Tensor) -> None
         tensor_view_dtype = get_dtype(tensor_view.element_type)
         if list(tensor_view.shape) != list(value.shape) and len(value.shape) > 0:
-            raise UserInputError('Provided tensor\'s shape: %s does not match the expected: %s.',
+            raise UserInputError("Provided tensor's shape: %s does not match the expected: %s.",
                                  list(value.shape), list(tensor_view.shape))
         if value.dtype != tensor_view_dtype:
             log.warning(
@@ -128,11 +133,11 @@ class Computation(object):
             tensor_view.element_type, tensor_view.element_count)
 
         nparray = np.ascontiguousarray(value)
-        tensor_view.write(util.numpy_to_c(nparray), 0, buffer_size)
+        tensor_view.write(util.numpy_to_c(nparray), buffer_size)
 
     @staticmethod
     def _read_tensor_view_to_ndarray(tensor_view, output):
         # type: (Tensor, np.ndarray) -> None
         buffer_size = Computation._get_buffer_size(
             tensor_view.element_type, tensor_view.element_count)
-        tensor_view.read(util.numpy_to_c(output), 0, buffer_size)
+        tensor_view.read(util.numpy_to_c(output), buffer_size)

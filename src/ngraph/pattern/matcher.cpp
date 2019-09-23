@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #include "matcher.hpp"
 #include <algorithm>
+#include <regex>
 #include <typeindex>
 #include <typeinfo>
 
@@ -27,6 +28,11 @@ namespace ngraph
 {
     namespace pattern
     {
+        constexpr NodeTypeInfo op::AnyOf::type_info;
+        constexpr NodeTypeInfo op::Any::type_info;
+        constexpr NodeTypeInfo op::Label::type_info;
+        constexpr NodeTypeInfo op::Skip::type_info;
+
         std::shared_ptr<Node> Matcher::get_match_root() { return m_match_root; }
         bool Matcher::match_pattern(const std::shared_ptr<op::Label>& label,
                                     const std::shared_ptr<Node>& graph_node,
@@ -49,7 +55,8 @@ namespace ngraph
                 is_match = !predicate || predicate(graph_node);
             }
 
-            if (is_match) // in case label was already bound this rebinds it to the same node (harmless; and the logic seems cleaner)
+            if (is_match) // in case label was already bound this rebinds it to the same node
+                          // (harmless; and the logic seems cleaner)
             {
                 auto args = label->get_arguments();
                 if (args.size() > 0)
@@ -69,6 +76,12 @@ namespace ngraph
                     pattern_map[label] = graph_node;
                 }
             }
+
+            if (!is_match)
+            {
+                NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name()
+                             << " for pattern " << label->get_name();
+            }
             return is_match;
         }
 
@@ -80,7 +93,7 @@ namespace ngraph
                 for (auto entry : m_pattern_map)
                 {
                     // leaf label
-                    if (entry.first->get_inputs().empty())
+                    if (entry.first->get_input_size() == 0)
                     {
                         label_exclusions.push_back(entry.second);
                     }
@@ -131,6 +144,8 @@ namespace ngraph
             }
             else
             {
+                NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name()
+                             << " for pattern " << any->get_name();
                 return false;
             }
         }
@@ -157,10 +172,14 @@ namespace ngraph
                     }
                 }
 
+                NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name()
+                             << " for pattern " << any->get_name();
                 return false;
             }
             else
             {
+                NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name()
+                             << " for pattern " << any->get_name();
                 return false;
             }
         }
@@ -177,27 +196,59 @@ namespace ngraph
             add_node(graph_node);
             size_t watermark = m_matched_list.size() - 1;
 
+            // we can skip multi-output nodes since their shapes will be compared
+            // when their individual GOE are matched
+            // this also gives a bit more flexibility since we don't have to worry
+            // about *all* outputs of a pattern node but only the ones we want to match.
+            if (m_strict_mode && graph_node->get_outputs().size() == 1)
+            {
+                bool shape_match = pattern_node->get_output_partial_shape(0).compatible(
+                    graph_node->get_output_partial_shape(0));
+                bool et_match =
+                    pattern_node->get_element_type().compatible(graph_node->get_element_type());
+
+                if (!shape_match || !et_match)
+                {
+                    return abort_match(watermark, false);
+                }
+            }
+
+            // This env var allows one to specify node name patterns to abort pattern matching
+            // at particular nodes. The upshot is that one can quickly zero in on an offending
+            // fusion by disabling individual fusions or optimizations that use Matcher.
+            static const char* node_skip_cregex = std::getenv("NGRAPH_FAIL_MATCH_AT");
+            if (node_skip_cregex)
+            {
+                static const std::regex node_skip_regex(node_skip_cregex);
+                if (std::regex_match(graph_node->get_name(), node_skip_regex))
+                {
+                    NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name()
+                                 << " due to NGRAPH_MATCHER_SKIP set to " << node_skip_cregex;
+                    return abort_match(watermark, false);
+                }
+            }
+
             NGRAPH_DEBUG << pad(2 * m_depth) << "[MATCHER] in match_node : "
                          << "pattern = " << pattern_node->get_name() << " matched "
                          << graph_node->get_name();
 
-            if (auto label_node = std::dynamic_pointer_cast<op::Label>(pattern_node))
+            if (auto label_node = as_type_ptr<op::Label>(pattern_node))
             {
                 return abort_match(watermark, match_pattern(label_node, graph_node, pattern_map));
             }
 
-            if (auto skip_node = std::dynamic_pointer_cast<op::Skip>(
-                    pattern_node)) // matches PatternSkipOp semantics
+            if (auto skip_node =
+                    as_type_ptr<op::Skip>(pattern_node)) // matches PatternSkipOp semantics
             {
                 return abort_match(watermark, match_skip(skip_node, graph_node, pattern_map));
             }
 
-            if (auto any_node = std::dynamic_pointer_cast<op::Any>(pattern_node))
+            if (auto any_node = as_type_ptr<op::Any>(pattern_node))
             {
                 return abort_match(watermark, match_any(any_node, graph_node, pattern_map));
             }
 
-            if (auto any_of_node = std::dynamic_pointer_cast<op::AnyOf>(pattern_node))
+            if (auto any_of_node = as_type_ptr<op::AnyOf>(pattern_node))
             {
                 return abort_match(watermark, match_any_of(any_of_node, graph_node, pattern_map));
             }
@@ -211,6 +262,8 @@ namespace ngraph
                                    match_arguments(pattern_node, graph_node, pattern_map));
             }
 
+            NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name() << " for pattern "
+                         << pattern_node->get_name();
             return abort_match(watermark, false);
         }
 
@@ -244,14 +297,22 @@ namespace ngraph
 
             if (args.size() != pattern_args.size())
             {
+                NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name()
+                             << " for pattern " << pattern_node->get_name();
                 return false;
             }
 
             if (graph_node->is_commutative())
             {
-                std::sort(
-                    begin(pattern_args),
-                    end(pattern_args)); // TODO: [nikolayk] we don't really have to use lexicographically-based perms, heap's algo should be faster
+                // TODO: [nikolayk] we don't really have to use lexicographically-based perms,
+                // heap's algo should be faster
+                std::sort(begin(pattern_args),
+                          end(pattern_args),
+                          [](const std::shared_ptr<ngraph::Node>& n1,
+                             const std::shared_ptr<ngraph::Node>& n2) {
+                              return n1->get_instance_id() < n2->get_instance_id();
+
+                          });
                 do
                 {
                     NGRAPH_DEBUG << pad(2 * m_depth) << "Running a permutation for graph_node "
@@ -262,7 +323,13 @@ namespace ngraph
                         pattern_map.insert(begin(copy), end(copy));
                         return true;
                     }
-                } while (std::next_permutation(begin(pattern_args), end(pattern_args)));
+                } while (std::next_permutation(begin(pattern_args),
+                                               end(pattern_args),
+                                               [](const std::shared_ptr<ngraph::Node>& n1,
+                                                  const std::shared_ptr<ngraph::Node>& n2) {
+                                                   return n1->get_instance_id() <
+                                                          n2->get_instance_id();
+                                               }));
             }
             else
             {
@@ -273,27 +340,10 @@ namespace ngraph
                     return true;
                 }
             }
+
+            NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name() << " for pattern "
+                         << pattern_node->get_name();
             return false;
-        }
-
-        bool Matcher::process_match(::ngraph::pattern::graph_rewrite_callback callback)
-        {
-            graph_rewrite_callback cb = m_callback;
-            if (callback)
-            {
-                cb = callback;
-            }
-            if (!cb)
-            {
-                throw ngraph_error("process_match invoked w/o a callback function");
-            }
-
-            if (!this->m_match_root)
-            {
-                throw ngraph_error("process_match invoked w/o a match");
-            }
-
-            return cb(*this);
         }
 
         bool Matcher::match(const std::shared_ptr<Node>& graph_node)
@@ -376,7 +426,8 @@ namespace ngraph
                 {
                     if (m.get_pattern_map().count(cor_pat) != 0)
                     {
-                        // assert that bound nodes from the previous and current matches are the same
+                        // assert that bound nodes from the previous and current matches are the
+                        // same
                         if (previous_matches.count(cor_pat) != 0)
                         {
                             if (previous_matches[cor_pat] != m.get_pattern_map()[cor_pat])
@@ -393,12 +444,12 @@ namespace ngraph
 
             if (!matched)
             {
+                NGRAPH_DEBUG << "[RecurrentMatcher] Aborting at " << graph->get_name()
+                             << " for pattern " << m_pattern->get_name();
                 m_match_root.reset();
             }
 
             return matched;
         }
-
-        bool RecurrentMatcher::process_match() { return m_callback(*this); }
     }
 }

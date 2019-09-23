@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,14 +25,18 @@
 using namespace std;
 using namespace ngraph;
 
-static unordered_map<string, unordered_set<string>> s_blacklists;
+static unordered_set<string>& get_blacklist(const string& backend)
+{
+    static unordered_map<string, unordered_set<string>> s_blacklists;
+    return s_blacklists[backend];
+}
 
 string ngraph::prepend_disabled(const string& backend_name,
                                 const string& test_name,
                                 const string& manifest)
 {
     string rc = test_name;
-    unordered_set<string>& blacklist = s_blacklists[backend_name];
+    unordered_set<string>& blacklist = get_blacklist(backend_name);
     if (blacklist.empty() && !manifest.empty())
     {
         ifstream f(manifest);
@@ -48,7 +52,9 @@ string ngraph::prepend_disabled(const string& backend_name,
             }
         }
     }
-    if (blacklist.find(test_name) != blacklist.end())
+    string compound_test_name = backend_name + "." + test_name;
+    if (blacklist.find(test_name) != blacklist.end() ||
+        blacklist.find(compound_test_name) != blacklist.end())
     {
         rc = "DISABLED_" + test_name;
     }
@@ -64,6 +70,6 @@ string ngraph::combine_test_backend_and_case(const string& backend_name,
     }
     else
     {
-        return backend_name + "_" + test_casename;
+        return backend_name + "/" + test_casename;
     }
 }

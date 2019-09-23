@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,11 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-/// In-place-concat optimization makes the argument nodes of a concatenation node use the concatenation node's memory buffer
-/// for their outputs. As a result, we eliminate memory copies from the memory buffers of the argument nodes to
-/// that of the concatenation node. When there is a chain of in place concatenation nodes, we propagate the
-/// memory buffer starting from the last concatenation node. Not all concatenation nodes can be optimized. This pass
-/// marks all the nodes that can be optimized.
+/// In-place-concat optimization makes the argument nodes of a concatenation node use the
+/// concatenation node's memory buffer for their outputs. As a result, we eliminate memory copies
+/// from the memory buffers of the argument nodes to that of the concatenation node. When there is a
+/// chain of in place concatenation nodes, we propagate the memory buffer starting from the last
+/// concatenation node. Not all concatenation nodes can be optimized. This pass marks all the nodes
+/// that can be optimized.
 ///
 /// Example1:
 /// parameter1 parameter2        parameter3 parameter4        parameter5 parameter6
@@ -27,10 +28,11 @@
 ///           \                           |                            /
 ///                                    concat
 ///
-/// Before optimization: the result of add1 is stored to the memory buffer assigned to add1, same for add2 and add3;
-///                      then those results are copied to the memory buffer assigned to concat.
-/// After optimization: the result of add1 is stored to the memory buffer assigned to concat, same for add2 and add3.
-///                     there is no need to copy those results.
+/// Before optimization: the result of add1 is stored to the memory buffer assigned to add1, same
+///                      for add2 and add3; then those results are copied to the memory buffer
+///                      assigned to concat.
+/// After optimization: the result of add1 is stored to the memory buffer assigned to concat, same
+///                     for add2 and add3. There is no need to copy those results.
 ///
 ///
 /// Example2:
@@ -44,7 +46,8 @@
 ///                       \                 /
 ///                               concat
 ///
-/// After optimization: the result of add1 is stored to the memory buffer assigned to concat, same for add2 and add3.
+/// After optimization: the result of add1 is stored to the memory buffer assigned to concat, same
+/// for add2 and add3.
 
 #include "ngraph/runtime/cpu/pass/cpu_memory_optimization.hpp"
 
@@ -62,12 +65,13 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 {
     for (auto n : function->get_ordered_ops())
     {
-        if (auto concat = std::dynamic_pointer_cast<op::Concat>(n))
+        if (n->description() == "Concat")
         {
+            auto concat = std::static_pointer_cast<ngraph::op::Concat>(n);
             auto shape = concat->get_input_shape(0);
             auto axis = concat->get_concatenation_axis();
             auto product = 1;
-            for (int i = 0; i < axis; i++)
+            for (size_t i = 0; i < axis; i++)
             {
                 product *= shape[i];
             }
@@ -80,6 +84,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
             bool in_place_concat = true;
             auto output_md = mkldnn_utils::get_output_mkldnn_md(n.get(), 0);
+#if MKLDNN_VERSION_MAJOR < 1
             auto output_format = static_cast<mkldnn::memory::format>(output_md.data.format);
             for (size_t i = 0; i < n->get_input_size(); i++)
             {
@@ -93,6 +98,19 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     break;
                 }
             }
+#else
+            for (size_t i = 0; i < n->get_input_size(); i++)
+            {
+                auto input_md = mkldnn_utils::get_input_mkldnn_md(n.get(), i);
+                if (!mkldnn_utils::compare_mkldnn_md_formats(output_md, input_md))
+                {
+                    NGRAPH_DEBUG << "cpu_memory_optimization: input format is different from "
+                                    "output format, no in place concat";
+                    in_place_concat = false;
+                    break;
+                }
+            }
+#endif
             if (!in_place_concat)
             {
                 continue;
@@ -104,7 +122,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             for (descriptor::Input& input : concat->get_inputs())
             {
                 // no tensors with zero-sized dimensions after zero_dim_tensor_elimination
-                NGRAPH_ASSERT(shape_size(input.get_shape()) != 0);
+                NGRAPH_CHECK(shape_size(input.get_shape()) != 0);
 
                 // check if input layout is padded
                 auto input_md = mkldnn_utils::get_input_mkldnn_md(n.get(), index);
@@ -119,8 +137,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
                 const auto& output = input.get_output();
                 auto arg = output.get_node();
-                if (std::dynamic_pointer_cast<op::Constant>(arg) ||
-                    std::dynamic_pointer_cast<op::Parameter>(arg))
+                if (arg->is_constant() || arg->is_parameter())
                 {
                     NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
                                  << ": constant or parameter, no in place concat";
@@ -128,12 +145,13 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     break;
                 }
 
-                NGRAPH_ASSERT(arg->get_output_size() == 1);
+                NGRAPH_CHECK(arg->get_output_size() == 1);
 
-                if (!std::dynamic_pointer_cast<op::Concat>(arg))
+                if (arg->description() != "Concat")
                 {
-                    if (auto op = std::dynamic_pointer_cast<op::Op>(arg))
+                    if (arg->is_op())
                     {
+                        auto op = std::static_pointer_cast<ngraph::op::Op>(arg);
                         auto annotation = op->get_op_annotations();
                         if (annotation && annotation->get_in_place_oi_pairs().size() > 0)
 
@@ -153,7 +171,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     for (auto output_input : output.get_inputs())
                     {
                         auto user = output_input->get_node();
-                        if (std::dynamic_pointer_cast<op::Concat>(user))
+                        if (user->description() == "Concat")
                         {
                             concat_count++;
                             if (concat_count == 2)
@@ -174,8 +192,9 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     {
                         if ((user != concat))
                         {
-                            if (auto op = std::dynamic_pointer_cast<op::Op>(user))
+                            if (user->is_op())
                             {
+                                auto op = std::static_pointer_cast<ngraph::op::Op>(user);
                                 if (auto op_annotations = op->get_op_annotations())
                                 {
                                     if (op_annotations->get_in_place_oi_pairs().size() > 0)
@@ -223,8 +242,9 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
     for (auto n : function->get_ordered_ops())
     {
-        if (auto slice = std::dynamic_pointer_cast<op::Slice>(n))
+        if (n->description() == "Slice")
         {
+            auto slice = std::static_pointer_cast<ngraph::op::Slice>(n);
             auto in_shape = slice->get_input_shape(0);
             auto out_shape = slice->get_output_shape(0);
             auto strides = slice->get_strides();
@@ -233,11 +253,10 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             auto upper_bounds = slice->get_upper_bounds();
 
             auto arg = slice->get_argument(0);
-            if (std::dynamic_pointer_cast<op::Constant>(arg) ||
-                std::dynamic_pointer_cast<op::Parameter>(arg))
+            if (arg->is_constant())
             {
                 NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
-                             << ": constant or parameter, no in place slice";
+                             << ": constant, no in place slice";
                 continue;
             }
 
@@ -270,8 +289,9 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
             // check if input and output formats are the same
             auto output_md = mkldnn_utils::get_output_mkldnn_md(n.get(), 0);
-            auto output_format = static_cast<mkldnn::memory::format>(output_md.data.format);
             auto input_md = mkldnn_utils::get_input_mkldnn_md(n.get(), 0);
+#if MKLDNN_VERSION_MAJOR < 1
+            auto output_format = static_cast<mkldnn::memory::format>(output_md.data.format);
             auto input_format = static_cast<mkldnn::memory::format>(input_md.data.format);
             if (output_format != input_format)
             {
@@ -279,13 +299,35 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                                 "output format, no in place slice";
                 continue;
             }
-
-            // check if input layout is padded
-            AxisVector axis_list = ngraph::get_default_order(in_shape);
-            if (mkldnn_utils::is_mkldnn_padded_layout(input_md, axis_list))
+#else
+            if (!mkldnn_utils::compare_mkldnn_md_formats(output_md, input_md))
             {
-                NGRAPH_DEBUG << "cpu_memory_optimization: padded input layout, no in place slice";
+                NGRAPH_DEBUG << "cpu_memory_optimization: input format is different from "
+                                "output format, no in place slice";
+                continue;
+            }
+#endif
 
+            const auto& dtype = slice->get_input_element_type(0);
+            if (runtime::cpu::mkldnn_utils::get_mkldnn_data_type(dtype) ==
+                mkldnn::memory::data_type::DATA_UNDEF)
+            {
+                NGRAPH_DEBUG << "cpu_memory_optimization: "
+                             << slice->get_input_element_type(0).c_type_string()
+                             << " isn't supported, no in place slice";
+                continue;
+            }
+
+            // If input layout is in non-native layout, we need more complicated checks for
+            // slice contiguity. Bail out for now.
+            auto input_tensor = slice->get_inputs().at(0).get_output().get_tensor_ptr();
+            auto native_md = mkldnn_utils::create_blocked_mkldnn_md(
+                in_shape,
+                input_tensor->get_tensor_layout()->get_strides(),
+                slice->get_input_element_type(0));
+            if (!mkldnn_utils::compare_mkldnn_mds(input_md, native_md))
+            {
+                NGRAPH_DEBUG << "cpu_memory_optimization: Non-native layout for MKLDNN slice input";
                 continue;
             }
 

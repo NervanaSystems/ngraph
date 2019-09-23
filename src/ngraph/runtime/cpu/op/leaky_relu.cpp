@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,8 +19,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::LeakyRelu::LeakyRelu(shared_ptr<Node> arg, float alpha)
-    : Op("LeakyRelu", check_single_output_args({arg}))
+constexpr NodeTypeInfo op::CPULeakyRelu::type_info;
+
+op::CPULeakyRelu::CPULeakyRelu(const Output<Node>& arg, float alpha)
+    : UnaryElementwiseArithmetic(arg)
     , m_alpha(alpha)
 {
     constructor_validate_and_infer_types();
@@ -28,14 +30,14 @@ op::LeakyRelu::LeakyRelu(shared_ptr<Node> arg, float alpha)
     {
         throw ngraph_error("Leaky Relu expects non-negative alpha");
     }
-    set_output_type(0, arg->get_element_type(), arg->get_shape());
+    set_output_type(0, arg.get_element_type(), arg.get_shape());
 }
 
-shared_ptr<Node> op::LeakyRelu::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::CPULeakyRelu::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 1)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<LeakyRelu>(new_args.at(0), m_alpha);
+    return make_shared<CPULeakyRelu>(new_args.at(0), m_alpha);
 }

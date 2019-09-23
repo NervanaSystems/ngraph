@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 #include <iostream>
 #include <vector>
 
+#include "ngraph/check.hpp"
 #include "ngraph/partial_shape.hpp"
 
 using namespace ngraph;
@@ -243,4 +244,47 @@ bool PartialShape::merge_into(PartialShape& dst, const PartialShape& src)
         }
         return success;
     }
+}
+
+bool PartialShape::broadcast_merge_into(PartialShape& dst,
+                                        const PartialShape& src,
+                                        const op::AutoBroadcastSpec& autob)
+{
+    NGRAPH_CHECK(autob.m_type == op::AutoBroadcastType::NUMPY, "Unsupported auto broadcast type");
+
+    if (dst.rank().is_dynamic() || src.rank().is_dynamic())
+    {
+        dst = PartialShape::dynamic();
+        return true;
+    }
+    else
+    {
+        // Ranks are both static.
+        auto dst_rank = size_t(dst.rank());
+        auto src_rank = size_t(src.rank());
+        auto new_rank = std::max(dst_rank, src_rank);
+        std::vector<Dimension> dims(new_rank);
+        bool success = true;
+        for (size_t i = 0; i < new_rank; i++)
+        {
+            auto dsti = i < (new_rank - dst_rank) ? Dimension(1) : dst[i - (new_rank - dst_rank)];
+            auto srci = i < (new_rank - src_rank) ? Dimension(1) : src[i - (new_rank - src_rank)];
+            success &= Dimension::broadcast_merge(dims[i], dsti, srci);
+        }
+        dst = PartialShape(dims);
+        return success;
+    }
+}
+
+bool PartialShape::all_non_negative() const
+{
+    for (auto& d : m_dimensions)
+    {
+        if (d.is_static() && int64_t(d) < 0)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }

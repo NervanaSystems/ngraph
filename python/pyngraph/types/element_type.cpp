@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ void regclass_pyngraph_Type(py::module m)
     py::class_<ngraph::element::Type, std::shared_ptr<ngraph::element::Type>> type(m, "Type");
     type.doc() = "ngraph.impl.Type wraps ngraph::element::Type";
     type.attr("boolean") = ngraph::element::boolean;
+    type.attr("f16") = ngraph::element::f16;
     type.attr("f32") = ngraph::element::f32;
     type.attr("f64") = ngraph::element::f64;
     type.attr("i8") = ngraph::element::i8;

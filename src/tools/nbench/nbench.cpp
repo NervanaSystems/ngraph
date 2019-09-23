@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,25 +16,44 @@
 
 // tool to benchmark any ngraph json model with given backend.
 // compile and run with:
-// g++ ./nbench.cpp -std=c++11 -I$HOME/ngraph_dist/include -L$HOME/ngraph_dist/lib -lngraph -o nbench
-// env LD_LIBRARY_PATH=$HOME/ngraph_dist/lib env NGRAPH_INTERPRETER_EMIT_TIMING=1 ./nbench
+// $ g++ ./nbench.cpp
+//             -std=c++11
+//             -I$HOME/ngraph_dist/include
+//             -L$HOME/ngraph_dist/lib
+//             -lngraph
+//             -o nbench
+// $ env LD_LIBRARY_PATH=$HOME/ngraph_dist/lib env NGRAPH_INTERPRETER_EMIT_TIMING=1 ./nbench
 // sample models are under ../../test/models
 
 #include <fstream>
 #include <iomanip>
 
 #include "benchmark.hpp"
+#include "benchmark_pipelined.hpp"
+#include "ngraph/distributed.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
+
+static void configure_static_backends()
+{
+#ifdef NGRAPH_INTERPRETER_STATIC_LIB_ENABLE
+    ngraph::runtime::BackendManager::register_backend(
+        "INTERPRETER", ngraph::runtime::interpreter::get_backend_constructor_pointer());
+#endif
+}
 
 class PerfShape : public ngraph::runtime::PerformanceCounter
 {
@@ -47,37 +66,22 @@ public:
     Shape shape;
 };
 
-unordered_map<string, shared_ptr<Node>> get_node_map(shared_ptr<Function> func)
-{
-    unordered_map<string, shared_ptr<Node>> node_map;
-    vector<shared_ptr<Function>> fs;
-    traverse_functions(func, [&](shared_ptr<Function> f) { fs.push_back(f); });
-    for (shared_ptr<Function> f : fs)
-    {
-        for (shared_ptr<Node> node : f->get_ops())
-        {
-            node_map.insert({node->get_name(), node});
-        }
-    }
-    return node_map;
-}
-
 vector<PerfShape> to_perf_shape(shared_ptr<Function> f,
                                 const vector<runtime::PerformanceCounter>& perf_data)
 {
     vector<PerfShape> result;
-    auto node_map = get_node_map(f);
     for (const runtime::PerformanceCounter& p : perf_data)
     {
-        auto node = node_map[p.name()];
+        auto node = p.get_node();
         if (node == nullptr)
         {
             ostringstream os;
-            os << "Can't find \"" << p.name() << "\" in Function \"" << f->get_name() << "\".";
+            os << "Can't find \"" << node->get_name() << "\" in Function \"" << f->get_name()
+               << "\".";
             throw runtime_error(os.str());
         }
 
-        Shape shape = node->get_outputs()[0].get_shape();
+        Shape shape = node->output(0).get_shape();
         result.push_back(PerfShape(p, shape));
     }
     return result;
@@ -89,14 +93,15 @@ multimap<size_t, string> aggregate_timing_details(const vector<PerfShape>& perf_
     unordered_map<string, size_t> count;
     for (const PerfShape& p : perf_data)
     {
-        string op = p.name().substr(0, p.name().find('_'));
+        auto node = p.get_node();
+        string op = node->description();
         string shape_name = " {" + join(p.shape) + "} ";
         timing[op + shape_name] += p.microseconds();
         count[op + shape_name] += 1;
     }
 
     multimap<size_t, string> rc;
-    for (const pair<string, size_t>& t : timing)
+    for (auto& t : timing)
     {
         rc.insert({t.second, t.first + to_string(count[t.first])});
     }
@@ -108,12 +113,13 @@ multimap<size_t, string> aggregate_timing(const vector<PerfShape>& perf_data)
     unordered_map<string, size_t> timing;
     for (const PerfShape& p : perf_data)
     {
-        string op = p.name().substr(0, p.name().find('_'));
+        auto node = p.get_node();
+        string op = node->description();
         timing[op] += p.microseconds();
     }
 
     multimap<size_t, string> rc;
-    for (const pair<string, size_t>& t : timing)
+    for (auto& t : timing)
     {
         rc.insert({t.second, t.first});
     }
@@ -125,13 +131,10 @@ void print_times(const multimap<size_t, string>& timing)
     // set the column widths
     int name_width = 0;
     int time_width = 0;
-    for (const pair<size_t, string>& p : timing)
+    for (auto& p : timing)
     {
         name_width = max(name_width, static_cast<int>(p.second.size()));
-        stringstream ss;
-        ss.imbue(locale(""));
-        ss << p.first;
-        time_width = max(time_width, static_cast<int>(ss.str().size()));
+        time_width = max(time_width, static_cast<int>(locale_string(p.first).size()));
     }
     for (auto it = timing.rbegin(); it != timing.rend(); it++)
     {
@@ -163,7 +166,7 @@ element::Type get_op_element_type(const Node& op)
     element::Type type;
     if (op.description() == "Convert")
     {
-        type = op.get_input_element_type(0);
+        type = op.input(0).get_element_type();
     }
     else if (op.description() == "Equal" || op.description() == "Greater" ||
              op.description() == "GreaterEq" || op.description() == "Less" ||
@@ -172,11 +175,11 @@ element::Type get_op_element_type(const Node& op)
         // Get the type of the second input, not the first
         // All BinaryElementwiseComparision ops have the same type for inputs
         // Select has bool for first input and the type we are interested in for the second
-        type = op.get_input_element_type(1);
+        type = op.input(1).get_element_type();
     }
     else
     {
-        type = op.get_outputs().at(0).get_element_type();
+        type = op.output(0).get_element_type();
     }
     return type;
 }
@@ -193,8 +196,11 @@ int main(int argc, char** argv)
     bool visualize = false;
     int warmup_iterations = 1;
     bool copy_data = true;
+    bool dot_file = false;
+    bool double_buffer = false;
 
-    for (size_t i = 1; i < argc; i++)
+    configure_static_backends();
+    for (int i = 1; i < argc; i++)
     {
         string arg = argv[i];
         if (arg == "-f" || arg == "--file")
@@ -233,9 +239,17 @@ int main(int argc, char** argv)
         {
             visualize = true;
         }
+        else if (arg == "--dot")
+        {
+            dot_file = true;
+        }
         else if (arg == "-d" || arg == "--directory")
         {
             directory = argv[++i];
+        }
+        else if (arg == "--double_buffer")
+        {
+            double_buffer = true;
         }
         else if (arg == "-w" || arg == "--warmup_iterations")
         {
@@ -275,7 +289,7 @@ int main(int argc, char** argv)
     {
         cout << R"###(
 DESCRIPTION
-    Benchmark ngraph json model with given backend.
+    Benchmark nGraph JSON model with given backend.
 
 SYNOPSIS
         nbench [-f <filename>] [-b <backend>] [-i <iterations>]
@@ -285,11 +299,13 @@ OPTIONS
         -b|--backend              Backend to use (default: CPU)
         -d|--directory            Directory to scan for models. All models are benchmarked.
         -i|--iterations           Iterations (default: 10)
-        -s|--statistics           Display op stastics
-        -v|--visualize            Visualize a model (WARNING: requires GraphViz installed)
+        -s|--statistics           Display op statistics
+        -v|--visualize            Visualize a model (WARNING: requires Graphviz installed)
         --timing_detail           Gather detailed timing
         -w|--warmup_iterations    Number of warm-up iterations
         --no_copy_data            Disable copy of input/result data every iteration
+        --dot                     Generate Graphviz dot file
+        --double_buffer           Double buffer inputs and outputs
 )###";
         return 1;
     }
@@ -314,6 +330,7 @@ OPTIONS
     }
 
     vector<PerfShape> aggregate_perf_data;
+    int rc = 0;
     for (const string& model : models)
     {
         cout << "\n";
@@ -325,11 +342,11 @@ OPTIONS
             if (visualize)
             {
                 shared_ptr<Function> f = deserialize(model);
-                auto model_file_name = ngraph::file_util::get_file_name(model) + std::string(".") +
-                                       pass::VisualizeTree::get_file_ext();
+                auto model_file_name = ngraph::file_util::get_file_name(model) +
+                                       (dot_file ? ".dot" : ngraph::file_util::get_file_ext(model));
 
                 pass::Manager pass_manager;
-                pass_manager.register_pass<pass::VisualizeTree>(model_file_name);
+                pass_manager.register_pass<pass::VisualizeTree>(model_file_name, nullptr, true);
                 pass_manager.run_passes(f);
             }
 
@@ -337,16 +354,32 @@ OPTIONS
             {
                 shared_ptr<Function> f = deserialize(model);
 
+                pass::Manager pass_manager;
+                pass_manager.register_pass<pass::Liveness>();
+                pass_manager.register_pass<pass::MemoryLayout>();
+                pass_manager.run_passes(f);
+
                 cout << "\n---- Source Graph Statistics ----\n";
-                cout << "Total nodes: " << f->get_ops().size() << endl;
+                cout << "Total nodes: " << locale_string(f->get_ops().size()) << endl;
                 size_t total_constant_bytes = 0;
+                size_t total_parameter_bytes = 0;
+                size_t total_result_bytes = 0;
+                size_t total_temporary_bytes = 0;
+                size_t total_constant_count = 0;
+                size_t total_parameter_count = 0;
+                size_t total_result_count = 0;
+                size_t total_temporary_count = 0;
                 unordered_map<string, size_t> op_list;
                 set<string> type_list;
                 for (shared_ptr<Node> node : f->get_ordered_ops())
                 {
-                    string name = node->get_name();
-                    string op_name = name.substr(0, name.find('_'));
-                    string shape_name = "{" + join(node->get_outputs()[0].get_shape()) + "}";
+                    for (descriptor::Tensor* tensor : node->liveness_new_list)
+                    {
+                        total_temporary_bytes += tensor->size();
+                        total_temporary_count++;
+                    }
+                    string op_name = node->description();
+                    string shape_name = "{" + join(node->output(0).get_shape()) + "}";
                     op_list[op_name + shape_name]++;
                     auto et = get_op_element_type(*node);
                     string type_string = et.c_type_string();
@@ -354,8 +387,9 @@ OPTIONS
 
                     if (op_name == "Constant")
                     {
-                        const Shape& shape = node->get_outputs()[0].get_shape();
-                        size_t const_size = node->get_outputs()[0].get_element_type().size();
+                        total_constant_count++;
+                        const Shape& shape = node->output(0).get_shape();
+                        size_t const_size = node->output(0).get_element_type().size();
                         if (shape.size() == 0)
                         {
                             total_constant_bytes += const_size;
@@ -363,12 +397,35 @@ OPTIONS
                         else
                         {
                             total_constant_bytes +=
-                                (const_size * shape_size(node->get_outputs()[0].get_shape()));
+                                (const_size * shape_size(node->output(0).get_shape()));
                         }
+                    }
+                    else if (op_name == "Parameter")
+                    {
+                        total_parameter_count++;
+                        const Shape& shape = node->output(0).get_shape();
+                        size_t size = node->output(0).get_element_type().size() * shape_size(shape);
+                        total_parameter_bytes += size;
+                    }
+                    else if (op_name == "Result")
+                    {
+                        total_result_count++;
+                        const Shape& shape = node->input(0).get_shape();
+                        size_t size = node->input(0).get_element_type().size() * shape_size(shape);
+                        total_result_bytes += size;
                     }
                 }
                 cout << "--\n";
-                cout << "Total Constant size: " << total_constant_bytes << " bytes\n";
+                cout << "Total Constant size: " << locale_string(total_constant_bytes)
+                     << " bytes in " << total_constant_count << " constants\n";
+                cout << "Total Parameter size: " << locale_string(total_parameter_bytes)
+                     << " bytes in " << total_parameter_count << " parameters\n";
+                cout << "Total Result size: " << locale_string(total_result_bytes) << " bytes in "
+                     << total_result_count << " results\n";
+                cout << "Total Temporary size: " << locale_string(total_temporary_bytes)
+                     << " bytes in " << total_temporary_count << " temporaries\n";
+                cout << "Temporary size with reuse : "
+                     << locale_string(f->get_temporary_pool_size()) << " bytes\n";
                 cout << "--\n";
                 cout << "Types used:\n";
                 for (const string& type : type_list)
@@ -376,7 +433,7 @@ OPTIONS
                     cout << "    " << type << "\n";
                 }
                 cout << "--\n";
-                for (const pair<string, size_t>& op_info : op_list)
+                for (auto& op_info : op_list)
                 {
                     cout << op_info.first << ": " << op_info.second << " ops" << endl;
                 }
@@ -386,8 +443,17 @@ OPTIONS
             {
                 cout << "\n---- Benchmark ----\n";
                 shared_ptr<Function> f = deserialize(model);
-                auto perf_data = run_benchmark(
-                    f, backend, iterations, timing_detail, warmup_iterations, copy_data);
+                vector<runtime::PerformanceCounter> perf_data;
+                if (double_buffer)
+                {
+                    perf_data = run_benchmark_pipelined(
+                        f, backend, iterations, timing_detail, warmup_iterations, copy_data);
+                }
+                else
+                {
+                    perf_data = run_benchmark(
+                        f, backend, iterations, timing_detail, warmup_iterations, copy_data);
+                }
                 auto perf_shape = to_perf_shape(f, perf_data);
                 aggregate_perf_data.insert(
                     aggregate_perf_data.end(), perf_shape.begin(), perf_shape.end());
@@ -397,10 +463,12 @@ OPTIONS
         catch (ngraph::unsupported_op& ue)
         {
             cout << "Unsupported op '" << ue.what() << "' in model " << model << endl;
+            rc += 1;
         }
         catch (exception& e)
         {
             cout << "Exception caught on '" << model << "'\n" << e.what() << endl;
+            rc += 1;
         }
     }
 
@@ -413,5 +481,5 @@ OPTIONS
         print_results(aggregate_perf_data, timing_detail);
     }
 
-    return 0;
+    return rc;
 }

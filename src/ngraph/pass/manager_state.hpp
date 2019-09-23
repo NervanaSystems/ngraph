@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,15 +41,6 @@ namespace ngraph
 class ngraph::pass::ManagerState
 {
 public:
-    const std::vector<std::shared_ptr<Function>>& get_functions();
-
-    template <typename T>
-    void set_functions(const T& collection)
-    {
-        m_function_list.clear();
-        m_function_list.insert(m_function_list.begin(), collection.begin(), collection.end());
-    }
-
     void set_visualize_tree_ops_map(const visualize_tree_ops_map_t& ops_map)
     {
         m_visualize_tree_ops_map = ops_map;
@@ -60,7 +51,15 @@ public:
         return m_visualize_tree_ops_map;
     }
 
+    void set_function(const std::shared_ptr<Function> function) { m_function = function; }
+    std::shared_ptr<Function> get_function() const { return m_function; }
+    std::vector<std::shared_ptr<Function>> get_functions() const
+        NGRAPH_DEPRECATED("Use get_function()")
+    {
+        return {m_function};
+    }
+
 private:
-    std::vector<std::shared_ptr<Function>> m_function_list;
     visualize_tree_ops_map_t m_visualize_tree_ops_map;
+    std::shared_ptr<Function> m_function;
 };

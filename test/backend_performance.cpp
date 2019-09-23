@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -98,8 +98,9 @@ TEST(benchmark, concat_32x1x200_axis1_6)
         auto result_tv = backend->create_tensor(element::f32, result_shape);
         result_tvs.push_back(result_tv);
 
-        std::function<void()> cb = [&]() {
-            backend->call_with_validate(f, {result_tv}, input_vals);
+        std::function<void()> cb = [=]() {
+            auto handle = backend->compile(f);
+            handle->call_with_validate({result_tv}, input_vals);
         };
 
         test_callbacks.push_back(cb);

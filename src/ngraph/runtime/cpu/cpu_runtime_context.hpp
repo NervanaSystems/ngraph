@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,12 @@
 #include <tbb/task_scheduler_init.h>
 #endif
 
+#include "ngraph/op/experimental/compiled_kernel.hpp"
+
+#ifdef NGRAPH_MLIR_ENABLE
+#include "contrib/mlir/compiler/compiler.hpp"
+#endif
+
 namespace mkldnn
 {
     class primitive;
@@ -39,7 +45,6 @@ namespace ngraph
     {
         class AlignedBuffer;
     }
-
     class State;
 }
 
@@ -59,16 +64,29 @@ namespace ngraph
                 int64_t* op_durations;
                 bool* p_en;
                 bool first_iteration;
-                mkldnn::primitive* const* mkldnn_primitives;
+                // stores tensor pointers
+                std::vector<void*> buffer_data;
+                std::vector<mkldnn::memory*> mkldnn_memories;
+                std::vector<mkldnn::primitive*> mkldnn_primitives;
                 std::vector<AlignedBuffer*> memory_buffers;
-                char* const* mkldnn_workspaces;
-#if defined(NGRAPH_TBB_ENABLE)
+                std::vector<mkldnn::memory::desc*> mkldnn_scratchpad_mds;
+                AlignedBuffer* scratchpad_buffer;
+                std::vector<char*> mkldnn_workspaces;
+#if defined(NGRAPH_TBB_ENABLE)  
                 tbb::flow::graph* G;
                 tbb::global_control* c;
 #endif
                 State* const* states;
                 std::set<size_t> breakpoints;
                 size_t pc;
+#ifdef NGRAPH_MLIR_ENABLE
+                /// Maps CompiledKernel nodes to their MLIR compiler
+                /// The MLIR compiler caches the compiled code on the first invocation,
+                /// and may in the future support re-compilation
+                std::unordered_map<ngraph::op::CompiledKernel*,
+                                   ngraph::runtime::ngmlir::MLIRCompiler>
+                    mlir_compilers;
+#endif
             };
             }
 

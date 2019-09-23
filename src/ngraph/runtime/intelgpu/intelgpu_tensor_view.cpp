@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ runtime::intelgpu::IntelGPUTensorView::IntelGPUTensorView(const element::Type& e
                                                           const Shape& shape,
                                                           const cldnn::engine& backend_engine,
                                                           void* memory_pointer)
-    : runtime::Tensor(make_shared<descriptor::Tensor>(element_type, shape, "external"))
+    : runtime::Tensor(make_shared<descriptor::Tensor>(element_type, shape, ""))
 {
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(element_type, shape);
 
@@ -47,28 +47,26 @@ runtime::intelgpu::IntelGPUTensorView::IntelGPUTensorView(const element::Type& e
     }
 }
 
-void runtime::intelgpu::IntelGPUTensorView::write(const void* source,
-                                                  size_t tensor_offset,
-                                                  size_t n)
+void runtime::intelgpu::IntelGPUTensorView::write(const void* source, size_t n)
 {
-    if (tensor_offset + n > ocl_memory->size())
+    if (n > ocl_memory->size())
     {
         throw out_of_range("write access past end of tensor");
     }
 
     auto ptr = ocl_memory->pointer<char>();
     char* target = ptr.data();
-    memcpy(&target[tensor_offset], source, n);
+    memcpy(target, source, n);
 }
 
-void runtime::intelgpu::IntelGPUTensorView::read(void* target, size_t tensor_offset, size_t n) const
+void runtime::intelgpu::IntelGPUTensorView::read(void* target, size_t n) const
 {
-    if (tensor_offset + n > ocl_memory->size())
+    if (n > ocl_memory->size())
     {
         throw out_of_range("read access past end of tensor");
     }
 
     const auto ptr = ocl_memory->pointer<char>();
     const char* source = ptr.data();
-    memcpy(target, &source[tensor_offset], n);
+    memcpy(target, source, n);
 }

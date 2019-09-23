@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include <cstdlib> // std::size_t, std::uintptr_t
-#include <onnxifi.h>
+#include <onnx/onnxifi.h>
 #include <stdexcept> // std::invalid_agrument, std::out_of_rage
 
 #include "backend.hpp"

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/nop/nop_backend.hpp"
+#include "ngraph/runtime/nop/nop_backend_visibility.hpp"
+
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/op/convert.hpp"
@@ -24,6 +25,8 @@
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/nop/nop_backend.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -31,14 +34,11 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorLayout;
 
-extern "C" const char* get_ngraph_version_string()
+extern "C" NOP_BACKEND_API void ngraph_register_nop_backend()
 {
-    return NGRAPH_VERSION;
-}
-
-extern "C" runtime::Backend* new_backend(const char* configuration_string)
-{
-    return new runtime::nop::NOPBackend();
+    runtime::BackendManager::register_backend("NOP", [](const std::string& /* config */) {
+        return std::make_shared<runtime::nop::NOPBackend>();
+    });
 }
 
 shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor(const element::Type& type,
@@ -54,14 +54,25 @@ shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor(const elemen
     return make_shared<runtime::HostTensor>(type, shape, memory_pointer, "external");
 }
 
-bool runtime::nop::NOPBackend::compile(shared_ptr<Function> function)
+shared_ptr<runtime::Executable>
+    runtime::nop::NOPBackend::compile(shared_ptr<Function> function,
+                                      bool enable_performance_collection)
 {
-    return true;
+    return make_shared<NOPExecutable>(function, enable_performance_collection);
 }
 
-bool runtime::nop::NOPBackend::call(shared_ptr<Function> function,
-                                    const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                    const vector<shared_ptr<runtime::Tensor>>& inputs)
+runtime::nop::NOPExecutable::NOPExecutable(shared_ptr<Function> function,
+                                           bool /* enable_performance_collection */)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
+    pass_manager.run_passes(function);
+
+    set_parameters_and_results(*function);
+}
+
+bool runtime::nop::NOPExecutable::call(const vector<shared_ptr<runtime::Tensor>>& /* outputs */,
+                                       const vector<shared_ptr<runtime::Tensor>>& /* inputs */)
 {
     return true;
 }

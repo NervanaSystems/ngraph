@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,11 @@ namespace ngraph
         {
             namespace kernel
             {
-                template <typename ElementType>
+                template <typename INPUT,
+                          typename FILTER,
+                          typename OUTPUT,
+                          typename ACCUMULATION =
+                              typename ngraph::runtime::reference::widen<OUTPUT>::type>
                 void convolution(void* input0,
                                  void* input1,
                                  void* output,
@@ -39,34 +43,87 @@ namespace ngraph
                                  const CoordinateDiff& padding_below,
                                  const CoordinateDiff& padding_above,
                                  const Strides& data_dilation_strides,
-                                 size_t batch_axis_data,
-                                 size_t input_channel_axis_data,
-                                 size_t input_channel_axis_filters,
-                                 size_t output_channel_axis_filters,
-                                 size_t batch_axis_result,
-                                 size_t output_channel_axis_result,
-                                 bool rotate_filter)
+                                 void* input_scale = nullptr,
+                                 void* input_zero_point = nullptr,
+                                 void* filter_scale = nullptr,
+                                 void* filter_zero_point = nullptr,
+                                 void* output_scale = nullptr,
+                                 void* output_zero_point = nullptr)
                 {
-                    reference::convolution<ElementType>(static_cast<const ElementType*>(input0),
-                                                        static_cast<const ElementType*>(input1),
-                                                        static_cast<ElementType*>(output),
-                                                        arg0_shape,
-                                                        arg1_shape,
-                                                        result_shape,
-                                                        window_movement_strides,
-                                                        window_dilation_strides,
-                                                        padding_below,
-                                                        padding_above,
-                                                        data_dilation_strides,
-                                                        batch_axis_data,
-                                                        input_channel_axis_data,
-                                                        input_channel_axis_filters,
-                                                        output_channel_axis_filters,
-                                                        batch_axis_result,
-                                                        output_channel_axis_result,
-                                                        rotate_filter);
+                    reference::convolution<INPUT, FILTER, OUTPUT, ACCUMULATION>(
+                        static_cast<const INPUT*>(input0),
+                        static_cast<const FILTER*>(input1),
+                        static_cast<OUTPUT*>(output),
+                        arg0_shape,
+                        arg1_shape,
+                        result_shape,
+                        window_movement_strides,
+                        window_dilation_strides,
+                        padding_below,
+                        padding_above,
+                        data_dilation_strides,
+                        static_cast<const float*>(input_scale),
+                        static_cast<const INPUT*>(input_zero_point),
+                        static_cast<const float*>(filter_scale),
+                        static_cast<const FILTER*>(filter_zero_point),
+                        static_cast<const float*>(output_scale),
+                        static_cast<const OUTPUT*>(output_zero_point));
                 }
-            }
-        }
-    }
-}
+
+                template <typename ElementType>
+                void convolution_backprop_filter(void* input0,
+                                                 void* input1,
+                                                 void* output,
+                                                 const Shape& arg0_shape,
+                                                 const Shape& arg1_shape,
+                                                 const Shape& filter_shape,
+                                                 const Strides& window_dilation_strides,
+                                                 const Strides& window_movement_strides,
+                                                 const CoordinateDiff& padding_below,
+                                                 const CoordinateDiff& padding_above,
+                                                 const Strides& data_dilation_strides)
+                {
+                    reference::convolution_backprop_filter<ElementType>(
+                        static_cast<const ElementType*>(input0),
+                        static_cast<const ElementType*>(input1),
+                        static_cast<ElementType*>(output),
+                        arg0_shape,
+                        arg1_shape,
+                        filter_shape,
+                        window_dilation_strides,
+                        window_movement_strides,
+                        padding_below,
+                        padding_above,
+                        data_dilation_strides);
+                }
+
+                template <typename ElementType>
+                void convolution_backprop_in(void* input0,
+                                             void* input1,
+                                             void* output,
+                                             const Shape& arg0_shape,
+                                             const Shape& arg1_shape,
+                                             const Shape& in_shape,
+                                             const Strides& window_movement_strides,
+                                             const Strides& window_dilation_strides,
+                                             const CoordinateDiff& padding_below,
+                                             const CoordinateDiff& padding_above,
+                                             const Strides& data_dilation_strides)
+                {
+                    reference::convolution_backprop_in<ElementType>(
+                        static_cast<const ElementType*>(input0),
+                        static_cast<const ElementType*>(input1),
+                        static_cast<ElementType*>(output),
+                        arg0_shape,
+                        arg1_shape,
+                        in_shape,
+                        window_movement_strides,
+                        window_dilation_strides,
+                        padding_below,
+                        padding_above,
+                        data_dilation_strides);
+                }
+            } // namespace kernel
+        }     // namespace cpu
+    }         // namespace runtime
+} // namespace ngraph

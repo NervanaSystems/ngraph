@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ namespace ngraph
                 {
                     for (size_t i = 0; i < node->get_output_size(); ++i)
                     {
-                        auto tv = node->get_output_tensor_ptr(i);
+                        auto tv = &node->output(i).get_tensor();
                         if (nullptr == tv->get_tensor_layout())
                         {
                             auto layout = std::make_shared<LT>(*tv);

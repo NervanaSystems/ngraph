@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,28 +14,26 @@
 # limitations under the License.
 # ******************************************************************************
 
+if (NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
+    set(LIBRARY_TYPE STATIC)
+else()
+    set(LIBRARY_TYPE SHARED)
+endif()
+
 if (NGRAPH_INTERPRETER_ENABLE)
-    add_library(interpreter_backend SHARED int_backend.cpp node_wrapper.cpp)
+    add_library(interpreter_backend ${LIBRARY_TYPE} int_backend.cpp node_wrapper.cpp int_executable.cpp)
+    target_compile_definitions(interpreter_backend PRIVATE INTERPRETER_BACKEND_EXPORTS)
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(interpreter_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
     endif()
     target_link_libraries(interpreter_backend PUBLIC ngraph)
-    set_target_properties(interpreter_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-
+    if(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
+        target_compile_definitions(interpreter_backend PUBLIC NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
+    endif()
     install(TARGETS interpreter_backend
         LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
         ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
     )
-
-    if(NGRAPH_DISTRIBUTED_ENABLE)
-        find_package(MPI REQUIRED)
-        target_compile_definitions(interpreter_backend
-            PRIVATE NGRAPH_DISTRIBUTED)
-        target_include_directories(interpreter_backend
-            SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-        target_link_libraries(interpreter_backend
-            PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-    endif()
 endif()

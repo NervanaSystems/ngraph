@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,22 +36,35 @@ namespace ngraph
                 {
                     auto& functors = external_function->get_functors();
 
-                    auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                    auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                    auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                    auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    auto relu_desc = mkldnn_emitter->get_relu_forward_desc(node);
+                    QUERY_SCRATCHPAD(eltwise_forward, relu_desc);
 
-                    size_t relu_index = mkldnn_emitter->build_relu_forward(input_desc, result_desc);
-
+                    // Relu needs 3 primitives: input, result, and eltwise_forward.
+                    size_t relu_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(relu_index);
 
-                    auto functor = [&, relu_index](CPURuntimeContext* ctx,
-                                                   CPUExecutionContext* ectx) {
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, relu_index);
+                    auto functor = [&, relu_desc, relu_index, arg_buffer_index, out_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->build_relu_forward(ctx->mkldnn_memories,
+                                                               ctx->mkldnn_primitives,
+                                                               ctx->mkldnn_scratchpad_mds,
+                                                               relu_desc,
+                                                               deps,
+                                                               relu_index);
+                        }
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[out_buffer_index]);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, relu_index, deps, cpu::mkldnn_utils::OpType::RELU);
                     };
                     functors.emplace_back(functor);
                 }
@@ -66,28 +79,49 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg_fwd_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& delta_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg_fwd_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto delta_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
                 size_t count = out[0].get_size();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    auto bwd_desc = mkldnn_emitter->get_relu_backward_desc(node);
+                    auto fwd_desc = mkldnn_emitter->get_relu_forward_desc(node);
+                    QUERY_SCRATCHPAD_2ARGS(eltwise_backward, fwd_desc, bwd_desc);
 
-                    size_t relu_index =
-                        mkldnn_emitter->build_relu_backward(input_desc, delta_desc, result_desc);
-
+                    // ReluBackprop needs 4 primitives: input, delta, result, and eltwise_backward.
+                    size_t relu_index = mkldnn_emitter->reserve_primitive_space(4);
                     auto& deps = mkldnn_emitter->get_primitive_deps(relu_index);
-                    auto functor = [&, relu_index](CPURuntimeContext* ctx,
-                                                   CPUExecutionContext* ectx) {
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_fwd_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], delta_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, relu_index);
+
+                    auto functor = [&,
+                                    bwd_desc,
+                                    fwd_desc,
+                                    relu_index,
+                                    arg_fwd_buffer_index,
+                                    delta_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->build_relu_backward(ctx->mkldnn_memories,
+                                                                ctx->mkldnn_primitives,
+                                                                ctx->mkldnn_scratchpad_mds,
+                                                                bwd_desc,
+                                                                fwd_desc,
+                                                                deps,
+                                                                relu_index);
+                        }
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg_fwd_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[delta_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[out_buffer_index]);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, relu_index, deps, cpu::mkldnn_utils::OpType::RELUBACKPROP);
                     };
                     functors.emplace_back(functor);
                 }
@@ -96,18 +130,30 @@ namespace ngraph
                     std::function<decltype(runtime::cpu::kernel::relu_backprop<float>)> kernel;
 
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::relu_backprop);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::relu_backprop)
 
-                    auto functor = [&, kernel, count](CPURuntimeContext* ctx,
+                    auto functor = [&,
+                                    kernel,
+                                    count,
+                                    arg_fwd_buffer_index,
+                                    delta_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
                                                       CPUExecutionContext* ectx) {
-                        kernel(arg_fwd_tensor, delta_tensor, out_tensor, count, ectx->arena);
+                        kernel(ctx->buffer_data[arg_fwd_buffer_index],
+                               ctx->buffer_data[delta_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
+                               count,
+                               ectx->arena);
                     };
                     functors.emplace_back(functor);
                 }
             }
 
-            REGISTER_OP_BUILDER(Relu);
-            REGISTER_OP_BUILDER(ReluBackprop);
+            void register_builders_relu_cpp()
+            {
+                REGISTER_OP_BUILDER(Relu);
+                REGISTER_OP_BUILDER(ReluBackprop);
+            }
         }
     }
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <cstdint>
+
 #include "concat.hpp"
+#include "exceptions.hpp"
 #include "ngraph/op/concat.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -28,14 +32,16 @@ namespace ngraph
                 NodeVector concat(const Node& node)
                 {
                     NodeVector inputs{node.get_ng_inputs()};
-                    auto axis = node.get_attribute_value<int64_t>("axis");
+                    std::int64_t axis = node.get_attribute_value<std::int64_t>("axis");
+                    size_t valid_axis =
+                        common::validate_axis(node, axis, inputs.at(0)->get_shape().size());
 
-                    return {std::make_shared<ngraph::op::Concat>(inputs, axis)};
+                    return {std::make_shared<ngraph::op::Concat>(inputs, valid_axis)};
                 }
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

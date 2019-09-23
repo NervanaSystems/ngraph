@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,6 +40,9 @@ namespace ngraph
 enum class ngraph::runtime::interpreter::OP_TYPEID
 {
 #include "ngraph/op/op_tbl.hpp"
+#ifdef INTERPRETER_USE_HYBRID
+#include "ngraph/runtime/hybrid/op/op_tbl.hpp"
+#endif
 };
 #undef NGRAPH_OP
 
@@ -51,7 +54,7 @@ class ngraph::runtime::interpreter::NodeWrapper
 public:
     NodeWrapper(const std::shared_ptr<const ngraph::Node>& node);
 
-    const Node& get_node() const { return *m_node; }
+    std::shared_ptr<const Node> get_node() const { return m_node; }
     ngraph::runtime::interpreter::OP_TYPEID get_typeid() const { return m_typeid; }
 private:
     std::shared_ptr<const ngraph::Node> m_node;

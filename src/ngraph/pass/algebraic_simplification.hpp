@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -32,7 +33,7 @@ public:
     AlgebraicSimplification()
         : FunctionPass()
     {
+        set_property(PassProperty::REQUIRE_STATIC_SHAPE, true);
     }
-
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 };

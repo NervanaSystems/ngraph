@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,16 +14,14 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cstddef>    // std::size_t
-#include <functional> // std::multiplies
-#include <iterator>   // std::begin, std::end
-#include <numeric>    // std::accumulate
+#include <cstddef>  // std::size_t
+#include <iterator> // std::begin, std::end
+#include <numeric>  // std::accumulate
 
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/shape.hpp"
 #include "reduce.hpp"
-#include "utils/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -44,21 +42,26 @@ namespace ngraph
                                         [&input_shape](const std::size_t& a, const std::size_t& b) {
                                             return a * input_shape.at(b);
                                         });
-                    auto sum_node = reduction::make_ng_reduction_op<ngraph::op::Sum>(
-                        node, node.get_ng_inputs().at(0));
-                    auto const_node = std::make_shared<ngraph::op::Constant>(
-                        sum_node->get_element_type(),
-                        Shape{},
-                        std::vector<std::size_t>{elem_count_product});
 
-                    auto broadcasted_const_node =
-                        make_broadcast_node(const_node, sum_node->get_shape());
-                    return {std::make_shared<ngraph::op::Divide>(sum_node, broadcasted_const_node)};
+                    auto sum_node = std::shared_ptr<ngraph::Node>{reduction::make_ng_reduction_op(
+                        node,
+                        node.get_ng_inputs().at(0),
+                        std::make_shared<ngraph::op::Sum,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         const ngraph::AxisSet&>)};
+
+                    auto const_node = ngraph::op::Constant::create(
+                        sum_node->get_element_type(),
+                        sum_node->get_shape(),
+                        std::vector<std::size_t>(shape_size(sum_node->get_shape()),
+                                                 elem_count_product));
+
+                    return {std::make_shared<ngraph::op::Divide>(sum_node, const_node)};
                 }
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

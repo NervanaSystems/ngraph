@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,6 @@ namespace ngraph
     class Function;
 
     static std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Function>> s_df_map;
-    static std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Function>> s_clone_fwd_map;
     static std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Function>> s_clone_bwd_map;
 
     namespace runtime
@@ -89,7 +88,9 @@ namespace ngraph
 
             // get adjoint and force to all elements to zero
             auto c_vec = read_vector<T>(c_arg);
-            fill(c_vec.begin(), c_vec.end(), 0);
+            fill(c_vec.begin(), c_vec.end(), static_cast<T>(0));
+
+            auto df_handle = backend->compile(clone_function(*df));
 
             // for each element of the adjoint
             // same as saying for each element of y
@@ -100,11 +101,10 @@ namespace ngraph
                 write_vector(c_arg, c_vec);
 
                 // call modified df/dX* = f'(c, cached)
-                backend->call_with_validate(df, df_output_args, df_input_args);
+                df_handle->call_with_validate(df_output_args, df_input_args);
 
                 // reset the adjoint element
                 c_vec[i] = 0;
-                write_vector(c_arg, c_vec);
 
                 // for each result
                 // same as saying for each x "of interest"
@@ -144,7 +144,7 @@ namespace ngraph
             // df/dX*
             std::vector<std::shared_ptr<Node>> df_output_params;
 
-            Adjoints adjoints(NodeVector{f->get_output_op(0)}, NodeVector{c_param});
+            Adjoints adjoints(OutputVector{f->output(0)}, OutputVector{c_param});
 
             // for each x "of interest"
             for (auto x : indep_params)
@@ -192,13 +192,16 @@ namespace ngraph
             }
 
             // compile and run modified (y, cached) = f(x)
+            static std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Function>>
+                s_clone_fwd_map;
             if (!s_clone_fwd_map[f])
             {
                 s_clone_fwd_map[f] = clone_function(*fprop_cache.fprop);
             }
             auto clone_fwd = s_clone_fwd_map[f];
+            auto clone_fwd_handle = backend->compile(clone_fwd);
 
-            backend->call_with_validate(clone_fwd, mod_f_output_args, f_input_args);
+            clone_fwd_handle->call_with_validate(mod_f_output_args, f_input_args);
 
             // call modfied f'(c, cached) to get df/dX*
             if (!s_clone_bwd_map[f])

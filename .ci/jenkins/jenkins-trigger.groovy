@@ -1,4 +1,4 @@
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,39 +21,50 @@
 // set these up below as global variables, so we do not need to rewrite the
 // original script -- we only need to provide this new trigger hook.
 //
-// Parameters which ngraph-unittest uses:
-String  PR_URL = CHANGE_URL
-String  PR_COMMIT_AUTHOR = CHANGE_AUTHOR
-String  JENKINS_BRANCH = "master"
-Integer TIMEOUTTIME = "3600"
-// BRANCH parameter is no loner needed
-// TRIGGER_URL parameter is no longer needed
+
+String JENKINS_BRANCH = "master"
+String TIMEOUTTIME = "3600"
 
 // Constants
 JENKINS_DIR = '.'
 
-env.MB_PIPELINE_CHECKOUT = true
-
 timestamps {
+
     node("trigger") {
 
         deleteDir()  // Clear the workspace before starting
 
         // Clone the cje-algo directory which contains our Jenkins groovy scripts
-        git(branch: JENKINS_BRANCH, changelog: false, poll: false,
-            url: 'https://github.intel.com/AIPG/cje-algo')
+        def sleeptime=0
+        retry(count: 3) {
+            sleep sleeptime; sleeptime = 10
+            sh "git clone -b $JENKINS_BRANCH https://github.intel.com/AIPG/cje-algo ."
+        }
 
         // Call the main job script.
         //
         // NOTE: We keep the main job script in github.intel.com because it may
         //      contain references to technology which has not yet been released.
         //
+        
         echo "Calling ngraph-ci-premerge.groovy"
         def ngraphCIPreMerge = load("${JENKINS_DIR}/ngraph-ci-premerge.groovy")
-        ngraphCIPreMerge(PR_URL, PR_COMMIT_AUTHOR, JENKINS_BRANCH, TIMEOUTTIME)
+
+        ngraphCIPreMerge(premerge: 'true',
+                         prURL: CHANGE_URL,
+                         prTitle: CHANGE_TITLE,
+                         prTarget: CHANGE_TARGET,
+                         prAuthor: CHANGE_AUTHOR,
+                         jenkinsBranch: JENKINS_BRANCH,
+                         timeoutTime: TIMEOUTTIME,
+                         useMBPipelineSCM: 'true',
+                         checkoutBranch: '-UNDEFINED-BRANCH-'
+                        )
+                         
         echo "ngraph-ci-premerge.groovy completed"
 
     }  // End:  node
+
 }  // End:  timestamps
 
 echo "Done"

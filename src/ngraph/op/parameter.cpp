@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,13 +21,15 @@
 using namespace std;
 using namespace ngraph;
 
+constexpr NodeTypeInfo op::Parameter::type_info;
+
 op::Parameter::Parameter(const element::Type& element_type,
                          const PartialShape& pshape,
                          const bool cacheable)
-    : Op("Parameter", {})
-    , m_cacheable(cacheable)
+    : m_cacheable(cacheable)
     , m_partial_shape(pshape)
     , m_element_type(element_type)
+    , m_is_relevant_to_shapes(false)
 {
     constructor_validate_and_infer_types();
 }
@@ -44,7 +46,17 @@ shared_ptr<Node> op::Parameter::copy_with_new_args(const NodeVector& new_args) c
     return make_shared<Parameter>(m_element_type, m_partial_shape);
 }
 
-void op::Parameter::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Parameter::generate_adjoints(autodiff::Adjoints& /* adjoints */, const NodeVector& deltas)
 {
     auto delta = deltas.at(0);
+}
+
+bool op::Parameter::is_relevant_to_shapes() const
+{
+    return m_is_relevant_to_shapes;
+}
+
+void op::Parameter::set_is_relevant_to_shapes(bool is_relevant)
+{
+    m_is_relevant_to_shapes = is_relevant;
 }

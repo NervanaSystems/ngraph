@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,9 +50,8 @@ namespace ngraph
                         ASSERT_IS_SUPPORTED(node, ng_inputs.at(1)->description() == "Constant")
                             << "doesn't support shape input of other type than Constant.";
 
-                        auto output_shape_node =
-                            std::dynamic_pointer_cast<ngraph::op::Constant>(ng_inputs.at(1));
-                        output_shape = output_shape_node->get_vector<std::size_t>();
+                        output_shape = ngraph::as_type_ptr<ngraph::op::Constant>(ng_inputs.at(1))
+                                           ->get_vector<std::size_t>();
                     }
                     // Do nothing if there is no shape argument nor second node input.
                     else if (output_shape.empty())
@@ -63,14 +62,12 @@ namespace ngraph
                     output_shape =
                         reshape::infer_dimensions(node.get_name(), data_shape, output_shape);
                     return {std::make_shared<ngraph::op::Reshape>(
-                        data,
-                        reshape::get_default_axis_vector(data_shape.size()),
-                        Shape{output_shape})};
+                        data, ngraph::get_default_order(data_shape.size()), Shape{output_shape})};
                 }
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

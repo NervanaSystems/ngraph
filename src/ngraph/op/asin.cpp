@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,8 +31,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Asin::Asin(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Asin", arg)
+constexpr NodeTypeInfo op::Asin::type_info;
+
+op::Asin::Asin(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }
@@ -47,14 +49,14 @@ void op::Asin::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector&
 {
     auto delta = deltas.at(0);
 
-    auto x = get_inputs().at(0).get_output().get_node();
+    auto x = input_value(0);
 
-    auto one = make_shared<op::Constant>(x->get_element_type(), Shape{}, vector<string>{"1"});
+    auto one = make_shared<op::Constant>(x.get_element_type(), Shape{}, vector<string>{"1"});
 
     AxisSet axes;
-    for (size_t i = 0; i < x->get_shape().size(); i++)
+    for (size_t i = 0; i < x.get_shape().size(); i++)
         axes.insert(i);
-    auto ones = make_shared<op::Broadcast>(one, x->get_shape(), axes);
+    auto ones = make_shared<op::Broadcast>(one, x.get_shape(), axes);
 
     adjoints.add_delta(x, delta / make_shared<op::Sqrt>(ones - x * x));
 }

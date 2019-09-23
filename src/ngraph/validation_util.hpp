@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,10 +19,20 @@
 #include <tuple>
 
 #include "ngraph/coordinate_diff.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 
 namespace ngraph
 {
+    Strides conv_default_strides(const Node* node,
+                                 const PartialShape& data_batch_shape,
+                                 const PartialShape& filters_shape);
+
+    CoordinateDiff conv_default_padding(const Node* node,
+                                        const PartialShape& data_batch_shape,
+                                        const PartialShape& filters_shape);
+
     PartialShape infer_windowed_reduction_output_shape(const Node* node,
                                                        const PartialShape& data_shape,
                                                        const Strides& data_dilation,
@@ -31,19 +41,17 @@ namespace ngraph
                                                        const PartialShape& window_shape,
                                                        const Strides& window_strides,
                                                        const Strides& window_dilation,
-                                                       bool is_window_all_in_padding_allowed);
+                                                       bool is_window_all_in_padding_allowed,
+                                                       bool ceil_mode = false);
 
-    std::tuple<element::Type, PartialShape>
-        infer_convolution_forward(const Node* node,
-                                  element::Type et_batch,
-                                  element::Type et_filters,
-                                  const PartialShape& data_batch_shape,
-                                  const Strides& data_dilation,
-                                  const CoordinateDiff& data_padding_below,
-                                  const CoordinateDiff& data_padding_above,
-                                  const PartialShape& filters_shape,
-                                  const Strides& filter_strides,
-                                  const Strides& filter_dilation);
+    PartialShape infer_convolution_forward(const Node* node,
+                                           const PartialShape& data_batch_shape,
+                                           const Strides& data_dilation,
+                                           const CoordinateDiff& data_padding_below,
+                                           const CoordinateDiff& data_padding_above,
+                                           const PartialShape& filters_shape,
+                                           const Strides& filter_strides,
+                                           const Strides& filter_dilation);
 
     PartialShape infer_batched_pooling_forward(const Node* node,
                                                const PartialShape& data_batch_shape,
@@ -51,7 +59,8 @@ namespace ngraph
                                                const CoordinateDiff& data_padding_above,
                                                const PartialShape& window_shape,
                                                const Strides& window_strides,
-                                               bool is_window_all_in_padding_allowed);
+                                               bool is_window_all_in_padding_allowed,
+                                               bool ceil_mode = false);
 
     std::tuple<element::Type, PartialShape, PartialShape>
         infer_batch_norm_forward(const Node* node,
@@ -74,4 +83,23 @@ namespace ngraph
                                  const PartialShape& input_shape,
                                  const PartialShape& gamma_shape,
                                  const PartialShape& beta_shape);
+
+    void infer_auto_padding(const Shape& image_shape,
+                            const Shape& filter_shape,
+                            const Strides& filter_strides,
+                            const Strides& filter_dilations,
+                            const op::PadType pad_type,
+                            CoordinateDiff& padding_above,
+                            CoordinateDiff& padding_below);
+
+    PartialShape infer_slice_shape(const Node* node,
+                                   const PartialShape& input_shape,
+                                   const std::vector<int64_t>& lb,
+                                   const std::vector<int64_t>& ub,
+                                   const std::vector<int64_t>& str,
+                                   const AxisSet& lb_mask,
+                                   const AxisSet& ub_mask,
+                                   const AxisSet& new_axis,
+                                   const AxisSet& shrink_mask,
+                                   const AxisSet& ellipsis_mask);
 }

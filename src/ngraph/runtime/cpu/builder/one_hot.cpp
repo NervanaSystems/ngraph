@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,18 +39,23 @@ namespace ngraph
 
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 if (arg_rank == 0)
                 {
                     std::function<decltype(runtime::cpu::kernel::one_hot_rank_0<float>)> kernel;
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::one_hot_rank_0);
-                    auto functor = [&, kernel, out_shape, one_hot_axis](CPURuntimeContext* ctx,
-                                                                        CPUExecutionContext* ectx) {
-                        kernel(arg_tensor, out_tensor, out_shape, one_hot_axis, ectx->arena);
-                    };
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::one_hot_rank_0)
+                    auto functor =
+                        [&, kernel, out_shape, one_hot_axis, arg_buffer_index, out_buffer_index](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            kernel(ctx->buffer_data[arg_buffer_index],
+                                   ctx->buffer_data[out_buffer_index],
+                                   out_shape,
+                                   one_hot_axis,
+                                   ectx->arena);
+                        };
 
                     functors.emplace_back(functor);
                 }
@@ -58,11 +63,17 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::one_hot_rank_1<float>)> kernel;
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::one_hot_rank_1);
-                    auto functor = [&, kernel, arg_shape, out_shape, one_hot_axis](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(arg_tensor,
-                               out_tensor,
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::one_hot_rank_1)
+                    auto functor = [&,
+                                    kernel,
+                                    arg_shape,
+                                    out_shape,
+                                    one_hot_axis,
+                                    arg_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
                                arg_shape,
                                out_shape,
                                one_hot_axis,
@@ -77,17 +88,27 @@ namespace ngraph
                         kernel;
                     SELECT_KERNEL(kernel,
                                   out[0].get_element_type(),
-                                  runtime::cpu::kernel::one_hot_rank_2_or_more);
-                    auto functor = [&, kernel, arg_shape, out_shape, one_hot_axis](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(arg_tensor, out_tensor, arg_shape, out_shape, one_hot_axis);
+                                  runtime::cpu::kernel::one_hot_rank_2_or_more)
+                    auto functor = [&,
+                                    kernel,
+                                    arg_shape,
+                                    out_shape,
+                                    one_hot_axis,
+                                    arg_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
+                        kernel(ctx->buffer_data[arg_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
+                               arg_shape,
+                               out_shape,
+                               one_hot_axis);
                     };
 
                     functors.emplace_back(functor);
                 }
             }
 
-            REGISTER_OP_BUILDER(OneHot);
+            void register_builders_one_hot_cpp() { REGISTER_OP_BUILDER(OneHot); }
         }
     }
 }
