@@ -326,8 +326,7 @@ shared_ptr<op::Constant> fold_constant_binary_arithmetic(shared_ptr<op::Constant
 }
 
 template <class Tin>
-shared_ptr<op::Constant> fold_constant_binary_helper(const element::Type& et_out,
-                                                     shared_ptr<op::Constant> a,
+shared_ptr<op::Constant> fold_constant_binary_helper(shared_ptr<op::Constant> a,
                                                      shared_ptr<op::Constant> b,
                                                      shared_ptr<Node> binary,
                                                      NodeExecutorTy func)
@@ -417,56 +416,56 @@ void pass::ConstantFolding::construct_constant_binary()
                              "Encountered 'dynamic' element type in constant_binary_callback");
                 break;
             case element::Type_t::boolean:
-                replacement = fold_constant_binary_helper<char>(
-                    out_type, a_match, b_match, binary_match, func);
+                replacement =
+                    fold_constant_binary_helper<char>(a_match, b_match, binary_match, func);
                 break;
             case element::Type_t::bf16:
-                replacement = fold_constant_binary_helper<bfloat16>(
-                    out_type, a_match, b_match, binary_match, func);
+                replacement =
+                    fold_constant_binary_helper<bfloat16>(a_match, b_match, binary_match, func);
                 break;
             case element::Type_t::f16:
-                replacement = fold_constant_binary_helper<float16>(
-                    out_type, a_match, b_match, binary_match, func);
+                replacement =
+                    fold_constant_binary_helper<float16>(a_match, b_match, binary_match, func);
                 break;
             case element::Type_t::f32:
-                replacement = fold_constant_binary_helper<float>(
-                    out_type, a_match, b_match, binary_match, func);
+                replacement =
+                    fold_constant_binary_helper<float>(a_match, b_match, binary_match, func);
                 break;
             case element::Type_t::f64:
-                replacement = fold_constant_binary_helper<double>(
-                    out_type, a_match, b_match, binary_match, func);
+                replacement =
+                    fold_constant_binary_helper<double>(a_match, b_match, binary_match, func);
                 break;
             case element::Type_t::i8:
-                replacement = fold_constant_binary_helper<int8_t>(
-                    out_type, a_match, b_match, binary_match, func);
+                replacement =
+                    fold_constant_binary_helper<int8_t>(a_match, b_match, binary_match, func);
                 break;
             case element::Type_t::i16:
-                replacement = fold_constant_binary_helper<int16_t>(
-                    out_type, a_match, b_match, binary_match, func);
+                replacement =
+                    fold_constant_binary_helper<int16_t>(a_match, b_match, binary_match, func);
                 break;
             case element::Type_t::i32:
-                replacement = fold_constant_binary_helper<int32_t>(
-                    out_type, a_match, b_match, binary_match, func);
+                replacement =
+                    fold_constant_binary_helper<int32_t>(a_match, b_match, binary_match, func);
                 break;
             case element::Type_t::i64:
-                replacement = fold_constant_binary_helper<int64_t>(
-                    out_type, a_match, b_match, binary_match, func);
+                replacement =
+                    fold_constant_binary_helper<int64_t>(a_match, b_match, binary_match, func);
                 break;
             case element::Type_t::u8:
-                replacement = fold_constant_binary_helper<uint8_t>(
-                    out_type, a_match, b_match, binary_match, func);
+                replacement =
+                    fold_constant_binary_helper<uint8_t>(a_match, b_match, binary_match, func);
                 break;
             case element::Type_t::u16:
-                replacement = fold_constant_binary_helper<uint16_t>(
-                    out_type, a_match, b_match, binary_match, func);
+                replacement =
+                    fold_constant_binary_helper<uint16_t>(a_match, b_match, binary_match, func);
                 break;
             case element::Type_t::u32:
-                replacement = fold_constant_binary_helper<uint32_t>(
-                    out_type, a_match, b_match, binary_match, func);
+                replacement =
+                    fold_constant_binary_helper<uint32_t>(a_match, b_match, binary_match, func);
                 break;
             case element::Type_t::u64:
-                replacement = fold_constant_binary_helper<uint64_t>(
-                    out_type, a_match, b_match, binary_match, func);
+                replacement =
+                    fold_constant_binary_helper<uint64_t>(a_match, b_match, binary_match, func);
                 break;
             }
         }
