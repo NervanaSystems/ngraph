@@ -344,14 +344,17 @@ shared_ptr<Node> Node::add_provenance_group_members_above(const OutputVector& ba
     {
         Node* node = todo.back();
         todo.pop_back();
-        if (base_set.count(node) > 0 || !node->m_provenance_group.empty())
+        if (base_set.count(node) > 0)
         {
             continue;
         }
         add_provenance_group_member(node->shared_from_this());
-        for (auto input : node->inputs())
+        for (auto value : node->input_values())
         {
-            todo.push_back(input.get_source_output().get_node());
+            if (0 == node->m_provenance_group.count(value.get_node_shared_ptr()))
+            {
+                todo.push_back(value.get_node());
+            }
         }
         base_set.insert(node);
     }
