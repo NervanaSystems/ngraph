@@ -190,6 +190,11 @@ void codegen::CompilerCore::initialize()
     // Prevent Eigen from using any LGPL3 code
     args.push_back("-DEIGEN_MPL2_ONLY");
 
+#if defined(NGRAPH_TBB_ENABLE)
+    // Enable TBB
+    args.push_back("-DNGRAPH_TBB_ENABLE");
+#endif
+
     // Prepare DiagnosticEngine
     IntrusiveRefCntPtr<DiagnosticOptions> diag_options = new DiagnosticOptions();
     diag_options->ErrorLimit = 20;
