@@ -26,8 +26,8 @@
 #include <tbb/flow_graph.h>
 #include <tbb/global_control.h>
 #include <tbb/task_scheduler_init.h>
-#include "ngraph/op/experimental/compiled_kernel.hpp"
 #endif
+#include "ngraph/op/experimental/compiled_kernel.hpp"
 
 #ifdef NGRAPH_MLIR_ENABLE
 #include "contrib/mlir/compiler.hpp"

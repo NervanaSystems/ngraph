@@ -1372,6 +1372,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             "CPU Backend: Tracing and performance breakdowns might not be accurate with TBB "
             "enabled due to concurrent graph execution");
     }
+#endif
 
 // reference all the builders for static library
 #ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
