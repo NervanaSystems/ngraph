@@ -84,7 +84,7 @@ using namespace ngraph::runtime::ngmlir;
 // *** Debug flags ***
 
 static llvm::cl::opt<bool> clPrintIRAfterAll(
-    "print-ngraph-ir-after-all",
+    "ngraph-print-ir-after-all",
     llvm::cl::init(false),
     llvm::cl::desc(
         "Print IR after transformation that are not implemented as passes in the MLIRCompiler. It "
