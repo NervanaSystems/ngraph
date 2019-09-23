@@ -476,15 +476,9 @@ static void generate_class_declarations(CodeWriter& writer)
 
 static void generate_runtime_context_class(CodeWriter& writer)
 {
-#if defined(NGRAPH_TBB_ENABLE)
     writer <<
 #include "ngraph/runtime/cpu/pregenerated_src/cpu_cg_runtime_context.hpp"
            << "\n";
-#else
-    writer <<
-#include "ngraph/runtime/cpu/pregenerated_src/cpu_cg_runtime_context_no_tbb.hpp"
-           << "\n";
-#endif
 }
 
 void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_config)
