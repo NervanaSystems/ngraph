@@ -42,8 +42,7 @@ namespace ngraph
                 ///
                 /// \param[in]  hidden_size        The number of hidden units for recurrent cell.
                 /// \param[in]  clip               The value defining clipping range [-clip, clip]
-                /// on
-                ///                                input of activation functions.
+                ///                                on input of activation functions.
                 /// \param[in]  activations        The vector of activation functions used inside
                 ///                                recurrent cell.
                 /// \param[in]  activations_alpha  The vector of alpha parameters for activation

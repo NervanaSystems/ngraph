@@ -47,13 +47,13 @@ namespace ngraph
             ///
             /// \brief      Constructs GRUCell node.
             ///
-            /// \param[in]  X                 The input tensor with shape: [batch_size, input_size].
-            /// \param[in]  W                 The weight tensor with shape:
-            ///                               [gates_count * hidden_size, input_size].
-            /// \param[in]  R                 The recurrence weight tensor with shape:
-            ///                               [gates_count * hidden_size, hidden_size].
-            /// \param[in]  H_t               The hidden state tensor at current time step with
-            ///                               shape: [batch_size, hidden_size].
+            /// \param[in]  X            The input tensor with shape: [batch_size, input_size].
+            /// \param[in]  W            The weight tensor with shape:
+            ///                          [gates_count * hidden_size, input_size].
+            /// \param[in]  R            The recurrence weight tensor with shape:
+            ///                          [gates_count * hidden_size, hidden_size].
+            /// \param[in]  H_t          The hidden state tensor at current time step with
+            ///                          shape: [batch_size, hidden_size].
             /// \param[in]  hidden_size  The number of hidden units for recurrent cell.
             ///
             GRUCell(const Output<Node>& X,
@@ -66,7 +66,7 @@ namespace ngraph
             /// \brief      Constructs GRUCell node.
             ///
             /// \param[in]  X                  The input tensor with shape: [batch_size,
-            /// input_size].
+            ///                                input_size].
             /// \param[in]  W                  The weight tensor with shape:
             ///                                [gates_count * hidden_size, input_size].
             /// \param[in]  R                  The recurrence weight tensor with shape:
@@ -79,8 +79,7 @@ namespace ngraph
             /// \param[in]  activations_alpha  The vector of alpha parameters for activation
             ///                                functions in order respective to activation list.
             /// \param[in]  activations_beta   The vector of beta parameters for activation
-            /// functions
-            ///                                in order respective to activation list.
+            ///                                functions in order respective to activation list.
             /// \param[in]  clip               The value defining clipping range [-clip, clip] on
             ///                                input of activation functions.
             ///
@@ -98,26 +97,27 @@ namespace ngraph
             ///
             /// \brief      Constructs GRUCell node.
             ///
-            /// \param[in]  X                  The input tensor with shape: [batch_size,
-            /// input_size].
-            /// \param[in]  W                  The weight tensor with shape:
-            ///                                [gates_count * hidden_size, input_size].
-            /// \param[in]  R                  The recurrence weight tensor with shape:
-            ///                                [gates_count * hidden_size, hidden_size].
-            /// \param[in]  H_t                The hidden state tensor at current time step with
-            ///                                shape: [batch_size, hidden_size].
-            /// \param[in]  hidden_size        The number of hidden units for recurrent cell.
-            /// \param[in]  B                  The bias tensor for input gate with shape:
-            ///                                [2 * gates_count * hidden_size].
-            /// \param[in]  activations        The vector of activation functions used inside
-            ///                                recurrent cell.
-            /// \param[in]  activations_alpha  The vector of alpha parameters for activation
-            ///                                functions in order respective to activation list.
-            /// \param[in]  activations_beta   The vector of beta parameters for activation
-            /// functions
-            ///                                in order respective to activation list.
-            /// \param[in]  clip               The value defining clipping range [-clip, clip] on
-            ///                                input of activation functions.
+            /// \param[in]  X                    The input tensor with shape: [batch_size,
+            ///                                  input_size].
+            /// \param[in]  W                    The weight tensor with shape: [gates_count *
+            ///                                  hidden_size, input_size].
+            /// \param[in]  R                    The recurrence weight tensor with shape:
+            ///                                  [gates_count * hidden_size, hidden_size].
+            /// \param[in]  H_t                  The hidden state tensor at current time step with
+            ///                                  shape: [batch_size, hidden_size].
+            /// \param[in]  hidden_size          The number of hidden units for recurrent cell.
+            /// \param[in]  B                    The bias tensor for input gate with shape:
+            ///                                  [2 * gates_count * hidden_size].
+            /// \param[in]  activations          The vector of activation functions used inside
+            ///                                  recurrent cell.
+            /// \param[in]  activations_alpha    The vector of alpha parameters for activation
+            ///                                  functions in order respective to activation list.
+            /// \param[in]  activations_beta     The vector of beta parameters for activation
+            ///                                  functions in order respective to activation list.
+            /// \param[in]  clip                 The value defining clipping range [-clip, clip] on
+            ///                                  input of activation functions.
+            /// \param[in]  linear_before_reset  Whether or not to apply the linear transformation
+            ///                                  before multiplying by the output of the reset gate.
             ///
             GRUCell(const Output<Node>& X,
                     const Output<Node>& W,
