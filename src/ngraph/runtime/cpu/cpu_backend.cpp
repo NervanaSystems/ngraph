@@ -14,7 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+#if defined(NGRAPH_TBB_ENABLE)
 #include <tbb/tbb_stddef.h>
+#endif
 
 #include "cpu_backend_visibility.h"
 #include "ngraph/graph_util.hpp"
@@ -40,8 +42,10 @@ runtime::BackendConstructor* runtime::cpu::get_backend_constructor_pointer()
     public:
         std::shared_ptr<runtime::Backend> create(const std::string& /* config */) override
         {
+#if defined(NGRAPH_TBB_ENABLE)
             // Force TBB to link to the backend
             tbb::TBB_runtime_interface_version();
+#endif
             return make_shared<runtime::cpu::CPU_Backend>();
         }
     };

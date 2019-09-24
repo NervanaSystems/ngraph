@@ -189,6 +189,9 @@ option(NGRAPH_STATIC_LIB_ENABLE "Enable build nGraph static library" FALSE)
 option(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE "Enable build INTERPRETER backend static library" FALSE)
 option(NGRAPH_CPU_STATIC_LIB_ENABLE "Enable build CPU backend static library" FALSE)
 option(NGRAPH_DYNAMIC_COMPONENTS_ENABLE "Enable dynamic loading of components" TRUE)
+if (NGRAPH_CPU_ENABLE)
+    option(NGRAPH_TBB_ENABLE "Control usage of TBB for CPU backend" TRUE)
+endif()
 
 if (NGRAPH_CPU_ENABLE
         AND
@@ -268,6 +271,9 @@ NORMALIZE_BOOL(NGRAPH_STATIC_LIB_ENABLE)
 NORMALIZE_BOOL(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
 NORMALIZE_BOOL(NGRAPH_CPU_STATIC_LIB_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DYNAMIC_COMPONENTS_ENABLE)
+if (NGRAPH_CPU_ENABLE)
+    NORMALIZE_BOOL(NGRAPH_TBB_ENABLE)
+endif()
 
 # Turn off GPU build in 0.25.1
 set(NGRAPH_GPU_ENABLE FALSE)
@@ -298,6 +304,9 @@ message(STATUS "NGRAPH_STATIC_LIB_ENABLE:             ${NGRAPH_STATIC_LIB_ENABLE
 message(STATUS "NGRAPH_INTERPRETER_STATIC_LIB_ENABLE: ${NGRAPH_INTERPRETER_STATIC_LIB_ENABLE}")
 message(STATUS "NGRAPH_CPU_STATIC_LIB_ENABLE:         ${NGRAPH_CPU_STATIC_LIB_ENABLE}")
 message(STATUS "NGRAPH_DYNAMIC_COMPONENTS_ENABLE:     ${NGRAPH_DYNAMIC_COMPONENTS_ENABLE}")
+if (NGRAPH_CPU_ENABLE)
+    message(STATUS "NGRAPH_TBB_ENABLE:                    ${NGRAPH_TBB_ENABLE}")
+endif()
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
@@ -433,10 +442,6 @@ if (NGRAPH_DISTRIBUTED_ENABLE)
     elseif (NGRAPH_DISTRIBUTED_OMPI_ENABLE)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_DISTRIBUTED_OMPI_ENABLE")
     endif()
-endif()
-
-if (NOT DEFINED NGRAPH_TBB_ENABLE)
-    set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
 endif()
 
 # Since UNIX and APPLE support Bash we can use a Bash script to do the clang-format functions
