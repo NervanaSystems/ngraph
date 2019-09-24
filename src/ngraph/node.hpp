@@ -437,6 +437,14 @@ namespace ngraph
         void remove_provenance_tag(const std::string& tag);
         /// \brief Add node to additional nodes that receive tags
         void add_provenance_group_member(const std::shared_ptr<Node>& node);
+        /// \brief Remove node to additional nodes that receive tags
+        void remove_provenance_group_member(const std::shared_ptr<Node>& node);
+        /// \brief Replace current_node with replacement_node and transfer tags
+        void replace_provenance_group_member(const std::shared_ptr<Node>& current_node,
+                                             const std::shared_ptr<Node>& replacement_node);
+        /// \return Provenance group nodes
+        const std::set<std::shared_ptr<Node>>& get_provenance_group_members() const;
+
         /// \brief Add all nodes between this node and nodes in base as additional nodes to receive
         /// provenance tags.
         std::shared_ptr<Node> add_provenance_group_members_above(const OutputVector& base);

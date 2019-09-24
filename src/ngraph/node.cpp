@@ -328,6 +328,30 @@ void Node::add_provenance_group_member(const shared_ptr<Node>& node)
     m_provenance_group.insert(node);
 }
 
+void Node::remove_provenance_group_member(const shared_ptr<Node>& node)
+{
+    m_provenance_group.erase(node);
+}
+
+void Node::replace_provenance_group_member(const shared_ptr<Node>& current_node,
+                                           const shared_ptr<Node>& replacement_node)
+{
+    // Catch up with the current state of the group
+    replacement_node->add_provenance_tags(get_provenance_tags());
+    if (current_node != nullptr)
+    {
+        remove_provenance_group_member(current_node);
+        // Catch up with what was added to the current node
+        replacement_node->add_provenance_tags(current_node->get_provenance_tags());
+    }
+    add_provenance_group_member(replacement_node);
+}
+
+const set<shared_ptr<Node>>& Node::get_provenance_group_members() const
+{
+    return m_provenance_group;
+}
+
 shared_ptr<Node> Node::add_provenance_group_members_above(const OutputVector& base)
 {
     set<Node*> base_set;
