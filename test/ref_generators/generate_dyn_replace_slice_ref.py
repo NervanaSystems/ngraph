@@ -610,7 +610,6 @@ def main():
     for dt in ['int32','int64','float32','uint32']:
         t.set_dtype(dt)
 
-        t.set_shape((4,))
         t[np.newaxis,3:0:-1] = None
         t[...] = None
         t[1:3] = None
@@ -710,10 +709,10 @@ def main():
     t[1, ..., np.newaxis, 2:1:-1] = None
     t[np.newaxis, np.newaxis, 2:1:-1, ...] = None
 
-    t.set_shape((9, 10, 12, 2, 3))
+    t.set_shape((3, 3, 3, 2, 3))
     t[6:1:-2, ..., 1:2, 2:1:-1] = None
 
-    t.set_shape((9, 10, 12, 2, 3))
+    t.set_shape((3, 3, 3, 2, 3))
     t[..., 1:2, 2:1:-1] = None
 
     t.set_dtype('int32')
