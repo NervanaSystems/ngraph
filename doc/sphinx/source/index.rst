@@ -23,7 +23,7 @@ nGraph Compiler stack
 
 .. only:: release
 
-  nGraph Compiler stack documentation for version |version|.
+   nGraph Compiler stack documentation for version |version|.
 
 
    Documentation for the latest (master) development branch can be found 
