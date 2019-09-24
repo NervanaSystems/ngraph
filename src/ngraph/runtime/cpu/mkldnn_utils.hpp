@@ -204,13 +204,15 @@ namespace ngraph
                     // Data
                     if (node->get_input_element_type(0) != element::f32 &&
                         node->get_input_element_type(0) != element::i8 &&
-                        node->get_input_element_type(0) != element::u8)
+                        node->get_input_element_type(0) != element::u8 &&
+                        node->get_input_element_type(0) != element::bf16)
                     {
                         return false;
                     }
                     // Weights
                     if (node->get_input_element_type(1) != element::f32 &&
-                        node->get_input_element_type(1) != element::i8)
+                        node->get_input_element_type(1) != element::i8 &&
+                        node->get_input_element_type(1) != element::bf16)
                     {
                         return false;
                     }
@@ -218,7 +220,8 @@ namespace ngraph
                     if (node->get_output_element_type(0) != element::f32 &&
                         node->get_output_element_type(0) != element::i8 &&
                         node->get_output_element_type(0) != element::u8 &&
-                        node->get_output_element_type(0) != element::i32)
+                        node->get_output_element_type(0) != element::i32 &&
+                        node->get_output_element_type(0) != element::bf16)
                     {
                         return false;
                     }
