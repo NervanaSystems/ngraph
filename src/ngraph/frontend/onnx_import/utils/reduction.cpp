@@ -32,13 +32,17 @@ namespace ngraph
                 AxisSet get_reduction_axes(const Node& node)
                 {
                     auto reduction_axes =
-                        node.get_attribute_value<std::vector<std::size_t>>("axes", {});
+                        node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
+                    std::vector<std::size_t> valid_reduction_axes = common::validate_axes(
+                        node, reduction_axes, node.get_ng_inputs().at(0)->get_shape().size());
+
                     if (reduction_axes.empty())
                     {
-                        reduction_axes = onnx_import::common::get_monotonic_range<std::size_t>(
-                            node.get_ng_inputs().at(0)->get_shape().size());
+                        valid_reduction_axes =
+                            onnx_import::common::get_monotonic_range<std::size_t>(
+                                node.get_ng_inputs().at(0)->get_shape().size());
                     }
-                    return AxisSet{reduction_axes};
+                    return AxisSet{valid_reduction_axes};
                 }
             } // namespace  detail
 

@@ -285,7 +285,7 @@ TEST(type_prop, reshape_v1_arg_rank_static_pattern_zero)
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 0, 2, 8});
     auto pattern = op::Constant::create(element::i64, Shape{4}, {1, 2, 0, 32});
 
-    auto reshape_v1_static = make_shared<op::v1::Reshape>(arg, pattern);
+    auto reshape_v1_static = make_shared<op::v1::Reshape>(arg, pattern, true);
     EXPECT_EQ(reshape_v1_static->get_output_shape(0), Shape({1, 2, 2, 32}));
 
     auto dynamic_arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());

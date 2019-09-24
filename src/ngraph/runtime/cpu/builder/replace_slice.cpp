@@ -43,6 +43,7 @@ namespace ngraph
 
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
+                auto out_shape = out[0].get_shape();
 
                 auto strides = replace_slice->get_strides();
                 auto lower_bounds = replace_slice->get_lower_bounds();
@@ -71,15 +72,15 @@ namespace ngraph
                     return;
                 }
 
-                if (strided)
+                if (strided && is_optimized_et(args[0].get_element_type()))
                 {
                     std::function<decltype(runtime::cpu::kernel::strided_replace_slice<float, 2>)>
                         kernel;
 
-                    SELECT_KERNEL_BY_RANK(kernel,
-                                          args[0].get_element_type(),
-                                          arg0_shape.size(),
-                                          runtime::cpu::kernel::strided_replace_slice)
+                    SELECT_ETS_AND_RANK7(kernel,
+                                         args[0].get_element_type(),
+                                         arg0_shape.size(),
+                                         runtime::cpu::kernel::strided_replace_slice);
 
                     auto functor = [&,
                                     kernel,
@@ -104,14 +105,14 @@ namespace ngraph
                     };
                     functors.emplace_back(functor);
                 }
-                else
+                else if (is_optimized_et(args[0].get_element_type()))
                 {
                     std::function<decltype(runtime::cpu::kernel::replace_slice<float, 2>)> kernel;
 
-                    SELECT_KERNEL_BY_RANK(kernel,
-                                          args[0].get_element_type(),
-                                          arg0_shape.size(),
-                                          runtime::cpu::kernel::replace_slice)
+                    SELECT_ETS_AND_RANK7(kernel,
+                                         args[0].get_element_type(),
+                                         arg0_shape.size(),
+                                         runtime::cpu::kernel::replace_slice);
 
                     auto functor = [&,
                                     kernel,
@@ -129,6 +130,34 @@ namespace ngraph
                                arg1_shape,
                                lower_bounds,
                                ectx->arena);
+                    };
+                    functors.emplace_back(functor);
+                }
+                else
+                {
+                    std::function<decltype(runtime::cpu::kernel::ref_replace_slice<float>)> kernel;
+                    SELECT_KERNEL(kernel,
+                                  args[0].get_element_type(),
+                                  runtime::cpu::kernel::ref_replace_slice);
+                    auto functor = [&,
+                                    kernel,
+                                    arg1_shape,
+                                    out_shape,
+                                    lower_bounds,
+                                    upper_bounds,
+                                    strides,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /*ectx*/) {
+                        kernel(ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[arg1_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
+                               arg1_shape,
+                               lower_bounds,
+                               upper_bounds,
+                               strides,
+                               out_shape);
                     };
                     functors.emplace_back(functor);
                 }
