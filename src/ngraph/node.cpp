@@ -320,6 +320,71 @@ void Node::set_placement_index(size_t placement)
     m_placement_index = placement;
 }
 
+void Node::add_provenance_group_member(const shared_ptr<Node>& node)
+{
+    m_provenance_group.insert(node);
+}
+
+shared_ptr<Node> Node::add_provenance_group_members_above(const OutputVector& base)
+{
+    set<Node*> base_set;
+    for (auto& output : base)
+    {
+        base_set.insert(output.get_node());
+    }
+    vector<Node*> todo;
+    for (auto value : input_values())
+    {
+        todo.push_back(value.get_node());
+    }
+    while (!todo.empty())
+    {
+        Node* node = todo.back();
+        todo.pop_back();
+        if (base_set.count(node) > 0)
+        {
+            continue;
+        }
+        add_provenance_group_member(node->shared_from_this());
+        for (auto input : node->inputs())
+        {
+            if (0 ==
+                node->m_provenance_group.count(input.get_source_output().get_node_shared_ptr()))
+            {
+                todo.push_back(input.get_source_output().get_node());
+            }
+        }
+        base_set.insert(node);
+    }
+    return shared_from_this();
+}
+
+void Node::add_provenance_tags_above(const OutputVector& base,
+                                     const std::unordered_set<std::string>& tag_set)
+{
+    set<Node*> base_set;
+    for (auto& output : base)
+    {
+        base_set.insert(output.get_node());
+    }
+    vector<Node*> todo{this};
+    while (!todo.empty())
+    {
+        Node* node = todo.back();
+        todo.pop_back();
+        if (base_set.count(node) > 0)
+        {
+            continue;
+        }
+        node->add_provenance_tags(tag_set);
+        for (auto value : node->input_values())
+        {
+            todo.push_back(value.get_node());
+        }
+        base_set.insert(node);
+    }
+}
+
 const std::unordered_set<std::string>& Node::get_provenance_tags() const
 {
     return m_provenance_tags;
@@ -328,6 +393,10 @@ const std::unordered_set<std::string>& Node::get_provenance_tags() const
 void Node::add_provenance_tag(const std::string& tag)
 {
     m_provenance_tags.insert(tag);
+    for (auto node : m_provenance_group)
+    {
+        node->add_provenance_tag(tag);
+    }
 }
 
 void Node::remove_provenance_tag(const std::string& tag)

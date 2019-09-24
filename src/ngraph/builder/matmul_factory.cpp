@@ -80,7 +80,9 @@ NodeVector builder::MatmulFactory::make_matmul_op()
     // Multiply two tensors where both of them has rank lower equal 2.
     if (left_rank <= 2 && right_rank <= 2)
     {
-        return {make_dot(left, right).get_node_shared_ptr()};
+        return {make_dot(left, right)
+                    .get_node_shared_ptr()
+                    ->add_provenance_group_members_above(m_inputs)};
     }
 
     // Second case:
@@ -135,7 +137,7 @@ NodeVector builder::MatmulFactory::make_matmul_op()
 
     if (left_shape.size() <= 3 && right_shape.size() <= 3)
     {
-        return {result};
+        return {result->add_provenance_group_members_above(m_inputs)};
     }
     // Expand result _stack of matrices_ axes to get expected result shape.
     else
@@ -144,7 +146,8 @@ NodeVector builder::MatmulFactory::make_matmul_op()
         Shape result_shape(next(begin(shape)), end(shape));
         result_shape.insert(
             begin(result_shape), begin(left_shape), next(begin(left_shape), left_shape.size() - 2));
-        return {make_shared<op::Reshape>(result, get_default_order(shape.size()), result_shape)};
+        return {make_shared<op::Reshape>(result, get_default_order(shape.size()), result_shape)
+                    ->add_provenance_group_members_above(m_inputs)};
     }
 }
 
