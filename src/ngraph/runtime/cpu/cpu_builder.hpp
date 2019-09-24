@@ -31,6 +31,7 @@
                    const std::vector<TensorViewWrapper>& out)
 
 #define BUILD_UNARY_ELEMWISE_FUNCTOR(OP)                                                           \
+    (void)node;                                                                                    \
     if (args[0].get_element_type() == element::bf16)                                               \
     {                                                                                              \
         auto& functors = external_function->get_functors();                                        \
@@ -74,6 +75,7 @@
     }
 
 #define BUILD_BINARY_ELEMWISE_FUNCTOR(OP)                                                          \
+    (void)node;                                                                                    \
     if (args[0].get_element_type() == element::bf16)                                               \
     {                                                                                              \
         auto& functors = external_function->get_functors();                                        \
