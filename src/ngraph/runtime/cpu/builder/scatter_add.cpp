@@ -61,18 +61,18 @@ namespace ngraph
                 auto out_shape = out[0].get_shape();
                 auto element_type = args[0].get_element_type();
 
-                if (is_int64)
+                if (is_int64 && is_optimized_et(args[0].get_element_type()))
                 {
                     if (inputs_shape.size() <= 3 && updates_shape.size() <= 5)
                     {
                         std::function<decltype(runtime::cpu::kernel::scatter_add_i64<float, 2, 2>)>
                             kernel;
 
-                        SELECT_KERNEL_BY_2RANKS(kernel,
-                                                args[0].get_element_type(),
-                                                inputs_shape.size(),
-                                                updates_shape.size(),
-                                                runtime::cpu::kernel::scatter_add_i64)
+                        SELECT_RANK35_ET4(kernel,
+                                          args[0].get_element_type(),
+                                          inputs_shape.size(),
+                                          updates_shape.size(),
+                                          runtime::cpu::kernel::scatter_add_i64);
 
                         auto functor = [&,
                                         kernel,
@@ -100,18 +100,18 @@ namespace ngraph
                         throw ngraph_error("Unsupported ranks in CPU Builder for ScatterAdd");
                     }
                 }
-                else
+                else if (is_optimized_et(args[0].get_element_type()))
                 {
                     if (inputs_shape.size() <= 3 && updates_shape.size() <= 5)
                     {
                         std::function<decltype(runtime::cpu::kernel::scatter_add_i32<float, 2, 2>)>
                             kernel;
 
-                        SELECT_KERNEL_BY_2RANKS(kernel,
-                                                args[0].get_element_type(),
-                                                inputs_shape.size(),
-                                                updates_shape.size(),
-                                                runtime::cpu::kernel::scatter_add_i32)
+                        SELECT_RANK35_ET4(kernel,
+                                          args[0].get_element_type(),
+                                          inputs_shape.size(),
+                                          updates_shape.size(),
+                                          runtime::cpu::kernel::scatter_add_i32);
 
                         auto functor = [&,
                                         kernel,
@@ -138,6 +138,67 @@ namespace ngraph
                     {
                         throw ngraph_error("Unsupported ranks in CPU Builder for ScatterAdd");
                     }
+                }
+                else if (is_int64)
+                {
+                    std::function<decltype(runtime::cpu::kernel::ref_scatter_add_i64<float>)>
+                        kernel;
+                    SELECT_KERNEL(kernel,
+                                  args[0].get_element_type(),
+                                  runtime::cpu::kernel::ref_scatter_add_i64);
+
+                    auto functor = [&,
+                                    kernel,
+                                    inputs_shape,
+                                    indices_shape,
+                                    updates_shape,
+                                    out_shape,
+                                    inputs_buffer_index,
+                                    indices_buffer_index,
+                                    updates_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /*ectx*/) {
+                        kernel(ctx->buffer_data[inputs_buffer_index],
+                               ctx->buffer_data[indices_buffer_index],
+                               ctx->buffer_data[updates_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
+                               inputs_shape,
+                               indices_shape,
+                               updates_shape,
+                               out_shape);
+                    };
+                    functors.emplace_back(functor);
+                }
+
+                else
+                {
+                    std::function<decltype(runtime::cpu::kernel::ref_scatter_add_i32<float>)>
+                        kernel;
+                    SELECT_KERNEL(kernel,
+                                  args[0].get_element_type(),
+                                  runtime::cpu::kernel::ref_scatter_add_i32);
+
+                    auto functor = [&,
+                                    kernel,
+                                    inputs_shape,
+                                    indices_shape,
+                                    updates_shape,
+                                    out_shape,
+                                    inputs_buffer_index,
+                                    indices_buffer_index,
+                                    updates_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /*ectx*/) {
+                        kernel(ctx->buffer_data[inputs_buffer_index],
+                               ctx->buffer_data[indices_buffer_index],
+                               ctx->buffer_data[updates_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
+                               inputs_shape,
+                               indices_shape,
+                               updates_shape,
+                               out_shape);
+                    };
+                    functors.emplace_back(functor);
                 }
             }
 

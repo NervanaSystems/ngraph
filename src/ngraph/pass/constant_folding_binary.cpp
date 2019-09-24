@@ -305,11 +305,11 @@ shared_ptr<op::Constant> fold_constant_binary_helper(const element::Type& et_out
 }
 bool is_supported_binary_op(std::shared_ptr<Node> n)
 {
-    return (n->is_type<op::Add>() || n->is_type<op::And>() || n->is_type<op::Divide>() ||
-            n->is_type<op::Equal>() || n->is_type<op::Greater>() || n->is_type<op::GreaterEq>() ||
-            n->is_type<op::Less>() || n->is_type<op::LessEq>() || n->is_type<op::Maximum>() ||
-            n->is_type<op::Minimum>() || n->is_type<op::Multiply>() || n->is_type<op::NotEqual>() ||
-            n->is_type<op::Or>() || n->is_type<op::Subtract>() || n->is_type<op::Xor>());
+    return (is_type<op::Add>(n) || is_type<op::And>(n) || is_type<op::Divide>(n) ||
+            is_type<op::Equal>(n) || is_type<op::Greater>(n) || is_type<op::GreaterEq>(n) ||
+            is_type<op::Less>(n) || is_type<op::LessEq>(n) || is_type<op::Maximum>(n) ||
+            is_type<op::Minimum>(n) || is_type<op::Multiply>(n) || is_type<op::NotEqual>(n) ||
+            is_type<op::Or>(n) || is_type<op::Subtract>(n) || is_type<op::Xor>(n));
 }
 
 void pass::ConstantFolding::construct_constant_binary()

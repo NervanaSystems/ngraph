@@ -556,7 +556,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
                 }
             }
             // process output tensors
-            for (auto i = 0; i < node->get_output_size(); i++)
+            for (size_t i = 0; i < node->get_output_size(); i++)
             {
                 auto output_tensor = &node->get_outputs().at(i).get_tensor();
                 // not in place, create a new set and insert into the map

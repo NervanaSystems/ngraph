@@ -18,7 +18,7 @@
 
 #include <random>
 
-#include "ngraph/state/rng_state.hpp"
+#include "ngraph/state/bernoulli_rng_state.hpp"
 
 namespace ngraph
 {
@@ -27,7 +27,10 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            void generate_mask(T* out, size_t count, ngraph::RNGState* rng_state, bool training)
+            void generate_mask(T* out,
+                               size_t count,
+                               ngraph::BernoulliRNGState* rng_state,
+                               bool training)
             {
                 auto& gen = rng_state->get_generator();
                 auto& bd = rng_state->get_distribution();

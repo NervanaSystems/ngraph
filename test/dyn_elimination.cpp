@@ -43,8 +43,7 @@ TEST(dyn_elimination, transpose)
     ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
 
-    auto new_reshape =
-        std::dynamic_pointer_cast<op::Reshape>(f->get_results().at(0)->get_argument(0));
+    auto new_reshape = as_type_ptr<op::Reshape>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_reshape);
 
     ASSERT_EQ(new_reshape->get_input_order(), (AxisVector{2, 3, 1, 0}));
@@ -76,8 +75,7 @@ TEST(dyn_elimination, transpose_dyn_shape)
     ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 1);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_transpose =
-        std::dynamic_pointer_cast<op::Transpose>(f->get_results().at(0)->get_argument(0));
+    auto new_transpose = as_type_ptr<op::Transpose>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_transpose);
 
     ASSERT_EQ(new_transpose->get_output_element_type(0), element::boolean);
@@ -226,7 +224,7 @@ TEST(dyn_elimination, range)
     ASSERT_EQ(count_ops_of_type<op::Range>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto replacement = dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto replacement = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
 
     ASSERT_NE(replacement, nullptr);
     ASSERT_EQ(replacement->get_element_type(), element::i64);
@@ -257,7 +255,7 @@ TEST(dyn_elimination, range_f64)
     ASSERT_EQ(count_ops_of_type<op::Range>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto replacement = dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto replacement = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
 
     ASSERT_NE(replacement, nullptr);
     ASSERT_EQ(replacement->get_element_type(), element::f64);

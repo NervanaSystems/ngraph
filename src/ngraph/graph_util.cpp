@@ -152,14 +152,20 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     {
         auto common_args = ngraph::find_common_args(target, replacement);
 
-        auto set_replacement_prov = [replacement](std::shared_ptr<Node> node) {
-            replacement->merge_provenance_tags_from(node);
+        std::set<string> removed_subgraph_tags;
+
+        auto set_replacement_prov = [&removed_subgraph_tags](std::shared_ptr<Node> node) {
+            for (auto tag : node->get_provenance_tags())
+            {
+                removed_subgraph_tags.insert(tag);
+            }
         };
 
         traverse_nodes({target}, set_replacement_prov, false, common_args);
+        replacement->add_provenance_tags(removed_subgraph_tags);
 
-        auto set_prov_new_nodes = [replacement](std::shared_ptr<Node> node) {
-            node->merge_provenance_tags_from(replacement);
+        auto set_prov_new_nodes = [&removed_subgraph_tags](std::shared_ptr<Node> node) {
+            node->add_provenance_tags(removed_subgraph_tags);
         };
 
         traverse_nodes({replacement}, set_prov_new_nodes, false, common_args);
