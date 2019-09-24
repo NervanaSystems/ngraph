@@ -305,6 +305,7 @@ set(MULTI_TEST_SRC
     backend/slice.in.cpp
     backend/softmax.in.cpp
     backend/sqrt.in.cpp
+    backend/strided_slice.in.cpp
     backend/subtract.in.cpp
     backend/sum.in.cpp
     backend/tan.in.cpp
