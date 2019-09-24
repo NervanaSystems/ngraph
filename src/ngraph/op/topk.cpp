@@ -38,6 +38,7 @@ op::TopK::TopK(const Output<Node>& arg,
     , m_compute_max(compute_max)
     , m_sort(sort)
 {
+    add_provenance_group_member(input_value(1).get_node_shared_ptr());
     constructor_validate_and_infer_types();
 }
 
