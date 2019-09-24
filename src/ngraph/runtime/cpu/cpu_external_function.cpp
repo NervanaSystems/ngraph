@@ -1031,7 +1031,7 @@ using namespace ngraph::runtime;
                 writer.indent--;
                 writer << "});\n";
             }
-#endif          
+#endif
         }
     }
 
@@ -1071,7 +1071,7 @@ using namespace ngraph::runtime;
                << "->try_put(tbb::flow::continue_msg());\n";
         writer << "try { cg_ctx->tbb_graph->wait_for_all(); } catch(...) { throw; }\n";
     }
-#endif  
+#endif
     writer << "ctx->first_iteration = false;\n";
 
     writer.indent--;

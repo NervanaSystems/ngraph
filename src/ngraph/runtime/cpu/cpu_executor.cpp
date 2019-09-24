@@ -109,7 +109,7 @@ namespace ngraph
                         m_thread_pool_devices.push_back(
                             std::unique_ptr<Eigen::ThreadPoolDevice>(new Eigen::ThreadPoolDevice(
                                 m_thread_pools[i].get(), num_threads_per_pool)));
-#if defined(NGRAPH_TBB_ENABLE) 
+#if defined(NGRAPH_TBB_ENABLE)
                         m_tbb_arenas.emplace_back(1);
 #endif
                     }

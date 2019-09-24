@@ -72,7 +72,7 @@ namespace ngraph
                 std::vector<mkldnn::memory::desc*> mkldnn_scratchpad_mds;
                 AlignedBuffer* scratchpad_buffer;
                 std::vector<char*> mkldnn_workspaces;
-#if defined(NGRAPH_TBB_ENABLE)  
+#if defined(NGRAPH_TBB_ENABLE)
                 tbb::flow::graph* G;
                 tbb::global_control* c;
 #endif
