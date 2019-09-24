@@ -86,7 +86,6 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
     {
     case OP_TYPEID::DynReshape:
     {
-        auto tmp = dynamic_cast<const op::v0::DynReshape*>(node.get());
         auto zero_flag = false;
         auto replacement_node = make_shared<op::v1::Reshape>(
             node->input(0).get_source_output(), node->input(1).get_source_output(), zero_flag);
