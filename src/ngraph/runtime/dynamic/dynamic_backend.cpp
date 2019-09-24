@@ -24,6 +24,8 @@
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/dyn_elimination.hpp"
+//TODO [REMOVE]
+#include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/shape_relevance.hpp"
 #include "ngraph/specialize_function.hpp"
@@ -170,6 +172,8 @@ bool runtime::dynamic::DynamicExecutable::call(
     }
 
     pass::Manager passes;
+    //TODO [REMOVE] FUSED PASS SHOULD BE PERFORMED BEFORE ConstantFolding and DynElimination?
+    passes.register_pass<pass::FusedOpDecomposition>();
     passes.register_pass<pass::ConstantFolding>();
     passes.register_pass<pass::DynElimination>();
     passes.set_per_pass_validation(false);
@@ -182,6 +186,8 @@ bool runtime::dynamic::DynamicExecutable::call(
     // and DE into one pass.
     size_t num_dyn_nodes_last_pass = std::numeric_limits<size_t>::max();
 
+    //TODO [REMOVE] Diagnostic log
+    std::cout << "Before run dynamic passes \n";
     while (num_dyn_nodes_last_pass != 0)
     {
         passes.run_passes(clone);
@@ -194,7 +200,8 @@ bool runtime::dynamic::DynamicExecutable::call(
 
         num_dyn_nodes_last_pass = num_dyn_nodes_this_pass;
     }
-
+    //TODO [REMOVE] Diagnostic log
+    std::cout << "After run dynamic passes \n";
     pass::Manager pass_val;
     pass_val.register_pass<pass::Validate>();
     pass_val.run_passes(clone);

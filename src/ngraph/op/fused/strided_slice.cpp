@@ -194,7 +194,8 @@ NodeVector op::StridedSlice::decompose_op() const
                                       convert_mask_to_axis_set(m_shrink_axis_mask),
                                       convert_mask_to_axis_set(m_ellipsis_mask));
     }
-
+    //TODO [REMOVE] DIAGNOSTIC LOG
+    std::cout << "StridedSlice decompose ends with: " << strided_slice_result.get_node_shared_ptr()->get_name() << "\n";
     return as_node_vector({strided_slice_result});
 }
 

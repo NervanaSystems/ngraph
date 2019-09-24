@@ -57,8 +57,17 @@ void op::util::FusedOp::validate_and_infer_types()
             {
                 set_output_size(i + 1);
             }
-            set_output_type(
-                i, output_node->get_output_element_type(j), output_node->get_output_shape(j));
+            //TODO [REMOVE] How to deal with dynamic output?
+            if (output_node->get_output_partial_shape(j).is_static())
+            {
+                set_output_type(
+                    i, output_node->get_output_element_type(j), output_node->get_output_shape(j));
+            }
+            else
+            {
+                set_output_type(
+                    i, output_node->get_output_element_type(j), PartialShape::dynamic());
+            }
         }
     }
 

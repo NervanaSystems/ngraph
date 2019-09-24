@@ -142,6 +142,8 @@ void pass::DynElimination::construct_dyn_broadcast()
 
 void pass::DynElimination::construct_dyn_slice()
 {
+    //TODO [REMOVE] Diagnostic log
+    std::cout << "construct_dyn_slice begins \n";
     auto data_arg_label = make_shared<pattern::op::Label>(element::f32, Shape{1, 2, 3});
     auto begins_arg_label =
         make_shared<pattern::op::Label>(element::i64, Shape{3}, pattern::has_class<op::Constant>());
@@ -174,6 +176,8 @@ void pass::DynElimination::construct_dyn_slice()
             ends_arg->get_element_type() != element::i64 ||
             strides_arg->get_element_type() != element::i64)
         {
+            //TODO [REMOVE] Diagnostic log
+            std::cout << "construct_dyn_slice retuns false \n";
             return false;
         }
 
@@ -205,6 +209,8 @@ void pass::DynElimination::construct_dyn_slice()
         }
 
         replace_node(m.get_match_root(), replacement);
+        //TODO [REMOVE] Diagnostic log
+        std::cout << "construct_dyn_slice node replaced \n";
         return true;
     };
 
