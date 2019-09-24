@@ -25,8 +25,9 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v1::Reshape::type_info;
 
-op::v1::Reshape::Reshape(const Output<Node>& arg, const Output<Node>& pattern)
+op::v1::Reshape::Reshape(const Output<Node>& arg, const Output<Node>& pattern, bool zero_flag)
     : Op({arg, pattern})
+    , m_zero_flag(zero_flag)
 {
     constructor_validate_and_infer_types();
 }
@@ -68,7 +69,7 @@ void op::v1::Reshape::validate_and_infer_types()
                               negative_dims,
                               ")");
 
-        if (!zero_dims && !negative_dims)
+        if (!(zero_dims && m_zero_flag) && !negative_dims)
         {
             set_output_type(0, get_input_element_type(0), const_shape->get_shape_val());
         }
@@ -80,7 +81,9 @@ void op::v1::Reshape::validate_and_infer_types()
                            out_shape_val.end(),
                            partial_shape.begin(),
                            [&](const int64_t& v) {
-                               return (v < 0) ? Dimension() : (v == 0) ? Dimension() : Dimension(v);
+                               return (v < 0)
+                                          ? Dimension()
+                                          : ((v == 0 && m_zero_flag) ? Dimension() : Dimension(v));
                            });
 
             if (get_input_partial_shape(0).is_static())
@@ -92,7 +95,7 @@ void op::v1::Reshape::validate_and_infer_types()
                 size_t input_elements = shape_size(input_shape);
                 for (size_t i = 0; i < static_cast<size_t>(output_rank); i++)
                 {
-                    if (out_shape_val[i] == 0)
+                    if (out_shape_val[i] == 0 && m_zero_flag)
                     {
                         // Copy input_shape[i] for zero values
                         NODE_VALIDATION_CHECK(
@@ -147,11 +150,11 @@ void op::v1::Reshape::validate_and_infer_types()
 shared_ptr<Node> op::v1::Reshape::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<v1::Reshape>(new_args.at(0), new_args.at(1));
+    return make_shared<v1::Reshape>(new_args.at(0), new_args.at(1), m_zero_flag);
 }
 
 void op::v1::Reshape::generate_adjoints(autodiff::Adjoints& /* adjoints */,
                                         const NodeVector& /* deltas */)
 {
-    throw ngraph_error("generate_adjoints not implemented for v1::Reshape");
+    throw ngraph_error("generate_adjoints not implemented for Reshape");
 }
