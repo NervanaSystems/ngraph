@@ -30,7 +30,6 @@
                    const std::vector<TensorViewWrapper>& args,                                     \
                    const std::vector<TensorViewWrapper>& out)
 
-
 #define BUILD_UNARY_ELEMWISE_FUNCTOR(OP)                                                           \
     if (args[0].get_element_type() == element::bf16)                                               \
     {                                                                                              \
@@ -73,7 +72,6 @@
         };                                                                                         \
         functors.emplace_back(functor);                                                            \
     }
-
 
 #define BUILD_BINARY_ELEMWISE_FUNCTOR(OP)                                                          \
     if (args[0].get_element_type() == element::bf16)                                               \
