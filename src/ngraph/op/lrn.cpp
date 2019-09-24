@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::LRN::type_name{"LRN"};
+constexpr NodeTypeInfo op::LRN::type_info;
 
 op::LRN::LRN(const Output<Node>& arg, double alpha, double beta, double bias, size_t size)
     : LRN(arg, op::Constant::create(element::i64, Shape{1}, {1}), alpha, beta, bias, size)
@@ -47,7 +47,7 @@ AxisSet op::LRN::get_reduction_axes() const
 {
     AxisSet axes{1}; // channel axis as default
     auto axes_input_node = input_value(1).get_node_shared_ptr();
-    if (auto const_op = dynamic_pointer_cast<op::Constant>(axes_input_node))
+    if (auto const_op = as_type_ptr<op::Constant>(axes_input_node))
     {
         axes = const_op->get_axis_set_val();
     }
@@ -85,8 +85,7 @@ void op::LRN::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(
         this,
-        static_cast<size_t>(axes_shape[0]) >= 0 &&
-            static_cast<size_t>(axes_shape[0]) <= static_cast<size_t>(input_shape_rank),
+        static_cast<size_t>(axes_shape[0]) <= static_cast<size_t>(input_shape_rank),
         "Number of elements of axes must be >= 0 and <= argument rank (axes_shape[0]: ",
         axes_shape[0],
         ").");
@@ -123,7 +122,7 @@ shared_ptr<Node> op::LRN::copy_with_new_args(const NodeVector& new_args) const
     return make_shared<op::LRN>(new_args.at(0), new_args.at(1), m_alpha, m_beta, m_bias, m_size);
 }
 
-void op::LRN::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::LRN::generate_adjoints(autodiff::Adjoints& /* adjoints */, const NodeVector& /* deltas */)
 {
     throw ngraph_error("NYI");
 }

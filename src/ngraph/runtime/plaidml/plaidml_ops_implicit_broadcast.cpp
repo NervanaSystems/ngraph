@@ -30,7 +30,7 @@ namespace ngraph
     }
 }
 
-const std::string ngraph::runtime::plaidml::op::ImplicitBroadcast::type_name{"ImplicitBroadcast"};
+constexpr ngraph::NodeTypeInfo ngraph::runtime::plaidml::op::ImplicitBroadcast::type_info;
 
 ngraph::runtime::plaidml::op::ImplicitBroadcast::ImplicitBroadcast(const Output<Node>& input,
                                                                    const Shape& shape)

@@ -14,15 +14,18 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include <random>
 
-namespace ngraph
+#include "bernoulli_rng_state.hpp"
+#include "except.hpp"
+
+using namespace std;
+using namespace ngraph;
+
+void ngraph::BernoulliRNGState::activate()
 {
-    namespace runtime
-    {
-        namespace interpreter
-        {
-            void static_initialize();
-        }
-    }
+}
+
+void ngraph::BernoulliRNGState::deactivate()
+{
 }

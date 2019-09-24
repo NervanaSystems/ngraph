@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const std::string runtime::cpu::op::ConvertLayout::type_name{"ConvertLayout"};
+constexpr NodeTypeInfo runtime::cpu::op::ConvertLayout::type_info;
 
 runtime::cpu::op::ConvertLayout::ConvertLayout(
     const Output<Node>& arg, const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)

@@ -67,14 +67,14 @@ namespace ngraph
             // For a scalar, nothing to do.
             template <typename T, size_t N>
             typename std::enable_if<(N == 0), void>::type
-                fill_shape(Shape& shape, const NestedInitializerList<T, N>& inits)
+                fill_shape(Shape& /* shape */, const NestedInitializerList<T, N>& /* inits */)
             {
             }
 
             // Check that the inits match the shape
             template <typename T, size_t N>
             typename std::enable_if<(N == 0), void>::type
-                check_shape(const Shape& shape, const NestedInitializerList<T, N>& inits)
+                check_shape(const Shape& shape, const NestedInitializerList<T, N>& /* inits */)
             {
                 if (shape.size() != 0)
                 {

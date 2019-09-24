@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Any::type_name{"Any"};
+constexpr NodeTypeInfo op::Any::type_info;
 
 op::Any::Any(const Output<Node>& arg, const AxisSet& reduction_axes)
     : LogicalReduction(arg, reduction_axes)

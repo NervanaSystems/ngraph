@@ -23,3 +23,4 @@ include_directories(
 )
 
 add_subdirectory(compiler)
+add_subdirectory(tools/ngraph-opt)
