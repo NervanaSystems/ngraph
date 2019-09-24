@@ -178,8 +178,7 @@ if (NGRAPH_CPU_ENABLE)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_ENABLE_CPU_CONV_AUTO")
     endif()
     if(NGRAPH_TBB_ENABLE)
-        set_source_files_properties(cpu_external_function.cpp
-            PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_TBB_ENABLE")
     endif()
     if (NGRAPH_HALIDE)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_HALIDE")
@@ -210,14 +209,16 @@ if (NGRAPH_CPU_ENABLE)
     target_compile_definitions(cpu_backend PRIVATE CPU_BACKEND_DLL_EXPORTS)
 
     add_dependencies(cpu_backend libmkldnn ext_eigen)
-    target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libtbb)
+    target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen)
     if (NGRAPH_JSON_ENABLE)
         target_link_libraries(cpu_backend PUBLIC libjson)
+    endif()
+    if (NGRAPH_TBB_ENABLE)
+        target_link_libraries(cpu_backend PUBLIC libtbb)
     endif()
     if (NOT NGRAPH_DEX_ONLY)
         target_link_libraries(cpu_backend PUBLIC codegen)
     endif()
-    target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
 
     if (NOT APPLE AND NOT MSVS)
         # CPU backend uses third-party libraries like Eigen that might be linked in and
@@ -229,12 +230,12 @@ if (NGRAPH_CPU_ENABLE)
     endif()
 
     if (NGRAPH_MLIR_ENABLE)
-        # TODO: can we get away without LLVM/MLIR include path. 
+        # TODO: can we get away without LLVM/MLIR include path.
         # Currently mlir backend compiler.hpp include LLVM/MLIR files
         get_directory_property(MLIR_LLVM_INCLUDEPATH
                                DIRECTORY ${NGRAPH_MLIR_SOURCE_DIR}
                                DEFINITION MLIR_LLVM_INCLUDEPATH)
-        
+
         message(STATUS "Building CPU backend with MLIR")
         message(STATUS "MLIR INCLUDE DIRS: ${MLIR_INCLUDE_PATHS}")
         message(STATUS "LLVM INCLUDE DIRS: ${MLIR_LLVM_INCLUDEPATH}")
@@ -245,6 +246,6 @@ if (NGRAPH_CPU_ENABLE)
         # and add them to cpu_backend here instead.
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_MLIR_ENABLE")
     endif()
-    
+
     install(TARGETS cpu_backend DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()
