@@ -654,23 +654,31 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
     std::vector<Dimension> dim;
 
     size_t input_shape_idx = 0;
-    for (size_t axis = 0; axis < begin.size(); ++axis) {
-        if (ellipsis_mask.count(axis)) { // add all dimensions hidden under the ellipsis mask if ellipsis mask is set
+    for (size_t axis = 0; axis < begin.size(); ++axis)
+    {
+        // add all dimensions hidden under the ellipsis mask if ellipsis mask is set
+        if (ellipsis_mask.count(axis))
+        {
             // only one bit in ellipsis mask is allowed
             int num_new_axis_after_ellipses = 0;
             int num_input_axis_before_ellipses = 0;
             for (size_t i = 0; i < axis; ++i)
             {
                 if (!new_axis_mask.count(i))
+                {
                     num_input_axis_before_ellipses++;
+                }
             }
-            for (size_t i = axis + 1; i < begin.size(); ++i) {
+            for (size_t i = axis + 1; i < begin.size(); ++i)
+            {
                 if (new_axis_mask.count(i))
+                {
                     num_new_axis_after_ellipses++;
+                }
             }
 
-            unsigned long num_input_axis_after_ellipses = (begin.size() - axis - num_new_axis_after_ellipses - 1); // -1 because it's a position of ellipses
-            unsigned long num_of_hidden_dims = input_shape.to_shape().size() - num_input_axis_after_ellipses
+            int64_t num_input_axis_after_ellipses = (begin.size() - axis - num_new_axis_after_ellipses - 1); // -1 because it's a position of ellipses
+            int64_t num_of_hidden_dims = input_shape.to_shape().size() - num_input_axis_after_ellipses
                     - num_input_axis_before_ellipses;
             for (size_t i = 0; i < num_of_hidden_dims; ++i)
             {
@@ -678,57 +686,87 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                 input_shape_idx++;
             }
         }
-        else {
-            if (new_axis_mask.count(axis)) { // add new single dimension if new_axis_mask is set
+        else
+        {
+            // add new single dimension if new_axis_mask is set
+            if (new_axis_mask.count(axis))
+            {
                 dim.emplace_back(1);
             }
-            else if (shrink_axis_mask.count(axis)) { // skip this dimension if shrink_axis_mask is set
+            // skip this dimension if shrink_axis_mask is set
+            else if (shrink_axis_mask.count(axis))
+            {
                 input_shape_idx++;
             }
-            else { // calculating dimension (begin, end, begin_mask, end_mask, stride)
+            // calculating dimension (begin, end, begin_mask, end_mask, stride)
+            else
+            {
                 int64_t lb = begin[axis];
                 int64_t ub = end[axis];
 
                 // convert negative indexes to positive
+                // take max for this case: if abs(lb) > input_shape[input_shape_idx],then after conversion lb < 0
+                // so according to tensorflow and numpy we just get 0
                 if (lb < 0)
+                {
                     lb = std::max(int64_t(input_shape[input_shape_idx]) + lb, 0l);
-                if (ub < 0)
-                    ub = std::max(int64_t(input_shape[input_shape_idx]) + ub, 0l);
+                }
 
-                // apply restrictions when begin or end values more/less than max/min possible values.
+                if (ub < 0)
+                {
+                    ub = std::max(int64_t(input_shape[input_shape_idx]) + ub, 0l);
+                }
+
+                // apply restrictions when begin or end values more than max possible values.
                 lb = std::min(int64_t(input_shape[input_shape_idx]), lb);
                 ub = std::min(int64_t(input_shape[input_shape_idx]), ub);
 
                 // set default value for stride or use given value
                 int64_t stride = 1;
                 if (strides.size() > axis)
+                {
                     stride = strides[axis];
+                }
 
                 NODE_VALIDATION_CHECK(node, stride != 0, "Stride must be non-zero");
 
                 int64_t dimension = 0;
-                if(stride < 0){
+                if(stride < 0)
+                {
                     // apply masks
                     if (begin_mask.count(axis))
+                    {
                         lb = int64_t(input_shape[input_shape_idx]) - 1;
+                    }
                     if (end_mask.count(axis))
+                    {
                         ub = -1;
+                    }
 
                     lb = std::min(lb, int64_t(input_shape[input_shape_idx]) - 1);
                     lb -= 1;// we always get 1st element, so we need decrease range
                     if (ub <= lb)
+                    {
                         dimension = (ub - lb) / stride + 1;
+                    }
                 }
-                else {
+                else
+                {
                     // apply masks
                     if (begin_mask.count(axis))
+                    {
                         lb = 0;
+                    }
                     if (end_mask.count(axis))
+                    {
                         ub = int64_t(input_shape[input_shape_idx]);
+                    }
 
                     lb += 1;// we always get 1st element, so we need decrease range
                     if (ub >= lb)
+                    {
                         dimension = (ub - lb) / stride + 1;
+                    }
                 }
 
                 dim.emplace_back(dimension);
@@ -737,7 +775,8 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
         }
     }
     // get remaining values
-    for (; input_shape_idx < input_shape.to_shape().size(); ++input_shape_idx) {
+    for (; input_shape_idx < input_shape.to_shape().size(); ++input_shape_idx)
+    {
         dim.emplace_back(input_shape[input_shape_idx]);
     }
 
