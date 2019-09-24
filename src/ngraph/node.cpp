@@ -93,7 +93,7 @@ std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i, bool for_
 {
     for (auto in : output(i).get_target_inputs())
     {
-        if (in.get_node()->is_type<op::GetOutputElement>())
+        if (is_type<op::GetOutputElement>(in.get_node()))
         {
             return in.get_node()->shared_from_this();
         }
@@ -105,7 +105,7 @@ std::shared_ptr<Node>
     Node::copy_with_new_inputs(const OutputVector& inputs,
                                const std::vector<std::shared_ptr<Node>>& control_dependencies) const
 {
-    bool for_get_output_element = is_type<op::GetOutputElement>();
+    bool for_get_output_element = is_type<op::GetOutputElement>(this);
     NodeVector args;
     for (const Output<Node>& input : inputs)
     {
@@ -259,11 +259,6 @@ const std::deque<descriptor::Output>& Node::get_outputs() const
     return m_outputs;
 }
 
-bool Node::is_parameter() const
-{
-    return is_type<op::Parameter>();
-}
-
 bool Node::is_output() const
 {
     return false;
@@ -328,7 +323,7 @@ void Node::set_placement_index(size_t placement)
     m_placement_index = placement;
 }
 
-const std::unordered_set<std::string>& Node::get_provenance_tags() const
+const std::set<std::string>& Node::get_provenance_tags() const
 {
     return m_provenance_tags;
 }
@@ -336,6 +331,14 @@ const std::unordered_set<std::string>& Node::get_provenance_tags() const
 void Node::add_provenance_tag(const std::string& tag)
 {
     m_provenance_tags.insert(tag);
+}
+
+void Node::add_provenance_tags(const std::set<std::string>& tag_set)
+{
+    for (auto tag : tag_set)
+    {
+        add_provenance_tag(tag);
+    }
 }
 
 void Node::remove_provenance_tag(const std::string& tag)

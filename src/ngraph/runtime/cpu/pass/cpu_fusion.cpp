@@ -93,7 +93,7 @@ static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
                            bool& transpose_w,
                            ngraph::Shape& shape_w)
 {
-    auto r_w = std::dynamic_pointer_cast<ngraph::op::Reshape>(reshape);
+    auto r_w = ngraph::as_type_ptr<ngraph::op::Reshape>(reshape);
 
     if (!r_w)
     {
@@ -330,7 +330,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
         Shape m_bn_variance_shape{pattern_map[variance_label]->get_shape()};
 
         // get epsilon value
-        auto eps_ptr = std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[eps_label]);
+        auto eps_ptr = as_type_ptr<ngraph::op::Constant>(pattern_map[eps_label]);
         if (!eps_ptr)
         {
             NGRAPH_DEBUG << "Eps must be a constant";
@@ -378,16 +378,13 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        auto conv_m =
-            std::dynamic_pointer_cast<ngraph::op::Convolution>(m.get_match_root()->get_argument(0));
-        auto bcast_m =
-            std::dynamic_pointer_cast<op::Broadcast>(m.get_match_root()->get_argument(1));
+        auto conv_m = as_type_ptr<ngraph::op::Convolution>(m.get_match_root()->get_argument(0));
+        auto bcast_m = as_type_ptr<op::Broadcast>(m.get_match_root()->get_argument(1));
 
         if (conv_m == nullptr)
         {
-            conv_m = std::dynamic_pointer_cast<ngraph::op::Convolution>(
-                m.get_match_root()->get_argument(1));
-            bcast_m = std::dynamic_pointer_cast<op::Broadcast>(m.get_match_root()->get_argument(0));
+            conv_m = as_type_ptr<ngraph::op::Convolution>(m.get_match_root()->get_argument(1));
+            bcast_m = as_type_ptr<op::Broadcast>(m.get_match_root()->get_argument(0));
         }
 
         if (!runtime::cpu::mkldnn_utils::can_use_mkldnn_conv<ngraph::op::Convolution>(conv_m.get()))
@@ -461,9 +458,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
         {
             for (auto delta_user : pattern_map[delta]->get_users())
             {
-                if (std::dynamic_pointer_cast<ngraph::op::Sum>(delta_user))
+                if (is_type<ngraph::op::Sum>(delta_user))
                 {
-                    auto bias = std::dynamic_pointer_cast<ngraph::op::Sum>(delta_user);
+                    auto bias = as_type_ptr<ngraph::op::Sum>(delta_user);
                     auto bias_shape = bias->get_shape();
                     bool flag = false;
                     if (bias_shape.size() > 1)
@@ -675,7 +672,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
         }
 
         std::shared_ptr<Node> bn_relu;
-        if (auto bn_inference = std::dynamic_pointer_cast<ngraph::op::BatchNormInference>(bn_match))
+        if (auto bn_inference = as_type_ptr<ngraph::op::BatchNormInference>(bn_match))
         {
             if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(bn_inference.get()))
             {
@@ -792,7 +789,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_infer_relu_with
         }
 
         std::vector<size_t> vec{0};
-        for (auto i = 2; i < pattern_map[input]->output(0).get_shape().size(); i++)
+        for (size_t i = 2; i < pattern_map[input]->output(0).get_shape().size(); i++)
         {
             vec.push_back(i);
         }
@@ -813,7 +810,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_infer_relu_with
         auto new_beta = std::make_shared<ngraph::op::Add>(new_multi, pattern_map[broadcast2_input]);
 
         std::shared_ptr<Node> bn_relu;
-        if (auto bn_inference = std::dynamic_pointer_cast<ngraph::op::BatchNormInference>(bn_match))
+        if (auto bn_inference = as_type_ptr<ngraph::op::BatchNormInference>(bn_match))
         {
             if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(bn_inference.get()))
             {
@@ -959,12 +956,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add()
 
         auto add_m = m.get_match_root();
         auto pattern_map = m.get_pattern_map();
-        auto conv_m = std::dynamic_pointer_cast<ngraph::op::Convolution>(add_m->get_argument(1));
+        auto conv_m = as_type_ptr<ngraph::op::Convolution>(add_m->get_argument(1));
         auto inplace_input = add_m->get_argument(0);
 
         if (!conv_m)
         {
-            conv_m = std::dynamic_pointer_cast<ngraph::op::Convolution>(add_m->get_argument(0));
+            conv_m = as_type_ptr<ngraph::op::Convolution>(add_m->get_argument(0));
             inplace_input = add_m->get_argument(1);
         }
 
@@ -1070,13 +1067,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
 
         auto add_m = m.get_match_root();
         auto pattern_map = m.get_pattern_map();
-        auto conv_m =
-            std::dynamic_pointer_cast<ngraph::op::ConvolutionBias>(add_m->get_argument(1));
+        auto conv_m = as_type_ptr<ngraph::op::ConvolutionBias>(add_m->get_argument(1));
         auto inplace_input = add_m->get_argument(0);
 
         if (!conv_m)
         {
-            conv_m = std::dynamic_pointer_cast<ngraph::op::ConvolutionBias>(add_m->get_argument(0));
+            conv_m = as_type_ptr<ngraph::op::ConvolutionBias>(add_m->get_argument(0));
             inplace_input = add_m->get_argument(1);
         }
 
@@ -1147,22 +1143,22 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
 
         auto gm = std::static_pointer_cast<ngraph::op::GenerateMask>(pattern_map[genmask_label]);
 
-        if (!std::dynamic_pointer_cast<ngraph::op::Constant>(gm->get_argument(0)))
+        if (!is_type<ngraph::op::Constant>(gm->get_argument(0)))
         {
             NGRAPH_DEBUG << "training argument to GenerateMask must be constant";
             return false;
         }
-        if (!std::dynamic_pointer_cast<ngraph::op::Constant>(gm->get_argument(2)))
+        if (!is_type<ngraph::op::Constant>(gm->get_argument(2)))
         {
             NGRAPH_DEBUG << "use_seed argument to GenerateMask must be constant";
             return false;
         }
-        if (!std::dynamic_pointer_cast<ngraph::op::Constant>(gm->get_argument(3)))
+        if (!is_type<ngraph::op::Constant>(gm->get_argument(3)))
         {
             NGRAPH_DEBUG << "seed argument to GenerateMask must be constant";
             return false;
         }
-        if (!std::dynamic_pointer_cast<ngraph::op::Constant>(gm->get_argument(4)))
+        if (!is_type<ngraph::op::Constant>(gm->get_argument(4)))
         {
             NGRAPH_DEBUG << "probability argument to GenerateMask must be constant";
             return false;
@@ -1254,15 +1250,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
 {
     // Construct predicate to match sigmoid and tanh
     auto sigmoid_pred = [](std::shared_ptr<Node> n) {
-        return (std::dynamic_pointer_cast<ngraph::op::Sigmoid>(n) != nullptr) ||
-               (std::dynamic_pointer_cast<ngraph::op::Tanh>(n) != nullptr);
+        return (is_type<ngraph::op::Sigmoid>(n)) || (is_type<ngraph::op::Tanh>(n));
     };
     // Construct predicate to match other valid nodes
     auto other_pred = [](std::shared_ptr<Node> n) {
-        return (std::dynamic_pointer_cast<ngraph::op::Sigmoid>(n) != nullptr) ||
-               (std::dynamic_pointer_cast<ngraph::op::Tanh>(n) != nullptr) ||
-               (std::dynamic_pointer_cast<ngraph::op::Add>(n) != nullptr) ||
-               (std::dynamic_pointer_cast<ngraph::op::Broadcast>(n) != nullptr);
+        return (is_type<ngraph::op::Sigmoid>(n)) || (is_type<ngraph::op::Tanh>(n)) ||
+               (is_type<ngraph::op::Add>(n)) || (is_type<ngraph::op::Broadcast>(n));
     };
     auto sigmoid_0 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, sigmoid_pred);
     auto sigmoid_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, other_pred);
@@ -1319,7 +1312,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_leaky_relu()
     auto iconst1 = ngraph::op::Constant::create(element::f32, Shape{}, {1});
     auto alpha = std::make_shared<pattern::op::Label>(iconst1);
     auto broadcast_pred = [](std::shared_ptr<Node> n) {
-        return (std::dynamic_pointer_cast<ngraph::op::Broadcast>(n) != nullptr);
+        return (is_type<ngraph::op::Broadcast>(n));
     };
     auto skip_broadcast = std::make_shared<pattern::op::Skip>(alpha, broadcast_pred);
     auto leaky_relu = std::make_shared<ngraph::op::Maximum>(
@@ -1330,7 +1323,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_leaky_relu()
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
-        if (!std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[alpha]))
+        if (!is_type<ngraph::op::Constant>(pattern_map[alpha]))
         {
             NGRAPH_DEBUG << "alpha must be constant for leaky relu";
             return false;
@@ -1382,7 +1375,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
     auto iconst1 = ngraph::op::Constant::create(element::f32, Shape{}, {1});
     auto alpha = std::make_shared<pattern::op::Label>(iconst1);
     auto broadcast_pred = [](std::shared_ptr<Node> n) {
-        return (std::dynamic_pointer_cast<ngraph::op::Broadcast>(n) != nullptr);
+        return (is_type<ngraph::op::Broadcast>(n));
     };
     auto skip_broadcast = std::make_shared<pattern::op::Skip>(alpha, broadcast_pred);
     auto min = std::make_shared<ngraph::op::Minimum>(relu, skip_broadcast);
@@ -1398,7 +1391,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
             return false;
         }
         auto pattern_map = m.get_pattern_map();
-        if (!std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[alpha]))
+        if (!is_type<ngraph::op::Constant>(pattern_map[alpha]))
         {
             NGRAPH_DEBUG << "alpha must be constant for bounded relu";
             return false;
@@ -1785,7 +1778,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::
 
         auto conv_m =
             std::static_pointer_cast<ngraph::op::GroupConvolutionBias>(pattern_map[conv_label]);
-        auto relu_m = std::dynamic_pointer_cast<ngraph::op::Relu>(m.get_match_root());
+        auto relu_m = as_type_ptr<ngraph::op::Relu>(m.get_match_root());
 
         auto g_conv_bias_relu = std::make_shared<ngraph::op::GroupConvolutionBias>(
             conv_m->get_argument(0),
@@ -2433,17 +2426,16 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
         NGRAPH_DEBUG << "In a callback for construct_qconvb_dq_add_relu against "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
-        auto add_m =
-            std::dynamic_pointer_cast<ngraph::op::Add>(m.get_match_root()->get_argument(0));
-        auto dq_l_m = std::dynamic_pointer_cast<ngraph::op::Dequantize>(pattern_map[dq_l_label]);
-        auto dq_r_m = std::dynamic_pointer_cast<ngraph::op::Dequantize>(pattern_map[dq_r_label]);
+        auto add_m = as_type_ptr<ngraph::op::Add>(m.get_match_root()->get_argument(0));
+        auto dq_l_m = as_type_ptr<ngraph::op::Dequantize>(pattern_map[dq_l_label]);
+        auto dq_r_m = as_type_ptr<ngraph::op::Dequantize>(pattern_map[dq_r_label]);
 
         // both left and right are QuantizedConvolutionBias
         if (dq_r_m->get_argument(0)->description() == "QuantizedConvolutionBias")
         {
             for (auto user : m.get_match_root()->get_users())
             {
-                auto q_m = std::dynamic_pointer_cast<ngraph::op::Quantize>(user);
+                auto q_m = as_type_ptr<ngraph::op::Quantize>(user);
                 if (q_m)
                 {
                     auto q_m_scale = q_m->get_argument(1);

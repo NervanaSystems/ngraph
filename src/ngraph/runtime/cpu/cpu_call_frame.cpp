@@ -119,7 +119,7 @@ void runtime::cpu::CPU_CallFrame::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
 {
-    auto id = 0;
+    size_t id = 0;
     auto disable_caching = false;
     {
         std::unique_lock<std::mutex> lck(m_mutex);
@@ -128,7 +128,7 @@ void runtime::cpu::CPU_CallFrame::call(
             m_cv.wait(lck);
         }
 
-        for (auto i = 0; i < m_num_ctx; i++)
+        for (size_t i = 0; i < m_num_ctx; i++)
         {
             if (m_id_pool[i])
             {
@@ -181,7 +181,7 @@ void runtime::cpu::CPU_CallFrame::propagate_layouts(
 
 void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
 {
-    for (auto i = 0; i < m_num_ctx; i++)
+    for (size_t i = 0; i < m_num_ctx; i++)
     {
         m_id_pool[i] = true;
         auto ctx = new CPURuntimeContext;
@@ -244,7 +244,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
 
 void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
 {
-    for (auto i = 0; i < m_num_ctx; i++)
+    for (size_t i = 0; i < m_num_ctx; i++)
     {
         auto ctx = m_ctx_vec.back();
         m_ctx_vec.pop_back();

@@ -30,19 +30,19 @@ ngraph::op::SigmoidMultiply::FunctionType
     op::SigmoidMultiply::identify_node_type(const Output<ngraph::Node>& value)
 {
     auto node = value.get_node_shared_ptr();
-    if (std::dynamic_pointer_cast<ngraph::op::Tanh>(node) != nullptr)
+    if (is_type<ngraph::op::Tanh>(node))
     {
         return ngraph::op::SigmoidMultiply::FunctionType::Tanh;
     }
-    else if (std::dynamic_pointer_cast<ngraph::op::Sigmoid>(node) != nullptr)
+    else if (is_type<ngraph::op::Sigmoid>(node))
     {
         return ngraph::op::SigmoidMultiply::FunctionType::Logistic;
     }
-    else if (std::dynamic_pointer_cast<ngraph::op::Broadcast>(node) != nullptr)
+    else if (is_type<ngraph::op::Broadcast>(node))
     {
         return ngraph::op::SigmoidMultiply::FunctionType::Identity;
     }
-    else if (std::dynamic_pointer_cast<ngraph::op::Add>(node) != nullptr)
+    else if (is_type<ngraph::op::Add>(node))
     {
         return ngraph::op::SigmoidMultiply::FunctionType::Identity;
     }
