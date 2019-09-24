@@ -1,4 +1,4 @@
-7.. pad.rst:
+.. pad.rst:
 
 ###
 Pad
