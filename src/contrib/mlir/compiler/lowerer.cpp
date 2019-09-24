@@ -113,15 +113,19 @@ namespace
                 }
             }
 
-            // Convert the original function results.
-            SmallVector<Type, 4> convertedResults;
-            if (failed(converter.convertTypes(type.getResults(), convertedResults)))
+            auto funcTypeResults = type.getResults();
+            if (!funcTypeResults.empty())
             {
-                return matchFailure();
-            }
+                // Convert the original function results.
+                SmallVector<Type, 4> convertedResults;
+                if (failed(converter.convertTypes(funcTypeResults, convertedResults)))
+                {
+                    return matchFailure();
+                }
 
-            // Add result types as input args without mapping
-            result.addInputs(convertedResults);
+                // Add result types as input args without mapping
+                result.addInputs(convertedResults);
+            }
 
             // Create a new function with an updated signature.
             auto newFuncOp = rewriter.cloneWithoutRegions(funcOp);
