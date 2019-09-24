@@ -18,11 +18,8 @@
 
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/and.hpp"
-#include "ngraph/op/not.hpp"
-#include "ngraph/op/or.hpp"
-#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/op/xor.hpp"
 
 namespace ngraph
 {
@@ -34,19 +31,10 @@ namespace ngraph
             {
                 inline NodeVector logical_xor(const Node& node)
                 {
-                    auto left = node.get_ng_inputs().at(0);
-                    auto not_left = std::make_shared<ngraph::op::Not>(left);
-                    auto right = node.get_ng_inputs().at(1);
-                    auto not_right = std::make_shared<ngraph::op::Not>(right);
-                    return {std::make_shared<ngraph::op::Or>(
-                        std::make_shared<ngraph::op::And>(
-                            left,
-                            not_right,
-                            ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY)),
-                        std::make_shared<ngraph::op::And>(
-                            not_left,
-                            right,
-                            ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY)))};
+                    return {std::make_shared<ngraph::op::Xor>(
+                        node.get_ng_inputs().at(0),
+                        node.get_ng_inputs().at(1),
+                        ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY))};
                 }
 
             } // namespace set_1

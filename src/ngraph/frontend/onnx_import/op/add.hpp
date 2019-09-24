@@ -19,7 +19,6 @@
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
-#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 
 namespace ngraph
