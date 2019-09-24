@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cstddef>
+#include <ostream>
 
 namespace ngraph
 {
@@ -129,5 +130,7 @@ namespace ngraph
             AutoBroadcastType m_type; // Implicit broadcasting algorithm
             int64_t m_axis;           // Axis to start alignment on
         };
+
+        std::ostream& operator<<(std::ostream& s, const AutoBroadcastType& type);
     }
 }
