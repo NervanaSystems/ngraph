@@ -677,9 +677,12 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                 }
             }
 
-            int64_t num_input_axis_after_ellipses = (begin.size() - axis - num_new_axis_after_ellipses - 1); // -1 because it's a position of ellipses
-            int64_t num_of_hidden_dims = input_shape.to_shape().size() - num_input_axis_after_ellipses
-                    - num_input_axis_before_ellipses;
+            int64_t num_input_axis_after_ellipses =
+                (begin.size() - axis - num_new_axis_after_ellipses -
+                 1); // -1 because it's a position of ellipses
+            int64_t num_of_hidden_dims = input_shape.to_shape().size() -
+                                         num_input_axis_after_ellipses -
+                                         num_input_axis_before_ellipses;
             for (int64_t i = 0; i < num_of_hidden_dims; ++i)
             {
                 dim.emplace_back(input_shape[input_shape_idx]);
@@ -705,7 +708,8 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                 int64_t ub = end[axis];
 
                 // convert negative indexes to positive
-                // take max for this case: if abs(lb) > input_shape[input_shape_idx],then after conversion lb < 0
+                // take max for this case: if abs(lb) > input_shape[input_shape_idx],then after
+                // conversion lb < 0
                 // so according to tensorflow and numpy we just get 0
                 if (lb < 0)
                 {
@@ -731,7 +735,7 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                 NODE_VALIDATION_CHECK(node, stride != 0, "Stride must be non-zero");
 
                 int64_t dimension = 0;
-                if(stride < 0)
+                if (stride < 0)
                 {
                     // apply masks
                     if (begin_mask.count(axis))
@@ -744,7 +748,7 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                     }
 
                     lb = std::min(lb, int64_t(input_shape[input_shape_idx]) - 1);
-                    lb -= 1;// we always get 1st element, so we need decrease range
+                    lb -= 1; // we always get 1st element, so we need decrease range
                     if (ub <= lb)
                     {
                         dimension = (ub - lb) / stride + 1;
@@ -762,7 +766,7 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                         ub = int64_t(input_shape[input_shape_idx]);
                     }
 
-                    lb += 1;// we always get 1st element, so we need decrease range
+                    lb += 1; // we always get 1st element, so we need decrease range
                     if (ub >= lb)
                     {
                         dimension = (ub - lb) / stride + 1;
