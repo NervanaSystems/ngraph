@@ -173,8 +173,8 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise_pdpd_dynamic)
     // a shape {2, 3, 4, 5}, b shape {3, 4} axis = 1
     autob = op::AutoBroadcastSpec(op::AutoBroadcastType::PDPD, 1);
     f = make_shared<Function>(make_shared<op::Add>(a, b, autob), ParameterVector{a, b});
-    backend = runtime::Backend::create("${BACKEND_NAME}", true);
     ex = backend->compile(f);
+    t_r = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
     t_a = backend->create_tensor(element::f32, Shape{2, 3, 4, 5});
     t_b = backend->create_tensor(element::f32, Shape{3, 4});
     copy_data(t_a, vector<float>(2 * 3 * 4 * 5, 1));
@@ -183,7 +183,10 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise_pdpd_dynamic)
     ASSERT_EQ(t_r->get_shape(), (Shape{2, 3, 4, 5}));
 
     // a shape {2, 3, 4, 5}, b shape {3, 1} axis = 1
+    t_r = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
+    t_a = backend->create_tensor(element::f32, Shape{2, 3, 4, 5});
     t_b = backend->create_tensor(element::f32, Shape{3, 1});
+    copy_data(t_a, vector<float>(2 * 3 * 4 * 5, 1));
     copy_data(t_b, vector<float>(3, 1));
     ex->call_with_validate({t_r}, {t_a, t_b});
     ASSERT_EQ(t_r->get_shape(), (Shape{2, 3, 4, 5}));
