@@ -41,16 +41,16 @@ TEST(pad_opset_pass, opset1_pad_upgrade_pass)
 
 TEST(pad_opset_pass, opset1_pad_downgrade_pass)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{ 5, 6 });
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{5, 6});
     auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
-    const auto pads_begin = make_shared<op::Constant>(element::i64, Shape{ 2 }, vector<int64_t>{1, 2});
-    const auto pads_end = make_shared<op::Constant>(element::i64, Shape{ 2 }, vector<int64_t>{3, 4});
+    const auto pads_begin =
+        make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
+    const auto pads_end = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{3, 4});
     auto pad_mode = op::PadMode::EDGE;
 
-    auto pad_v1 =
-        make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value, pad_mode);
+    auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value, pad_mode);
     auto result = make_shared<op::Result>(pad_v1);
-    auto f = make_shared<Function>(ResultVector{ result }, ParameterVector{ arg, arg_pad_value });
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg, arg_pad_value});
 
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<pass::Opset1Downgrade>();
@@ -64,6 +64,6 @@ TEST(pad_opset_pass, opset1_pad_downgrade_pass)
     EXPECT_EQ(pad_v0_node->get_version(), 0);
     EXPECT_EQ(pad_v0_node->get_pad_mode(), pad_mode);
 
-    EXPECT_EQ(pad_v0_node->get_padding_below(), CoordinateDiff({1,2}));
-    EXPECT_EQ(pad_v0_node->get_padding_above(), CoordinateDiff({3,4}));
+    EXPECT_EQ(pad_v0_node->get_padding_below(), CoordinateDiff({1, 2}));
+    EXPECT_EQ(pad_v0_node->get_padding_above(), CoordinateDiff({3, 4}));
 }
