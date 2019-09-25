@@ -39,6 +39,7 @@
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/placement.hpp"
 #include "ngraph/strides.hpp"
+#include "ngraph/type.hpp"
 
 namespace ngraph
 {
@@ -81,46 +82,7 @@ namespace ngraph
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
 
-    struct TypeInfo
-    {
-        const char* name;
-        uint64_t version;
-    };
-
-    using NodeTypeInfo = TypeInfo;
-
-    /// Tests if a value is of nGraph type Type
-    template <typename Type, typename Value>
-    typename std::enable_if<std::is_convertible<decltype(std::declval<Value>()->get_type_info()),
-                                                decltype(Type::type_info)>::value,
-                            bool>::type
-        is_type(Value value)
-    {
-        return &value->get_type_info() == &Type::type_info;
-    }
-
-    /// Casts a Value* to a Type* if it is of nGraph type Type, nullptr otherwise
-    template <typename Type, typename Value>
-    typename std::enable_if<
-        std::is_convertible<decltype(static_cast<Type*>(std::declval<Value>())), Type*>::value,
-        Type*>::type
-        as_type(Value value)
-    {
-        return is_type<Type>(value) ? static_cast<Type*>(value) : nullptr;
-    }
-
-    /// Casts a std::shared_ptr<Value> to a std::shared_ptr<Type> if it is of nGraph type
-    /// Type, nullptr otherwise
-    template <typename Type, typename Value>
-    typename std::enable_if<
-        std::is_convertible<decltype(std::static_pointer_cast<Type>(std::declval<Value>())),
-                            std::shared_ptr<Type>>::value,
-        std::shared_ptr<Type>>::type
-        as_type_ptr(Value value)
-    {
-        return is_type<Type>(value) ? std::static_pointer_cast<Type>(value)
-                                    : std::shared_ptr<Type>();
-    }
+    using NodeTypeInfo = DiscreteTypeInfo;
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor

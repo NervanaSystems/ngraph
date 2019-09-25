@@ -22,11 +22,11 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::TensorIterator::type_info;
 
-constexpr NodeTypeInfo op::TensorIterator::SliceInputDescription::type_info;
-constexpr NodeTypeInfo op::TensorIterator::BodyConnectionInputDescription::type_info;
+constexpr DiscreteTypeInfo op::TensorIterator::SliceInputDescription::type_info;
+constexpr DiscreteTypeInfo op::TensorIterator::BodyConnectionInputDescription::type_info;
 
-constexpr NodeTypeInfo op::TensorIterator::BodyOutputDescription::type_info;
-constexpr NodeTypeInfo op::TensorIterator::ConcatOutputDescription::type_info;
+constexpr DiscreteTypeInfo op::TensorIterator::BodyOutputDescription::type_info;
+constexpr DiscreteTypeInfo op::TensorIterator::ConcatOutputDescription::type_info;
 
 op::TensorIterator::TensorIterator(const OutputVector& values)
     : op::util::FusedOp(values)
