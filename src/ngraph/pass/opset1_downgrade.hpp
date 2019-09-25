@@ -26,12 +26,11 @@ namespace ngraph
         {
         public:
             ///
-            /// \brief    Constructor for the Opset 1 transformation pass.
+            /// \brief    Constructor for the Opset 1 downgrade transformation pass.
             ///
             /// \details  This transformation pass iterates over all nodes in a graph
-            /// and updates opset version 0 ops to their opset version 1 equivalents.
-            /// All ops in the final graph have opset version 1.
-            // TODO DOC
+            /// and updates opset version 1 ops to their opset version 0 equivalents.
+            /// All ops in the final graph have opset version 0.
             Opset1Downgrade() = default;
             bool run_on_node(std::shared_ptr<ngraph::Node> node) override;
         };
