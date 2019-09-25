@@ -36,12 +36,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
         #add_compile_options(-Wno-zero-as-null-pointer-constant)
     endif()
 endif()
-<<<<<<< HEAD
 
 # should remove these
 add_compile_options(-Wno-float-conversion)
 add_compile_options(-Wno-padded)
 add_compile_options(-Wno-conversion)
 add_compile_options(-Wno-undefined-func-template)
-=======
->>>>>>> 1cc365c0f... Cyphers/lastwarns (#3640)
