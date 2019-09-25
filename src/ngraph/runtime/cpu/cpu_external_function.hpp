@@ -264,7 +264,9 @@ namespace ngraph
                 bool m_release_function;
                 bool m_emit_timing;
 
+#if defined(NGRAPH_TBB_ENABLE)
                 bool m_use_tbb;
+#endif
 #if !defined(NGRAPH_DEX_ONLY)
                 bool m_is_compiled;
 #endif
