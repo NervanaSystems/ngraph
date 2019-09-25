@@ -1316,7 +1316,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_cross_entropy_fpro
     auto log = std::make_shared<ngraph::op::Log>(softmax);
     auto multiply = std::make_shared<ngraph::op::Multiply>(param_2, log);
 
-    auto summation_axis = ngraph::op::Constant::create(element::f32, Shape{}, {1});
+    auto summation_axis = ngraph::op::Constant::create(element::i64, Shape{}, {1});
     auto summation_axis_label = std::make_shared<pattern::op::Label>(summation_axis);
     auto sum = std::make_shared<ngraph::op::Sum>(multiply, summation_axis);
     auto negative = std::make_shared<ngraph::op::Negative>(sum);
@@ -1331,7 +1331,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_cross_entropy_fpro
 
         return false;
     };
-    auto m = std::make_shared<pattern::Matcher>(loss_result, "CPUFusion.BoundedRelu");
+    auto m = std::make_shared<pattern::Matcher>(loss_result, "CPUFusion.SigmoidCrossEntropy");
     this->add_matcher(m, callback);
 }
 
