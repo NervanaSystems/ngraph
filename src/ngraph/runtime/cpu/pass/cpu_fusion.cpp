@@ -46,6 +46,7 @@
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/log.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
@@ -64,6 +65,7 @@
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/softmax.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
@@ -1331,6 +1333,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_cross_entropy_fpro
     };
     auto m = std::make_shared<pattern::Matcher>(loss_result, "CPUFusion.BoundedRelu");
     this->add_matcher(m, callback);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_cross_entropy_bprop()
+{
+
 }
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_leaky_relu()
