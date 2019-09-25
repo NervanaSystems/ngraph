@@ -60,8 +60,8 @@ namespace ngraph
                 else
                 {
                     std::function<decltype(runtime::cpu::kernel::tile<float, 2>)> kernel;
-                    SELECT_KERNEL_BY_RANK(
-                        kernel, out[0].get_element_type(), arg_rank, runtime::cpu::kernel::tile)
+                    SELECT_KERNEL_ET_RANK(
+                        kernel, out[0].get_element_type(), arg_rank, runtime::cpu::kernel::tile);
                     auto functor =
                         [&, kernel, arg_shape, out_shape, arg_buffer_index, out_buffer_index](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {

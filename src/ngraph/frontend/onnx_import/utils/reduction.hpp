@@ -26,6 +26,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/util.hpp"
+#include "utils/common.hpp"
 #include "utils/reshape.hpp"
 
 namespace ngraph
@@ -64,8 +65,10 @@ namespace ngraph
                 auto axis = node.get_attribute_value<std::int64_t>("axis", 0);
                 auto keepdims = node.get_attribute_value<std::int64_t>("keepdims", 1);
                 auto input_node = node.get_ng_inputs().at(0);
+                auto valid_axis = common::validate_axis(node, axis, input_node->get_shape().size());
 
-                auto op_node = std::make_shared<IndexReduction>(input_node, axis, element::i64);
+                auto op_node =
+                    std::make_shared<IndexReduction>(input_node, valid_axis, element::i64);
 
                 if (keepdims == 0)
                 {
@@ -76,7 +79,7 @@ namespace ngraph
                 auto convert_node = std::make_shared<ngraph::op::Convert>(op_node, element::f32);
 
                 auto output_shape = input_node->get_shape();
-                output_shape.at(axis) = 1;
+                output_shape.at(valid_axis) = 1;
                 auto reshape_node = std::make_shared<ngraph::op::Reshape>(
                     convert_node,
                     ngraph::get_default_order(op_node->get_shape().size()),

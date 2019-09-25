@@ -1634,3 +1634,29 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reverse_sequence_1_batch_0)
 
     test_case.run();
 }
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reverse_sequence_incorrect_batch_axis)
+{
+    EXPECT_THROW(onnx_import::import_onnx_model(file_util::path_join(
+                     SERIALIZED_ZOO, "onnx/reverse_sequence_incorrect_batch_axis.prototxt")),
+                 ngraph_error)
+        << "ReverseSequence batch_axis attribute can only equal 0 or 1. Value of '2' is not "
+           "accepted.";
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reverse_sequence_incorrect_time_axis)
+{
+    EXPECT_THROW(onnx_import::import_onnx_model(file_util::path_join(
+                     SERIALIZED_ZOO, "onnx/reverse_sequence_incorrect_time_axis.prototxt")),
+                 ngraph_error)
+        << "ReverseSequence time_axis attribute can only equal 0 or 1. Value of '2' is not "
+           "accepted.";
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reverse_sequence_time_and_batch_axis_equal)
+{
+    EXPECT_THROW(onnx_import::import_onnx_model(file_util::path_join(
+                     SERIALIZED_ZOO, "onnx/reverse_sequence_time_and_batch_axis_equal.prototxt")),
+                 ngraph_error)
+        << "ReverseSequence 'time_axis' and 'batch_axis' can't be equal.";
+}

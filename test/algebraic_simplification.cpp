@@ -264,10 +264,9 @@ TEST(algebraic_simplification, multiply_prod_vector_one)
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{prod_fconst1}, ParameterVector{});
     pass_manager.run_passes(f);
-    auto new_broadcast =
-        std::dynamic_pointer_cast<op::Broadcast>(f->get_results().at(0)->get_argument(0));
+    auto new_broadcast = as_type_ptr<op::Broadcast>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_broadcast);
-    auto new_const = std::dynamic_pointer_cast<op::Constant>(new_broadcast->get_argument(0));
+    auto new_const = as_type_ptr<op::Constant>(new_broadcast->get_argument(0));
     auto values = new_const->get_vector<double>();
     ASSERT_EQ(values.size(), 1);
     ASSERT_EQ(values.at(0), 32);
@@ -284,8 +283,7 @@ TEST(algebraic_simplification, multiply_prod_scalar_one)
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{prod_fconst1}, ParameterVector{});
     pass_manager.run_passes(f);
-    auto new_const =
-        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values = new_const->get_vector<double>();
     ASSERT_EQ(values.size(), 1);
@@ -318,8 +316,7 @@ TEST(algebraic_simplification, multiply_sum_scalar_one)
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{sum_fconst1}, ParameterVector{});
     pass_manager.run_passes(f);
-    auto new_const =
-        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values = new_const->get_vector<double>();
     ASSERT_EQ(values.size(), 1);
@@ -337,10 +334,9 @@ TEST(algebraic_simplification, multiply_sum_vector_one)
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{sum_fconst1}, ParameterVector{});
     pass_manager.run_passes(f);
-    auto new_broadcast =
-        std::dynamic_pointer_cast<op::Broadcast>(f->get_results().at(0)->get_argument(0));
+    auto new_broadcast = as_type_ptr<op::Broadcast>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_broadcast);
-    auto new_const = std::dynamic_pointer_cast<op::Constant>(new_broadcast->get_argument(0));
+    auto new_const = as_type_ptr<op::Constant>(new_broadcast->get_argument(0));
     auto values = new_const->get_vector<double>();
     ASSERT_EQ(values.size(), 1);
     ASSERT_EQ(values.at(0), 5);
@@ -385,7 +381,7 @@ TEST(algebraic_simplification, concat_reshape_slice)
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, ParameterVector{a});
     pass_manager.run_passes(f);
-    ASSERT_TRUE(std::dynamic_pointer_cast<op::Reshape>(f->get_results().at(0)->get_argument(0)));
+    ASSERT_TRUE(as_type_ptr<op::Reshape>(f->get_results().at(0)->get_argument(0)));
 }
 
 TEST(algebraic_simplification, concat_slice)
@@ -535,10 +531,10 @@ TEST(algebraic_simplification, log_neg_neg)
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{neg4}, ParameterVector{a, b});
     pass_manager.run_passes(f);
-    auto sub = std::dynamic_pointer_cast<op::Subtract>(neg_inner->get_argument(0));
+    auto sub = as_type_ptr<op::Subtract>(neg_inner->get_argument(0));
     ASSERT_TRUE(sub != nullptr);
     ASSERT_EQ(sub->get_argument(0), a);
-    auto new_log = std::dynamic_pointer_cast<op::Log>(sub->get_argument(1));
+    auto new_log = as_type_ptr<op::Log>(sub->get_argument(1));
     ASSERT_TRUE(new_log != nullptr);
     ASSERT_EQ(new_log->get_argument(0), b);
 }
