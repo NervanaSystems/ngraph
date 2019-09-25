@@ -426,7 +426,7 @@ if (NGRAPH_PLAIDML_ENABLE)
 endif()
 
 if (NGRAPH_TBB_ENABLE)
-    target_compile_definitions(unit-test PRIVATE NGRAPH_TBB_ENABLE)
+    target_compile_definitions(unit-test PRIVATE "NGRAPH_TBB_ENABLE")
 endif()
 
 if (NGRAPH_HALIDE)
