@@ -47,7 +47,8 @@ mlir::Type NGraphOpsDialect::parseType(llvm::StringRef tyData, mlir::Location lo
     {
         if (!tyData.consume_front("<") || !tyData.consume_back(">"))
         {
-            emitError(loc, "expected '<' and '>' enclosing the tensor shape: ") << tyData;
+            return (emitError(loc, "expected '<' and '>' enclosing the tensor shape: " + tyData),
+                    Type());
         }
 
         // Get x-separated sub-strings.
@@ -63,8 +64,9 @@ mlir::Type NGraphOpsDialect::parseType(llvm::StringRef tyData, mlir::Location lo
             // NOTE: `consumeInteger` returns false if an integer was parsed successfully.
             if (dimStr.consumeInteger(/*Radix=*/10, dim) || !dimStr.empty())
             {
-                emitError(loc, "expected a list of '[0-9]+x' dimension specifiers: ") << tyData;
-                return Type();
+                return (
+                    emitError(loc, "expected a list of '[0-9]+x' dimension specifiers: " + tyData),
+                    Type());
             }
 
             shape.push_back(dim);
@@ -73,7 +75,7 @@ mlir::Type NGraphOpsDialect::parseType(llvm::StringRef tyData, mlir::Location lo
         auto elem_ty = mlir::parseType(subStrings.back(), context);
         if (!elem_ty)
         {
-            emitError(loc, "Unexpected element type in tensor type: ") << tyData;
+            return (emitError(loc, "Unexpected element type in tensor type: " + tyData), Type());
         }
 
         return NGTensorType::get(context, elem_ty, shape);
