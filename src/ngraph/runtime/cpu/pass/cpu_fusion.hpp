@@ -96,6 +96,8 @@ public:
             }
             construct_dropout();
             construct_batch_norm_infer_relu_with_multiply_add();
+            construct_sigmoid_cross_entropy_fprop();
+            construct_sigmoid_cross_entropy_bprop();
         }
     }
 
@@ -128,6 +130,8 @@ private:
     void construct_deconvolution_affine_folding();
     void construct_deconvolution_affine_folding_relu();
     void construct_dropout();
+    void construct_sigmoid_cross_entropy_fprop();
+    void construct_sigmoid_cross_entropy_bprop();
 };
 
 class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUQuantFusion : public ngraph::pass::GraphRewrite

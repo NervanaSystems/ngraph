@@ -1305,6 +1305,33 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
     auto m = std::make_shared<ngraph::pattern::Matcher>(elem_mul, "CPUFusion.SigmoidMultiply");
     this->add_matcher(m, callback);
 }
+void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_cross_entropy_fprop()
+{
+    auto param_1 = std::make_shared<ngraph::op::Parameter>(element::f32, Shape{41, 37});
+    auto softmax = std::make_shared<ngraph::op::Softmax>(param_1, AxisSet{1});
+    auto param_2 = std::make_shared<ngraph::op::Parameter>(element::f32, Shape{41, 37});
+    auto softmax_result = std::make_shared<ngraph::op::Result>(softmax);
+    auto log = std::make_shared<ngraph::op::Log>(softmax);
+    auto multiply = std::make_shared<ngraph::op::Multiply>(param_2, log);
+
+    auto summation_axis = ngraph::op::Constant::create(element::f32, Shape{}, {1});
+    auto summation_axis_label = std::make_shared<pattern::op::Label>(summation_axis);
+    auto sum = std::make_shared<ngraph::op::Sum>(multiply, summation_axis);
+    auto negative = std::make_shared<ngraph::op::Negative>(sum);
+    auto reshape = std::make_shared<ngraph::op::Reshape>(negative, AxisVector{0}, Shape{41, 1});
+    auto loss_result = std::make_shared<ngraph::op::Result>(reshape);
+
+    auto callback = [summation_axis_label](pattern::Matcher& m) {
+        std::cout << "In a callback for construct_sigmoid_cross_entropy_fprop against "
+                  << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        return false;
+    };
+    auto m = std::make_shared<pattern::Matcher>(loss_result, "CPUFusion.BoundedRelu");
+    this->add_matcher(m, callback);
+}
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_leaky_relu()
 {
