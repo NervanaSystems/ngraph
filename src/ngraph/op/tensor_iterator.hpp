@@ -52,7 +52,7 @@ namespace ngraph
                 virtual ~InputDescription() {}
                 virtual std::shared_ptr<InputDescription> copy() const = 0;
 
-                virtual const NodeTypeInfo& get_type_info() const = 0;
+                virtual const TypeInfo& get_type_info() const = 0;
 
                 uint64_t m_input_index;
                 std::shared_ptr<Parameter> m_body_parameter;
@@ -62,8 +62,8 @@ namespace ngraph
             class SliceInputDescription : public InputDescription
             {
             public:
-                static constexpr NodeTypeInfo type_info{"SliceInputDescription", 0};
-                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                static constexpr TypeInfo type_info{"SliceInputDescription", 0};
+                const TypeInfo& get_type_info() const override { return type_info; }
                 /// \param input_index Position of the TensorIterator input
                 /// \param body_parameter Body parameter to receive input
                 /// \param start First index for slices
@@ -92,8 +92,8 @@ namespace ngraph
             class BodyConnectionInputDescription : public InputDescription
             {
             public:
-                static constexpr NodeTypeInfo type_info{"BodyConnectionInputDescription", 0};
-                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                static constexpr TypeInfo type_info{"BodyConnectionInputDescription", 0};
+                const TypeInfo& get_type_info() const override { return type_info; }
                 /// \param input_index Position of the TensorIterator input supplying a value to
                 /// body_parameter
                 /// for the initial iteration.
@@ -122,7 +122,7 @@ namespace ngraph
             public:
                 virtual ~OutputDescription() {}
                 virtual std::shared_ptr<OutputDescription> copy() const = 0;
-                virtual const NodeTypeInfo& get_type_info() const = 0;
+                virtual const TypeInfo& get_type_info() const = 0;
 
                 Output<Node> m_body_value;
                 uint64_t m_output_index;
@@ -132,8 +132,8 @@ namespace ngraph
             class ConcatOutputDescription : public OutputDescription
             {
             public:
-                static constexpr NodeTypeInfo type_info{"ConcatOutputDescription", 0};
-                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                static constexpr TypeInfo type_info{"ConcatOutputDescription", 0};
+                const TypeInfo& get_type_info() const override { return type_info; }
                 /// \param body_value A body value that produces the output
                 /// \param output_index The TensorIterator output index
                 /// \param start First index for slices
@@ -162,8 +162,8 @@ namespace ngraph
             class BodyOutputDescription : public OutputDescription
             {
             public:
-                static constexpr NodeTypeInfo type_info{"BodyOutputDescription", 0};
-                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                static constexpr TypeInfo type_info{"BodyOutputDescription", 0};
+                const TypeInfo& get_type_info() const override { return type_info; }
                 /// \param body_value A body value that produces the output
                 /// \param output_index The TensorIterator output index
                 /// \param iteration which iteration (typically -1, final) will supply the value

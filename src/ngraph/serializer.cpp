@@ -639,7 +639,7 @@ json JSONSerializer::serialize_tensor_iterator_input_description(
     {
         result["kind"] = "slice";
         result["input_index"] = slice->m_input_index;
-        result["body_parameter"] = serialize_node(*slice->m_body_parameter.get());
+        result["body_parameter"] = serialize_node_reference(*slice->m_body_parameter.get());
         result["start"] = slice->m_start;
         result["stride"] = slice->m_stride;
         result["part_size"] = slice->m_part_size;
@@ -651,7 +651,8 @@ json JSONSerializer::serialize_tensor_iterator_input_description(
     {
         result["kind"] = "body_connection";
         result["input_index"] = body_connection->m_input_index;
-        result["body_parameter"] = serialize_node(*body_connection->m_body_parameter.get());
+        result["body_parameter"] =
+            serialize_node_reference(*body_connection->m_body_parameter.get());
         result["body_value"] = serialize_output(body_connection->m_body_value);
     }
     else
@@ -732,7 +733,7 @@ std::shared_ptr<op::TensorIterator::OutputDescription>
     shared_ptr<op::TensorIterator::OutputDescription> result;
     if (kind == "concat")
     {
-        Output<Node> body_value = deserialize_output(j["body_parameter"]);
+        Output<Node> body_value = deserialize_output(j["body_value"]);
         uint64_t output_index = j["output_index"].get<uint64_t>();
         int64_t start = j["start"].get<int64_t>();
         int64_t stride = j["stride"].get<int64_t>();
@@ -744,7 +745,7 @@ std::shared_ptr<op::TensorIterator::OutputDescription>
     }
     else if (kind == "body_output")
     {
-        Output<Node> body_value = deserialize_output(j["body_parameter"]);
+        Output<Node> body_value = deserialize_output(j["body_value"]);
         uint64_t output_index = j["output_index"].get<uint64_t>();
         int64_t iteration = j["iteration"].get<int64_t>();
         result = make_shared<op::TensorIterator::BodyOutputDescription>(
@@ -2107,6 +2108,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 ti->get_output_descriptions().push_back(
                     deserialize_tensor_iterator_output_description(jout));
             }
+            ti->set_output_size(ti->get_output_descriptions().size());
 
             node = ti;
             break;

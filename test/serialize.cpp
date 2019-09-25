@@ -480,7 +480,7 @@ TEST(serialize, tensor_iterator_raw)
     // Output 1 is concat of hidden states
     // start=0, stride=1, part_size=1, end=40, axis=1
     auto out1 = tensor_iterator->get_concatenated_slices(Ho, 0, 1, 1, 40, 1);
-    
+
     auto results = ResultVector{make_shared<op::Result>(out0), make_shared<op::Result>(out1)};
     auto f = make_shared<Function>(results, ParameterVector{X, Hinit, WH, WX, bH, WY, bY});
     string s = serialize(f);
@@ -524,7 +524,8 @@ TEST(serialize, tensor_iterator_lstm)
     auto out1 = tensor_iterator->get_iter_value(C_o, -1);
 
     auto results = ResultVector{make_shared<op::Result>(out0), make_shared<op::Result>(out1)};
-    auto f = make_shared<Function>(results, ParameterVector{X, H_init, W, R, B});
+    auto f =
+        make_shared<Function>(results, ParameterVector{SENT, X, H_init, H_t, C_init, C_t, W, R, B});
     string s = serialize(f);
     shared_ptr<Function> g = deserialize(s);
 }
