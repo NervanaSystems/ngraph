@@ -680,7 +680,7 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
             int64_t num_input_axis_after_ellipses = (begin.size() - axis - num_new_axis_after_ellipses - 1); // -1 because it's a position of ellipses
             int64_t num_of_hidden_dims = input_shape.to_shape().size() - num_input_axis_after_ellipses
                     - num_input_axis_before_ellipses;
-            for (size_t i = 0; i < num_of_hidden_dims; ++i)
+            for (int64_t i = 0; i < num_of_hidden_dims; ++i)
             {
                 dim.emplace_back(input_shape[input_shape_idx]);
                 input_shape_idx++;
@@ -709,12 +709,12 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                 // so according to tensorflow and numpy we just get 0
                 if (lb < 0)
                 {
-                    lb = std::max(int64_t(input_shape[input_shape_idx]) + lb, 0l);
+                    lb = std::max(int64_t(input_shape[input_shape_idx]) + lb, int64_t(0));
                 }
 
                 if (ub < 0)
                 {
-                    ub = std::max(int64_t(input_shape[input_shape_idx]) + ub, 0l);
+                    ub = std::max(int64_t(input_shape[input_shape_idx]) + ub, int64_t(0));
                 }
 
                 // apply restrictions when begin or end values more than max possible values.
