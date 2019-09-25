@@ -21,6 +21,7 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
+#include "ngraph/runtime/reference/softmax.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -37,7 +38,7 @@ namespace ngraph
                     Eigen::array<Eigen::Index, Rank> in_dims, rdims;
                     rdims.fill(1);
 
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         in_dims[i] = input_shape[i];
                     }
@@ -63,12 +64,12 @@ namespace ngraph
                     Eigen::array<Eigen::Index, AxisCount> axes;
                     rdims.fill(1);
 
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         in_dims[i] = input_shape[i];
                     }
 
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         if (softmax_axes.count(i))
                         {
@@ -79,12 +80,12 @@ namespace ngraph
                             rdims[i] = in_dims[i];
                         }
                     }
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         bcast[i] = in_dims[i] / rdims[i];
                     }
 
-                    int i = 0;
+                    size_t i = 0;
                     for (auto axis : softmax_axes)
                     {
                         axes[i++] = axis;
@@ -110,17 +111,17 @@ namespace ngraph
                     Eigen::IndexList<Eigen::type2index<Rank - 1>> axis;
                     rdims.fill(1);
 
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         in_dims[i] = input_shape[i];
                     }
 
-                    for (int i = 0; i < Rank - 1; i++)
+                    for (size_t i = 0; i < Rank - 1; i++)
                     {
                         rdims[i] = in_dims[i];
                     }
 
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         bcast[i] = in_dims[i] / rdims[i];
                     }
@@ -163,6 +164,15 @@ namespace ngraph
                                     int arena)
                 {
                     softmax<ElementType, 4, 3>(input, output, input_shape, softmax_axes, arena);
+                }
+
+                template <typename ElementType>
+                void ref_softmax(void* input, void* output, const Shape& shape, const AxisSet& axes)
+                {
+                    reference::softmax<ElementType>(static_cast<const ElementType*>(input),
+                                                    static_cast<ElementType*>(output),
+                                                    shape,
+                                                    axes);
                 }
             }
         }

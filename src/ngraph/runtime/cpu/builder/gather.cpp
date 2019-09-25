@@ -57,16 +57,17 @@ namespace ngraph
                              args[0].get_element_type() == element::f64 ||
                              args[0].get_element_type() == element::u8 ||
                              args[0].get_element_type() == element::i8) &&
-                            params_shape.size() <= 3 && out_shape.size() <= 5)
+                            params_shape.size() <= 3 && out_shape.size() <= 5 &&
+                            is_optimized_et(args[0].get_element_type()))
                         {
                             std::function<decltype(runtime::cpu::kernel::gather_i64<float, 2, 2>)>
                                 kernel;
 
-                            SELECT_KERNEL_BY_2RANKS(kernel,
-                                                    args[0].get_element_type(),
-                                                    params_shape.size(),
-                                                    out_shape.size(),
-                                                    runtime::cpu::kernel::gather_i64)
+                            SELECT_RANK35_ET4(kernel,
+                                              args[0].get_element_type(),
+                                              params_shape.size(),
+                                              out_shape.size(),
+                                              runtime::cpu::kernel::gather_i64);
 
                             return [&,
                                     kernel,
@@ -117,16 +118,17 @@ namespace ngraph
                              args[0].get_element_type() == element::f64 ||
                              args[0].get_element_type() == element::u8 ||
                              args[0].get_element_type() == element::i8) &&
-                            params_shape.size() <= 3 && out_shape.size() <= 5)
+                            params_shape.size() <= 3 && out_shape.size() <= 5 &&
+                            is_optimized_et(args[0].get_element_type()))
                         {
                             std::function<decltype(runtime::cpu::kernel::gather_i32<float, 2, 2>)>
                                 kernel;
 
-                            SELECT_KERNEL_BY_2RANKS(kernel,
-                                                    args[0].get_element_type(),
-                                                    params_shape.size(),
-                                                    out_shape.size(),
-                                                    runtime::cpu::kernel::gather_i32)
+                            SELECT_RANK35_ET4(kernel,
+                                              args[0].get_element_type(),
+                                              params_shape.size(),
+                                              out_shape.size(),
+                                              runtime::cpu::kernel::gather_i32);
 
                             return [&,
                                     kernel,
@@ -188,6 +190,10 @@ namespace ngraph
                 {
                     functor = prepare_functor<float>(node, args, out, external_function);
                 }
+                else if (element_type == element::i64)
+                {
+                    functor = prepare_functor<int64_t>(node, args, out, external_function);
+                }
                 else if (element_type == element::f64)
                 {
                     functor = prepare_functor<double>(node, args, out, external_function);
@@ -203,10 +209,6 @@ namespace ngraph
                 else if (element_type == element::i32)
                 {
                     functor = prepare_functor<int32_t>(node, args, out, external_function);
-                }
-                else if (element_type == element::i64)
-                {
-                    functor = prepare_functor<int64_t>(node, args, out, external_function);
                 }
                 else if (element_type == element::u8)
                 {

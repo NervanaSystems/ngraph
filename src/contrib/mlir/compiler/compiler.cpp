@@ -85,7 +85,7 @@ using namespace ngraph::runtime::ngmlir;
 // *** Debug flags ***
 
 static llvm::cl::opt<bool> clPrintIRAfterAll(
-    "print-ngraph-ir-after-all",
+    "ngraph-print-ir-after-all",
     llvm::cl::init(false),
     llvm::cl::desc(
         "Print IR after transformation that are not implemented as passes in the MLIRCompiler. It "
@@ -99,27 +99,38 @@ static llvm::cl::opt<bool> clEnableNgInPlaceMemoryOpt(
     llvm::cl::desc("Enable ngraph dialect in-place memory optimization pass"));
 
 static llvm::cl::opt<bool>
-    clEnableAffineLoopFusion("affine-loop-fusion",
+    clEnableAffineLoopFusion("ngraph-affine-loop-fusion",
                              llvm::cl::init(false),
                              llvm::cl::desc("Enable loop fusion optimization in Affine dialect"));
 
 static llvm::cl::opt<bool>
-    clEnableAffineLoopTiling("affine-loop-tile",
+    clEnableAffineLoopTiling("ngraph-affine-loop-tile",
                              llvm::cl::init(false),
                              llvm::cl::desc("Enable loop tiling optimization in Affine dialect"));
 
 static llvm::cl::opt<unsigned>
-    clLoopTilingCacheLevel("affine-loop-tile-cache-level",
+    clLoopTilingCacheLevel("ngraph-affine-loop-tile-cache-level",
                            llvm::cl::init(2),
                            llvm::cl::desc("Cache level to which to apply affine loop tiling."));
 
 static llvm::cl::opt<unsigned> clLoopTilingCacheSize(
-    "affine-loop-tile-cache-size",
+    "ngraph-affine-loop-tile-cache-size",
     llvm::cl::init(0),
     llvm::cl::desc(
         "Cache size to use in affine loop tiling. If not zero, it overrides the cache-size "
         "inferred from the host CPU using for the cache level specified by "
-        "-loop-tile-cache-level."));
+        "-ngraph-loop-tile-cache-level."));
+
+// *** Debug flags ***
+
+static llvm::cl::opt<bool>
+    clDumpObjectFile("ngraph-dump-mlir-object-file",
+                     llvm::cl::desc("Dump MLIR JITted-compiled object to file specified with "
+                                    "-object-filename (<input file>.o by default)."));
+
+static llvm::cl::opt<std::string>
+    clObjectFilename("ngraph-mlir-object-filename",
+                     llvm::cl::desc("Dump MLIR JITted-compiled object to file jitted_mlir.o"));
 
 #define COMPILE_OP_DECL(op_name)                                                                   \
     createOp<op_name>(MLIRCompiler & compiler, const ngraph::Node* ngNode)
@@ -729,6 +740,12 @@ void MLIRCompiler::execute()
     // Please, note that 'invoke' method is overloaded with a parameter pack version.
     // Make sure the MutableArrayRef version is invoked.
     auto invocationResult = m_engine->invoke("main", llvm::MutableArrayRef<void*>(m_invokeArgs));
+
+    if (clDumpObjectFile)
+    {
+        m_engine->dumpToObjectFile(clObjectFilename.empty() ? "jitted_mlir.o"
+                                                            : clObjectFilename.getValue());
+    }
     NGRAPH_CHECK(!invocationResult, "JIT invocation of 'main' failed\n");
 }
 

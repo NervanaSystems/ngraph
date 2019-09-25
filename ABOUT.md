@@ -4,19 +4,20 @@ About nGraph Compiler stack
 nGraph Compiler stack architecture
 ----------------------------------
 
-The diagram below represents our current Beta release stack.
-In the diagram, nGraph components are colored in gray. Please note
+The diagram below represents our current release stack. In the diagram, 
+nGraph components are colored in gray. Please note
 that the stack diagram is simplified to show how nGraph executes deep
 learning workloads with two hardware backends; however, many other
 deep learning frameworks and backends currently are functioning.
 
-![](doc/sphinx/source/graphics/arch_simple_pad.png)
+![](doc/sphinx/source/graphics/ngraph_arch_diag.png)
 
-#### Bridge
+
+## Bridge
 
 Starting from the top of the stack, nGraph receives a computational graph
-from a deep learning framework such as TensorFlow* or MXNet*. The
-computational graph is converted to an nGraph internal representation
+from a deep learning framework such as TensorFlow or MXNet. The
+computational graph is converted to an nGraph internal representation 
 by a bridge created for the corresponding framework.
 
 An nGraph bridge examines the whole graph to pattern match subgraphs
@@ -24,7 +25,8 @@ which nGraph knows how to execute, and these subgraphs are encapsulated.
 Parts of the graph that are not encapsulated will default to framework
 implementation when executed.
 
-#### nGraph Core
+
+## nGraph Core
 
 nGraph uses a strongly-typed and platform-neutral
 `Intermediate Representation (IR)` to construct a "stateless"
@@ -38,10 +40,11 @@ memory management, data layouts, etc.
 
 In addition, using nGraph IR allows faster optimization delivery
 for many of the supported frameworks. For example, if nGraph optimizes
-ResNet* for TensorFlow*, the same optimization can be readily applied
-to MXNet* or ONNX* implementations of ResNet*.
+ResNet for TensorFlow, the same optimization can be readily applied
+to MXNet* or ONNX* implementations of ResNet.
 
-#### Hybrid Transformer
+
+## Hybrid Transformer
 
 Hybrid transformer takes the nGraph IR, and partitions it into
 subgraphs, which can then be assigned to the best-performing backend.
@@ -57,7 +60,7 @@ Once the subgraphs are assigned, the corresponding backend will
 execute the IR.
 
 
-#### Backends
+## Backends
 
 Focusing our attention on the CPU backend, when the IR is passed to
 the Intel® Architecture (IA) transformer, it can be executed in two modes:
@@ -70,10 +73,7 @@ nGraph leverages existing kernel libraries such as MKL-DNN, Eigen, and MLSL.
 
 MLSL library is called when nGraph executes distributed training.
 At the time of the nGraph Beta release, nGraph achieved state of the art
-results for ResNet50 with 16 nodes and 32 nodes for TensorFlow* and MXNet*.
-We are excited to continue our work in enabling distributed training,
-and we plan to expand to 256 nodes in Q4 ‘18. Additionally, we
-are testing model parallelism in addition to data parallelism.
+results for ResNet50 with 16 nodes and 32 nodes for TensorFlow and MXNet.
 
 The other mode of execution is Direct EXecution (DEX). In DEX mode,
 nGraph can execute the operations by directly calling associated kernels
@@ -106,23 +106,16 @@ non-device-specific optimizations:
 -   **Memory management** -- Prevent peak memory usage by intercepting
     a graph with or by a "saved checkpoint," and to enable data auditing.
 
-Beta Limitations
-----------------
+Limitations
+-----------
 
-In this Beta release, nGraph only supports Just In Time compilation,
-but we plan to add support for Ahead of Time compilation in the official
-release of nGraph. nGraph currently has limited support for dynamic graphs.
+The Beta release of nGraph only supports Just-In-Time (JiT) compilation; 
+Ahead-of Time (AoT) compilation will be supported in the official release. 
+nGraph currently has limited support for dynamic shapes.
+
 
 Current nGraph Compiler full stack
 ----------------------------------
 
-![](doc/sphinx/source/graphics/arch_complex.png)
+![](doc/sphinx/source/graphics/ngraph_full_stack_diagrams.png)
 
-
-In addition to IA and NNP transformers, nGraph Compiler stack has transformers
-for multiple GPU types and an upcoming Intel deep learning accelerator. To
-support the growing number of transformers, we plan to expand the capabilities
-of the hybrid transformer with a cost model and memory sharing. With these new
-features, even if nGraph has multiple backends targeting the same hardware, it
-will partition the graph into multiple subgraphs and determine the best way to
-execute each subgraph.

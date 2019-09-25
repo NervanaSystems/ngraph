@@ -107,7 +107,10 @@ if (APPLE)
             set(XCODE_ISYSROOT ${APPLE_DEV_DIR}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${OSX_SHORT_VERSION}.sdk)
             message(STATUS "Trying Xcode sdk at ${XCODE_ISYSROOT}.")
             if(NOT EXISTS ${XCODE_ISYSROOT})
-                message(FATAL_ERROR "Cannot find macos sdk.")
+                set(XCODE_ISYSROOT ${APPLE_DEV_DIR}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk)
+                if(NOT EXISTS ${XCODE_ISYSROOT})
+                    message(FATAL_ERROR "Cannot find macos sdk.")
+                endif()
             endif()
         endif()
         message(STATUS "Setting CMAKE_OSX_SYSROOT for macos ${OSX_SHORT_VERSION} to ${XCODE_ISYSROOT}")
@@ -191,6 +194,9 @@ option(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE "Enable build INTERPRETER backend as
 option(NGRAPH_CPU_STATIC_LIB_ENABLE "Enable build CPU backend as a static library" FALSE)
 option(NGRAPH_PLAIDML_STATIC_LIB_ENABLE "Enable build PlaidML backend as a static library" FALSE)
 option(NGRAPH_DYNAMIC_COMPONENTS_ENABLE "Enable dynamic loading of components" TRUE)
+if (NGRAPH_CPU_ENABLE)
+    option(NGRAPH_TBB_ENABLE "Control usage of TBB for CPU backend" TRUE)
+endif()
 
 if (NGRAPH_CPU_ENABLE
         AND
@@ -265,6 +271,9 @@ NORMALIZE_BOOL(NGRAPH_STATIC_LIB_ENABLE)
 NORMALIZE_BOOL(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
 NORMALIZE_BOOL(NGRAPH_CPU_STATIC_LIB_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DYNAMIC_COMPONENTS_ENABLE)
+if (NGRAPH_CPU_ENABLE)
+    NORMALIZE_BOOL(NGRAPH_TBB_ENABLE)
+endif()
 
 message(STATUS "NGRAPH_CXX_STANDARD:                  ${NGRAPH_CXX_STANDARD}")
 message(STATUS "NGRAPH_UNIT_TEST_ENABLE:              ${NGRAPH_UNIT_TEST_ENABLE}")
@@ -293,6 +302,9 @@ message(STATUS "NGRAPH_INTERPRETER_STATIC_LIB_ENABLE: ${NGRAPH_INTERPRETER_STATI
 message(STATUS "NGRAPH_CPU_STATIC_LIB_ENABLE:         ${NGRAPH_CPU_STATIC_LIB_ENABLE}")
 message(STATUS "NGRAPH_PLAIDML_STATIC_LIB_ENABLE:     ${NGRAPH_PLAIDML_STATIC_LIB_ENABLE}")
 message(STATUS "NGRAPH_DYNAMIC_COMPONENTS_ENABLE:     ${NGRAPH_DYNAMIC_COMPONENTS_ENABLE}")
+if (NGRAPH_CPU_ENABLE)
+    message(STATUS "NGRAPH_TBB_ENABLE:                    ${NGRAPH_TBB_ENABLE}")
+endif()
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...

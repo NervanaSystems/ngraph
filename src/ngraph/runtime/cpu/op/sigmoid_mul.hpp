@@ -30,6 +30,7 @@ namespace ngraph
         class SigmoidMultiply : public Op
         {
         public:
+            CPU_BACKEND_API
             static constexpr NodeTypeInfo type_info{"SigmoidMultiply", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// Defines valid function types
@@ -69,6 +70,7 @@ namespace ngraph
         class SigmoidMultiplyBackprop : public Op
         {
         public:
+            CPU_BACKEND_API
             static constexpr NodeTypeInfo type_info{"SigmoidMultiplyBackprop", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             typedef SigmoidMultiply::FunctionType FunctionType;

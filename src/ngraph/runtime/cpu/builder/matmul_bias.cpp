@@ -236,7 +236,7 @@ namespace ngraph
                                              void* data,
                                              int64_t size,
                                              size_t offset) {
-                        for (size_t i = 0; i < size; ++i)
+                        for (int64_t i = 0; i < size; ++i)
                         {
                             offsets_vector.at(i) = static_cast<float*>(data) + (i * offset);
                         }
