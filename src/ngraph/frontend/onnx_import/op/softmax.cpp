@@ -19,6 +19,7 @@
 #include "exceptions.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "softmax.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -35,22 +36,13 @@ namespace ngraph
                     auto data_shape = data->get_shape();
 
                     int axis = node.get_attribute_value<int64_t>("axis", 1);
-
-                    if (axis < 0)
-                    {
-                        axis = data_shape.size() + axis;
-                    }
-
-                    ASSERT_VALID_ARGUMENT(node, axis < data_shape.size())
-                        << "provided 'axis' value:" << axis
-                        << " is out of input tensor dimensions range.";
+                    std::size_t valid_axis = common::validate_axis(node, axis, data_shape.size());
 
                     // create vector of capacity data_dimensions - axis_divider position
-                    std::vector<size_t> axes(data_shape.size() - axis);
-                    std::iota(std::begin(axes), std::end(axes), axis);
+                    std::vector<size_t> axes(data_shape.size() - valid_axis);
+                    std::iota(std::begin(axes), std::end(axes), valid_axis);
                     return {std::make_shared<ngraph::op::Softmax>(data, axes)};
                 }
-
             } // namespace set_1
 
         } // namespace op

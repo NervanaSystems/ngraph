@@ -60,14 +60,13 @@ namespace ngraph
                          result_desc.data.ndims == 5 && node->get_users().size() == 1)
                 {
                     Shape weights_shape_groups;
-                    if (auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(
-                            node->get_users()[0]))
+                    if (auto gconv =
+                            as_type_ptr<ngraph::op::GroupConvolution>(node->get_users()[0]))
                     {
                         weights_shape_groups = gconv->get_weights_dimensions();
                     }
-                    else if (auto gconvb =
-                                 std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(
-                                     node->get_users()[0]))
+                    else if (auto gconvb = as_type_ptr<ngraph::op::GroupConvolutionBias>(
+                                 node->get_users()[0]))
                     {
                         weights_shape_groups = gconvb->get_weights_dimensions();
                     }
@@ -109,14 +108,13 @@ namespace ngraph
                          result_desc.data.ndims == 5 && node->get_users().size() == 1)
                 {
                     Shape weights_shape_groups;
-                    if (auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(
-                            node->get_users()[0]))
+                    if (auto gconv =
+                            as_type_ptr<ngraph::op::GroupConvolution>(node->get_users()[0]))
                     {
                         weights_shape_groups = gconv->get_weights_dimensions();
                     }
-                    else if (auto gconvb =
-                                 std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(
-                                     node->get_users()[0]))
+                    else if (auto gconvb = as_type_ptr<ngraph::op::GroupConvolutionBias>(
+                                 node->get_users()[0]))
                     {
                         weights_shape_groups = gconvb->get_weights_dimensions();
                     }
@@ -138,7 +136,7 @@ namespace ngraph
                 auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);
                 auto functor =
                     [&, input_desc, result_desc, reorder_index, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_reorder(ctx->mkldnn_memories,

@@ -90,7 +90,7 @@ namespace ngraph
                                 bias_buffer_index,
                                 dst_layer_buffer_index,
                                 dst_iter_buffer_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) {
+                                                       CPUExecutionContext* /* ectx */) {
                     if (ctx->first_iteration)
                     {
                         mkldnn_emitter->build_rnn_forward(ctx->mkldnn_memories,

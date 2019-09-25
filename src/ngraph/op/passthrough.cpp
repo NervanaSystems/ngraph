@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Passthrough::type_name{"Passthrough"};
+constexpr NodeTypeInfo op::Passthrough::type_info;
 
 ngraph::op::Passthrough::Passthrough(const std::string& logical_type,
                                      const std::string& language,

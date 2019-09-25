@@ -31,8 +31,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"DynBroadcast", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             DynBroadcast() = default;
             /// \brief Constructs a dynamic broadcast operation.
             ///

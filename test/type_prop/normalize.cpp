@@ -20,11 +20,12 @@
 
 using namespace std;
 using namespace ngraph;
-TEST(type_prop, normalize_invalid_input_tensor_rank)
+
+TEST(type_prop, normalize_axes_input_not_constant)
 {
-    Shape data_shape{1, 2, 3, 4, 5};
+    Shape data_shape{1, 2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    auto axes = make_shared<op::Parameter>(element::u64, Shape{1, 2});
+    auto axes = make_shared<op::Parameter>(element::u64, Shape{1});
     float eps{1e-6f};
     auto eps_mode = op::EpsMode::ADD;
 
@@ -36,26 +37,7 @@ TEST(type_prop, normalize_invalid_input_tensor_rank)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Input tensor rank must be 2, 3 or 4 dimensional"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-
-    data = make_shared<op::Parameter>(element::f32, Shape{2});
-
-    try
-    {
-        auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Invalid input tensor rank.";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Input tensor rank must be 2, 3 or 4 dimensional"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input axes must be Constant type"));
     }
     catch (...)
     {
@@ -67,7 +49,7 @@ TEST(type_prop, normalize_invalid_axes_rank)
 {
     Shape data_shape{1, 2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    auto axes = make_shared<op::Parameter>(element::u64, Shape{1, 2});
+    const auto axes = make_shared<op::Constant>(element::i64, Shape{1, 2}, vector<int64_t>{1, 2});
     float eps{1e-6f};
     auto eps_mode = op::EpsMode::ADD;
 
@@ -87,15 +69,26 @@ TEST(type_prop, normalize_invalid_axes_rank)
     }
 }
 
-TEST(type_prop, normalize_output_shape_across_chw)
+TEST(type_prop, normalize_axes_out_of_bounds)
 {
-    Shape data_shape{2, 3, 4};
+    Shape data_shape{1, 2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto axes = make_shared<op::Constant>(element::u64, Shape{3}, vector<int64_t>{1, 2, 3});
+    const auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{3, 4});
     float eps{1e-6f};
     auto eps_mode = op::EpsMode::ADD;
 
-    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
-    EXPECT_EQ(normalize->get_element_type(), element::f32);
-    EXPECT_EQ(normalize->get_shape(), (Shape{2, 3, 4}));
+    try
+    {
+        auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Reduction axis ("));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }

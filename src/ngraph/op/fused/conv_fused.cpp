@@ -27,10 +27,9 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::ConvolutionBias::type_name{"ConvolutionBias"};
-const string op::ConvolutionBiasBackpropFiltersBias::type_name{
-    "ConvolutionBiasBackpropFiltersBias"};
-const string op::ConvolutionBiasAdd::type_name{"ConvolutionBiasAdd"};
+constexpr NodeTypeInfo op::ConvolutionBias::type_info;
+constexpr NodeTypeInfo op::ConvolutionBiasBackpropFiltersBias::type_info;
+constexpr NodeTypeInfo op::ConvolutionBiasAdd::type_info;
 
 static void validate_convbias_shapes(const Node* node,
                                      element::Type et_filters,

@@ -36,8 +36,8 @@ namespace ngraph
 
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"Parameter", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructions a tensor-typed parameter node.
             Parameter() = default;
             /// \brief Constructions a tensor-typed parameter node.
@@ -49,6 +49,7 @@ namespace ngraph
                       const PartialShape& pshape,
                       const bool cacheable = false);
 
+            bool is_parameter() const override { return true; }
             void validate_and_infer_types() override;
 
             bool get_cacheable() const { return m_cacheable; }

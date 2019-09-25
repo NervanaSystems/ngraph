@@ -44,12 +44,12 @@ namespace ngraph
                     Eigen::array<Eigen::Index, InRank> in_dims;
                     Eigen::array<Eigen::Index, InRank> axis_order;
 
-                    for (int i = 0; i < OutRank; i++)
+                    for (size_t i = 0; i < OutRank; i++)
                     {
                         out_dims[i] = output_shape[i];
                     }
 
-                    for (int i = 0; i < InRank; i++)
+                    for (size_t i = 0; i < InRank; i++)
                     {
                         in_dims[i] = input_shape[i];
                         axis_order[i] = input_axis_order[i];
@@ -150,7 +150,7 @@ namespace ngraph
                                  const Shape& in_shape,
                                  const AxisVector& in_axis_order,
                                  const Shape& out_shape,
-                                 int arena)
+                                 int /* arena */)
                 {
                     reference::reshape(static_cast<const ElementType*>(arg),
                                        static_cast<ElementType*>(out),

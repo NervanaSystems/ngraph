@@ -69,10 +69,8 @@ TEST(concat_fusion, single_branch)
     auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_single_branch.png");
     pass_manager.register_pass<pass::ConcatElimination>();
     pass_manager.register_pass<pass::SelfConcatFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_single_branch.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
@@ -116,10 +114,8 @@ TEST(concat_fusion, multiple_branches_1)
     auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_multiple_branches_1.png");
     pass_manager.register_pass<pass::ConcatElimination>();
     pass_manager.register_pass<pass::SelfConcatFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_multiple_branches_1.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
@@ -159,10 +155,8 @@ TEST(concat_fusion, multiple_branches_2)
     auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_multiple_branches_2.png");
     pass_manager.register_pass<pass::ConcatElimination>();
     pass_manager.register_pass<pass::SelfConcatFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_multiple_branches_2.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
@@ -211,10 +205,8 @@ TEST(concat_fusion, non_fusable_self_concat)
     auto baseline_input_shape_2 = baseline_f->get_parameters().at(1)->get_shape();
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_non_fusable_self_concat.png");
     pass_manager.register_pass<pass::ConcatElimination>();
     pass_manager.register_pass<pass::SelfConcatFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_non_fusable_self_concat.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
@@ -266,10 +258,8 @@ TEST(concat_fusion, self_concat_with_fan_out)
     auto baseline_input_shape_2 = baseline_f->get_parameters().at(1)->get_shape();
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_self_concat_with_fan_out.png");
     pass_manager.register_pass<pass::ConcatElimination>();
     pass_manager.register_pass<pass::SelfConcatFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_self_concat_with_fan_out.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);

@@ -28,7 +28,7 @@ namespace ngraph
     }
 }
 
-const std::string ngraph::runtime::plaidml::op::Replicate::type_name{"Replicate"};
+constexpr ngraph::NodeTypeInfo ngraph::runtime::plaidml::op::Replicate::type_info;
 
 ngraph::runtime::plaidml::op::Replicate::Replicate(const Output<Node>& arg,
                                                    std::size_t replication_axis,
