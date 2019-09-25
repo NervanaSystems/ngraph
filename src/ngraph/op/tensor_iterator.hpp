@@ -23,40 +23,6 @@
 
 namespace ngraph
 {
-    template <typename T, typename U>
-    bool is_type(U u)
-    {
-        return &u->get_type_info() == &T::type_info;
-    }
-
-    /// Casts a Node* to a NodeType* if it is of type NodeType, nullptr otherwise
-    template <typename T, typename U>
-    T* as_type(U* u)
-    {
-        return is_type<T>(u) ? static_cast<T*>(u) : nullptr;
-    }
-
-    /// Casts a Node* to a NodePtr* if it is of type NodePtr, nullptr otherwise
-    template <typename T, typename U>
-    const T* as_type(const U* u)
-    {
-        return is_type<T>(u) ? static_cast<const T*>(u) : nullptr;
-    }
-
-    /// Casts a Node* to a NodeType* if it is of type NodeType, nullptr otherwise
-    template <typename T, typename U>
-    T* as_type(std::shared_ptr<U> u)
-    {
-        return is_type<T>(u) ? static_cast<T*>(u.get()) : nullptr;
-    }
-
-    /// Casts a Node* to a NodePtr* if it is of type NodePtr, nullptr otherwise
-    template <typename T, typename U>
-    const T* as_type(std::shared_ptr<const U> u)
-    {
-        return is_type<T>(u) ? static_cast<const T*>(u.get()) : nullptr;
-    }
-
     namespace op
     {
         /// \brief  Iterate a body over tensors, accumulating into tensors.

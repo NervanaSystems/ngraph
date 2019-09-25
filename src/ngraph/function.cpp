@@ -104,6 +104,19 @@ void Function::validate_nodes_and_infer_types()
 void Function::init()
 {
     validate_nodes_and_infer_types();
+
+    traverse_nodes(this,
+                   [&](shared_ptr<Node> node) {
+                       if (node->is_parameter())
+                       {
+                           auto it = std::find(m_parameters.begin(), m_parameters.end(), node);
+                           if (it == m_parameters.end())
+                           {
+                               throw ngraph_error("Function references undeclared parameter");
+                           }
+                       }
+                   },
+                   true /*include control dependencies*/);
 }
 
 std::list<shared_ptr<Node>> Function::get_ordered_ops(bool include_control_deps) const

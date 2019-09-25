@@ -89,11 +89,37 @@ namespace ngraph
 
     using NodeTypeInfo = TypeInfo;
 
-    /// Tests if a node is of op type T
-    template <typename NodeType, typename T>
-    bool is_type(T value)
+    /// Tests if a value is of nGraph type Type
+    template <typename Type, typename Value>
+    typename std::enable_if<std::is_convertible<decltype(std::declval<Value>()->get_type_info()),
+                                                decltype(Type::type_info)>::value,
+                            bool>::type
+        is_type(Value value)
     {
-        return &value->get_type_info() == &NodeType::type_info;
+        return &value->get_type_info() == &Type::type_info;
+    }
+
+    /// Casts a Value* to a Type* if it is of nGraph type Type, nullptr otherwise
+    template <typename Type, typename Value>
+    typename std::enable_if<
+        std::is_convertible<decltype(static_cast<Type*>(std::declval<Value>())), Type*>::value,
+        Type*>::type
+        as_type(Value value)
+    {
+        return is_type<Type>(value) ? static_cast<Type*>(value) : nullptr;
+    }
+
+    /// Casts a std::shared_ptr<Value> to a std::shared_ptr<Type> if it is of nGraph type
+    /// Type, nullptr otherwise
+    template <typename Type, typename Value>
+    typename std::enable_if<
+        std::is_convertible<decltype(std::static_pointer_cast<Type>(std::declval<Value>())),
+                            std::shared_ptr<Type>>::value,
+        std::shared_ptr<Type>>::type
+        as_type_ptr(Value value)
+    {
+        return is_type<Type>(value) ? std::static_pointer_cast<Type>(value)
+                                    : std::shared_ptr<Type>();
     }
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
@@ -493,36 +519,6 @@ namespace ngraph
         Placement m_placement = Placement::DEFAULT;
         size_t m_placement_index = placement_invalid;
     };
-
-    /// Casts a Node* to a NodeType* if it is of type NodeType, nullptr otherwise
-    template <typename NodeType>
-    NodeType* as_type(Node* node)
-    {
-        return is_type<NodeType>(node) ? static_cast<NodeType*>(node) : nullptr;
-    }
-
-    /// Casts a Node* to a NodePtr* if it is of type NodePtr, nullptr otherwise
-    template <typename NodeType>
-    const NodeType* as_type(const Node* node)
-    {
-        return is_type<NodeType>(node) ? static_cast<const NodeType*>(node) : nullptr;
-    }
-
-    /// Casts a Node to a shared_ptr<NodePtr> if it is of type NodePtr, nullptr otherwise
-    template <typename NodeType>
-    std::shared_ptr<NodeType> as_type_ptr(std::shared_ptr<Node> node_ptr)
-    {
-        return is_type<NodeType>(node_ptr) ? std::static_pointer_cast<NodeType>(node_ptr)
-                                           : std::shared_ptr<NodeType>();
-    }
-
-    /// Casts a Node to a shared_ptr<NodePtr> if it is of type NodePtr, nullptr otherwise
-    template <typename NodeType>
-    std::shared_ptr<const NodeType> as_type_ptr(std::shared_ptr<const Node> node_ptr)
-    {
-        return is_type<NodeType>(node_ptr) ? std::static_pointer_cast<NodeType>(node_ptr)
-                                           : std::shared_ptr<NodeType>();
-    }
 
     /// \brief A handle for one of a node's inputs.
     template <typename NodeType>
