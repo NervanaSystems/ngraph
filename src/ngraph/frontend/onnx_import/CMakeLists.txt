@@ -86,6 +86,8 @@ add_library(onnx_import STATIC
         op/equal.hpp
         op/erf.hpp
         op/exp.hpp
+        op/expand.hpp
+        op/expand.cpp
         op/eye_like.cpp
         op/eye_like.hpp
         op/flatten.cpp
