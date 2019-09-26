@@ -1,0 +1,44 @@
+diff --git a/lib/ExecutionEngine/CMakeLists.txt b/lib/ExecutionEngine/CMakeLists.txt
+index 07061b1d..49f20bda 100644
+--- a/lib/ExecutionEngine/CMakeLists.txt
++++ b/lib/ExecutionEngine/CMakeLists.txt
+@@ -14,6 +14,7 @@ target_link_libraries(MLIRExecutionEngine
+   LLVMBitReader
+   LLVMBitWriter
+   LLVMExecutionEngine
++  LLVMIntelJITEvents
+   LLVMOrcJIT
+   LLVMSupport
+   LLVMTransformUtils
+diff --git a/lib/ExecutionEngine/ExecutionEngine.cpp b/lib/ExecutionEngine/ExecutionEngine.cpp
+index cc0979a8..e6d4c1f2 100644
+--- a/lib/ExecutionEngine/ExecutionEngine.cpp
++++ b/lib/ExecutionEngine/ExecutionEngine.cpp
+@@ -27,6 +27,7 @@
+ 
+ #include "llvm/Bitcode/BitcodeReader.h"
+ #include "llvm/Bitcode/BitcodeWriter.h"
++#include "llvm/ExecutionEngine/JITEventListener.h"
+ #include "llvm/ExecutionEngine/ObjectCache.h"
+ #include "llvm/ExecutionEngine/Orc/CompileUtils.h"
+ #include "llvm/ExecutionEngine/Orc/ExecutionUtils.h"
+@@ -69,6 +70,11 @@ static inline Error make_string_error(const llvm::Twine &message) {
+                                        llvm::inconvertibleErrorCode());
+ }
+ 
++static void notifyLoaded(llvm::orc::VModuleKey Key, const llvm::object::ObjectFile &Obj, const llvm::RuntimeDyld::LoadedObjectInfo &LoadedObjectInfo) {
++  static llvm::JITEventListener* eventListener = llvm::JITEventListener::createIntelJITEventListener();
++  eventListener->notifyObjectLoaded(Key, Obj, LoadedObjectInfo);
++}
++
+ namespace mlir {
+ 
+ void SimpleObjectCache::notifyObjectCompiled(const Module *M,
+@@ -233,6 +239,7 @@ Expected<std::unique_ptr<ExecutionEngine>> ExecutionEngine::create(
+                                        const Triple &TT) {
+     auto objectLayer = std::make_unique<RTDyldObjectLinkingLayer>(
+         session, []() { return std::make_unique<SectionMemoryManager>(); });
++    objectLayer->setNotifyLoaded(notifyLoaded);
+     auto dataLayout = deserModule->getDataLayout();
+ 
+     // Resolve symbols that are statically linked in the current process.

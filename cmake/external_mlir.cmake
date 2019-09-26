@@ -31,6 +31,9 @@ set(MLIR_BUILD_DIR ${MLIR_LLVM_ROOT}/build)
 set(MLIR_TOOLS_DIR ${MLIR_BUILD_DIR}/bin)
 set(NGRAPH_LIT_TEST_SRC_DIR ${CMAKE_SOURCE_DIR}/test/mlir)
 set(NGRAPH_LIT_TEST_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/test/mlir)
+set(MLIR_PATCH_FILE mlir.patch)
+# Revert prior changes to make incremental build work.
+set(MLIR_PATCH_REVERT_COMMAND cd ${MLIR_SOURCE_DIR} && git reset HEAD --hard)
 
 # MLIR has to be pre-built before ngraph build starts
 # this will clone and build MLIR during cmake config instead
