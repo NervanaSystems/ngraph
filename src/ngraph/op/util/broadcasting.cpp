@@ -203,9 +203,9 @@ static std::shared_ptr<ngraph::Node> broadcast_value_pdpd_style(
     }
 
     ngraph::AxisSet axes;
-    for (size_t i = 0; i < axis; ++i)
+    for (int64_t i = 0; i < axis; ++i)
     {
-        axes.insert(i);
+        axes.insert(static_cast<size_t>(i));
     }
 
     for (size_t i = axis + trimmed_value_shape.size(); i < output_shape.size(); ++i)

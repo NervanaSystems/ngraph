@@ -252,6 +252,7 @@ bool PartialShape::broadcast_merge_into(PartialShape& dst,
 {
     switch (autob.m_type)
     {
+    case op::AutoBroadcastType::NONE: return true;
     case op::AutoBroadcastType::NUMPY:
     {
         if (dst.rank().is_dynamic() || src.rank().is_dynamic())
@@ -279,7 +280,6 @@ bool PartialShape::broadcast_merge_into(PartialShape& dst,
             return success;
         }
     }
-    break;
     case op::AutoBroadcastType::PDPD:
     {
         if (dst.rank().is_dynamic() || src.rank().is_dynamic())
@@ -321,9 +321,10 @@ bool PartialShape::broadcast_merge_into(PartialShape& dst,
             return true;
         }
     }
-    break;
     default: NGRAPH_CHECK(false, "Unsupported auto broadcast type: ", autob.m_type);
     }
+
+    return false;
 }
 
 bool PartialShape::all_non_negative() const
