@@ -187,7 +187,7 @@ namespace ngraph
                             arg1_padded_shape.insert(arg1_padded_shape.begin(), 1);
                         }
 
-                        for (size_t i = axis + arg1_shape.size(); i < arg0_shape.size(); ++i)
+                        while (arg1_padded_shape.size() < arg0_shape.size())
                         {
                             arg1_padded_shape.insert(arg1_padded_shape.end(), 1);
                         }
