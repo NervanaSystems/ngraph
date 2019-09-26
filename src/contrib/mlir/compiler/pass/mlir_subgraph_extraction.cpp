@@ -106,17 +106,11 @@ MLIRSubgraphExtractionPass::MLIRSubgraphExtractionPass()
 }
 
 // The sub-graph construction algorithm is as follows
-// For each node, check its predecessors, if
-// - all predecessors in sub-graphs belong to the same sub-graph (graph ID), then extend the
-//   sub-graph to include the current node.
-//   Predecessors outside sub-graphs are marked as input to the sub-graph.
-// - predecessors in sub-graphs belong to different sub-graphs, then merge all the sub-graphs into
-//   one, and add current node to it. Predecessors outside sub-graphs are marked as input to the
-//   sub-graph.
-//
-// If the node has any external inputs, then it's possible that the input may come from one of the
-// predecessor sub-graphs (cycle).
-// If a cycle is found, always start a new sub-graph.
+// Process each node in topological order:
+// - start a new sub-graph whenever an unsupported node is encountered.
+// - supported node is added to current sub-graph and its
+// -- predecessors outside current sub-graphs are marked as input to the sub-graph.
+// Sub-graph may contain multiple disjoint clusters.
 //
 // For each sub-graph found build a CompiledKernel(CK) node around it as follows
 // - all inputs edges to the sub-graph are cloned as inputs to CK node as well.
@@ -139,13 +133,16 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
 {
     NGRAPH_DEBUG << "[CK Extract] Construct sub-graphs";
+    bool create_subgraph = true;
+    int current_subgraph_id = 0;
     for (auto op : func->get_ordered_ops())
     {
         NodeVector inputs;
         std::unordered_set<int> subgraph_ids;
-        // unsupported ops, skip
+        // unsupported ops, skip and start a new sub-graph
         if (!is_supported_mlir_op(op))
         {
+            create_subgraph = true;
             continue;
         }
         if (TI(Parameter) == TI(*op) || TI(Result) == TI(*op))
@@ -153,71 +150,33 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
             continue;
         }
 
-        NGRAPH_DEBUG << "[CK Extract] Processing " << *op;
         // supported op
+        NGRAPH_DEBUG << "[CK Extract] Processing " << *op;
+        if (create_subgraph)
+        {
+            // first sub-graph or the top topologically before this op is not supported
+            // create a new sub-graph
+            MLIRSubgraph sg = MLIRSubgraph::create(this);
+            add_subgraph(sg);
+            NGRAPH_DEBUG << "   [CK Extract] Start new sub-graph " << sg.get_id();
+            create_subgraph = false;
+            current_subgraph_id = sg.get_id();
+        }
         for (auto pred : op->get_arguments())
         {
             int pred_subgraph_id = get_subgraph_id(pred);
-            if (pred_subgraph_id == -1)
+            if (pred_subgraph_id != current_subgraph_id)
             {
-                // predecessor doesn't belong to any sub-graph, it is an input
+                // predecessor doesn't belong to current sub-graph, it is an input
                 inputs.push_back(pred);
             }
-            else
-            {
-                // record sub-graph id of the predecessor
-                subgraph_ids.insert(pred_subgraph_id);
-            }
         }
-        if (subgraph_ids.size() == 0)
-        {
-            // we couldn't find any predecessor sub-graphs to extend with this node
-            // create a new sub-graph
-            MLIRSubgraph sg = MLIRSubgraph::create(this);
-            sg.add_inputs(inputs);
-            sg.add_node(op);
-            add_subgraph(sg);
-            NGRAPH_DEBUG << "   [CK Extract] Start new sub-graph " << sg.get_id();
-        }
-        else
-        {
-            // we have sub-graphs.
-            // check if adding this node to the sub-graph will create a cycle in the DAG
-            NGRAPH_DEBUG << "   [CK Extract] Extending sub-graph. Check for cycles";
-            if (!check_cycles(op, subgraph_ids))
-            {
-                NGRAPH_DEBUG << "       [CK Extract] Merging subgraphs ";
-                // merge sub-graphs if needed
-                std::unordered_set<int>::iterator it = subgraph_ids.begin();
-                int sg_id = *it;
-                MLIRSubgraph& first_subgraph = get_subgraph(sg_id);
-                NGRAPH_CHECK(first_subgraph.get_id() == sg_id);
-                NGRAPH_DEBUG << "       Graph ID: " << sg_id;
-                while (++it != subgraph_ids.end())
-                {
-                    sg_id = *it;
-                    NGRAPH_DEBUG << "       Graph ID: " << sg_id;
-                    MLIRSubgraph& subgraph = get_subgraph(sg_id);
-                    NGRAPH_CHECK(subgraph.get_id() == sg_id);
-                    first_subgraph.merge(subgraph);
-                }
 
-                first_subgraph.add_node(op);
-                first_subgraph.add_inputs(inputs);
-            }
-            else
-            {
-                // we have a cycle, start a new sub-graph
-                MLIRSubgraph sg = MLIRSubgraph::create(this);
-                NGRAPH_DEBUG << "       [CK Extract] Cycle found. Start a new subgraph "
-                             << sg.get_id();
-                // use all predecessors as graph inputs
-                NodeVector inputs = op->get_arguments();
-                sg.add_inputs(inputs);
-                sg.add_node(op);
-                add_subgraph(sg);
-            }
-        }
+        // add inputs and op to current sub-graph
+        MLIRSubgraph& current_subgraph = get_subgraph(current_subgraph_id);
+        current_subgraph.add_node(op);
+        current_subgraph.add_inputs(inputs);
+
         NGRAPH_DEBUG << "[CK Extract] Node Processed " << *op;
     }
 
@@ -454,54 +413,6 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     }
 
     return true;
-}
-
-bool MLIRSubgraphExtractionPass::check_cycles(std::shared_ptr<Node> node,
-                                              std::unordered_set<int>& subgraph_ids,
-                                              bool inside_subgraphs,
-                                              unsigned depth)
-{
-    // Going too deep, bail out.
-    if (depth >= m_max_cycle_depth)
-        return true;
-
-    // root node is always inside merged sub-graphs.
-    if (depth != 0)
-    {
-        if (subgraph_ids.find(get_subgraph_id(node)) != subgraph_ids.end())
-        {
-            // This node is inside a sub-graph. If we are coming from outside the sub-graphs, then
-            // we formed a cycle.
-            if (!inside_subgraphs)
-            {
-                return true;
-            }
-        }
-        else
-        {
-            inside_subgraphs = false;
-        }
-    }
-    NodeVector node_inputs;
-    auto subgraph_id = get_subgraph_id(node);
-    // If the node is part of a sub-graph, capture all of sub-graph inputs, else only node's input
-    if (subgraph_id >= 0)
-    {
-        auto subgraph = get_subgraph(subgraph_id);
-        auto subgraph_inputs = subgraph.get_inputs();
-        node_inputs.insert(node_inputs.end(), subgraph_inputs.begin(), subgraph_inputs.end());
-    }
-    else
-    {
-        node_inputs = node->get_arguments();
-    }
-
-    for (auto& input : node_inputs)
-    {
-        if (check_cycles(input, subgraph_ids, inside_subgraphs, ++depth))
-            return true;
-    }
-    return false;
 }
 
 void MLIRSubgraphExtractionPass::clean_up()
