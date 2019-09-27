@@ -28,13 +28,18 @@ namespace ngraph
             NodeVector rc;
             if (node->supports_auto_broadcast())
             {
-                if (node->get_autob().m_type == op::AutoBroadcastType::NONE)
+                auto autob = node->get_autob();
+                if (autob.m_type == op::AutoBroadcastType::NONE)
                 {
                     rc = node->get_arguments();
                 }
-                else if (node->get_autob().m_type == op::AutoBroadcastType::NUMPY)
+                else if (autob.m_type == op::AutoBroadcastType::NUMPY)
                 {
                     rc = op::numpy_style_broadcast(node->get_arguments());
+                }
+                else if (autob.m_type == op::AutoBroadcastType::PDPD)
+                {
+                    rc = op::pdpd_style_broadcast(node->get_arguments(), autob.m_axis);
                 }
                 else
                 {
