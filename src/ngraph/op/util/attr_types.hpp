@@ -54,6 +54,13 @@ namespace ngraph
             NOTSET = EXPLICIT,
         };
 
+        /// \brief Rounding Type used for `Pooling` operators.
+        enum class RoundingType
+        {
+            FLOOR = 0,
+            CEIL = 1,
+        };
+
         /// \brief Specifies the algorithm to use for implicit broadcasting of a tensor
         ///        to align with another tensor
         ///

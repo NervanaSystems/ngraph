@@ -21,7 +21,9 @@
 
 #include "ngraph/code_writer.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/gather.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/sum.hpp"
@@ -127,9 +129,6 @@ namespace ngraph
         class MaxPoolWithIndices;
         class Reverse;
         class ReverseSequence;
-        class AvgPool;
-        class AvgPoolBackprop;
-        class MaxPoolBackprop;
         class MaxPoolWithIndicesBackprop;
         class Max;
         class Erf;
