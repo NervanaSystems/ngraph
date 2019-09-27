@@ -77,6 +77,10 @@ if ("${CMAKE_GENERATOR}" MATCHES "^Visual Studio.*$")
     set(MSVS TRUE)
 endif()
 
+if (CMAKE_CXX_COMPILER_ID MATCHES MSVC)
+    add_definitions(/bigobj)
+endif()
+
 # APPLE: Set CMAKE_OSX_SYSROOT if not set already.
 if (APPLE)
     execute_process(COMMAND sw_vers -productVersion
