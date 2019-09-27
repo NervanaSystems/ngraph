@@ -1338,7 +1338,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_cross_entropy_fpro
         auto axis_to_sum = *(static_cast<int const*>(axis_constant_op->get_data_ptr()));
 
         auto max_xj = std::make_shared<ngraph::op::Max>(input_to_normalize, AxisSet{axis_to_sum});
-        auto subtract = std::make_shared<ngraph::op::Subtract>(input_to_normalize, max_xj);
+        auto broadcast_max_xj = std::make_shared<ngraph::op::Broadcast>(
+            max_xj, input_to_normalize->get_shape(), AxisSet{1});
+        auto subtract =
+            std::make_shared<ngraph::op::Subtract>(input_to_normalize, broadcast_max_xj);
         auto exp = std::make_shared<ngraph::op::Exp>(subtract);
 
         auto j_axis_to_sum = ngraph::op::Constant::create(
@@ -1347,9 +1350,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_cross_entropy_fpro
         auto log_sum_over_j = std::make_shared<ngraph::op::Log>(sum_over_j);
 
         auto subtract_max_xj_from_input =
-            std::make_shared<ngraph::op::Subtract>(input_to_normalize, max_xj);
+            std::make_shared<ngraph::op::Subtract>(input_to_normalize, broadcast_max_xj);
+        auto broadcast_log = std::make_shared<ngraph::op::Broadcast>(
+            log_sum_over_j, subtract_max_xj_from_input->get_shape(), AxisSet{1});
         auto subtract_max_xj_from_input_from_log_sum_over_j =
-            std::make_shared<ngraph::op::Subtract>(subtract_max_xj_from_input, log_sum_over_j);
+            std::make_shared<ngraph::op::Subtract>(subtract_max_xj_from_input, broadcast_log);
         auto multiply = std::make_shared<ngraph::op::Multiply>(
             one_hot_labels, subtract_max_xj_from_input_from_log_sum_over_j);
         auto k_axis_to_sum = ngraph::op::Constant::create(
@@ -1358,9 +1363,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_cross_entropy_fpro
         auto negate_summation = std::make_shared<ngraph::op::Negative>(sum_over_k);
         ngraph::replace_node(m.get_match_root(), negate_summation);
 
-        return false;
+        return true;
     };
-    auto m = std::make_shared<pattern::Matcher>(loss_result, "CPUFusion.SigmoidCrossEntropy");
+    auto m = std::make_shared<pattern::Matcher>(negative, "CPUFusion.SigmoidCrossEntropy");
     this->add_matcher(m, callback);
 }
 
