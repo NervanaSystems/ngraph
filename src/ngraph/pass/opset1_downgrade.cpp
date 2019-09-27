@@ -129,10 +129,34 @@ bool pass::Opset1Downgrade::run_on_node(shared_ptr<Node> node)
     }
     case OP_TYPEID::Sum:
     {
-        bool keep_dims = false;
-        auto replacement_node = make_shared<op::v1::ReduceSum>(
-            node->input(0).get_source_output(), node->input(1).get_source_output(), keep_dims);
-        replace_node(node, replacement_node);
+        auto tmp = dynamic_cast<const op::v1::ReduceSum*>(node.get());
+        auto replacement_node = make_shared<op::v0::Sum>(node->input(0).get_source_output(),
+            node->input(1).get_source_output());
+        if (tmp->get_keep_dims())
+        {
+            NGRAPH_CHECK(tmp->reduction_axes_constant(),
+                "Unable to convert ReduceSum:v1 to Sum:v0 "
+                "if reduction axes are not constant (for keep_dims=true). Node: ",
+                *node);
+            auto output_pshape = replacement_node->get_output_partial_shape(0);
+            NGRAPH_CHECK(output_pshape.is_static(),
+                "Unable to convert ReduceSum:v1 to Sum:v0 "
+                "if output shape is dynamic (for keep_dims=true). Node: ",
+                *node);
+            const auto output_shape = output_pshape.to_shape();
+            auto reshaped_output_shape = output_shape;
+            for (const auto& axis : tmp->get_reduction_axes())
+            {
+                reshaped_output_shape.insert(reshaped_output_shape.begin() + axis, 1);
+            }
+            auto reshaped_product = make_shared<op::Reshape>(
+                replacement_node->output(0), get_default_order(output_shape), reshaped_output_shape);
+            replace_node(node, reshaped_product);
+        }
+        else
+        {
+            replace_node(node, replacement_node);
+        }
         modified = true;
         break;
     }
