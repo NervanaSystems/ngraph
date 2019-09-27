@@ -47,6 +47,7 @@
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/log.hpp"
+#include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
@@ -1330,6 +1331,32 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_cross_entropy_fpro
                   << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
+        auto input_to_normalize = pattern_map[param_1];
+        auto one_hot_labels = pattern_map[param_2];
+        auto axis_constant_op =
+            std::static_pointer_cast<ngraph::op::Constant>(pattern_map[summation_axis_label]);
+        auto axis_to_sum = *(static_cast<int const*>(axis_constant_op->get_data_ptr()));
+
+        auto max_xj = std::make_shared<ngraph::op::Max>(input_to_normalize, AxisSet{axis_to_sum});
+        auto subtract = std::make_shared<ngraph::op::Subtract>(input_to_normalize, max_xj);
+        auto exp = std::make_shared<ngraph::op::Exp>(subtract);
+
+        auto j_axis_to_sum = ngraph::op::Constant::create(
+            element::i64, axis_constant_op->get_shape(), {axis_to_sum});
+        auto sum_over_j = std::make_shared<ngraph::op::Sum>(exp, j_axis_to_sum);
+        auto log_sum_over_j = std::make_shared<ngraph::op::Log>(sum_over_j);
+
+        auto subtract_max_xj_from_input =
+            std::make_shared<ngraph::op::Subtract>(input_to_normalize, max_xj);
+        auto subtract_max_xj_from_input_from_log_sum_over_j =
+            std::make_shared<ngraph::op::Subtract>(subtract_max_xj_from_input, log_sum_over_j);
+        auto multiply = std::make_shared<ngraph::op::Multiply>(
+            one_hot_labels, subtract_max_xj_from_input_from_log_sum_over_j);
+        auto k_axis_to_sum = ngraph::op::Constant::create(
+            element::i64, axis_constant_op->get_shape(), {axis_to_sum});
+        auto sum_over_k = std::make_shared<ngraph::op::Sum>(multiply, k_axis_to_sum);
+        auto negate_summation = std::make_shared<ngraph::op::Negative>(sum_over_k);
+        ngraph::replace_node(m.get_match_root(), negate_summation);
 
         return false;
     };
