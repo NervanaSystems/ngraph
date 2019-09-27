@@ -51,8 +51,7 @@ TEST(product, opset1_product_upgrade)
 TEST(product, opset1_red_prod_downgrade)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
-    const auto axes =
-        make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{0, 1});
+    const auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{0, 1});
 
     const auto product_v1 = make_shared<op::v1::ReduceProd>(data, axes, true);
     const auto result = make_shared<op::Result>(product_v1);
@@ -65,7 +64,8 @@ TEST(product, opset1_red_prod_downgrade)
     const auto reshape_replacement_node =
         f->get_result()->input(0).get_source_output().get_node_shared_ptr();
     const auto reshape = static_pointer_cast<op::Reshape>(reshape_replacement_node);
-    const auto product_replace_node = reshape_replacement_node->input(0).get_source_output().get_node_shared_ptr();
+    const auto product_replace_node =
+        reshape_replacement_node->input(0).get_source_output().get_node_shared_ptr();
     const auto product_v0 = static_pointer_cast<op::v0::Product>(product_replace_node);
 
     EXPECT_EQ(reshape->description(), "Reshape");
@@ -92,9 +92,10 @@ TEST(product, opset1_red_prod_downgrade_not_constant_axes)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Unable to convert ReduceProd:v1 to Product:v0 "
-                                         "if reduction axes are not constant (for keep_dims=true)"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Unable to convert ReduceProd:v1 to Product:v0 "
+                        "if reduction axes are not constant (for keep_dims=true)"));
     }
     catch (...)
     {
@@ -105,8 +106,7 @@ TEST(product, opset1_red_prod_downgrade_not_constant_axes)
 TEST(product, opset1_red_prod_downgrade_output_not_static)
 {
     const auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    const auto axes =
-        make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{0, 1});
+    const auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{0, 1});
 
     const auto product_v1 = make_shared<op::v1::ReduceProd>(data, axes, true);
     const auto result = make_shared<op::Result>(product_v1);
@@ -133,12 +133,12 @@ TEST(product, opset1_red_prod_downgrade_output_not_static)
 
 TEST(product, opset1_red_prod_downgrade_out_shape_if_keep_dims)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{ 3, 4, 5 });
-    auto axes = make_shared<op::Constant>(element::i64, Shape{ 2 }, vector<int64_t>{1, 2});
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
     auto keep_dims = true;
     auto reduce_prod_v1 = make_shared<op::v1::ReduceProd>(arg, axes, keep_dims);
     const auto result = make_shared<op::Result>(reduce_prod_v1);
-    auto f = make_shared<Function>(ResultVector{ result }, ParameterVector{ arg });
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<pass::Opset1Downgrade>();
@@ -147,17 +147,17 @@ TEST(product, opset1_red_prod_downgrade_out_shape_if_keep_dims)
     const auto replacement_node =
         f->get_result()->input(0).get_source_output().get_node_shared_ptr();
 
-    ASSERT_TRUE(replacement_node->get_output_partial_shape(0).compatible(PartialShape{ 3, 1, 1 }));
+    ASSERT_TRUE(replacement_node->get_output_partial_shape(0).compatible(PartialShape{3, 1, 1}));
 }
 
 TEST(product, opset1_red_prod_downgrade_out_shape_if_not_keep_dims)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{ 3, 4, 5 });
-    auto axes = make_shared<op::Constant>(element::i64, Shape{ 2 }, vector<int64_t>{1, 2});
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
     auto keep_dims = false;
     auto reduce_prod_v1 = make_shared<op::v1::ReduceProd>(arg, axes, keep_dims);
     const auto result = make_shared<op::Result>(reduce_prod_v1);
-    auto f = make_shared<Function>(ResultVector{ result }, ParameterVector{ arg });
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<pass::Opset1Downgrade>();
@@ -166,5 +166,5 @@ TEST(product, opset1_red_prod_downgrade_out_shape_if_not_keep_dims)
     const auto replacement_node =
         f->get_result()->input(0).get_source_output().get_node_shared_ptr();
 
-    ASSERT_TRUE(replacement_node->get_output_partial_shape(0).compatible(PartialShape{ 3 }));
+    ASSERT_TRUE(replacement_node->get_output_partial_shape(0).compatible(PartialShape{3}));
 }

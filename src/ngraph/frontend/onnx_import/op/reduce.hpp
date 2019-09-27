@@ -235,7 +235,7 @@ namespace ngraph
                         std::make_shared<ngraph::op::v1::ReduceSum,
                                          const std::shared_ptr<ngraph::Node>&,
                                          const std::shared_ptr<ngraph::Node>&,
-                                         bool>) };
+                                         bool>)};
                 }
 
                 /// \brief      Compute the sum square of the input tensor's element along the

@@ -67,15 +67,16 @@ namespace ngraph
             ///
             /// \param[in]  node                The node representing incoming ONNX operation.
             /// \param[in]  ng_input            The input (nGraph) Tensor.
-            /// \param[in]  reduction_function  The reduction function defining arithmetic dynamic reduction
+            /// \param[in]  reduction_function  The reduction function defining arithmetic dynamic
+            /// reduction
             ///                                 operation (e.g. ReduceProd, ReduceSum).
             ///
             /// \return     nGraph node equivalent of the ONNX operation.
             ///
             std::shared_ptr<ngraph::Node>
                 make_ng_dyn_reduction_op(const Node& node,
-                    const std::shared_ptr<ngraph::Node>& ng_input,
-                    DynamicReductionFunction reduction_function);
+                                         const std::shared_ptr<ngraph::Node>& ng_input,
+                                         DynamicReductionFunction reduction_function);
 
             template <class IndexReduction>
             std::shared_ptr<ngraph::Node> make_ng_index_reduction_op(const Node& node)
