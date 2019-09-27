@@ -32,6 +32,7 @@ namespace ngraph
         class MaxPoolWithIndices : public Op
         {
         public:
+            CPU_BACKEND_API
             static constexpr NodeTypeInfo type_info{"MaxPoolWithIndices", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             CPU_BACKEND_API MaxPoolWithIndices(const Output<Node>& arg,

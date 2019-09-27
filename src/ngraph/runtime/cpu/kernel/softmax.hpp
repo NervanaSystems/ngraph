@@ -21,6 +21,7 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
+#include "ngraph/runtime/reference/softmax.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -163,6 +164,15 @@ namespace ngraph
                                     int arena)
                 {
                     softmax<ElementType, 4, 3>(input, output, input_shape, softmax_axes, arena);
+                }
+
+                template <typename ElementType>
+                void ref_softmax(void* input, void* output, const Shape& shape, const AxisSet& axes)
+                {
+                    reference::softmax<ElementType>(static_cast<const ElementType*>(input),
+                                                    static_cast<ElementType*>(output),
+                                                    shape,
+                                                    axes);
                 }
             }
         }

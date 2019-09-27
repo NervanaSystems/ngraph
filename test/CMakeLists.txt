@@ -69,6 +69,9 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
+    opset_pass/sum_opset_pass.cpp
+    opset_pass/product_opset_pass.cpp
+    opset_pass/softmax_opset_pass.cpp
     opset_pass/softmax_opset_pass.cpp
     opset_pass/gather_opset_pass.cpp
     opset_pass/pad_opset_pass.cpp
@@ -154,6 +157,8 @@ set(SRC
     type_prop/squared_difference.cpp
     type_prop/squeeze.cpp
     type_prop/sum.cpp
+    type_prop/reduce_prod.cpp
+    type_prop/reduce_sum.cpp
     type_prop/tile.cpp
     type_prop/top_k.cpp
     type_prop/transpose.cpp
@@ -422,7 +427,7 @@ if (NGRAPH_PLAIDML_ENABLE)
 endif()
 
 if (NGRAPH_TBB_ENABLE)
-    target_compile_definitions(unit-test PRIVATE NGRAPH_TBB_ENABLE)
+    target_compile_definitions(unit-test PRIVATE "NGRAPH_TBB_ENABLE")
 endif()
 
 if (NGRAPH_HALIDE)

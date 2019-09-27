@@ -81,25 +81,25 @@ namespace ngraph
                     return;
                 }
 
-                if (arg_rank == 1)
+                if (arg_rank == 1 && is_optimized_et(result_element_type))
                 {
-                    SELECT_KERNEL_BY_RANK(
-                        kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_1d)
+                    SELECT_ETS_AND_RANK7(
+                        kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_1d);
                 }
-                else if (arg_rank == 2)
+                else if (arg_rank == 2 && is_optimized_et(result_element_type))
                 {
-                    SELECT_KERNEL_BY_RANK(
-                        kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_2d)
+                    SELECT_ETS_AND_RANK7(
+                        kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_2d);
                 }
-                else if (arg_rank == 3)
+                else if (arg_rank == 3 && is_optimized_et(result_element_type))
                 {
-                    SELECT_KERNEL_BY_RANK(
-                        kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_3d)
+                    SELECT_ETS_AND_RANK7(
+                        kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_3d);
                 }
-                else if (arg_rank == 4)
+                else if (arg_rank == 4 && is_optimized_et(result_element_type))
                 {
-                    SELECT_KERNEL_BY_RANK(
-                        kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_4d)
+                    SELECT_ETS_AND_RANK7(
+                        kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_4d);
                 }
                 else
                 {

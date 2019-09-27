@@ -24,82 +24,87 @@ namespace ngraph
 {
     namespace op
     {
-        // clang-format off
-        /// \brief Tensor sum operation.
-        ///
-        /// Element-wise sums the input tensor, eliminating the specified reduction axes.
-        /// For example:
-        ///
-        /// \f[
-        ///     \mathit{sum}\left(\{0\},
-        ///         \left[ \begin{array}{ccc}
-        ///                1 & 2 \\ 3 & 4 \\ 5 & 6 \end{array} \right]\right) =
-        ///     \left[ (1 + 3 + 5), (2 + 4 + 6) \right] =
-        ///     \left[ 9, 12 \right]~~~\text{(dimension 0 (rows) is eliminated)}
-        /// \f]
-        ///
-        /// \f[
-        ///     \mathit{sum}\left(\{1\},
-        ///         \left[ \begin{array}{ccc}
-        ///                1 & 2 \\ 3 & 4 \\ 5 & 6 \end{array} \right]\right) =
-        ///     \left[ (1 + 2), (3 + 4), (5 + 6) \right] =
-        ///     \left[ 3, 7, 11 \right]~~~\text{(dimension 1 (columns) is eliminated)}
-        /// \f]
-        ///
-        /// \f[
-        ///     \mathit{sum}\left(\{0,1\},
-        ///         \left[ \begin{array}{ccc}
-        ///                1 & 2 \\ 3 & 4 \\ 5 & 6 \end{array} \right]\right) =
-        ///      (1 + 2) + (3 + 4) + (5 + 6) =
-        ///      21~~~\text{(both dimensions (rows and columns) are eliminated)}
-        /// \f]
-        ///
-        /// ## Parameters
-        ///
-        /// |                      | Description                              |
-        /// | -------------------- | ---------------------------------------- |
-        /// | `reduction_axes`     | The axes to eliminate through summation. |
-        ///
-        /// ## Inputs
-        ///
-        /// |       | Type                              | Description                                            |
-        /// | ----- | --------------------------------- | ------------------------------------------------------ |
-        /// | `arg` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | An input tensor of any shape and numeric element type. |
-        ///
-        /// ## Output
-        ///
-        /// | Type                                      | Description                                                                                                      |
-        /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-        /// | \f$N[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by summation. |
-        // clang-format off
-        class Sum : public util::ArithmeticReduction
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Sum", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a summation operation.
-            Sum() = default;
-            /// \brief Constructs a summation operation.
+            // clang-format off
+            /// \brief Tensor sum operation.
             ///
-            /// \param arg The tensor to be summed.
-            /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            Sum(const Output<Node>& arg, const AxisSet& reduction_axes);
-            /// \brief Constructs a summation operation.
+            /// Element-wise sums the input tensor, eliminating the specified reduction axes.
+            /// For example:
             ///
-            /// \param arg The tensor to be summed.
-            /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            Sum(const Output<Node>& arg, const Output<Node>& reduction_axes);
+            /// \f[
+            ///     \mathit{sum}\left(\{0\},
+            ///         \left[ \begin{array}{ccc}
+            ///                1 & 2 \\ 3 & 4 \\ 5 & 6 \end{array} \right]\right) =
+            ///     \left[ (1 + 3 + 5), (2 + 4 + 6) \right] =
+            ///     \left[ 9, 12 \right]~~~\text{(dimension 0 (rows) is eliminated)}
+            /// \f]
+            ///
+            /// \f[
+            ///     \mathit{sum}\left(\{1\},
+            ///         \left[ \begin{array}{ccc}
+            ///                1 & 2 \\ 3 & 4 \\ 5 & 6 \end{array} \right]\right) =
+            ///     \left[ (1 + 2), (3 + 4), (5 + 6) \right] =
+            ///     \left[ 3, 7, 11 \right]~~~\text{(dimension 1 (columns) is eliminated)}
+            /// \f]
+            ///
+            /// \f[
+            ///     \mathit{sum}\left(\{0,1\},
+            ///         \left[ \begin{array}{ccc}
+            ///                1 & 2 \\ 3 & 4 \\ 5 & 6 \end{array} \right]\right) =
+            ///      (1 + 2) + (3 + 4) + (5 + 6) =
+            ///      21~~~\text{(both dimensions (rows and columns) are eliminated)}
+            /// \f]
+            ///
+            /// ## Parameters
+            ///
+            /// |                      | Description                              |
+            /// | -------------------- | ---------------------------------------- |
+            /// | `reduction_axes`     | The axes to eliminate through summation. |
+            ///
+            /// ## Inputs
+            ///
+            /// |       | Type                              | Description                                            |
+            /// | ----- | --------------------------------- | ------------------------------------------------------ |
+            /// | `arg` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | An input tensor of any shape and numeric element type. |
+            ///
+            /// ## Output
+            ///
+            /// | Type                                      | Description                                                                                                      |
+            /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+            /// | \f$N[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by summation. |
+            // clang-format off
+            class Sum : public util::ArithmeticReduction
+            {
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{ "Sum", 0 };
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a summation operation.
+                Sum() = default;
+                /// \brief Constructs a summation operation.
+                ///
+                /// \param arg The tensor to be summed.
+                /// \param reduction_axes The axis positions (0-based) to be eliminated.
+                Sum(const Output<Node>& arg, const AxisSet& reduction_axes);
+                /// \brief Constructs a summation operation.
+                ///
+                /// \param arg The tensor to be summed.
+                /// \param reduction_axes The axis positions (0-based) to be eliminated.
+                Sum(const Output<Node>& arg, const Output<Node>& reduction_axes);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            /// \return The default value for Sum.
-            virtual std::shared_ptr<Node> get_default_value() const override;
+                /// \return The default value for Sum.
+                virtual std::shared_ptr<Node> get_default_value() const override;
 
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                    const NodeVector& deltas) override;
+            };
+        }
+        // default opset version
+        using v0::Sum;
     }
 }

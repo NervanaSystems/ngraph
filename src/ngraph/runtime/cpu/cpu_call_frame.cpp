@@ -226,7 +226,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
         }
 
         ctx->states = m_external_function->m_states.data();
-
+#if defined(NGRAPH_TBB_ENABLE)
         if (m_external_function->is_direct_execution() &&
             std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
         {
@@ -238,6 +238,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
             ctx->c =
                 new tbb::global_control(tbb::global_control::max_allowed_parallelism, parallelism);
         }
+#endif
     }
     m_num_ctx_available = m_num_ctx;
 }
@@ -272,6 +273,7 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
             delete ctx->scratchpad_buffer;
         }
 
+#if defined(NGRAPH_TBB_ENABLE)
         if (m_external_function->is_direct_execution() &&
             std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
         {
@@ -292,6 +294,7 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
             }
             delete ctx->c;
         }
+#endif
         delete ctx;
     }
     m_num_ctx_available = 0;
