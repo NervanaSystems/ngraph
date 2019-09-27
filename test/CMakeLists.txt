@@ -75,6 +75,7 @@ set(SRC
     opset_pass/softmax_opset_pass.cpp
     opset_pass/gather_opset_pass.cpp
     opset_pass/pad_opset_pass.cpp
+    opset_pass/poolings_opset_pass.cpp
     partial_shape.cpp
     pass.cpp
     pass_liveness.cpp
@@ -426,7 +427,7 @@ if (NGRAPH_PLAIDML_ENABLE)
 endif()
 
 if (NGRAPH_TBB_ENABLE)
-    target_compile_definitions(unit-test PRIVATE NGRAPH_TBB_ENABLE)
+    target_compile_definitions(unit-test PRIVATE "NGRAPH_TBB_ENABLE")
 endif()
 
 if (NGRAPH_HALIDE)
