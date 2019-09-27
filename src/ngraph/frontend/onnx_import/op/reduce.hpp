@@ -29,6 +29,7 @@
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/reduce_prod.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "utils/reduction.hpp"
@@ -205,12 +206,13 @@ namespace ngraph
                 ///
                 inline NodeVector reduce_prod(const Node& node)
                 {
-                    return {reduction::make_ng_reduction_op(
+                    return {reduction::make_ng_dyn_reduction_op(
                         node,
                         node.get_ng_inputs().at(0),
-                        std::make_shared<ngraph::op::Product,
+                        std::make_shared<ngraph::op::v1::ReduceProd,
                                          const std::shared_ptr<ngraph::Node>&,
-                                         const ngraph::AxisSet&>)};
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         bool>)};
                 }
 
                 /// \brief      Compute the sum of the input tensor's elements along the provided
