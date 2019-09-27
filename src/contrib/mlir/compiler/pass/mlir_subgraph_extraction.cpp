@@ -132,6 +132,7 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 #endif
 
     clean_up();
+
     return true;
 }
 
@@ -366,19 +367,19 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
             }
         }
 
-        // Any input to CK must also have at least one user in the sub-graph body
+        // Any input to CK must not have any user in the sub-graph body
         for (auto& arg : ck_node->get_arguments())
         {
             bool found = false;
             for (auto& user : arg->get_users())
             {
-                found = (node_set.find(user) != node_set.end());
+                found = (node_set.find(user) == node_set.end());
                 if (found)
                 {
                     break;
                 }
             }
-            NGRAPH_CHECK(found, "CK input is not input to sub-graph");
+            NGRAPH_CHECK(found, "CK input is input to sub-graph");
         }
     }
 }
