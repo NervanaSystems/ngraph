@@ -281,3 +281,6 @@ random_uniform_all_static_seed_used
 random_uniform_seed_use_dynamic
 random_uniform_all_static_range_dynamic
 random_uniform_dynamic_shapes
+
+# shapes with zeros dimensions like (5, 0, 5) not supported in PlaidML backend
+dyn_replace_slice
