@@ -83,8 +83,8 @@ namespace ngraph
 
             std::shared_ptr<ngraph::Node>
                 make_ng_dyn_reduction_op(const Node& node,
-                    const std::shared_ptr<ngraph::Node>& ng_input,
-                    DynamicReductionFunction reduction_function)
+                                         const std::shared_ptr<ngraph::Node>& ng_input,
+                                         DynamicReductionFunction reduction_function)
             {
                 auto data_shape = ng_input->get_shape();
 
@@ -96,11 +96,12 @@ namespace ngraph
 
                 std::int64_t keepdims = node.get_attribute_value<std::int64_t>("keepdims", 1);
 
-                std::shared_ptr<ngraph::Node> op_node =
-                    reduction_function(ng_input,
-                        std::make_shared<ngraph::op::Constant>(
-                            element::i64, ngraph::Shape{ reduction_axes.size() }, reduction_axes.to_vector()),
-                        static_cast<bool>(keepdims));
+                std::shared_ptr<ngraph::Node> op_node = reduction_function(
+                    ng_input,
+                    std::make_shared<ngraph::op::Constant>(element::i64,
+                                                           ngraph::Shape{reduction_axes.size()},
+                                                           reduction_axes.to_vector()),
+                    static_cast<bool>(keepdims));
 
                 return op_node;
             }
