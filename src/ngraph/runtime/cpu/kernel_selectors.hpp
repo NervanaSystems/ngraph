@@ -50,22 +50,22 @@
 #define EXPAND_ETS_AND_RANK7(K, KV, ET, R, S) EXPAND_ETS_2(K, KV, ET, EXPAND_RANK7_1, R, S)
 
 // Expander Macros that instantiate kernels for various element types and ranks
-#define EXPAND_ET4(K, KV, ET, S, ...)                                                              \
+#define EXPAND_ET4(K, KV, ET, S, A1, A2)                                                           \
     if (ET == element::f32)                                                                        \
     {                                                                                              \
-        EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, float));                                              \
+        EXPAND_MACRO(S(K, KV, A1, A2, float));                                                     \
     }                                                                                              \
     else if (ET == element::f64)                                                                   \
     {                                                                                              \
-        EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, double));                                             \
+        EXPAND_MACRO(S(K, KV, A1, A2, double));                                                    \
     }                                                                                              \
     else if (ET == element::i8)                                                                    \
     {                                                                                              \
-        EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, int8_t));                                             \
+        EXPAND_MACRO(S(K, KV, A1, A2, int8_t));                                                    \
     }                                                                                              \
     else if (ET == element::u8)                                                                    \
     {                                                                                              \
-        EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, uint8_t));                                            \
+        EXPAND_MACRO(S(K, KV, A1, A2, uint8_t));                                                   \
     }                                                                                              \
     else                                                                                           \
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);
