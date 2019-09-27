@@ -29,6 +29,7 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
+#include "ngraph/pass/opset1_downgrade.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -45,6 +46,7 @@ runtime::gcpu::GCPUExecutable::GCPUExecutable(const shared_ptr<Function>& functi
 {
     m_function = clone_function(*function);
     pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Opset1Downgrade>();
     pass_manager.register_pass<pass::LikeReplacement>();
     pass_manager.register_pass<pass::FusedOpDecomposition>();
     pass_manager.register_pass<pass::ImplicitBroadcastElimination>();

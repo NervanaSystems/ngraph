@@ -27,6 +27,7 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
+#include "ngraph/pass/opset1_downgrade.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
@@ -88,6 +89,7 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     pass_manager.set_per_pass_validation(false);
 
     // We apply the same general-purposes passes as the CPU backend.
+    pass_manager.register_pass<ngraph::pass::Opset1Downgrade>();
     pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>([](const Node& node) -> bool {
         if (node.description() == ngraph::op::GroupConvolution().description())
             return true;
