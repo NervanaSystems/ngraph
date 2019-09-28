@@ -16,10 +16,10 @@
 
 function(find_os_version)
     set(UBUNTU FALSE PARENT_SCOPE)
-    set(CENTOS FALSE PARENT_SCOPE)
+    set(REDHAT FALSE PARENT_SCOPE)
     if(EXISTS /etc/debian_version)
         set(UBUNTU TRUE PARENT_SCOPE)
     elseif(EXISTS /etc/redhat-release)
-        set(CENTOS TRUE PARENT_SCOPE)
+        set(REDHAT TRUE PARENT_SCOPE)
     endif()
 endfunction()
