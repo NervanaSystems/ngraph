@@ -19,22 +19,16 @@
 
 #pragma once
 
-#include "contrib/mlir/compiler/compiler.hpp"
-
-#include <mlir/Pass/Pass.h>
-
 namespace ngraph
 {
     namespace runtime
     {
         namespace ngmlir
         {
-            class MLIRCompiler;
-        }
-    }
-}
+            /// Common nGraph dialect initialization code. Used by nGraph compiler and tools that
+            /// require nGraph dialect initialization.
+            void initializeNGraphMLIR();
 
-namespace mlir
-{
-    std::unique_ptr<Pass> createDialectLoweringPass();
-}
+        } // namespace ngmlir
+    }     // namespace runtime
+} // namespace ngraph
