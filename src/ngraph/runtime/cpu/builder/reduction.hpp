@@ -30,6 +30,28 @@
                                                                                                    \
     auto reduction_axes = op->get_reduction_axes();                                                \
                                                                                                    \
+    if (args[0].get_element_type() == element::bf16)                                               \
+    {                                                                                              \
+        std::function<decltype(runtime::cpu::kernel::K<float>)> ref_kernel;                        \
+                                                                                                   \
+        SELECT_KERNEL(ref_kernel, result_element_type, runtime::cpu::kernel::K);                   \
+                                                                                                   \
+        auto functor = [&,                                                                         \
+                        ref_kernel,                                                                \
+                        arg_shape,                                                                 \
+                        result_shape,                                                              \
+                        reduction_axes,                                                            \
+                        arg_buffer_index,                                                          \
+                        out_buffer_index](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {     \
+            void* fp_src = std::malloc(args[0].get_size() * 4);                                    \
+            void* fp_dst = std::malloc(out[0].get_size() * 4);                                     \
+            ngraph::bf16_to_float(ctx->buffer_data[arg_buffer_index], fp_src, args[0].get_size()); \
+            ref_kernel(fp_src, fp_dst, arg_shape, result_shape, reduction_axes, ectx->arena);      \
+            ngraph::float_to_bf16(                                                                 \
+                fp_dst, ctx->buffer_data[out_buffer_index], (out[0].get_size() * 4) / 2);          \
+        };                                                                                         \
+        functors.emplace_back(functor);                                                            \
+    }                                                                                              \
     if (reduction_axes.empty())                                                                    \
     {                                                                                              \
         size_t size = out[0].get_size() * out[0].get_element_type().size();                        \
