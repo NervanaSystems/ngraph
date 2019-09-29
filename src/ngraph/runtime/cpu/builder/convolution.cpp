@@ -92,7 +92,61 @@ namespace ngraph
                     };
                     functors.emplace_back(functor);
                 }
-                else
+                else if(args[0].get_element_type() == element::bf16)
+                {
+  		  	
+		  std::function<decltype(runtime::cpu::kernel::convolution<float, float, float>)>
+                        kernel;
+
+                    SELECT_KERNEL_3ARGS(
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::convolution)
+
+                    auto window_movement_strides = convolution->get_window_movement_strides();
+                    auto window_dilation_strides = convolution->get_window_dilation_strides();
+                    auto padding_below = convolution->get_padding_below();
+                    auto padding_above = convolution->get_padding_above();
+                    auto data_dilation_strides = convolution->get_data_dilation_strides();
+
+                    auto functor = [&,
+                                    kernel,
+                                    arg0_shape,
+                                    arg1_shape,
+                                    result_shape,
+                                    window_movement_strides,
+                                    window_dilation_strides,
+                                    padding_below,
+                                    padding_above,
+                                    data_dilation_strides,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
+                        void* fp_input = std::malloc(args[0].get_size() * 4);                                        
+            		void* fp_weights = std::malloc(args[1].get_size() * 4);                                        
+            		void* fp_dst = std::malloc(out[0].get_size() * 4);   
+ 			ngraph::bf16_to_float(ctx->buffer_data[arg0_buffer_index], fp_input, args[0].get_size());
+   			ngraph::bf16_to_float(ctx->buffer_data[arg1_buffer_index], fp_weights, args[1].get_size());
+                        kernel(fp_input, fp_weights, fp_dst,
+                               arg0_shape,
+                               arg1_shape,
+                               result_shape,
+                               window_movement_strides,
+                               window_dilation_strides,
+                               padding_below,
+                               padding_above,
+                               data_dilation_strides,
+                               nullptr,
+                               nullptr,
+                               nullptr,
+                               nullptr,
+                               nullptr,
+                               nullptr);
+			ngraph::float_to_bf16(                                                                 
+                fp_dst, ctx->buffer_data[out_buffer_index], (out[0].get_size() * 4) / 2);
+                    };
+                    functors.emplace_back(functor);	
+                }
+                 else
                 {
                     std::function<decltype(runtime::cpu::kernel::convolution<float, float, float>)>
                         kernel;
