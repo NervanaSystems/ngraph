@@ -83,6 +83,42 @@ namespace ngraph
                         };
                     functors.emplace_back(functor);
                 }
+                else if (args[0].get_element_type() == element::bf16)
+                {
+                    std::function<decltype(runtime::cpu::kernel::avg_pool<float>)> kernel;
+
+                    SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::avg_pool)
+
+                    auto functor = [&,
+                                    kernel,
+                                    arg0_shape,
+                                    out_shape,
+                                    window_shape,
+                                    window_movement_strides,
+                                    padding_below,
+                                    padding_above,
+                                    include_padding_in_avg_computation,
+                                    arg0_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
+                        void* fp_input = std::malloc(args[0].get_size() * 4);
+                        void* fp_dst = std::malloc(out[0].get_size() * 4);
+                        kernel(fp_input,
+                               fp_dst,
+                               arg0_shape,
+                               out_shape,
+                               window_shape,
+                               window_movement_strides,
+                               padding_below,
+                               padding_above,
+                               include_padding_in_avg_computation);
+                        ngraph::float_to_bf16(fp_dst,
+                                              ctx->buffer_data[out_buffer_index],
+                                              (out[0].get_size() * 4) / 2);
+                    };
+                    functors.emplace_back(functor);
+                }
+
                 else
                 {
                     std::function<decltype(runtime::cpu::kernel::avg_pool<float>)> kernel;
