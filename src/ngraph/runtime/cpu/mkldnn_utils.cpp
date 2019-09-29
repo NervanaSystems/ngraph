@@ -215,7 +215,8 @@ bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_fprop(const ngraph::No
     auto input_rank = node->get_input_shape(2).size();
     auto input_element_type = node->get_input_element_type(2);
 
-    if (((input_rank == 4 || input_rank == 5) && input_element_type == element::f32))
+    if (((input_rank == 4 || input_rank == 5) &&
+         (input_element_type == element::f32 || input_element_type == element::bf16)))
     {
         return true;
     }
