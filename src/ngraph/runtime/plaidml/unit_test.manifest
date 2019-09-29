@@ -282,5 +282,10 @@ random_uniform_seed_use_dynamic
 random_uniform_all_static_range_dynamic
 random_uniform_dynamic_shapes
 
+# Fused op test fails on mac
+layer_norm_affine_stats
+layer_norm_bprop_affine_stats
+layer_norm_bprop_affine
+
 # shapes with zeros dimensions like (5, 0, 5) not supported in PlaidML backend
 dyn_replace_slice

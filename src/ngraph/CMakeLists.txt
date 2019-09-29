@@ -336,6 +336,8 @@ set (SRC
     op/fused/group_conv_transpose.cpp
     op/fused/gru_cell.cpp
     op/fused/gru_cell.hpp
+    op/fused/layer_norm.cpp
+    op/fused/layer_norm.hpp
     op/fused/lstm_cell.cpp
     op/fused/lstm_cell.hpp
     op/fused/matmul.cpp
