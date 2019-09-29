@@ -145,6 +145,45 @@ namespace ngraph
 
                     functors.emplace_back(functor);
                 }
+                else if (out[0].get_element_type() == element::bf16)
+                {
+                    std::function<decltype(runtime::cpu::kernel::concat<float, 1>)> kernel;
+
+                    SELECT_KERNEL_ET_RANK(kernel,
+                                          element::f32,
+                                          out[0].get_shape().size(),
+                                          runtime::cpu::kernel::concat)
+
+                    auto functor = [&,
+                                    kernel,
+                                    arg_buffer_indices,
+                                    arg_shapes,
+                                    out_shape,
+                                    axis,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
+                        std::vector<void*> arg_tensors;
+                        for (auto& arg_buffer_index : arg_buffer_indices)
+                        {
+                            arg_tensors.push_back(ctx->buffer_data[arg_buffer_index]);
+                        }
+
+                        std::vector<void*> fp_arg_tensors;
+                        for (size_t i = 0; i < nargs; i++)
+                        {
+                            void* fp_input = std::malloc(args[i].get_size() * 4);
+                            ngraph::bf16_to_float(arg_tensors[i], fp_input, args[i].get_size());
+                            fp_arg_tensors.push_back(fp_input);
+                        }
+                        void* fp_dst = std::malloc(out[0].get_size() * 4);
+                        kernel(fp_arg_tensors, arg_shapes, fp_dst, out_shape, axis);
+                        ngraph::float_to_bf16(fp_dst,
+                                              ctx->buffer_data[out_buffer_index],
+                                              (out[0].get_size() * 4) / 2);
+                    };
+                    functors.emplace_back(functor);
+                }
+
                 else
                 {
                     std::function<decltype(runtime::cpu::kernel::concat<float, 1>)> kernel;
