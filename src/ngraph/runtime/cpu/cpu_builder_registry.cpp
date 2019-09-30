@@ -42,6 +42,7 @@ namespace ngraph
                 register_builders_erf_cpp();
                 register_builders_gather_cpp();
                 register_builders_gather_nd_cpp();
+                register_builders_gelu_cpp();
                 register_builders_get_output_element_cpp();
                 register_builders_leaky_relu_cpp();
                 register_builders_lrn_cpp();

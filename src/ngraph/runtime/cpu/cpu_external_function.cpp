@@ -81,6 +81,7 @@
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/gather.hpp"
@@ -442,6 +443,7 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<ngraph::op::DeconvolutionBias>},
     {TI(ngraph::op::Dropout), &runtime::cpu::CPU_Emitter::emit<op::Dropout>},
     {TI(ngraph::op::Tile), &runtime::cpu::CPU_Emitter::emit<op::Tile>},
+    {TI(ngraph::op::Gelu), &runtime::cpu::CPU_Emitter::emit<op::Gelu>},
 };
 
 static void
@@ -482,6 +484,11 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
 
     ngraph::pass::Manager pass_manager;
+    if (std::getenv("NGRAPH_ENABLE_VISUALIZE_TRACING"))
+    {
+        // Enable per_pass_validation if required for debug purpose
+        pass_manager.set_per_pass_validation(false);
+    }
     register_common_passes(pass_manager, pass_config);
 
     // Build mkldnn primitives for codegen.
@@ -1385,6 +1392,11 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     static StaticInitializers s_static_initializers(s_debug_dir);
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
     ngraph::pass::Manager pass_manager;
+    if (std::getenv("NGRAPH_ENABLE_VISUALIZE_TRACING"))
+    {
+        // Enable per_pass_validation if required for debug purpose
+        pass_manager.set_per_pass_validation(false);
+    }
     register_common_passes(pass_manager, pass_config);
     pass_manager.run_passes(m_function, false);
 
@@ -1703,6 +1715,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         }
     }
     // This check ensures we have exactly one functor for Op.
+    std::cout << "Before error: m_op_attrs.size = " << m_op_attrs.size() << ", functors.size = " << functors.size() <<"\n";
     NGRAPH_CHECK(m_op_attrs.size() == functors.size());
 
     executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {

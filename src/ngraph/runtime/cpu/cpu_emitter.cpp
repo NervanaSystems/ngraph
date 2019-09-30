@@ -62,6 +62,7 @@
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -3529,6 +3530,41 @@ namespace ngraph
                            << alpha << " ? " << args[0].get_name() << "[i] : " << alpha << ";\n";
                     writer.block_end();
                 }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Gelu)
+            {
+                throw ngraph_error("Gelu is currently NOT supported in codegen.");
+                /*if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    size_t bounded_relu_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(
+                        external_function, node, writer, bounded_relu_index, deps);
+
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << out[0].get_name() << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(bounded_relu_index)
+                           << ", deps, OpType::BOUNDEDRELU);\n";
+                }
+                else
+                {
+                    auto bounded_relu_node = static_cast<const ngraph::op::BoundedRelu*>(node);
+                    float alpha = bounded_relu_node->get_alpha();
+                    writer << "#pragma omp parallel for\n";
+                    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                    writer.block_begin();
+                    writer << args[0].get_name() << "[i] = " << args[0].get_name() << "[i] > 0 ? "
+                           << args[0].get_name() << "[i] : 0;\n";
+                    writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] < "
+                           << alpha << " ? " << args[0].get_name() << "[i] : " << alpha << ";\n";
+                    writer.block_end();
+                }*/
             }
 
             template <>

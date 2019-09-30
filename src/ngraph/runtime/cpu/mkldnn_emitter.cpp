@@ -380,9 +380,21 @@ mkldnn::eltwise_forward::desc MKLDNNEmitter::get_bounded_relu_desc(const ngraph:
     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
 
     return mkldnn::eltwise_forward::desc(mkldnn::prop_kind::forward_training,
-                                         mkldnn::algorithm::eltwise_bounded_relu,
+                                         mkldnn::algorithm::eltwise_gelu,
                                          input_desc,
                                          alpha,
+                                         0.0f);
+}
+
+mkldnn::eltwise_forward::desc MKLDNNEmitter::get_gelu_desc(const ngraph::Node* node)
+{
+    // TODO: check, do I need alpha?
+    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+
+    return mkldnn::eltwise_forward::desc(mkldnn::prop_kind::forward_training,
+                                         mkldnn::algorithm::eltwise_bounded_relu,
+                                         input_desc,
+                                         0.0f,
                                          0.0f);
 }
 
@@ -2401,6 +2413,25 @@ void MKLDNNEmitter::build_bounded_relu(
 
     mkldnn_primitives[bounded_relu_index] =
         new mkldnn::eltwise_forward({bounded_relu_desc, executor::global_cpu_engine},
+                                    *mkldnn_primitives[input_index],
+                                    *mkldnn_primitives[result_index]);
+}
+
+void MKLDNNEmitter::build_gelu(
+    std::vector<mkldnn::memory*>& /* mkldnn_memories */,
+    std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& /* mkldnn_scratchpad_mds */,
+    const mkldnn::eltwise_forward::desc& gelu_desc,
+    const std::vector<size_t>& deps,
+    size_t gelu_index)
+{
+    size_t input_index = deps[0];
+    build_memory_primitive(mkldnn_primitives, gelu_desc.data.data_desc, input_index);
+    size_t result_index = deps[1];
+    build_memory_primitive(mkldnn_primitives, gelu_desc.data.data_desc, result_index);
+
+    mkldnn_primitives[gelu_index] =
+        new mkldnn::eltwise_forward({gelu_desc, executor::global_cpu_engine},
                                     *mkldnn_primitives[input_index],
                                     *mkldnn_primitives[result_index]);
 }

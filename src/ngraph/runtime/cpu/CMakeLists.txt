@@ -58,6 +58,7 @@ set(SRC
     builder/erf.cpp
     builder/gather.cpp
     builder/gather_nd.cpp
+    builder/gelu.cpp
     builder/leaky_relu.cpp
     builder/lstm.cpp
     builder/lrn.cpp
