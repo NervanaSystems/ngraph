@@ -20,11 +20,14 @@
 #include <cstdint>
 #include <set>
 
+#if defined(NGRAPH_TBB_ENABLE)
 #define TBB_PREVIEW_GLOBAL_CONTROL 1
 #define TBB_PREVIEW_FLOW_GRAPH_TRACE 1
 #include <tbb/flow_graph.h>
 #include <tbb/global_control.h>
 #include <tbb/task_scheduler_init.h>
+#endif
+
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 
 #ifdef NGRAPH_MLIR_ENABLE
@@ -69,8 +72,10 @@ namespace ngraph
                 std::vector<mkldnn::memory::desc*> mkldnn_scratchpad_mds;
                 AlignedBuffer* scratchpad_buffer;
                 std::vector<char*> mkldnn_workspaces;
+#if defined(NGRAPH_TBB_ENABLE)
                 tbb::flow::graph* G;
                 tbb::global_control* c;
+#endif
                 State* const* states;
                 std::set<size_t> breakpoints;
                 size_t pc;

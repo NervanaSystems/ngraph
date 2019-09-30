@@ -340,7 +340,7 @@ static op::AutoBroadcastSpec read_auto_broadcast(json js_node, const std::string
     {
         json j = js_node[attr];
         return op::AutoBroadcastSpec(static_cast<op::AutoBroadcastType>(j.at("type")),
-                                     j.at("axis").get<size_t>());
+                                     j.at("axis").get<int64_t>());
     }
     else
     {
