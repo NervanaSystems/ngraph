@@ -27,7 +27,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::MVN::type_name{"MVN"};
+constexpr NodeTypeInfo op::MVN::type_info;
 
 op::MVN::MVN(const Output<Node>& data, bool across_channels, bool normalize_variance, double eps)
     : FusedOp({data})

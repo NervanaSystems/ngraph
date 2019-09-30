@@ -21,6 +21,13 @@
 
 #include "ngraph/code_writer.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/convolution.hpp"
+#include "ngraph/op/gather.hpp"
+#include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/pad.hpp"
+#include "ngraph/op/product.hpp"
+#include "ngraph/op/sum.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 
@@ -75,7 +82,6 @@ namespace ngraph
         class Reshape;
         class Sign;
         class Slice;
-        class Sum;
         class Exp;
         class EmbeddingLookup;
         class Sin;
@@ -89,7 +95,6 @@ namespace ngraph
         class ArgMin;
         class ArgMax;
         class TopK;
-        class Gather;
         class GatherND;
         class ScatterAdd;
         class ScatterNDAdd;
@@ -105,10 +110,7 @@ namespace ngraph
         class QuantizedConvolution;
         class GroupConvolution;
         class GroupConvolutionBias;
-        class Convolution;
-        class ConvolutionBackpropFilters;
         class DeconvolutionBias;
-        class ConvolutionBackpropData;
         class QuantizedConvolutionBias;
         class QuantizedConvolutionBiasAdd;
         class QuantizedConvolutionBiasSignedAdd;
@@ -125,12 +127,7 @@ namespace ngraph
         class MaxPoolWithIndices;
         class Reverse;
         class ReverseSequence;
-        class AvgPool;
-        class Pad;
-        class AvgPoolBackprop;
-        class MaxPoolBackprop;
         class MaxPoolWithIndicesBackprop;
-        class Product;
         class Max;
         class Erf;
         class Min;
@@ -167,20 +164,21 @@ namespace ngraph
             {
             public:
                 template <typename OP>
-                static void emit(CPU_ExternalFunction* external_function,
-                                 CodeWriter& writer,
+                static void emit(CPU_ExternalFunction* /* external_function */,
+                                 CodeWriter& /* writer */,
                                  const ngraph::Node* node,
-                                 const std::vector<TensorViewWrapper>& args,
-                                 const std::vector<TensorViewWrapper>& out)
+                                 const std::vector<TensorViewWrapper>& /* args */,
+                                 const std::vector<TensorViewWrapper>& /* out */)
                 {
                     throw std::runtime_error("Unimplemented op '" + node->description() +
                                              "' in CPU emitter");
                 }
-                static void nop(CPU_ExternalFunction* external_function,
-                                CodeWriter& writer,
-                                const ngraph::Node* node,
-                                const std::vector<TensorViewWrapper>& args,
-                                const std::vector<TensorViewWrapper>& out)
+
+                static void nop(CPU_ExternalFunction* /* external_function */,
+                                CodeWriter& /* writer */,
+                                const ngraph::Node* /* node */,
+                                const std::vector<TensorViewWrapper>& /* args */,
+                                const std::vector<TensorViewWrapper>& /* out */)
                 {
                 }
 

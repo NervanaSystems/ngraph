@@ -45,7 +45,7 @@ string to_cpp_string(T value)
     return rc;
 }
 
-const string op::Constant::type_name{"Constant"};
+constexpr NodeTypeInfo op::Constant::type_info;
 
 op::Constant::~Constant()
 {
@@ -332,7 +332,7 @@ bool op::Constant::are_all_data_elements_bitwise_identical() const
     return rc;
 }
 
-const string op::ScalarConstantLikeBase::type_name{"ScalarConstantLike"};
+constexpr NodeTypeInfo op::ScalarConstantLikeBase::type_info;
 
 shared_ptr<op::Constant> op::ScalarConstantLikeBase::as_constant() const
 {
@@ -364,11 +364,11 @@ namespace ngraph
     namespace op
     {
         template <>
-        void Constant::write_to_buffer<string>(const element::Type& target_type,
-                                               const Shape& target_shape,
-                                               const vector<string>& source,
-                                               void* target,
-                                               size_t target_element_count)
+        void Constant::write_to_buffer<string>(const element::Type& /* target_type */,
+                                               const Shape& /* target_shape */,
+                                               const vector<string>& /* source */,
+                                               void* /* target */,
+                                               size_t /* target_element_count */)
         {
         }
     }

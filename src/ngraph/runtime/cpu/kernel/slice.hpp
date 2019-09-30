@@ -21,6 +21,7 @@
 
 #include "ngraph/coordinate.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
+#include "ngraph/runtime/reference/slice.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -42,7 +43,7 @@ namespace ngraph
                     Eigen::array<Eigen::Index, Rank> out_dims, in_dims;
                     Eigen::array<Eigen::Index, Rank> indices;
 
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         out_dims[i] = output_shape[i];
                         in_dims[i] = input_shape[i];
@@ -71,7 +72,7 @@ namespace ngraph
                     Eigen::array<Eigen::Index, Rank> out_dims, in_dims;
                     Eigen::array<Eigen::Index, Rank> start_indices, stop_indices, strides;
 
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         out_dims[i] = output_shape[i];
                         in_dims[i] = input_shape[i];
@@ -87,6 +88,24 @@ namespace ngraph
 
                     out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
                         in.stridedSlice(start_indices, stop_indices, strides);
+                }
+
+                template <typename ElementType>
+                void ref_slice(void* input,
+                               void* output,
+                               const Shape& input_shape,
+                               const Coordinate& lower_bounds,
+                               const Coordinate& upper_bounds,
+                               const Strides& slice_strides,
+                               const Shape& output_shape)
+                {
+                    reference::slice<ElementType>(static_cast<const ElementType*>(input),
+                                                  static_cast<ElementType*>(output),
+                                                  input_shape,
+                                                  lower_bounds,
+                                                  upper_bounds,
+                                                  slice_strides,
+                                                  output_shape);
                 }
             }
         }

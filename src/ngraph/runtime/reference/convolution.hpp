@@ -234,12 +234,12 @@ namespace ngraph
                             size_t filter_idx = filter_transform.index(filter_coord);
                             for (size_t in_channel = 0; in_channel < n_in_channels; ++in_channel)
                             {
-                                ACCUMULATION in_v = in[in_idx];
-                                ACCUMULATION f_v = filter[filter_idx];
+                                ACCUMULATION in_v = static_cast<ACCUMULATION>(in[in_idx]);
+                                ACCUMULATION f_v = static_cast<ACCUMULATION>(filter[filter_idx]);
                                 if (is_quantized)
                                 {
-                                    in_v = in_v - *input_zero_point;
-                                    f_v = f_v - *filter_zero_point;
+                                    in_v = in_v - static_cast<ACCUMULATION>(*input_zero_point);
+                                    f_v = f_v - static_cast<ACCUMULATION>(*filter_zero_point);
                                 }
                                 result += in_v * f_v;
                                 in_idx += in_channel_stride;
@@ -252,8 +252,9 @@ namespace ngraph
                     if (is_quantized)
                     {
                         float scale = *input_scale * *filter_scale / *output_scale;
-                        out[out_transform.index(out_coord)] = static_cast<OUTPUT>(
-                            std::round(static_cast<float>(result) * scale) + *output_zero_point);
+                        out[out_transform.index(out_coord)] =
+                            static_cast<OUTPUT>(std::round(static_cast<float>(result) * scale)) +
+                            *output_zero_point;
                     }
                     else
                     {

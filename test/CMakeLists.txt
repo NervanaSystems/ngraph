@@ -69,7 +69,14 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
+    opset_pass/convolution_opset_pass.cpp
+    opset_pass/gather_opset_pass.cpp
+    opset_pass/pad_opset_pass.cpp
+    opset_pass/poolings_opset_pass.cpp
+    opset_pass/product_opset_pass.cpp
+    opset_pass/reverse_opset_pass.cpp
     opset_pass/softmax_opset_pass.cpp
+    opset_pass/sum_opset_pass.cpp
     partial_shape.cpp
     pass.cpp
     pass_liveness.cpp
@@ -118,6 +125,7 @@ set(SRC
     type_prop/gru_cell.cpp
     type_prop/hard_sigmoid.cpp
     type_prop/index_reduction.cpp
+    type_prop/layer_norm.cpp
     type_prop/lrn.cpp
     type_prop/lstm_cell.cpp
     type_prop/matmul.cpp
@@ -132,6 +140,7 @@ set(SRC
     type_prop/quantize.cpp
     type_prop/quantized_convolution.cpp
     type_prop/quantized_dot.cpp
+    type_prop/random_uniform.cpp
     type_prop/range.cpp
     type_prop/replace_slice.cpp
     type_prop/reshape.cpp
@@ -150,6 +159,8 @@ set(SRC
     type_prop/squared_difference.cpp
     type_prop/squeeze.cpp
     type_prop/sum.cpp
+    type_prop/reduce_prod.cpp
+    type_prop/reduce_sum.cpp
     type_prop/tile.cpp
     type_prop/top_k.cpp
     type_prop/transpose.cpp
@@ -263,6 +274,7 @@ set(MULTI_TEST_SRC
     backend/gather.in.cpp
     backend/gelu.in.cpp
     backend/generate_mask.in.cpp
+    backend/layer_norm.in.cpp
     backend/log.in.cpp
     backend/logical_and.in.cpp
     backend/logical_or.in.cpp
@@ -288,6 +300,7 @@ set(MULTI_TEST_SRC
     backend/quantize_dequantize.in.cpp
     backend/quantized_convolution.in.cpp
     backend/quantized_dot.in.cpp
+    backend/random_uniform.in.cpp
     backend/range.in.cpp
     backend/relu.in.cpp
     backend/replace_slice.in.cpp
@@ -417,7 +430,7 @@ if (NGRAPH_PLAIDML_ENABLE)
 endif()
 
 if (NGRAPH_TBB_ENABLE)
-    target_compile_definitions(unit-test PRIVATE NGRAPH_TBB_ENABLE)
+    target_compile_definitions(unit-test PRIVATE "NGRAPH_TBB_ENABLE")
 endif()
 
 if (NGRAPH_HALIDE)
@@ -451,7 +464,7 @@ if (MSVS)
     )
 else()
     add_custom_target(unit-test-check
-        COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
+        COMMAND ${PROJECT_BINARY_DIR}/test/unit-test --cpath ${EXTERNAL_PROJECTS_ROOT}/src/ngraph/ \${ARGS}
         DEPENDS unit-test
     )
 endif()

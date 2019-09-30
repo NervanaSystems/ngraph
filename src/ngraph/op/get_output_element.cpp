@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::GetOutputElement::type_name{"GetOutputElement"};
+constexpr NodeTypeInfo op::GetOutputElement::type_info;
 
 op::GetOutputElement::GetOutputElement(const shared_ptr<Node>& arg, size_t n)
     : Op({Output<Node>{arg, n}})

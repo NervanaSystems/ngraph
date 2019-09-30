@@ -27,7 +27,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::GRN::type_name{"GRN"};
+constexpr NodeTypeInfo op::GRN::type_info;
 
 op::GRN::GRN(const Output<Node>& data, float bias)
     : FusedOp({data})

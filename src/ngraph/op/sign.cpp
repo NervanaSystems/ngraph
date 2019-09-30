@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Sign::type_name{"Sign"};
+constexpr NodeTypeInfo op::Sign::type_info;
 
 op::Sign::Sign(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
