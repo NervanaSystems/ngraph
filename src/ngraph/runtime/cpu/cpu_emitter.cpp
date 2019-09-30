@@ -4189,7 +4189,7 @@ namespace ngraph
                     throw ngraph_error("Unsupported index 2 element type");
                 }
 
-                auto index = external_function->add_state(new ngraph::RandomUniformRNGState());
+                auto index = external_function->add_state(new ngraph::UniformRNGState());
                 auto fixed_seed = ru->get_fixed_seed();
 
                 writer.block_begin();
