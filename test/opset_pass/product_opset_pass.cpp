@@ -26,7 +26,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(product, opset1_product_upgrade)
+TEST(opset_downgrade, opset1_product_upgrade)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     const AxisSet reduction_axes{1, 2};
@@ -48,7 +48,7 @@ TEST(product, opset1_product_upgrade)
     EXPECT_EQ(reduce_prod_v1->get_keep_dims(), false);
 }
 
-TEST(product, opset1_red_prod_downgrade)
+TEST(opset_downgrade, opset1_red_prod_downgrade)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     const auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{0, 1});
@@ -74,7 +74,7 @@ TEST(product, opset1_red_prod_downgrade)
     EXPECT_EQ(product_v0->get_version(), 0);
 }
 
-TEST(product, opset1_red_prod_downgrade_not_constant_axes)
+TEST(opset_downgrade, opset1_red_prod_downgrade_not_constant_axes)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     const auto axes = make_shared<op::Parameter>(element::f32, Shape{1});
@@ -103,7 +103,7 @@ TEST(product, opset1_red_prod_downgrade_not_constant_axes)
     }
 }
 
-TEST(product, opset1_red_prod_downgrade_output_not_static)
+TEST(opset_downgrade, opset1_red_prod_downgrade_output_not_static)
 {
     const auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     const auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{0, 1});
@@ -131,7 +131,7 @@ TEST(product, opset1_red_prod_downgrade_output_not_static)
     }
 }
 
-TEST(product, opset1_red_prod_downgrade_out_shape_if_keep_dims)
+TEST(opset_downgrade, opset1_red_prod_downgrade_out_shape_if_keep_dims)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
     auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
@@ -150,7 +150,7 @@ TEST(product, opset1_red_prod_downgrade_out_shape_if_keep_dims)
     ASSERT_TRUE(replacement_node->get_output_partial_shape(0).compatible(PartialShape{3, 1, 1}));
 }
 
-TEST(product, opset1_red_prod_downgrade_out_shape_if_not_keep_dims)
+TEST(opset_downgrade, opset1_red_prod_downgrade_out_shape_if_not_keep_dims)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
     auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});

@@ -15,7 +15,6 @@
 //*****************************************************************************
 #include "ngraph/pass/opset1_downgrade.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/graph_util.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
