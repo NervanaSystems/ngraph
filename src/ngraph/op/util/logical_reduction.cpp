@@ -40,7 +40,7 @@ op::util::LogicalReduction::LogicalReduction(const Output<Node>& arg,
 
 bool op::util::LogicalReduction::reduction_axes_constant() const
 {
-    return input_value(1).get_node()->is_type<op::Constant>();
+    return is_type<op::Constant>(input_value(1).get_node());
 }
 
 const AxisSet op::util::LogicalReduction::get_reduction_axes() const

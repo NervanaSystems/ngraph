@@ -178,7 +178,7 @@ void ngraph::pass::SelfConcatFusion::construct_concat_patterns(
     if (matcher->match(n))
     {
         auto concat_op = matcher->get_pattern_map()[concat_op_label];
-        if (!concat_op->is_type<op::Concat>())
+        if (!is_type<op::Concat>(concat_op))
         {
             NGRAPH_DEBUG << "self_concat_fusion: Pattern matcher matched incorrect op. Matched "
                          << concat_op->get_name() << " instead of a self concat";

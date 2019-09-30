@@ -45,7 +45,15 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
         OutputVector cur_args;
         for (auto a : n->input_values())
         {
-            cur_args.push_back(a.for_node(nm.at(a.get_node())));
+            if (as_type<op::Parameter>(a.get_node()))
+            {
+                // dummy parameter
+                cur_args.push_back(a);
+            }
+            else
+            {
+                cur_args.push_back(a.for_node(nm.at(a.get_node())));
+            }
         }
         auto new_n = n->copy_with_new_inputs(cur_args);
         nm[n.get()] = new_n;
@@ -58,7 +66,12 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
         new_outputs.push_back(nm.at(o.get()));
     }
 
-    return std::make_shared<CompiledKernel>(new_node_list, new_outputs, new_args);
+    auto ck = std::make_shared<CompiledKernel>(new_node_list, new_outputs, new_args);
+    for (auto it : m_input_map)
+    {
+        ck->insert_to_input_map(it.first, it.second);
+    }
+    return ck;
 }
 
 ngraph::op::CompiledKernel::CompiledKernel(const OutputVector& node_list,
@@ -76,6 +89,7 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
     , m_output_nodes(outputs)
 {
     constructor_validate_and_infer_types();
+    encapsulate_nodes();
     set_output_size(m_output_nodes.size());
 
     for (size_t i = 0; i < outputs.size(); ++i)
@@ -88,4 +102,36 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
         }
         set_output_type(i, o->get_element_type(), o->get_shape());
     }
+}
+
+void ngraph::op::CompiledKernel::encapsulate_nodes()
+{
+    std::unordered_set<std::shared_ptr<Node>> node_set(m_node_list.begin(), m_node_list.end());
+
+    // Go through each non-CK user of input to CK
+    int ck_arg_idx = 0;
+    for (auto& arg_output : input_values())
+    {
+        for (auto& input : arg_output.get_target_inputs())
+        {
+            auto user = input.get_node();
+            if (!as_type<op::CompiledKernel>(user) &&
+                node_set.find(user->shared_from_this()) != node_set.end())
+            {
+                arg_output.remove_target_input(input);
+                // Use a dummy Parameter as input for now, will replace later with the correct
+                // one.
+                auto temp_input_param = std::make_shared<ngraph::op::Parameter>(
+                    arg_output.get_element_type(), arg_output.get_partial_shape());
+                input.replace_source_output(temp_input_param->output(0));
+                insert_to_input_map(temp_input_param, ck_arg_idx);
+            }
+        }
+        ck_arg_idx++;
+    }
+}
+
+void ngraph::op::CompiledKernel::insert_to_input_map(std::shared_ptr<Node> node, size_t ck_arg_idx)
+{
+    m_input_map.emplace(node, ck_arg_idx);
 }
