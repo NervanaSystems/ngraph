@@ -49,6 +49,7 @@
 #include "util/all_close_f.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
+#include "util/float_util.hpp"
 #include "util/ndarray.hpp"
 #include "util/random.hpp"
 #include "util/test_tools.hpp"
@@ -1100,8 +1101,7 @@ TEST(cpu_test, constant_reshape)
     ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const =
-        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     const vector<float> values_out = new_const->get_vector<float>();
 
@@ -1126,8 +1126,7 @@ TEST(cpu_test, constant_reshape_permute)
     ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const =
-        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     const vector<double> values_out = new_const->get_vector<double>();
 
@@ -1153,8 +1152,7 @@ TEST(cpu_test, constant_broadcast)
     ASSERT_EQ(count_ops_of_type<op::Broadcast>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const =
-        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int>();
 
@@ -1184,8 +1182,7 @@ TEST(cpu_test, constant_pad_exterior)
     ASSERT_EQ(count_ops_of_type<op::Pad>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const =
-        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int>();
 
@@ -1196,8 +1193,7 @@ TEST(cpu_test, constant_pad_exterior)
 template <typename T>
 static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t pos)
 {
-    auto new_const =
-        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(pos)->get_argument(0));
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(pos)->get_argument(0));
     return new_const->get_vector<T>();
 }
 
@@ -2158,3 +2154,99 @@ TEST(cpu_test, tensor_copy_from_different_layout)
 
     EXPECT_EQ((vector<uint8_t>{1, 4, 2, 5, 3, 6}), read_vector<uint8_t>(b));
 }
+
+#if MKLDNN_VERSION_MAJOR >= 1
+TEST(cpu_test, max_pool_bf16)
+{
+    Shape shape_a{1, 1, 3, 5};
+    Shape window_shape{2, 3};
+    auto window_movement_strides = Strides{1, 1};
+    Shape padding_below{0, 0};
+    Shape padding_above{0, 0};
+    Shape shape_r{1, 1, 2, 3};
+
+    // input data
+    vector<float> a_data = {
+        0.5f, 1.5f, 0.5f, 2.5f, 1.5f, 0.5f, 3.5f, 2.5f, 0.5f, 0.5f, 2.5f, 0.5f, 0.5f, 0.5f, 1.5f};
+
+    // allocate memory for destination
+    int size = a_data.size() * sizeof(float) / 2;
+    void* bf16_dst = std::malloc(size);
+    // convert float data to bfloat16
+    ngraph::test::float_to_bf16(a_data.data(), bf16_dst, a_data.size());
+
+    auto A = make_shared<op::Parameter>(element::bf16, shape_a);
+    auto QMP = make_shared<ngraph::op::MaxPool>(
+        A, window_shape, window_movement_strides, padding_below, padding_above);
+    auto f = make_shared<Function>(NodeVector{QMP}, ParameterVector{A});
+    auto backend = runtime::Backend::create("CPU");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::bf16, shape_a);
+    a->write(bf16_dst, size);
+    auto result = backend->create_tensor(element::bf16, shape_r);
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    // convert the output back to float
+    void* fp_dst = malloc(shape_size(shape_r) * 4);
+    ngraph::test::bf16_to_float(
+        static_pointer_cast<runtime::cpu::CPUTensorView>(result)->get_data_ptr(),
+        fp_dst,
+        shape_size(shape_r));
+    auto b = backend->create_tensor(element::f32, shape_r);
+    b->write(fp_dst, shape_size(shape_r) * 4);
+    EXPECT_EQ((vector<float>{3.5f, 3.5f, 2.5f, 3.5f, 3.5f, 2.5f}), read_vector<float>(b));
+}
+
+TEST(cpu_test, convolution_simple_bf16)
+{
+    Shape shape_a{1, 2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::bf16, shape_a);
+    Shape shape_b{2, 2, 1, 1};
+    auto B = make_shared<op::Parameter>(element::bf16, shape_b);
+    Shape shape_r{1, 2, 2, 2};
+
+    vector<float> input = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
+    vector<float> weights = {3.0f, 3.0f, 3.0f, 3.0f};
+
+    int input_size = input.size() * sizeof(float) / 2;
+    int weights_size = weights.size() * sizeof(float) / 2;
+    void* bf16_input_dst = std::malloc(input_size);
+    void* bf16_weights_dst = std::malloc(weights_size);
+    // convert float data to bfloat16
+    ngraph::test::float_to_bf16(input.data(), bf16_input_dst, input.size());
+    ngraph::test::float_to_bf16(weights.data(), bf16_weights_dst, weights.size());
+
+    auto conv1 = make_shared<op::Convolution>(A,
+                                              B,
+                                              Strides{1, 1},
+                                              Strides{1, 1},
+                                              CoordinateDiff{0, 0},
+                                              CoordinateDiff{0, 0},
+                                              Strides{1, 1});
+
+    auto f = make_shared<Function>(conv1, ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::bf16, shape_a);
+    a->write(bf16_input_dst, input_size);
+    auto b = backend->create_tensor(element::bf16, shape_b);
+    b->write(bf16_weights_dst, weights_size);
+    auto result = backend->create_tensor(element::bf16, shape_r);
+
+    vector<float> expected_result{18.0f, 24.0f, 30.0f, 36.0f, 18.0f, 24.0f, 30.0f, 36.0f};
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    // convert the output back to float
+    void* fp_dst = malloc(shape_size(shape_r) * 4);
+    ngraph::test::bf16_to_float(
+        static_pointer_cast<runtime::cpu::CPUTensorView>(result)->get_data_ptr(),
+        fp_dst,
+        shape_size(shape_r));
+    auto c = backend->create_tensor(element::f32, shape_r);
+    c->write(fp_dst, shape_size(shape_r) * 4);
+    EXPECT_TRUE(test::all_close_f(vector<float>{expected_result}, read_vector<float>(c)));
+}
+#endif

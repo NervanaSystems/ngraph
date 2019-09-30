@@ -47,6 +47,7 @@
 #include "ngraph/op/util/index_reduction.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "pass/memory_optimization.hpp"
+#include "tools.hpp"
 
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
@@ -85,7 +86,7 @@ using namespace ngraph::runtime::ngmlir;
 // *** Debug flags ***
 
 static llvm::cl::opt<bool> clPrintIRAfterAll(
-    "print-ngraph-ir-after-all",
+    "ngraph-print-ir-after-all",
     llvm::cl::init(false),
     llvm::cl::desc(
         "Print IR after transformation that are not implemented as passes in the MLIRCompiler. It "
@@ -99,37 +100,37 @@ static llvm::cl::opt<bool> clEnableNgInPlaceMemoryOpt(
     llvm::cl::desc("Enable ngraph dialect in-place memory optimization pass"));
 
 static llvm::cl::opt<bool>
-    clEnableAffineLoopFusion("affine-loop-fusion",
+    clEnableAffineLoopFusion("ngraph-affine-loop-fusion",
                              llvm::cl::init(false),
                              llvm::cl::desc("Enable loop fusion optimization in Affine dialect"));
 
 static llvm::cl::opt<bool>
-    clEnableAffineLoopTiling("affine-loop-tile",
+    clEnableAffineLoopTiling("ngraph-affine-loop-tile",
                              llvm::cl::init(false),
                              llvm::cl::desc("Enable loop tiling optimization in Affine dialect"));
 
 static llvm::cl::opt<unsigned>
-    clLoopTilingCacheLevel("affine-loop-tile-cache-level",
+    clLoopTilingCacheLevel("ngraph-affine-loop-tile-cache-level",
                            llvm::cl::init(2),
                            llvm::cl::desc("Cache level to which to apply affine loop tiling."));
 
 static llvm::cl::opt<unsigned> clLoopTilingCacheSize(
-    "affine-loop-tile-cache-size",
+    "ngraph-affine-loop-tile-cache-size",
     llvm::cl::init(0),
     llvm::cl::desc(
         "Cache size to use in affine loop tiling. If not zero, it overrides the cache-size "
         "inferred from the host CPU using for the cache level specified by "
-        "-loop-tile-cache-level."));
+        "-ngraph-loop-tile-cache-level."));
 
 // *** Debug flags ***
 
 static llvm::cl::opt<bool>
-    clDumpObjectFile("dump-mlir-object-file",
+    clDumpObjectFile("ngraph-dump-mlir-object-file",
                      llvm::cl::desc("Dump MLIR JITted-compiled object to file specified with "
                                     "-object-filename (<input file>.o by default)."));
 
 static llvm::cl::opt<std::string>
-    clObjectFilename("mlir-object-filename",
+    clObjectFilename("ngraph-mlir-object-filename",
                      llvm::cl::desc("Dump MLIR JITted-compiled object to file jitted_mlir.o"));
 
 #define COMPILE_OP_DECL(op_name)                                                                   \
@@ -173,7 +174,7 @@ void MLIRCompiler::init_mlir()
 
     if (!initialized)
     {
-        mlir::registerDialect<mlir::NGraphOpsDialect>();
+        initializeNGraphMLIR();
 
         // Register MLIR command line options in the pool of supported flags and and process flags
         // from environment variable to be used by nGraph, MLIR and LLVM.
@@ -352,7 +353,7 @@ void MLIRCompiler::lowerNgDialect()
 {
     // Lower NG dialect to Affine
     mlir::PassManager pm(&m_context);
-    pm.addPass(mlir::createDialectLoweringPass(this));
+    pm.addPass(mlir::createDialectLoweringPass());
     pm.addPass(mlir::createCanonicalizerPass());
 
     // Apply any generic pass manager command line options.
@@ -639,11 +640,25 @@ mlir::Operation* MLIRCompiler::createGenericOp(const ngraph::Node* ngNode)
 {
     std::vector<mlir::Value*> argValues;
     std::vector<mlir::Type> resTypes;
-    for (auto& arg : ngNode->get_arguments())
+    auto inputMap = m_compiledKernel->get_input_map();
+    std::shared_ptr<descriptor::Tensor> argTensor;
+    for (auto& argOutput : ngNode->input_values())
     {
-        auto argTensor = arg->get_output_tensor_ptr();
-        auto argv = getTensorValue(argTensor.get()).m_value;
-        argValues.push_back(argv);
+        auto argOutputNode = argOutput.get_node();
+        if (as_type<op::Parameter>(argOutputNode))
+        {
+            auto it = inputMap.find(argOutputNode->shared_from_this());
+            NGRAPH_CHECK(it != inputMap.end(), "Parameter not in CK input map");
+
+            argTensor = m_compiledKernel->input_values().at(it->second).get_tensor_ptr();
+        }
+        else
+        {
+            argTensor = argOutput.get_tensor_ptr();
+        }
+
+        auto argV = getTensorValue(argTensor.get()).m_value;
+        argValues.push_back(argV);
     }
 
     for (auto& output : ngNode->outputs())

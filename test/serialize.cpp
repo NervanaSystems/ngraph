@@ -183,7 +183,7 @@ TEST(serialize, constant)
     bool found = false;
     for (shared_ptr<Node> node : g->get_ops())
     {
-        shared_ptr<op::Constant> c = dynamic_pointer_cast<op::Constant>(node);
+        shared_ptr<op::Constant> c = as_type_ptr<op::Constant>(node);
         if (c)
         {
             found = true;
@@ -245,7 +245,7 @@ TEST(serialize, passthrough)
     std::shared_ptr<op::Passthrough> pt;
     for (const auto& op : g->get_ops())
     {
-        pt = dynamic_pointer_cast<op::Passthrough>(op);
+        pt = as_type_ptr<op::Passthrough>(op);
         if (pt)
         {
             break;

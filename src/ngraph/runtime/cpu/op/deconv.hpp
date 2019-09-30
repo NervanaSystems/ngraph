@@ -18,6 +18,7 @@
 
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -27,6 +28,7 @@ namespace ngraph
         class DeconvolutionBias : public Op
         {
         public:
+            CPU_BACKEND_API
             static constexpr NodeTypeInfo type_info{"DeconvolutionBias", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a batched-convolution data batch-backprop operation.

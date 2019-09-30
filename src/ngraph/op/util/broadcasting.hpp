@@ -133,6 +133,15 @@ namespace ngraph
         OutputVector numpy_style_broadcast_values_for_matmul_operation(const Output<Node>& left,
                                                                        const Output<Node>& right);
 
+        /// \brief Cast shape of all input nodes for an element-wise operation that requires
+        ///        shape-compatibility
+        ///
+        /// \param inputs Original list of inputs
+        /// \param axis Index starting to align
+        ///
+        /// \return pdpd-style broadcasted list of nodes.
+        NodeVector pdpd_style_broadcast(const NodeVector& inputs, int64_t axis);
+
         /// \brief Generate a list of broadcast axes.
         ///
         /// \details Informally, a broadcast "adds" axes to the input tensor, replicating

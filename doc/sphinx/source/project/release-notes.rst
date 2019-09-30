@@ -20,11 +20,10 @@ Core updates for |version|
 --------------------------
 + All ops support ``Output<Node>`` arguments
 + Additional ops
-
++ ONNX handling unknown domains
 
 Latest documentation updates for |version|
 ------------------------------------------
-
 + Note the only support for nGPU is now through PlaidML; nGraph support for nGPU 
   (via cuDNN) has been deprecated.  
 + iGPU works only with nGraph version `0.24`.
@@ -41,6 +40,8 @@ Changelog on Previous Releases
 + Allow DLLs that link nGraph statically to load backends
 + Add rank id to trace file name
 + Allow provenance merging to be disabled
++ Remove some white-listed compiler warnings
++ Provenance on builders and fused op expansions
 
 
 0.25.0
