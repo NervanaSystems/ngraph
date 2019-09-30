@@ -30,12 +30,7 @@ namespace ngraph
             class FusedOp : public Op
             {
             public:
-                /// \brief Decomposes the FusedOp into a sub-graph consisting of core ngraph ops
-                ///
-                /// \return A vector of nodes comprising the sub-graph. The order of output
-                ///         tensors must match the match output tensors of the FusedOp
-                virtual NodeVector decompose_op() const = 0;
-
+                bool supports_decompose() const override { return true; }
                 void validate_and_infer_types() override;
 
                 /// Pre and post validation hooks for op-specific actions

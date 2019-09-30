@@ -178,7 +178,7 @@ void op::GroupConvolutionTranspose::pre_validate_and_infer_types()
                 out_shape.erase(std::begin(out_shape), std::begin(out_shape) + 2);
             }
 
-            for (int i = 0; i < num_spatial_dims; ++i)
+            for (uint64_t i = 0; i < num_spatial_dims; ++i)
             {
                 int total_padding = m_strides[i] * (data_shape[i + 2] - 1) +
                                     m_dilations[i] * (filters_shape[i + 2] - 1) - out_shape[i] +

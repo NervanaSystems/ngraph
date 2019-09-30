@@ -250,8 +250,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     NodeVector result_nodes;
     for (auto node : bprop->get_results())
     {
-        auto result =
-            std::dynamic_pointer_cast<op::Result>(fprop_cache.node_param_map.at(node.get()));
+        auto result = as_type_ptr<op::Result>(fprop_cache.node_param_map.at(node.get()));
         if (!result)
         {
             throw ngraph_error("Expected op::Result values for op::Result keys in node_param_map");
@@ -266,15 +265,15 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
         ParameterVector bprop_input_params;
         for (auto param : bprop_inputs)
         {
-            bprop_input_params.push_back(std::dynamic_pointer_cast<op::Parameter>(
-                fprop_cache.node_param_map.at(param.get())));
+            bprop_input_params.push_back(
+                as_type_ptr<op::Parameter>(fprop_cache.node_param_map.at(param.get())));
         }
 
         // add the cached fprop nodes as inputs to bprop
         for (auto x : fprop_cache.fprop_output_nodes)
         {
             bprop_input_params.push_back(
-                std::dynamic_pointer_cast<op::Parameter>(fprop_cache.node_param_map.at(x)));
+                as_type_ptr<op::Parameter>(fprop_cache.node_param_map.at(x)));
         }
         return bprop_input_params;
     };
@@ -286,7 +285,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     ngraph::traverse_nodes(
         result_nodes,
         [&cloned_bprop_inputs, &fprop_cache, &inverted_node_map](std::shared_ptr<Node> node) {
-            auto pnode = std::dynamic_pointer_cast<op::Parameter>(node);
+            auto pnode = as_type_ptr<op::Parameter>(node);
             if (pnode != nullptr &&
                 std::find(cloned_bprop_inputs.begin(), cloned_bprop_inputs.end(), pnode) ==
                     cloned_bprop_inputs.end())
@@ -302,7 +301,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     for (auto fpirn : fprop_cache.fprop_output_nodes)
     {
         auto fpir = fpirn->shared_from_this();
-        if (std::dynamic_pointer_cast<op::Result>(fpir))
+        if (as_type_ptr<op::Result>(fpir))
         {
             throw ngraph_error("Expected op::Result in fprop->get_results()");
         }

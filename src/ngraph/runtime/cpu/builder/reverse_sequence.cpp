@@ -47,7 +47,7 @@ namespace ngraph
 
                 if (args[1].get_element_type() == element::i32)
                 {
-                    SELECT_KERNEL_BY_RANK(kernel,
+                    SELECT_KERNEL_ET_RANK(kernel,
                                           args[0].get_element_type(),
                                           arg_shape.size(),
                                           runtime::cpu::kernel::reverse_sequence_sli32)
