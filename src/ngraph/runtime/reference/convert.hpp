@@ -41,30 +41,6 @@ namespace ngraph
                     out[i] = static_cast<char>(static_cast<bool>(arg[i]));
                 }
             }
-
-            template <typename TI>
-            void convert_float_to_bf16(void* arg, void* out, size_t count)
-            {
-                int* a = static_cast<int*>(arg);
-                char16_t* b = static_cast<char16_t*>(out);
-
-                for (; count != 0; b++, count--, a++)
-                {
-                    *b = (a[0] >> 16) & 0xffff;
-                }
-            }
-
-            template <typename TI>
-            void convert_bf16_to_float(void* arg, void* out, size_t count)
-            {
-                char16_t* a = static_cast<char16_t*>(arg);
-                int* b = static_cast<int*>(out);
-
-                for (; count != 0; a++, b++, count--)
-                {
-                    *b = (a[0] & 0xffff) << 16;
-                }
-            }
         }
     }
 }

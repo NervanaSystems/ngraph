@@ -48,7 +48,7 @@ namespace ngraph
                 else if (args[0].get_element_type() == element::bf16 &&
                          out[0].get_element_type() == element::f32)
                 {
-                    kernel = runtime::cpu::kernel::convert_bf16_to_float<bfloat16>;
+                    kernel = runtime::cpu::kernel::convert_to_float32<bfloat16>;
                 }
                 else if (out[0].get_element_type() == element::f32)
                 {
@@ -105,7 +105,7 @@ namespace ngraph
                 else if (args[0].get_element_type() == element::f32 &&
                          out[0].get_element_type() == element::bf16)
                 {
-                    kernel = runtime::cpu::kernel::convert_float_to_bf16<float>;
+                    kernel = runtime::cpu::kernel::convert_to_bf16<float>;
                 }
                 else
                 {
