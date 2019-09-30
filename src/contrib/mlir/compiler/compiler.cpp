@@ -360,7 +360,10 @@ void MLIRCompiler::lowerNgDialect()
     // Apply any generic pass manager command line options.
     mlir::applyPassManagerCLOptions(pm);
 
-    pm.run(m_module.get());
+    if (failed(pm.run(m_module.get())))
+    {
+        NGRAPH_CHECK(false, "MLIR pass manager failed");
+    }
 
     if (failed(m_module->verify()))
     {
@@ -709,7 +712,11 @@ void MLIRCompiler::optimizeNgDialect()
     {
         pm.addPass(mlir::createMemoryOptimizationPass());
     }
-    pm.run(m_module.get());
+
+    if (failed(pm.run(m_module.get())))
+    {
+        NGRAPH_CHECK(false, "MLIR pass manager failed");
+    }
 }
 
 // Binds MLIR function arguments to the proper values. This includes externally allocated tensors
