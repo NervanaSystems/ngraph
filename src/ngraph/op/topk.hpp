@@ -133,17 +133,20 @@ namespace ngraph
                 ///             the biggest element of two.
                 /// \param sort Specifies order of output elements and/or indices
                 ///             Accepted values: none, index, value
+                /// \param index_element_type Specyfies type of produced indices
                 TopK(const Output<Node>& data,
                      const Output<Node>& k,
                      const int64_t axis,
                      const std::string& mode,
-                     const std::string& sort);
+                     const std::string& sort,
+                     const element::Type& index_element_type = element::i32);
 
                 TopK(const Output<Node>& data,
                      const Output<Node>& k,
                      const int64_t axis,
                      const Mode mode,
-                     const SortType sort);
+                     const SortType sort,
+                     const element::Type& index_element_type = element::i32);
 
                 void validate_and_infer_types() override;
 

@@ -144,12 +144,13 @@ op::v1::TopK::TopK(const Output<Node>& data,
                    const Output<Node>& k,
                    const int64_t axis,
                    const std::string& mode,
-                   const std::string& sort)
+                   const std::string& sort,
+                   const element::Type& index_element_type)
     : Op{{data, k}}
     , m_axis{axis}
     , m_mode{mode_from_string(mode)}
     , m_sort{sort_type_from_string(sort)}
-    , m_index_element_type{element::i32}
+    , m_index_element_type{index_element_type}
 {
     constructor_validate_and_infer_types();
 }
@@ -158,12 +159,13 @@ op::v1::TopK::TopK(const Output<Node>& data,
                    const Output<Node>& k,
                    const int64_t axis,
                    const Mode mode,
-                   const SortType sort)
+                   const SortType sort,
+                   const element::Type& index_element_type)
     : Op{{data, k}}
     , m_axis{axis}
     , m_mode{mode}
     , m_sort{sort}
-    , m_index_element_type{element::i32}
+    , m_index_element_type{index_element_type}
 {
     constructor_validate_and_infer_types();
 }
