@@ -22,6 +22,7 @@
 #include "ngraph/code_writer.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/pad.hpp"
@@ -109,10 +110,7 @@ namespace ngraph
         class QuantizedConvolution;
         class GroupConvolution;
         class GroupConvolutionBias;
-        class Convolution;
-        class ConvolutionBackpropFilters;
         class DeconvolutionBias;
-        class ConvolutionBackpropData;
         class QuantizedConvolutionBias;
         class QuantizedConvolutionBiasAdd;
         class QuantizedConvolutionBiasSignedAdd;
