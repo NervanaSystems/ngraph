@@ -1239,7 +1239,15 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::DynReshape:
         {
-            node = make_shared<op::DynReshape>(args[0], args[1]);
+            const auto zero_flag = node_js.at("zero_flag").get<bool>();
+            if (op_version == 0)
+            {
+                node = make_shared<op::v0::DynReshape>(args[0], args[1], zero_flag);
+            }
+            if (op_version == 1)
+            {
+                node = make_shared<op::v1::Reshape>(args[0], args[1], zero_flag);
+            }
             break;
         }
         case OP_TYPEID::DynSlice:
@@ -2672,7 +2680,19 @@ json JSONSerializer::serialize_node(const Node& n)
         node["ellipsis_mask"] = tmp->get_ellipsis_mask();
         break;
     }
-    case OP_TYPEID::DynReshape: { break;
+    case OP_TYPEID::DynReshape:
+    {
+        if (op_version == 0)
+        {
+            auto tmp = dynamic_cast<const op::v0::DynReshape*>(&n);
+            node["zero_flag"] = tmp->get_zero_flag();
+        }
+        if (op_version == 1)
+        {
+            auto tmp = dynamic_cast<const op::v1::Reshape*>(&n);
+            node["zero_flag"] = tmp->get_zero_flag();
+        }
+        break;
     }
     case OP_TYPEID::DynSlice:
     {
