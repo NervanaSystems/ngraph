@@ -19,6 +19,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -29,6 +30,7 @@ namespace ngraph
         class BoundedRelu : public ngraph::op::util::UnaryElementwiseArithmetic
         {
         public:
+            CPU_BACKEND_API
             static constexpr NodeTypeInfo type_info{"BoundedRelu", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a BoundedRelu operation.

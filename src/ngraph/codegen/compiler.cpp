@@ -190,6 +190,11 @@ void codegen::CompilerCore::initialize()
     // Prevent Eigen from using any LGPL3 code
     args.push_back("-DEIGEN_MPL2_ONLY");
 
+#if defined(NGRAPH_TBB_ENABLE)
+    // Enable TBB
+    args.push_back("-DNGRAPH_TBB_ENABLE");
+#endif
+
 #if defined(NGRAPH_USE_LEGACY_MKLDNN)
     args.push_back("-DNGRAPH_USE_LEGACY_MKLDNN");
 #endif

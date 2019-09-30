@@ -18,6 +18,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/layer_norm.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
@@ -90,7 +91,13 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     // We apply the same general-purposes passes as the CPU backend.
     pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>([](const Node& node) -> bool {
         if (node.description() == ngraph::op::GroupConvolution().description())
+        {
             return true;
+        }
+        else if (node.description() == ngraph::op::LayerNorm().description())
+        {
+            return true;
+        }
         return false;
     });
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();

@@ -152,7 +152,7 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
 void pass::ReshapeElimination::construct_dot_transpose_pattern()
 {
     // dot(A,B).T = dot (B.T, A.T)
-    auto dot_pred = [](shared_ptr<Node> n) { return n->is_type<op::Dot>(); };
+    auto dot_pred = [](shared_ptr<Node> n) { return is_type<op::Dot>(n); };
 
     auto pdot = make_shared<pattern::op::Label>(element::f32, Shape{2, 1}, dot_pred);
     auto preshape = make_shared<op::Reshape>(pdot, AxisVector{1, 0}, Shape{1, 2});
@@ -230,7 +230,7 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
         // Need to check if the user of the last bound op is a reshape since the last reshape is
         // allowed to have fan-out but the matcher will discard any reshape if it has fan-out
         auto user_of_last_bound_reshape_op = last_bound_reshape_op->get_users(true)[0];
-        if (user_of_last_bound_reshape_op->is_type<op::Reshape>())
+        if (is_type<op::Reshape>(user_of_last_bound_reshape_op))
         {
             reshape_node_vector.push_back(user_of_last_bound_reshape_op);
             last_bound_reshape_op = reshape_node_vector.back();

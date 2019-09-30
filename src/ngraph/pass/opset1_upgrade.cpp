@@ -15,9 +15,11 @@
 //*****************************************************************************
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reduce_prod.hpp"
@@ -25,8 +27,6 @@
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
-
-#include <limits>
 
 using namespace std;
 using namespace ngraph;
@@ -85,6 +85,52 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 #endif
     switch (get_typeid(node))
     {
+    case OP_TYPEID::AvgPool:
+    {
+        auto tmp = dynamic_cast<const op::v0::AvgPool*>(node.get());
+
+        auto rounding_type = static_cast<op::RoundingType>(tmp->get_ceil_mode());
+        auto exclude_pad = !tmp->get_include_padding_in_avg_computation();
+        auto auto_pad = tmp->get_pad_type();
+        auto pads_begin = tmp->get_padding_below();
+        auto pads_end = tmp->get_padding_above();
+        auto strides = tmp->get_window_movement_strides();
+        auto kernel = tmp->get_window_shape();
+
+        auto replacement_node = make_shared<op::v1::AvgPool>(node->input(0).get_source_output(),
+                                                             strides,
+                                                             pads_begin,
+                                                             pads_end,
+                                                             kernel,
+                                                             exclude_pad,
+                                                             rounding_type,
+                                                             auto_pad);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::AvgPoolBackprop:
+    {
+        auto tmp = dynamic_cast<const op::v0::AvgPoolBackprop*>(node.get());
+
+        auto exclude_pad = !tmp->get_include_padding_in_avg_computation();
+        auto pads_begin = tmp->get_padding_below();
+        auto pads_end = tmp->get_padding_above();
+        auto strides = tmp->get_window_movement_strides();
+        auto kernel = tmp->get_window_shape();
+
+        auto replacement_node =
+            make_shared<op::v1::AvgPoolBackprop>(tmp->get_forward_arg_shape(),
+                                                 node->input(0).get_source_output(),
+                                                 strides,
+                                                 pads_begin,
+                                                 pads_end,
+                                                 kernel,
+                                                 exclude_pad);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::Gather:
     {
         auto tmp = dynamic_cast<const op::v0::Gather*>(node.get());
@@ -93,6 +139,63 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         auto axis_node = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{axis});
         auto replacement_node = make_shared<op::v1::Gather>(
             node->input(0).get_source_output(), node->input(1).get_source_output(), axis_node);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::MaxPool:
+    {
+        auto tmp = dynamic_cast<const op::v0::MaxPool*>(node.get());
+
+        auto rounding_type = static_cast<op::RoundingType>(tmp->get_ceil_mode());
+        auto auto_pad = tmp->get_pad_type();
+        auto pads_begin = tmp->get_padding_below();
+        auto pads_end = tmp->get_padding_above();
+        auto strides = tmp->get_window_movement_strides();
+        auto kernel = tmp->get_window_shape();
+
+        auto replacement_node = make_shared<op::v1::MaxPool>(node->input(0).get_source_output(),
+                                                             strides,
+                                                             pads_begin,
+                                                             pads_end,
+                                                             kernel,
+                                                             rounding_type,
+                                                             auto_pad);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::MaxPoolBackprop:
+    {
+        auto tmp = dynamic_cast<const op::v0::MaxPoolBackprop*>(node.get());
+
+        auto pads_begin = tmp->get_padding_below();
+        auto pads_end = tmp->get_padding_above();
+        auto strides = tmp->get_window_movement_strides();
+        auto kernel = tmp->get_window_shape();
+
+        shared_ptr<Node> replacement_node;
+        if (node->get_inputs().size() == 3)
+        {
+            replacement_node =
+                make_shared<op::v1::MaxPoolBackprop>(node->input(0).get_source_output(),
+                                                     node->input(1).get_source_output(),
+                                                     node->input(2).get_source_output(),
+                                                     strides,
+                                                     pads_begin,
+                                                     pads_end,
+                                                     kernel);
+        }
+        else
+        {
+            replacement_node =
+                make_shared<op::v1::MaxPoolBackprop>(node->input(0).get_source_output(),
+                                                     node->input(1).get_source_output(),
+                                                     strides,
+                                                     pads_begin,
+                                                     pads_end,
+                                                     kernel);
+        }
         replace_node(node, replacement_node);
         modified = true;
         break;
@@ -183,7 +286,6 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-
     default: break;
     }
 #if defined(__clang__)
