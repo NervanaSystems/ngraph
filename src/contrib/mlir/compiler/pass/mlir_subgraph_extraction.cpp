@@ -108,8 +108,8 @@ MLIRSubgraphExtractionPass::MLIRSubgraphExtractionPass()
 // The sub-graph construction algorithm is as follows
 // Process each node in topological order:
 // - start a new sub-graph whenever an unsupported node is encountered.
-// - supported node is added to current sub-graph and its
-// -- predecessors outside current sub-graphs are marked as input to the sub-graph.
+// - supported node is added to current sub-graph and
+// - its predecessors outside current sub-graphs are marked as input to the sub-graph.
 // Sub-graph may contain multiple disjoint clusters.
 //
 // For each sub-graph found build a CompiledKernel(CK) node around it as follows
