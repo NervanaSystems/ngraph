@@ -50,7 +50,8 @@ namespace ngraph
 
                 if (!shape_size(result_shape))
                 {
-                    auto functor = [](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {};
+                    auto functor = [](CPURuntimeContext* /* ctx */,
+                                      CPUExecutionContext* /* ectx */) {};
                     functors.emplace_back(functor);
                     return;
                 }
@@ -59,14 +60,16 @@ namespace ngraph
                 {
                     auto size = shape_size(result_shape) * out[0].get_element_type().size();
                     auto functor = [&, size, out_buffer_index](CPURuntimeContext* ctx,
-                                                               CPUExecutionContext* ectx) {
+                                                               CPUExecutionContext* /* ectx */) {
                         memset(ctx->buffer_data[out_buffer_index], 0, size);
                     };
                     functors.emplace_back(functor);
                     return;
                 }
 
-                if (arg0_shape.empty() || arg1_shape.empty())
+                if ((arg0_shape.empty() || arg1_shape.empty()) &&
+                    is_optimized_et(args[0].get_element_type()) &&
+                    is_optimized_et(args[1].get_element_type()))
                 {
                     auto first = (arg0_shape.empty() ? args[0] : args[1]);
                     auto second = (arg0_shape.empty() ? args[1] : args[0]);
@@ -77,8 +80,7 @@ namespace ngraph
 
                     std::function<decltype(runtime::cpu::kernel::dot_scalar<float>)> kernel;
 
-                    SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_scalar);
+                    SELECT_ETS(kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_scalar);
 
                     auto element_count = shape_size(second.get_shape());
 
@@ -100,11 +102,12 @@ namespace ngraph
                 }
 
                 if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1) &&
-                    reduction_axes_count == 1)
+                    reduction_axes_count == 1 && is_optimized_et(args[0].get_element_type()) &&
+                    is_optimized_et(args[1].get_element_type()))
                 {
                     std::function<decltype(runtime::cpu::kernel::dot_1d_1d_1rd<float>)> kernel;
 
-                    SELECT_KERNEL(
+                    SELECT_ETS(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_1d_1d_1rd);
 
                     auto functor = [&,
@@ -129,11 +132,12 @@ namespace ngraph
                 }
 
                 if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1) &&
-                    reduction_axes_count == 1)
+                    reduction_axes_count == 1 && is_optimized_et(args[0].get_element_type()) &&
+                    is_optimized_et(args[1].get_element_type()))
                 {
                     std::function<decltype(runtime::cpu::kernel::dot_2d_1d_1rd<float>)> kernel;
 
-                    SELECT_KERNEL(
+                    SELECT_ETS(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_2d_1d_1rd);
 
                     auto functor = [&,
@@ -158,11 +162,12 @@ namespace ngraph
                 }
 
                 if ((arg0_shape.size() == 1) && (arg1_shape.size() == 2) &&
-                    reduction_axes_count == 1)
+                    reduction_axes_count == 1 && is_optimized_et(args[0].get_element_type()) &&
+                    is_optimized_et(args[1].get_element_type()))
                 {
                     std::function<decltype(runtime::cpu::kernel::dot_1d_2d_1rd<float>)> kernel;
 
-                    SELECT_KERNEL(
+                    SELECT_ETS(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_1d_2d_1rd);
 
                     auto functor = [&,
@@ -209,7 +214,7 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         cblas::cblas_sgemm(
                             cblas::Layout::RowMajor,
                             transpose_A ? cblas::Transpose::Transpose : cblas::Transpose::None,
@@ -233,7 +238,7 @@ namespace ngraph
                 std::function<decltype(runtime::cpu::kernel::dot_ref<float, float, float>)> kernel;
 
                 SELECT_KERNEL_3ARGS(
-                    kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_ref);
+                    kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_ref)
 
                 auto functor = [&,
                                 kernel,
@@ -244,7 +249,7 @@ namespace ngraph
                                 arg0_buffer_index,
                                 arg1_buffer_index,
                                 out_buffer_index](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
+                                                  CPUExecutionContext* /* ectx */) {
                     kernel(ctx->buffer_data[arg0_buffer_index],
                            ctx->buffer_data[arg1_buffer_index],
                            ctx->buffer_data[out_buffer_index],

@@ -90,7 +90,7 @@ TEST(copy, broadcast)
 
     auto node = make_shared<op::Broadcast>(arg0, shape, axes);
     auto new_node = node->copy_with_new_args(new_args);
-    auto node_cast = dynamic_pointer_cast<op::Broadcast>(new_node);
+    auto node_cast = as_type_ptr<op::Broadcast>(new_node);
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
@@ -114,7 +114,7 @@ TEST(copy, concat)
     size_t axis = 0;
     auto node = make_shared<op::Concat>(NodeVector{arg0, arg1}, axis);
     auto new_node = node->copy_with_new_args(new_args);
-    auto node_cast = dynamic_pointer_cast<op::Concat>(new_node);
+    auto node_cast = as_type_ptr<op::Concat>(new_node);
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
@@ -129,7 +129,7 @@ TEST(copy, constant)
     auto& et = element::f32;
     auto node = op::Constant::create(et, shape, c);
     auto new_node = node->copy_with_new_args(NodeVector{});
-    auto node_cast = dynamic_pointer_cast<op::Constant>(new_node);
+    auto node_cast = as_type_ptr<op::Constant>(new_node);
     ASSERT_NE(node_cast, nullptr);
     ASSERT_TRUE(nullptr != new_node);
     ASSERT_TRUE(NodeVector{} == new_node->get_arguments());
@@ -147,7 +147,7 @@ TEST(copy, convert)
 
     auto node = make_shared<op::Convert>(arg0, et);
     auto new_node = node->copy_with_new_args(new_args);
-    auto node_cast = dynamic_pointer_cast<op::Convert>(new_node);
+    auto node_cast = as_type_ptr<op::Convert>(new_node);
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
@@ -245,7 +245,7 @@ TEST(copy, parameter)
     Shape shape{1};
     auto node = make_shared<op::Parameter>(element::f32, shape);
     auto new_node = node->copy_with_new_args({});
-    auto node_cast = dynamic_pointer_cast<op::Parameter>(new_node);
+    auto node_cast = as_type_ptr<op::Parameter>(new_node);
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
@@ -269,7 +269,7 @@ TEST(copy, reshape)
 
     auto node = make_shared<op::Reshape>(arg0, axes, shape_out);
     auto new_node = node->copy_with_new_args(new_args);
-    auto node_cast = dynamic_pointer_cast<op::Reshape>(new_node);
+    auto node_cast = as_type_ptr<op::Reshape>(new_node);
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
@@ -290,7 +290,7 @@ TEST(copy, select)
 
     auto node = make_shared<op::Select>(arg0, arg1, arg2);
     auto new_node = node->copy_with_new_args(new_args);
-    auto node_cast = dynamic_pointer_cast<op::Select>(new_node);
+    auto node_cast = as_type_ptr<op::Select>(new_node);
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
@@ -324,7 +324,7 @@ TEST(copy, slice)
 
     auto node = make_shared<op::Slice>(arg0, lower, upper, strides);
     auto new_node = node->copy_with_new_args(new_args);
-    auto node_cast = dynamic_pointer_cast<op::Slice>(new_node);
+    auto node_cast = as_type_ptr<op::Slice>(new_node);
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
@@ -348,7 +348,7 @@ TEST(copy, sum)
     auto node = make_shared<op::Sum>(arg0, axes);
     NodeVector new_args{make_shared<op::Parameter>(element::f32, shape), node->get_argument(1)};
     auto new_node = node->copy_with_new_args(new_args);
-    auto node_cast = dynamic_pointer_cast<op::Sum>(new_node);
+    auto node_cast = as_type_ptr<op::Sum>(new_node);
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);

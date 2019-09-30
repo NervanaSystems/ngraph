@@ -29,6 +29,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::BroadcastDistributed)
             {
+                (void)out;
                 auto& functors = external_function->get_functors();
 
                 auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
@@ -37,7 +38,7 @@ namespace ngraph
                 auto broadcast = static_cast<const ngraph::op::BroadcastDistributed*>(node);
                 auto root_id = broadcast->get_root_id();
                 auto functor = [&, count, data_type, arg_buffer_index, root_id](
-                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                     get_distributed_interface()->broadcast(
                         ctx->buffer_data[arg_buffer_index], data_type, count, root_id);
                 };

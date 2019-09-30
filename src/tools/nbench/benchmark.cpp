@@ -30,7 +30,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
                                                   const string& backend_name,
                                                   size_t iterations,
                                                   bool timing_detail,
-                                                  int warmup_iterations,
+                                                  size_t warmup_iterations,
                                                   bool copy_data)
 {
     stopwatch timer;

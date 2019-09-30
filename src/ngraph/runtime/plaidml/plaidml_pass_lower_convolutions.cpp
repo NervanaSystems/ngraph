@@ -92,7 +92,7 @@ ngraph::runtime::plaidml::pass::LowerConvolutions::LowerConvolutions()
         AxisVector rhs_axes = to_axes(rhs, rhs_transpose);
 
         {
-            auto conv = std::dynamic_pointer_cast<ngraph::op::Convolution>(node);
+            auto conv = as_type_ptr<ngraph::op::Convolution>(node);
             if (conv)
             {
                 replace_node(target,
@@ -106,8 +106,7 @@ ngraph::runtime::plaidml::pass::LowerConvolutions::LowerConvolutions()
         }
 
         {
-            auto conv_bp_data =
-                std::dynamic_pointer_cast<ngraph::op::ConvolutionBackpropData>(node);
+            auto conv_bp_data = as_type_ptr<ngraph::op::ConvolutionBackpropData>(node);
             if (conv_bp_data)
             {
                 replace_node(
@@ -122,8 +121,7 @@ ngraph::runtime::plaidml::pass::LowerConvolutions::LowerConvolutions()
         }
 
         {
-            auto conv_bp_filters =
-                std::dynamic_pointer_cast<ngraph::op::ConvolutionBackpropFilters>(node);
+            auto conv_bp_filters = as_type_ptr<ngraph::op::ConvolutionBackpropFilters>(node);
             if (conv_bp_filters)
             {
                 replace_node(target,

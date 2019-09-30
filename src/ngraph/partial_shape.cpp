@@ -250,30 +250,81 @@ bool PartialShape::broadcast_merge_into(PartialShape& dst,
                                         const PartialShape& src,
                                         const op::AutoBroadcastSpec& autob)
 {
-    NGRAPH_CHECK(autob.m_type == op::AutoBroadcastType::NUMPY, "Unsupported auto broadcast type");
-
-    if (dst.rank().is_dynamic() || src.rank().is_dynamic())
+    switch (autob.m_type)
     {
-        dst = PartialShape::dynamic();
-        return true;
-    }
-    else
+    case op::AutoBroadcastType::NONE: return true;
+    case op::AutoBroadcastType::NUMPY:
     {
-        // Ranks are both static.
-        auto dst_rank = size_t(dst.rank());
-        auto src_rank = size_t(src.rank());
-        auto new_rank = std::max(dst_rank, src_rank);
-        std::vector<Dimension> dims(new_rank);
-        bool success = true;
-        for (size_t i = 0; i < new_rank; i++)
+        if (dst.rank().is_dynamic() || src.rank().is_dynamic())
         {
-            auto dsti = i < (new_rank - dst_rank) ? Dimension(1) : dst[i - (new_rank - dst_rank)];
-            auto srci = i < (new_rank - src_rank) ? Dimension(1) : src[i - (new_rank - src_rank)];
-            success &= Dimension::broadcast_merge(dims[i], dsti, srci);
+            dst = PartialShape::dynamic();
+            return true;
         }
-        dst = PartialShape(dims);
-        return success;
+        else
+        {
+            // Ranks are both static.
+            auto dst_rank = size_t(dst.rank());
+            auto src_rank = size_t(src.rank());
+            auto new_rank = std::max(dst_rank, src_rank);
+            std::vector<Dimension> dims(new_rank);
+            bool success = true;
+            for (size_t i = 0; i < new_rank; i++)
+            {
+                auto dsti =
+                    i < (new_rank - dst_rank) ? Dimension(1) : dst[i - (new_rank - dst_rank)];
+                auto srci =
+                    i < (new_rank - src_rank) ? Dimension(1) : src[i - (new_rank - src_rank)];
+                success &= Dimension::broadcast_merge(dims[i], dsti, srci);
+            }
+            dst = PartialShape(dims);
+            return success;
+        }
     }
+    case op::AutoBroadcastType::PDPD:
+    {
+        if (dst.rank().is_dynamic() || src.rank().is_dynamic())
+        {
+            return true;
+        }
+        else
+        {
+            // Ranks are both static.
+            auto dst_rank = size_t(dst.rank());
+            auto src_rank = size_t(src.rank());
+            if (dst_rank == src_rank && dst.compatible(src))
+                return true;
+
+            int64_t axis = autob.m_axis;
+            if (axis < -1)
+            {
+                return false;
+            }
+            if (axis == -1)
+            {
+                axis = dst_rank - src_rank;
+            }
+
+            size_t len = src_rank;
+            while (len > 0 && src[len - 1].is_static() && size_t(src[len - 1]) == 1)
+            {
+                --len;
+            }
+
+            for (size_t i = axis; i < axis + len; ++i)
+            {
+                if (!(dst[i].compatible(src[i - axis])))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+    }
+    default: NGRAPH_CHECK(false, "Unsupported auto broadcast type: ", autob.m_type);
+    }
+
+    return false;
 }
 
 bool PartialShape::all_non_negative() const

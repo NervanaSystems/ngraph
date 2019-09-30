@@ -14,7 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+#if defined(NGRAPH_TBB_ENABLE)
 #include <tbb/tbb_stddef.h>
+#endif
 
 #include "cpu_backend_visibility.h"
 
@@ -38,11 +40,14 @@ using namespace std;
 
 extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend()
 {
-    runtime::BackendManager::register_backend("CPU", [](const std::string& config) {
+    runtime::BackendManager::register_backend("CPU", [](const std::string& /* config */) {
         static bool is_initialized = false;
         if (!is_initialized)
         {
+#if defined(NGRAPH_TBB_ENABLE)
+            // Force TBB to link to the backend
             tbb::TBB_runtime_interface_version();
+#endif
             ngraph::runtime::cpu::register_builders();
             is_initialized = true;
         }
@@ -202,7 +207,7 @@ vector<runtime::PerformanceCounter> runtime::cpu::CPU_Executable::get_performanc
     return rc;
 }
 
-bool runtime::cpu::CPU_Backend::is_supported(const Node& op) const
+bool runtime::cpu::CPU_Backend::is_supported(const Node& /* op */) const
 {
     return true;
 }

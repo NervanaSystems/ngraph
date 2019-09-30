@@ -133,7 +133,7 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
 
     for (size_t i = 0; i < m_n_axes; i++)
     {
-        if (source_start_corner[i] >= padded_upper_bounds[i] &&
+        if (static_cast<int64_t>(source_start_corner[i]) >= padded_upper_bounds[i] &&
             source_start_corner[i] != source_shape[i])
         {
             std::stringstream ss;
@@ -142,7 +142,7 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
             throw std::domain_error(ss.str());
         }
 
-        if (source_end_corner[i] > padded_upper_bounds[i])
+        if (static_cast<int64_t>(source_end_corner[i]) > padded_upper_bounds[i])
         {
             std::stringstream ss;
 
@@ -356,8 +356,9 @@ bool CoordinateTransform::has_source_coordinate(const Coordinate& c_target) cons
 
         // If we are in the above-padding, we have no source coordinate.
         if (m_source_shape[source_axis] == 0 ||
-            (pos_depadded >=
-             ((m_source_shape[source_axis] - 1) * m_target_dilation_strides[target_axis]) + 1))
+            (pos_depadded >= ((static_cast<int64_t>(m_source_shape[source_axis]) - 1) *
+                              static_cast<int64_t>(m_target_dilation_strides[target_axis])) +
+                                 1))
         {
             return false;
         }
