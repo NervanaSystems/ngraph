@@ -120,17 +120,17 @@ namespace ngraph
             bool get_input_forget() const { return m_input_forget; }
         private:
             ///
-            /// \brief      Gets the masked node according to sequence lenght in a batch.
+            /// \brief      Gets the masked value according to sequence lenght in a batch.
             ///
             /// \note       Zeros out values or sets them to default value for inputs with
             ///             sequence lenght shorter than currently procssed time step.
             ///
-            /// \param[in]  data           The input node.
+            /// \param[in]  data           The input value.
             /// \param[in]  time_step      The current time step denoting sequence lenght.
             /// \param[in]  batch_axis     The batch axis index of data tensor.
             /// \param[in]  default_value  The default value for masked elements.
             ///
-            /// \return     The masked node.
+            /// \return     The masked value.
             ///
             std::shared_ptr<Node> get_masked_node(const std::shared_ptr<Node>& data,
                                                   std::int32_t time_step,
