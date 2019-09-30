@@ -1,7 +1,7 @@
 .. project/contribution-guide.rst:
 
 
-.._contribution_guide:
+.. contribution_guide:
 
 ##################
 Contribution guide

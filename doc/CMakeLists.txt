@@ -16,7 +16,7 @@
 
 add_subdirectory(examples)
 
-if ("${NGRAPH_BUILD_DOCS}" MATCHES "^ON$")
+if ("${NGRAPH_DOC_BUILD_ENABLE}" MATCHES "^ON$")
     add_custom_target( docs
         COMMENT "Build all of the documentation types selected during CMake configuration."
         )
@@ -26,7 +26,7 @@ if ("${NGRAPH_BUILD_DOCS}" MATCHES "^ON$")
 else()
     add_custom_target( docs
         COMMAND echo
-        COMMAND echo "The 'docs' target is disabled. To enable the building of documentation, re-run cmake with the option -DNGRAPH_BUILD_DOCS=ON."
+        COMMAND echo "The 'docs' target is disabled. To enable the building of documentation, re-run cmake with the option -DNGRAPH_DOC_BUILD_ENABLE=ON."
         COMMAND echo
         COMMAND false
         VERBATIM

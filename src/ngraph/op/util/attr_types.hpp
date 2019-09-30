@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cstddef>
+#include <ostream>
 
 namespace ngraph
 {
@@ -53,6 +54,13 @@ namespace ngraph
             NOTSET = EXPLICIT,
         };
 
+        /// \brief Rounding Type used for `Pooling` operators.
+        enum class RoundingType
+        {
+            FLOOR = 0,
+            CEIL = 1,
+        };
+
         /// \brief Specifies the algorithm to use for implicit broadcasting of a tensor
         ///        to align with another tensor
         ///
@@ -73,12 +81,29 @@ namespace ngraph
         ///              A: Shape(2, 1, 6)
         ///              B: Shape(   3, 1)
         ///         Result: Shape(2, 3, 6)
+        /// PDPD  - PaddlePaddle-style implicit broadcasting
+        ///         (https://github.com/PaddlePaddle/Paddle/blob/release/1.5/paddle/
+        ///                  fluid/operators/elementwise/elementwise_op.h#L126)
+        ///         Broadcast B to match the shape of A, where axis is the start
+        ///         dimension index to align B with A. If axis is -1 (default), i
+        ///         axis = rank(A) - rank(B). The trailing dimensions of size 1 for B
+        ///         will be ignored.
+        ///
+        ///         E.g.,
+        ///              A: Shape(2, 3, 4, 5)
+        ///              B: Shape(   3, 4   ) with axis =1
+        ///         Result: Shape(2, 3, 4, 5)
+        ///
+        ///              A: Shape(2, 3, 4, 5)
+        ///              B: Shape(   3, 1   ) with axis = 1
+        ///         Result: Shape(2, 3, 4, 5)
         ///
         /// TODO: Add more implicit broadcast modes used by frameworks
         enum class AutoBroadcastType
         {
             NONE = 0,
-            NUMPY
+            NUMPY,
+            PDPD
         };
 
         /// \brief Specifies how eps is combined with L2 value
@@ -103,14 +128,16 @@ namespace ngraph
                 , m_axis(0)
             {
             }
-            AutoBroadcastSpec(AutoBroadcastType type, size_t axis)
+            AutoBroadcastSpec(AutoBroadcastType type, int64_t axis)
                 : m_type(type)
                 , m_axis(axis)
             {
             }
 
             AutoBroadcastType m_type; // Implicit broadcasting algorithm
-            size_t m_axis;            // Axis to start alignment on
+            int64_t m_axis;           // Axis to start alignment on
         };
+
+        std::ostream& operator<<(std::ostream& s, const AutoBroadcastType& type);
     }
 }
