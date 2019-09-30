@@ -108,6 +108,11 @@ const ngraph::ResultVector& runtime::Executable::get_results() const
     return m_results;
 }
 
+size_t runtime::Executable::get_default_pipeline_depth() const
+{
+    return m_default_pipeline_depth;
+}
+
 void runtime::Executable::set_parameters_and_results(const Function& func)
 {
     m_parameters = func.get_parameters();
