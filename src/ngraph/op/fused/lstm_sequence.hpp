@@ -140,6 +140,7 @@ namespace ngraph
 
             NodeVector lstm_pass(bool is_reverse = false) const;
 
+            // Split(bi-directional) and squeeze input data to remove 'num_direction' dimension.
             std::shared_ptr<Node> prepare_input(Output<Node> node, bool is_reverse) const;
 
             const std::vector<float> m_activations_alpha;
