@@ -102,54 +102,66 @@ namespace ngraph
                     throw ngraph_error("Unsupported index 2 element type");
                 }
                 auto element_type = args[0].get_element_type();
-                if (element_type == element::f32)
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+#endif
+                switch (element_type)
                 {
-                    functor = prepare_functor<float>(node, args, out, external_function);
-                }
-                else if (element_type == element::f64)
-                {
-                    functor = prepare_functor<double>(node, args, out, external_function);
-                }
-                else if (element_type == element::i8)
-                {
-                    functor = prepare_functor<int8_t>(node, args, out, external_function);
-                }
-                else if (element_type == element::i16)
-                {
-                    functor = prepare_functor<int16_t>(node, args, out, external_function);
-                }
-                else if (element_type == element::i32)
-                {
-                    functor = prepare_functor<int32_t>(node, args, out, external_function);
-                }
-                else if (element_type == element::i64)
-                {
-                    functor = prepare_functor<int64_t>(node, args, out, external_function);
-                }
-                else if (element_type == element::u8)
-                {
-                    functor = prepare_functor<uint8_t>(node, args, out, external_function);
-                }
-                else if (element_type == element::u16)
-                {
-                    functor = prepare_functor<uint16_t>(node, args, out, external_function);
-                }
-                else if (element_type == element::u32)
-                {
-                    functor = prepare_functor<uint32_t>(node, args, out, external_function);
-                }
-                else if (element_type == element::u64)
-                {
-                    functor = prepare_functor<uint64_t>(node, args, out, external_function);
-                }
-                else if (element_type == element::boolean)
-                {
+                case element::Type_t::undefined:
+                    NGRAPH_CHECK(false,
+                                 "Encountered 'undefined' element type in fold_constant_convert");
+                    break;
+                case element::Type_t::dynamic:
+                    NGRAPH_CHECK(false,
+                                 "Encountered 'dynamic' element type in fold_constant_convert");
+                    break;
+                case element::Type_t::boolean:
                     functor = prepare_functor<char>(node, args, out, external_function);
+                    break;
+                case element::Type_t::bf16:
+                    functor = prepare_functor<bfloat16>(node, args, out, external_function);
+                    break;
+                case element::Type_t::f16:
+                    functor = prepare_functor<float16>(node, args, out, external_function);
+                    break;
+                case element::Type_t::f32:
+                    functor = prepare_functor<float>(node, args, out, external_function);
+                    break;
+                case element::Type_t::f64:
+                    functor = prepare_functor<double>(node, args, out, external_function);
+                    break;
+                case element::Type_t::i8:
+                    functor = prepare_functor<int8_t>(node, args, out, external_function);
+                    break;
+                case element::Type_t::i16:
+                    functor = prepare_functor<int16_t>(node, args, out, external_function);
+                    break;
+                case element::Type_t::i32:
+                    functor = prepare_functor<int32_t>(node, args, out, external_function);
+                    break;
+                case element::Type_t::i64:
+                    functor = prepare_functor<int64_t>(node, args, out, external_function);
+                    break;
+                case element::Type_t::u8:
+                    functor = prepare_functor<uint8_t>(node, args, out, external_function);
+                    break;
+                case element::Type_t::u16:
+                    functor = prepare_functor<uint16_t>(node, args, out, external_function);
+                    break;
+                case element::Type_t::u32:
+                    functor = prepare_functor<uint32_t>(node, args, out, external_function);
+                    break;
+                case element::Type_t::u64:
+                    functor = prepare_functor<uint64_t>(node, args, out, external_function);
+                    break;
+                    NGRAPH_UNREACHABLE("Unexpected switch case");
                 }
-                else
-                {
-                    throw ngraph_error("Unsupported type in CPU Builder for RandomUniform");
-                }
+
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic pop
+#endif
 
                 functors.emplace_back(functor);
             }
