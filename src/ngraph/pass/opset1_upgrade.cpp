@@ -378,7 +378,6 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
     default: break;
     }
 
-
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif
