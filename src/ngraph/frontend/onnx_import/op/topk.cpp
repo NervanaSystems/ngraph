@@ -24,6 +24,27 @@
 #include "topk.hpp"
 #include "utils/common.hpp"
 
+static std::int64_t get_axis(const ngraph::onnx_import::Node& node)
+{
+    // Parse node attribute value for axis (adjust for negative value if needed).
+    std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
+
+    auto data = node.get_ng_inputs().at(0);
+    auto data_rank = data->get_shape().size();
+    return ngraph::onnx_import::common::validate_axis(node, axis, data_rank);
+}
+
+static ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& top_k)
+{
+    std::shared_ptr<ngraph::Node> indices =
+            std::make_shared<ngraph::op::GetOutputElement>(top_k, 0);
+    std::shared_ptr<ngraph::Node> values =
+            std::make_shared<ngraph::op::GetOutputElement>(top_k, 1);
+
+    return {values, indices};
+}
+
+
 namespace ngraph
 {
     namespace onnx_import
@@ -36,23 +57,30 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
                     std::int64_t k{node.get_attribute_value<std::int64_t>("k")};
-                    auto data_rank = data->get_shape().size();
-
-                    std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
-                    axis = common::validate_axis(node, axis, data_rank);
+                    auto axis = get_axis(node);
 
                     std::shared_ptr<ngraph::Node> top_k =
                         std::make_shared<ngraph::op::TopK>(data, axis, element::i64, k);
 
-                    std::shared_ptr<ngraph::Node> indices =
-                        std::make_shared<ngraph::op::GetOutputElement>(top_k, 0);
-                    std::shared_ptr<ngraph::Node> values =
-                        std::make_shared<ngraph::op::GetOutputElement>(top_k, 1);
-
-                    return {values, indices};
+                    return get_outputs(top_k);
                 }
 
-            } // namespace set_1
+            }
+
+            namespace set_10
+            {
+                NodeVector topk(const Node& node)
+                {
+                    auto data = node.get_ng_inputs().at(0);
+                    auto k = node.get_ng_inputs().at(1);
+                    auto axis = get_axis(node);
+
+                    std::shared_ptr<ngraph::Node> top_k =
+                        std::make_shared<ngraph::op::TopK>(data, k, axis, element::i64);
+
+                    return get_outputs(top_k);
+                }
+            }
 
         } // namespace op
 
