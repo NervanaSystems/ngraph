@@ -296,7 +296,7 @@ Use a different backend
 A backend is a layer between nGraph and the device on your machine that executes the model.
 
 You can substitute the default CPU backend with a different backend such as 
-``INTELGPU`` or ``PLAIDML``.
+``INTELGPU`` or ``PlaidML``.
 
 For running the computation on an Intel GPU, use the following line to create
 the runtime:
