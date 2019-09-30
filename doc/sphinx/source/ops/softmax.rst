@@ -55,6 +55,6 @@ Mathematical Definition
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Softmax
+.. doxygenclass:: ngraph::op::v0::Softmax
    :project: ngraph
    :members: m_axes

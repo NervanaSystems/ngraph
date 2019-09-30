@@ -618,9 +618,7 @@ def main():
         t[3::-2] = None
         t[4::-2] = None
         t[5::-2] = None
-        # TODO(amprocte): Failing due to bug in DynReplaceSlice inference.
-        # Re-enable when NGCORE-510 is fixed.
-        #t[-9000:-8000:2] = None
+        t[-9000:-8000:2] = None
         t[-9000:8000:2] = None
         t[-5:5:2] = None
         t[np.newaxis] = None
@@ -639,9 +637,7 @@ def main():
         t[0:100:2] = None
         t[4:0:-2] = None
         t[4:0:-3] = None
-        # TODO(amprocte): Failing due to bug in DynReplaceSlice inference.
-        # Re-enable when NGCORE-510 is fixed.
-        #t[3:2:1] = None
+        t[3:2:1] = None
         t[4::-2] = None
 
         #
@@ -689,6 +685,35 @@ def main():
         t[7:1:-3] = None
         t[7:0:-3] = None
         t[7::-3] = None
+
+    t.set_dtype('int32')
+    t.set_shape((4, 5))
+    t[2:4, ...] = None
+    t[4:2, ...] = None
+    t[4:2:-3, ...] = None
+    t[-100:100, ...] = None
+    t[..., 2:] = None
+    t[..., 2:4] = None
+    t[..., :] = None
+    t[..., -100:100] = None
+    t.set_shape((5, 6, 10, 8))
+    t[2:4, ..., 1:7:3, 7:2:-2] = None
+    t[..., 1:7:3, 7:2:-2] = None
+    t[2:4, ..., :3, -3:2:-2] = None
+    t[2:4, ..., 1:7:-3, 7:2:-2] = None
+    t[2:4, ..., :, np.newaxis, 0] = None
+
+    t.set_shape((2, 2, 3, 2, 3, 3))
+    t[2:6:2, ..., :, 2:1:-1] = None
+    t[np.newaxis, 1, ..., np.newaxis, 2:1:-1] = None
+    t[1, ..., np.newaxis, 2:1:-1] = None
+    t[np.newaxis, np.newaxis, 2:1:-1, ...] = None
+
+    t.set_shape((3, 3, 3, 2, 3))
+    t[6:1:-2, ..., 1:2, 2:1:-1] = None
+
+    t.set_shape((3, 3, 3, 2, 3))
+    t[..., 1:2, 2:1:-1] = None
 
     t.set_dtype('int32')
     t[80000] = None # error expected (shrink-axis OOB)
