@@ -102,7 +102,8 @@ namespace ngraph
                     SELECT_KERNEL(
                         kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_u64)
                 }
-                else if (out[0].get_element_type() == element::bf16)
+                else if (args[0].get_element_type() == element::f32 &&
+                         out[0].get_element_type() == element::bf16)
                 {
                     kernel = runtime::cpu::kernel::convert_float_to_bf16<float>;
                 }
