@@ -248,6 +248,25 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
+    case OP_TYPEID::Reverse:
+    {
+        // creates a Constant node from the v0::Reverse reversed_axes attribute
+        // and uses it as the second input of v1::Reverse
+        const auto reverse_v0 = dynamic_cast<const op::Reverse*>(node.get());
+        const auto reversed_axes = reverse_v0->get_reversed_axes();
+
+        const auto reversed_axes_constant = op::Constant::create(
+            element::i64, Shape{reversed_axes.size()}, reversed_axes.to_vector());
+
+        const auto reverse_v1 = make_shared<op::v1::Reverse>(node->input(0).get_source_output(),
+                                                             reversed_axes_constant,
+                                                             op::v1::Reverse::Mode::INDEX);
+
+        replace_node(node, reverse_v1);
+        modified = true;
+
+        break;
+    }
     case OP_TYPEID::Softmax:
     {
         auto tmp = dynamic_cast<const op::v0::Softmax*>(node.get());

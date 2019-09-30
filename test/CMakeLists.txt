@@ -69,11 +69,12 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
-    opset_pass/dyn_reshape_opset_pass.cpp
     opset_pass/gather_opset_pass.cpp
     opset_pass/pad_opset_pass.cpp
     opset_pass/poolings_opset_pass.cpp
     opset_pass/product_opset_pass.cpp
+    opset_pass/product_opset_pass.cpp
+    opset_pass/reverse_opset_pass.cpp
     opset_pass/softmax_opset_pass.cpp
     opset_pass/sum_opset_pass.cpp
     partial_shape.cpp
