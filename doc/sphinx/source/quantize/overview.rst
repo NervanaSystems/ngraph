@@ -26,13 +26,14 @@ GemmLowP
 The term "GemmLowP" was coined by Google[1]_ from its `low precision math library`_, 
 and it denotes a basic formula of quantization in the form of:
 
+``float`` = :math:`Scale` (*quantized* - ``zero_point``)
 
--  where:
+where:
 
-   -   is a float scale value,
-   -   is the quantized value (INT8 or UINT8), and
-   -   is the integer number that represents zero (INT8 or
-      UINT8), also named as "offset".
+- ``float`` is a float scale value,
+- *quantized* is the quantized value (INT8 or UINT8), and
+- ``zero_point`` is the integer number that represents zero (``INT8`` or ``UINT8``), 
+  also named as "offset".
 
 We denote a superscript lower-case 'f' for float: and 'i' for integer; the 
 lower-case 'x' subscript is the constant the scale of offset refers to.
@@ -175,9 +176,9 @@ Today Intel provides two tools for post-training quantization:
    c) Example implementations of State-of-the-Art (SotA) algorithms.
 
 #. `Inference Engine Calibration Tool`_ included as part of the OpenVINO 
-   Toolkit calibrates a given FP32 model so
-   that is can be run in low-precision 8-bit integer mode while keeping
-   the input data of this model in the original precision.
+   Toolkit calibrates a given FP32 model so that it can be run in 
+   low-precision 8-bit integer mode while keeping the input data of this 
+   model in the original precision.
 
 #. Early-stage API support for the :doc:`../ops/quantize` and 
    :doc:`../ops/dequantize` ``Ops``.
@@ -260,3 +261,4 @@ as a backend for the following frameworks:
 .. _low precision math library: https://github.com/google/gemmlowp/blob/master/doc/quantization.md
 .. _Distiller: https://nervanasystems.github.io/distiller/index.html
 .. _Distiller guide: https://nervanasystems.github.io/distiller/algo_quantization.html#quantization-aware-training
+.. _Inference Engine Calibration Tool: http://docs.openvinotoolkit.org/2019_R1/_inference_engine_samples_calibration_tool_README.html

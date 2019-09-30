@@ -78,6 +78,6 @@ Given an input data batch tensor :math:`T_{in}`, the output tensor is defined by
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::MaxPool
+.. doxygenclass:: ngraph::op::v0::MaxPool
    :project: ngraph
    :members:
