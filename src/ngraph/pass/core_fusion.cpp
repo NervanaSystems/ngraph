@@ -43,6 +43,7 @@
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
+#include "ngraph/op/sum.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pattern/matcher.hpp"
@@ -76,8 +77,8 @@ void pass::CoreFusion::construct_sigmoid_cross_entropy_fprop()
     auto loss_result = std::make_shared<ngraph::op::Result>(reshape);
 
     auto callback = [summation_axis_label, param_1, param_2](pattern::Matcher& m) {
-        std::cout << "In a callback for construct_sigmoid_cross_entropy_fprop against "
-                  << m.get_match_root()->get_name();
+        NGRAPH_DEBUG << "In a callback for construct_sigmoid_cross_entropy_fprop against "
+                     << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
         auto input_to_normalize = pattern_map[param_1];
@@ -148,8 +149,8 @@ void pass::CoreFusion::construct_sigmoid_cross_entropy_bprop()
 
     auto callback = [constant_1_label, constant_2_label, constant_3_label, param_1, param_2](
         pattern::Matcher& m) {
-        std::cout << "In a callback for construct_sigmoid_cross_entropy_bprop against "
-                  << m.get_match_root()->get_name();
+        NGRAPH_DEBUG << "In a callback for construct_sigmoid_cross_entropy_bprop against "
+                     << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
 
