@@ -132,6 +132,7 @@
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/state/bernoulli_rng_state.hpp"
+#include "ngraph/state/uniform_rng_state.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -4189,10 +4190,10 @@ namespace ngraph
                     throw ngraph_error("Unsupported index 2 element type");
                 }
 
-                auto index = external_function->add_state(new ngraph::UniformRNGState());
+                writer.block_begin();
+                auto index = external_function->add_state(new UniformRNGState());
                 auto fixed_seed = ru->get_fixed_seed();
 
-                writer.block_begin();
                 writer << "auto state = static_cast<ngraph::RandomUniformRNGState*>(ctx->states["
                        << index << "]);\n";
                 writer << "bool use_fixed_seed = static_cast<bool>(" << args[3].get_name()
