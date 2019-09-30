@@ -29,6 +29,8 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/log.hpp"
+#include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -53,6 +55,108 @@ using namespace std;
 static shared_ptr<Node> construct_constant_node(int n)
 {
     return op::Constant::create(element::f32, Shape{}, {n});
+}
+
+void pass::CoreFusion::construct_sigmoid_cross_entropy_fprop()
+{
+    auto param_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{41, 37});
+    auto softmax = std::make_shared<ngraph::op::Softmax>(param_1, AxisSet{1});
+
+    // parameter with one-hot encoded values
+    auto param_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{41, 37});
+    auto softmax_result = std::make_shared<ngraph::op::Result>(softmax);
+    auto log = std::make_shared<ngraph::op::Log>(softmax);
+    auto multiply = std::make_shared<ngraph::op::Multiply>(param_2, log);
+
+    auto summation_axis = ngraph::op::Constant::create(element::i64, Shape{}, {1});
+    auto summation_axis_label = std::make_shared<pattern::op::Label>(summation_axis);
+    auto sum = std::make_shared<ngraph::op::Sum>(multiply, summation_axis_label);
+    auto negative = std::make_shared<ngraph::op::Negative>(sum);
+    auto reshape = std::make_shared<ngraph::op::Reshape>(negative, AxisVector{0}, Shape{41, 1});
+    auto loss_result = std::make_shared<ngraph::op::Result>(reshape);
+
+    auto callback = [summation_axis_label, param_1, param_2](pattern::Matcher& m) {
+        std::cout << "In a callback for construct_sigmoid_cross_entropy_fprop against "
+                  << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+        auto input_to_normalize = pattern_map[param_1];
+        auto one_hot_labels = pattern_map[param_2];
+        auto axis_constant_op =
+            std::static_pointer_cast<ngraph::op::Constant>(pattern_map[summation_axis_label]);
+        auto axis_to_sum = *(static_cast<int const*>(axis_constant_op->get_data_ptr()));
+
+        auto max_xj = std::make_shared<ngraph::op::Max>(input_to_normalize, AxisSet{axis_to_sum});
+        auto broadcast_max_xj = std::make_shared<ngraph::op::Broadcast>(
+            max_xj, input_to_normalize->get_shape(), AxisSet{1});
+        auto subtract =
+            std::make_shared<ngraph::op::Subtract>(input_to_normalize, broadcast_max_xj);
+        auto exp = std::make_shared<ngraph::op::Exp>(subtract);
+
+        auto j_axis_to_sum = ngraph::op::Constant::create(
+            element::i64, axis_constant_op->get_shape(), {axis_to_sum});
+        auto sum_over_j = std::make_shared<ngraph::op::Sum>(exp, j_axis_to_sum);
+        auto log_sum_over_j = std::make_shared<ngraph::op::Log>(sum_over_j);
+
+        auto subtract_max_xj_from_input =
+            std::make_shared<ngraph::op::Subtract>(input_to_normalize, broadcast_max_xj);
+        auto broadcast_log = std::make_shared<ngraph::op::Broadcast>(
+            log_sum_over_j, subtract_max_xj_from_input->get_shape(), AxisSet{1});
+        auto subtract_max_xj_from_input_from_log_sum_over_j =
+            std::make_shared<ngraph::op::Subtract>(subtract_max_xj_from_input, broadcast_log);
+        auto multiply = std::make_shared<ngraph::op::Multiply>(
+            one_hot_labels, subtract_max_xj_from_input_from_log_sum_over_j);
+        auto k_axis_to_sum = ngraph::op::Constant::create(
+            element::i64, axis_constant_op->get_shape(), {axis_to_sum});
+        auto sum_over_k = std::make_shared<ngraph::op::Sum>(multiply, k_axis_to_sum);
+        auto negate_summation = std::make_shared<ngraph::op::Negative>(sum_over_k);
+        ngraph::replace_node(m.get_match_root(), negate_summation);
+
+        return true;
+    };
+    auto m = std::make_shared<pattern::Matcher>(negative, "CPUFusion.SigmoidCrossEntropy");
+    this->add_matcher(m, callback);
+}
+
+void pass::CoreFusion::construct_sigmoid_cross_entropy_bprop()
+{
+    auto param_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{41, 37});
+    auto softmax = std::make_shared<ngraph::op::Softmax>(param_1, AxisSet{1});
+    auto param_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{41, 37});
+    auto subtract = std::make_shared<ngraph::op::Subtract>(softmax, param_2);
+
+    auto constant_1 = ngraph::op::Constant::create(element::f32, Shape{1}, {1});
+    auto constant_1_label = std::make_shared<pattern::op::Label>(constant_1);
+    auto constant_2 = ngraph::op::Constant::create(element::f32, Shape{1}, {1});
+    auto constant_2_label = std::make_shared<pattern::op::Label>(constant_2);
+
+    auto divide = std::make_shared<ngraph::op::Divide>(constant_1_label, constant_2_label);
+    auto broadcast_1 =
+        std::make_shared<ngraph::op::Broadcast>(divide, Shape{41, 1, 1}, AxisSet{0, 1});
+    auto reshape_1 =
+        std::make_shared<ngraph::op::Reshape>(broadcast_1, AxisVector{0, 1, 2}, Shape{41, 1});
+
+    auto constant_3 = ngraph::op::Constant::create(element::f32, Shape{41, 1}, {1});
+    auto constant_3_label = std::make_shared<pattern::op::Label>(constant_3);
+    auto add = std::make_shared<ngraph::op::Add>(reshape_1, constant_3_label);
+    auto reshape_2 = std::make_shared<ngraph::op::Reshape>(add, AxisVector{0, 1}, Shape{41});
+    auto broadcast_2 =
+        std::make_shared<ngraph::op::Broadcast>(reshape_2, Shape{41, 37}, AxisSet{1});
+
+    auto multiply = std::make_shared<ngraph::op::Multiply>(broadcast_2, subtract);
+    auto bprop_result = std::make_shared<ngraph::op::Result>(multiply);
+
+    auto callback = [constant_1_label, constant_2_label, constant_3_label, param_1, param_2](
+        pattern::Matcher& m) {
+        std::cout << "In a callback for construct_sigmoid_cross_entropy_bprop against "
+                  << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        return false;
+    };
+    auto m = std::make_shared<pattern::Matcher>(bprop_result, "CPUFusion.SigmoidCrossEntropyBprop");
+    this->add_matcher(m, callback);
 }
 
 void pass::CoreFusion::construct_relu()
