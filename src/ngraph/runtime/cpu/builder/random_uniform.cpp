@@ -34,8 +34,6 @@ namespace ngraph
                                              const vector<TensorViewWrapper>& out,
                                              CPU_ExternalFunction* external_function)
             {
-                auto& functors = external_function->get_functors();
-
                 auto ru = static_cast<const ngraph::op::RandomUniform*>(node);
                 CPUKernelFunctor functor;
 
