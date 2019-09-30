@@ -75,9 +75,6 @@ set(SRC
     opset_pass/reverse_opset_pass.cpp
     opset_pass/softmax_opset_pass.cpp
     opset_pass/sum_opset_pass.cpp
-    opset_pass/softmax_opset_pass.cpp
-    opset_pass/gather_opset_pass.cpp
-    opset_pass/pad_opset_pass.cpp
     opset_pass/poolings_opset_pass.cpp
     partial_shape.cpp
     pass.cpp
