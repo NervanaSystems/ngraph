@@ -37,13 +37,11 @@ static std::int64_t get_axis(const ngraph::onnx_import::Node& node)
 static ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& top_k)
 {
     std::shared_ptr<ngraph::Node> indices =
-            std::make_shared<ngraph::op::GetOutputElement>(top_k, 0);
-    std::shared_ptr<ngraph::Node> values =
-            std::make_shared<ngraph::op::GetOutputElement>(top_k, 1);
+        std::make_shared<ngraph::op::GetOutputElement>(top_k, 0);
+    std::shared_ptr<ngraph::Node> values = std::make_shared<ngraph::op::GetOutputElement>(top_k, 1);
 
     return {values, indices};
 }
-
 
 namespace ngraph
 {
@@ -64,7 +62,6 @@ namespace ngraph
 
                     return get_outputs(top_k);
                 }
-
             }
 
             namespace set_10

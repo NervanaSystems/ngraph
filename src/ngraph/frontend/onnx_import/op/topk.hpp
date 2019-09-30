@@ -33,18 +33,16 @@ namespace ngraph
                 /// \return The vector containing Ngraph nodes producing output of ONNX TopK
                 ///         operation (both values and indices).
                 NodeVector topk(const Node& node);
-
             }
 
             /// \brief Performs TopK operation from ONNX version 1.5
             ///
-            /// \details ONNX op set 10 added support for K as a dynamic input, not a static attribute.
+            /// \details ONNX op set 10 added support for K as a dynamic input, not a static
+            /// attribute.
             namespace set_10
             {
                 NodeVector topk(const Node& node);
-
             }
-
 
         } // namespace op
 
