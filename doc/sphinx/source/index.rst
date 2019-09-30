@@ -60,9 +60,15 @@ packages, scripts, and other files that use licensing.
    nGraph Core Ops <ops/index.rst>
    core/constructing-graphs/index.rst
    core/passes/passes.rst
-   quantize/index.rst
 
-   
+.. toctree::
+   :maxdepth: 1
+   :caption: Quantization & Tools
+
+   quantize/index.rst
+   quantize/overview.rst
+
+
 .. toctree::
    :maxdepth: 1
    :caption: nGraph Python API
