@@ -47,6 +47,7 @@
 #include "ngraph/op/util/index_reduction.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "pass/memory_optimization.hpp"
+#include "tools.hpp"
 
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
@@ -173,7 +174,7 @@ void MLIRCompiler::init_mlir()
 
     if (!initialized)
     {
-        mlir::registerDialect<mlir::NGraphOpsDialect>();
+        initializeNGraphMLIR();
 
         // Register MLIR command line options in the pool of supported flags and and process flags
         // from environment variable to be used by nGraph, MLIR and LLVM.
@@ -352,7 +353,7 @@ void MLIRCompiler::lowerNgDialect()
 {
     // Lower NG dialect to Affine
     mlir::PassManager pm(&m_context);
-    pm.addPass(mlir::createDialectLoweringPass(this));
+    pm.addPass(mlir::createDialectLoweringPass());
     pm.addPass(mlir::createCanonicalizerPass());
 
     // Apply any generic pass manager command line options.

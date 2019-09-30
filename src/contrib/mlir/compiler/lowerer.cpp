@@ -19,7 +19,6 @@
 
 #include "lowerer.hpp"
 
-#include "compiler.hpp"
 #include "dialect/ops.hpp"
 #include "dialect/type.hpp"
 #include "ngraph/assertion.hpp"
@@ -35,6 +34,9 @@
 #include <mlir/Transforms/DialectConversion.h>
 
 #include <map>
+
+#define PASS_NAME "convert-ngraph-to-affine"
+#define DEBUG_TYPE PASS_NAME
 
 // anonymous namespace
 // no need to expose any of the following outside of this file
@@ -111,15 +113,19 @@ namespace
                 }
             }
 
-            // Convert the original function results.
-            SmallVector<Type, 4> convertedResults;
-            if (failed(converter.convertTypes(type.getResults(), convertedResults)))
+            auto funcTypeResults = type.getResults();
+            if (!funcTypeResults.empty())
             {
-                return matchFailure();
-            }
+                // Convert the original function results.
+                SmallVector<Type, 4> convertedResults;
+                if (failed(converter.convertTypes(funcTypeResults, convertedResults)))
+                {
+                    return matchFailure();
+                }
 
-            // Add result types as input args without mapping
-            result.addInputs(convertedResults);
+                // Add result types as input args without mapping
+                result.addInputs(convertedResults);
+            }
 
             // Create a new function with an updated signature.
             auto newFuncOp = rewriter.cloneWithoutRegions(funcOp);
@@ -174,12 +180,8 @@ namespace
     class DialectLoweringPass : public ModulePass<DialectLoweringPass>
     {
     public:
-        DialectLoweringPass(ngmlir::MLIRCompiler& compiler)
-            : compiler(compiler)
-        {
-        }
-
         void runOnModule() override;
+
         SmallVector<Value*, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
         Value* createTempTensor(Type type, PatternRewriter& rewriter);
 
@@ -204,7 +206,8 @@ namespace
         using IdToMemRefMap = std::unordered_map<unsigned, Value*>;
         IdToMemRefMap m_id_to_memref;
 
-        ngmlir::MLIRCompiler& compiler;
+        // TODO: Workaround for findOutputValues and buildOutputDefs. See NGCPU-470.
+        std::string funcName;
     };
 
     void DialectLoweringPass::runOnModule()
@@ -225,18 +228,32 @@ namespace
             return typeConverter.isSignatureLegal(op.getType());
         });
 
-        // capture output values by looking for the Return and grabbing the values
-        // the order of the returned values matches the order of the lowered func signature for
-        // results. This is used to find the arg_id that a defined value maps to if it is an output
-        findOutputValues();
+        // Gather functions to be processed. Note that new functions will be added to module as part
+        // of the function signature conversion so we have to collect the original ones before hand.
+        SmallVector<FuncOp, 2> origFuncOps(getModule().getOps<FuncOp>());
 
-        if (failed(applyFullConversion(getModule(), target, std::move(patterns), &converter)))
+        for (auto origFunc : origFuncOps)
         {
-            emitError(mlir::UnknownLoc::get(&getContext()), "Error lowering nGraph dialect\n");
-            signalPassFailure();
-        }
+            // TODO: Workaround for findOutputValues and buildOutputDefs. See NGCPU-470.
+            funcName = origFunc.getName();
 
-        insertNoAliasArgAttrs();
+            // Capture output values by looking for the Return and grabbing the values the order of
+            // the returned values matches the order of the lowered func signature for results. This
+            // is used to find the arg_id that a defined value maps to if it is an output.
+            findOutputValues();
+
+            // NOTE: Function signature conversion creates a new FuncOp that is inserted in the
+            // module. References the original FuncOp are no longer valid after this point.
+            if (failed(applyFullConversion(origFunc, target, std::move(patterns), &converter)))
+            {
+                emitError(mlir::UnknownLoc::get(&getContext()), "Error lowering nGraph dialect\n");
+                signalPassFailure();
+            }
+
+            // TODO: Encode no alias attribute as part of the function signature conversion or as a
+            // separate rewrite pattern. Retrieve new function after signature conversion.
+            insertNoAliasArgAttrs();
+        }
     }
 
     void DialectLoweringPass::populateNGraphToAffineConversionPatterns(
@@ -254,8 +271,9 @@ namespace
 
     void DialectLoweringPass::findOutputValues()
     {
-        // get original function
-        auto f = getModule().lookupSymbol<mlir::FuncOp>("main");
+        FuncOp f = getModule().lookupSymbol<mlir::FuncOp>(funcName);
+        NGRAPH_CHECK(f, "FuncOp '" + funcName + "' not found");
+
         SmallVector<Value*, 4> outputList;
         unsigned outputCount = 0;
         unsigned inputCount = f.getType().getNumInputs();
@@ -280,13 +298,15 @@ namespace
     SmallVector<Value*, 4> DialectLoweringPass::buildOutputDefs(Operation* op,
                                                                 PatternRewriter& rewriter)
     {
+        FuncOp f = getModule().lookupSymbol<mlir::FuncOp>(funcName);
+        NGRAPH_CHECK(f, "FuncOp '" + funcName + "' not found");
+
         SmallVector<Value*, 4> newResults;
         for (auto origResult : op->getResults())
         {
             // find output arg if this operation produces any sub-graph outputs
             if (IntegerAttr attr = op->getAttrOfType<IntegerAttr>("graphOutputIdx"))
             {
-                auto f = getModule().lookupSymbol<mlir::FuncOp>("main");
                 mlir::Block* entryBlock = &*(f.begin());
                 unsigned argId = (unsigned)attr.getInt();
                 newResults.push_back(entryBlock->getArgument(argId));
@@ -350,7 +370,9 @@ namespace
     /// by nGraph op semantics.
     void DialectLoweringPass::insertNoAliasArgAttrs()
     {
-        auto func = getModule().lookupSymbol<mlir::FuncOp>("main");
+        FuncOp func = getModule().lookupSymbol<mlir::FuncOp>(funcName);
+        NGRAPH_CHECK(func, "FuncOp '" + funcName + "' not found");
+
         unsigned int argIdx = 0;
         for (auto* arg : func.getArguments())
         {
@@ -1315,8 +1337,11 @@ namespace
 
 namespace mlir
 {
-    std::unique_ptr<Pass> createDialectLoweringPass(ngraph::runtime::ngmlir::MLIRCompiler* compiler)
+    std::unique_ptr<Pass> createDialectLoweringPass()
     {
-        return std::make_unique<DialectLoweringPass>(*compiler);
+        return std::make_unique<DialectLoweringPass>();
     }
 } // namespace mlir
+
+static PassRegistration<DialectLoweringPass> pass(PASS_NAME,
+                                                  "Convert nGraph dialect to affine dialect");
