@@ -220,7 +220,8 @@ size_t MKLDNNEmitter::build_dequantization(const ngraph::Node* node,
                                            const mkldnn::memory::desc& result_desc)
 {
     auto dequantize = static_cast<const ngraph::op::Dequantize*>(node);
-    auto scale_const_op = as_type_ptr<ngraph::op::Constant>(dequantize->get_argument(1));
+    auto scale_const_op =
+        std::dynamic_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(1));
     std::vector<float> scale = {1.0f};
     if (scale_const_op != nullptr)
     {

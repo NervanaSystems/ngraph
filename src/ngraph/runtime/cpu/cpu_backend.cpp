@@ -14,9 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#if defined(NGRAPH_TBB_ENABLE)
 #include <tbb/tbb_stddef.h>
-#endif
 
 #include "cpu_backend_visibility.h"
 
@@ -44,10 +42,7 @@ extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend()
         static bool is_initialized = false;
         if (!is_initialized)
         {
-#if defined(NGRAPH_TBB_ENABLE)
-            // Force TBB to link to the backend
             tbb::TBB_runtime_interface_version();
-#endif
             ngraph::runtime::cpu::register_builders();
             is_initialized = true;
         }

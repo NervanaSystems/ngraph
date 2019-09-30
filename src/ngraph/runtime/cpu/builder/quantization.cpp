@@ -55,8 +55,8 @@ namespace ngraph
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                     QUERY_SCRATCHPAD_2ARGS(reorder, input_desc, result_desc);
 
-                    auto scale_const_op =
-                        as_type_ptr<ngraph::op::Constant>(dequantize->get_argument(1));
+                    auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
+                        dequantize->get_argument(1));
 
                     if (scale_const_op == nullptr)
                     {
@@ -328,7 +328,7 @@ namespace ngraph
                     QUERY_SCRATCHPAD_2ARGS(reorder, input_desc, result_desc);
 
                     auto scale_const_op =
-                        as_type_ptr<ngraph::op::Constant>(quantize->get_argument(1));
+                        std::dynamic_pointer_cast<ngraph::op::Constant>(quantize->get_argument(1));
                     if (scale_const_op == nullptr)
                     {
                         auto arg1_buffer_index =

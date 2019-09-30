@@ -81,26 +81,19 @@ namespace ngraph
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
 
-    struct TypeInfo
+    struct NodeTypeInfo
     {
         const char* name;
         uint64_t version;
     };
-
-    using NodeTypeInfo = TypeInfo;
-
-    /// Tests if a node is of op type T
-    template <typename NodeType, typename T>
-    bool is_type(T value)
-    {
-        return &value->get_type_info() == &NodeType::type_info;
-    }
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// or a (possibly empty) tuple of values.
     class Node : public std::enable_shared_from_this<Node>
     {
+        static constexpr NodeTypeInfo type_info{"Node", 0};
+
         // For access to generate_adjoints.
         friend class autodiff::Adjoints;
 
@@ -157,11 +150,14 @@ namespace ngraph
         void safe_delete(NodeVector& nodes, bool recurse);
 
     public:
-        NGRAPH_API
-        static constexpr NodeTypeInfo type_info{"Node", 0};
-
         virtual ~Node();
 
+        /// Tests if a node is of op type T
+        template <typename NodeType>
+        bool is_type() const
+        {
+            return &get_type_info() == &NodeType::type_info;
+        }
         virtual bool is_unary_elementwise_arithmetic() const { return false; }
         virtual bool is_binary_elementwise_arithmetic() const { return false; }
         virtual bool is_binary_elementwise_comparison() const { return false; }
@@ -184,7 +180,7 @@ namespace ngraph
         virtual const char* get_type_name() const
         {
             auto& info = get_type_info();
-            if (is_type<Node>(this))
+            if (is_type<Node>())
             {
                 // Transitional definition
                 return description().c_str();
@@ -263,7 +259,7 @@ namespace ngraph
                              const element::Type& element_type,
                              const PartialShape& pshape);
 
-        virtual bool is_parameter() const { return false; }
+        bool is_parameter() const;
         virtual bool is_output() const;
         virtual bool is_constant() const;
         virtual bool is_null() const { return false; }
@@ -498,30 +494,30 @@ namespace ngraph
     template <typename NodeType>
     NodeType* as_type(Node* node)
     {
-        return is_type<NodeType>(node) ? static_cast<NodeType*>(node) : nullptr;
+        return node->template is_type<NodeType>() ? static_cast<NodeType*>(node) : nullptr;
     }
 
     /// Casts a Node* to a NodePtr* if it is of type NodePtr, nullptr otherwise
     template <typename NodeType>
     const NodeType* as_type(const Node* node)
     {
-        return is_type<NodeType>(node) ? static_cast<const NodeType*>(node) : nullptr;
+        return node->template is_type<NodeType>() ? static_cast<const NodeType*>(node) : nullptr;
     }
 
     /// Casts a Node to a shared_ptr<NodePtr> if it is of type NodePtr, nullptr otherwise
     template <typename NodeType>
     std::shared_ptr<NodeType> as_type_ptr(std::shared_ptr<Node> node_ptr)
     {
-        return is_type<NodeType>(node_ptr) ? std::static_pointer_cast<NodeType>(node_ptr)
-                                           : std::shared_ptr<NodeType>();
+        return node_ptr->template is_type<NodeType>() ? std::static_pointer_cast<NodeType>(node_ptr)
+                                                      : std::shared_ptr<NodeType>();
     }
 
     /// Casts a Node to a shared_ptr<NodePtr> if it is of type NodePtr, nullptr otherwise
     template <typename NodeType>
     std::shared_ptr<const NodeType> as_type_ptr(std::shared_ptr<const Node> node_ptr)
     {
-        return is_type<NodeType>(node_ptr) ? std::static_pointer_cast<NodeType>(node_ptr)
-                                           : std::shared_ptr<NodeType>();
+        return node_ptr->template is_type<NodeType>() ? std::static_pointer_cast<NodeType>(node_ptr)
+                                                      : std::shared_ptr<NodeType>();
     }
 
     /// \brief A handle for one of a node's inputs.

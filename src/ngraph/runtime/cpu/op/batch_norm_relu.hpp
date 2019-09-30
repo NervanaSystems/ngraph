@@ -30,7 +30,6 @@ namespace ngraph
         class BatchNormTrainingRelu : public Op
         {
         public:
-            CPU_BACKEND_API
             static constexpr NodeTypeInfo type_info{"BatchNormTrainingRelu", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             CPU_BACKEND_API BatchNormTrainingRelu(double eps,
@@ -60,7 +59,6 @@ namespace ngraph
         class BatchNormInferenceRelu : public Op
         {
         public:
-            CPU_BACKEND_API
             static constexpr NodeTypeInfo type_info{"BatchNormInferenceRelu", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             BatchNormInferenceRelu(double eps,

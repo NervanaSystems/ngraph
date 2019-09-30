@@ -74,16 +74,11 @@ R"(
 
 struct CPURuntimeContextCG
 {
-#if defined(NGRAPH_TBB_ENABLE)
     std::unique_ptr<tbb::flow::graph> tbb_graph;
     std::unique_ptr<tbb::global_control> tbb_gcontrol;
 
     CPURuntimeContextCG() { init_tbb(); init_mkldnn_primitives();}
     ~CPURuntimeContextCG() { cleanup_tbb(); cleanup_mkldnn_primitives();}
-#else
-    CPURuntimeContextCG() { init_mkldnn_primitives();}
-    ~CPURuntimeContextCG() { cleanup_mkldnn_primitives();}
-#endif
 
     std::vector<mkldnn::memory*> mkldnn_memories;
     std::vector<mkldnn::primitive*> mkldnn_primitives;
@@ -275,7 +270,6 @@ struct CPURuntimeContextCG
     }
 
 private:
-#if defined(NGRAPH_TBB_ENABLE)
     inline void init_tbb()
     {
         if (std::getenv("NGRAPH_CPU_USE_TBB"))
@@ -305,7 +299,6 @@ private:
             }
         }
     }
-#endif
 
     void init_mkldnn_primitives();
 

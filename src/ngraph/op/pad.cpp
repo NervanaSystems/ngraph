@@ -204,7 +204,7 @@ CoordinateDiff op::v1::Pad::get_pads_begin() const
 {
     auto pads_begin_node = input_value(1).get_node_shared_ptr();
     CoordinateDiff pads_begin_coord{};
-    if (auto pads_begin_const = as_type_ptr<op::Constant>(pads_begin_node))
+    if (auto pads_begin_const = dynamic_pointer_cast<op::Constant>(pads_begin_node))
     {
         pads_begin_coord = pads_begin_const->get_vector<ptrdiff_t>();
     }
@@ -215,7 +215,7 @@ CoordinateDiff op::v1::Pad::get_pads_end() const
 {
     auto pads_end_node = input_value(2).get_node_shared_ptr();
     CoordinateDiff pads_end_coord{};
-    if (auto pads_end_const = as_type_ptr<op::Constant>(pads_end_node))
+    if (auto pads_end_const = dynamic_pointer_cast<op::Constant>(pads_end_node))
     {
         pads_end_coord = pads_end_const->get_vector<ptrdiff_t>();
     }

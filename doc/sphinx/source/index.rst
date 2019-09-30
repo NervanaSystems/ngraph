@@ -32,6 +32,7 @@ nGraph Compiler stack
    nGraph Compiler stack documentation for the master tree under development 
    (version |version|).
 
+For information about the releases, see the :doc:`../project/release-notes`. 
 
 The nGraph Library and Compiler stack are provided under the `Apache 2.0 license`_ 
 (found in the LICENSE file in the project's `repo`_). It may also import or reference 
@@ -40,14 +41,10 @@ packages, scripts, and other files that use licensing.
 .. _Apache 2.0 license: https://github.com/NervanaSystems/ngraph/blob/master/LICENSE
 .. _repo: https://github.com/NervanaSystems/ngraph
 
-.. toctree::
-   :name: mastertoctree
-   :titlesonly: 
 
 .. toctree::
    :maxdepth: 1
    :caption: Getting Started
-   :titlesonly:
    
    frameworks/index.rst
    frameworks/validated/list.rst
@@ -99,8 +96,6 @@ packages, scripts, and other files that use licensing.
    project/index.rst
    project/extras/index.rst 
    glossary.rst
-
-
 
 .. only:: html
 

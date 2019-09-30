@@ -93,7 +93,7 @@ std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i, bool for_
 {
     for (auto in : output(i).get_target_inputs())
     {
-        if (is_type<op::GetOutputElement>(in.get_node()))
+        if (in.get_node()->is_type<op::GetOutputElement>())
         {
             return in.get_node()->shared_from_this();
         }
@@ -105,7 +105,7 @@ std::shared_ptr<Node>
     Node::copy_with_new_inputs(const OutputVector& inputs,
                                const std::vector<std::shared_ptr<Node>>& control_dependencies) const
 {
-    bool for_get_output_element = is_type<op::GetOutputElement>(this);
+    bool for_get_output_element = is_type<op::GetOutputElement>();
     NodeVector args;
     for (const Output<Node>& input : inputs)
     {
@@ -257,6 +257,11 @@ std::deque<descriptor::Output>& Node::get_outputs()
 const std::deque<descriptor::Output>& Node::get_outputs() const
 {
     return m_outputs;
+}
+
+bool Node::is_parameter() const
+{
+    return is_type<op::Parameter>();
 }
 
 bool Node::is_output() const
@@ -724,8 +729,7 @@ std::tuple<element::Type, PartialShape>
                                       PartialShape::merge_into(pshape, get_input_partial_shape(i)),
                                       "Argument shapes are inconsistent.");
             }
-            else if (autob.m_type == op::AutoBroadcastType::NUMPY ||
-                     autob.m_type == op::AutoBroadcastType::PDPD)
+            else if (autob.m_type == op::AutoBroadcastType::NUMPY)
             {
                 NODE_VALIDATION_CHECK(
                     this,

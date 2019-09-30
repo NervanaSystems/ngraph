@@ -23,7 +23,6 @@
 #include "ngraph/op/topk.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "topk.hpp"
-#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -36,14 +35,21 @@ namespace ngraph
                 NodeVector topk(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
+                    std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
                     std::int64_t k{node.get_attribute_value<std::int64_t>("k")};
+
                     auto num_dimensions = data->get_shape().size();
 
-                    std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
-                    std::int64_t valid_axis = common::validate_axis(node, axis, num_dimensions);
+                    if (axis < 0)
+                    {
+                        axis += num_dimensions;
+                    }
+
+                    ASSERT_VALID_ARGUMENT(node, axis < static_cast<int64_t>(num_dimensions))
+                        << "`axis` parameter is out of range: " << axis;
 
                     std::shared_ptr<ngraph::Node> top_k =
-                        std::make_shared<ngraph::op::TopK>(data, valid_axis, element::i64, k);
+                        std::make_shared<ngraph::op::TopK>(data, axis, element::i64, k);
 
                     std::shared_ptr<ngraph::Node> indices =
                         std::make_shared<ngraph::op::GetOutputElement>(top_k, 0);

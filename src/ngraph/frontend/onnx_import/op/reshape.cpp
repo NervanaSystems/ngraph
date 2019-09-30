@@ -50,8 +50,9 @@ namespace ngraph
                         ASSERT_IS_SUPPORTED(node, ng_inputs.at(1)->description() == "Constant")
                             << "doesn't support shape input of other type than Constant.";
 
-                        output_shape = ngraph::as_type_ptr<ngraph::op::Constant>(ng_inputs.at(1))
-                                           ->get_vector<std::size_t>();
+                        auto output_shape_node =
+                            std::dynamic_pointer_cast<ngraph::op::Constant>(ng_inputs.at(1));
+                        output_shape = output_shape_node->get_vector<std::size_t>();
                     }
                     // Do nothing if there is no shape argument nor second node input.
                     else if (output_shape.empty())

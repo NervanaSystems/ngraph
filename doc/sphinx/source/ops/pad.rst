@@ -101,6 +101,6 @@ new rows and columns with 42.
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::v0::Pad
+.. doxygenclass:: ngraph::op::Pad
    :project: ngraph
    :members:

@@ -41,7 +41,8 @@ TEST(constant_folding, constant_reshape)
     ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<float>();
 
@@ -65,7 +66,8 @@ TEST(constant_folding, constant_reshape_permute)
     ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<double>();
 
@@ -90,7 +92,8 @@ TEST(constant_folding, constant_broadcast)
     ASSERT_EQ(count_ops_of_type<op::Broadcast>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int>();
 
@@ -116,7 +119,8 @@ TEST(constant_folding, constant_dyn_broadcast)
     ASSERT_EQ(count_ops_of_type<op::DynBroadcast>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int32_t>();
 
@@ -145,7 +149,8 @@ TEST(constant_folding, constant_pad_exterior)
     ASSERT_EQ(count_ops_of_type<op::Pad>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int>();
 
@@ -156,7 +161,8 @@ TEST(constant_folding, constant_pad_exterior)
 template <typename T>
 static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t pos)
 {
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(pos)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(pos)->get_argument(0));
     return new_const->get_vector<T>();
 }
 
@@ -316,7 +322,8 @@ TEST(constant_folding, const_dequantize)
     ASSERT_EQ(count_ops_of_type<op::Dequantize>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<output_c_type>();
 
@@ -350,7 +357,8 @@ TEST(constant_folding, const_quantize)
     ASSERT_EQ(count_ops_of_type<op::Quantize>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<output_c_type>();
 
@@ -374,7 +382,8 @@ TEST(constant_folding, const_convert)
     ASSERT_EQ(count_ops_of_type<op::Convert>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     ASSERT_EQ(new_const->get_output_element_type(0), element::u64);
     auto values_out = new_const->get_vector<uint64_t>();
@@ -398,7 +407,8 @@ TEST(constant_folding, shape_of)
     ASSERT_EQ(count_ops_of_type<op::ShapeOf>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     ASSERT_EQ(new_const->get_output_element_type(0), element::i64);
     auto values_out = new_const->get_vector<int64_t>();
@@ -424,7 +434,8 @@ TEST(constant_folding, shape_of_dynamic)
     ASSERT_EQ(count_ops_of_type<op::ShapeOf>(f), 1);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 0);
 
-    auto result_as_shape_of = as_type_ptr<op::ShapeOf>(f->get_results().at(0)->get_argument(0));
+    auto result_as_shape_of =
+        std::dynamic_pointer_cast<op::ShapeOf>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(result_as_shape_of);
     ASSERT_EQ(result_as_shape_of->get_output_shape(0), Shape{7});
 }
@@ -445,7 +456,8 @@ TEST(constant_folding, shape_of_rank_dynamic)
     ASSERT_EQ(count_ops_of_type<op::ShapeOf>(f), 1);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 0);
 
-    auto result_as_shape_of = as_type_ptr<op::ShapeOf>(f->get_results().at(0)->get_argument(0));
+    auto result_as_shape_of =
+        std::dynamic_pointer_cast<op::ShapeOf>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(result_as_shape_of);
     ASSERT_TRUE(result_as_shape_of->get_output_partial_shape(0).same_scheme(
         PartialShape{Dimension::dynamic()}));
@@ -467,7 +479,8 @@ TEST(constant_folding, const_reverse)
     ASSERT_EQ(count_ops_of_type<op::Reverse>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int32_t>();
 
@@ -491,7 +504,8 @@ TEST(constant_folding, const_product)
     ASSERT_EQ(count_ops_of_type<op::Product>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int32_t>();
 
@@ -515,7 +529,8 @@ TEST(constant_folding, const_sum)
     ASSERT_EQ(count_ops_of_type<op::Sum>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int32_t>();
 
@@ -540,7 +555,8 @@ TEST(constant_folding, const_max)
     ASSERT_EQ(count_ops_of_type<op::Max>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int32_t>();
 
@@ -565,7 +581,8 @@ TEST(constant_folding, const_min)
     ASSERT_EQ(count_ops_of_type<op::Min>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int32_t>();
 
@@ -590,7 +607,8 @@ TEST(constant_folding, const_all)
     ASSERT_EQ(count_ops_of_type<op::All>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<char>();
 
@@ -615,7 +633,8 @@ TEST(constant_folding, const_any)
     ASSERT_EQ(count_ops_of_type<op::Any>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<char>();
 
@@ -639,7 +658,8 @@ TEST(constant_folding, const_concat)
     ASSERT_EQ(count_ops_of_type<op::Concat>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int32_t>();
 
@@ -662,7 +682,8 @@ TEST(constant_folding, const_not)
     ASSERT_EQ(count_ops_of_type<op::Not>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<char>();
 
@@ -687,7 +708,8 @@ TEST(constant_folding, const_equal)
     ASSERT_EQ(count_ops_of_type<op::Equal>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<char>();
 
@@ -712,7 +734,8 @@ TEST(constant_folding, const_not_equal)
     ASSERT_EQ(count_ops_of_type<op::NotEqual>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<char>();
 
@@ -737,7 +760,8 @@ TEST(constant_folding, const_greater)
     ASSERT_EQ(count_ops_of_type<op::Greater>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<char>();
 
@@ -762,7 +786,8 @@ TEST(constant_folding, const_greater_eq)
     ASSERT_EQ(count_ops_of_type<op::GreaterEq>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<char>();
 
@@ -787,7 +812,8 @@ TEST(constant_folding, const_less)
     ASSERT_EQ(count_ops_of_type<op::Less>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<char>();
 
@@ -812,7 +838,8 @@ TEST(constant_folding, const_less_eq)
     ASSERT_EQ(count_ops_of_type<op::LessEq>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<char>();
 
@@ -837,7 +864,8 @@ TEST(constant_folding, const_and)
     ASSERT_EQ(count_ops_of_type<op::And>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<char>();
 
@@ -862,7 +890,8 @@ TEST(constant_folding, const_or)
     ASSERT_EQ(count_ops_of_type<op::Or>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<char>();
 
@@ -887,7 +916,8 @@ TEST(constant_folding, const_xor)
     ASSERT_EQ(count_ops_of_type<op::Xor>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<char>();
 
@@ -910,7 +940,8 @@ TEST(constant_folding, const_ceiling)
     ASSERT_EQ(count_ops_of_type<op::Ceiling>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<float>();
 
@@ -933,7 +964,8 @@ TEST(constant_folding, const_floor)
     ASSERT_EQ(count_ops_of_type<op::Floor>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<float>();
 
@@ -961,7 +993,8 @@ TEST(constant_folding, const_gather)
     ASSERT_EQ(count_ops_of_type<op::Gather>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<float>();
 
@@ -987,7 +1020,8 @@ TEST(constant_folding, const_slice)
     ASSERT_EQ(count_ops_of_type<op::Slice>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int>();
 
@@ -1026,7 +1060,8 @@ TEST(constant_folding, const_dyn_slice)
     ASSERT_EQ(count_ops_of_type<op::DynSlice>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int>();
 
@@ -1054,7 +1089,8 @@ TEST(constant_folding, constant_dyn_reshape)
     ASSERT_EQ(count_ops_of_type<op::DynReshape>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<float>();
 
@@ -1090,7 +1126,8 @@ TEST(constant_folding, constant_dyn_reshape_shape_not_originally_constant)
     ASSERT_EQ(count_ops_of_type<op::DynReshape>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<float>();
 
@@ -1117,7 +1154,8 @@ TEST(constant_folding, constant_transpose)
     ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<double>();
 
@@ -1162,7 +1200,8 @@ void range_test(T start, T stop, T step, const vector<T>& values_expected)
     ASSERT_EQ(count_ops_of_type<op::Range>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
 
     auto values_out = new_const->template get_vector<T>();
@@ -1203,7 +1242,8 @@ TEST(constant_folding, constant_select)
     ASSERT_EQ(count_ops_of_type<op::Select>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int64_t>();
 

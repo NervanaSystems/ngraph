@@ -49,7 +49,6 @@ namespace ngraph
                       const PartialShape& pshape,
                       const bool cacheable = false);
 
-            bool is_parameter() const override { return true; }
             void validate_and_infer_types() override;
 
             bool get_cacheable() const { return m_cacheable; }

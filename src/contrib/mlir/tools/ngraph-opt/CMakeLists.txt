@@ -14,18 +14,25 @@
 # limitations under the License.
 # ******************************************************************************
 
-set(LIBS
-    mlir_backend
-    MLIROptMain
+set(LIB_LIBS
     MLIRPass
+)
+
+add_library(ngraph_opt_lib
+    ngraph_opt.cpp
+)
+target_link_libraries(ngraph_opt_lib ${LIB_LIBS})
+
+set(LIBS
+    MLIROptMain
     MLIRParser
-    LLVMSupport
 )
 
 add_executable(ngraph-opt
     ngraph_opt.cpp
 )
 
-target_link_libraries(ngraph-opt PRIVATE ${LIBS})
+#whole_archive_link(ngraph-opt ${LIBS})
+target_link_libraries(ngraph-opt PRIVATE ngraph_opt_lib ${LIBS} LLVMSupport)
 
 install(TARGETS ngraph-opt RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})

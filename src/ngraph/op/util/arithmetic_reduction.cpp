@@ -41,7 +41,7 @@ op::util::ArithmeticReduction::ArithmeticReduction(const Output<Node>& arg,
 
 bool op::util::ArithmeticReduction::reduction_axes_constant() const
 {
-    return is_type<op::Constant>(input_value(1).get_node());
+    return input_value(1).get_node()->is_type<op::Constant>();
 }
 
 const AxisSet op::util::ArithmeticReduction::get_reduction_axes() const

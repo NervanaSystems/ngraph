@@ -158,3 +158,6 @@ namespace mlir
         return std::make_unique<MemoryOptimizationPass>();
     }
 } // namespace mlir
+
+static PassRegistration<MemoryOptimizationPass> pass("ng-inplace-mem-opt",
+                                                     "Performs in-place memory optimizations");

@@ -109,7 +109,7 @@ TEST(cpu_fusion, gemm_pattern)
     auto x = std::make_shared<pattern::op::Label>(B);
 
     auto reshape_pred = [](std::shared_ptr<Node> n) {
-        return static_cast<bool>(as_type_ptr<op::Reshape>(n));
+        return static_cast<bool>(std::dynamic_pointer_cast<op::Reshape>(n));
     };
 
     auto skip_w = std::make_shared<pattern::op::Skip>(W, reshape_pred);
@@ -290,7 +290,7 @@ TEST(cpu_fusion, cpu_fusion_pass_basic)
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::FusionType::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, ParameterVector{A, B, C});
     pass_manager.run_passes(func);
-    ASSERT_NE(as_type_ptr<op::MatmulBias>(graph->get_argument(0)), nullptr);
+    ASSERT_NE(std::dynamic_pointer_cast<op::MatmulBias>(graph->get_argument(0)), nullptr);
 }
 
 TEST(cpu_fusion, commutative_matmul_bias)
@@ -311,7 +311,7 @@ TEST(cpu_fusion, commutative_matmul_bias)
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::FusionType::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, ParameterVector{A, B, C});
     pass_manager.run_passes(func);
-    ASSERT_NE(as_type_ptr<op::MatmulBias>(graph->get_argument(0)), nullptr);
+    ASSERT_NE(std::dynamic_pointer_cast<op::MatmulBias>(graph->get_argument(0)), nullptr);
 }
 
 TEST(cpu_fusion, cpu_fusion_pass_matmul_bias)
@@ -334,7 +334,7 @@ TEST(cpu_fusion, cpu_fusion_pass_matmul_bias)
     auto func = make_shared<Function>(graph, ParameterVector{W, x, b});
     pass_manager.run_passes(func);
     auto gmm = graph->get_argument(0);
-    ASSERT_TRUE(as_type_ptr<op::MatmulBias>(gmm));
+    ASSERT_TRUE(std::dynamic_pointer_cast<op::MatmulBias>(gmm));
     ASSERT_EQ(gmm->get_argument(2), b);
 }
 
@@ -1437,7 +1437,8 @@ TEST(cpu_fusion, weight_fusion)
     auto new_conv_bprop_data = conv_bprop_abs->get_argument(0);
     auto new_convert_layout = new_conv_bprop_data->get_argument(0);
 
-    ASSERT_EQ(as_type_ptr<runtime::cpu::op::ConvertLayout>(new_convert_layout->get_argument(0)),
+    ASSERT_EQ(std::dynamic_pointer_cast<runtime::cpu::op::ConvertLayout>(
+                  new_convert_layout->get_argument(0)),
               cvt_lt_conv);
 }
 
@@ -1479,12 +1480,12 @@ TEST(cpu_fusion, max_pool_with_indices)
     }
 
     auto maxpool_goe_output =
-        as_type_ptr<op::GetOutputElement>(f->get_results().at(0)->get_argument(0));
+        std::dynamic_pointer_cast<op::GetOutputElement>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(maxpool_goe_output);
     ASSERT_EQ(maxpool_goe_output->get_n(), 0);
     auto maxpool_with_indices = df->get_results().at(0)->get_argument(0);
     auto maxpool_goe_indices =
-        as_type_ptr<op::GetOutputElement>(maxpool_with_indices->get_argument(2));
+        std::dynamic_pointer_cast<op::GetOutputElement>(maxpool_with_indices->get_argument(2));
     ASSERT_TRUE(maxpool_goe_indices);
     ASSERT_EQ(maxpool_goe_indices->get_n(), 1);
 }
@@ -1580,7 +1581,8 @@ static std::pair<std::shared_ptr<ngraph::Function>, OutputVector>
     // create the backward function
     std::vector<std::shared_ptr<ngraph::op::Parameter>> param_adjoints;
     for (auto n : adjoints)
-        param_adjoints.push_back(as_type_ptr<ngraph::op::Parameter>(n.get_node_shared_ptr()));
+        param_adjoints.push_back(
+            std::dynamic_pointer_cast<ngraph::op::Parameter>(n.get_node_shared_ptr()));
     back_parameters.insert(back_parameters.begin(), param_adjoints.begin(), param_adjoints.end());
 
     return {std::make_shared<ngraph::Function>(dYdXs, back_parameters), adjoints};
@@ -1648,8 +1650,8 @@ TEST(cpu_fusion, maxpool_with_indices_in_mxnet)
     auto fprop_cache = ngraph::cache_fprop(f, maybe_bf);
 
     auto mpwi_bprop = fprop_cache.bprop->get_results().at(0)->get_argument(0);
-    ASSERT_TRUE(as_type_ptr<op::Parameter>(mpwi_bprop->get_argument(0)));
-    ASSERT_TRUE(as_type_ptr<op::Parameter>(mpwi_bprop->get_argument(2)));
+    ASSERT_TRUE(std::dynamic_pointer_cast<op::Parameter>(mpwi_bprop->get_argument(0)));
+    ASSERT_TRUE(std::dynamic_pointer_cast<op::Parameter>(mpwi_bprop->get_argument(2)));
 }
 
 TEST(cpu_fusion, conv_batch_norm_folding)
@@ -3783,7 +3785,7 @@ TEST(cpu_fusion, rnn_fusion_from_json_model)
         auto users = node->get_users();
         return (users.size() == NUM_STEPS) &&
                std::all_of(begin(users), end(users), [](std::shared_ptr<Node> n) {
-                   return as_type_ptr<op::Slice>(n) != nullptr;
+                   return std::dynamic_pointer_cast<op::Slice>(n) != nullptr;
                });
     };
 

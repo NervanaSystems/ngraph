@@ -298,12 +298,13 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
              result_desc.data.ndims == 5 && convertlayout->get_users().size() == 1)
     {
         Shape weights_shape_groups;
-        if (auto gconv = as_type_ptr<ngraph::op::GroupConvolution>(convertlayout->get_users()[0]))
+        if (auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(
+                convertlayout->get_users()[0]))
         {
             weights_shape_groups = gconv->get_weights_dimensions();
         }
-        else if (auto gconvb =
-                     as_type_ptr<ngraph::op::GroupConvolutionBias>(convertlayout->get_users()[0]))
+        else if (auto gconvb = std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(
+                     convertlayout->get_users()[0]))
         {
             weights_shape_groups = gconvb->get_weights_dimensions();
         }
@@ -357,12 +358,13 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
              convertlayout->get_users().size() == 1)
     {
         Shape weights_shape_groups;
-        if (auto gconv = as_type_ptr<ngraph::op::GroupConvolution>(convertlayout->get_users()[0]))
+        if (auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(
+                convertlayout->get_users()[0]))
         {
             weights_shape_groups = gconv->get_weights_dimensions();
         }
-        else if (auto gconvb =
-                     as_type_ptr<ngraph::op::GroupConvolutionBias>(convertlayout->get_users()[0]))
+        else if (auto gconvb = std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(
+                     convertlayout->get_users()[0]))
         {
             weights_shape_groups = gconvb->get_weights_dimensions();
         }
@@ -408,7 +410,7 @@ bool ngraph::runtime::cpu::pass::CPUConvertLayoutConstantFolding::run_on_functio
     auto replace = false;
     for (auto n : function->get_ordered_ops())
     {
-        if (is_type<runtime::cpu::op::ConvertLayout>(n))
+        if (dynamic_pointer_cast<runtime::cpu::op::ConvertLayout>(n))
         {
             auto m_convertlayout = static_pointer_cast<runtime::cpu::op::ConvertLayout>(n);
             auto output_md = mkldnn_utils::get_output_mkldnn_md(m_convertlayout.get(), 0);
@@ -420,7 +422,7 @@ bool ngraph::runtime::cpu::pass::CPUConvertLayoutConstantFolding::run_on_functio
             }
 
             auto arg = m_convertlayout->input(0).get_source_output().get_node_shared_ptr();
-            if (is_type<ngraph::op::Constant>(arg))
+            if (dynamic_pointer_cast<ngraph::op::Constant>(arg))
             {
                 auto m_input = static_pointer_cast<ngraph::op::Constant>(arg);
                 auto input_md = mkldnn_utils::get_input_mkldnn_md(m_convertlayout.get(), 0);

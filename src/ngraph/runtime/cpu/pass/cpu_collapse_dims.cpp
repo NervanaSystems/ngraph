@@ -241,27 +241,27 @@ bool runtime::cpu::pass::CPUCollapseDims::run_on_function(std::shared_ptr<ngraph
     bool replaced = false;
     for (auto n : f->get_ordered_ops())
     {
-        if (is_type<op::Broadcast>(n))
+        if (std::dynamic_pointer_cast<op::Broadcast>(n))
         {
             replaced |= collapse_broadcast(n);
         }
-        else if (is_type<op::Max>(n))
+        else if (std::dynamic_pointer_cast<op::Max>(n))
         {
             replaced |= collapse_reduction<op::Max>(n);
         }
-        else if (is_type<op::Min>(n))
+        else if (std::dynamic_pointer_cast<op::Min>(n))
         {
             replaced |= collapse_reduction<op::Min>(n);
         }
-        else if (is_type<op::Product>(n))
+        else if (std::dynamic_pointer_cast<op::Product>(n))
         {
             replaced |= collapse_reduction<op::Product>(n);
         }
-        else if (is_type<op::Sum>(n))
+        else if (std::dynamic_pointer_cast<op::Sum>(n))
         {
             replaced |= collapse_reduction<op::Sum>(n);
         }
-        else if (is_type<op::Dot>(n))
+        else if (std::dynamic_pointer_cast<op::Dot>(n))
         {
             replaced |= collapse_dot<op::Dot>(n);
         }

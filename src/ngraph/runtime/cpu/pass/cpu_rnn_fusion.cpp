@@ -107,7 +107,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
             ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
 
         auto target_lstm_node = m.get_match_root();
-        auto lstmcell_op = as_type_ptr<op::LSTMCell>(m.get_match_root());
+        auto lstmcell_op = std::dynamic_pointer_cast<op::LSTMCell>(m.get_match_root());
         auto src_iter =
             std::make_shared<ngraph::op::Concat>(NodeVector{pattern_map[H_t], pattern_map[C_t]}, 0);
         auto bias_iofc = target_lstm_node->get_argument(5);
@@ -219,12 +219,12 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
             lstm_ht_ct_output, Coordinate{batch_size, 0}, Coordinate{(2 * batch_size), dic});
 #endif
         // find the user's for {ht} and replace them with lstm_goe_0
-        if (is_type<ngraph::op::GetOutputElement>(dst_iter))
+        if (std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(dst_iter) != nullptr)
         {
             ngraph::replace_node(dst_iter, ct_slice);
         }
         // find the user's for {ht} and replace them with lstm_goe_0
-        if (is_type<ngraph::op::GetOutputElement>(dst_layer))
+        if (std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(dst_layer) != nullptr)
         {
             ngraph::replace_node(dst_layer, lstm_ht_output);
         }
@@ -321,7 +321,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
     auto ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
 
     auto broadcast_pred = [](std::shared_ptr<Node> n) {
-        return ((is_type<ngraph::op::Broadcast>(n)) || (is_type<ngraph::op::Reshape>(n)));
+        return ((std::dynamic_pointer_cast<ngraph::op::Broadcast>(n) != nullptr) ||
+                (std::dynamic_pointer_cast<ngraph::op::Reshape>(n) != nullptr));
     };
 
     // Fused MatMuls
@@ -388,17 +389,17 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
 // will remove this once mkldnn optimizes individual LSTM cell or once
 // we have decoder pattern for GNMT.
 #if MKLDNN_VERSION_MAJOR < 1
-        if (!(is_type<ngraph::op::Broadcast>(cell_state) &&
-              is_type<ngraph::op::Constant>(cell_state->get_argument(0))) &&
-            !(is_type<ngraph::op::Slice>(cell_state) &&
-              is_type<ngraph::op::GetOutputElement>(cell_state->get_argument(0))))
+        if (!(std::dynamic_pointer_cast<ngraph::op::Broadcast>(cell_state) &&
+              std::dynamic_pointer_cast<ngraph::op::Constant>(cell_state->get_argument(0))) &&
+            !(std::dynamic_pointer_cast<ngraph::op::Slice>(cell_state) &&
+              std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(cell_state->get_argument(0))))
         {
             return false;
         }
 #else
-        if (!(is_type<ngraph::op::Broadcast>(cell_state) &&
-              is_type<ngraph::op::Constant>(cell_state->get_argument(0))) &&
-            !(is_type<ngraph::op::GetOutputElement>(cell_state)))
+        if (!(std::dynamic_pointer_cast<ngraph::op::Broadcast>(cell_state) &&
+              std::dynamic_pointer_cast<ngraph::op::Constant>(cell_state->get_argument(0))) &&
+            !(std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(cell_state)))
         {
             return false;
         }
@@ -415,8 +416,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         // pattern matcher cannot guarantee this since the computations are
         // symmetric around x_t and ht_1. Use heuristics to swap the matched
         // labels
-        if (is_type<ngraph::op::Broadcast>(src_layer) &&
-            is_type<ngraph::op::Constant>(src_layer->get_argument(0)))
+        if (std::dynamic_pointer_cast<ngraph::op::Broadcast>(src_layer) &&
+            std::dynamic_pointer_cast<ngraph::op::Constant>(src_layer->get_argument(0)))
         {
             // First timestep of an RNN layer
             swap_lstm_inputs();
@@ -426,7 +427,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             swap_lstm_inputs();
         }
 #if MKLDNN_VERSION_MAJOR < 1
-        else if (is_type<ngraph::op::GetOutputElement>(cell_state->get_argument(0)))
+        else if (std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(
+                     cell_state->get_argument(0)))
         {
             // swap the inputs if the cell_state and hidden state does not
             // belong to the same Lstm
@@ -438,7 +440,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             }
         }
 #else
-        else if (is_type<ngraph::op::GetOutputElement>(cell_state))
+        else if (std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(cell_state))
         {
             // swap the inputs if the cell_state and hidden state does not
             // belong to the same Lstm
@@ -649,9 +651,9 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         }
 
         auto check_const_input = [&](std::shared_ptr<Node> n) {
-            if (is_type<ngraph::op::Constant>(n) ||
-                (is_type<ngraph::op::Broadcast>(n) &&
-                 is_type<ngraph::op::Constant>(n->get_argument(0))))
+            if (std::dynamic_pointer_cast<ngraph::op::Constant>(n) ||
+                (std::dynamic_pointer_cast<ngraph::op::Broadcast>(n) &&
+                 std::dynamic_pointer_cast<ngraph::op::Constant>(n->get_argument(0))))
             {
                 return true;
             }
@@ -742,7 +744,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                 {
                     if (ngraph::is_used(goe0_user.get()))
                     {
-                        if (!is_type<ngraph::op::Slice>(goe0_user))
+                        if (!std::dynamic_pointer_cast<ngraph::op::Slice>(goe0_user))
                         {
                             NGRAPH_DEBUG << "Did not find LSTM slice to replace with RNN slice";
                             return false;
@@ -852,9 +854,9 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         NGRAPH_DEBUG << "batch_size: " << batch_size;
 
         auto check_const_input = [&](std::shared_ptr<Node> n) {
-            if (is_type<ngraph::op::Constant>(n) ||
-                (is_type<ngraph::op::Broadcast>(n) &&
-                 is_type<ngraph::op::Constant>(n->get_argument(0))))
+            if (std::dynamic_pointer_cast<ngraph::op::Constant>(n) ||
+                (std::dynamic_pointer_cast<ngraph::op::Broadcast>(n) &&
+                 std::dynamic_pointer_cast<ngraph::op::Constant>(n->get_argument(0))))
             {
                 return true;
             }
@@ -922,7 +924,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             // lstm's will be the user of lstm_ct
             for (auto user : lstm_cts[i]->get_users())
             {
-                if (is_type<ngraph::op::Lstm>(user))
+                if (std::dynamic_pointer_cast<ngraph::op::Lstm>(user))
                 {
                     lstm_nodes.push_back(user);
                     break;
@@ -1063,7 +1065,8 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         std::vector<std::shared_ptr<ngraph::op::Rnn>> rnn_nodes;
         for (auto rnn_goe : m.get_bound_nodes_for_pattern(rnn_goe0_label))
         {
-            if (auto rnn_op = as_type_ptr<ngraph::op::Rnn>(rnn_goe->get_arguments()[0]))
+            if (auto rnn_op =
+                    std::dynamic_pointer_cast<ngraph::op::Rnn>(rnn_goe->get_arguments()[0]))
             {
                 rnn_nodes.push_back(rnn_op);
             }
@@ -1276,7 +1279,9 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
     auto rnn_right_to_left = std::make_shared<pattern::op::Label>(
         element::f32, Shape{1, 256}, pattern::has_class<ngraph::op::Rnn>());
 
-    auto reshape_pred = [](std::shared_ptr<Node> n) { return (is_type<ngraph::op::Reshape>(n)); };
+    auto reshape_pred = [](std::shared_ptr<Node> n) {
+        return (std::dynamic_pointer_cast<ngraph::op::Reshape>(n) != nullptr);
+    };
     auto rnn_left_to_right_goe0 =
         std::make_shared<ngraph::op::GetOutputElement>(rnn_left_to_right, 0);
     auto rnn_right_to_left_goe0 =

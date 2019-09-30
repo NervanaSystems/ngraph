@@ -102,8 +102,7 @@ static shared_ptr<Node>
     {
         const auto& output = input.get_output();
         auto tv = output.get_tensor_ptr();
-        auto tvl =
-            std::dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_layout());
+        auto tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_layout());
         if (!tvl)
         {
             throw ngraph_error(
@@ -381,11 +380,12 @@ namespace ngraph
 
                     // Convert filters to MKLDNN shape
                     // o,i,h,w -> g,o,i,h,w (e.g., {6, 2, 1, 1}, groups = 2 -> {2, 3, 1, 1, 1})
-                    if (auto gconv = as_type_ptr<ngraph::op::GroupConvolution>(node))
+                    if (auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node))
                     {
                         arg1_shape = gconv->get_weights_dimensions();
                     }
-                    if (auto gconv = as_type_ptr<ngraph::op::GroupConvolutionBias>(node))
+                    if (auto gconv =
+                            std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node))
                     {
                         arg1_shape = gconv->get_weights_dimensions();
                     }
@@ -2705,11 +2705,13 @@ bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::share
         {
             handler->second(m_external_function, node);
         }
-        else if (node->is_unary_elementwise_arithmetic())
+        else if (dynamic_pointer_cast<ngraph::op::util::UnaryElementwiseArithmetic>(node) !=
+                 nullptr)
         {
             set_layouts_unaryeltwise(m_external_function, node);
         }
-        else if (node->is_binary_elementwise_arithmetic())
+        else if (dynamic_pointer_cast<ngraph::op::util::BinaryElementwiseArithmetic>(node) !=
+                 nullptr)
         {
             set_layouts_binaryeltwise(m_external_function, node);
         }

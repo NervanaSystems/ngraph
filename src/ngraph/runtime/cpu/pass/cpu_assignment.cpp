@@ -408,8 +408,7 @@ namespace ngraph
                          (arg0_rank == 5 && max_pool->get_window_shape().size() == 3)) &&
                         (node->get_input_element_type(0) == element::f32 ||
                          node->get_input_element_type(0) == element::u8 ||
-                         node->get_input_element_type(0) == element::i8 ||
-                         node->get_input_element_type(0) == element::bf16))
+                         node->get_input_element_type(0) == element::i8))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -770,11 +769,11 @@ namespace ngraph
                     (void)external_function;
                     auto qconv = static_cast<ngraph::op::QuantizedConvolution*>(node);
                     auto input_zero_point =
-                        as_type_ptr<ngraph::op::Constant>(qconv->get_argument(3));
+                        dynamic_pointer_cast<ngraph::op::Constant>(qconv->get_argument(3));
                     auto filter_zero_point =
-                        as_type_ptr<ngraph::op::Constant>(qconv->get_argument(5));
+                        dynamic_pointer_cast<ngraph::op::Constant>(qconv->get_argument(5));
                     auto output_zero_point =
-                        as_type_ptr<ngraph::op::Constant>(qconv->get_argument(7));
+                        dynamic_pointer_cast<ngraph::op::Constant>(qconv->get_argument(7));
                     if (node->get_input_element_type(0) == element::u8 &&
                         node->get_input_element_type(1) == element::i8)
                     {
