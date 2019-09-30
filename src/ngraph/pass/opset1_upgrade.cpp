@@ -15,14 +15,17 @@
 //*****************************************************************************
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reduce_prod.hpp"
 #include "ngraph/op/reduce_sum.hpp"
+#include "ngraph/op/reverse.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
 
@@ -83,6 +86,52 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 #endif
     switch (get_typeid(node))
     {
+    case OP_TYPEID::AvgPool:
+    {
+        auto tmp = dynamic_cast<const op::v0::AvgPool*>(node.get());
+
+        auto rounding_type = static_cast<op::RoundingType>(tmp->get_ceil_mode());
+        auto exclude_pad = !tmp->get_include_padding_in_avg_computation();
+        auto auto_pad = tmp->get_pad_type();
+        auto pads_begin = tmp->get_padding_below();
+        auto pads_end = tmp->get_padding_above();
+        auto strides = tmp->get_window_movement_strides();
+        auto kernel = tmp->get_window_shape();
+
+        auto replacement_node = make_shared<op::v1::AvgPool>(node->input(0).get_source_output(),
+                                                             strides,
+                                                             pads_begin,
+                                                             pads_end,
+                                                             kernel,
+                                                             exclude_pad,
+                                                             rounding_type,
+                                                             auto_pad);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::AvgPoolBackprop:
+    {
+        auto tmp = dynamic_cast<const op::v0::AvgPoolBackprop*>(node.get());
+
+        auto exclude_pad = !tmp->get_include_padding_in_avg_computation();
+        auto pads_begin = tmp->get_padding_below();
+        auto pads_end = tmp->get_padding_above();
+        auto strides = tmp->get_window_movement_strides();
+        auto kernel = tmp->get_window_shape();
+
+        auto replacement_node =
+            make_shared<op::v1::AvgPoolBackprop>(tmp->get_forward_arg_shape(),
+                                                 node->input(0).get_source_output(),
+                                                 strides,
+                                                 pads_begin,
+                                                 pads_end,
+                                                 kernel,
+                                                 exclude_pad);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::Convolution:
     {
         auto tmp = dynamic_cast<const op::v0::Convolution*>(node.get());
@@ -250,8 +299,86 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
+    case OP_TYPEID::MaxPool:
+    {
+        auto tmp = dynamic_cast<const op::v0::MaxPool*>(node.get());
+
+        auto rounding_type = static_cast<op::RoundingType>(tmp->get_ceil_mode());
+        auto auto_pad = tmp->get_pad_type();
+        auto pads_begin = tmp->get_padding_below();
+        auto pads_end = tmp->get_padding_above();
+        auto strides = tmp->get_window_movement_strides();
+        auto kernel = tmp->get_window_shape();
+
+        auto replacement_node = make_shared<op::v1::MaxPool>(node->input(0).get_source_output(),
+                                                             strides,
+                                                             pads_begin,
+                                                             pads_end,
+                                                             kernel,
+                                                             rounding_type,
+                                                             auto_pad);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::MaxPoolBackprop:
+    {
+        auto tmp = dynamic_cast<const op::v0::MaxPoolBackprop*>(node.get());
+
+        auto pads_begin = tmp->get_padding_below();
+        auto pads_end = tmp->get_padding_above();
+        auto strides = tmp->get_window_movement_strides();
+        auto kernel = tmp->get_window_shape();
+
+        shared_ptr<Node> replacement_node;
+        if (node->get_inputs().size() == 3)
+        {
+            replacement_node =
+                make_shared<op::v1::MaxPoolBackprop>(node->input(0).get_source_output(),
+                                                     node->input(1).get_source_output(),
+                                                     node->input(2).get_source_output(),
+                                                     strides,
+                                                     pads_begin,
+                                                     pads_end,
+                                                     kernel);
+        }
+        else
+        {
+            replacement_node =
+                make_shared<op::v1::MaxPoolBackprop>(node->input(0).get_source_output(),
+                                                     node->input(1).get_source_output(),
+                                                     strides,
+                                                     pads_begin,
+                                                     pads_end,
+                                                     kernel);
+        }
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Reverse:
+    {
+        // creates a Constant node from the v0::Reverse reversed_axes attribute
+        // and uses it as the second input of v1::Reverse
+        const auto reverse_v0 = dynamic_cast<const op::Reverse*>(node.get());
+        const auto reversed_axes = reverse_v0->get_reversed_axes();
+
+        const auto reversed_axes_constant = op::Constant::create(
+            element::i64, Shape{reversed_axes.size()}, reversed_axes.to_vector());
+
+        const auto reverse_v1 = make_shared<op::v1::Reverse>(node->input(0).get_source_output(),
+                                                             reversed_axes_constant,
+                                                             op::v1::Reverse::Mode::INDEX);
+
+        replace_node(node, reverse_v1);
+        modified = true;
+
+        break;
+    }
     default: break;
     }
+
+
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif

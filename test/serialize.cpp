@@ -183,7 +183,7 @@ TEST(serialize, constant)
     bool found = false;
     for (shared_ptr<Node> node : g->get_ops())
     {
-        shared_ptr<op::Constant> c = dynamic_pointer_cast<op::Constant>(node);
+        shared_ptr<op::Constant> c = as_type_ptr<op::Constant>(node);
         if (c)
         {
             found = true;
@@ -245,7 +245,7 @@ TEST(serialize, passthrough)
     std::shared_ptr<op::Passthrough> pt;
     for (const auto& op : g->get_ops())
     {
-        pt = dynamic_pointer_cast<op::Passthrough>(op);
+        pt = as_type_ptr<op::Passthrough>(op);
         if (pt)
         {
             break;
@@ -343,15 +343,15 @@ TEST(serialize, non_zero_node_output)
 
 TEST(serialize, opset1_softmax)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{10});
-    auto softmax = make_shared<op::v1::Softmax>(arg, 0);
-    auto result = make_shared<op::Result>(softmax);
-    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
+    const auto arg = make_shared<op::Parameter>(element::f32, Shape{10});
+    const auto softmax = make_shared<op::v1::Softmax>(arg, 0);
+    const auto result = make_shared<op::Result>(softmax);
+    const auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
     string s = serialize(f);
 
     shared_ptr<Function> g = deserialize(s);
-    auto g_result = g->get_results().at(0);
-    auto g_softmax = g_result->input(0).get_source_output().get_node_shared_ptr();
+    const auto g_result = g->get_results().at(0);
+    const auto g_softmax = g_result->input(0).get_source_output().get_node_shared_ptr();
 
     EXPECT_EQ(g_softmax->description(), "Softmax");
     EXPECT_EQ(g_softmax->get_version(), 1);
