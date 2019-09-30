@@ -17,7 +17,6 @@
 #include <cstdint>
 #include <memory>
 
-#include "exceptions.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/topk.hpp"
@@ -37,13 +36,13 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
                     std::int64_t k{node.get_attribute_value<std::int64_t>("k")};
-                    auto num_dimensions = data->get_shape().size();
+                    auto data_rank = data->get_shape().size();
 
                     std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
-                    std::int64_t valid_axis = common::validate_axis(node, axis, num_dimensions);
+                    axis = common::validate_axis(node, axis, data_rank);
 
                     std::shared_ptr<ngraph::Node> top_k =
-                        std::make_shared<ngraph::op::TopK>(data, valid_axis, element::i64, k);
+                        std::make_shared<ngraph::op::TopK>(data, axis, element::i64, k);
 
                     std::shared_ptr<ngraph::Node> indices =
                         std::make_shared<ngraph::op::GetOutputElement>(top_k, 0);
