@@ -1311,8 +1311,8 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_top_k)
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, top_k_opset_10)
 {
-    auto function =
-        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/top_k_opset_10.prototxt"));
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/top_k_opset_10.prototxt"));
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_input<float>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
@@ -1326,8 +1326,8 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, top_k_opset_10)
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, top_k_opset_10_const_k)
 {
-    auto function =
-        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/top_k_opset_10_const_k.prototxt"));
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/top_k_opset_10_const_k.prototxt"));
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_input<float>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
