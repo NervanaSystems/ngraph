@@ -206,7 +206,7 @@ namespace ngraph
                 ///
                 inline NodeVector reduce_prod(const Node& node)
                 {
-                    return {reduction::make_ng_dyn_reduction_op(
+                    return {reduction::make_ng_reduction_op(
                         node,
                         node.get_ng_inputs().at(0),
                         std::make_shared<ngraph::op::v1::ReduceProd,
@@ -229,7 +229,7 @@ namespace ngraph
                 ///
                 inline NodeVector reduce_sum(const Node& node)
                 {
-                    return {reduction::make_ng_dyn_reduction_op(
+                    return {reduction::make_ng_reduction_op(
                         node,
                         node.get_ng_inputs().at(0),
                         std::make_shared<ngraph::op::v1::ReduceSum,
