@@ -378,6 +378,7 @@ TEST(provenance, fused)
     });
 }
 
+<<<<<<< HEAD
 TEST(provenance, topk_setk)
 {
     auto p1 = make_shared<op::Parameter>(element::f32, PartialShape{20, 3, 4});
@@ -387,11 +388,23 @@ TEST(provenance, topk_setk)
     auto tkc0 = tk->input_value(1).get_node_shared_ptr();
     tkc0->add_provenance_tag("TKC0");
     for (auto node : topological_sort(NodeVector{tk}))
+=======
+TEST(provenance, empty_group)
+{
+    auto p1 = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
+    p1->add_provenance_tag("P1");
+    auto abs = make_shared<op::Abs>(p1);
+    // Make sure group is empty
+    abs->add_provenance_group_members_above({abs});
+    abs->add_provenance_tag("abs");
+    for (auto node : topological_sort(NodeVector{abs}))
+>>>>>>> 3c2831e11... Add missing input (#3691)
     {
         if (node == p1)
         {
             EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"P1"}));
         }
+<<<<<<< HEAD
         else if (node == tkc0)
         {
             EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"TK", "TKC0"}));
@@ -417,6 +430,11 @@ TEST(provenance, topk_setk)
         else
         {
             EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"TK"}));
+=======
+        else
+        {
+            EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"abs"}));
+>>>>>>> 3c2831e11... Add missing input (#3691)
         }
     }
 }
