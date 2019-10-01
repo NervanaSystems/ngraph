@@ -188,6 +188,7 @@ max_trivial_5d_int32
 floor_int32
 any_trivial
 any_2x2x3_eliminate_dim_0
+backwards_batch_norm_training_3d
 
 # unsupported op: `GenerateMask`
 generate_mask
