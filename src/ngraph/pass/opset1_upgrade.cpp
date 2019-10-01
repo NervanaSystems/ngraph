@@ -30,6 +30,9 @@
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/topk.hpp"
+
+#include <limits>
 
 using namespace std;
 using namespace ngraph;
@@ -382,6 +385,38 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         bool keep_dims = false;
         auto replacement_node = make_shared<op::v1::ReduceSum>(
             node->input(0).get_source_output(), node->input(1).get_source_output(), keep_dims);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::TopK:
+    {
+        const auto topk_v0 = dynamic_cast<const op::TopK*>(node.get());
+        const auto k = topk_v0->get_k();
+        const auto axis = topk_v0->get_top_k_axis();
+
+        std::string sort;
+        switch (topk_v0->get_sort())
+        {
+        case op::TopK::SortType::SORT_INDICES: sort = "index"; break;
+        case op::TopK::SortType::SORT_VALUES: sort = "value"; break;
+        default: sort = "none"; break;
+        }
+
+        std::string mode;
+        if (topk_v0->get_compute_max())
+        {
+            mode = "max";
+        }
+        else
+        {
+            mode = "min";
+        }
+
+        const auto k_constant = op::Constant::create(element::i64, Shape{}, {k});
+        auto replacement_node =
+            make_shared<op::v1::TopK>(node->input_value(0), k_constant, axis, mode, sort);
+
         replace_node(node, replacement_node);
         modified = true;
         break;
