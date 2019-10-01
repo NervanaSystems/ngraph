@@ -53,8 +53,8 @@ void op::NormalizeL2::pre_validate_and_infer_types()
     if (axes_rank.is_static())
     {
         NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(axes_rank) == 1,
-                              "Input axes must have rank equals 1 (axes rank: ",
+                              static_cast<size_t>(axes_rank) <= 1,
+                              "Input axes must be scalar or have rank equals 1 (axes rank: ",
                               axes_rank,
                               ").");
 
