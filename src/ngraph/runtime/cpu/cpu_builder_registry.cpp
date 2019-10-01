@@ -57,6 +57,7 @@ namespace ngraph
                 register_builders_quantized_conv_cpp();
                 register_builders_quantized_dot_cpp();
                 register_builders_quantized_matmul_cpp();
+                register_builders_random_uniform_cpp();
                 register_builders_reduce_function_cpp();
                 register_builders_relu_cpp();
                 register_builders_replace_slice_cpp();
