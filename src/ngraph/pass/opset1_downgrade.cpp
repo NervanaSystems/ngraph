@@ -15,6 +15,7 @@
 //*****************************************************************************
 #include "ngraph/pass/opset1_downgrade.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
@@ -22,7 +23,6 @@
 #include "ngraph/op/reduce_sum.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/node.hpp"
 
 using namespace std;
 using namespace ngraph;
