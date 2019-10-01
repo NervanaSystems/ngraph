@@ -62,7 +62,7 @@ namespace ngraph
 
                     auto functor =
                         [&, max_pool_desc, max_pool_index, arg0_buffer_index, out_buffer_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                             if (ctx->first_iteration)
                             {
                                 mkldnn_emitter->build_pooling_forward(ctx->mkldnn_memories,
@@ -86,8 +86,7 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::max_pool<float>)> kernel;
 
-                    SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::max_pool);
+                    SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::max_pool)
 
                     auto functor = [&,
                                     kernel,
@@ -99,7 +98,7 @@ namespace ngraph
                                     padding_above,
                                     arg0_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         kernel(ctx->buffer_data[arg0_buffer_index],
                                ctx->buffer_data[out_buffer_index],
                                arg0_shape,
@@ -153,7 +152,7 @@ namespace ngraph
 
                     auto functor_fprop =
                         [&, fwd_pool_index, arg_fwd_buffer_index, out_buffer_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                             cpu::mkldnn_utils::set_memory_ptr(
                                 ctx, fdeps[0], ctx->buffer_data[arg_fwd_buffer_index]);
                             cpu::mkldnn_utils::set_memory_ptr(
@@ -174,7 +173,7 @@ namespace ngraph
                         mkldnn_emitter->reserve_primitive_space(4, true /* new workspace */);
                     auto& bdeps = mkldnn_emitter->get_primitive_deps(bwd_pool_index);
                     auto functor_bprop = [&, bwd_pool_index, delta_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, bdeps[0], ctx->buffer_data[delta_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
@@ -220,7 +219,7 @@ namespace ngraph
                     std::function<decltype(runtime::cpu::kernel::max_pool_backprop<float>)> kernel;
 
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::max_pool_backprop);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::max_pool_backprop)
 
                     auto functor = [&,
                                     kernel,
@@ -234,7 +233,7 @@ namespace ngraph
                                     arg_fwd_buffer_index,
                                     delta_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         kernel(ctx->buffer_data[arg_fwd_buffer_index],
                                ctx->buffer_data[delta_buffer_index],
                                ctx->buffer_data[out_buffer_index],
@@ -280,7 +279,7 @@ namespace ngraph
                                 arg0_buffer_index,
                                 out0_buffer_index,
                                 out1_buffer_index](CPURuntimeContext* ctx,
-                                                   CPUExecutionContext* ectx) {
+                                                   CPUExecutionContext* /* ectx */) {
                     if (ctx->first_iteration)
                     {
                         mkldnn_emitter->build_max_pooling_with_indices_forward(
@@ -342,7 +341,7 @@ namespace ngraph
                                 arg1_buffer_index,
                                 arg2_buffer_index,
                                 out_buffer_index](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
+                                                  CPUExecutionContext* /* ectx */) {
                     if (ctx->first_iteration)
                     {
                         mkldnn_emitter->build_max_pooling_with_indices_backward(

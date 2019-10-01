@@ -133,11 +133,11 @@ TEST(specialize_function, et_static_shape_rank_static_dynamic_subst_val)
     ASSERT_EQ(g->get_output_shape(0), (Shape{1, 2, 3}));
     ASSERT_EQ(g->get_output_element_type(0), element::f32);
 
-    auto plus_node = std::dynamic_pointer_cast<op::Add>(g->get_results().at(0)->get_argument(0));
+    auto plus_node = as_type_ptr<op::Add>(g->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(plus_node);
-    auto convert_node = std::dynamic_pointer_cast<op::Convert>(plus_node->get_argument(1));
+    auto convert_node = as_type_ptr<op::Convert>(plus_node->get_argument(1));
     ASSERT_TRUE(convert_node);
-    auto const_node = std::dynamic_pointer_cast<op::Constant>(convert_node->get_argument(0));
+    auto const_node = as_type_ptr<op::Constant>(convert_node->get_argument(0));
     ASSERT_TRUE(const_node);
 
     ASSERT_EQ(const_node->get_output_element_type(0), element::i32);

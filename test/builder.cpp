@@ -112,27 +112,25 @@ TEST(builder, numpy_transpose)
     // 2D Transpose
     Shape shape{2, 4};
     auto param = make_shared<op::Parameter>(element::f32, shape);
-    auto transposed = dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param));
+    auto transposed = as_type_ptr<op::Reshape>(builder::numpy_transpose(param));
     EXPECT_EQ(Shape({4, 2}), transposed->get_output_shape());
 
     // Multidimensional Transpose
     shape = Shape{2, 4, 8};
     param = make_shared<op::Parameter>(element::f32, shape);
-    transposed = dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param));
+    transposed = as_type_ptr<op::Reshape>(builder::numpy_transpose(param));
     EXPECT_EQ(Shape({8, 4, 2}), transposed->get_output_shape());
 
     // Dimshuffle
     shape = Shape{2, 4, 8};
     param = make_shared<op::Parameter>(element::f32, shape);
-    transposed =
-        dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param, AxisVector{2, 0, 1}));
+    transposed = as_type_ptr<op::Reshape>(builder::numpy_transpose(param, AxisVector{2, 0, 1}));
     EXPECT_EQ(Shape({8, 2, 4}), transposed->get_output_shape());
 
     // Bad Orders
+    EXPECT_ANY_THROW(as_type_ptr<op::Reshape>(builder::numpy_transpose(param, AxisVector{2})));
     EXPECT_ANY_THROW(
-        dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param, AxisVector{2})));
-    EXPECT_ANY_THROW(
-        dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param, AxisVector{2, 2, 1})));
+        as_type_ptr<op::Reshape>(builder::numpy_transpose(param, AxisVector{2, 2, 1})));
 }
 
 TEST(builder, tensor_mask)

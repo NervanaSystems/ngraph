@@ -14,18 +14,18 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <random>
+#include "ngraph/op/util/attr_types.hpp"
 
-#include "except.hpp"
-#include "rng_state.hpp"
-
-using namespace std;
 using namespace ngraph;
 
-void ngraph::RNGState::activate()
+std::ostream& op::operator<<(std::ostream& s, const op::AutoBroadcastType& type)
 {
-}
-
-void ngraph::RNGState::deactivate()
-{
+    switch (type)
+    {
+    case op::AutoBroadcastType::NONE: s << "NONE"; break;
+    case op::AutoBroadcastType::NUMPY: s << "NUMPY"; break;
+    case op::AutoBroadcastType::PDPD: s << "PDPD"; break;
+    default: s << "Undefined Type";
+    }
+    return s;
 }

@@ -71,7 +71,7 @@ namespace ngraph
                                                    std::vector<mkldnn::memory::desc>& descs,
                                                    size_t index)
                 {
-                    for (auto i = 0; i < descs.size(); i++)
+                    for (size_t i = 0; i < descs.size(); i++)
                     {
                         desc_file << index;
                         desc_file.write(reinterpret_cast<char*>(&descs[i]),
@@ -1847,14 +1847,13 @@ namespace ngraph
                              result_desc.data.ndims == 5 && node->get_users().size() == 1)
                     {
                         Shape weights_shape_groups;
-                        if (auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(
-                                node->get_users()[0]))
+                        if (auto gconv =
+                                as_type_ptr<ngraph::op::GroupConvolution>(node->get_users()[0]))
                         {
                             weights_shape_groups = gconv->get_weights_dimensions();
                         }
-                        else if (auto gconvb =
-                                     std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(
-                                         node->get_users()[0]))
+                        else if (auto gconvb = as_type_ptr<ngraph::op::GroupConvolutionBias>(
+                                     node->get_users()[0]))
                         {
                             weights_shape_groups = gconvb->get_weights_dimensions();
                         }

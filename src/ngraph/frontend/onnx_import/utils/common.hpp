@@ -25,6 +25,7 @@
 #include <type_traits> // std::enable_if
 #include <vector>
 
+#include "core/node.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
@@ -67,28 +68,52 @@ namespace ngraph
                 return range;
             }
 
-            /// \brief      Handle negative axis value.
+            /// \brief      Handle out of range axis.
             ///
-            /// \param[in]  axis        The requested axis value.
-            /// \param[in]  tensor_dim  The corresponding tensor dimensionality.
+            /// \param[in]  node         The node with requested axis.
+            /// \param[in]  axis         The requested axis value.
+            /// \param[in]  tensor_rank  The corresponding tensor rank.
             ///
-            /// \tparam     T           Provided axis value type.
+            /// \return    Checking if axis is in range [-tensor_rank, tensor_rank-1], otherwise
+            /// returns error.
+            ///            If negative axis, it counts from the last to the first axis, by adding
+            ///            tensor_rank to axis.
             ///
-            /// \return     If negative axis, then return sum of tensor dimension and axis.
+            std::size_t validate_axis(const ngraph::onnx_import::Node& node,
+                                      std::int64_t axis,
+                                      std::int64_t tensor_rank);
+
+            /// \brief      Handle out of range axis.
             ///
-            template <typename T,
-                      typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
-            std::int64_t convert_negative_axis(T axis, std::size_t tensor_dim)
-            {
-                if (axis >= 0)
-                {
-                    return std::min(axis, static_cast<T>(tensor_dim));
-                }
-                else
-                {
-                    return static_cast<std::int64_t>(tensor_dim) + axis;
-                }
-            }
+            /// \param[in]  node            The node with requested axis.
+            /// \param[in]  axis            The requested axis value.
+            /// \param[in]  tensor_rank     The corresponding tensor rank.
+            /// \param[in]  axis_range_min  The min value of accepted range for axis.
+            /// \param[in]  axis_range_max  The max value of accepted range for axis.
+            ///
+            /// \return     Checking if axis is in range [axis_range_min, axis_range_max], otherwise
+            /// returns error.
+            ////            If negative axis, it counts from the last to the first axis, by adding
+            /// tensor_rank to axis.
+            ///
+            std::size_t validate_axis(const ngraph::onnx_import::Node& node,
+                                      std::int64_t axis,
+                                      std::int64_t tensor_rank,
+                                      std::int64_t axis_range_min,
+                                      std::int64_t axis_range_max);
+
+            /// \brief      Handle out of range axes in vector.
+            ///
+            /// \param[in]  node         The node with requested axes.
+            /// \param[in]  axes         The requested vector of axes.
+            /// \param[in]  tensor_rank  The corresponding tensor rank.
+            ///
+            /// \return     If any negative axis in vector, it counts from the last to the first
+            /// axis, by adding tensor_rank to axis.
+            ///
+            std::vector<std::size_t> validate_axes(const ngraph::onnx_import::Node& node,
+                                                   std::vector<std::int64_t> axes,
+                                                   std::int64_t tensor_rank);
 
             /// \brief Creates a shifted square identity matrix.
             /// \note Shifting in the context of this operator means that

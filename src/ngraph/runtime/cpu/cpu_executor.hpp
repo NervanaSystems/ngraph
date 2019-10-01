@@ -26,7 +26,9 @@
 #define EIGEN_USE_THREADS
 #include <unsupported/Eigen/CXX11/Tensor>
 
+#if defined(NGRAPH_TBB_ENABLE)
 #include "tbb/task_arena.h"
+#endif
 
 namespace ngraph
 {
@@ -49,16 +51,24 @@ namespace ngraph
                         return *m_thread_pool_devices[id].get();
                     }
 
+#if defined(NGRAPH_TBB_ENABLE)
                     void execute(CPUKernelFunctor& f,
                                  CPURuntimeContext* ctx,
                                  CPUExecutionContext* ectx,
                                  bool use_tbb = false);
+#else
+                    void execute(CPUKernelFunctor& f,
+                                 CPURuntimeContext* ctx,
+                                 CPUExecutionContext* ectx);
+#endif
                     int get_num_thread_pools() { return m_num_thread_pools; }
                     int get_num_cores() { return m_num_cores; }
                 private:
                     std::vector<std::unique_ptr<Eigen::ThreadPool>> m_thread_pools;
                     std::vector<std::unique_ptr<Eigen::ThreadPoolDevice>> m_thread_pool_devices;
+#if defined(NGRAPH_TBB_ENABLE)
                     std::vector<tbb::task_arena> m_tbb_arenas;
+#endif
                     int m_num_thread_pools;
                     int m_num_cores;
                 };

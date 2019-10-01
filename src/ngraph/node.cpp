@@ -93,7 +93,7 @@ std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i, bool for_
 {
     for (auto in : output(i).get_target_inputs())
     {
-        if (in.get_node()->is_type<op::GetOutputElement>())
+        if (is_type<op::GetOutputElement>(in.get_node()))
         {
             return in.get_node()->shared_from_this();
         }
@@ -105,7 +105,7 @@ std::shared_ptr<Node>
     Node::copy_with_new_inputs(const OutputVector& inputs,
                                const std::vector<std::shared_ptr<Node>>& control_dependencies) const
 {
-    bool for_get_output_element = is_type<op::GetOutputElement>();
+    bool for_get_output_element = is_type<op::GetOutputElement>(this);
     NodeVector args;
     for (const Output<Node>& input : inputs)
     {
@@ -259,11 +259,6 @@ const std::deque<descriptor::Output>& Node::get_outputs() const
     return m_outputs;
 }
 
-bool Node::is_parameter() const
-{
-    return is_type<op::Parameter>();
-}
-
 bool Node::is_output() const
 {
     return false;
@@ -328,6 +323,100 @@ void Node::set_placement_index(size_t placement)
     m_placement_index = placement;
 }
 
+void Node::add_provenance_group_member(const shared_ptr<Node>& node)
+{
+    m_provenance_group.insert(node);
+}
+
+void Node::remove_provenance_group_member(const shared_ptr<Node>& node)
+{
+    m_provenance_group.erase(node);
+}
+
+void Node::replace_provenance_group_member(const shared_ptr<Node>& current_node,
+                                           const shared_ptr<Node>& replacement_node)
+{
+    // Catch up with the current state of the group
+    replacement_node->add_provenance_tags(get_provenance_tags());
+    if (current_node != nullptr)
+    {
+        remove_provenance_group_member(current_node);
+        // Catch up with what was added to the current node
+        replacement_node->add_provenance_tags(current_node->get_provenance_tags());
+    }
+    add_provenance_group_member(replacement_node);
+}
+
+const set<shared_ptr<Node>>& Node::get_provenance_group_members() const
+{
+    return m_provenance_group;
+}
+
+shared_ptr<Node> Node::add_provenance_group_members_above(const OutputVector& base)
+{
+    set<Node*> base_set;
+    for (auto& output : base)
+    {
+        Node* node = output.get_node();
+        if (node == this)
+        {
+            // A builder did nothing
+            return shared_from_this();
+        }
+        base_set.insert(node);
+    }
+    vector<Node*> todo;
+    for (auto value : input_values())
+    {
+        todo.push_back(value.get_node());
+    }
+    while (!todo.empty())
+    {
+        Node* node = todo.back();
+        todo.pop_back();
+        if (base_set.count(node) > 0)
+        {
+            continue;
+        }
+        add_provenance_group_member(node->shared_from_this());
+        for (auto value : node->input_values())
+        {
+            if (0 == node->m_provenance_group.count(value.get_node_shared_ptr()))
+            {
+                todo.push_back(value.get_node());
+            }
+        }
+        base_set.insert(node);
+    }
+    return shared_from_this();
+}
+
+void Node::add_provenance_tags_above(const OutputVector& base,
+                                     const std::unordered_set<std::string>& tag_set)
+{
+    set<Node*> base_set;
+    for (auto& output : base)
+    {
+        base_set.insert(output.get_node());
+    }
+    vector<Node*> todo{this};
+    while (!todo.empty())
+    {
+        Node* node = todo.back();
+        todo.pop_back();
+        if (base_set.count(node) > 0)
+        {
+            continue;
+        }
+        node->add_provenance_tags(tag_set);
+        for (auto value : node->input_values())
+        {
+            todo.push_back(value.get_node());
+        }
+        base_set.insert(node);
+    }
+}
+
 const std::unordered_set<std::string>& Node::get_provenance_tags() const
 {
     return m_provenance_tags;
@@ -336,6 +425,10 @@ const std::unordered_set<std::string>& Node::get_provenance_tags() const
 void Node::add_provenance_tag(const std::string& tag)
 {
     m_provenance_tags.insert(tag);
+    for (auto node : m_provenance_group)
+    {
+        node->add_provenance_tag(tag);
+    }
 }
 
 void Node::remove_provenance_tag(const std::string& tag)
@@ -452,6 +545,12 @@ void Node::clear_control_dependents()
     {
         (*m_control_dependents.begin())->remove_control_dependency(shared_from_this());
     }
+}
+
+const op::AutoBroadcastSpec& Node::get_autob() const
+{
+    static op::AutoBroadcastSpec s_spec;
+    return s_spec;
 }
 
 namespace ngraph
@@ -715,7 +814,8 @@ std::tuple<element::Type, PartialShape>
                                       PartialShape::merge_into(pshape, get_input_partial_shape(i)),
                                       "Argument shapes are inconsistent.");
             }
-            else if (autob.m_type == op::AutoBroadcastType::NUMPY)
+            else if (autob.m_type == op::AutoBroadcastType::NUMPY ||
+                     autob.m_type == op::AutoBroadcastType::PDPD)
             {
                 NODE_VALIDATION_CHECK(
                     this,
