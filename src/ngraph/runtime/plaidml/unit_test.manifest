@@ -263,6 +263,9 @@ dot_2x0_0
 auto_bcast_binary_elementwise
 max_pool_2d_1channel_1image_overpadded
 
+# node validation error: "Applying function, tensor with mismatching dimensionality: F, expected=4, got=5"
+group_conv_groups_included_in_shape
+
 # passes locally, fails in CI
 numeric_float_nan
 fake_quantize_with_clip_across_channels
