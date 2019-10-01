@@ -15,15 +15,24 @@
 //*****************************************************************************
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/convolution.hpp"
+#include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reduce_prod.hpp"
 #include "ngraph/op/reduce_sum.hpp"
+#include "ngraph/op/reshape.hpp"
+#include "ngraph/op/reverse.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/topk.hpp"
+
+#include <limits>
 
 using namespace std;
 using namespace ngraph;
@@ -82,36 +91,227 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 #endif
     switch (get_typeid(node))
     {
-    case OP_TYPEID::Softmax:
+    case OP_TYPEID::AvgPool:
     {
-        auto tmp = dynamic_cast<const op::v0::Softmax*>(node.get());
-        AxisSet axes = tmp->get_axes();
+        auto tmp = dynamic_cast<const op::v0::AvgPool*>(node.get());
+
+        auto rounding_type = static_cast<op::RoundingType>(tmp->get_ceil_mode());
+        auto exclude_pad = !tmp->get_include_padding_in_avg_computation();
+        auto auto_pad = tmp->get_pad_type();
+        auto pads_begin = tmp->get_padding_below();
+        auto pads_end = tmp->get_padding_above();
+        auto strides = tmp->get_window_movement_strides();
+        auto kernel = tmp->get_window_shape();
+
+        auto replacement_node = make_shared<op::v1::AvgPool>(node->input(0).get_source_output(),
+                                                             strides,
+                                                             pads_begin,
+                                                             pads_end,
+                                                             kernel,
+                                                             exclude_pad,
+                                                             rounding_type,
+                                                             auto_pad);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::AvgPoolBackprop:
+    {
+        auto tmp = dynamic_cast<const op::v0::AvgPoolBackprop*>(node.get());
+
+        auto exclude_pad = !tmp->get_include_padding_in_avg_computation();
+        auto pads_begin = tmp->get_padding_below();
+        auto pads_end = tmp->get_padding_above();
+        auto strides = tmp->get_window_movement_strides();
+        auto kernel = tmp->get_window_shape();
+
+        auto replacement_node =
+            make_shared<op::v1::AvgPoolBackprop>(tmp->get_forward_arg_shape(),
+                                                 node->input(0).get_source_output(),
+                                                 strides,
+                                                 pads_begin,
+                                                 pads_end,
+                                                 kernel,
+                                                 exclude_pad);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Convolution:
+    {
+        auto tmp = dynamic_cast<const op::v0::Convolution*>(node.get());
+        auto strides = tmp->get_window_movement_strides();
+        auto dilations = tmp->get_window_dilation_strides();
+        auto pads_begin = tmp->get_padding_below();
+        auto pads_end = tmp->get_padding_above();
+        auto data_dilation_strides = tmp->get_data_dilation_strides();
+        auto auto_pad = tmp->get_pad_type();
+
+        bool is_dds_valid = true;
+        for (auto value : data_dilation_strides)
+        {
+            is_dds_valid = is_dds_valid && (value == 1);
+        }
+
+        NGRAPH_CHECK(is_dds_valid,
+                     "Unable to convert Convolution:0 to Convolution:1 with data dilation strides "
+                     "other than `1`. Node: ",
+                     *node);
+
+        auto replacement_node = make_shared<op::v1::Convolution>(node->input(0).get_source_output(),
+                                                                 node->input(1).get_source_output(),
+                                                                 strides,
+                                                                 pads_begin,
+                                                                 pads_end,
+                                                                 dilations,
+                                                                 auto_pad);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::ConvolutionBackpropData:
+    {
+        auto tmp = dynamic_cast<const op::v0::ConvolutionBackpropData*>(node.get());
+        auto data_batch_shape = tmp->get_data_batch_shape();
+        auto strides = tmp->get_window_movement_strides_forward();
+        auto dilations = tmp->get_window_dilation_strides_forward();
+        auto pads_begin = tmp->get_padding_below_forward();
+        auto pads_end = tmp->get_padding_above_forward();
+        auto data_dilation_strides = tmp->get_data_dilation_strides_forward();
+
+        bool is_dds_valid = true;
+        for (auto value : data_dilation_strides)
+        {
+            is_dds_valid = is_dds_valid && (value == 1);
+        }
+
+        NGRAPH_CHECK(is_dds_valid,
+                     "Unable to convert ConvolutionBackpropData:0 to ConvolutionBackpropData:1 "
+                     "with data dilation strides "
+                     "other than `1`. Node: ",
+                     *node);
+
+        auto replacement_node =
+            make_shared<op::v1::ConvolutionBackpropData>(data_batch_shape,
+                                                         node->input(0).get_source_output(),
+                                                         node->input(1).get_source_output(),
+                                                         strides,
+                                                         dilations,
+                                                         pads_begin,
+                                                         pads_end);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::ConvolutionBackpropFilters:
+    {
+        auto tmp = dynamic_cast<const op::v0::ConvolutionBackpropFilters*>(node.get());
+        auto filters_shape = tmp->get_filters_shape();
+        auto strides = tmp->get_window_movement_strides_forward();
+        auto dilations = tmp->get_window_dilation_strides_forward();
+        auto pads_begin = tmp->get_padding_below_forward();
+        auto pads_end = tmp->get_padding_above_forward();
+        auto data_dilation_strides = tmp->get_data_dilation_strides_forward();
+
+        bool is_dds_valid = true;
+        for (auto value : data_dilation_strides)
+        {
+            is_dds_valid = is_dds_valid && (value == 1);
+        }
 
         NGRAPH_CHECK(
-            axes.size() == 1,
-            "Unable to convert Softmax:0 to Softmax:1 with zero or more than one axis. Node: ",
+            is_dds_valid,
+            "Unable to convert ConvolutionBackpropFilters:0 to ConvolutionBackpropFilters:1 "
+            "with data dilation strides "
+            "other than `1`. Node: ",
             *node);
 
         auto replacement_node =
-            make_shared<op::v1::Softmax>(node->input(0).get_source_output(), axes.to_vector()[0]);
+            make_shared<op::v1::ConvolutionBackpropFilters>(node->input(0).get_source_output(),
+                                                            filters_shape,
+                                                            node->input(1).get_source_output(),
+                                                            strides,
+                                                            dilations,
+                                                            pads_begin,
+                                                            pads_end);
         replace_node(node, replacement_node);
         modified = true;
         break;
     }
-    case OP_TYPEID::Product:
+    case OP_TYPEID::DynReshape:
     {
-        bool keep_dims = false;
-        auto replacement_node = make_shared<op::v1::ReduceProd>(
-            node->input(0).get_source_output(), node->input(1).get_source_output(), keep_dims);
+        auto zero_flag = false;
+        auto replacement_node = make_shared<op::v1::Reshape>(
+            node->input(0).get_source_output(), node->input(1).get_source_output(), zero_flag);
         replace_node(node, replacement_node);
         modified = true;
         break;
     }
-    case OP_TYPEID::Sum:
+    case OP_TYPEID::Gather:
     {
-        bool keep_dims = false;
-        auto replacement_node = make_shared<op::v1::ReduceSum>(
-            node->input(0).get_source_output(), node->input(1).get_source_output(), keep_dims);
+        auto tmp = dynamic_cast<const op::v0::Gather*>(node.get());
+        int64_t axis = tmp->get_axis();
+
+        auto axis_node = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{axis});
+        auto replacement_node = make_shared<op::v1::Gather>(
+            node->input(0).get_source_output(), node->input(1).get_source_output(), axis_node);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::MaxPool:
+    {
+        auto tmp = dynamic_cast<const op::v0::MaxPool*>(node.get());
+
+        auto rounding_type = static_cast<op::RoundingType>(tmp->get_ceil_mode());
+        auto auto_pad = tmp->get_pad_type();
+        auto pads_begin = tmp->get_padding_below();
+        auto pads_end = tmp->get_padding_above();
+        auto strides = tmp->get_window_movement_strides();
+        auto kernel = tmp->get_window_shape();
+
+        auto replacement_node = make_shared<op::v1::MaxPool>(node->input(0).get_source_output(),
+                                                             strides,
+                                                             pads_begin,
+                                                             pads_end,
+                                                             kernel,
+                                                             rounding_type,
+                                                             auto_pad);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::MaxPoolBackprop:
+    {
+        auto tmp = dynamic_cast<const op::v0::MaxPoolBackprop*>(node.get());
+
+        auto pads_begin = tmp->get_padding_below();
+        auto pads_end = tmp->get_padding_above();
+        auto strides = tmp->get_window_movement_strides();
+        auto kernel = tmp->get_window_shape();
+
+        shared_ptr<Node> replacement_node;
+        if (node->get_inputs().size() == 3)
+        {
+            replacement_node =
+                make_shared<op::v1::MaxPoolBackprop>(node->input(0).get_source_output(),
+                                                     node->input(1).get_source_output(),
+                                                     node->input(2).get_source_output(),
+                                                     strides,
+                                                     pads_begin,
+                                                     pads_end,
+                                                     kernel);
+        }
+        else
+        {
+            replacement_node =
+                make_shared<op::v1::MaxPoolBackprop>(node->input(0).get_source_output(),
+                                                     node->input(1).get_source_output(),
+                                                     strides,
+                                                     pads_begin,
+                                                     pads_end,
+                                                     kernel);
+        }
         replace_node(node, replacement_node);
         modified = true;
         break;
@@ -136,20 +336,94 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Gather:
+    case OP_TYPEID::Product:
     {
-        auto tmp = dynamic_cast<const op::v0::Gather*>(node.get());
-        int64_t axis = tmp->get_axis();
+        bool keep_dims = false;
+        auto replacement_node = make_shared<op::v1::ReduceProd>(
+            node->input(0).get_source_output(), node->input(1).get_source_output(), keep_dims);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Reverse:
+    {
+        // creates a Constant node from the v0::Reverse reversed_axes attribute
+        // and uses it as the second input of v1::Reverse
+        const auto reverse_v0 = dynamic_cast<const op::Reverse*>(node.get());
+        const auto reversed_axes = reverse_v0->get_reversed_axes();
 
-        auto axis_node = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{axis});
-        auto replacement_node = make_shared<op::v1::Gather>(
-            node->input(0).get_source_output(), node->input(1).get_source_output(), axis_node);
+        const auto reversed_axes_constant = op::Constant::create(
+            element::i64, Shape{reversed_axes.size()}, reversed_axes.to_vector());
+
+        const auto reverse_v1 = make_shared<op::v1::Reverse>(node->input(0).get_source_output(),
+                                                             reversed_axes_constant,
+                                                             op::v1::Reverse::Mode::INDEX);
+
+        replace_node(node, reverse_v1);
+        modified = true;
+
+        break;
+    }
+    case OP_TYPEID::Softmax:
+    {
+        auto tmp = dynamic_cast<const op::v0::Softmax*>(node.get());
+        AxisSet axes = tmp->get_axes();
+
+        NGRAPH_CHECK(
+            axes.size() == 1,
+            "Unable to convert Softmax:0 to Softmax:1 with zero or more than one axis. Node: ",
+            *node);
+
+        auto replacement_node =
+            make_shared<op::v1::Softmax>(node->input(0).get_source_output(), axes.to_vector()[0]);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Sum:
+    {
+        bool keep_dims = false;
+        auto replacement_node = make_shared<op::v1::ReduceSum>(
+            node->input(0).get_source_output(), node->input(1).get_source_output(), keep_dims);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::TopK:
+    {
+        const auto topk_v0 = dynamic_cast<const op::TopK*>(node.get());
+        const auto k = topk_v0->get_k();
+        const auto axis = topk_v0->get_top_k_axis();
+
+        std::string sort;
+        switch (topk_v0->get_sort())
+        {
+        case op::TopK::SortType::SORT_INDICES: sort = "index"; break;
+        case op::TopK::SortType::SORT_VALUES: sort = "value"; break;
+        default: sort = "none"; break;
+        }
+
+        std::string mode;
+        if (topk_v0->get_compute_max())
+        {
+            mode = "max";
+        }
+        else
+        {
+            mode = "min";
+        }
+
+        const auto k_constant = op::Constant::create(element::i64, Shape{}, {k});
+        auto replacement_node =
+            make_shared<op::v1::TopK>(node->input_value(0), k_constant, axis, mode, sort);
+
         replace_node(node, replacement_node);
         modified = true;
         break;
     }
     default: break;
     }
+
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif

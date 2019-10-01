@@ -26,7 +26,8 @@ namespace ngraph
             {
                 auto abs_a = std::make_shared<op::Abs>(a);
                 auto abs_b = std::make_shared<op::Abs>(b);
-                return std::make_shared<op::Maximum>(abs_a, abs_b);
+                return std::make_shared<op::Maximum>(abs_a, abs_b)
+                    ->add_provenance_group_members_above({a, b});
             }
 
             std::shared_ptr<Node> get_scale(const Output<Node>& input_min_range,
@@ -72,7 +73,8 @@ namespace ngraph
                 auto max_abs_range = max_abs(min_range, max_range);
                 auto target_range = make_constant(type, shape, range);
 
-                return max_abs_range / target_range;
+                return (max_abs_range / target_range)
+                    ->add_provenance_group_members_above({input_min_range, input_max_range});
             }
 
             std::shared_ptr<Node> get_bias_scale(Output<Node> min_input,

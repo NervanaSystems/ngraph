@@ -58,8 +58,17 @@ namespace ngraph
                                               AxisSet{},
                                               op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
             }
-
-            return make_shared<op::Concat>(rescaled_args, concatenation_axis);
+            OutputVector base = as_output_vector(args);
+            for (auto node : mins)
+            {
+                base.push_back(node);
+            };
+            for (auto node : maxs)
+            {
+                base.push_back(node);
+            };
+            return make_shared<op::Concat>(rescaled_args, concatenation_axis)
+                ->add_provenance_group_members_above(base);
         }
     }
 }

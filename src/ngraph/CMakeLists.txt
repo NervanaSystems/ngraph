@@ -338,6 +338,8 @@ set (SRC
     op/fused/group_conv_transpose.cpp
     op/fused/gru_cell.cpp
     op/fused/gru_cell.hpp
+    op/fused/layer_norm.cpp
+    op/fused/layer_norm.hpp
     op/fused/lstm_cell.cpp
     op/fused/lstm_cell.hpp
     op/fused/matmul.cpp
@@ -364,6 +366,8 @@ set (SRC
     op/fused/squeeze.hpp
     op/fused/unsqueeze.cpp
     op/fused/unsqueeze.hpp
+    op/util/attr_types.cpp
+    op/util/attr_types.hpp
     op/util/activation_functions.cpp
     op/util/activation_functions.hpp
     op/util/arithmetic_reduction.cpp

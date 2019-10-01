@@ -172,7 +172,7 @@ namespace ngraph
                     return_value, final_shape, broadcast_axes);
             }
 
-            return return_value.get_node_shared_ptr();
+            return return_value.get_node_shared_ptr()->add_provenance_group_members_above({value});
         }
 
         std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>
