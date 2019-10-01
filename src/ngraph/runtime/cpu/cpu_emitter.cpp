@@ -58,6 +58,7 @@
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
+#include "ngraph/op/experimental/random_uniform.hpp"
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
@@ -131,6 +132,7 @@
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/state/bernoulli_rng_state.hpp"
+#include "ngraph/state/uniform_rng_state.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -4175,6 +4177,45 @@ namespace ngraph
                 writer << "           " << out[0].get_name() << ",\n";
                 writer << "           " << out[0].get_size() << ",\n";
                 writer << "           training, seed, keep_prob);\n";
+                writer << "}\n";
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::RandomUniform)
+            {
+                auto ru = static_cast<const ngraph::op::RandomUniform*>(node);
+                if (args[2].get_element_type() != element::i64)
+                {
+                    throw ngraph_error("Unsupported index 2 element type");
+                }
+
+                writer.block_begin();
+                auto index = external_function->add_state(new UniformRNGState());
+                auto fixed_seed = ru->get_fixed_seed();
+
+                writer << "auto state = static_cast<ngraph::RandomUniformRNGState*>(ctx->states["
+                       << index << "]);\n";
+                writer << "bool use_fixed_seed = static_cast<bool>(" << args[3].get_name()
+                       << "[0]);\n";
+
+                writer << "if (use_fixed_seed == false) \n";
+                writer << "{\n";
+                writer << "    reference::random_uniform<" << args[0].get_type() << ">(\n";
+                writer << "                   " << out[0].get_name() << ",\n";
+                writer << "                   " << args[0].get_name() << ",\n";
+                writer << "                   " << args[1].get_name() << ",\n";
+                writer << "                   " << out[0].get_size() << ",\n";
+                writer << "                   state);\n";
+                writer << "}\n";
+                writer << "else {\n";
+                writer << "    reference::random_uniform_with_fixed_seed<" << args[0].get_type()
+                       << ">(\n";
+                writer << "                   " << out[0].get_name() << ",\n";
+                writer << "                   " << args[0].get_name() << ",\n";
+                writer << "                   " << args[1].get_name() << ",\n";
+                writer << "                   " << out[0].get_size() << ",\n";
+                writer << "                   " << fixed_seed << ");\n";
                 writer << "}\n";
                 writer.block_end();
             }
