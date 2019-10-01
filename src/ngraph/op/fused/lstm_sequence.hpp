@@ -69,7 +69,7 @@ namespace ngraph
                 , m_hidden_size(hidden_size)
                 , m_input_forget(input_forget)
             {
-                validate_and_infer_types();
+                constructor_validate_and_infer_types();
             }
 
             explicit LSTMSequence(const Output<Node>& X,
@@ -104,7 +104,7 @@ namespace ngraph
             {
             }
 
-            void validate_and_infer_types() override;
+            void pre_validate_and_infer_types() override;
 
             virtual NodeVector decompose_op() const override;
 

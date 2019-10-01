@@ -220,7 +220,7 @@ shared_ptr<Node> op::LSTMSequence::prepare_input(Output<Node> node, bool is_reve
     return builder::squeeze(tmp);
 }
 
-void op::LSTMSequence::validate_and_infer_types()
+void op::LSTMSequence::pre_validate_and_infer_types()
 {
     NGRAPH_CHECK(m_direction == "bidirectional" || m_direction == "forward" ||
                      m_direction == "reverse",
