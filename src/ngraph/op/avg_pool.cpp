@@ -21,16 +21,17 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::AvgPool::type_info;
+// *** AvgPool OP SET 0 ***
+constexpr NodeTypeInfo op::v0::AvgPool::type_info;
 
-op::AvgPool::AvgPool(const Output<Node>& arg,
-                     const Shape& window_shape,
-                     const Strides& window_movement_strides,
-                     const Shape& padding_below,
-                     const Shape& padding_above,
-                     bool include_padding_in_avg_computation,
-                     const PadType& pad_type,
-                     bool ceil_mode)
+op::v0::AvgPool::AvgPool(const Output<Node>& arg,
+                         const Shape& window_shape,
+                         const Strides& window_movement_strides,
+                         const Shape& padding_below,
+                         const Shape& padding_above,
+                         bool include_padding_in_avg_computation,
+                         const PadType& pad_type,
+                         bool ceil_mode)
     : Op({arg})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
@@ -43,13 +44,13 @@ op::AvgPool::AvgPool(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::AvgPool::AvgPool(const Output<Node>& arg,
-                     const Shape& window_shape,
-                     const Strides& window_movement_strides,
-                     const Shape& padding_below,
-                     const Shape& padding_above,
-                     bool include_padding_in_avg_computation,
-                     const PadType& pad_type)
+op::v0::AvgPool::AvgPool(const Output<Node>& arg,
+                         const Shape& window_shape,
+                         const Strides& window_movement_strides,
+                         const Shape& padding_below,
+                         const Shape& padding_above,
+                         bool include_padding_in_avg_computation,
+                         const PadType& pad_type)
     : AvgPool(arg,
               window_shape,
               window_movement_strides,
@@ -61,12 +62,12 @@ op::AvgPool::AvgPool(const Output<Node>& arg,
 {
 }
 
-op::AvgPool::AvgPool(const Output<Node>& arg,
-                     const Shape& window_shape,
-                     const Strides& window_movement_strides,
-                     const Shape& padding_below,
-                     const Shape& padding_above,
-                     bool include_padding_in_avg_computation)
+op::v0::AvgPool::AvgPool(const Output<Node>& arg,
+                         const Shape& window_shape,
+                         const Strides& window_movement_strides,
+                         const Shape& padding_below,
+                         const Shape& padding_above,
+                         bool include_padding_in_avg_computation)
     : AvgPool(arg,
               window_shape,
               window_movement_strides,
@@ -77,7 +78,7 @@ op::AvgPool::AvgPool(const Output<Node>& arg,
 {
 }
 
-void op::AvgPool::validate_and_infer_types()
+void op::v0::AvgPool::validate_and_infer_types()
 {
     if (0 == m_window_movement_strides.size())
     {
@@ -130,114 +131,115 @@ void op::AvgPool::validate_and_infer_types()
                                                   m_ceil_mode));
 }
 
-op::AvgPool::AvgPool(const Output<Node>& arg,
-                     const Shape& window_shape,
-                     const Strides& window_movement_strides)
+op::v0::AvgPool::AvgPool(const Output<Node>& arg,
+                         const Shape& window_shape,
+                         const Strides& window_movement_strides)
     : AvgPool(arg, window_shape, window_movement_strides, Shape(), Shape(), false)
 {
 }
 
-op::AvgPool::AvgPool(const Output<Node>& arg, const Shape& window_shape)
+op::v0::AvgPool::AvgPool(const Output<Node>& arg, const Shape& window_shape)
     : AvgPool(arg, window_shape, Strides(), Shape(), Shape(), false)
 {
 }
 
-const Shape& op::AvgPool::get_window_shape() const
+const Shape& op::v0::AvgPool::get_window_shape() const
 {
     return m_window_shape;
 }
 
-void op::AvgPool::set_window_shape(const Shape& window_shape)
+void op::v0::AvgPool::set_window_shape(const Shape& window_shape)
 {
     m_window_shape = window_shape;
 }
 
-const Strides& op::AvgPool::get_window_movement_strides() const
+const Strides& op::v0::AvgPool::get_window_movement_strides() const
 {
     return m_window_movement_strides;
 }
 
-void op::AvgPool::set_window_movement_strides(const Strides& window_movement_strides)
+void op::v0::AvgPool::set_window_movement_strides(const Strides& window_movement_strides)
 {
     m_window_movement_strides = window_movement_strides;
 }
 
-const Shape& op::AvgPool::get_padding_below() const
+const Shape& op::v0::AvgPool::get_padding_below() const
 {
     return m_padding_below;
 }
 
-void op::AvgPool::set_padding_below(const Shape& padding_below)
+void op::v0::AvgPool::set_padding_below(const Shape& padding_below)
 {
     m_padding_below = padding_below;
 }
 
-const Shape& op::AvgPool::get_padding_above() const
+const Shape& op::v0::AvgPool::get_padding_above() const
 {
     return m_padding_above;
 }
 
-void op::AvgPool::set_padding_above(const Shape& padding_above)
+void op::v0::AvgPool::set_padding_above(const Shape& padding_above)
 {
     m_padding_above = padding_above;
 }
 
-bool op::AvgPool::get_include_padding_in_avg_computation() const
+bool op::v0::AvgPool::get_include_padding_in_avg_computation() const
 {
     return m_include_padding_in_avg_computation;
 }
 
-void op::AvgPool::set_include_padding_in_avg_computation(bool include_padding_in_avg_computation)
+void op::v0::AvgPool::set_include_padding_in_avg_computation(
+    bool include_padding_in_avg_computation)
 {
     m_include_padding_in_avg_computation = include_padding_in_avg_computation;
 }
 
-const op::PadType& op::AvgPool::get_pad_type() const
+const op::PadType& op::v0::AvgPool::get_pad_type() const
 {
     return m_pad_type;
 }
 
-void op::AvgPool::set_pad_type(const op::PadType& pad_type)
+void op::v0::AvgPool::set_pad_type(const op::PadType& pad_type)
 {
     m_pad_type = pad_type;
 }
 
-bool op::AvgPool::get_ceil_mode() const
+bool op::v0::AvgPool::get_ceil_mode() const
 {
     return m_ceil_mode;
 }
 
-void op::AvgPool::set_ceil_mode(bool ceil_mode)
+void op::v0::AvgPool::set_ceil_mode(bool ceil_mode)
 {
     m_ceil_mode = ceil_mode;
 }
 
-shared_ptr<Node> op::AvgPool::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::AvgPool::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<AvgPool>(new_args.at(0),
-                                m_window_shape,
-                                m_window_movement_strides,
-                                m_padding_below,
-                                m_padding_above,
-                                m_include_padding_in_avg_computation,
-                                m_pad_type,
-                                m_ceil_mode);
+    return make_shared<v0::AvgPool>(new_args.at(0),
+                                    m_window_shape,
+                                    m_window_movement_strides,
+                                    m_padding_below,
+                                    m_padding_above,
+                                    m_include_padding_in_avg_computation,
+                                    m_pad_type,
+                                    m_ceil_mode);
 }
 
-constexpr NodeTypeInfo op::AvgPoolBackprop::type_info;
-shared_ptr<Node> op::AvgPool::get_default_value() const
+constexpr NodeTypeInfo op::v0::AvgPoolBackprop::type_info;
+shared_ptr<Node> op::v0::AvgPool::get_default_value() const
 {
-    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
+    return Constant::create(get_element_type(), get_shape(), {0});
 }
 
-op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
-                                     const shared_ptr<Node>& delta,
-                                     const Shape& window_shape,
-                                     const Strides& window_movement_strides,
-                                     const Shape& padding_below,
-                                     const Shape& padding_above,
-                                     bool include_padding_in_avg_computation)
+op::v0::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
+                                         const shared_ptr<Node>& delta,
+                                         const Shape& window_shape,
+                                         const Strides& window_movement_strides,
+                                         const Shape& padding_below,
+                                         const Shape& padding_above,
+                                         bool include_padding_in_avg_computation)
     : Op(check_single_output_args({delta}))
     , m_forward_arg_shape(forward_arg_shape)
     , m_window_shape(window_shape)
@@ -249,7 +251,7 @@ op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
     constructor_validate_and_infer_types();
 }
 
-void op::AvgPoolBackprop::validate_and_infer_types()
+void op::v0::AvgPoolBackprop::validate_and_infer_types()
 {
     // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for
     // now still take Shape (no negative padding).
@@ -283,81 +285,80 @@ void op::AvgPoolBackprop::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), m_forward_arg_shape);
 }
 
-const Shape& op::AvgPoolBackprop::get_forward_arg_shape() const
+const Shape& op::v0::AvgPoolBackprop::get_forward_arg_shape() const
 {
     return m_forward_arg_shape;
 }
 
-void op::AvgPoolBackprop::set_forward_arg_shape(const Shape& forward_arg_shape)
+void op::v0::AvgPoolBackprop::set_forward_arg_shape(const Shape& forward_arg_shape)
 {
     m_forward_arg_shape = forward_arg_shape;
 }
 
-const Shape& op::AvgPoolBackprop::get_window_shape() const
+const Shape& op::v0::AvgPoolBackprop::get_window_shape() const
 {
     return m_window_shape;
 }
 
-void op::AvgPoolBackprop::set_window_shape(const Shape& window_shape)
+void op::v0::AvgPoolBackprop::set_window_shape(const Shape& window_shape)
 {
     m_window_shape = window_shape;
 }
 
-const Strides& op::AvgPoolBackprop::get_window_movement_strides() const
+const Strides& op::v0::AvgPoolBackprop::get_window_movement_strides() const
 {
     return m_window_movement_strides;
 }
 
-void op::AvgPoolBackprop::set_window_movement_strides(const Strides& window_movement_strides)
+void op::v0::AvgPoolBackprop::set_window_movement_strides(const Strides& window_movement_strides)
 {
     m_window_movement_strides = window_movement_strides;
 }
 
-const Shape& op::AvgPoolBackprop::get_padding_below() const
+const Shape& op::v0::AvgPoolBackprop::get_padding_below() const
 {
     return m_padding_below;
 }
 
-void op::AvgPoolBackprop::set_padding_below(const Shape& padding_below)
+void op::v0::AvgPoolBackprop::set_padding_below(const Shape& padding_below)
 {
     m_padding_below = padding_below;
 }
 
-const Shape& op::AvgPoolBackprop::get_padding_above() const
+const Shape& op::v0::AvgPoolBackprop::get_padding_above() const
 {
     return m_padding_above;
 }
 
-void op::AvgPoolBackprop::set_padding_above(const Shape& padding_above)
+void op::v0::AvgPoolBackprop::set_padding_above(const Shape& padding_above)
 {
     m_padding_above = padding_above;
 }
 
-bool op::AvgPoolBackprop::get_include_padding_in_avg_computation() const
+bool op::v0::AvgPoolBackprop::get_include_padding_in_avg_computation() const
 {
     return m_include_padding_in_avg_computation;
 }
 
-void op::AvgPoolBackprop::set_include_padding_in_avg_computation(
+void op::v0::AvgPoolBackprop::set_include_padding_in_avg_computation(
     bool include_padding_in_avg_computation)
 {
     m_include_padding_in_avg_computation = include_padding_in_avg_computation;
 }
 
-shared_ptr<Node> op::AvgPoolBackprop::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::AvgPoolBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    AvgPoolBackprop* avpn = new AvgPoolBackprop(m_forward_arg_shape,
-                                                new_args.at(0),
-                                                m_window_shape,
-                                                m_window_movement_strides,
-                                                m_padding_below,
-                                                m_padding_above,
-                                                m_include_padding_in_avg_computation);
-    return shared_ptr<op::AvgPoolBackprop>(avpn);
+    return make_shared<v0::AvgPoolBackprop>(m_forward_arg_shape,
+                                            new_args.at(0),
+                                            m_window_shape,
+                                            m_window_movement_strides,
+                                            m_padding_below,
+                                            m_padding_above,
+                                            m_include_padding_in_avg_computation);
 }
 
-void op::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     if (m_ceil_mode)
     {
@@ -368,12 +369,327 @@ void op::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
 
     auto operand = input_value(0);
     auto& operand_shape = get_input_shape(0);
-    auto backprop = make_shared<op::AvgPoolBackprop>(operand_shape,
-                                                     delta,
-                                                     m_window_shape,
-                                                     m_window_movement_strides,
-                                                     m_padding_below,
-                                                     m_padding_above,
-                                                     m_include_padding_in_avg_computation);
+    auto backprop = make_shared<op::v0::AvgPoolBackprop>(operand_shape,
+                                                         delta,
+                                                         m_window_shape,
+                                                         m_window_movement_strides,
+                                                         m_padding_below,
+                                                         m_padding_above,
+                                                         m_include_padding_in_avg_computation);
     adjoints.add_delta(operand, backprop);
+}
+
+// *** AvgPool OP SET 1 ***
+constexpr NodeTypeInfo op::v1::AvgPool::type_info;
+
+op::v1::AvgPool::AvgPool(const Output<Node>& arg,
+                         const Strides& strides,
+                         const Shape& pads_begin,
+                         const Shape& pads_end,
+                         const Shape& kernel,
+                         bool exclude_pad,
+                         op::RoundingType rounding_type,
+                         const PadType& auto_pad)
+    : Op({arg})
+    , m_kernel(kernel)
+    , m_strides(strides)
+    , m_pads_begin(pads_begin)
+    , m_pads_end(pads_end)
+    , m_exclude_pad(exclude_pad)
+    , m_auto_pad(auto_pad)
+    , m_rounding_type(rounding_type)
+{
+    constructor_validate_and_infer_types();
+}
+
+op::v1::AvgPool::AvgPool(const Output<Node>& arg,
+                         const Strides& strides,
+                         const Shape& pads_begin,
+                         const Shape& pads_end,
+                         const Shape& kernel,
+                         bool exclude_pad,
+                         op::RoundingType rounding_type)
+    : AvgPool(arg,
+              kernel,
+              strides,
+              pads_begin,
+              pads_end,
+              exclude_pad,
+              rounding_type,
+              op::PadType::EXPLICIT)
+{
+}
+
+void op::v1::AvgPool::validate_and_infer_types()
+{
+    if (0 == m_strides.size())
+    {
+        m_strides = Strides(m_kernel.size(), 1);
+    }
+
+    if (0 == m_pads_begin.size())
+    {
+        m_pads_begin = Shape(m_kernel.size(), 0);
+    }
+
+    if (0 == m_pads_end.size())
+    {
+        m_pads_end = Shape(m_kernel.size(), 0);
+    }
+
+    const PartialShape& arg_shape = get_input_partial_shape(0);
+
+    if (m_auto_pad == PadType::SAME_UPPER || m_auto_pad == PadType::SAME_LOWER)
+    {
+        if (arg_shape.is_static())
+        {
+            CoordinateDiff pads_end, pads_begin;
+            infer_auto_padding(arg_shape.to_shape(),
+                               m_kernel,
+                               m_strides,
+                               Strides(m_kernel.size(), 1), // No dilation
+                               m_auto_pad,
+                               pads_end,
+                               pads_begin);
+            m_pads_end = Shape(pads_end.begin(), pads_end.end());
+            m_pads_begin = Shape(pads_begin.begin(), pads_begin.end());
+        }
+    }
+
+    // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for
+    // now still take Shape (no negative padding).
+    CoordinateDiff pads_begin(m_pads_begin.begin(), m_pads_begin.end());
+    CoordinateDiff pads_end(m_pads_end.begin(), m_pads_end.end());
+
+    set_output_type(0,
+                    get_input_element_type(0),
+                    infer_batched_pooling_forward(this,
+                                                  arg_shape,
+                                                  pads_begin,
+                                                  pads_end,
+                                                  m_kernel,
+                                                  m_strides,
+                                                  !m_exclude_pad,
+                                                  m_rounding_type == op::RoundingType::CEIL));
+}
+
+const Shape& op::v1::AvgPool::get_kernel() const
+{
+    return m_kernel;
+}
+
+void op::v1::AvgPool::set_kernel(const Shape& kernel)
+{
+    m_kernel = kernel;
+}
+
+const Strides& op::v1::AvgPool::get_strides() const
+{
+    return m_strides;
+}
+
+void op::v1::AvgPool::set_strides(const Strides& strides)
+{
+    m_strides = strides;
+}
+
+const Shape& op::v1::AvgPool::get_pads_begin() const
+{
+    return m_pads_begin;
+}
+
+void op::v1::AvgPool::set_pads_begin(const Shape& pads_begin)
+{
+    m_pads_begin = pads_begin;
+}
+
+const Shape& op::v1::AvgPool::get_pads_end() const
+{
+    return m_pads_end;
+}
+
+void op::v1::AvgPool::set_pads_end(const Shape& pads_end)
+{
+    m_pads_end = pads_end;
+}
+
+bool op::v1::AvgPool::get_exclude_pad() const
+{
+    return m_exclude_pad;
+}
+
+void op::v1::AvgPool::set_exclude_pad(bool exclude_pad)
+{
+    m_exclude_pad = exclude_pad;
+}
+
+const op::PadType& op::v1::AvgPool::get_auto_pad() const
+{
+    return m_auto_pad;
+}
+
+void op::v1::AvgPool::set_auto_pad(const op::PadType& auto_pad)
+{
+    m_auto_pad = auto_pad;
+}
+
+op::RoundingType op::v1::AvgPool::get_rounding_type() const
+{
+    return m_rounding_type;
+}
+
+void op::v1::AvgPool::set_rounding_type(op::RoundingType rounding_type)
+{
+    m_rounding_type = rounding_type;
+}
+
+shared_ptr<Node> op::v1::AvgPool::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<v1::AvgPool>(new_args.at(0),
+                                    m_strides,
+                                    m_pads_begin,
+                                    m_pads_end,
+                                    m_kernel,
+                                    m_exclude_pad,
+                                    m_rounding_type,
+                                    m_auto_pad);
+}
+
+constexpr NodeTypeInfo op::v1::AvgPoolBackprop::type_info;
+
+op::v1::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
+                                         const Output<Node>& delta,
+                                         const Strides& strides,
+                                         const Shape& pads_begin,
+                                         const Shape& pads_end,
+                                         const Shape& kernel,
+                                         bool exclude_pad)
+    : Op(check_single_output_args({delta.get_node_shared_ptr()}))
+    , m_forward_arg_shape(forward_arg_shape)
+    , m_kernel(kernel)
+    , m_strides(strides)
+    , m_pads_begin(pads_begin)
+    , m_pads_end(pads_end)
+    , m_exclude_pad(exclude_pad)
+{
+    constructor_validate_and_infer_types();
+}
+
+void op::v1::AvgPoolBackprop::validate_and_infer_types()
+{
+    // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for
+    // now still take Shape (no negative padding).
+    CoordinateDiff pads_begin(m_pads_begin.begin(), m_pads_begin.end());
+    CoordinateDiff pads_end(m_pads_end.begin(), m_pads_end.end());
+
+    PartialShape forward_result_shape = infer_batched_pooling_forward(
+        this, m_forward_arg_shape, pads_begin, pads_end, m_kernel, m_strides, m_exclude_pad);
+
+    const PartialShape& delta_shape = get_input_partial_shape(0);
+
+    NODE_VALIDATION_CHECK(
+        this,
+        forward_result_shape.compatible(delta_shape),
+        "Inferred forward output shape does not match delta shape (inferred forward output ",
+        "shape: ",
+        forward_result_shape,
+        ", delta shape: ",
+        delta_shape,
+        ").");
+
+    set_output_type(0, get_input_element_type(0), m_forward_arg_shape);
+}
+
+const Shape& op::v1::AvgPoolBackprop::get_forward_arg_shape() const
+{
+    return m_forward_arg_shape;
+}
+
+void op::v1::AvgPoolBackprop::set_forward_arg_shape(const Shape& forward_arg_shape)
+{
+    m_forward_arg_shape = forward_arg_shape;
+}
+
+const Shape& op::v1::AvgPoolBackprop::get_kernel() const
+{
+    return m_kernel;
+}
+
+void op::v1::AvgPoolBackprop::set_kernel(const Shape& kernel)
+{
+    m_kernel = kernel;
+}
+
+const Strides& op::v1::AvgPoolBackprop::get_strides() const
+{
+    return m_strides;
+}
+
+void op::v1::AvgPoolBackprop::set_strides(const Strides& strides)
+{
+    m_strides = strides;
+}
+
+const Shape& op::v1::AvgPoolBackprop::get_pads_begin() const
+{
+    return m_pads_begin;
+}
+
+void op::v1::AvgPoolBackprop::set_pads_begin(const Shape& pads_begin)
+{
+    m_pads_begin = pads_begin;
+}
+
+const Shape& op::v1::AvgPoolBackprop::get_pads_end() const
+{
+    return m_pads_end;
+}
+
+void op::v1::AvgPoolBackprop::set_pads_end(const Shape& pads_end)
+{
+    m_pads_end = pads_end;
+}
+
+bool op::v1::AvgPoolBackprop::get_exclude_pad() const
+{
+    return m_exclude_pad;
+}
+
+void op::v1::AvgPoolBackprop::set_exclude_pad(bool exclude_pad)
+{
+    m_exclude_pad = exclude_pad;
+}
+
+shared_ptr<Node> op::v1::AvgPoolBackprop::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<v1::AvgPoolBackprop>(m_forward_arg_shape,
+                                            new_args.at(0),
+                                            m_strides,
+                                            m_pads_begin,
+                                            m_pads_end,
+                                            m_kernel,
+                                            m_exclude_pad);
+}
+
+void op::v1::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+{
+    if (m_rounding_type == op::RoundingType::CEIL)
+    {
+        throw ngraph_error("Autodiff not supported on AvgPool with ceil_mode set");
+    }
+
+    auto delta = deltas.at(0);
+
+    auto operand = input_value(0);
+    auto& operand_shape = get_input_shape(0);
+    auto backprop = make_shared<op::v1::AvgPoolBackprop>(
+        operand_shape, delta, m_strides, m_pads_begin, m_pads_end, m_kernel, m_exclude_pad);
+    adjoints.add_delta(operand, backprop);
+}
+
+shared_ptr<Node> op::v1::AvgPool::get_default_value() const
+{
+    return op::Constant::create(get_element_type(), get_shape(), {0});
 }

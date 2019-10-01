@@ -43,6 +43,8 @@ mlir::Type NGraphOpsDialect::parseType(llvm::StringRef tyData, mlir::Location lo
 {
     StringRef origTypeStr = tyData;
     MLIRContext* context = getContext();
+
+    // Process nGraph tensor type.
     if (tyData.consume_front("tensor"))
     {
         if (!tyData.consume_front("<") || !tyData.consume_back(">"))
@@ -72,6 +74,7 @@ mlir::Type NGraphOpsDialect::parseType(llvm::StringRef tyData, mlir::Location lo
             shape.push_back(dim);
         }
 
+        // Parse nGraph element type.
         auto elem_ty = mlir::parseType(subStrings.back(), context);
         if (!elem_ty)
         {
@@ -81,6 +84,41 @@ mlir::Type NGraphOpsDialect::parseType(llvm::StringRef tyData, mlir::Location lo
         return NGTensorType::get(context, elem_ty, shape);
     }
 
+    // Process nGraph integer element types.
+    if (tyData.startswith("i") || tyData.startswith("u"))
+    {
+        bool isSigned = tyData.consume_front("i");
+        bool isUnsigned = tyData.consume_front("u");
+        NGRAPH_CHECK(isSigned != isUnsigned, "nGraph integer cannot be signed and unsigned");
+
+        unsigned width = 0;
+        // NOTE: `consumeInteger` returns false if an integer was parsed successfully.
+        if (tyData.consumeInteger(/*Radix=*/10, width) || width == 0 || !tyData.empty())
+        {
+            return (emitError(loc, "Unexpected nGraph integer type: " + origTypeStr), Type());
+        }
+
+        switch (width)
+        {
+        case 8:
+            return isSigned ? NGIntegerType::getInt8(context) : NGIntegerType::getUInt8(context);
+        case 16:
+            return isSigned ? NGIntegerType::getInt16(context) : NGIntegerType::getUInt16(context);
+        case 32:
+            return isSigned ? NGIntegerType::getInt32(context) : NGIntegerType::getUInt32(context);
+        case 64:
+            return isSigned ? NGIntegerType::getInt64(context) : NGIntegerType::getUInt64(context);
+        default:
+            return (emitError(loc, "Unexpected width for nGraph integer type: " + origTypeStr),
+                    Type());
+        }
+    }
+
+    // nGraph reuses standard dialect floating point element types.
+    NGRAPH_CHECK(!tyData.startswith("f"),
+                 "Floating point types should be processed by standard parser");
+
+    // NOTE: We may hit this error if the nGraph type is not yet supported in parser.
     return (emitError(loc, "Unknown nGraph type: " + origTypeStr), Type());
 }
 

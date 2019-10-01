@@ -24,6 +24,7 @@
 /// small sequence of passes without running the whole compiler pipeline. Please, refer to
 /// ngraph_repo_path/tests/mlir/ for examples.
 
+#include "contrib/mlir/compiler/tools.hpp"
 #include "ngraph/check.hpp"
 
 #include <llvm/Support/CommandLine.h>
@@ -33,6 +34,7 @@
 #include <mlir/Pass/PassManager.h>
 #include <mlir/Support/FileUtilities.h>
 #include <mlir/Support/MlirOptMain.h>
+#include "llvm/Support/InitLLVM.h"
 
 static llvm::cl::opt<std::string>
     input_filename(llvm::cl::Positional, llvm::cl::desc("<input file>"), llvm::cl::init("-"));
@@ -63,7 +65,8 @@ static std::vector<const mlir::PassRegistryEntry*>* pass_list;
 
 int main(int argc, char** argv)
 {
-    // TODO: Init nGraph MLIR Compiler here, when necessary.
+    llvm::InitLLVM y(argc, argv);
+    ngraph::runtime::ngmlir::initializeNGraphMLIR();
 
     // Register any pass manager command line options.
     mlir::registerPassManagerCLOptions();
