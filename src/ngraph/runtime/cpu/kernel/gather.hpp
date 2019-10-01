@@ -69,7 +69,7 @@ namespace ngraph
                     Eigen::array<Eigen::Index, Rank1> in_dims;
                     Eigen::array<Eigen::Index, Rank2> out_dims;
 
-                    auto bound_value = inputs_shape[axis];
+                    auto axis_length = inputs_shape[axis];
 
                     for (int i = 0; i < Rank1; i++)
                     {
@@ -129,7 +129,7 @@ namespace ngraph
                             index_value = indices_ptr[0];
                             // take care of negative indices
                             in_offsets[axis] =
-                                index_value >= 0 ? index_value : index_value + bound_value;
+                                index_value >= 0 ? index_value : index_value + axis_length;
 
                             // before axis
                             for (int r = 0; r < axis; r++)
@@ -202,7 +202,7 @@ namespace ngraph
                             index_value = indices_ptr[k];
                             // take care of negative indices
                             in_offsets[axis] =
-                                index_value >= 0 ? index_value : index_value + bound_value;
+                                index_value >= 0 ? index_value : index_value + axis_length;
 
                             // indices_from_indices_arg depends on indices_shape and k.
                             // suppose the inputs has shape {3, 3, 3}, indices has shape {2, 2}, and
