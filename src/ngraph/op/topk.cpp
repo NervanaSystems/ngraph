@@ -38,6 +38,7 @@ op::TopK::TopK(const Output<Node>& arg,
     , m_compute_max(compute_max)
     , m_sort(sort)
 {
+    add_provenance_group_member(input_value(1).get_node_shared_ptr());
     constructor_validate_and_infer_types();
 }
 
@@ -72,8 +73,10 @@ size_t op::TopK::get_k() const
 
 void op::TopK::set_k(size_t k)
 {
-    this->input(1).replace_source_output(
-        op::Constant::create(element::i64, Shape{1}, {k})->output(0));
+    shared_ptr<Node> current_const =
+        get_input_size() == 1 ? nullptr : input_value(1).get_node_shared_ptr();
+    auto replacement_const = op::Constant::create(element::i64, Shape{1}, {k})->output(0);
+    replace_provenance_group_member(current_const, replacement_const.get_node_shared_ptr());
 }
 
 void op::TopK::validate_and_infer_types()
