@@ -88,6 +88,7 @@
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/shuffle_channels.hpp"
+#include "ngraph/op/fused/softmax_crossentropy.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/fused/split.hpp"
 #include "ngraph/op/fused/squared_difference.hpp"
@@ -1896,6 +1897,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             break;
         }
+        case OP_TYPEID::SoftmaxCrossEntropy:
+        {
+            auto reduction_axis = node_js.at("reduction_axis");
+            node = make_shared<op::SoftmaxCrossEntropy>(args[0], args[1], reduction_axis);
+            break;
+        }
         case OP_TYPEID::SpaceToDepth:
         {
             auto block_size = node_js.at("block_size").get<size_t>();
@@ -3004,6 +3011,12 @@ json JSONSerializer::serialize_node(const Node& n)
             auto tmp = dynamic_cast<const op::v1::Softmax*>(&n);
             node["softmax_axis"] = tmp->get_axis();
         }
+        break;
+    }
+    case OP_TYPEID::SoftmaxCrossEntropy:
+    {
+        auto tmp = dynamic_cast<const op::SoftmaxCrossEntropy*>(&n);
+        node["reduction_axis"] = tmp->get_summation_axis();
         break;
     }
     case OP_TYPEID::Tan: { break;

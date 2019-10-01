@@ -83,6 +83,7 @@
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/fused/softmax_crossentropy.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -1178,7 +1179,6 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
                 return false;
             }
         }
-
         if (dex)
         {
             auto handler = GetGlobalBuildDispatcher().find(type_index(typeid(node)));
@@ -1203,6 +1203,8 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     };
 
     REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass)
+    REGISTER_KNOBBED_PASS_WITH_ARGS(
+        CoreFusion, true, ngraph::pass, ngraph::pass::FusionType::ALL_FUSIONS)
     REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported)
     REGISTER_KNOBBED_PASS(ImplicitBroadcastElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass)
@@ -1218,8 +1220,6 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(ReshapeSinking, false, ngraph::pass)
     REGISTER_KNOBBED_PASS(ReshapeElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(RecurrentReshapeElimination, false, ngraph::pass)
-    REGISTER_KNOBBED_PASS_WITH_ARGS(
-        CoreFusion, true, ngraph::pass, ngraph::pass::FusionType::ALL_FUSIONS)
     REGISTER_KNOBBED_PASS(CPUPreFusion, true, runtime::cpu::pass)
 
     // Disable CPUFusion if MLIR is enabled to preserve core ops.

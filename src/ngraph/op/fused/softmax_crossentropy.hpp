@@ -24,10 +24,6 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Softamx + CrossEntropy for numerical stabilization
-        /// \param arg1 Node that produces the tensor to normalize
-        /// \param arg2 Node that produces OneHot Lables
-        //  \param reduction_axes axis on which to reduce the summation operation
         class SoftmaxCrossEntropy : public ngraph::op::util::FusedOp
         {
         public:
@@ -35,6 +31,10 @@ namespace ngraph
             static constexpr NodeTypeInfo type_info{"SoftmaxCrossEntropy", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             SoftmaxCrossEntropy() = default;
+            /// \brief Softamx + CrossEntropy for numerical stabilization
+            /// \param arg1 Node that produces the tensor to normalize
+            /// \param arg2 Node that produces OneHot Lables
+            /// \param reduction_axes axis on which to reduce the summation operation
             SoftmaxCrossEntropy(const Output<Node>& arg1,
                                 const Output<Node>& arg2,
                                 const AxisSet& reduction_axes);
