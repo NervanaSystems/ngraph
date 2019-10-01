@@ -330,6 +330,11 @@ shared_ptr<Node> Node::add_provenance_group_members_above(const OutputVector& ba
     {
         base_set.insert(output.get_node());
     }
+    if (0 == base_set.count(this))
+    {
+        // A builder did nothing
+        return shared_from_this();
+    }
     vector<Node*> todo;
     for (auto input : inputs())
     {
