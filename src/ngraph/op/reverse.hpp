@@ -77,5 +77,59 @@ namespace ngraph
 
             AxisSet m_reversed_axes;
         };
+
+        namespace v1
+        {
+            class Reverse : public Op
+            {
+            public:
+                enum class Mode
+                {
+                    INDEX,
+                    MASK
+                };
+
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"Reverse", 1};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Reverse() = default;
+                /// \brief Constructs a reverse operation.
+                ///
+                /// \param data The input tensor, some of whose axes are to be reversed.
+                /// \param reversed_axes The axes to reverse in a form of a set of indices or
+                /// boolean mask.
+                /// \param mode The way reversed_axes should be interpreted - a set or a mask.
+                Reverse(const Output<Node>& data,
+                        const Output<Node>& reversed_axes,
+                        const std::string& mode);
+
+                Reverse(const Output<Node>& data,
+                        const Output<Node>& reversed_axes,
+                        const Mode mode);
+
+                void validate_and_infer_types() override;
+
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+                /// \return The second input data interpretation mode.
+                Mode get_mode() const { return m_mode; }
+                void set_mode(const Mode mode) { m_mode = mode; }
+                virtual size_t get_version() const override { return 1; }
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+
+                Mode mode_from_string(const std::string& mode) const;
+
+                /// \brief Indicates how the values from the second input should be interpreted.
+                ///
+                /// The second input can contain a set of indices pointing to axes in the data
+                /// tensor shape.
+                /// Alternatively it can contain a boolean mask that indicates which axes should be
+                /// reversed.
+                Mode m_mode;
+            };
+        }
     }
 }
