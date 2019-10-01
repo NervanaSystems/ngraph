@@ -1203,9 +1203,9 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         return true;
     };
 
-    REGISTER_KNOBBED_PASS(Opset1Downgrade, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass)
     REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported)
+    REGISTER_KNOBBED_PASS(Opset1Downgrade, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(ImplicitBroadcastElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass)
