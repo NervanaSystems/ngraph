@@ -6,7 +6,7 @@
 Validated workloads
 ###################
 
-We validated performance [#f1]_ for the following workloads:
+We have validated performance [#f1]_ for the following workloads:
 
 .. contents::
    :local:

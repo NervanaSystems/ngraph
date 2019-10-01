@@ -8,8 +8,9 @@ Overview
 A framework is "supported" with a framework :term:`bridge` that can be written or
 cloned and used to connect to nGraph device backends while maintaining the 
 framework's programmatic or user interface. A `bridge currently exists`_ for the 
-TensorFlow framework. Intel previously contributed work to an MXNet bridge; 
-however, support for this bridge is no longer active. 
+TensorFlow framework. We also have a bridge to do :doc:`paddle_integ`.  Intel 
+previously contributed work to an MXNet bridge; however, support for this 
+bridge is no longer active.
 
 `ONNX`_ on its own is not a framework; however, it can be used with nGraph's
 :doc:`../python_api/index` to import and execute ONNX models.
