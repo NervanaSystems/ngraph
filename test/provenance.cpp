@@ -377,3 +377,24 @@ TEST(provenance, fused)
         }
     });
 }
+
+TEST(provenance, empty_group)
+{
+    auto p1 = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
+    p1->add_provenance_tag("P1");
+    auto abs = make_shared<op::Abs>(p1);
+    // Make sure group is empty
+    abs->add_provenance_group_members_above({abs});
+    abs->add_provenance_tag("abs");
+    for (auto node : topological_sort(NodeVector{abs}))
+    {
+        if (node == p1)
+        {
+            EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"P1"}));
+        }
+        else
+        {
+            EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"abs"}));
+        }
+    }
+}
