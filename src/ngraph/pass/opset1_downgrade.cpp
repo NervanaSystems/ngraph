@@ -22,6 +22,7 @@
 #include "ngraph/op/reduce_sum.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/node.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -82,7 +83,7 @@ bool pass::Opset1Downgrade::run_on_node(shared_ptr<Node> node)
     {
     case OP_TYPEID::Pad:
     {
-        auto tmp = dynamic_cast<const op::v1::Pad*>(node.get());
+        auto tmp = as_type_ptr<op::v1::Pad>(node);
         auto replacement_node = make_shared<op::v0::Pad>(node->input(0).get_source_output(),
                                                          node->input(3).get_source_output(),
                                                          tmp->get_pads_begin(),
@@ -95,7 +96,7 @@ bool pass::Opset1Downgrade::run_on_node(shared_ptr<Node> node)
     }
     case OP_TYPEID::Product:
     {
-        auto tmp = dynamic_cast<const op::v1::ReduceProd*>(node.get());
+        auto tmp = as_type_ptr<op::v1::ReduceProd>(node);
         auto replacement_node = make_shared<op::v0::Product>(node->input(0).get_source_output(),
                                                              node->input(1).get_source_output());
         if (tmp->get_keep_dims())
@@ -129,7 +130,7 @@ bool pass::Opset1Downgrade::run_on_node(shared_ptr<Node> node)
     }
     case OP_TYPEID::Sum:
     {
-        auto tmp = dynamic_cast<const op::v1::ReduceSum*>(node.get());
+        auto tmp = as_type_ptr<op::v1::ReduceSum>(node);
         auto replacement_node = make_shared<op::v0::Sum>(node->input(0).get_source_output(),
                                                          node->input(1).get_source_output());
         if (tmp->get_keep_dims())
