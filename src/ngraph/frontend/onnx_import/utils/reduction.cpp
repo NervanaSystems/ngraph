@@ -83,8 +83,8 @@ namespace ngraph
 
             std::shared_ptr<ngraph::Node>
                 make_ng_reduction_op(const Node& node,
-                                         const std::shared_ptr<ngraph::Node>& ng_input,
-                                         RuntimeReductionFunction reduction_function)
+                                     const std::shared_ptr<ngraph::Node>& ng_input,
+                                     RuntimeReductionFunction reduction_function)
             {
                 auto data_shape = ng_input->get_shape();
 
