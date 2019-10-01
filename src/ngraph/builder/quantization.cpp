@@ -440,8 +440,15 @@ namespace ngraph
             }
             return make_shared<op::QuantizedDotBias>(
                        input, filters, mybias, requantization_scale, requantize, with_relu)
-                ->add_provenance_group_members_above(
-                    {min_input, max_input, min_filter, max_filter, min_output, max_output});
+                ->add_provenance_group_members_above({input,
+                                                      filters,
+                                                      bias,
+                                                      min_input,
+                                                      max_input,
+                                                      min_filter,
+                                                      max_filter,
+                                                      min_output,
+                                                      max_output});
         }
 
         shared_ptr<Node> ScaledQuantizedDot(const Output<Node>& input,
