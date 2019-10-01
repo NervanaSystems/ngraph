@@ -89,12 +89,12 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     pass_manager.set_per_pass_validation(false);
 
     // We apply the same general-purposes passes as the CPU backend.
-    pass_manager.register_pass<ngraph::pass::Opset1Downgrade>();
     pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>([](const Node& node) -> bool {
         if (node.description() == ngraph::op::GroupConvolution().description())
             return true;
         return false;
     });
+    pass_manager.register_pass<ngraph::pass::Opset1Downgrade>();
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();

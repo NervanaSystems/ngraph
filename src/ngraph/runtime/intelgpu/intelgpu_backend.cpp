@@ -438,9 +438,9 @@ shared_ptr<runtime::Executable>
 
     if (m_disable_backend_optimizations < 2)
     {
-        pass_manager.register_pass<ngraph::pass::Opset1Downgrade>();
         pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(
             IntelGPUBackend::is_supported_impl);
+        pass_manager.register_pass<ngraph::pass::Opset1Downgrade>();
         pass_manager.register_pass<ngraph::pass::ImplicitBroadcastElimination>();
     }
 

@@ -46,9 +46,9 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
 {
     m_function = clone_function(*function);
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Downgrade>();
     pass_manager.register_pass<pass::LikeReplacement>();
     pass_manager.register_pass<pass::FusedOpDecomposition>();
+    pass_manager.register_pass<pass::Opset1Downgrade>();
     pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.run_passes(m_function);

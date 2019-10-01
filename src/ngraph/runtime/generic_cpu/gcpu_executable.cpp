@@ -46,9 +46,9 @@ runtime::gcpu::GCPUExecutable::GCPUExecutable(const shared_ptr<Function>& functi
 {
     m_function = clone_function(*function);
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Downgrade>();
     pass_manager.register_pass<pass::LikeReplacement>();
     pass_manager.register_pass<pass::FusedOpDecomposition>();
+    pass_manager.register_pass<pass::Opset1Downgrade>();
     pass_manager.register_pass<pass::ImplicitBroadcastElimination>();
     pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
     pass_manager.register_pass<pass::Liveness>();
