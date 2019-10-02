@@ -50,10 +50,8 @@ void op::Concat::validate_and_infer_types()
         Dimension this_input_rank = this_input_shape.rank();
         if (this_input_rank.is_static())
         {
-            if (m_concatenation_axis < 0)
-            {
-                m_concatenation_axis = m_concatenation_axis + int64_t(this_input_rank);
-            }
+            m_axis = m_axis < 0 ? m_axis + int64_t(this_input_rank) : m_axis;
+
             NODE_VALIDATION_CHECK(this,
                                   m_axis < int64_t(this_input_rank),
                                   "Concatenation axis (",
