@@ -199,6 +199,7 @@ def group_convolution(data_batch,                      # type: Node
                       padding_above,                   # type: List[int]
                       data_dilation_strides,           # type: List[int]
                       groups,                          # type: int
+                      pad_type='EXPLICIT',             # type: str
                       name=None,                       # type: str
                       ):
     # type: (...) -> Node
@@ -213,6 +214,20 @@ def group_convolution(data_batch,                      # type: Node
     :data_dilation_strides: The dilations along data.
     :param groups: The number of groups the input channels and output channels
                    are divided into.
+    :param pad_type: Name describes how to perform padding.
+                     EXPLICITI: Pad dimensions are explicity specified
+
+                     SAME_LOWER: Pad dimensions computed to match input shape
+                                 Ceil(num_dims/2) at the beginning and
+                                 Floor(num_dims/2) at the end
+
+                     SAME_UPPER: Pad dimensions computed to match input shape
+                                 Floor(num_dims/2) at the beginning and
+                                 Ceil(num_dims/2) at the end
+
+                     VALID: No padding
+    :param name: Optional output node name.
+    :return: The new node performing a Group Convolution operation on tensor from input node.
     """
     return GroupConvolution(data_batch,
                             filters,
@@ -221,7 +236,8 @@ def group_convolution(data_batch,                      # type: Node
                             CoordinateDiff(padding_below),
                             CoordinateDiff(padding_above),
                             Strides(data_dilation_strides),
-                            groups)
+                            groups,
+                            GroupConvolution.PadType(pad_type))
 
 
 @nameable_op
@@ -259,8 +275,7 @@ def rnn_cell(X,                      # type: Node
                             in order respective to activation list.
     :param clip: The value defining clipping range [-clip, clip] on
                  input of activation functions.
-
-
+    :param name: Optional output node name.
     :return: The new node performing a RNNCell operation on tensor from input node.
     """
     return RNNCell(X,
@@ -287,7 +302,7 @@ def scale_shift(data, scale, shift, name=None):  # type: (Node, Node, Node, str)
     :param data: The node with data tensor.
     :param scale: The node with data tensor that scale input data.
     :param shift: The node with data tensor that shift input data.
-    :param name: Optional output node name.spa
+    :param name: Optional output node name.
     :return: The new node performing a ScaleShift operation on input tensor.
     """
     return ScaleShift(data, scale, shift)
@@ -978,7 +993,6 @@ def fake_quantize(data, input_low, input_high, output_low, output_high, levels, 
     Input floating point values are quantized into a discrete set of floating point values.
 
     .. code-block:: python
-
         if x <= input_low:
             output = output_low
         if x > input_high:
