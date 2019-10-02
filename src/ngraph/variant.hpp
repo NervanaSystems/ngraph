@@ -35,8 +35,8 @@
             : m_value(value)                                                                       \
         {                                                                                          \
         }                                                                                          \
-        API static constexpr ::ngraph::VariantTypeInfo type_info{NAME, VERSION};                     \
-        const ::ngraph::VariantTypeInfo& get_type_info() const override { return type_info; }        \
+        API static constexpr ::ngraph::VariantTypeInfo type_info{NAME, VERSION};                   \
+        const ::ngraph::VariantTypeInfo& get_type_info() const override { return type_info; }      \
         const VT& get() const { return m_value; }                                                  \
         VT& get() { return m_value; }                                                              \
         void set(const VT& value) { m_value = value; }                                             \
