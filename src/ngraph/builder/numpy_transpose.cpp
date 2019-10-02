@@ -74,7 +74,8 @@ namespace ngraph
                 out_shape.push_back(in_shape[order[i]]);
 
             // do the reshaping with the order
-            return std::make_shared<ngraph::op::Reshape>(value, order, out_shape);
+            return std::make_shared<ngraph::op::Reshape>(value, order, out_shape)
+                ->add_provenance_group_members_above({value});
         }
 
     } // namespace builder

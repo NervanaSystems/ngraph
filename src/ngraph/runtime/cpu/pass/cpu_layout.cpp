@@ -2326,7 +2326,7 @@ namespace ngraph
                     }
                     else
                     {
-                        throw ngraph_error("Batchnorm Backprop only supported in MKLDNN for now");
+                        set_native_layouts(external_function, node);
                     }
                 }
 

@@ -30,6 +30,7 @@ op::util::LogicalReduction::LogicalReduction(const Output<Node>& arg, const Axis
               element::i64, Shape{reduction_axes.size()}, reduction_axes.to_vector())
               ->output(0)})
 {
+    add_provenance_group_member(input_value(1).get_node_shared_ptr());
 }
 
 op::util::LogicalReduction::LogicalReduction(const Output<Node>& arg,

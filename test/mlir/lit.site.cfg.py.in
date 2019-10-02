@@ -22,7 +22,8 @@ config.mlir_tools_dir = "@MLIR_TOOLS_DIR@"
 config.suffixes = ['.mlir']
 
 config.ngraph_mlir_tools_dir = "@NGRAPH_INSTALL_BIN@"
-config.ngraph_mlir_test_dir = "@NGRAPH_LIT_TEST_SRC_DIR@"
+config.ngraph_mlir_test_src_dir = "@NGRAPH_LIT_TEST_SRC_DIR@"
+config.ngraph_mlir_test_build_dir = "@NGRAPH_LIT_TEST_BUILD_DIR@"
 
 lit.llvm.initialize(lit_config, config)
 
