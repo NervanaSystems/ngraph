@@ -58,6 +58,7 @@
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
+#include "ngraph/op/experimental/random_uniform.hpp"
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
@@ -131,6 +132,7 @@
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/state/bernoulli_rng_state.hpp"
+#include "ngraph/state/uniform_rng_state.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -823,46 +825,67 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormTrainingBackprop)
             {
                 writer.block_begin();
-                // define weights
-                writer << "std::vector<" << args[0].get_element_type().c_type_string()
-                       << ">bn_weights(2*" << args[0].get_size() << ");\n";
-                writer << "std::vector<" << args[0].get_element_type().c_type_string()
-                       << ">bn_dweights(2*" << args[0].get_size() << ");\n";
+                if (!mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    const ngraph::op::BatchNormTrainingBackprop* batchnorm =
+                        static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
 
-                writer << "memcpy(&bn_weights[0], " << args[0].get_name() << ", "
-                       << args[0].get_size() * args[0].get_element_type().size() << ");\n";
-                writer << "memcpy(&bn_weights[0]+" << args[0].get_size() << ", "
-                       << args[1].get_name() << ", "
-                       << args[1].get_size() * args[1].get_element_type().size() << ");\n";
+                    writer << "reference::batch_norm_backprop(" << batchnorm->get_eps_value()
+                           << ",\n";
+                    writer << "            " << args[0].get_name() << ",\n";
+                    writer << "            " << args[1].get_name() << ",\n";
+                    writer << "            " << args[2].get_name() << ",\n";
+                    writer << "            " << args[3].get_name() << ",\n";
+                    writer << "            " << args[4].get_name() << ",\n";
+                    writer << "            " << args[5].get_name() << ",\n";
+                    writer << "            " << out[0].get_name() << ",\n";
+                    writer << "            " << out[1].get_name() << ",\n";
+                    writer << "            " << out[2].get_name() << ",\n";
+                    writer << "            {" << join(args[2].get_shape()) << "});\n";
+                }
+                else
+                {
+                    // define weights
+                    writer << "std::vector<" << args[0].get_element_type().c_type_string()
+                           << ">bn_weights(2*" << args[0].get_size() << ");\n";
+                    writer << "std::vector<" << args[0].get_element_type().c_type_string()
+                           << ">bn_dweights(2*" << args[0].get_size() << ");\n";
 
-                size_t batchnorm_index;
-                std::vector<std::size_t> deps;
-                emit_build_primitives(external_function, node, writer, batchnorm_index, deps);
+                    writer << "memcpy(&bn_weights[0], " << args[0].get_name() << ", "
+                           << args[0].get_size() * args[0].get_element_type().size() << ");\n";
+                    writer << "memcpy(&bn_weights[0]+" << args[0].get_size() << ", "
+                           << args[1].get_name() << ", "
+                           << args[1].get_size() * args[1].get_element_type().size() << ");\n";
 
-                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0])
-                       << ", bn_weights.data());\n";
-                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
-                       << args[2].get_name() << ");\n";
-                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
-                       << args[3].get_name() << ");\n";
-                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
-                       << args[4].get_name() << ");\n";
-                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[4]) << ", "
-                       << args[5].get_name() << ");\n";
-                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[5]) << ", "
-                       << out[0].get_name() << ");\n";
-                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[6])
-                       << ", bn_dweights.data());\n";
+                    size_t batchnorm_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function, node, writer, batchnorm_index, deps);
 
-                writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
-                writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(batchnorm_index)
-                       << ", deps, OpType::BATCHNORMBACKPROP);\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0])
+                           << ", bn_weights.data());\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << args[2].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
+                           << args[3].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
+                           << args[4].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[4]) << ", "
+                           << args[5].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[5]) << ", "
+                           << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[6])
+                           << ", bn_dweights.data());\n";
 
-                writer << "memcpy(" << out[1].get_name() << ", &bn_dweights[0], "
-                       << args[0].get_size() * args[0].get_element_type().size() << ");\n";
-                writer << "memcpy(" << out[2].get_name() << ", &bn_dweights[0]+"
-                       << args[0].get_size() << ", "
-                       << args[1].get_size() * args[1].get_element_type().size() << ");\n";
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(batchnorm_index)
+                           << ", deps, OpType::BATCHNORMBACKPROP);\n";
+
+                    writer << "memcpy(" << out[1].get_name() << ", &bn_dweights[0], "
+                           << args[0].get_size() * args[0].get_element_type().size() << ");\n";
+                    writer << "memcpy(" << out[2].get_name() << ", &bn_dweights[0]+"
+                           << args[0].get_size() << ", "
+                           << args[1].get_size() * args[1].get_element_type().size() << ");\n";
+                }
                 writer.block_end();
             }
 
@@ -4175,6 +4198,45 @@ namespace ngraph
                 writer << "           " << out[0].get_name() << ",\n";
                 writer << "           " << out[0].get_size() << ",\n";
                 writer << "           training, seed, keep_prob);\n";
+                writer << "}\n";
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::RandomUniform)
+            {
+                auto ru = static_cast<const ngraph::op::RandomUniform*>(node);
+                if (args[2].get_element_type() != element::i64)
+                {
+                    throw ngraph_error("Unsupported index 2 element type");
+                }
+
+                writer.block_begin();
+                auto index = external_function->add_state(new UniformRNGState());
+                auto fixed_seed = ru->get_fixed_seed();
+
+                writer << "auto state = static_cast<ngraph::RandomUniformRNGState*>(ctx->states["
+                       << index << "]);\n";
+                writer << "bool use_fixed_seed = static_cast<bool>(" << args[3].get_name()
+                       << "[0]);\n";
+
+                writer << "if (use_fixed_seed == false) \n";
+                writer << "{\n";
+                writer << "    reference::random_uniform<" << args[0].get_type() << ">(\n";
+                writer << "                   " << out[0].get_name() << ",\n";
+                writer << "                   " << args[0].get_name() << ",\n";
+                writer << "                   " << args[1].get_name() << ",\n";
+                writer << "                   " << out[0].get_size() << ",\n";
+                writer << "                   state);\n";
+                writer << "}\n";
+                writer << "else {\n";
+                writer << "    reference::random_uniform_with_fixed_seed<" << args[0].get_type()
+                       << ">(\n";
+                writer << "                   " << out[0].get_name() << ",\n";
+                writer << "                   " << args[0].get_name() << ",\n";
+                writer << "                   " << args[1].get_name() << ",\n";
+                writer << "                   " << out[0].get_size() << ",\n";
+                writer << "                   " << fixed_seed << ");\n";
                 writer << "}\n";
                 writer.block_end();
             }

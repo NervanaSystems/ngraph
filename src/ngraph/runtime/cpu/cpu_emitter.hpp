@@ -150,6 +150,7 @@ namespace ngraph
         class Quantize;
         class QuantizedConcat;
         class Tile;
+        class RandomUniform;
     }
     namespace runtime
     {
@@ -443,6 +444,8 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConcat);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Tile);
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::RandomUniform);
         }
     }
 }
