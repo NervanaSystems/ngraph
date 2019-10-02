@@ -16,6 +16,7 @@
 
 #include <iterator>
 
+#include "core/node.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "utils/convpool.hpp"
 #include "utils/pooling_factory.hpp"
@@ -33,6 +34,7 @@ namespace ngraph
                 , m_strides{convpool::get_strides(node)}
                 , m_dilations{convpool::get_dilations(node)}
                 , m_auto_pad{convpool::get_auto_pad(node)}
+                , m_ceil_mode{static_cast<bool>(node.get_attribute_value<std::int64_t>("ceil_mode", 0))}
             {
                 auto paddings = convpool::get_pads(node);
                 const CoordinateDiff& padding_above{paddings.second};
@@ -52,7 +54,8 @@ namespace ngraph
                                                               m_padding_below,
                                                               m_padding_above,
                                                               count_include_pad,
-                                                              m_auto_pad)};
+                                                              m_auto_pad,
+                                                              m_ceil_mode)};
             }
 
             GlobalPoolingFactory::GlobalPoolingFactory(const Node& node)

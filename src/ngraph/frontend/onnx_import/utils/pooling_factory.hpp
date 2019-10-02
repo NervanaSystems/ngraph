@@ -66,7 +66,8 @@ namespace ngraph
                                                              m_strides,
                                                              m_padding_below,
                                                              m_padding_above,
-                                                             m_auto_pad)};
+                                                             m_auto_pad,
+                                                             m_ceil_mode)};
                 }
 
             protected:
@@ -78,6 +79,7 @@ namespace ngraph
                 Shape m_padding_below;
                 Shape m_padding_above;
                 ngraph::op::PadType m_auto_pad;
+                bool m_ceil_mode;
             };
 
             // AvgPool accepts some additional parameters thus we have specialization for it.

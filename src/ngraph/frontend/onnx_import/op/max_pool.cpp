@@ -31,7 +31,10 @@ namespace ngraph
                 {
                     auto max_pool =
                         pooling::PoolingFactory(node).make_pooling_op<ngraph::op::MaxPool>();
+
+                    // nGraph currently does not support calculating the indices of maximum values
                     max_pool.emplace_back(std::make_shared<NullNode>()); // Indices (optional)
+
                     return max_pool;
                 }
 
