@@ -21,7 +21,7 @@ nGraph Compiler stack
 
 .. only:: release
 
-  nGraph Compiler stack documentation for version |version|.
+   nGraph Compiler stack documentation for version |version|.
 
    Documentation for the latest (master) development branch can be found 
    at https://ngraph.nervanasys.com/docs/latest 
@@ -47,11 +47,16 @@ packages, scripts, and other files that use licensing.
 .. toctree::
    :maxdepth: 1
    :caption: Getting Started
-   :titlesonly:
-   
+
+   introduction.rst
+   features.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Framework Support
+
    frameworks/index.rst
    frameworks/validated/list.rst
-   frameworks/generic-configs.rst
 
 
 .. toctree::
@@ -68,15 +73,9 @@ packages, scripts, and other files that use licensing.
    
 .. toctree::
    :maxdepth: 1
-   :caption: nGraph Python API
+   :caption: APIs 
 
    python_api/index.rst
-
-   
-.. toctree::
-   :maxdepth: 1
-   :caption: Backend Developers
-
    backends/index.rst
    backends/cpp-api.rst
 
@@ -93,9 +92,7 @@ packages, scripts, and other files that use licensing.
    :caption: Project Metadata
 
    project/release-notes.rst
-   project/introduction.rst
    project/contribution-guide.rst
-   project/doc-contributor-README.rst
    project/index.rst
    project/extras/index.rst 
    glossary.rst
