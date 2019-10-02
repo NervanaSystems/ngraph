@@ -314,13 +314,14 @@ namespace ngraph
                             std::shared_ptr<ngraph::Node> lstm_cell =
                                 std::make_shared<ngraph::op::LSTMCell>(
                                     in_x,
-                                    m_W,
-                                    m_R,
                                     H_t,
                                     C_t,
-                                    m_attributes.m_hidden_size,
+                                    m_W,
+                                    m_R,
                                     m_B,
                                     m_P,
+                                    m_attributes.m_hidden_size,
+                                    ngraph::op::LSTMWeightsFormat::IOFC,
                                     m_attributes.m_activations,
                                     m_attributes.m_activation_alpha,
                                     m_attributes.m_activation_beta,

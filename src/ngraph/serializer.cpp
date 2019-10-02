@@ -409,6 +409,13 @@ static element::Type read_element_type(json j)
     return element::Type(bitwidth, is_real, is_signed, is_quantized, c_type_string);
 }
 
+static op::LSTMWeightsFormat read_lstm_weights_format(const json& js)
+{
+    return has_key(js, "weights_format")
+        ? static_cast<op::LSTMWeightsFormat>(js.at("weights_format"))
+        : op::LSTMWeightsFormat::IFCO;
+}
+
 void ngraph::serialize(const string& path, shared_ptr<ngraph::Function> func, size_t indent)
 {
     ofstream out(path);
@@ -1529,6 +1536,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::LSTMCell:
         {
             auto hidden_size = node_js.at("hidden_size").get<size_t>();
+            auto weights_format = read_lstm_weights_format(node_js);
             auto clip = node_js.at("clip").get<float>();
             auto activations = node_js.at("activations").get<vector<string>>();
             auto activations_alpha = node_js.at("activations_alpha").get<vector<float>>();
@@ -1539,9 +1547,10 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                              args[2],
                                              args[3],
                                              args[4],
-                                             hidden_size,
                                              args[5],
                                              args[6],
+                                             hidden_size,
+                                             weights_format,
                                              activations,
                                              activations_alpha,
                                              activations_beta,
@@ -2904,6 +2913,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = dynamic_cast<const op::LSTMCell*>(&n);
         node["hidden_size"] = tmp->get_hidden_size();
+        node["weights_format"] = tmp->get_weights_format();
         node["clip"] = tmp->get_clip();
         node["activations"] = tmp->get_activations();
         node["activations_alpha"] = tmp->get_activations_alpha();
