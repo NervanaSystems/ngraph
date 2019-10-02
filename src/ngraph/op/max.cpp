@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Max::type_info;
+constexpr NodeTypeInfo op::v0::Max::type_info;
 
 op::v0::Max::Max(const Output<Node>& arg, const AxisSet& reduction_axes)
     : ArithmeticReduction(arg, reduction_axes)
