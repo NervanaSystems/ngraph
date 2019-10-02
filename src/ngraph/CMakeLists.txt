@@ -532,6 +532,8 @@ set (SRC
     util.hpp
     validation_util.cpp
     validation_util.hpp
+    variant.cpp
+    variant.hpp
     )
 
 set(SRC ${SRC}

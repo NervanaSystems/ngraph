@@ -24,6 +24,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/variant.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -57,6 +58,46 @@ TEST(op, provenance_tag)
     auto tags = node->get_provenance_tags();
     ASSERT_TRUE(tags.find(tag1) == tags.end());
     ASSERT_TRUE(tags.find(tag2) != tags.end());
+}
+
+struct Ship
+{
+    std::string name;
+    int16_t x;
+    int16_t y;
+};
+
+DECLARE_VARIANT(Ship, , "Variant::Ship", 0);
+DEFINE_VARIANT(Ship, 0);
+
+TEST(op, variant)
+{
+    shared_ptr<Variant> var_std_string = make_shared<VARIANT_NAME(std::string, 0)>("My string");
+    ASSERT_TRUE((is_type<VARIANT_NAME(std::string, 0)>(var_std_string)));
+    EXPECT_EQ((as_type_ptr<VARIANT_NAME(std::string, 0)>(var_std_string)->get()), "My string");
+
+    shared_ptr<Variant> var_uint64_t = make_shared<VARIANT_NAME(uint64_t, 0)>(27);
+    ASSERT_TRUE((is_type<VARIANT_NAME(uint64_t, 0)>(var_uint64_t)));
+    EXPECT_FALSE((is_type<VARIANT_NAME(std::string, 0)>(var_uint64_t)));
+    EXPECT_EQ((as_type_ptr<VARIANT_NAME(uint64_t, 0)>(var_uint64_t)->get()), 27);
+
+    shared_ptr<Variant> var_string = make_shared<StringVariant>("My other string");
+    ASSERT_TRUE((is_type<StringVariant>(var_string)));
+    EXPECT_EQ((as_type_ptr<StringVariant>(var_string)->get()), "My other string");
+
+    shared_ptr<Variant> var_ship = make_shared<VARIANT_NAME(Ship, 0)>(Ship{"Lollipop", 3, 4});
+    ASSERT_TRUE((is_type<VARIANT_NAME(Ship, 0)>(var_ship)));
+    Ship& ship = as_type_ptr<VARIANT_NAME(Ship, 0)>(var_ship)->get();
+    EXPECT_EQ(ship.name, "Lollipop");
+    EXPECT_EQ(ship.x, 3);
+    EXPECT_EQ(ship.y, 4);
+
+    auto node = make_shared<op::Parameter>(element::f32, Shape{1});
+    node->set_rt_info(var_ship);
+    auto node_var_ship = node->get_rt_info();
+    ASSERT_TRUE((is_type<VARIANT_NAME(Ship, 0)>(node_var_ship)));
+    Ship& node_ship = as_type_ptr<VARIANT_NAME(Ship, 0)>(node_var_ship)->get();
+    EXPECT_EQ(&node_ship, &ship);
 }
 
 // TODO: Need to mock Node, Op etc to be able to unit test functions like replace_node().
