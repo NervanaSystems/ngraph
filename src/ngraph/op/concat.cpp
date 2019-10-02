@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "ngraph/op/concat.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/slice.hpp"
 
 using namespace std;
@@ -24,14 +25,14 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Concat::type_info;
 
-op::Concat::Concat(const OutputVector& args, size_t axis)
+op::Concat::Concat(const OutputVector& args, int64_t axis)
     : Op(args)
     , m_axis(axis)
 {
     constructor_validate_and_infer_types();
 }
 
-op::Concat::Concat(const NodeVector& args, size_t axis)
+op::Concat::Concat(const NodeVector& args, int64_t axis)
     : Concat(as_output_vector(args), axis)
 {
 }
@@ -50,8 +51,12 @@ void op::Concat::validate_and_infer_types()
         Dimension this_input_rank = this_input_shape.rank();
         if (this_input_rank.is_static())
         {
+            if (m_concatenation_axis < 0)
+            {
+                m_concatenation_axis = m_concatenation_axis + int64_t(this_input_rank);
+            }
             NODE_VALIDATION_CHECK(this,
-                                  m_axis < size_t(this_input_rank),
+                                  m_axis < int64_t(this_input_rank),
                                   "Concatenation axis (",
                                   m_axis,
                                   ") is out of bounds for ",
@@ -82,7 +87,6 @@ void op::Concat::validate_and_infer_types()
             concatenation_axis_output_dim += Dimension::dynamic();
         }
     }
-
     PartialShape concatenated_shape = inputs_shape_scheme;
 
     if (concatenated_shape.rank().is_static())
