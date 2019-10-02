@@ -54,7 +54,7 @@ void op::NormalizeL2::pre_validate_and_infer_types()
     {
         NODE_VALIDATION_CHECK(this,
                               static_cast<size_t>(axes_rank) <= 1,
-                              "Input axes must be scalar or have rank equals 1 (axes rank: ",
+                              "Input axes must be scalar or have rank equal to 1 (axes rank: ",
                               axes_rank,
                               ").");
 
