@@ -685,7 +685,14 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                                          num_input_axis_before_ellipses;
             for (int64_t i = 0; i < num_of_hidden_dims; ++i)
             {
-                dim.emplace_back(input_shape[input_shape_idx]);
+                if (input_shape[input_shape_idx].is_dynamic())
+                {
+                    dim.emplace_back(Dimension::dynamic());
+                }
+                else
+                {
+                    dim.emplace_back(input_shape[input_shape_idx]);
+                }
                 input_shape_idx++;
             }
         }
@@ -704,6 +711,14 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
             // calculating dimension (begin, end, begin_mask, end_mask, stride)
             else
             {
+                // check dynamic dimension
+                if (input_shape[input_shape_idx].is_dynamic())
+                {
+                    input_shape_idx++;
+                    dim.emplace_back(Dimension::dynamic());
+                    continue;
+                }
+
                 int64_t lb = begin[axis];
                 int64_t ub = end[axis];
 
