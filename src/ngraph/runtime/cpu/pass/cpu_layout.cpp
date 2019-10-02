@@ -1895,12 +1895,7 @@ namespace ngraph
                         if (input_shape[axis_order[i]] != output_shape[i])
                             return false;
                     }
-#if MKLDNN_VERSION_MAJOR >= 1
-                    if (mkldnn_utils::is_mkldnn_desc_blocked_data_format(md))
-                    {
-                        return false;
-                    }
-#endif
+
                     return true;
                 }
 

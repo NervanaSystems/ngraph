@@ -1325,6 +1325,12 @@ memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& i
     md.data_type = in.data.data_type;
     md.format_desc.blocking.inner_nblks = in.data.format_desc.blocking.inner_nblks;
 
+    AxisVector inverse_axis_order(in.data.ndims);
+    for (size_t i = 0; i < in.data.ndims; i++)
+    {
+        inverse_axis_order[axis_order[i]] = i;
+    }
+
     for (size_t i = 0; i < in.data.ndims; i++)
     {
         md.padded_dims[i] = in.data.padded_dims[axis_order[i]];
@@ -1337,7 +1343,7 @@ memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& i
     {
         md.format_desc.blocking.inner_blks[i] = in.data.format_desc.blocking.inner_blks[i];
         md.format_desc.blocking.inner_idxs[i] =
-            axis_order[in.data.format_desc.blocking.inner_idxs[i]];
+            inverse_axis_order[in.data.format_desc.blocking.inner_idxs[i]];
     }
 
     md.offset0 = in.data.offset0;
