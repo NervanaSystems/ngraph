@@ -16,6 +16,8 @@
 
 #include "ngraph/variant.hpp"
 
+using namespace ngraph;
+
 // Define variant for std::string
 DEFINE_VARIANT(std::string, 0)
 // Define variant for uint64_t

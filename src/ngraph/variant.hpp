@@ -21,13 +21,13 @@
 #include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/type.hpp"
 
-#define VARIANT_NAME(VT, VERSION) ngraph::VariantImpl<VT, VERSION>
+#define VARIANT_NAME(VT, VERSION) VariantImpl<VT, VERSION>
 
 // Convenience macro to declare a variant for values of type VT
 #define DECLARE_VARIANT(VT, API, NAME, VERSION)                                                    \
     template <>                                                                                    \
     class VARIANT_NAME(VT, VERSION)                                                                \
-        : public ngraph::Variant                                                                   \
+        : public Variant                                                                   \
     {                                                                                              \
     public:                                                                                        \
         VariantImpl() = default;                                                                   \
@@ -35,8 +35,8 @@
             : m_value(value)                                                                       \
         {                                                                                          \
         }                                                                                          \
-        API static constexpr ngraph::VariantTypeInfo type_info{NAME, VERSION};                     \
-        const ngraph::VariantTypeInfo& get_type_info() const override { return type_info; }        \
+        API static constexpr VariantTypeInfo type_info{NAME, VERSION};                     \
+        const VariantTypeInfo& get_type_info() const override { return type_info; }        \
         const VT& get() const { return m_value; }                                                  \
         VT& get() { return m_value; }                                                              \
         void set(const VT& value) { m_value = value; }                                             \
@@ -46,7 +46,7 @@
 
 // Convenience macro to define a variant for values of type VT
 #define DEFINE_VARIANT(VT, VERSION)                                                                \
-    constexpr ngraph::VariantTypeInfo VARIANT_NAME(VT, VERSION)::type_info;
+    constexpr VariantTypeInfo VARIANT_NAME(VT, VERSION)::type_info;
 
 namespace ngraph
 {
@@ -64,7 +64,7 @@ namespace ngraph
     {
     public:
         NGRAPH_API
-        static constexpr ngraph::VariantTypeInfo type_info{"Variant::StringVariant", 0};
+        static constexpr VariantTypeInfo type_info{"Variant::StringVariant", 0};
         const VariantTypeInfo& get_type_info() const override { return type_info; }
         StringVariant(const std::string& value)
             : m_value(value)
