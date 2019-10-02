@@ -93,8 +93,8 @@ TEST(op, variant)
     EXPECT_EQ(ship.y, 4);
 
     auto node = make_shared<op::Parameter>(element::f32, Shape{1});
-    node->set_rt_info(var_ship);
-    auto node_var_ship = node->get_rt_info();
+    node->get_rt_info()["A"] = var_ship;
+    auto node_var_ship = node->get_rt_info().at("A");
     ASSERT_TRUE((is_type<VARIANT_NAME(Ship, 0)>(node_var_ship)));
     Ship& node_ship = as_type_ptr<VARIANT_NAME(Ship, 0)>(node_var_ship)->get();
     EXPECT_EQ(&node_ship, &ship);

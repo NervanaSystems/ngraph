@@ -410,8 +410,10 @@ namespace ngraph
         /// Set device placement
         void set_placement_index(size_t placement);
 
-        const std::shared_ptr<Variant>& get_rt_info() { return m_rt_info; }
-        void set_rt_info(const std::shared_ptr<Variant>& rt_info) { m_rt_info = rt_info; }
+        using RTMap = std::map<std::string, std::shared_ptr<Variant>>;
+
+        RTMap& get_rt_info() { return m_rt_info; }
+        const RTMap& get_rt_info() const { return m_rt_info; }
         const std::unordered_set<std::string>& get_provenance_tags() const;
         void add_provenance_tag(const std::string& tag);
         template <typename T>
@@ -507,7 +509,7 @@ namespace ngraph
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
         size_t m_placement_index = placement_invalid;
-        std::shared_ptr<Variant> m_rt_info;
+        std::map<std::string, std::shared_ptr<Variant>> m_rt_info;
     };
 
     /// \brief A handle for one of a node's inputs.
