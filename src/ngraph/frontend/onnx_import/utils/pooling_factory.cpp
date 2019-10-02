@@ -34,7 +34,8 @@ namespace ngraph
                 , m_strides{convpool::get_strides(node)}
                 , m_dilations{convpool::get_dilations(node)}
                 , m_auto_pad{convpool::get_auto_pad(node)}
-                , m_ceil_mode{static_cast<bool>(node.get_attribute_value<std::int64_t>("ceil_mode", 0))}
+                , m_ceil_mode{
+                      static_cast<bool>(node.get_attribute_value<std::int64_t>("ceil_mode", 0))}
             {
                 auto paddings = convpool::get_pads(node);
                 const CoordinateDiff& padding_above{paddings.second};
