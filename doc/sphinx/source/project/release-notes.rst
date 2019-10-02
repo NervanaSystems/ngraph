@@ -2,6 +2,8 @@
 
 :orphan:
 
+.. _release_notes:
+
 Release Notes
 #############
 
@@ -18,15 +20,20 @@ We are pleased to announce the release of version |version|.
 
 Core updates for |version|
 --------------------------
+
 + All ops support ``Output<Node>`` arguments
 + Additional ops
 + ONNX handling unknown domains
++ Provenance works with builders and fused ops
++ ``RPATH`` for finding openmpi
 
-Latest documentation updates for |version|
-------------------------------------------
+Latest documentation updates
+----------------------------
+
 + Note the only support for nGPU is now through PlaidML; nGraph support for nGPU 
   (via cuDNN) has been deprecated.  
 + iGPU works only with nGraph version `0.24`.
++ New Sphinx-friendly theme (can be built natively for an alternative to ngraph.ai docs). 
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
 
@@ -41,7 +48,7 @@ Changelog on Previous Releases
 + Add rank id to trace file name
 + Allow provenance merging to be disabled
 + Remove some white-listed compiler warnings
-+ Provenance on builders and fused op expansions
++ Provenance, builders, ops that make ops, and fused op expansions
 
 
 0.25.0

@@ -78,7 +78,7 @@ Other integration paths
 
 If you are considering incorporating components from the nGraph Compiler stack 
 in your framework or neural network design, another useful doc is the section 
-on :doc:`generic-configs`. Contents here are also useful if you are working on 
+on :doc:`generic_configs`. Contents here are also useful if you are working on 
 something built-from-scratch, or on an existing framework that is less 
 widely-supported than the popular frameworks like TensorFlow and PyTorch.
 

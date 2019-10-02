@@ -52,7 +52,7 @@ packages, scripts, and other files that use licensing.
    features.rst
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Framework Support
 
    frameworks/index.rst
