@@ -23,15 +23,16 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v0 {
+        namespace v0
+        {
             /// \brief Max-reduction operation.
-            class Max : public util::ArithmeticReduction {
+            class Max : public util::ArithmeticReduction
+            {
             public:
                 NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Max", 0};
 
-                const NodeTypeInfo &get_type_info() const override { return type_info; }
-
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a "max" reduction operation.
                 Max() = default;
 
@@ -39,23 +40,24 @@ namespace ngraph
                 ///
                 /// \param arg The tensor to be reduced.
                 /// \param reduction_axes The axis positions (0-based) to be elimaxated.
-                Max(const Output<Node> &arg, const AxisSet &reduction_axes);
+                Max(const Output<Node>& arg, const AxisSet& reduction_axes);
 
                 /// \brief Constructs a "max" reduction operation.
                 ///
                 /// \param arg The tensor to be reduced.
                 /// \param reduction_axes The axis positions (0-based) to be elimaxated.
-                Max(const Output<Node> &arg, const Output<Node> &reduction_axes);
+                Max(const Output<Node>& arg, const Output<Node>& reduction_axes);
 
                 virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector &new_args) const override;
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
                 /// \return The default value for Max.
                 virtual std::shared_ptr<Node> get_default_value() const override;
             };
         }
 
-        namespace v1 {
+        namespace v1
+        {
             class ReduceMax : public util::ArithmeticReductionKeepDims
             {
             public:
@@ -74,9 +76,8 @@ namespace ngraph
                           bool keep_dims = false);
 
                 size_t get_version() const override { return 1; }
-
                 virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,

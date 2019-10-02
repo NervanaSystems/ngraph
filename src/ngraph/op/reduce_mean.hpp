@@ -31,7 +31,6 @@ namespace ngraph
                 NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ReduceMean", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
-
                 ReduceMean() = default;
 
                 /// \param arg The tensor to be summed.
@@ -42,7 +41,6 @@ namespace ngraph
                            bool keep_dims = false);
 
                 size_t get_version() const override { return 1; }
-
                 std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
             protected:

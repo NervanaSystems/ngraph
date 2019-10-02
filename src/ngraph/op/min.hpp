@@ -23,15 +23,16 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v0 {
+        namespace v0
+        {
             /// \brief Min-reduction operation.
-            class Min : public util::ArithmeticReduction {
+            class Min : public util::ArithmeticReduction
+            {
             public:
                 NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Min", 0};
 
-                const NodeTypeInfo &get_type_info() const override { return type_info; }
-
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a "min" reduction operation.
                 Min() = default;
 
@@ -39,23 +40,24 @@ namespace ngraph
                 ///
                 /// \param arg The tensor to be reduced.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
-                Min(const Output <Node> &arg, const AxisSet &reduction_axes);
+                Min(const Output<Node>& arg, const AxisSet& reduction_axes);
 
                 /// \brief Constructs a "min" reduction operation.
                 ///
                 /// \param arg The tensor to be reduced.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
-                Min(const Output <Node> &arg, const Output <Node> &reduction_axes);
+                Min(const Output<Node>& arg, const Output<Node>& reduction_axes);
 
                 virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector &new_args) const override;
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
                 /// \return The default value for Min.
                 virtual std::shared_ptr<Node> get_default_value() const override;
             };
         }
 
-        namespace v1 {
+        namespace v1
+        {
             class ReduceMin : public util::ArithmeticReductionKeepDims
             {
             public:
@@ -74,9 +76,8 @@ namespace ngraph
                           bool keep_dims = false);
 
                 size_t get_version() const override { return 1; }
-
                 virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,

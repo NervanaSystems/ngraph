@@ -81,13 +81,12 @@ shared_ptr<Node> op::v0::Max::get_default_value() const
     }
 }
 
-
 constexpr NodeTypeInfo op::v1::ReduceMax::type_info;
 
 op::v1::ReduceMax::ReduceMax(const Output<Node>& arg,
                              const Output<Node>& reduction_axes,
                              bool keep_dims)
-        : ArithmeticReductionKeepDims(arg, reduction_axes, keep_dims)
+    : ArithmeticReductionKeepDims(arg, reduction_axes, keep_dims)
 {
     constructor_validate_and_infer_types();
 }
