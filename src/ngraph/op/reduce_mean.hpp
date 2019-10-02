@@ -42,10 +42,6 @@ namespace ngraph
 
                 size_t get_version() const override { return 1; }
                 std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
-
-            protected:
-                void generate_adjoints(autodiff::Adjoints& adjoints,
-                                       const NodeVector& deltas) override;
             };
         }
     }

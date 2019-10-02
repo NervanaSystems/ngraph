@@ -91,11 +91,6 @@ op::v1::ReduceMax::ReduceMax(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-void op::v1::ReduceMax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
-{
-    throw ngraph_error("ReduceMax generate_adjoints not supported implemented");
-}
-
 shared_ptr<Node> op::v1::ReduceMax::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);

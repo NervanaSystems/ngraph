@@ -31,11 +31,6 @@ op::v1::ReduceMean::ReduceMean(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-void op::v1::ReduceMean::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
-{
-    throw ngraph_error("ReduceMean generate_adjoints not supported implemented");
-}
-
 shared_ptr<Node> op::v1::ReduceMean::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
