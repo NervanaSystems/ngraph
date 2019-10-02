@@ -17,7 +17,6 @@
 #include <memory>
 
 #include "ngraph/op/concat.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/slice.hpp"
 
 using namespace std;
