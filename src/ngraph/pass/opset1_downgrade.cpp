@@ -15,8 +15,11 @@
 //*****************************************************************************
 #include "ngraph/pass/opset1_downgrade.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/pad.hpp"
+#include "ngraph/op/reverse.hpp"
+#include "ngraph/type.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -83,6 +86,38 @@ bool pass::Opset1Downgrade::run_on_node(shared_ptr<Node> node)
                                                          tmp->get_pads_begin(),
                                                          tmp->get_pads_end(),
                                                          tmp->get_pad_mode());
+
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Reverse:
+    {
+        auto tmp = as_type_ptr<op::v1::Reverse>(node);
+        auto axes_node = tmp->input_value(1).get_node_shared_ptr();
+        NGRAPH_CHECK(axes_node->is_constant(),
+                     "Unable to convert Reverse:v1 to Reverse:v0 "
+                     "if reduction axes are not constant. Node: ",
+                     *node);
+        const auto axes_node_const = dynamic_pointer_cast<op::Constant>(axes_node);
+        AxisSet axes{};
+        if (tmp->get_mode() == op::v1::Reverse::Mode::INDEX)
+        {
+            axes = axes_node_const->get_axis_vector_val();
+        }
+        else // Mode::MASK
+        {
+            auto axes_mask = axes_node_const->get_vector<bool>();
+            for (size_t i = 0; i < axes_mask.size(); ++i)
+            {
+                if (axes_mask[i])
+                {
+                    axes.emplace(i);
+                }
+            }
+        }
+        auto replacement_node =
+            make_shared<op::v0::Reverse>(node->input(0).get_source_output(), axes);
 
         replace_node(node, replacement_node);
         modified = true;
