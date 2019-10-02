@@ -27,7 +27,6 @@ op::util::ArithmeticReductionKeepDims::ArithmeticReductionKeepDims(const ngraph:
         : ArithmeticReduction(arg, reduction_axes)
         , m_keep_dims{keep_dims}
 {
-    constructor_validate_and_infer_types();
 }
 
 void op::util::ArithmeticReductionKeepDims::validate_and_infer_types()
