@@ -102,13 +102,14 @@ namespace ngraph
         shared_ptr<Node> l2_norm(const Output<Node>& value,
                                  const AxisSet& reduction_axes,
                                  float bias,
-                                 BiasMode bias_mode)
+                                 BiasMode bias_mode,
+                                 bool keep_dims)
         {
             shared_ptr<Node> values{make_shared<op::v1::ReduceSum>(
                 value * value,
                 make_shared<op::Constant>(
                     element::i64, Shape{reduction_axes.size()}, reduction_axes.to_vector()),
-                true)};
+                keep_dims)};
 
             shared_ptr<Node> bias_node{
                 op::Constant::create(values->get_element_type(),

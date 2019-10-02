@@ -750,16 +750,14 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_c_2x4_shape)
     test_case.add_input<float>(input_data);
 
     test_case.add_expected_output<float>(data_shape,
-                                         {
-                                             0.18257418f,
-                                             0.36514837f,
-                                             0.54772252f,
-                                             0.73029673f,
-                                             0.37904903f,
-                                             0.45485884f,
-                                             0.53066862f,
-                                             0.60647845f
-                                         });
+                                         {0.18257418f,
+                                          0.36514837f,
+                                          0.54772252f,
+                                          0.73029673f,
+                                          0.37904903f,
+                                          0.45485884f,
+                                          0.53066862f,
+                                          0.60647845f});
 
     test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }

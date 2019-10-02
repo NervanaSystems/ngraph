@@ -129,7 +129,8 @@ namespace ngraph
                                                        std::placeholders::_1,
                                                        std::placeholders::_2,
                                                        0.f,
-                                                       ngraph::builder::BiasMode::ADD);
+                                                       ngraph::builder::BiasMode::ADD,
+                                                       false);
                     return {reduction::make_ng_reduction_op(
                         node, node.get_ng_inputs().at(0), l2_norm_reduction)};
                 }
