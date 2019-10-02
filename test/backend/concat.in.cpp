@@ -27,6 +27,36 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
+NGRAPH_TEST(${BACKEND_NAME}, concat_negative_axis)
+{
+    Shape shape_a{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{2, 3};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_c{2, 3};
+    auto C = make_shared<op::Parameter>(element::f32, shape_c);
+    Shape shape_r{2, 8};
+    auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, -1),
+                                   ParameterVector{A, B, C});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{2, 4, 8, 16});
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, vector<float>{1, 2, 4, 8, 16, 32});
+    auto c = backend->create_tensor(element::f32, shape_c);
+    copy_data(c, vector<float>{2, 3, 5, 7, 11, 13});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b, c});
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{2, 4, 1, 2, 4, 2, 3, 5, 8, 16, 8, 16, 32, 7, 11, 13}),
+                          read_vector<float>(result),
+                          MIN_FLOAT_TOLERANCE_BITS));
+}
 NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_colwise)
 {
     Shape shape_a{2, 2};
