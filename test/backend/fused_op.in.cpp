@@ -758,7 +758,7 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_c_2x4_shape)
                                              0.37904903f,
                                              0.45485884f,
                                              0.53066862f,
-                                             0.60647845f,
+                                             0.60647845f
                                          });
 
     test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
