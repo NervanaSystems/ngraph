@@ -77,6 +77,7 @@ set(SRC
     opset_pass/reverse_opset_pass.cpp
     opset_pass/softmax_opset_pass.cpp
     opset_pass/sum_opset_pass.cpp
+    opset_pass/topk_opset_pass.cpp
     partial_shape.cpp
     pass.cpp
     pass_liveness.cpp
