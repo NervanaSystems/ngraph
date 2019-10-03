@@ -685,14 +685,7 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                                          num_input_axis_before_ellipses;
             for (int64_t i = 0; i < num_of_hidden_dims; ++i)
             {
-                if (input_shape[input_shape_idx].is_dynamic())
-                {
-                    dim.emplace_back(Dimension::dynamic());
-                }
-                else
-                {
-                    dim.emplace_back(input_shape[input_shape_idx]);
-                }
+                dim.emplace_back(input_shape[input_shape_idx]);
                 input_shape_idx++;
             }
         }
