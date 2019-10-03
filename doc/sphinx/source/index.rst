@@ -38,6 +38,7 @@ nGraph Compiler stack
 
    introduction.rst
    features.rst
+   project/release-notes.rst
 
 .. toctree::
    :maxdepth: 2
