@@ -115,7 +115,7 @@ namespace ngraph
                 /// \param dilations The dilations from forward-prop.
                 /// \param pads_begin The padding-below sizes from forward-prop.
                 /// \param pads_end The padding-above sizes from forward-prop.
-                ConvolutionBackpropData(const Shape& data_batch_shape,
+                ConvolutionBackpropData(const Output<Node>& data_batch_shape,
                                         const Output<Node>& filters,
                                         const Output<Node>& output_delta,
                                         const Strides& strides,
@@ -132,11 +132,8 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 /// \return The data batch shape.
-                const Shape& get_data_batch_shape() const { return m_data_batch_shape; }
-                void set_data_batch_shape(const Shape& data_batch_shape)
-                {
-                    m_data_batch_shape = data_batch_shape;
-                }
+                const Shape get_data_batch_shape() const;
+                void set_data_batch_shape(const Shape& data_batch_shape);
                 /// \return The strides from the forward prop.
                 const Strides& get_strides() const { return m_strides; }
                 void set_strides(const Strides& strides) { m_strides = strides; }
@@ -154,7 +151,6 @@ namespace ngraph
                 CoordinateDiff compute_backward_delta_out_pad_below() const;
 
             protected:
-                Shape m_data_batch_shape;
                 Strides m_strides;
                 Strides m_dilations;
                 CoordinateDiff m_pads_begin;

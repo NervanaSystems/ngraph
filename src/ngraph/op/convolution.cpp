@@ -139,7 +139,7 @@ void op::v1::Convolution::generate_adjoints(autodiff::Adjoints& adjoints, const 
 
     adjoints.add_delta(x,
                        make_shared<op::v1::ConvolutionBackpropData>(
-                           x_shape, f, delta, m_strides, m_dilations, m_pads_begin, m_pads_end));
+                           x, f, delta, m_strides, m_dilations, m_pads_begin, m_pads_end));
 
     adjoints.add_delta(f,
                        make_shared<op::v1::ConvolutionBackpropFilters>(
@@ -152,15 +152,14 @@ shared_ptr<Node> op::v1::Convolution::get_default_value() const
     return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
 }
 
-op::v1::ConvolutionBackpropData::ConvolutionBackpropData(const Shape& data_batch_shape,
+op::v1::ConvolutionBackpropData::ConvolutionBackpropData(const Output<Node>& data_batch_shape,
                                                          const Output<Node>& filters,
                                                          const Output<Node>& output_delta,
                                                          const Strides& strides,
                                                          const Strides& dilations,
                                                          const CoordinateDiff& pads_begin,
                                                          const CoordinateDiff& pads_end)
-    : Op({filters, output_delta})
-    , m_data_batch_shape(data_batch_shape)
+    : Op({data_batch_shape, filters, output_delta})
     , m_strides(strides)
     , m_dilations(dilations)
     , m_pads_begin(pads_begin)
@@ -169,6 +168,21 @@ op::v1::ConvolutionBackpropData::ConvolutionBackpropData(const Shape& data_batch
     constructor_validate_and_infer_types();
 }
 
+const Shape op::v1::ConvolutionBackpropData::get_data_batch_shape() const
+{
+    Shape shape;
+    if (auto const_op = as_type<op::Constant>(input_value(0).get_node()))
+    {
+        shape = const_op->get_shape_val();
+    }
+    return shape;
+}
+
+void op::v1::ConvolutionBackpropData::set_data_batch_shape(const Shape& shape)
+{
+    this->input(0).replace_source_output(
+        op::Constant::create(element::i64, shape, shape)->output(0));
+}
 void op::v1::ConvolutionBackpropData::validate_and_infer_types()
 {
     // Backprop to data is itself convolution, with inputs/outputs/attributes transmogrified as
@@ -214,8 +228,8 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
         ").");
 
     forward_result_shape = infer_convolution_forward(this,
-                                                     m_data_batch_shape,
-                                                     Strides(m_data_batch_shape.size() - 2, 0),
+                                                     get_data_batch_shape(),
+                                                     Strides(get_data_batch_shape().size() - 2, 0),
                                                      m_pads_begin,
                                                      m_pads_end,
                                                      filters_shape,
@@ -231,12 +245,19 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
                           delta_shape,
                           ").");
 
-    set_output_type(0, forward_result_et, m_data_batch_shape);
+    set_output_type(0, forward_result_et, get_data_batch_shape());
 }
 
 void op::v1::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints,
                                                         const NodeVector& deltas)
 {
+    if (auto const_op = as_type<op::Constant>(input_value(0).get_node()))
+    {
+    }
+    else
+    {
+        throw ngraph_error("Autodiff not supported with dynamic shapes");
+    }
     auto delta = deltas.at(0);
 
     auto x = input_value(1);
@@ -262,8 +283,8 @@ void op::v1::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjo
 
         ptrdiff_t pads_end_backward =
             (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) * m_dilations[i] +
-            ((m_pads_begin[i] + ((m_data_batch_shape[i + 2]) - 1) * m_strides[i] + m_pads_end[i] -
-              (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) * m_dilations[i]) %
+            ((m_pads_begin[i] + ((get_data_batch_shape()[i + 2]) - 1) * m_strides[i] +
+              m_pads_end[i] - (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) * m_dilations[i]) %
              m_strides[i]) -
             m_pads_end[i];
 
@@ -303,9 +324,9 @@ shared_ptr<Node>
     op::v1::ConvolutionBackpropData::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<v1::ConvolutionBackpropData>(m_data_batch_shape,
-                                                    new_args.at(0),
+    return make_shared<v1::ConvolutionBackpropData>(new_args.at(0),
                                                     new_args.at(1),
+                                                    new_args.at(2),
                                                     m_strides,
                                                     m_dilations,
                                                     m_pads_begin,
