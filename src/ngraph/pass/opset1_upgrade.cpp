@@ -228,8 +228,8 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 
         auto replacement_node =
             make_shared<op::v1::ConvolutionBackpropFilters>(node->input(0).get_source_output(),
-                                                            filters_shape,
                                                             node->input(1).get_source_output(),
+                                                            node->input(2).get_source_output(),
                                                             strides,
                                                             dilations,
                                                             pads_begin,

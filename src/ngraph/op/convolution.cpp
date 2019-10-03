@@ -143,7 +143,7 @@ void op::v1::Convolution::generate_adjoints(autodiff::Adjoints& adjoints, const 
 
     adjoints.add_delta(f,
                        make_shared<op::v1::ConvolutionBackpropFilters>(
-                           x, f_shape, delta, m_strides, m_dilations, m_pads_begin, m_pads_end));
+                           x, delta, f, m_strides, m_dilations, m_pads_begin, m_pads_end));
 }
 
 constexpr NodeTypeInfo op::v1::ConvolutionBackpropData::type_info;
@@ -381,20 +381,29 @@ CoordinateDiff op::v1::ConvolutionBackpropData::compute_backward_delta_out_pad_a
 constexpr NodeTypeInfo op::v1::ConvolutionBackpropFilters::type_info;
 
 op::v1::ConvolutionBackpropFilters::ConvolutionBackpropFilters(const Output<Node>& data_batch,
-                                                               const Shape& filters_shape,
                                                                const Output<Node>& output_delta,
+                                                               const Output<Node>& filters_shape,
                                                                const Strides& strides,
                                                                const Strides& dilations,
                                                                const CoordinateDiff& pads_begin,
                                                                const CoordinateDiff& pads_end)
-    : Op({data_batch, output_delta})
-    , m_filters_shape(filters_shape)
+    : Op({data_batch, output_delta, filters_shape})
     , m_strides(strides)
     , m_dilations(dilations)
     , m_pads_begin(pads_begin)
     , m_pads_end(pads_end)
 {
     constructor_validate_and_infer_types();
+}
+
+const Shape op::v1::ConvolutionBackpropFilters::get_filters_shape() const
+{
+    Shape shape;
+    if (auto const_op = as_type<op::Constant>(input_value(2).get_node()))
+    {
+        shape = const_op->get_shape_val();
+    }
+    return shape;
 }
 
 void op::v1::ConvolutionBackpropFilters::validate_and_infer_types()
@@ -451,7 +460,7 @@ void op::v1::ConvolutionBackpropFilters::validate_and_infer_types()
                                   Strides(static_cast<size_t>(data_batch_shape.rank()) - 2, 1),
                                   m_pads_begin,
                                   m_pads_end,
-                                  m_filters_shape,
+                                  get_filters_shape(),
                                   m_strides,
                                   m_dilations);
 
@@ -464,7 +473,7 @@ void op::v1::ConvolutionBackpropFilters::validate_and_infer_types()
                           delta_shape,
                           ").");
 
-    set_output_type(0, forward_result_et, m_filters_shape);
+    set_output_type(0, forward_result_et, get_filters_shape());
 }
 
 shared_ptr<Node>
@@ -472,8 +481,8 @@ shared_ptr<Node>
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::ConvolutionBackpropFilters>(new_args.at(0),
-                                                       m_filters_shape,
                                                        new_args.at(1),
+                                                       new_args.at(2),
                                                        m_strides,
                                                        m_dilations,
                                                        m_pads_begin,

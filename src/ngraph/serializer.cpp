@@ -1093,7 +1093,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 auto pads_begin = node_js.at("pads_begin").get<vector<std::ptrdiff_t>>();
                 auto pads_end = node_js.at("pads_end").get<vector<std::ptrdiff_t>>();
                 node = make_shared<op::v1::ConvolutionBackpropFilters>(
-                    args[0], filters_shape, args[1], strides, dilations, pads_begin, pads_end);
+                    args[0], args[1], args[2], strides, dilations, pads_begin, pads_end);
             }
             break;
         }
