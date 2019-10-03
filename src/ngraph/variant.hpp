@@ -27,7 +27,7 @@
 #define DECLARE_VARIANT(VT, API, NAME, VERSION)                                                    \
     template <>                                                                                    \
     class VARIANT_NAME(VT, VERSION)                                                                \
-        : public Variant                                                                   \
+        : public Variant                                                                           \
     {                                                                                              \
     public:                                                                                        \
         VariantImpl() = default;                                                                   \
@@ -35,8 +35,8 @@
             : m_value(value)                                                                       \
         {                                                                                          \
         }                                                                                          \
-        API static constexpr VariantTypeInfo type_info{NAME, VERSION};                     \
-        const VariantTypeInfo& get_type_info() const override { return type_info; }        \
+        API static constexpr VariantTypeInfo type_info{NAME, VERSION};                             \
+        const VariantTypeInfo& get_type_info() const override { return type_info; }                \
         const VT& get() const { return m_value; }                                                  \
         VT& get() { return m_value; }                                                              \
         void set(const VT& value) { m_value = value; }                                             \
@@ -45,8 +45,7 @@
     };
 
 // Convenience macro to define a variant for values of type VT
-#define DEFINE_VARIANT(VT, VERSION)                                                                \
-    constexpr VariantTypeInfo VARIANT_NAME(VT, VERSION)::type_info;
+#define DEFINE_VARIANT(VT, VERSION) constexpr VariantTypeInfo VARIANT_NAME(VT, VERSION)::type_info;
 
 namespace ngraph
 {
