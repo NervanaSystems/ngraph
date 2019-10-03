@@ -181,7 +181,7 @@ const Shape op::v1::ConvolutionBackpropData::get_data_batch_shape() const
 void op::v1::ConvolutionBackpropData::set_data_batch_shape(const Shape& shape)
 {
     this->input(0).replace_source_output(
-        op::Constant::create(element::i64, shape, shape)->output(0));
+        op::Constant::create(element::i64, Shape{shape.size()}, shape)->output(0));
 }
 void op::v1::ConvolutionBackpropData::validate_and_infer_types()
 {
