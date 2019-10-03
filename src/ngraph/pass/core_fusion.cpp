@@ -130,6 +130,8 @@ void pass::CoreFusion::construct_sigmoid_cross_entropy_bprop()
 
         auto pattern_map = m.get_pattern_map();
 
+        // TODO(pthoreho): Add Fused Sofmax+Crossentropy bprop op and replace it with the matched
+        // root node in the call back funtion
         return false;
     };
     auto m = std::make_shared<pattern::Matcher>(bprop_result, "CPUFusion.SigmoidCrossEntropyBprop");
