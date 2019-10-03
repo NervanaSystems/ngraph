@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::BatchMatMul::type_name{"BatchMatMul"};
+constexpr NodeTypeInfo op::BatchMatMul::type_info;
 
 op::BatchMatMul::BatchMatMul(const Output<Node>& arg0, const Output<Node>& arg1)
     : Op({arg0, arg1})

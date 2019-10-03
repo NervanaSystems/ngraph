@@ -18,6 +18,7 @@
 
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -26,8 +27,9 @@ namespace ngraph
         class ConvolutionAdd : public Op
         {
         public:
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            CPU_BACKEND_API
+            static constexpr NodeTypeInfo type_info{"ConvolutionAdd", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
                            const Output<Node>& sum_input,
                            bool with_relu);

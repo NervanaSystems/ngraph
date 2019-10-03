@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::QuantizedConvolution::type_name{"QuantizedConvolution"};
+constexpr NodeTypeInfo op::QuantizedConvolution::type_info;
 
 op::QuantizedConvolution::QuantizedConvolution(const Output<Node>& input,
                                                const Output<Node>& filters,
@@ -193,8 +193,8 @@ shared_ptr<Node> op::QuantizedConvolution::copy_with_new_args(const NodeVector& 
                                                      m_output_axes));
 }
 
-void op::QuantizedConvolution::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                 const NodeVector& deltas)
+void op::QuantizedConvolution::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                                 const NodeVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }

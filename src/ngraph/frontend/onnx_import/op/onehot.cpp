@@ -60,7 +60,7 @@ namespace ngraph
                                                                    -indices_shape.size() - 1,
                                                                    indices_shape.size());
 
-                    auto constant_depth = std::dynamic_pointer_cast<ngraph::op::Constant>(depth);
+                    auto constant_depth = ngraph::as_type_ptr<ngraph::op::Constant>(depth);
 
                     ASSERT_VALID_ARGUMENT(node, constant_depth)
                         << "Only constant values for depth input are supported for the OneHot "

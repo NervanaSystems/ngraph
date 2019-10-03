@@ -20,8 +20,8 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Relu::type_name{"Relu"};
-const string op::ReluBackprop::type_name{"ReluBackprop"};
+constexpr NodeTypeInfo op::Relu::type_info;
+constexpr NodeTypeInfo op::ReluBackprop::type_info;
 
 op::Relu::Relu(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)

@@ -30,8 +30,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"LayerNorm", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             LayerNorm() = default;
             /// \brief Constructs an LayerNorm operation.
             ///
@@ -81,8 +81,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"LayerNormBackprop", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             LayerNormBackprop() = default;
             /// \brief Constructs an LayerNormBackprop operation.
             ///

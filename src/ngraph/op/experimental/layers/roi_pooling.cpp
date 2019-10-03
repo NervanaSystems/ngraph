@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::ROIPooling::type_name{"ROIPooling"};
+constexpr NodeTypeInfo op::ROIPooling::type_info;
 
 op::ROIPooling::ROIPooling(const Output<Node>& input,
                            const Output<Node>& coords,

@@ -25,7 +25,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Maximum::type_name{"Maximum"};
+constexpr NodeTypeInfo op::Maximum::type_info;
 
 op::Maximum::Maximum(const Output<Node>& arg0,
                      const Output<Node>& arg1,

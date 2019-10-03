@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::SquaredDifference::type_name{"SquaredDifference"};
+constexpr NodeTypeInfo op::SquaredDifference::type_info;
 
 op::SquaredDifference::SquaredDifference(const Output<Node>& x1, const Output<Node>& x2)
     : FusedOp({x1, x2})

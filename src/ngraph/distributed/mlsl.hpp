@@ -138,15 +138,18 @@ namespace ngraph
                 env.DeleteDistribution(distribution);
             }
 
-            void recv(void* in, element::Type_t element_type, size_t count, int src_id) override
+            void recv(void* /* in */,
+                      element::Type_t /* element_type */,
+                      size_t /* count */,
+                      int /* src_id */) override
             {
                 throw ngraph_error("recv not supported/mentioned in MLSL");
             }
 
-            void send(const void* in,
-                      element::Type_t element_type,
-                      size_t count,
-                      int dest_id) override
+            void send(const void* /* in */,
+                      element::Type_t /* element_type */,
+                      size_t /* count */,
+                      int /* dest_id */) override
             {
                 throw ngraph_error("send not supported/mentioned in MLSL");
             }

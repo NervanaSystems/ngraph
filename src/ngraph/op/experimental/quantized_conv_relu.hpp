@@ -28,8 +28,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"QuantizedConvolutionRelu", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             QuantizedConvolutionRelu() = default;
             QuantizedConvolutionRelu(const Output<Node>& data_batch,
                                      const Output<Node>& filters,

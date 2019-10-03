@@ -29,7 +29,7 @@ using namespace std;
 using namespace ngraph;
 
 // *** SOFTMAX OP SET 0 ***
-const string op::Softmax::type_name{"Softmax"};
+constexpr NodeTypeInfo op::v0::Softmax::type_info;
 
 op::v0::Softmax::Softmax(const Output<Node>& arg, const AxisSet& axes)
     : Op({arg})
@@ -107,7 +107,7 @@ void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const Node
 }
 
 // *** SOFTMAX OP SET V1 ***
-const string op::v1::Softmax::type_name{"Softmax"};
+constexpr NodeTypeInfo op::v1::Softmax::type_info;
 
 op::v1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
     : Op({arg})
@@ -141,7 +141,8 @@ shared_ptr<Node> op::v1::Softmax::copy_with_new_args(const NodeVector& new_args)
     return make_shared<op::v1::Softmax>(new_args.at(0), m_axis);
 }
 
-void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                        const NodeVector& /* deltas */)
 {
     throw ngraph_error("op::v1::Softmax::generate_adjoints function is not implemented yet");
 

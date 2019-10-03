@@ -6,8 +6,8 @@ Working with Backends
 
 * :ref:`what_is_backend`
 * :ref:`how_to_use`
-* :ref:`miscellaneous_resources`
-
+* :ref:`ngraph_bridge`
+* :ref:`opencl`
 
 .. _what_is_backend:
 
@@ -32,6 +32,13 @@ from source in our documentation: :ref:`ngraph_plaidml_backend`.
    Intel® Architecture Processors (CPUs), Yes, Yes
    Intel® Nervana™ Neural Network Processor™ (NNPs), Yes, Yes
    AMD\* GPUs, Yes, Some
+
+
+Each backend must define a function ``ngraph_register_${backend}_backend`` 
+that registers a backend constructor function and ensures that 
+initializations are performed. An example that includes initializations 
+can be found in the ``ngraph/src/runtime/cpu/cpu_backend.cpp`` file. See 
+also: :ref:`backend_api_macros`.
 
 
 .. _how_to_use:
@@ -63,34 +70,10 @@ interface; each backend implements the following five functions:
   against a particular set of tensors.
 
 
-.. _miscellaneous_resources: 
+.. _ngraph_bridge:
 
-Miscellaneous resources
-=======================
-
-Additional resources for device or framework-specific configurations:
-
-OpenCL
-------
-
-OpenCL is needed for the :doc:`plaidml-ng-api/index`; this is not needed if 
-you have only a CPU backend.  
-
-#. Install the latest Linux driver for your system. You can find a list 
-   of drivers at https://software.intel.com/en-us/articles/opencl-drivers;
-   You may need to install `OpenCL SDK`_ in case of an ``libOpenCL.so`` absence.
-
-#. Any user added to "video" group: 
-
-   .. code-block:: console 
-
-      sudo usermod –a –G video <user_id>
-
-   may, for example, be able to find details at the ``/sys/module/[system]/parameters/`` location. 
-
-
-nGraph Bridge from TensorFlow\*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+nGraph bridge
+-------------
 
 When specified as the generic backend -- either manually or automatically 
 from a framework --  ``NGRAPH`` defaults to CPU, and it also allows for 
@@ -112,6 +95,26 @@ depending on the parameters specified.
 * ``NGRAPH_INTELGPU_DUMP_FUNCTION`` -- dumps nGraph’s functions 
   in dot format.
 
+.. _opencl: 
+
+OpenCL
+------
+
+OpenCL is only needed for the :doc:`plaidml-ng-api/index`; if you have only 
+a CPU backend, it is not needed.
+
+#. Install the latest Linux driver for your system. You can find a list 
+   of drivers at https://software.intel.com/en-us/articles/opencl-drivers;
+   You may need to install `OpenCL SDK`_ in case of an ``libOpenCL.so`` absence.
+
+#. Any user added to "video" group:
+
+   .. code-block:: console
+
+      sudo usermod –a –G video <user_id>
+
+   may, for example, be able to find details at the ``/sys/module/[system]/parameters/`` 
+   location.
 
 .. _axpy.py example: https://github.com/tensorflow/ngraph-bridge/blob/master/examples/axpy.py
 .. _OpenCL SDK: https://software.intel.com/en-us/opencl-sdk
