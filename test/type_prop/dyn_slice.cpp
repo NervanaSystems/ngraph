@@ -403,3 +403,16 @@ TEST(type_prop, dynslice_params_et_wrong)
         DynSlice_Test_Type_Except(arg, lower_bounds, upper_bounds, strides);
     }
 }
+
+TEST(DeduceDynSliceTest, dynslice_arg_dimension_dynamic_output_dimension_dynamic)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape{3, Dimension::dynamic()});
+    auto lower_bounds = op::Constant::create(element::i64, {2}, {1, 2});
+    auto upper_bounds = op::Constant::create(element::i64, {2}, {2, 3});
+    auto strides = op::Constant::create(element::i64, {2}, {1, 1});
+
+    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+
+    auto output_val = PartialShape{1, Dimension::dynamic()};
+    EXPECT_TRUE(output_val.compatible(r->get_output_partial_shape(0)));
+}
