@@ -2128,7 +2128,7 @@ namespace ngraph
                     mkldnn_emitter.reserve_descriptor_space(descs.size());
                     serialize_memory_descs(desc_file, descs, deps[0]);
 
-                    writer << "const float alpha = " << alpha << ";\n";
+                    //writer << "const float alpha = " << alpha << ";\n";
                     writer << "auto gelu_desc = "
                               "mkldnn::eltwise_forward::desc(mkldnn::prop_kind::forward, "
                               "mkldnn::algorithm::eltwise_gelu, "

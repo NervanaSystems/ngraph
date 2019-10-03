@@ -17,6 +17,7 @@
 #include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 //#include "ngraph/runtime/cpu/kernel/relu.hpp"
+#include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
@@ -42,7 +43,7 @@ namespace ngraph
                 //auto alpha = static_cast<const ngraph::op::BoundedRelu*>(node)->get_alpha();
 
                 std::cout << "\tuse mkldnn = " << runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node) << "\n";
-                if (true)
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     std::cout << "Registering functor for Gelu\n";
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
@@ -81,6 +82,8 @@ namespace ngraph
                 }
                 else
                 {
+                    throw ngraph_error(
+                        "Gelu is supported with MKLDNN kernel only for f32.");
                     /*std::function<decltype(runtime::cpu::kernel::bounded_relu<float>)> kernel;
 
                     SELECT_KERNEL(

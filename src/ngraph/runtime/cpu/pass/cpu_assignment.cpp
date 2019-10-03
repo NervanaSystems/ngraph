@@ -752,9 +752,8 @@ namespace ngraph
                     auto arg0_rank = arg0_shape.size();
                     auto result_shape = node->get_output_shape(0);
 
-                    //if ((arg0_rank == 4 || arg0_rank == 2) &&
-                    //    node->get_input_element_type(0) == element::f32)
-                    //{
+                    if (node->get_input_element_type(0) == element::f32)
+                    {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         std::cout << " Setting mkldnn to true\n";
@@ -766,7 +765,7 @@ namespace ngraph
                             op_annotations->add_in_place_oi_pair({0, 0, true});
                         }
                         gelu->set_op_annotations(op_annotations);
-                    //}
+                    }
                 }
 
                 template <>

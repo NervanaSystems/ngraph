@@ -380,7 +380,7 @@ mkldnn::eltwise_forward::desc MKLDNNEmitter::get_bounded_relu_desc(const ngraph:
     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
 
     return mkldnn::eltwise_forward::desc(mkldnn::prop_kind::forward_training,
-                                         mkldnn::algorithm::eltwise_gelu,
+                                         mkldnn::algorithm::eltwise_bounded_relu,
                                          input_desc,
                                          alpha,
                                          0.0f);
@@ -392,9 +392,9 @@ mkldnn::eltwise_forward::desc MKLDNNEmitter::get_gelu_desc(const ngraph::Node* n
     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
 
     return mkldnn::eltwise_forward::desc(mkldnn::prop_kind::forward_training,
-                                         mkldnn::algorithm::eltwise_bounded_relu,
+                                         mkldnn::algorithm::eltwise_gelu,
                                          input_desc,
-                                         0.0f,
+                                         1.0f, //Note: this 1. this will always be 1, so no need for alpha
                                          0.0f);
 }
 
