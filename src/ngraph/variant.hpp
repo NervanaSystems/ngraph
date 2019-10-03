@@ -21,32 +21,6 @@
 #include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/type.hpp"
 
-#define VARIANT_NAME(VT, VERSION) VariantImpl<VT, VERSION>
-
-// Convenience macro to declare a variant for values of type VT
-#define DECLARE_VARIANT(VT, API, NAME, VERSION)                                                    \
-    template <>                                                                                    \
-    class VARIANT_NAME(VT, VERSION)                                                                \
-        : public Variant                                                                           \
-    {                                                                                              \
-    public:                                                                                        \
-        VariantImpl() = default;                                                                   \
-        VariantImpl(const VT& value)                                                               \
-            : m_value(value)                                                                       \
-        {                                                                                          \
-        }                                                                                          \
-        API static constexpr VariantTypeInfo type_info{NAME, VERSION};                             \
-        const VariantTypeInfo& get_type_info() const override { return type_info; }                \
-        const VT& get() const { return m_value; }                                                  \
-        VT& get() { return m_value; }                                                              \
-        void set(const VT& value) { m_value = value; }                                             \
-    private:                                                                                       \
-        VT m_value;                                                                                \
-    };
-
-// Convenience macro to define a variant for values of type VT
-#define DEFINE_VARIANT(VT, VERSION) constexpr VariantTypeInfo VARIANT_NAME(VT, VERSION)::type_info;
-
 namespace ngraph
 {
     using VariantTypeInfo = DiscreteTypeInfo;
@@ -58,32 +32,51 @@ namespace ngraph
         virtual const VariantTypeInfo& get_type_info() const = 0;
     };
 
-    // Hand-constructed variant
-    class StringVariant : public Variant
+    template <typename VT>
+    class VariantImpl : public Variant
     {
     public:
-        NGRAPH_API
-        static constexpr VariantTypeInfo type_info{"Variant::StringVariant", 0};
-        const VariantTypeInfo& get_type_info() const override { return type_info; }
-        StringVariant(const std::string& value)
+        using value_type = VT;
+
+        VariantImpl(const value_type& value)
             : m_value(value)
         {
         }
-        StringVariant() = default;
-        const std::string& get() const { return m_value; }
-        std::string& get() { return m_value; }
-        void set(const std::string& value) { m_value = value; }
-    private:
-        std::string m_value;
+        const value_type& get() const { return m_value; }
+        value_type& get() { return m_value; }
+        void set(const value_type& value) { m_value = value; }
+    protected:
+        value_type m_value;
     };
 
-    template <typename VT, int version>
-    class VariantImpl : public Variant
+    template <typename VT>
+    class VariantWrapper
     {
     };
 
-    // Declare a variant for std::string
-    DECLARE_VARIANT(std::string, NGRAPH_API, "Variant::std::string", 0)
-    // Declare a variant for uint64_t
-    DECLARE_VARIANT(uint64_t, NGRAPH_API, "Variant::uint64_t", 0)
+    template <>
+    class VariantWrapper<std::string> : public VariantImpl<std::string>
+    {
+    public:
+        NGRAPH_API
+        static constexpr VariantTypeInfo type_info{"Variant::std::string", 0};
+        const VariantTypeInfo& get_type_info() const override { return type_info; }
+        VariantWrapper(const value_type& value)
+            : VariantImpl<value_type>(value)
+        {
+        }
+    };
+
+    template <>
+    class VariantWrapper<int64_t> : public VariantImpl<int64_t>
+    {
+    public:
+        NGRAPH_API
+        static constexpr VariantTypeInfo type_info{"Variant::int64_t", 0};
+        const VariantTypeInfo& get_type_info() const override { return type_info; }
+        VariantWrapper(const value_type& value)
+            : VariantImpl<value_type>(value)
+        {
+        }
+    };
 }

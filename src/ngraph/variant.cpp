@@ -19,9 +19,5 @@
 using namespace ngraph;
 
 // Define variant for std::string
-DEFINE_VARIANT(std::string, 0)
-// Define variant for uint64_t
-DEFINE_VARIANT(uint64_t, 0)
-
-// Define StringVariant
-constexpr ngraph::VariantTypeInfo ngraph::StringVariant::type_info;
+constexpr VariantTypeInfo VariantWrapper<std::string>::type_info;
+constexpr VariantTypeInfo VariantWrapper<int64_t>::type_info;
