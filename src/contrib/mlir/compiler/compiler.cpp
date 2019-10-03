@@ -137,7 +137,7 @@ static llvm::cl::opt<std::string>
     createOp<op_name>(MLIRCompiler & compiler, const ngraph::Node* ngNode)
 
 // Default optimization level.
-unsigned MLIRCompiler::mlirOptLevel = 2;
+llvm::CodeGenOpt::Level MLIRCompiler::mlirOptLevel = llvm::CodeGenOpt::Level::Aggressive;
 
 // Target machine will be properly initialized by `init_mlir`.
 std::unique_ptr<llvm::TargetMachine> MLIRCompiler::targetMachine;
@@ -184,8 +184,9 @@ void MLIRCompiler::init_mlir()
         // Override default optimization level with macro value.
         if (char* optLevelStr = std::getenv("NGRAPH_MLIR_OPT_LEVEL"))
         {
-            mlirOptLevel = std::stoi(optLevelStr);
-            NGRAPH_CHECK(mlirOptLevel >= 0 && mlirOptLevel <= 3, "Invalid optimization level");
+            unsigned clOptLevel = std::stoi(optLevelStr);
+            NGRAPH_CHECK(clOptLevel >= 0 && clOptLevel <= 3, "Invalid optimization level");
+            mlirOptLevel = (llvm::CodeGenOpt::Level)clOptLevel;
         }
 
         // Initialize LLVM targets and target machine for current host.
@@ -391,7 +392,7 @@ void MLIRCompiler::lowerNgDialect()
     // the default or user-provided optimization level.
     auto llvmTransformer =
         mlir::makeOptimizingTransformer(mlirOptLevel, /*sizeLevel=*/0, targetMachine.get());
-    auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvmTransformer);
+    auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvmTransformer, mlirOptLevel);
     NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
     m_engine = std::move(maybeEngine.get());
 }
