@@ -67,20 +67,22 @@ struct Ship
     int16_t y;
 };
 
-template <>
-class VariantWrapper<Ship> : public VariantImpl<Ship>
+namespace ngraph
 {
-public:
-    NGRAPH_API
-    static constexpr VariantTypeInfo type_info{"Variant::Ship", 0};
-    const VariantTypeInfo& get_type_info() const override { return type_info; }
-    VariantWrapper(const value_type& value)
-        : VariantImpl<value_type>(value)
+    template <>
+    class VariantWrapper<Ship> : public VariantImpl<Ship>
     {
-    }
-};
+    public:
+        static constexpr VariantTypeInfo type_info{"Variant::Ship", 0};
+        const VariantTypeInfo& get_type_info() const override { return type_info; }
+        VariantWrapper(const value_type& value)
+            : VariantImpl<value_type>(value)
+        {
+        }
+    };
 
-constexpr VariantTypeInfo VariantWrapper<Ship>::type_info;
+    constexpr VariantTypeInfo VariantWrapper<Ship>::type_info;
+}
 
 TEST(op, variant)
 {
