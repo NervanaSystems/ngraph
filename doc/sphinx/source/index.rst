@@ -12,9 +12,9 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-######################
-nGraph Compiler stack 
-######################
+
+nGraph Compiler stack Documentation 
+###################################
 
 
 .. _ngraph_home:
