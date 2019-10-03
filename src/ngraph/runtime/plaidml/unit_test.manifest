@@ -188,6 +188,7 @@ max_trivial_5d_int32
 floor_int32
 any_trivial
 any_2x2x3_eliminate_dim_0
+backwards_batch_norm_training_3d
 
 # unsupported op: `GenerateMask`
 generate_mask
@@ -262,6 +263,9 @@ dot_matrix_2x0_0x2
 dot_2x0_0
 auto_bcast_binary_elementwise
 max_pool_2d_1channel_1image_overpadded
+
+# node validation error: "Applying function, tensor with mismatching dimensionality: F, expected=4, got=5"
+group_conv_groups_included_in_shape
 
 # passes locally, fails in CI
 numeric_float_nan

@@ -35,7 +35,8 @@ using namespace std;
 
 shared_ptr<Node> builder::reshape(const Output<Node>& value, const Shape& shape)
 {
-    return make_shared<op::Reshape>(value, get_default_order(value.get_shape().size()), shape);
+    return make_shared<op::Reshape>(value, get_default_order(value.get_shape().size()), shape)
+        ->add_provenance_group_members_above({value});
 }
 
 shared_ptr<Node> builder::reorder_axes(const Output<Node>& value, vector<size_t> axes_order)
@@ -55,7 +56,8 @@ shared_ptr<Node> builder::reorder_axes(const Output<Node>& value, vector<size_t>
     }
 
     auto axis_vector = AxisVector{begin(axes_order), end(axes_order)};
-    return make_shared<op::Reshape>(value, axis_vector, out_shape);
+    return make_shared<op::Reshape>(value, axis_vector, out_shape)
+        ->add_provenance_group_members_above({value});
 }
 
 shared_ptr<Node> builder::transpose(const Output<Node>& value)
@@ -80,7 +82,8 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, int axis)
         accumulate(next(begin(data_shape), axis), end(data_shape), 1UL, multiplies<size_t>());
 
     return make_shared<op::Reshape>(
-        value, get_default_order(data_shape.size()), Shape{first_dim_size, last_dim_size});
+               value, get_default_order(data_shape.size()), Shape{first_dim_size, last_dim_size})
+        ->add_provenance_group_members_above({value});
 }
 
 // Dynamic version of "flatten".
@@ -118,7 +121,8 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, const Output<Node>&
     auto flattened_dims = make_shared<op::Concat>(NodeVector{row_dims_prod, col_dims_prod}, 0);
 
     // result := DynReshape(value, flattened_dims)
-    return make_shared<op::DynReshape>(value, flattened_dims);
+    return make_shared<op::DynReshape>(value, flattened_dims)
+        ->add_provenance_group_members_above({value});
 }
 
 shared_ptr<Node> builder::squeeze(const Output<Node>& value, vector<size_t> axes)
@@ -166,5 +170,6 @@ shared_ptr<Node> builder::expand_dims(const Output<Node>& value, size_t axis)
     advance(empty_axis_it, axis);
     output_shape.insert(empty_axis_it, 1);
     return make_shared<op::Reshape>(
-        value, get_default_order(value.get_shape().size()), output_shape);
+               value, get_default_order(value.get_shape().size()), output_shape)
+        ->add_provenance_group_members_above({value});
 }

@@ -323,7 +323,101 @@ void Node::set_placement_index(size_t placement)
     m_placement_index = placement;
 }
 
-const std::set<std::string>& Node::get_provenance_tags() const
+void Node::add_provenance_group_member(const shared_ptr<Node>& node)
+{
+    m_provenance_group.insert(node);
+}
+
+void Node::remove_provenance_group_member(const shared_ptr<Node>& node)
+{
+    m_provenance_group.erase(node);
+}
+
+void Node::replace_provenance_group_member(const shared_ptr<Node>& current_node,
+                                           const shared_ptr<Node>& replacement_node)
+{
+    // Catch up with the current state of the group
+    replacement_node->add_provenance_tags(get_provenance_tags());
+    if (current_node != nullptr)
+    {
+        remove_provenance_group_member(current_node);
+        // Catch up with what was added to the current node
+        replacement_node->add_provenance_tags(current_node->get_provenance_tags());
+    }
+    add_provenance_group_member(replacement_node);
+}
+
+const set<shared_ptr<Node>>& Node::get_provenance_group_members() const
+{
+    return m_provenance_group;
+}
+
+shared_ptr<Node> Node::add_provenance_group_members_above(const OutputVector& base)
+{
+    set<Node*> base_set;
+    for (auto& output : base)
+    {
+        Node* node = output.get_node();
+        if (node == this)
+        {
+            // A builder did nothing
+            return shared_from_this();
+        }
+        base_set.insert(node);
+    }
+    vector<Node*> todo;
+    for (auto value : input_values())
+    {
+        todo.push_back(value.get_node());
+    }
+    while (!todo.empty())
+    {
+        Node* node = todo.back();
+        todo.pop_back();
+        if (base_set.count(node) > 0)
+        {
+            continue;
+        }
+        add_provenance_group_member(node->shared_from_this());
+        for (auto value : node->input_values())
+        {
+            if (0 == node->m_provenance_group.count(value.get_node_shared_ptr()))
+            {
+                todo.push_back(value.get_node());
+            }
+        }
+        base_set.insert(node);
+    }
+    return shared_from_this();
+}
+
+void Node::add_provenance_tags_above(const OutputVector& base,
+                                     const std::unordered_set<std::string>& tag_set)
+{
+    set<Node*> base_set;
+    for (auto& output : base)
+    {
+        base_set.insert(output.get_node());
+    }
+    vector<Node*> todo{this};
+    while (!todo.empty())
+    {
+        Node* node = todo.back();
+        todo.pop_back();
+        if (base_set.count(node) > 0)
+        {
+            continue;
+        }
+        node->add_provenance_tags(tag_set);
+        for (auto value : node->input_values())
+        {
+            todo.push_back(value.get_node());
+        }
+        base_set.insert(node);
+    }
+}
+
+const std::unordered_set<std::string>& Node::get_provenance_tags() const
 {
     return m_provenance_tags;
 }
@@ -331,13 +425,9 @@ const std::set<std::string>& Node::get_provenance_tags() const
 void Node::add_provenance_tag(const std::string& tag)
 {
     m_provenance_tags.insert(tag);
-}
-
-void Node::add_provenance_tags(const std::set<std::string>& tag_set)
-{
-    for (auto tag : tag_set)
+    for (auto node : m_provenance_group)
     {
-        add_provenance_tag(tag);
+        node->add_provenance_tag(tag);
     }
 }
 
