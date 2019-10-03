@@ -78,7 +78,7 @@ data:
 
 
 Find more information about nGraph and ONNX in the 
-`nGraph ONNX`_ GitHub\* repository.
+`nGraph ONNX`_ GitHub* repository.
 
 
 .. _ngraph ONNX: https://github.com/NervanaSystems/ngraph-onnx

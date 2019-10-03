@@ -23,22 +23,11 @@ nGraph Compiler stack
 
    nGraph Compiler stack documentation for version |version|.
 
-   Documentation for the latest (master) development branch can be found 
-   at https://ngraph.nervanasys.com/docs/latest 
-   .. https://docs.ngraph.ai/
-
 .. only:: (development or daily)
 
    nGraph Compiler stack documentation for the master tree under development 
    (version |version|).
 
-
-The nGraph Library and Compiler stack are provided under the `Apache 2.0 license`_ 
-(found in the LICENSE file in the project's `repo`_). It may also import or reference 
-packages, scripts, and other files that use licensing.
-
-.. _Apache 2.0 license: https://github.com/NervanaSystems/ngraph/blob/master/LICENSE
-.. _repo: https://github.com/NervanaSystems/ngraph
 
 .. toctree::
    :name: mastertoctree
@@ -46,7 +35,6 @@ packages, scripts, and other files that use licensing.
 
 .. toctree::
    :maxdepth: 1
-   :caption: Getting Started
 
    introduction.rst
    features.rst
@@ -89,14 +77,19 @@ packages, scripts, and other files that use licensing.
 
 .. toctree::
    :maxdepth: 1
-   :caption: Project Metadata
+   :caption: Contributing
 
-   project/release-notes.rst
    project/contribution-guide.rst
-   project/index.rst
-   project/extras/index.rst 
    glossary.rst
 
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   project/release-notes.rst
+   project/index.rst
+   project/extras/index.rst 
 
 
 .. only:: html

@@ -3,11 +3,10 @@
 Working with Frameworks
 =======================
 
-.. include:: overview.rst
-
 .. toctree::
    :maxdepth: 1
    
+   overview.rst
    getting_started.rst
    onnx_integ.rst 
    paddle_integ.rst

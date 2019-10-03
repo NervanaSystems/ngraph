@@ -3,31 +3,32 @@
 Overview
 ========
 
-To understand how a data science :term:`framework`(`TensorFlow <tensorflow_connect>`_, 
-PyTorch, :doc:`PaddlePaddle`, and others) can unlock acceleration available in 
+To understand how a data science :term:`framework` (`TensorFlow <tensorflow_connect>`_, 
+PyTorch, :doc:`paddle_integ`, and others) can unlock acceleration available in 
 the nGraph Compiler, it helps to familiarize yourself with some basic concepts.
 
-We use the term :term:`bridge` to define the code that connects to any nGraph 
+We use the term :term:`bridge` to describe code that connects to any nGraph 
 device backend(s) while maintaining the framework's programmatic or user 
 interface. A `bridge currently exists for the TensorFlow framework`_. We 
 also have a :doc:`paddle_integ` bridge. Intel previously 
 `contributed work to an MXNet bridge <../project/extras/testing_latency>`_; 
 however, support for the MXNet bridge is no longer active. 
 
-For some of the existing bridges, getting up and running is as simple as running 
-``pip install``, downloading a trained model, and running an inference. `ONNX`_ 
-on its own is not a framework; however, it can be used with nGraph's 
-:doc:`../python_api/index` to import and execute ONNX models in a similar manner.
+`ONNX`_ on its own is not a framework; however, it can be used with nGraph's 
+:doc:`../python_api/index` to import and execute ONNX models.
 
 Because it is framework agnostic (providing opportunities to optimize at the 
 graph level), nGraph can do the heavy lifting required by many popular 
-`workloads <validated/list>`_ without any additional effort of the framework user.  
+`workloads <validated/list>`_ without any additional effort of the framework user.
+Optimizations that were previously available only after careful integration of 
+a kernel or hardware-specific library are exposed via the 
+`Core graph construction API <../core/constructing-graphs>`_ 
 
 The illustration below shows how this works. 
 
 .. figure:: ../graphics/overview-framework-bridges.svg
    :width: 960px
-   :alt: 
+   :alt: Bridge to nGraph graph construction API
 
 While a :abbr:`Deep Learning (DL)` framework is ultimately meant for end-use by 
 data scientists, or for deployment in cloud container environments, nGraph's 
