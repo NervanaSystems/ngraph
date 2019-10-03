@@ -41,11 +41,7 @@ void op::BatchMatMul::validate_and_infer_types()
     // Check input types
     const auto& arg0_et = get_input_element_type(0);
     const auto& arg1_et = get_input_element_type(1);
-/*
-    NODE_VALIDATION_CHECK(this,
-                          arg0_et.compatible(arg1_et),
-                          "Inputs arg0 and arg1 must have compatible element type.");
-*/
+
     // Check input shapes
     const PartialShape& arg0_shape = get_input_partial_shape(0);
     const PartialShape& arg1_shape = get_input_partial_shape(1);

@@ -21,7 +21,6 @@
 #include "ngraph/builder/reshape.hpp"
 #include "utils/common.hpp"
 
-
 namespace ngraph
 {
     namespace onnx_import
