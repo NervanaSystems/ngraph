@@ -47,6 +47,7 @@
 #include "ngraph/op/util/index_reduction.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "pass/memory_optimization.hpp"
+#include "tools.hpp"
 
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
@@ -136,7 +137,7 @@ static llvm::cl::opt<std::string>
     createOp<op_name>(MLIRCompiler & compiler, const ngraph::Node* ngNode)
 
 // Default optimization level.
-unsigned MLIRCompiler::mlirOptLevel = 2;
+llvm::CodeGenOpt::Level MLIRCompiler::mlirOptLevel = llvm::CodeGenOpt::Level::Aggressive;
 
 // Target machine will be properly initialized by `init_mlir`.
 std::unique_ptr<llvm::TargetMachine> MLIRCompiler::targetMachine;
@@ -173,7 +174,7 @@ void MLIRCompiler::init_mlir()
 
     if (!initialized)
     {
-        mlir::registerDialect<mlir::NGraphOpsDialect>();
+        initializeNGraphMLIR();
 
         // Register MLIR command line options in the pool of supported flags and and process flags
         // from environment variable to be used by nGraph, MLIR and LLVM.
@@ -183,8 +184,9 @@ void MLIRCompiler::init_mlir()
         // Override default optimization level with macro value.
         if (char* optLevelStr = std::getenv("NGRAPH_MLIR_OPT_LEVEL"))
         {
-            mlirOptLevel = std::stoi(optLevelStr);
-            NGRAPH_CHECK(mlirOptLevel >= 0 && mlirOptLevel <= 3, "Invalid optimization level");
+            unsigned clOptLevel = std::stoi(optLevelStr);
+            NGRAPH_CHECK(clOptLevel >= 0 && clOptLevel <= 3, "Invalid optimization level");
+            mlirOptLevel = (llvm::CodeGenOpt::Level)clOptLevel;
         }
 
         // Initialize LLVM targets and target machine for current host.
@@ -352,7 +354,7 @@ void MLIRCompiler::lowerNgDialect()
 {
     // Lower NG dialect to Affine
     mlir::PassManager pm(&m_context);
-    pm.addPass(mlir::createDialectLoweringPass(this));
+    pm.addPass(mlir::createDialectLoweringPass());
     pm.addPass(mlir::createCanonicalizerPass());
 
     // Apply any generic pass manager command line options.
@@ -390,7 +392,7 @@ void MLIRCompiler::lowerNgDialect()
     // the default or user-provided optimization level.
     auto llvmTransformer =
         mlir::makeOptimizingTransformer(mlirOptLevel, /*sizeLevel=*/0, targetMachine.get());
-    auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvmTransformer);
+    auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvmTransformer, mlirOptLevel);
     NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
     m_engine = std::move(maybeEngine.get());
 }
@@ -639,11 +641,25 @@ mlir::Operation* MLIRCompiler::createGenericOp(const ngraph::Node* ngNode)
 {
     std::vector<mlir::Value*> argValues;
     std::vector<mlir::Type> resTypes;
-    for (auto& arg : ngNode->get_arguments())
+    auto inputMap = m_compiledKernel->get_input_map();
+    std::shared_ptr<descriptor::Tensor> argTensor;
+    for (auto& argOutput : ngNode->input_values())
     {
-        auto argTensor = arg->get_output_tensor_ptr();
-        auto argv = getTensorValue(argTensor.get()).m_value;
-        argValues.push_back(argv);
+        auto argOutputNode = argOutput.get_node();
+        if (as_type<op::Parameter>(argOutputNode))
+        {
+            auto it = inputMap.find(argOutputNode->shared_from_this());
+            NGRAPH_CHECK(it != inputMap.end(), "Parameter not in CK input map");
+
+            argTensor = m_compiledKernel->input_values().at(it->second).get_tensor_ptr();
+        }
+        else
+        {
+            argTensor = argOutput.get_tensor_ptr();
+        }
+
+        auto argV = getTensorValue(argTensor.get()).m_value;
+        argValues.push_back(argV);
     }
 
     for (auto& output : ngNode->outputs())

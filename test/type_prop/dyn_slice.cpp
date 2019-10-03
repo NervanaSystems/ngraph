@@ -179,9 +179,8 @@ INSTANTIATE_TEST_CASE_P(
     type_prop,
     DeduceDynSliceTest,
     ::testing::Values(
-        // TODO(jbobba): These tests should pass.
-        // DynSliceParams({{4}, {1}, {1}, {1}, {0}}, {{-9000}, {-8000}, {2}}, {{}, {}, {}, {}, {}}),
-        // DynSliceParams({{5}, {1}, {1}, {1}, {0}}, {{3}, {2}, {1}}, {{}, {}, {}, {}, {}}),
+        DynSliceParams({{4}, {1}, {1}, {1}, {0}}, {{-9000}, {-8000}, {2}}, {{}, {}, {}, {}, {}}),
+        DynSliceParams({{5}, {1}, {1}, {1}, {0}}, {{3}, {2}, {1}}, {{}, {}, {}, {}, {}}),
         DynSliceParams({{2, 3, 4, 5, 6}, {5}, {5}, {5}, {1, 2, 1, 1, 3}},
                        {{0, 1, 2, 3, 1}, {1, 3, 3, 5, 6}, {1, 1, 1, 2, 2}},
                        {{}, {}, {}, {}, {}}),
@@ -205,7 +204,7 @@ INSTANTIATE_TEST_CASE_P(
         DynSliceParams({{10}, {1}, {1}, {1}, {5}}, {{-1}, {0}, {-2}}, {{}, {0}, {}, {}, {}}),
         // Axis Masks: New, Shrink, Ellipsis
         DynSliceParams({{10}, {1}, {1}, {0}, {1, 10}}, {{0}, {10}, {}}, {{}, {}, {0}, {}, {}}),
-        DynSliceParams({{1, 2, 3}, {2}, {2}, {0}, {1, 2, 2}},
+        DynSliceParams({{1, 2, 3}, {2}, {2}, {0}, {1, 2, 3}},
                        {{0, 0}, {1, 2}, {}},
                        {{}, {}, {}, {}, {1}}),
         DynSliceParams({{1, 2, 3}, {4}, {4}, {0}, {1, 2, 1}},
@@ -214,7 +213,7 @@ INSTANTIATE_TEST_CASE_P(
         DynSliceParams({{1, 2, 3}, {3}, {3}, {0}, {1, 1, 2, 1}},
                        {{0, 0, 1}, {2, 2, 2}, {}},
                        {{}, {}, {0}, {}, {1}}),
-        DynSliceParams({{1, 2, 2, 2}, {1}, {1}, {1}, {1, 2, 2}},
+        DynSliceParams({{1, 2, 2, 2}, {1}, {1}, {1}, {0, 2, 2, 2}},
                        {{-1}, {0}, {-2}},
                        {{1}, {1}, {}, {1}, {}}),
         DynSliceParams({{1, 2, 2, 2}, {4}, {4}, {0}, {1, 2, 2}},
@@ -222,7 +221,56 @@ INSTANTIATE_TEST_CASE_P(
                        {{1}, {1}, {}, {1}, {}}),
         DynSliceParams({{1, 2, 3}, {3}, {3}, {0}, {1, 1, 2}},
                        {{0, 0, 1}, {2, 2, 2}, {}},
-                       {{}, {}, {0}, {2}, {1}})));
+                       {{}, {}, {0}, {2}, {1}}),
+
+        DynSliceParams({{9, 10, 12, 2, 3},  /*arg_shape*/
+                        {4},                /*lower_bounds_shape*/
+                        {4},                /*upper_bounds_shape*/
+                        {4},                /*strides_shape*/
+                        {2, 10, 12, 2, 0}}, /*replacement_shape*/
+
+                       {{2, 0, 0, 3},   /*lower_bounds_val*/
+                        {6, 0, 0, 2},   /*upper_bounds_val*/
+                        {2, 1, 1, -1}}, /*strides_val*/
+
+                       {{2},   /*lower_bounds_mask*/
+                        {2},   /*upper_bounds_mask*/
+                        {},    /*new_axis*/
+                        {},    /*shrink_axis*/
+                        {1}}), /*ellipsis_mask*/
+
+        DynSliceParams({{9, 10, 12, 2, 3},  /*arg_shape*/
+                        {4},                /*lower_bounds_shape*/
+                        {4},                /*upper_bounds_shape*/
+                        {4},                /*strides_shape*/
+                        {3, 10, 12, 1, 0}}, /*replacement_shape*/
+
+                       {{6, 0, 1, 3},    /*lower_bounds_val*/
+                        {1, 0, 2, 2},    /*upper_bounds_val*/
+                        {-2, 1, 1, -1}}, /*strides_val*/
+
+                       {{},    /*lower_bounds_mask*/
+                        {},    /*upper_bounds_mask*/
+                        {},    /*new_axis*/
+                        {},    /*shrink_axis*/
+                        {1}}), /*ellipsis_mask*/
+
+        DynSliceParams({{9, 10, 12, 2, 3},  /*arg_shape*/
+                        {3},                /*lower_bounds_shape*/
+                        {3},                /*upper_bounds_shape*/
+                        {3},                /*strides_shape*/
+                        {9, 10, 12, 1, 0}}, /*replacement_shape*/
+
+                       {{0, 1, 3},   /*lower_bounds_val*/
+                        {0, 2, 2},   /*upper_bounds_val*/
+                        {1, 1, -1}}, /*strides_val*/
+
+                       {{},   /*lower_bounds_mask*/
+                        {},   /*upper_bounds_mask*/
+                        {},   /*new_axis*/
+                        {},   /*shrink_axis*/
+                        {0}}) /*ellipsis_mask*/
+        ));
 
 void DynSlice_Test_Shape_Except(const shared_ptr<Node>& param_0,
                                 const shared_ptr<Node>& param_1,
