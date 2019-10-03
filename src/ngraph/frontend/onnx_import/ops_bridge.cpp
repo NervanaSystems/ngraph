@@ -265,7 +265,7 @@ namespace ngraph
             REGISTER_OPERATOR("Equal", 1, equal);
             REGISTER_OPERATOR("Erf", 1, erf);
             REGISTER_OPERATOR("Exp", 1, exp);
-            REGISTER_OPERATOR("Expand", 8, expand);
+            REGISTER_OPERATOR("Expand", 1, expand);
             REGISTER_OPERATOR("EyeLike", 1, eye_like);
             REGISTER_OPERATOR("Flatten", 1, flatten);
             REGISTER_OPERATOR("Floor", 1, floor);

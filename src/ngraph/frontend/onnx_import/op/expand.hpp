@@ -25,10 +25,13 @@ namespace ngraph
     {
         namespace op
         {
-            namespace set_8
+            namespace set_1
+            // Expand operator has been available since version 8 of the default ONNX operator set.
+            // Currently, Expand is assigned to version 1 due to temporary reason.
             {
                 NodeVector expand(const Node& node);
-            } // namespace set_8
+
+            } // namespace set_1
 
         } // namespace op
 

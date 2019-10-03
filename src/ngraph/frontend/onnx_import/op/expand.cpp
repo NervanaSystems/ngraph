@@ -34,25 +34,24 @@ namespace ngraph
     {
         namespace op
         {
-            namespace set_8
+            namespace set_1
             {
                 NodeVector expand(const Node& node)
                 {
                     const std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
                     const std::shared_ptr<ngraph::Node> shape{node.get_ng_inputs().at(1)};
-                    std::vector<std::size_t> shape_vector;
 
                     NGRAPH_CHECK(shape->is_constant(),
                                  "Ngraph does not support dynamic braodcasting for Expand op.");
 
-                    shape_vector =
+                    std::vector<std::size_t> shape_vector =
                         ngraph::as_type_ptr<ngraph::op::Constant>(shape)->get_vector<std::size_t>();
 
                     const ngraph::Shape shape_shape{shape_vector};
                     return {ngraph::op::numpy_style_broadcast(data, shape_shape)};
                 }
 
-            } // namespace set_8
+            } // namespace set_1
 
         } // namespace op
 
