@@ -558,15 +558,15 @@ shared_ptr<Node> op::v1::AvgPool::copy_with_new_args(const NodeVector& new_args)
 
 constexpr NodeTypeInfo op::v1::AvgPoolBackprop::type_info;
 
-op::v1::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
-                                         const Output<Node>& delta,
+op::v1::AvgPoolBackprop::AvgPoolBackprop(const Output<Node>& delta,
+                                         const Output<Node>& forward_arg_shape,
                                          const Strides& strides,
                                          const Shape& pads_begin,
                                          const Shape& pads_end,
                                          const Shape& kernel,
                                          bool exclude_pad)
-    : Op(check_single_output_args({delta.get_node_shared_ptr()}))
-    , m_forward_arg_shape(forward_arg_shape)
+    : Op(check_single_output_args(
+          {delta.get_node_shared_ptr(), forward_arg_shape.get_node_shared_ptr()}))
     , m_kernel(kernel)
     , m_strides(strides)
     , m_pads_begin(pads_begin)
@@ -574,6 +574,22 @@ op::v1::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
     , m_exclude_pad(exclude_pad)
 {
     constructor_validate_and_infer_types();
+}
+
+const Shape op::v1::AvgPoolBackprop::get_forward_arg_shape() const
+{
+    Shape shape;
+    if (auto const_op = as_type<op::Constant>(input_value(1).get_node()))
+    {
+        shape = const_op->get_shape_val();
+    }
+    return shape;
+}
+
+void op::v1::AvgPoolBackprop::set_forward_arg_shape(const Shape& shape)
+{
+    this->input(1).replace_source_output(
+        op::Constant::create(element::i64, Shape{shape.size()}, shape)->output(0));
 }
 
 void op::v1::AvgPoolBackprop::validate_and_infer_types()
@@ -584,7 +600,7 @@ void op::v1::AvgPoolBackprop::validate_and_infer_types()
     CoordinateDiff pads_end(m_pads_end.begin(), m_pads_end.end());
 
     PartialShape forward_result_shape = infer_batched_pooling_forward(
-        this, m_forward_arg_shape, pads_begin, pads_end, m_kernel, m_strides, m_exclude_pad);
+        this, get_forward_arg_shape(), pads_begin, pads_end, m_kernel, m_strides, m_exclude_pad);
 
     const PartialShape& delta_shape = get_input_partial_shape(0);
 
@@ -598,17 +614,7 @@ void op::v1::AvgPoolBackprop::validate_and_infer_types()
         delta_shape,
         ").");
 
-    set_output_type(0, get_input_element_type(0), m_forward_arg_shape);
-}
-
-const Shape& op::v1::AvgPoolBackprop::get_forward_arg_shape() const
-{
-    return m_forward_arg_shape;
-}
-
-void op::v1::AvgPoolBackprop::set_forward_arg_shape(const Shape& forward_arg_shape)
-{
-    m_forward_arg_shape = forward_arg_shape;
+    set_output_type(0, get_input_element_type(0), get_forward_arg_shape());
 }
 
 const Shape& op::v1::AvgPoolBackprop::get_kernel() const
@@ -664,8 +670,8 @@ void op::v1::AvgPoolBackprop::set_exclude_pad(bool exclude_pad)
 shared_ptr<Node> op::v1::AvgPoolBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<v1::AvgPoolBackprop>(m_forward_arg_shape,
-                                            new_args.at(0),
+    return make_shared<v1::AvgPoolBackprop>(new_args.at(0),
+                                            new_args.at(1),
                                             m_strides,
                                             m_pads_begin,
                                             m_pads_end,
@@ -685,7 +691,7 @@ void op::v1::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const Node
     auto operand = input_value(0);
     auto& operand_shape = get_input_shape(0);
     auto backprop = make_shared<op::v1::AvgPoolBackprop>(
-        operand_shape, delta, m_strides, m_pads_begin, m_pads_end, m_kernel, m_exclude_pad);
+        delta, input_value(1), m_strides, m_pads_begin, m_pads_end, m_kernel, m_exclude_pad);
     adjoints.add_delta(operand, backprop);
 }
 

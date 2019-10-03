@@ -878,7 +878,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 auto pads_end = node_js.at("pads_end").get<vector<size_t>>();
                 auto exclude_pad = get_or_default<bool>(node_js, "exclude_pad", true);
                 node = make_shared<op::v1::AvgPoolBackprop>(
-                    forward_arg_shape, args[0], strides, pads_begin, pads_end, kernel, exclude_pad);
+                    args[0], args[1], strides, pads_begin, pads_end, kernel, exclude_pad);
             }
             break;
         }
