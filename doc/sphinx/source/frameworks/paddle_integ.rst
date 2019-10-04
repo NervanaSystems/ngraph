@@ -67,7 +67,7 @@ is organized in the following file structure:
 
 .. _figure-paddle-dir:
 
-.. figure:: ../graphics/paddlepaddle_directory.png
+.. figure:: ../graphics/PaddlePaddleDir.svg
    :width: 555px
    :alt: 
 
