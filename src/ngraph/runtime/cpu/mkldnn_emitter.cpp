@@ -386,7 +386,7 @@ mkldnn::eltwise_forward::desc MKLDNNEmitter::get_bounded_relu_desc(const ngraph:
                                          0.0f);
 }
 
-mkldnn::eltwise_forward::desc MKLDNNEmitter::get_gelu_desc(const ngraph::Node* node)
+mkldnn::eltwise_forward::desc MKLDNNEmitter::get_gelu_forward_desc(const ngraph::Node* node)
 {
     // TODO: check, do I need alpha?
     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
@@ -396,6 +396,16 @@ mkldnn::eltwise_forward::desc MKLDNNEmitter::get_gelu_desc(const ngraph::Node* n
                                          input_desc,
                                          1.0f, //Note: this 1. this will always be 1, so no need for alpha
                                          0.0f);
+}
+
+mkldnn::eltwise_backward::desc MKLDNNEmitter::get_gelu_backward_desc(const ngraph::Node* node)
+{
+    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+    const float negative_slope = 0.0f;
+    return mkldnn::eltwise_backward::desc(
+        mkldnn::algorithm::eltwise_gelu, result_desc, input_desc, negative_slope);
 }
 
 size_t MKLDNNEmitter::convolution_forward_init(bool with_bias)
@@ -2434,5 +2444,34 @@ void MKLDNNEmitter::build_gelu(
         new mkldnn::eltwise_forward({gelu_desc, executor::global_cpu_engine},
                                     *mkldnn_primitives[input_index],
                                     *mkldnn_primitives[result_index]);
+}
+
+void MKLDNNEmitter::build_gelu_backward(
+    std::vector<mkldnn::memory*>& /* mkldnn_memories */,
+    std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& /* mkldnn_scratchpad_mds */,
+    const mkldnn::eltwise_backward::desc& bwd_desc,
+    const mkldnn::eltwise_forward::desc& fwd_desc,
+    const std::vector<size_t>& deps,
+    size_t relu_index)
+{
+    size_t input_index = deps[0];
+    build_memory_primitive(mkldnn_primitives, bwd_desc.data.data_desc, input_index);
+    size_t delta_index = deps[1];
+    build_memory_primitive(mkldnn_primitives, bwd_desc.data.diff_data_desc, delta_index);
+    size_t result_index = deps[2];
+    build_memory_primitive(mkldnn_primitives, bwd_desc.data.data_desc, result_index);
+
+    // create forward relu primitive descriptor
+    auto relu_pd = mkldnn::eltwise_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
+
+    // create backward relu primitive_descriptor
+    auto relu_bwd_pd =
+        mkldnn::eltwise_backward::primitive_desc(bwd_desc, executor::global_cpu_engine, relu_pd);
+
+    mkldnn_primitives[relu_index] = new mkldnn::eltwise_backward(relu_bwd_pd,
+                                                                 *mkldnn_primitives[input_index],
+                                                                 *mkldnn_primitives[delta_index],
+                                                                 *mkldnn_primitives[result_index]);
 }
 #endif

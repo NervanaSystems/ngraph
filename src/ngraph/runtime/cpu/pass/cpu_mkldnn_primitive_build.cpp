@@ -2113,7 +2113,7 @@ namespace ngraph
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     // query scratchpad size
-                    auto gelu_desc = mkldnn_emitter.get_gelu_desc(node);
+                    auto gelu_desc = mkldnn_emitter.get_gelu_forward_desc(node);
                     mkldnn_emitter.query_scratchpad_eltwise_forward(gelu_desc);
 
                     // Gelu needs 3 primitives: input, result, and eltwise_forward.
@@ -2150,6 +2150,10 @@ namespace ngraph
                            << "] = new mkldnn::memory::desc(gelu_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
+                }
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(GeluBackpropFactor)
+                {
                 }
 
                 template <>

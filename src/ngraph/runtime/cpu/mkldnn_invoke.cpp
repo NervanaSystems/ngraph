@@ -74,6 +74,7 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
     case OpType::BOUNDEDRELU:
     case OpType::CONVERTLAYOUT:
     case OpType::GELU:
+    case OpType::GELUBACKPROP:
     case OpType::LEAKYRELU:
     case OpType::LRN:
     case OpType::MAXPOOL:

@@ -444,6 +444,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Dropout), &runtime::cpu::CPU_Emitter::emit<op::Dropout>},
     {TI(ngraph::op::Tile), &runtime::cpu::CPU_Emitter::emit<op::Tile>},
     {TI(ngraph::op::Gelu), &runtime::cpu::CPU_Emitter::emit<op::Gelu>},
+    {TI(ngraph::op::GeluBackpropFactor), &runtime::cpu::CPU_Emitter::emit<op::GeluBackpropFactor>},
 };
 
 static void

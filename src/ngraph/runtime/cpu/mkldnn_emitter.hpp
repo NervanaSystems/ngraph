@@ -502,7 +502,9 @@ namespace ngraph
 
                 mkldnn::eltwise_forward::desc get_bounded_relu_desc(const ngraph::Node* node);
 
-                mkldnn::eltwise_forward::desc get_gelu_desc(const ngraph::Node* node);
+                mkldnn::eltwise_forward::desc get_gelu_forward_desc(const ngraph::Node* node);
+
+                mkldnn::eltwise_backward::desc get_gelu_backward_desc(const ngraph::Node* node);
 
                 size_t build_dequantization(const ngraph::Node* node,
                                             const mkldnn::memory::desc& input_desc,
@@ -1182,6 +1184,14 @@ namespace ngraph
                                 const mkldnn::eltwise_forward::desc& gelu_desc,
                                 const std::vector<size_t>& deps,
                                 size_t gelu_index);
+
+                void build_gelu_backward(std::vector<mkldnn::memory*>& mkldnn_memories,
+                                        std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                        std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
+                                        const mkldnn::eltwise_backward::desc& bwd_desc,
+                                        const mkldnn::eltwise_forward::desc& fwd_desc,
+                                        const std::vector<size_t>& deps,
+                                        size_t gelu_index);
 
 #if MKLDNN_VERSION_MAJOR >= 1
                 // TODO(jmenon): Get rid of TensorViewWrappers at some point
