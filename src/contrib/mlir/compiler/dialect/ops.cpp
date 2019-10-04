@@ -222,7 +222,6 @@ mlir::LogicalResult verifyOp(NGConvolutionOp* op)
 
     ty = op->res()->getType();
     NGTensorType resultType = ty.cast<NGTensorType>();
-    Type resultEt = resultType.getElementType();
     Shape resultShape = resultType.getShape();
 
     ArrayAttr strides = op->strides();
