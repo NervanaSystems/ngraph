@@ -313,11 +313,11 @@ shared_ptr<op::Constant> fold_constant_binary_arithmetic(shared_ptr<op::Constant
             vector<Tout> out_vec(shape_size(out_shape));
             shared_ptr<op::Power> powop = as_type_ptr<op::Power>(binary);
             runtime::reference::power<Tin>(a->get_data_ptr<Tin>(),
-                                            b->get_data_ptr<Tin>(),
-                                            out_vec.data(),
-                                            a->get_shape(),
-                                            b->get_shape(),
-                                            power_node->get_autob());
+                                           b->get_data_ptr<Tin>(),
+                                           out_vec.data(),
+                                           a->get_shape(),
+                                           b->get_shape(),
+                                           power_node->get_autob());
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
         else if (auto subtract_node = as_type_ptr<op::Subtract>(binary))
@@ -368,7 +368,8 @@ bool is_supported_binary_op(std::shared_ptr<Node> n)
             is_type<op::Equal>(n) || is_type<op::Greater>(n) || is_type<op::GreaterEq>(n) ||
             is_type<op::Less>(n) || is_type<op::LessEq>(n) || is_type<op::Maximum>(n) ||
             is_type<op::Minimum>(n) || is_type<op::Multiply>(n) || is_type<op::NotEqual>(n) ||
-            is_type<op::Or>(n) || is_type<op::Power>(n)  || is_type<op::Subtract>(n) || is_type<op::Xor>(n));
+            is_type<op::Or>(n) || is_type<op::Power>(n) || is_type<op::Subtract>(n) ||
+            is_type<op::Xor>(n));
 }
 
 void pass::ConstantFolding::construct_constant_binary()
