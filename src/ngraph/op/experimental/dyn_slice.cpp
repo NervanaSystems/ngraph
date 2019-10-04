@@ -45,6 +45,61 @@ op::DynSlice::DynSlice(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
+op::DynSlice::DynSlice(const Output<Node>& data,
+                       const Output<Node>& begin,
+                       const Output<Node>& end,
+                       const Output<Node>& stride,
+                       const std::vector<int64_t>& begin_mask,
+                       const std::vector<int64_t>& end_mask,
+                       const std::vector<int64_t>& new_axis_mask,
+                       const std::vector<int64_t>& shrink_axis_mask,
+                       const std::vector<int64_t>& ellipsis_mask)
+    : DynSlice(data,
+               begin,
+               end,
+               stride,
+               convert_mask_to_axis_set(begin_mask),
+               convert_mask_to_axis_set(end_mask),
+               convert_mask_to_axis_set(new_axis_mask),
+               convert_mask_to_axis_set(shrink_axis_mask),
+               convert_mask_to_axis_set(ellipsis_mask))
+{
+}
+
+op::DynSlice::DynSlice(const Output<Node>& data,
+                       const Output<Node>& begin,
+                       const Output<Node>& end,
+                       const std::vector<int64_t>& begin_mask,
+                       const std::vector<int64_t>& end_mask,
+                       const std::vector<int64_t>& new_axis_mask,
+                       const std::vector<int64_t>& shrink_axis_mask,
+                       const std::vector<int64_t>& ellipsis_mask)
+    : DynSlice(data,
+               begin,
+               end,
+               op::Constant::create(
+                   element::i64, Shape{begin_mask.size()}, vector<int64_t>(begin_mask.size(), 1)),
+               convert_mask_to_axis_set(begin_mask),
+               convert_mask_to_axis_set(end_mask),
+               convert_mask_to_axis_set(new_axis_mask),
+               convert_mask_to_axis_set(shrink_axis_mask),
+               convert_mask_to_axis_set(ellipsis_mask))
+{
+}
+
+AxisSet op::DynSlice::convert_mask_to_axis_set(const std::vector<int64_t>& mask) const
+{
+    AxisSet axis_set{};
+    for (auto i = 0; i < mask.size(); ++i)
+    {
+        if (mask[i] == 1)
+        {
+            axis_set.emplace(i);
+        }
+    }
+    return axis_set;
+}
+
 void op::DynSlice::validate_and_infer_types()
 {
     auto lower_bounds_et = get_input_element_type(1);

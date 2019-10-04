@@ -54,6 +54,55 @@ namespace ngraph
                      const AxisSet& shrink_axis = AxisSet{},
                      const AxisSet& ellipsis_mask = AxisSet{});
 
+            /// \brief Constructs a dynamic tensor strided slice operation.
+            ///
+            /// \param data           The tensor to be sliced.
+            /// \param begin          1D input tensor with begin indexes for input blob slicing.
+            /// \param end            1D input tensor with end indexes for input blob slicing.
+            /// \param strides        The slicing strides; for example, strides of `{n,m}` means to
+            ///                       take every nth row and every mth column of the input matrix.
+            /// \param begin_mask     When begin_mask[i] equal to 1 means
+            ///                       that the corresponding dimension of the begin input is ignored
+            /// \param end_mask       When end_mask[i] is 1, the corresponding dimension of
+            ///                       the end input is ignored
+            /// \param new_axis_mask  If new_axis_mask[i] is 1, a length 1 dimension is inserted
+            ///                       on the i-th position
+            /// \param shrink_axis    If shrink_axis_mask[i] is 1, the dimension
+            ///                       on the i-th position is deleted
+            /// \param ellipsis_mask  It inserts missing dimensions on a position of a non-zero bit
+            DynSlice(const Output<Node>& data,
+                     const Output<Node>& begin,
+                     const Output<Node>& end,
+                     const Output<Node>& stride,
+                     const std::vector<int64_t>& begin_mask,
+                     const std::vector<int64_t>& end_mask,
+                     const std::vector<int64_t>& new_axis_mask = std::vector<int64_t>{},
+                     const std::vector<int64_t>& shrink_axis_mask = std::vector<int64_t>{},
+                     const std::vector<int64_t>& ellipsis_mask = std::vector<int64_t>{});
+
+            /// \brief Constructs a dynamic tensor strided slice operation.
+            ///
+            /// \param data           The tensor to be sliced.
+            /// \param begin          1D input tensor with begin indexes for input blob slicing.
+            /// \param end            1D input tensor with end indexes for input blob slicing.
+            /// \param begin_mask     When begin_mask[i] equal to 1 means
+            ///                       that the corresponding dimension of the begin input is ignored
+            /// \param end_mask       When end_mask[i] is 1, the corresponding dimension of
+            ///                       the end input is ignored
+            /// \param new_axis_mask  If new_axis_mask[i] is 1, a length 1 dimension is inserted
+            ///                       on the i-th position
+            /// \param shrink_axis    If shrink_axis_mask[i] is 1, the dimension
+            ///                       on the i-th position is deleted
+            /// \param ellipsis_mask  It inserts missing dimensions on a position of a non-zero bit
+            DynSlice(const Output<Node>& data,
+                     const Output<Node>& begin,
+                     const Output<Node>& end,
+                     const std::vector<int64_t>& begin_mask,
+                     const std::vector<int64_t>& end_mask,
+                     const std::vector<int64_t>& new_axis_mask = std::vector<int64_t>{},
+                     const std::vector<int64_t>& shrink_axis_mask = std::vector<int64_t>{},
+                     const std::vector<int64_t>& ellipsis_mask = std::vector<int64_t>{});
+
             const AxisSet& get_lower_bounds_mask() const { return m_lower_bounds_mask; }
             const AxisSet& get_upper_bounds_mask() const { return m_upper_bounds_mask; }
             const AxisSet& get_new_axis() const { return m_new_axis; }
@@ -68,6 +117,7 @@ namespace ngraph
                                            const NodeVector& deltas) override;
 
         private:
+            AxisSet convert_mask_to_axis_set(const std::vector<int64_t>& mask) const;
             /// Helper method to compute output shape
             Shape compute_output_shape() const;
 
@@ -77,5 +127,6 @@ namespace ngraph
             AxisSet m_shrink_axis;
             AxisSet m_ellipsis_mask;
         };
+        using StridedSlice = DynSlice;
     }
 }
