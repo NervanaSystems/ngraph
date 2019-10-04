@@ -39,9 +39,6 @@ here are also useful if you are working on something built-from-scratch, or on
 an existing framework that is less widely-supported than the popular frameworks
 like TensorFlow and PyTorch.
 
-.. figure:: ../graphics/nGraphTranslation_Vert.svg
-   :width: 725px
-   :alt: Translation flow to nGraph function graph
 
 .. _tune the workload to extract best performance: https://ai.intel.com/accelerating-deep-learning-training-inference-system-level-optimizations
 .. _a few small: https://software.intel.com/en-us/articles/boosting-deep-learning-training-inference-performance-on-xeon-and-xeon-phi
