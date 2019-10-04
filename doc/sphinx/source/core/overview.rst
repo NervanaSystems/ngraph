@@ -26,7 +26,7 @@ are some common patterns: a fairly typical example for a graph-based framework
 is illustrated here, and consists of basically two phases: a **clustering** 
 phase and a **translation** phase.
 
-.. figure:: ../graphics/translation-flow.svg
+.. figure:: ../graphics/nGraphTranslation_Vert.svg
    :alt: The whole stack
 
    Translation flow to an nGraph function 
