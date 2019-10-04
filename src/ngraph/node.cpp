@@ -236,13 +236,19 @@ void Node::validate_and_infer_types()
 
 void Node::set_input_is_relevant_to_shape(size_t i, bool relevant)
 {
-    NGRAPH_CHECK(i < m_inputs.size(), "index '", i, "' out of range in set_input_is_relevant_to_shape(size_t index, bool relevant)");
+    NGRAPH_CHECK(i < m_inputs.size(),
+                 "index '",
+                 i,
+                 "' out of range in set_input_is_relevant_to_shape(size_t index, bool relevant)");
     m_inputs[i].m_is_relevant_to_shape = relevant;
 }
 
 void Node::set_input_is_relevant_to_value(size_t i, bool relevant)
 {
-    NGRAPH_CHECK(i < m_inputs.size(), "index '", i, "' out of range in set_input_is_relevant_to_value(size_t index, bool relevant)");
+    NGRAPH_CHECK(i < m_inputs.size(),
+                 "index '",
+                 i,
+                 "' out of range in set_input_is_relevant_to_value(size_t index, bool relevant)");
     m_inputs[i].m_is_relevant_to_value = relevant;
 }
 
@@ -455,7 +461,8 @@ std::shared_ptr<Node> Node::get_argument(size_t index) const
                      i.get_output().get_node()->get_name(),
                      " has multiple outputs");
     }
-    NGRAPH_CHECK(index < m_inputs.size(), "index '", index, "' out of range in get_argument(size_t index)");
+    NGRAPH_CHECK(
+        index < m_inputs.size(), "index '", index, "' out of range in get_argument(size_t index)");
     return m_inputs[index].get_output().get_node();
 }
 
@@ -612,7 +619,8 @@ size_t Node::get_output_size() const
 
 const element::Type& Node::get_output_element_type(size_t i) const
 {
-    NGRAPH_CHECK(i < m_outputs.size(), "index '", i, "' out of range in get_output_element_type(size_t i)");
+    NGRAPH_CHECK(
+        i < m_outputs.size(), "index '", i, "' out of range in get_output_element_type(size_t i)");
     return m_outputs[i].get_element_type();
 }
 
@@ -627,13 +635,15 @@ const element::Type& Node::get_element_type() const
 
 const Shape& Node::get_output_shape(size_t i) const
 {
-    NGRAPH_CHECK(i < m_outputs.size(), "index '", i, "' out of range in get_output_shape(size_t i)");
+    NGRAPH_CHECK(
+        i < m_outputs.size(), "index '", i, "' out of range in get_output_shape(size_t i)");
     return m_outputs[i].get_shape();
 }
 
 const PartialShape& Node::get_output_partial_shape(size_t i) const
 {
-    NGRAPH_CHECK(i < m_outputs.size(), "index '", i, "' out of range in get_output_partial_shape(size_t i)");
+    NGRAPH_CHECK(
+        i < m_outputs.size(), "index '", i, "' out of range in get_output_partial_shape(size_t i)");
     return m_outputs[i].get_partial_shape();
 }
 
@@ -651,7 +661,8 @@ const Shape& Node::get_shape() const
 
 shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr(size_t i) const
 {
-    NGRAPH_CHECK(i < m_outputs.size(), "index '", i, "' out of range in get_output_tensor_ptr(size_t i)");
+    NGRAPH_CHECK(
+        i < m_outputs.size(), "index '", i, "' out of range in get_output_tensor_ptr(size_t i)");
     return m_outputs[i].get_tensor_ptr();
 }
 
@@ -667,19 +678,22 @@ shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr() const
 
 const std::vector<descriptor::Input*>& Node::get_output_inputs(size_t i) const
 {
-    NGRAPH_CHECK(i < m_outputs.size(), "index '", i, "' out of range in get_output_inputs(size_t i)");
+    NGRAPH_CHECK(
+        i < m_outputs.size(), "index '", i, "' out of range in get_output_inputs(size_t i)");
     return m_outputs[i].get_inputs();
 }
 
 descriptor::Tensor& Node::get_output_tensor(size_t i) const
 {
-    NGRAPH_CHECK(i < m_outputs.size(), "index '", i, "' out of range in get_output_tensor(size_t i)");
+    NGRAPH_CHECK(
+        i < m_outputs.size(), "index '", i, "' out of range in get_output_tensor(size_t i)");
     return m_outputs[i].get_tensor();
 }
 
 const string& Node::get_output_tensor_name(size_t i) const
 {
-    NGRAPH_CHECK(i < m_outputs.size(), "index '", i, "' out of range in get_output_tensor_name(size_t i)");
+    NGRAPH_CHECK(
+        i < m_outputs.size(), "index '", i, "' out of range in get_output_tensor_name(size_t i)");
     return m_outputs[i].get_tensor().get_name();
 }
 
@@ -699,7 +713,8 @@ size_t Node::get_input_size() const
 
 const element::Type& Node::get_input_element_type(size_t i) const
 {
-    NGRAPH_CHECK(i < m_inputs.size(), "index '", i, "' out of range in get_input_element_type(size_t i)");
+    NGRAPH_CHECK(
+        i < m_inputs.size(), "index '", i, "' out of range in get_input_element_type(size_t i)");
     return m_inputs[i].get_element_type();
 }
 
@@ -711,13 +726,15 @@ const Shape& Node::get_input_shape(size_t i) const
 
 const PartialShape& Node::get_input_partial_shape(size_t i) const
 {
-    NGRAPH_CHECK(i < m_inputs.size(), "index '", i, "' out of range in get_input_partial_shape(size_t i)");
+    NGRAPH_CHECK(
+        i < m_inputs.size(), "index '", i, "' out of range in get_input_partial_shape(size_t i)");
     return m_inputs[i].get_partial_shape();
 }
 
 const string& Node::get_input_tensor_name(size_t i) const
 {
-    NGRAPH_CHECK(i < m_inputs.size(), "index '", i, "' out of range in get_input_tensor_name(size_t i)");
+    NGRAPH_CHECK(
+        i < m_inputs.size(), "index '", i, "' out of range in get_input_tensor_name(size_t i)");
     return m_inputs[i].get_tensor().get_name();
 }
 
