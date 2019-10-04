@@ -167,8 +167,15 @@ namespace ngraph
                 TensorToInfoMap m_tensorToValueMap;
                 static const MLIRCompOpMap opDispatcher;
 
-                // Optimization level used by MLIR and LLVM compilers.
-                static unsigned mlirOptLevel;
+                // Optimization level used by MLIR and LLVM compilers. It's based on LLVM CG
+                // optimization levels:
+                // enum Level {
+                //   None,        // -O0
+                //   Less,        // -O1
+                //   Default,     // -O2, -Os
+                //   Aggressive   // -O3
+                // };
+                static llvm::CodeGenOpt::Level mlirOptLevel;
 
                 // LLVM target machine to be used by this MLIR compiler instance to retrieve
                 // information about target features.

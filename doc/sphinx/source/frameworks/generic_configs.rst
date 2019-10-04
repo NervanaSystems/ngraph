@@ -1,4 +1,6 @@
-.. frameworks/generic-configs.rst:
+.. frameworks/generic_configs.rst:
+
+.. _generic_configs: 
 
 Integrating new frameworks
 ==========================
@@ -20,7 +22,7 @@ something like:
 
 
 Find or display version
-=======================
+-----------------------
 
 If you're working with the :doc:`../python_api/index`, the following command 
 may be useful:
@@ -35,7 +37,7 @@ documentation.
 
 
 Activate logtrace-related environment variables
-===============================================
+-----------------------------------------------
 
 Another configuration option is to activate ``NGRAPH_CPU_DEBUG_TRACER``,
 a runtime environment variable that supports extra logging and debug detail. 
