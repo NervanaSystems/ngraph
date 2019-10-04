@@ -23,10 +23,9 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise less-than operation.
-        class Less : public util::BinaryElementwiseComparison
+        class NGRAPH_API Less : public util::BinaryElementwiseComparison
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Less", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a less-than operation.

@@ -23,10 +23,9 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise greater-than operation.
-        class Greater : public util::BinaryElementwiseComparison
+        class NGRAPH_API Greater : public util::BinaryElementwiseComparison
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Greater", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a greater-than operation.

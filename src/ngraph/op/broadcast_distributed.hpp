@@ -24,10 +24,9 @@ namespace ngraph
 {
     namespace op
     {
-        class BroadcastDistributed : public Op
+        class NGRAPH_API BroadcastDistributed : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"BroadcastDistributed", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             BroadcastDistributed() = default;

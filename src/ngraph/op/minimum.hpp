@@ -23,10 +23,9 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise minimum operation.
-        class Minimum : public util::BinaryElementwiseArithmetic
+        class NGRAPH_API Minimum : public util::BinaryElementwiseArithmetic
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Minimum", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a minimum operation.

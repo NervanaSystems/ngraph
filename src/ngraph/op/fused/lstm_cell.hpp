@@ -39,10 +39,9 @@ namespace ngraph
         ///
         ///             Note this class represents only single *cell* and not whole LSTM *layer*.
         ///
-        class LSTMCell : public util::FusedOp, public util::RNNCellBase
+        class NGRAPH_API LSTMCell : public util::FusedOp, public util::RNNCellBase
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"LSTMCell", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             ///

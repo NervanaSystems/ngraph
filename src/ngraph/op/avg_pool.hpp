@@ -27,7 +27,7 @@ namespace ngraph
         {
             /// \brief Batched average pooling operation, with optional padding and window stride.
             ///
-            class AvgPool : public Op
+            class NGRAPH_API AvgPool : public Op
             {
             public:
                 NGRAPH_API
@@ -171,7 +171,7 @@ namespace ngraph
                 bool m_ceil_mode{false};
             };
 
-            class AvgPoolBackprop : public Op
+            class NGRAPH_API AvgPoolBackprop : public Op
             {
             public:
                 NGRAPH_API
@@ -219,7 +219,7 @@ namespace ngraph
         {
             /// \brief Batched average pooling operation.
             ///
-            class AvgPool : public Op
+            class NGRAPH_API AvgPool : public Op
             {
             public:
                 NGRAPH_API
@@ -320,7 +320,7 @@ namespace ngraph
                 op::RoundingType m_rounding_type{op::RoundingType::FLOOR};
             };
 
-            class AvgPoolBackprop : public Op
+            class NGRAPH_API AvgPoolBackprop : public Op
             {
             public:
                 NGRAPH_API

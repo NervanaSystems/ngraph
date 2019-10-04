@@ -27,7 +27,7 @@ namespace ngraph
         namespace v0
         {
             /// \brief Generic padding operation.
-            class Pad : public Op
+            class NGRAPH_API Pad : public Op
             {
             public:
                 NGRAPH_API
@@ -89,7 +89,7 @@ namespace ngraph
         namespace v1
         {
             /// \brief Generic padding operation.
-            class Pad : public Op
+            class NGRAPH_API Pad : public Op
             {
             public:
                 NGRAPH_API

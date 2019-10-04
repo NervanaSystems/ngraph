@@ -28,7 +28,7 @@ namespace ngraph
         {
             /// \brief Batched convolution operation, with optional window dilation and stride.
             ///
-            class Convolution : public Op
+            class NGRAPH_API Convolution : public Op
             {
             public:
                 NGRAPH_API
@@ -98,7 +98,7 @@ namespace ngraph
             };
 
             /// \brief Data batch backprop for batched convolution operation.
-            class ConvolutionBackpropData : public Op
+            class NGRAPH_API ConvolutionBackpropData : public Op
             {
             public:
                 NGRAPH_API
@@ -162,7 +162,7 @@ namespace ngraph
             };
 
             /// \brief Filters backprop for batched convolution operation.
-            class ConvolutionBackpropFilters : public Op
+            class NGRAPH_API ConvolutionBackpropFilters : public Op
             {
             public:
                 NGRAPH_API
@@ -224,7 +224,7 @@ namespace ngraph
         {
             /// \brief Batched convolution operation, with optional window dilation and stride.
             ///
-            class Convolution : public Op
+            class NGRAPH_API Convolution : public Op
             {
             public:
                 NGRAPH_API
@@ -399,7 +399,7 @@ namespace ngraph
             };
 
             /// \brief Data batch backprop for batched convolution operation.
-            class ConvolutionBackpropData : public Op
+            class NGRAPH_API ConvolutionBackpropData : public Op
             {
             public:
                 NGRAPH_API
@@ -504,7 +504,7 @@ namespace ngraph
             };
 
             /// \brief Filters backprop for batched convolution operation.
-            class ConvolutionBackpropFilters : public Op
+            class NGRAPH_API ConvolutionBackpropFilters : public Op
             {
             public:
                 NGRAPH_API

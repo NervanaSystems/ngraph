@@ -26,10 +26,9 @@ namespace ngraph
     {
         /// \brief Elementwise addition operation.
         ///
-        class Add : public util::BinaryElementwiseArithmetic
+        class NGRAPH_API Add : public util::BinaryElementwiseArithmetic
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Add", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs an uninitialized addition operation

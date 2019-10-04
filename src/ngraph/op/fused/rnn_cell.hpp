@@ -38,10 +38,9 @@ namespace ngraph
         ///
         ///             Note this class represents only single *cell* and not whole RNN *layer*.
         ///
-        class RNNCell : public util::FusedOp, public util::RNNCellBase
+        class NGRAPH_API RNNCell : public util::FusedOp, public util::RNNCellBase
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"RNNCell", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             ///

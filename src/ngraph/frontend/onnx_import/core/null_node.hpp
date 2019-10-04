@@ -33,7 +33,7 @@ namespace ngraph
         ///
         /// More:
         /// https://github.com/onnx/onnx/blob/master/docs/IR.md#optional-inputs-and-outputs
-        class NullNode : public ngraph::Node
+        class NGRAPH_API NullNode : public ngraph::Node
         {
         public:
             static constexpr NodeTypeInfo type_info{"NullNode", 0};

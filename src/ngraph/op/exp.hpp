@@ -23,10 +23,9 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise natural exponential (exp) operation.
-        class Exp : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Exp : public util::UnaryElementwiseArithmetic
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Exp", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs an exponential operation.

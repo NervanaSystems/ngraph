@@ -23,10 +23,9 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise logical negation operation.
-        class Not : public Op
+        class NGRAPH_API Not : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Not", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a logical negation operation.

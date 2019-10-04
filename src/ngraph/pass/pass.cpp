@@ -51,3 +51,10 @@ void pass::PassBase::set_property(const PassPropertyMask& prop, bool value)
         m_property.clear(prop);
     }
 }
+
+// RTTI
+
+pass::ModulePass::~ModulePass() {}
+pass::FunctionPass::~FunctionPass() {}
+pass::NodePass::~NodePass() {}
+pass::CallGraphPass::~CallGraphPass() {}

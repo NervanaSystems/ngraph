@@ -30,10 +30,9 @@ namespace ngraph
     namespace op
     {
         /// \brief Class for constants.
-        class Constant : public Op
+        class NGRAPH_API Constant : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Constant", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a tensor constant.
@@ -358,7 +357,6 @@ namespace ngraph
         class ScalarConstantLikeBase : public Constant
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"ScalarConstantLikeBase", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             std::shared_ptr<op::Constant> as_constant() const;
