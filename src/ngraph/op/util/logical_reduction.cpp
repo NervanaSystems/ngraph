@@ -30,7 +30,7 @@ op::util::LogicalReduction::LogicalReduction(const Output<Node>& arg, const Axis
               element::i64, Shape{reduction_axes.size()}, reduction_axes.to_vector())
               ->output(0)})
 {
-    add_provenance_group_member(input(1).get_source_output().get_node_shared_ptr());
+    add_provenance_group_member(input_value(1).get_node_shared_ptr());
 }
 
 op::util::LogicalReduction::LogicalReduction(const Output<Node>& arg,
@@ -41,7 +41,7 @@ op::util::LogicalReduction::LogicalReduction(const Output<Node>& arg,
 
 bool op::util::LogicalReduction::reduction_axes_constant() const
 {
-    return dynamic_pointer_cast<op::Constant>(get_argument(1)) != nullptr;
+    return dynamic_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr()) != nullptr;
 }
 
 const AxisSet op::util::LogicalReduction::get_reduction_axes() const
