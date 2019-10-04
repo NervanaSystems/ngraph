@@ -70,7 +70,7 @@ namespace ngraph
                     Eigen::array<Eigen::Index, Rank2> out_dims;
                     auto axis_length = inputs_shape[axis];
 
-                    for (int i = 0; i < Rank1; i++)
+                    for (size_t i = 0; i < Rank1; i++)
                     {
                         in_dims[i] = inputs_shape[i];
                     }
