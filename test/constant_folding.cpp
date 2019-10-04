@@ -185,12 +185,12 @@ TEST(constant_folding, constant_unary_binary)
     auto sub = a - b;
     auto mul = a * b;
     auto divn = a / b;
+    auto pow = make_shared<op::Power>(a, b);
     auto min = make_shared<op::Minimum>(c, a);
     auto max = make_shared<op::Maximum>(a, c);
     auto absn = make_shared<op::Abs>(c);
     auto neg = make_shared<op::Negative>(c);
     auto sqrt = make_shared<op::Sqrt>(d);
-    auto pow = make_shared<op::Power>(a, b);
     auto add_autob_numpy = make_shared<op::Add>(a, e, op::AutoBroadcastType::NUMPY);
     auto sub_autob_numpy = make_shared<op::Subtract>(a, e, op::AutoBroadcastType::NUMPY);
     auto mul_autob_numpy = make_shared<op::Multiply>(a, e, op::AutoBroadcastType::NUMPY);
