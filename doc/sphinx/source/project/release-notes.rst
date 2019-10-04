@@ -26,6 +26,8 @@ Core updates for |version|
 + ONNX handling unknown domains
 + Provenance works with builders and fused ops
 + ``RPATH`` for finding openmpi
++ Negative indices/axes fixes
+
 
 Latest documentation updates
 ----------------------------
