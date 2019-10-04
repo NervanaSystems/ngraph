@@ -84,8 +84,7 @@ static size_t count_dyn_nodes(const shared_ptr<ngraph::Function>& f)
     size_t count = 0;
     for (auto op : f->get_ops())
     {
-        if (std::dynamic_pointer_cast<op::Transpose>(op) ||
-            std::dynamic_pointer_cast<op::DynBroadcast>(op) ||
+        if (is_type<op::Transpose>(op) || std::dynamic_pointer_cast<op::DynBroadcast>(op) ||
             std::dynamic_pointer_cast<op::DynReplaceSlice>(op) ||
             std::dynamic_pointer_cast<op::DynSlice>(op) ||
             std::dynamic_pointer_cast<op::DynReshape>(op) ||
