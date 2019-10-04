@@ -27,6 +27,8 @@ Core updates for |version|
 + Provenance works with builders and fused ops
 + ``RPATH`` for finding openmpi
 + Negative indices/axes fixes
++ Migrate some ``get_argument`` removals
+
 
 
 Latest documentation updates
