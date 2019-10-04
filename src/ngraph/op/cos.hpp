@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise cosine operation.
-        class Cos : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Cos : public util::UnaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

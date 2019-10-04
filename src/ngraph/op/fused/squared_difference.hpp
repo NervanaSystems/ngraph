@@ -27,7 +27,7 @@ namespace ngraph
         /// \brief Calculates an element-wise squared difference between two tensors
         ///
         /// y[i] = (x1[i] - x2[i])^2
-        class SquaredDifference : public ngraph::op::util::FusedOp
+        class NGRAPH_API SquaredDifference : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API

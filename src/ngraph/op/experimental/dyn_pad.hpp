@@ -24,7 +24,7 @@ namespace ngraph
     {
         /// \brief Generic padding operation which takes padding below and above as dynamic shapes.
         /// This is similar to existing Pad operation except padding values are dynamic.
-        class DynPad : public Op
+        class NGRAPH_API DynPad : public Op
         {
         public:
             NGRAPH_API

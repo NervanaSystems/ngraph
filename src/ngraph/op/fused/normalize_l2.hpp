@@ -28,7 +28,7 @@ namespace ngraph
     {
         /// \brief  Normalization input tensor with L2 norm.
         ///
-        class NormalizeL2 : public ngraph::op::util::FusedOp
+        class NGRAPH_API NormalizeL2 : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API

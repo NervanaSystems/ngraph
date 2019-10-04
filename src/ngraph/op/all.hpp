@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Logical "all" reduction operation.
-        class All : public util::LogicalReduction
+        class NGRAPH_API All : public util::LogicalReduction
         {
         public:
             NGRAPH_API

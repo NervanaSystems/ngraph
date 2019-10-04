@@ -27,7 +27,7 @@ namespace ngraph
     {
         // \brief Computes indices of top k maximum/minimum index along a specified axis for a
         //        given tensor
-        class TopK : public Op
+        class NGRAPH_API TopK : public Op
         {
         public:
             enum class SortType

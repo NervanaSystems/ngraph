@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace op
     {
-        class QuantizedConvolution : public Op
+        class NGRAPH_API QuantizedConvolution : public Op
         {
         public:
             NGRAPH_API

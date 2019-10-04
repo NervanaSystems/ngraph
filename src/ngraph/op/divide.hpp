@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise division operation.
-        class Divide : public util::BinaryElementwiseArithmetic
+        class NGRAPH_API Divide : public util::BinaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

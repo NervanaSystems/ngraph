@@ -27,7 +27,7 @@ namespace ngraph
             /// \brief Product reduction operation.
             ///
             /// Reduces the tensor, eliminating the specified reduction axes by taking the product.
-            class Product : public util::ArithmeticReduction
+            class NGRAPH_API Product : public util::ArithmeticReduction
             {
             public:
                 NGRAPH_API

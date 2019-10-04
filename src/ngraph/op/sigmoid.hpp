@@ -25,7 +25,7 @@ namespace ngraph
 {
     namespace op
     {
-        class Sigmoid : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Sigmoid : public util::UnaryElementwiseArithmetic
         {
         public:
             NGRAPH_API
@@ -41,7 +41,7 @@ namespace ngraph
 
         /// \brief Elementwise SigmoidBackprop operation.
         ///
-        class SigmoidBackprop : public util::BinaryElementwiseArithmetic
+        class NGRAPH_API SigmoidBackprop : public util::BinaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

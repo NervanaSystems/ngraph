@@ -24,7 +24,7 @@ namespace ngraph
 {
     namespace op
     {
-        class QuantizedDotBias : public Op
+        class NGRAPH_API QuantizedDotBias : public Op
         {
         public:
             NGRAPH_API

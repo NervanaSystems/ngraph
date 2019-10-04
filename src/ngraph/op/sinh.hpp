@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise hyperbolic sine (sinh) operation.
-        class Sinh : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Sinh : public util::UnaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

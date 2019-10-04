@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Operation that returns the shape of its input argument as a tensor.
-        class ShapeOf : public Op
+        class NGRAPH_API ShapeOf : public Op
         {
         public:
             NGRAPH_API

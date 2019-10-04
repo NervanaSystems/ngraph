@@ -62,7 +62,7 @@ namespace ngraph
         /// | ------------------------ | ------------------------------------------------------------------------------------------------------ |
         /// | \f$E[d'_1,\dots,d'_m]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with its elements rearranged as described above. |
         // clang-format on
-        class Reshape : public Op
+        class NGRAPH_API Reshape : public Op
         {
         public:
             NGRAPH_API

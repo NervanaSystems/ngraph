@@ -27,7 +27,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Batchnorm for training operation
-        class BatchNormTraining : public Op
+        class NGRAPH_API BatchNormTraining : public Op
         {
         public:
             NGRAPH_API
@@ -88,7 +88,7 @@ namespace ngraph
             double m_epsilon;
         };
 
-        class BatchNormInference : public Op
+        class NGRAPH_API BatchNormInference : public Op
         {
         public:
             NGRAPH_API
@@ -158,7 +158,7 @@ namespace ngraph
             double m_epsilon;
         };
 
-        class BatchNormTrainingBackprop : public Op
+        class NGRAPH_API BatchNormTrainingBackprop : public Op
         {
         public:
             NGRAPH_API

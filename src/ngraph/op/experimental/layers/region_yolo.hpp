@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace op
     {
-        class RegionYolo : public Op
+        class NGRAPH_API RegionYolo : public Op
         {
         public:
             NGRAPH_API

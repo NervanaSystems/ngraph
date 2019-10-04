@@ -24,7 +24,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Range operation, analogous to `range()` in Python.
-        class Range : public Op
+        class NGRAPH_API Range : public Op
         {
         public:
             NGRAPH_API

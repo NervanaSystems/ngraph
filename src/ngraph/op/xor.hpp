@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Elementwise logical-xor operation.
         ///
-        class Xor : public util::BinaryElementwiseLogical
+        class NGRAPH_API Xor : public util::BinaryElementwiseLogical
         {
         public:
             NGRAPH_API

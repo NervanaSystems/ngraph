@@ -27,7 +27,7 @@ namespace ngraph
 {
     namespace op
     {
-        class Squeeze : public ngraph::op::util::FusedOp
+        class NGRAPH_API Squeeze : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API

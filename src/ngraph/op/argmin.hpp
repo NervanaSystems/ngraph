@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Computes minimum index along a specified axis for a given tensor
-        class ArgMin : public op::util::IndexReduction
+        class NGRAPH_API ArgMin : public op::util::IndexReduction
         {
         public:
             NGRAPH_API

@@ -29,7 +29,7 @@ namespace ngraph
     {
         /// \brief Elementwise Relu operation.
         ///
-        class Relu : public ngraph::op::util::UnaryElementwiseArithmetic
+        class NGRAPH_API Relu : public ngraph::op::util::UnaryElementwiseArithmetic
         {
         public:
             NGRAPH_API
@@ -50,7 +50,7 @@ namespace ngraph
 
         /// \brief Elementwise ReluBackprop operation.
         ///
-        class ReluBackprop : public ngraph::op::util::BinaryElementwiseArithmetic
+        class NGRAPH_API ReluBackprop : public ngraph::op::util::BinaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

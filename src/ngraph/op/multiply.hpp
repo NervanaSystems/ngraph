@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise multiplication operation.
-        class Multiply : public util::BinaryElementwiseArithmetic
+        class NGRAPH_API Multiply : public util::BinaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

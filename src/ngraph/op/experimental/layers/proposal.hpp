@@ -54,7 +54,7 @@ namespace ngraph
             std::string framework;
         };
 
-        class Proposal : public Op
+        class NGRAPH_API Proposal : public Op
         {
         public:
             NGRAPH_API

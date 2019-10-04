@@ -26,7 +26,7 @@ namespace ngraph
         namespace v0
         {
             /// \brief Max-reduction operation.
-            class Max : public util::ArithmeticReduction
+            class NGRAPH_API Max : public util::ArithmeticReduction
             {
             public:
                 NGRAPH_API
@@ -58,7 +58,7 @@ namespace ngraph
 
         namespace v1
         {
-            class ReduceMax : public util::ArithmeticReductionKeepDims
+            class NGRAPH_API ReduceMax : public util::ArithmeticReductionKeepDims
             {
             public:
                 NGRAPH_API

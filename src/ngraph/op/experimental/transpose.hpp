@@ -25,7 +25,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Tensor transpose operation.
-        class Transpose : public Op
+        class NGRAPH_API Transpose : public Op
         {
         public:
             NGRAPH_API

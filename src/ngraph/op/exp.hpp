@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise natural exponential (exp) operation.
-        class Exp : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Exp : public util::UnaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

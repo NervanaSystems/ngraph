@@ -32,7 +32,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Group Transpose Convolution (Deconvolution)
-        class GroupConvolutionTranspose : public util::FusedOp
+        class NGRAPH_API GroupConvolutionTranspose : public util::FusedOp
         {
         public:
             NGRAPH_API

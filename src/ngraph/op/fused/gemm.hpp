@@ -34,7 +34,7 @@ namespace ngraph
         ///
         /// Compute Y = alpha * A' * B' + beta * C
         ///
-        class Gemm : public ngraph::op::util::FusedOp
+        class NGRAPH_API Gemm : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API

@@ -27,7 +27,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Splits the input tensor into a list of smaller tensors ("pieces")
-        class Split : public ngraph::op::util::FusedOp
+        class NGRAPH_API Split : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API

@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Gaussian Error Linear Unit
         /// f(x) = 0.5 * x * (1 + erf( x / sqrt(2) )
-        class Gelu : public ngraph::op::util::FusedOp
+        class NGRAPH_API Gelu : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API
@@ -51,7 +51,7 @@ namespace ngraph
         };
 
         /// \brief Backprop for Gelu(x) is GeluBackprop(x) * delta
-        class GeluBackpropFactor : public util::FusedOp
+        class NGRAPH_API GeluBackpropFactor : public util::FusedOp
         {
         public:
             NGRAPH_API

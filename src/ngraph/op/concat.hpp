@@ -25,7 +25,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Concatenation operation.
-        class Concat : public Op
+        class NGRAPH_API Concat : public Op
         {
         public:
             NGRAPH_API

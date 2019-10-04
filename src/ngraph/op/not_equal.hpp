@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise not-equal operation.
-        class NotEqual : public util::BinaryElementwiseComparison
+        class NGRAPH_API NotEqual : public util::BinaryElementwiseComparison
         {
         public:
             NGRAPH_API

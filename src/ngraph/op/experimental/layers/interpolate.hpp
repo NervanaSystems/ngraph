@@ -33,7 +33,7 @@ namespace ngraph
         } InterpolateAttrs;
 
         /// \brief Layer which performs bilinear interpolation
-        class Interpolate : public Op
+        class NGRAPH_API Interpolate : public Op
         {
         public:
             NGRAPH_API

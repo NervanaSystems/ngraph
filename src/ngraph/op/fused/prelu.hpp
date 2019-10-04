@@ -28,7 +28,7 @@ namespace ngraph
         /// x <  0 => f(x) = x * slope
         /// x >= 0 => f(x) = x
         ///
-        class PRelu : public ngraph::op::util::FusedOp
+        class NGRAPH_API PRelu : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API

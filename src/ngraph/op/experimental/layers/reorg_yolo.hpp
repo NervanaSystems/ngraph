@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace op
     {
-        class ReorgYolo : public Op
+        class NGRAPH_API ReorgYolo : public Op
         {
         public:
             NGRAPH_API

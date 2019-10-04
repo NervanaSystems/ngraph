@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace op
     {
-        class PSROIPooling : public Op
+        class NGRAPH_API PSROIPooling : public Op
         {
         public:
             NGRAPH_API

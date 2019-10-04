@@ -37,7 +37,7 @@ namespace ngraph
         ///                 (levels-1) * (output_high - output_low) + output_low
         ///
         ///
-        class FakeQuantize : public ngraph::op::util::FusedOp
+        class NGRAPH_API FakeQuantize : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API

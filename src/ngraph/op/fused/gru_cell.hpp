@@ -38,7 +38,7 @@ namespace ngraph
         ///
         ///             Note this class represents only single *cell* and not whole GRU *layer*.
         ///
-        class GRUCell : public util::FusedOp, public util::RNNCellBase
+        class NGRAPH_API GRUCell : public util::FusedOp, public util::RNNCellBase
         {
         public:
             NGRAPH_API

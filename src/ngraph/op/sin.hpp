@@ -37,7 +37,7 @@ namespace ngraph
         /// | ---------------------- | ------------------------------------------------------------------------------------ |
         /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \sin(\texttt{arg}[i_1,\dots,i_n])\f$ |
         // clang-format on
-        class Sin : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Sin : public util::UnaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

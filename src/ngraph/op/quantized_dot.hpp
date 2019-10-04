@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace op
     {
-        class QuantizedDot : public Op
+        class NGRAPH_API QuantizedDot : public Op
         {
         public:
             NGRAPH_API

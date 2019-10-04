@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief GenerateMask
         ///
-        class GenerateMask : public op::Op
+        class NGRAPH_API GenerateMask : public op::Op
         {
         public:
             NGRAPH_API

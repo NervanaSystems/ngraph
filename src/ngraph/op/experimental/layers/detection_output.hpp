@@ -44,7 +44,7 @@ namespace ngraph
 
         /// \brief Layer which performs non-max suppression to
         /// generate detection output using location and confidence predictions
-        class DetectionOutput : public Op
+        class NGRAPH_API DetectionOutput : public Op
         {
         public:
             NGRAPH_API

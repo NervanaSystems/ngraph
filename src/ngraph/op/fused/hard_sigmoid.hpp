@@ -27,7 +27,7 @@ namespace ngraph
         /// \brief      Parameterized, bounded sigmoid-like, piecewise linear
         ///             function. min(max(alpha*x + beta, 0), 1)
         ///
-        class HardSigmoid : public ngraph::op::util::FusedOp
+        class NGRAPH_API HardSigmoid : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API

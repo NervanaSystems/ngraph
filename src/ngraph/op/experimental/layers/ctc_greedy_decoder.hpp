@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace op
     {
-        class CTCGreedyDecoder : public Op
+        class NGRAPH_API CTCGreedyDecoder : public Op
         {
         public:
             NGRAPH_API

@@ -27,7 +27,7 @@ namespace ngraph
         ///        input as needed along the new axes.
         ///
         /// This is basically the "dynamic shape" version of the static Broadcast op.
-        class DynBroadcast : public Op
+        class NGRAPH_API DynBroadcast : public Op
         {
         public:
             NGRAPH_API

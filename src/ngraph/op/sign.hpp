@@ -24,7 +24,7 @@ namespace ngraph
     {
         /// \brief Elementwise sign operation.
         ///
-        class Sign : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Sign : public util::UnaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

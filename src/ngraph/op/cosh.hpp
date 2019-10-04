@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise hyperbolic cosine (cosh) operation.
-        class Cosh : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Cosh : public util::UnaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

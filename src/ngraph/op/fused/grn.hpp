@@ -27,7 +27,7 @@ namespace ngraph
     {
         /// \brief  Global Response Normalization with L2 norm (across channels only).
         ///
-        class GRN : public ngraph::op::util::FusedOp
+        class NGRAPH_API GRN : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API

@@ -24,7 +24,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Returns embeddings for given indices
-        class EmbeddingLookup : public Op
+        class NGRAPH_API EmbeddingLookup : public Op
         {
         public:
             NGRAPH_API

@@ -28,7 +28,7 @@ namespace ngraph
         /// This op can be used to delimit sub-graphs that with special compilation requirements
         /// within a function. For example, we currently use it to delimit sub-graphs that will be
         /// independently compiled and executed by MLIR backend.
-        class CompiledKernel : public ngraph::op::Op
+        class NGRAPH_API CompiledKernel : public ngraph::op::Op
         {
         public:
             NGRAPH_API

@@ -29,7 +29,7 @@ namespace ngraph
         /// All input values that are outside of the <min;max> range are set to 'min' or 'max'
         /// depending on which side of the <min;max> range they are. The values that fall into
         /// this range remain unchanged.
-        class Clamp : public ngraph::op::util::FusedOp
+        class NGRAPH_API Clamp : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API

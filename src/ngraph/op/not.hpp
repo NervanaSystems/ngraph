@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise logical negation operation.
-        class Not : public Op
+        class NGRAPH_API Not : public Op
         {
         public:
             NGRAPH_API

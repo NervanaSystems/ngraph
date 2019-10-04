@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise ceiling operation.
-        class Ceiling : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Ceiling : public util::UnaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise maximum operation.
-        class Maximum : public util::BinaryElementwiseArithmetic
+        class NGRAPH_API Maximum : public util::BinaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

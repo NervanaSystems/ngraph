@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Logical "any" reduction operation.
-        class Any : public util::LogicalReduction
+        class NGRAPH_API Any : public util::LogicalReduction
         {
         public:
             NGRAPH_API

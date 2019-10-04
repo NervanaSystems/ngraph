@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Elementwise inverse sine (arcsin) operation.
         ///
-        class Asin : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Asin : public util::UnaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

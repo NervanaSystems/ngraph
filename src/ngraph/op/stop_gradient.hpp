@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief create StopGrdient op
-        class StopGradient : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API StopGradient : public util::UnaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

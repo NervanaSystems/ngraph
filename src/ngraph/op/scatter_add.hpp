@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Add updates to slices from inputs addressed by indices
-        class ScatterAdd : public Op
+        class NGRAPH_API ScatterAdd : public Op
         {
         public:
             NGRAPH_API

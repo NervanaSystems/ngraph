@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise natural log operation.
-        class Log : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Log : public util::UnaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

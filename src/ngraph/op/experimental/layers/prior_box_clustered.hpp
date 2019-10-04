@@ -44,7 +44,7 @@ namespace ngraph
 
         /// \brief Layer which generates prior boxes of specified sizes
         /// normalized to input image size
-        class PriorBoxClustered : public Op
+        class NGRAPH_API PriorBoxClustered : public Op
         {
         public:
             NGRAPH_API

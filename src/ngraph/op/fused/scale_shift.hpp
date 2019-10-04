@@ -28,7 +28,7 @@ namespace ngraph
         ///
         /// Y = Scale * Data + Shift
         ///
-        class ScaleShift : public ngraph::op::util::FusedOp
+        class NGRAPH_API ScaleShift : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API

@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise floor operation.
-        class Floor : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Floor : public util::UnaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

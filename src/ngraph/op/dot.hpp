@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Generalized dot product operation, including scalar-tensor product, matrix-vector
         ///        product, and matrix multiplication.
-        class Dot : public Op
+        class NGRAPH_API Dot : public Op
         {
         public:
             NGRAPH_API

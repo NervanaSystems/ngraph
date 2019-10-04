@@ -29,7 +29,7 @@ namespace ngraph
     {
         namespace util
         {
-            class IndexReduction : public Op
+            class NGRAPH_API IndexReduction : public Op
             {
             protected:
                 IndexReduction();

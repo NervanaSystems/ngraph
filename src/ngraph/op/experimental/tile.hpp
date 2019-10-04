@@ -24,7 +24,7 @@ namespace ngraph
     {
         /// \brief Dynamic Tiling operation which repeats a tensor multiple times
         ///        along each dimension
-        class Tile : public Op
+        class NGRAPH_API Tile : public Op
         {
         public:
             NGRAPH_API

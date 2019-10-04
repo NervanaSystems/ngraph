@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise subtraction operation.
-        class Subtract : public util::BinaryElementwiseArithmetic
+        class NGRAPH_API Subtract : public util::BinaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

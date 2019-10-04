@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Elementwise addition operation.
         ///
-        class Add : public util::BinaryElementwiseArithmetic
+        class NGRAPH_API Add : public util::BinaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

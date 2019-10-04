@@ -30,7 +30,7 @@
 namespace ngraph
 {
     /// A user-defined function.
-    class Function
+    class NGRAPH_API Function
     {
     public:
         Function(const NodeVector& results,

@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Elementwise inverse tangent (arctan) operation.
         ///
-        class Atan : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Atan : public util::UnaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

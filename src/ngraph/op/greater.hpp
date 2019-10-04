@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise greater-than operation.
-        class Greater : public util::BinaryElementwiseComparison
+        class NGRAPH_API Greater : public util::BinaryElementwiseComparison
         {
         public:
             NGRAPH_API

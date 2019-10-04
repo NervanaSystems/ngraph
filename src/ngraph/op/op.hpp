@@ -27,7 +27,7 @@ namespace ngraph
     namespace op
     {
         /// Root of all actual ops
-        class Op : public Node
+        class NGRAPH_API Op : public Node
         {
         public:
             void set_op_annotations(std::shared_ptr<ngraph::op::util::OpAnnotations> op_annotations)

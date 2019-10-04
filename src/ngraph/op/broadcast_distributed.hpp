@@ -24,7 +24,7 @@ namespace ngraph
 {
     namespace op
     {
-        class BroadcastDistributed : public Op
+        class NGRAPH_API BroadcastDistributed : public Op
         {
         public:
             NGRAPH_API

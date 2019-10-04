@@ -26,7 +26,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Group Convolution
-        class GroupConvolution : public ngraph::op::util::FusedOp
+        class NGRAPH_API GroupConvolution : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API

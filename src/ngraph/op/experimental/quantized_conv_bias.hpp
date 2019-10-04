@@ -24,7 +24,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Convolution + bias forward prop for batched convolution operation.
-        class QuantizedConvolutionBias : public Op
+        class NGRAPH_API QuantizedConvolutionBias : public Op
         {
         public:
             NGRAPH_API
@@ -63,7 +63,7 @@ namespace ngraph
             bool m_with_relu;
         };
 
-        class QuantizedConvolutionBiasAdd : public Op
+        class NGRAPH_API QuantizedConvolutionBiasAdd : public Op
         {
         public:
             NGRAPH_API
@@ -103,7 +103,7 @@ namespace ngraph
             bool m_with_relu;
         };
 
-        class QuantizedConvolutionBiasSignedAdd : public Op
+        class NGRAPH_API QuantizedConvolutionBiasSignedAdd : public Op
         {
         public:
             NGRAPH_API

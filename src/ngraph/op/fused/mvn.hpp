@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Operator performing Mean Variance Normalization
         ///
-        class MVN : public ngraph::op::util::FusedOp
+        class NGRAPH_API MVN : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API

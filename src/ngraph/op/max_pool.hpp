@@ -26,7 +26,7 @@ namespace ngraph
         namespace v0
         {
             /// \brief Batched max pooling operation, with optional padding and window stride.
-            class MaxPool : public Op
+            class NGRAPH_API MaxPool : public Op
             {
             public:
                 NGRAPH_API
@@ -147,7 +147,7 @@ namespace ngraph
                 bool m_ceil_mode{false};
             };
 
-            class MaxPoolBackprop : public Op
+            class NGRAPH_API MaxPoolBackprop : public Op
             {
             public:
                 NGRAPH_API
@@ -207,7 +207,7 @@ namespace ngraph
         namespace v1
         {
             /// \brief Batched max pooling operation.
-            class MaxPool : public Op
+            class NGRAPH_API MaxPool : public Op
             {
             public:
                 NGRAPH_API
@@ -292,7 +292,7 @@ namespace ngraph
                 op::RoundingType m_rounding_type{op::RoundingType::FLOOR};
             };
 
-            class MaxPoolBackprop : public Op
+            class NGRAPH_API MaxPoolBackprop : public Op
             {
             public:
                 NGRAPH_API

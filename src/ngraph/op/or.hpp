@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Elementwise logical-or operation.
         ///
-        class Or : public util::BinaryElementwiseLogical
+        class NGRAPH_API Or : public util::BinaryElementwiseLogical
         {
         public:
             NGRAPH_API

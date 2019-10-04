@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Elementwise inverse cosine (arccos) operation.
         ///
-        class Acos : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Acos : public util::UnaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

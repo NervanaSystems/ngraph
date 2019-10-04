@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise hyperbolic tangent operation.
-        class Tanh : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Tanh : public util::UnaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

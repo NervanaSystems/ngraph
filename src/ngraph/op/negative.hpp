@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise negative operation.
-        class Negative : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Negative : public util::UnaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

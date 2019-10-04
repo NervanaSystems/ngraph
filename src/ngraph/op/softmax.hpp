@@ -26,7 +26,7 @@ namespace ngraph
         {
             /// \brief Softmax operation.
             ///
-            class Softmax : public Op
+            class NGRAPH_API Softmax : public Op
             {
             public:
                 NGRAPH_API
@@ -59,7 +59,7 @@ namespace ngraph
 
         namespace v1
         {
-            class Softmax : public Op
+            class NGRAPH_API Softmax : public Op
             {
             public:
                 NGRAPH_API

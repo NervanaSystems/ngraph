@@ -26,7 +26,7 @@ namespace ngraph
         namespace v0
         {
             /// \brief Min-reduction operation.
-            class Min : public util::ArithmeticReduction
+            class NGRAPH_API Min : public util::ArithmeticReduction
             {
             public:
                 NGRAPH_API
@@ -58,7 +58,7 @@ namespace ngraph
 
         namespace v1
         {
-            class ReduceMin : public util::ArithmeticReductionKeepDims
+            class NGRAPH_API ReduceMin : public util::ArithmeticReductionKeepDims
             {
             public:
                 NGRAPH_API

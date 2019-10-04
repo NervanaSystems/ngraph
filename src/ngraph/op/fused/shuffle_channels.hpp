@@ -26,7 +26,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Permutes data in the channel dimension of the input
-        class ShuffleChannels : public ngraph::op::util::FusedOp
+        class NGRAPH_API ShuffleChannels : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API

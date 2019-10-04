@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace op
     {
-        class AllReduce : public Op
+        class NGRAPH_API AllReduce : public Op
         {
         public:
             NGRAPH_API

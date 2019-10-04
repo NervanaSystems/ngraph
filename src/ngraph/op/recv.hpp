@@ -24,7 +24,7 @@ namespace ngraph
 {
     namespace op
     {
-        class Recv : public Op
+        class NGRAPH_API Recv : public Op
         {
         public:
             NGRAPH_API

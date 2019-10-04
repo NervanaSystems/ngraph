@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace op
     {
-        class ReverseSequence : public Op
+        class NGRAPH_API ReverseSequence : public Op
         {
         public:
             NGRAPH_API

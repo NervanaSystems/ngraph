@@ -39,7 +39,7 @@ namespace ngraph
         /// | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
         /// | \f$\texttt{bool}[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = 1\text{ if }\texttt{arg0}[i_1,\dots,i_n] = \texttt{arg1}[i_1,\dots,i_n]\text{, else } 0\f$ |
         // clang-format on
-        class Equal : public util::BinaryElementwiseComparison
+        class NGRAPH_API Equal : public util::BinaryElementwiseComparison
         {
         public:
             NGRAPH_API

@@ -28,7 +28,7 @@ namespace ngraph
         /// x <  0 => f(x) = alpha * (exp(x) - 1.)
         /// x >= 0 => f(x) = x
         ///
-        class Elu : public ngraph::op::util::FusedOp
+        class NGRAPH_API Elu : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API

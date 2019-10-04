@@ -34,7 +34,7 @@ namespace ngraph
             };
 
             /// \brief Base class for annotations added to graph ops
-            class OpAnnotations
+            class NGRAPH_API OpAnnotations
             {
             public:
                 virtual ~OpAnnotations() = default;

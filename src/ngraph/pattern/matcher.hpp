@@ -52,7 +52,7 @@ namespace ngraph
 
         /// \brief Matcher matches (compares) two graphs
         ///
-        class Matcher
+        class NGRAPH_API Matcher
         {
         public:
             using PatternMap = std::map<std::shared_ptr<op::Label>, std::shared_ptr<Node>>;
@@ -90,6 +90,7 @@ namespace ngraph
             }
 
             virtual ~Matcher() {}
+
             /// \brief Matches a pattern to \p graph_node
             ///
             /// \param graph_node is an input graph to be matched against

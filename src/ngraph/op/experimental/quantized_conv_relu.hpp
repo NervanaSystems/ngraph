@@ -24,7 +24,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Relu(Convolution) forward prop for batched convolution operation.
-        class QuantizedConvolutionRelu : public Op
+        class NGRAPH_API QuantizedConvolutionRelu : public Op
         {
         public:
             NGRAPH_API

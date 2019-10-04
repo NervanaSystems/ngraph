@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise type conversion operation.
-        class Convert : public Op
+        class NGRAPH_API Convert : public Op
         {
         public:
             NGRAPH_API

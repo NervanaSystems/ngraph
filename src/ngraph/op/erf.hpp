@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace op
     {
-        class Erf : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Erf : public util::UnaryElementwiseArithmetic
         {
         public:
             NGRAPH_API

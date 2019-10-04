@@ -25,7 +25,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Operator performing Matrix Multiplication.
-        class MatMul : public ngraph::op::util::FusedOp
+        class NGRAPH_API MatMul : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API

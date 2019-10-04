@@ -29,7 +29,7 @@ namespace ngraph
         ///
         ///        Output node produces a tensor with shape:
         ///        [N, C * blocksize * blocksize, H / blocksize, W / blocksize]
-        class SpaceToDepth : public ngraph::op::util::FusedOp
+        class NGRAPH_API SpaceToDepth : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API

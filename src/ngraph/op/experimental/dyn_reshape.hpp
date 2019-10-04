@@ -30,7 +30,7 @@ namespace ngraph
             /// "Converts" an input tensor into a new shape with the same number of elements.
             /// This op does not touch the actual data. If needed, use Transpose for that purpose.
             ///
-            class DynReshape : public Op
+            class NGRAPH_API DynReshape : public Op
             {
             public:
                 NGRAPH_API

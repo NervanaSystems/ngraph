@@ -25,7 +25,7 @@ namespace ngraph
     {
         /// \brief Operation which "adds" axes to an input tensor, replicating elements from the
         ///        input as needed along the new axes.
-        class Broadcast : public Op
+        class NGRAPH_API Broadcast : public Op
         {
         public:
             NGRAPH_API
@@ -67,7 +67,7 @@ namespace ngraph
         };
 
         /// \brief Broadcast arg to the same shape as like_arg.
-        class BroadcastLike : public Broadcast
+        class NGRAPH_API BroadcastLike : public Broadcast
         {
         public:
             NGRAPH_API

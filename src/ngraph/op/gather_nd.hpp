@@ -23,7 +23,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Gather slices from params with shapes given by indices
-        class GatherND : public Op
+        class NGRAPH_API GatherND : public Op
         {
         public:
             NGRAPH_API

@@ -25,7 +25,7 @@ namespace ngraph
         namespace v0
         {
             /// \brief Gather slices from axis of params according to indices
-            class Gather : public Op
+            class NGRAPH_API Gather : public Op
             {
             public:
                 NGRAPH_API
@@ -55,7 +55,7 @@ namespace ngraph
         namespace v1
         {
             /// \brief Gather slices from axis of params according to indices
-            class Gather : public Op
+            class NGRAPH_API Gather : public Op
             {
             public:
                 NGRAPH_API
