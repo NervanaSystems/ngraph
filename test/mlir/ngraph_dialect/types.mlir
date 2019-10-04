@@ -83,4 +83,3 @@ func @u32(%arg0: !ng.u32) {
 func @u64(%arg0: !ng.u64) {
   "ng.return"() : () -> ()
 }
-

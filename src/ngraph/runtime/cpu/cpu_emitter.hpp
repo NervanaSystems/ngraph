@@ -24,7 +24,9 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/gather.hpp"
+#include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/min.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/sum.hpp"
@@ -128,9 +130,7 @@ namespace ngraph
         class Reverse;
         class ReverseSequence;
         class MaxPoolWithIndicesBackprop;
-        class Max;
         class Erf;
-        class Min;
         class ReluBackprop;
         class Relu;
         class CPULeakyRelu;
@@ -150,6 +150,7 @@ namespace ngraph
         class Quantize;
         class QuantizedConcat;
         class Tile;
+        class RandomUniform;
     }
     namespace runtime
     {
@@ -443,6 +444,8 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConcat);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Tile);
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::RandomUniform);
         }
     }
 }
