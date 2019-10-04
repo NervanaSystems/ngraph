@@ -39,7 +39,7 @@ here are also useful if you are working on something built-from-scratch, or on
 an existing framework that is less widely-supported than the popular frameworks
 like TensorFlow and PyTorch.
 
-.. figure:: ../graphics/overview-translation-flow.svg
+.. figure:: ../graphics/nGraphTranslation_Vert.svg
    :width: 725px
    :alt: Translation flow to nGraph function graph
 
