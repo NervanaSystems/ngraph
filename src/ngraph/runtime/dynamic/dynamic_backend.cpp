@@ -22,6 +22,7 @@
 #include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/dyn_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -86,8 +87,7 @@ static size_t count_dyn_nodes(const shared_ptr<ngraph::Function>& f)
     {
         if (is_type<op::Transpose>(op) || is_type<op::DynBroadcast>(op) ||
             is_type<op::DynReplaceSlice>(op) || is_type<op::DynSlice>(op) ||
-            std::dynamic_pointer_cast<op::DynReshape>(op) ||
-            std::dynamic_pointer_cast<op::Range>(op))
+            is_type<op::v1::Reshape>(op) || is_type<op::DynReshape>(op) || is_type<op::Range>(op))
         {
             count++;
         }
