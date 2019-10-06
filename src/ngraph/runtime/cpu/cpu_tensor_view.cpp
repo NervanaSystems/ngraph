@@ -80,6 +80,12 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
 
 runtime::cpu::CPUTensorView::~CPUTensorView()
 {
+    if (m_stale)
+    {
+        std::cout << "*********************************" << std::endl;
+        std::cout << "Stale at free - unexpected delete" << std::endl;
+        std::cout << "*********************************" << std::endl;
+    }
     ngraph_free(buffer);
 }
 

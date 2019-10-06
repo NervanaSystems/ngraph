@@ -27,6 +27,32 @@
 using namespace std;
 using namespace ngraph;
 
+void CPU_CallFrame_BadSharedPtr()
+{
+    std::cout << "*********************************" << std::endl;
+    std::cout << "Refcount unexpectedly below 1" << std::endl;
+    std::cout << "*********************************" << std::endl;
+}
+
+#define NGRAPH_SHARED_PTR_CHECKER(shared_ptr_to_check)                                             \
+    do                                                                                             \
+    {                                                                                              \
+        if (shared_ptr_to_check.use_count() < 1)                                                   \
+        {                                                                                          \
+            CPU_CallFrame_BadSharedPtr();                                                          \
+        }                                                                                          \
+    } while (0)
+
+#define NGRAPH_SHARED_PTR_VECTOR_CHECKER(shared_ptr_vector_to_check)                               \
+    do                                                                                             \
+    {                                                                                              \
+        for (size_t ___index = 0; ___index < shared_ptr_vector_to_check.size(); ++___index)        \
+        {                                                                                          \
+            NGRAPH_SHARED_PTR_CHECKER(shared_ptr_vector_to_check[___index]);                       \
+        }                                                                                          \
+    } while (0)
+
+
 runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction> external_function,
                                            InitContextFuncCG compiled_init_ctx_func,
                                            DestroyContextFuncCG compiled_destroy_ctx_func,
@@ -74,11 +100,15 @@ void runtime::cpu::CPU_CallFrame::inner_call(
 {
     vector<void*> inputs;
     vector<void*> outputs;
+    NGRAPH_SHARED_PTR_VECTOR_CHECKER(output_tvs);
+    NGRAPH_SHARED_PTR_VECTOR_CHECKER(input_tvs);
 
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
+        NGRAPH_SHARED_PTR_CHECKER(input_tvs[i]);
         shared_ptr<runtime::cpu::CPUTensorView> tv =
             static_pointer_cast<runtime::cpu::CPUTensorView>(input_tvs[i]);
+        NGRAPH_SHARED_PTR_CHECKER(input_tvs[i]);
         if (disable_caching)
         {
             m_ctx_vec[id]->p_en[i] = true;
@@ -90,12 +120,16 @@ void runtime::cpu::CPU_CallFrame::inner_call(
 
         inputs.push_back(tv->get_data_ptr());
     }
+    NGRAPH_SHARED_PTR_VECTOR_CHECKER(input_tvs);
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
+        NGRAPH_SHARED_PTR_CHECKER(output_tvs[i]);
         shared_ptr<runtime::cpu::CPUTensorView> tv =
             static_pointer_cast<runtime::cpu::CPUTensorView>(output_tvs[i]);
+        NGRAPH_SHARED_PTR_CHECKER(output_tvs[i]);
         outputs.push_back(tv->get_data_ptr());
     }
+    NGRAPH_SHARED_PTR_VECTOR_CHECKER(output_tvs);
 
     // Invoke compiled computation
     if (!m_external_function->is_direct_execution())
@@ -119,6 +153,8 @@ void runtime::cpu::CPU_CallFrame::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
 {
+    NGRAPH_SHARED_PTR_VECTOR_CHECKER(output_tvs);
+    NGRAPH_SHARED_PTR_VECTOR_CHECKER(input_tvs);
     auto id = 0;
     auto disable_caching = false;
     {
@@ -147,9 +183,13 @@ void runtime::cpu::CPU_CallFrame::call(
         m_prev_ctx = id;
         m_num_ctx_available--;
     }
+    NGRAPH_SHARED_PTR_VECTOR_CHECKER(output_tvs);
+    NGRAPH_SHARED_PTR_VECTOR_CHECKER(input_tvs);
 
     m_ctx_vec[id]->pc = 0;
     propagate_layouts(output_tvs, m_external_function->get_result_layout_descriptors());
+    NGRAPH_SHARED_PTR_VECTOR_CHECKER(output_tvs);
+    NGRAPH_SHARED_PTR_VECTOR_CHECKER(input_tvs);
     inner_call(output_tvs, input_tvs, id, disable_caching);
 
     m_mutex.lock();
