@@ -34,6 +34,13 @@ using namespace std;
 // TODO(jmenon): Refactor all the alignment specifications into
 // a single place and allow lower or no alignment when possible
 
+void CPUTensorView_BadDelete()
+{
+    std::cout << "*********************************" << std::endl;
+    std::cout << "Stale at free - unexpected delete" << std::endl;
+    std::cout << "*********************************" << std::endl;
+}
+
 runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
                                            const Shape& shape,
                                            void* memory_pointer)
@@ -82,9 +89,7 @@ runtime::cpu::CPUTensorView::~CPUTensorView()
 {
     if (m_stale)
     {
-        std::cout << "*********************************" << std::endl;
-        std::cout << "Stale at free - unexpected delete" << std::endl;
-        std::cout << "*********************************" << std::endl;
+        CPUTensorView_BadDelete();
     }
     ngraph_free(buffer);
 }
