@@ -36,6 +36,51 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
+NGRAPH_TEST(${BACKEND_NAME}, gather_1d_indices_axis_2_3d_input)
+{
+    Shape params_shape{2, 3, 4};
+    Shape indices_shape{3};
+    Shape out_shape{2, 3, 3};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto G = make_shared<op::Gather>(P, I, 2);
+    auto f = make_shared<Function>(G, ParameterVector{P, I});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto p = backend->create_tensor(element::f32, params_shape);
+    copy_data(p, vector<float>{0.0f,  0.1f,  0.2f,  0.3f,  1.0f,  1.1f,  1.2f,  1.3f,
+                               2.0f,  2.1f,  2.2f,  2.3f,  10.0f, 10.1f, 10.2f, 10.3f,
+                               11.0f, 11.1f, 11.2f, 11.3f, 12.0f, 12.1f, 12.2f, 12.3f});
+    auto i = backend->create_tensor(element::i32, indices_shape);
+    copy_data(i, vector<int32_t>{1, 0, 2});
+    auto result = backend->create_tensor(element::f32, out_shape);
+
+    auto c = backend->compile(f);
+    c->call_with_validate({result}, {p, i});
+    EXPECT_TRUE(test::all_close_f((vector<float>{0.1f,
+                                                 0.0f,
+                                                 0.2f,
+                                                 1.1f,
+                                                 1.0f,
+                                                 1.2f,
+                                                 2.1f,
+                                                 2.0f,
+                                                 2.2f,
+                                                 10.1f,
+                                                 10.0f,
+                                                 10.2f,
+                                                 11.1f,
+                                                 11.0f,
+                                                 11.2f,
+                                                 12.1f,
+                                                 12.0f,
+                                                 12.2f}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, gather_4d_indices_no_axis_uint8)
 {
     Shape params_shape{3, 2};
