@@ -78,7 +78,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
     auto R = std::make_shared<pattern::op::Label>(
         element::f32, Shape{ref_gates_count * ref_hidden_size, ref_hidden_size});
     auto B = std::make_shared<pattern::op::Label>(element::f32,
-                                                         Shape{ref_gates_count * ref_hidden_size});
+                                                  Shape{ref_gates_count * ref_hidden_size});
     auto peep_hole = std::make_shared<pattern::op::Label>(element::f32, Shape{3 * ref_hidden_size});
     auto H_t =
         std::make_shared<pattern::op::Label>(element::f32, Shape{ref_batch_size, ref_hidden_size});

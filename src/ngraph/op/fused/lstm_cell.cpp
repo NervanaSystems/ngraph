@@ -284,8 +284,7 @@ Output<Node> op::LSTMCell::get_default_peepholes_input() const
 
 shared_ptr<Node> ngraph::op::LSTMCell::convert_node_format(const Output<Node>& node) const
 {
-    static const std::map<op::LSTMWeightsFormat, std::vector<size_t>> gate_order_conversion_map
-    {
+    static const std::map<op::LSTMWeightsFormat, std::vector<size_t>> gate_order_conversion_map{
         {op::LSTMWeightsFormat::FICO, {1, 0, 2, 3}},
         {op::LSTMWeightsFormat::ICOF, {0, 3, 1, 2}},
         {op::LSTMWeightsFormat::IFOC, {0, 1, 3, 2}},

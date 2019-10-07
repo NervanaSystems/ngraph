@@ -33,13 +33,12 @@ namespace ngraph
     {
         enum class LSTMWeightsFormat
         {
-            FICO,   // IE
-            ICOF,   // PyTorch
-            IFCO,   // DNNL, TF, MxNet
-            IFOC,   // Caffe
-            IOFC,   // ONNX
+            FICO, // IE
+            ICOF, // PyTorch
+            IFCO, // DNNL, TF, MxNet
+            IFOC, // Caffe
+            IOFC, // ONNX
         };
-
 
         ///
         /// \brief      Class for single lstm cell node.
@@ -73,7 +72,6 @@ namespace ngraph
             NGRAPH_API
             static constexpr NodeTypeInfo type_info{"LSTMCell", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
-
             ///
             /// \brief      Constructs LSTMCell node.
             ///
@@ -113,7 +111,6 @@ namespace ngraph
                      const std::vector<float>& activations_beta = {},
                      float clip = 0.f,
                      bool input_forget = false);
-
 
             ///
             /// \brief      Constructs LSTMCell node.
@@ -170,7 +167,6 @@ namespace ngraph
             bool get_input_forget() const { return m_input_forget; }
             LSTMWeightsFormat get_weights_format() const { return m_weights_format; }
         private:
-
             ///
             /// \brief      Creates the default bias input initialized with zeros.
             ///

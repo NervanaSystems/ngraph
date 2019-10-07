@@ -3916,8 +3916,10 @@ TEST(cpu_fusion, lstm_cell)
         auto ht = make_shared<op::GetOutputElement>(lstm_cell, 0);
         auto ct = make_shared<op::GetOutputElement>(lstm_cell, 1);
 
-        auto lstm_function =
-            make_shared<Function>(NodeVector{ht, ct}, ParameterVector{X, H_t, C_t, W, R,});
+        auto lstm_function = make_shared<Function>(NodeVector{ht, ct},
+                                                   ParameterVector{
+                                                       X, H_t, C_t, W, R,
+                                                   });
         return lstm_function;
     };
     auto lstm_function_cpu = make_function();

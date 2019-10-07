@@ -412,8 +412,8 @@ static element::Type read_element_type(json j)
 static op::LSTMWeightsFormat read_lstm_weights_format(const json& js)
 {
     return has_key(js, "weights_format")
-        ? static_cast<op::LSTMWeightsFormat>(js.at("weights_format"))
-        : op::LSTMWeightsFormat::IFCO;
+               ? static_cast<op::LSTMWeightsFormat>(js.at("weights_format"))
+               : op::LSTMWeightsFormat::IFCO;
 }
 
 void ngraph::serialize(const string& path, shared_ptr<ngraph::Function> func, size_t indent)
