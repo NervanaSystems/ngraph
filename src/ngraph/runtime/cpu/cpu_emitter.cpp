@@ -3153,8 +3153,26 @@ namespace ngraph
                 auto arg0_shape = args[0].get_shape();
                 auto result_shape = out[0].get_shape();
 
+                std::string pad_mode_string;
+                switch (pad->get_pad_mode())
+                {
+                case ngraph::op::PadMode::CONSTANT:
+                    pad_mode_string = "ngraph::op::PadMode::CONSTANT";
+                    break;
+                case ngraph::op::PadMode::EDGE:
+                    pad_mode_string = "ngraph::op::PadMode::EDGE";
+                    break;
+                case ngraph::op::PadMode::REFLECT:
+                    pad_mode_string = "ngraph::op::PadMode::REFLECT";
+                    break;
+                case ngraph::op::PadMode::SYMMETRIC:
+                    pad_mode_string = "ngraph::op::PadMode::SYMMETRIC";
+                    break;
+                }
+
                 if (arg0_shape.size() == 4 && args[0].get_element_type() == element::f32 &&
-                    pad->get_pad_mode() == ngraph::op::PadMode::CONSTANT)
+                    (pad->get_pad_mode() == ngraph::op::PadMode::CONSTANT ||
+                     pad->get_pad_mode() == ngraph::op::PadMode::REFLECT))
                 {
                     writer << "cpu::kernel::pad_4d_float32(" << args[0].get_name() << ",\n"
                            << "                            " << out[0].get_name() << ",\n"
@@ -3164,26 +3182,12 @@ namespace ngraph
                            << "                            {" << join(pad->get_padding_below())
                            << "},\n"
                            << "                            {" << join(pad->get_padding_above())
-                           << "}, 0);\n";
+                           << "}, \n"
+                           << "                            " << pad_mode_string << ",\n"
+                           << "                             0);\n";
                 }
                 else
                 {
-                    std::string pad_mode_string;
-                    switch (pad->get_pad_mode())
-                    {
-                    case ngraph::op::PadMode::CONSTANT:
-                        pad_mode_string = "ngraph::op::PadMode::CONSTANT";
-                        break;
-                    case ngraph::op::PadMode::EDGE:
-                        pad_mode_string = "ngraph::op::PadMode::EDGE";
-                        break;
-                    case ngraph::op::PadMode::REFLECT:
-                        pad_mode_string = "ngraph::op::PadMode::REFLECT";
-                        break;
-                    case ngraph::op::PadMode::SYMMETRIC:
-                        pad_mode_string = "ngraph::op::PadMode::SYMMETRIC";
-                        break;
-                    }
                     writer << "reference::pad<" << out[0].get_type() << ">(" << args[0].get_name()
                            << ",\n";
                     writer << "            " << args[1].get_name() << ",\n";
