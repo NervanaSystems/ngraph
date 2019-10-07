@@ -185,6 +185,7 @@ TEST(constant_folding, constant_unary_binary)
     auto sub = a - b;
     auto mul = a * b;
     auto divn = a / b;
+    auto pow = make_shared<op::Power>(a, b);
     auto min = make_shared<op::Minimum>(c, a);
     auto max = make_shared<op::Maximum>(a, c);
     auto absn = make_shared<op::Abs>(c);
@@ -194,6 +195,7 @@ TEST(constant_folding, constant_unary_binary)
     auto sub_autob_numpy = make_shared<op::Subtract>(a, e, op::AutoBroadcastType::NUMPY);
     auto mul_autob_numpy = make_shared<op::Multiply>(a, e, op::AutoBroadcastType::NUMPY);
     auto div_autob_numpy = make_shared<op::Divide>(a, g, op::AutoBroadcastType::NUMPY);
+    auto pow_autob_numpy = make_shared<op::Power>(a, g, op::AutoBroadcastType::NUMPY);
     auto min_autob_numpy = make_shared<op::Minimum>(a, f, op::AutoBroadcastType::NUMPY);
     auto max_autob_numpy = make_shared<op::Maximum>(a, f, op::AutoBroadcastType::NUMPY);
     auto equal_autob_numpy = make_shared<op::Equal>(a, g, op::AutoBroadcastType::NUMPY);
@@ -212,6 +214,7 @@ TEST(constant_folding, constant_unary_binary)
                                                  sub,
                                                  mul,
                                                  divn,
+                                                 pow,
                                                  min,
                                                  max,
                                                  absn,
@@ -221,6 +224,7 @@ TEST(constant_folding, constant_unary_binary)
                                                  sub_autob_numpy,
                                                  mul_autob_numpy,
                                                  div_autob_numpy,
+                                                 pow_autob_numpy,
                                                  min_autob_numpy,
                                                  max_autob_numpy,
                                                  equal_autob_numpy,
@@ -244,6 +248,7 @@ TEST(constant_folding, constant_unary_binary)
     vector<int> sub_expected{0, 0, 0, 0};
     vector<int> mul_expected{1, 4, 9, 16};
     vector<int> div_expected{1, 1, 1, 1};
+    vector<int> pow_expected{1, 4, 27, 256};
     vector<int> min_expected{-1, -1, -1, -1};
     vector<int> max_expected{1, 2, 3, 4};
     vector<int> abs_neg_expected{1, 1, 1, 1};
@@ -252,6 +257,7 @@ TEST(constant_folding, constant_unary_binary)
     vector<int> sub_autob_numpy_expected{-4, -4, -2, -2};
     vector<int> mul_autob_numpy_expected{5, 12, 15, 24};
     vector<int> div_autob_numpy_expected{1, 0, 3, 1};
+    vector<int> pow_autob_numpy_expected{1, 16, 3, 256};
     vector<int> min_autob_numpy_expected{0, 2, 0, 4};
     vector<int> max_autob_numpy_expected{1, 10, 3, 10};
     vector<char> equal_autob_numpy_expected{1, 0, 0, 1};
@@ -268,26 +274,28 @@ TEST(constant_folding, constant_unary_binary)
     ASSERT_EQ(get_result_constant<int>(func, 1), sub_expected);
     ASSERT_EQ(get_result_constant<int>(func, 2), mul_expected);
     ASSERT_EQ(get_result_constant<int>(func, 3), div_expected);
-    ASSERT_EQ(get_result_constant<int>(func, 4), min_expected);
-    ASSERT_EQ(get_result_constant<int>(func, 5), max_expected);
-    ASSERT_EQ(get_result_constant<int>(func, 6), abs_neg_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 4), pow_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 5), min_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 6), max_expected);
     ASSERT_EQ(get_result_constant<int>(func, 7), abs_neg_expected);
-    ASSERT_EQ(get_result_constant<int>(func, 8), sqrt_expected);
-    ASSERT_EQ(get_result_constant<int>(func, 9), add_autob_numpy_expected);
-    ASSERT_EQ(get_result_constant<int>(func, 10), sub_autob_numpy_expected);
-    ASSERT_EQ(get_result_constant<int>(func, 11), mul_autob_numpy_expected);
-    ASSERT_EQ(get_result_constant<int>(func, 12), div_autob_numpy_expected);
-    ASSERT_EQ(get_result_constant<int>(func, 13), min_autob_numpy_expected);
-    ASSERT_EQ(get_result_constant<int>(func, 14), max_autob_numpy_expected);
-    ASSERT_EQ(get_result_constant<char>(func, 15), equal_autob_numpy_expected);
-    ASSERT_EQ(get_result_constant<char>(func, 16), not_equal_autob_numpy_expected);
-    ASSERT_EQ(get_result_constant<char>(func, 17), greater_autob_numpy_expected);
-    ASSERT_EQ(get_result_constant<char>(func, 18), greater_eq_autob_numpy_expected);
-    ASSERT_EQ(get_result_constant<char>(func, 19), less_autob_numpy_expected);
-    ASSERT_EQ(get_result_constant<char>(func, 20), less_eq_autob_numpy_expected);
-    ASSERT_EQ(get_result_constant<char>(func, 21), logical_and_autob_numpy_expected);
-    ASSERT_EQ(get_result_constant<char>(func, 22), logical_or_autob_numpy_expected);
-    ASSERT_EQ(get_result_constant<char>(func, 23), logical_xor_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 8), abs_neg_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 9), sqrt_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 10), add_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 11), sub_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 12), mul_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 13), div_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 14), pow_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 15), min_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 16), max_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 17), equal_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 18), not_equal_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 19), greater_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 20), greater_eq_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 21), less_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 22), less_eq_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 23), logical_and_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 24), logical_or_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 25), logical_xor_autob_numpy_expected);
     ASSERT_ANY_THROW(pass_manager.run_passes(func_error));
 }
 
