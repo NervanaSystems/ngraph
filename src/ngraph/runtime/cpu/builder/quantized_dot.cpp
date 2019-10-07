@@ -63,7 +63,7 @@ namespace ngraph
                     auto ip_attr =
                         mkldnn_emitter
                             ->get_inner_product_forward_attr<ngraph::op::QuantizedDotBias>(node);
-                    QUERY_SCRATCHPAD_2ARGS(ip_forward, ip_desc, ip_attr);
+                    size_t scratchpad_size = QUERY_SCRATCHPAD_2ARGS(ip_forward, ip_desc, ip_attr);
 
                     size_t ip_index = mkldnn_emitter->inner_product_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(ip_index);
@@ -74,6 +74,7 @@ namespace ngraph
                                     ip_attr,
                                     deps,
                                     ip_index,
+                                    scratchpad_size,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     arg2_buffer_index,
@@ -108,7 +109,11 @@ namespace ngraph
                             ctx, deps[3], ctx->buffer_data[out0_buffer_index]);
 
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, ip_index, deps, cpu::mkldnn_utils::OpType::QUANTIZEDDOTBIAS);
+                            ctx,
+                            ip_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::QUANTIZEDDOTBIAS,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
