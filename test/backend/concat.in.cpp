@@ -39,7 +39,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_negative_axis)
     auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, -1),
                                    ParameterVector{A, B, C});
 
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, Shape{2, 2});
