@@ -894,8 +894,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(batchnorm_index)
-                       << ", deps, OpType::BATCHNORMBACKPROP, " << to_string(scratchpad_size)
-                       << ");\n";
+                           << ", deps, OpType::BATCHNORMBACKPROP, " << to_string(scratchpad_size)
+                           << ");\n";
 
                     writer << "memcpy(" << out[1].get_name() << ", &bn_dweights[0], "
                            << args[0].get_size() * args[0].get_element_type().size() << ");\n";
