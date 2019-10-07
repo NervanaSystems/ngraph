@@ -36,8 +36,9 @@ Latest documentation updates
 + Note the only support for nGPU is now through PlaidML; nGraph support for nGPU 
   (via cuDNN) has been deprecated.  
 + iGPU works only with nGraph version `0.24`.
-+ New Sphinx-friendly theme (can be built natively for an alternative to ngraph.ai docs). 
-+ Update PaddlePaddle documentation to reflect demo directories instead of example directory
++ Add new Sphinx-friendly theme (can be built natively for an alternative to ngraph.ai docs). 
++ Update PaddlePaddle documentation to reflect demo directories instead of example directory.
++ Update doc regarding the validation of ``Sum`` op.
 
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
@@ -165,6 +166,7 @@ pre-0.20
 + Additional ONNX ops
 + Add graph visualization tools to doc
 + Update doxygen to be friendlier to frontends
+
 .. 0.18
 + Python formatting issue
 + mkl-dnn work-around
@@ -173,6 +175,7 @@ pre-0.20
 + Begin tracking framework node names
 + ONNX quantization
 + More fusions
+
 .. 0.17
 + Allow negative padding in more places
 + Add code generation for some quantized ops
@@ -180,6 +183,7 @@ pre-0.20
 + initial distributed ops
 + Pad op takes CoordinateDiff instead of Shape pad values to allow for negative 
   padding.
+
 .. 0.16
 + NodeInput and NodeOutput classes prepare for simplifications of Node
 + Test improvements
