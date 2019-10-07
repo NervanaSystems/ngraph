@@ -170,16 +170,19 @@ namespace ngraph
 // the filter to run all the tests for a given backend should be:
 // --gtest_filter=BACKENDNAME*.*
 // (rather than the BACKENDNAME.* that worked before the use of NGRAPH_TEST_P)
-#define NGRAPH_INSTANTIATE_TEST_CASE_P(backend_name, prefix, test_case_name, generator)            \
+#define NGRAPH_INSTANTIATE_TEST_CASE_P(backend_name, prefix, test_case_name, ...)                  \
     static ::testing::internal::ParamGenerator<test_case_name::ParamType>                          \
         gtest_##prefix##backend_name##test_case_name##_EvalGenerator_()                            \
     {                                                                                              \
-        return generator;                                                                          \
+        return GTEST_EXPAND_(GTEST_GET_FIRST_(__VA_ARGS__, DUMMY_PARAM_));                         \
     }                                                                                              \
     static ::std::string gtest_##prefix##backend_name##test_case_name##_EvalGenerateName_(         \
         const ::testing::TestParamInfo<test_case_name::ParamType>& info)                           \
     {                                                                                              \
-        return ::testing::internal::GetParamNameGen<test_case_name::ParamType>()(info);            \
+        return GTEST_EXPAND_(GTEST_GET_SECOND_(                                                    \
+                    __VA_ARGS__,                                                                   \
+                    ::testing::internal::DefaultParamName<test_case_name::ParamType>,              \
+                    DUMMY_PARAM_))(info);                                                          \
     }                                                                                              \
     static int gtest_##prefix##backend_name##test_case_name##_dummy_ GTEST_ATTRIBUTE_UNUSED_ =     \
         ::testing::UnitTest::GetInstance()                                                         \
@@ -187,7 +190,7 @@ namespace ngraph
             .GetTestCasePatternHolder<test_case_name>(                                             \
                 #backend_name "/" #test_case_name,                                                 \
                 ::testing::internal::CodeLocation(__FILE__, __LINE__))                             \
-            ->AddTestCaseInstantiation(                                                            \
+            ->AddTestSuiteInstantiation(                                                           \
                 #prefix[0] != '\0' ? #backend_name "/" #prefix : "",                               \
                 &gtest_##prefix##backend_name##test_case_name##_EvalGenerator_,                    \
                 &gtest_##prefix##backend_name##test_case_name##_EvalGenerateName_,                 \
