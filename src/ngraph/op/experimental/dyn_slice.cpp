@@ -90,7 +90,7 @@ op::DynSlice::DynSlice(const Output<Node>& data,
 AxisSet op::DynSlice::convert_mask_to_axis_set(const std::vector<int64_t>& mask) const
 {
     AxisSet axis_set{};
-    for (auto i = 0; i < mask.size(); ++i)
+    for (size_t i = 0; i < static_cast<size_t>(mask.size()); ++i)
     {
         if (mask[i] == 1)
         {
