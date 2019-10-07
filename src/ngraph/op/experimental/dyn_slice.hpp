@@ -59,7 +59,7 @@ namespace ngraph
             /// \param data             The tensor to be sliced.
             /// \param begin            1D input tensor with begin indexes for input blob slicing.
             /// \param end              1D input tensor with end indexes for input blob slicing.
-            /// \param strides          The slicing strides; for example, strides of `{n,m}` means
+            /// \param stride          The slicing strides; for example, strides of `{n,m}` means
             ///                         to take every nth row and every mth column of the input
             ///                         matrix.
             /// \param begin_mask       When begin_mask[i] equal to 1 means that the corresponding
