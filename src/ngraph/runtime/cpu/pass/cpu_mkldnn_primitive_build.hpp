@@ -100,7 +100,7 @@ namespace ngraph
                         std::string& construct_string,
                         std::vector<size_t>& deps,
                         size_t& index,
-                        size_t& scratchpad size,
+                        size_t& scratchpad_size,
                         std::ofstream& desc_file)
                     {
                         throw std::runtime_error("Unimplemented op '" + node->description() +
