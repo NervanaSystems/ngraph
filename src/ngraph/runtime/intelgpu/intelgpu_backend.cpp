@@ -114,7 +114,7 @@
 #include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
-#include "ngraph/pass/opset1_downgrade.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
@@ -440,7 +440,7 @@ shared_ptr<runtime::Executable>
     {
         pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(
             IntelGPUBackend::is_supported_impl);
-        pass_manager.register_pass<ngraph::pass::Opset1Downgrade>();
+        pass_manager.register_pass<ngraph::pass::Opset0Downgrade>();
         pass_manager.register_pass<ngraph::pass::ImplicitBroadcastElimination>();
     }
 
