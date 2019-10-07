@@ -456,6 +456,8 @@ set (SRC
     pass/nop_elimination.hpp
     pass/pass.cpp
     pass/pass.hpp
+    pass/opset0_downgrade.cpp
+    pass/opset0_downgrade.hpp
     pass/opset1_upgrade.cpp
     pass/opset1_upgrade.hpp
     pass/pass_config.cpp
