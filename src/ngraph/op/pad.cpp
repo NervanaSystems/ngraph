@@ -305,23 +305,6 @@ void op::v1::Pad::validate_and_infer_types()
     const auto& pads_begin_coord = get_pads_begin();
     const auto& pads_end_coord = get_pads_end();
 
-    for (const auto& pads_begin_dim : pads_begin_coord)
-    {
-        NODE_VALIDATION_CHECK(this,
-                              pads_begin_dim >= 0,
-                              "All pads_begin element must be non-negative (pads_begin_coord ",
-                              pads_begin_coord,
-                              ")");
-    }
-    for (const auto& pads_end_dim : pads_end_coord)
-    {
-        NODE_VALIDATION_CHECK(this,
-                              pads_end_dim >= 0,
-                              "All pads_end element must be non-negative (pads_end_coord ",
-                              pads_end_coord,
-                              ")");
-    }
-
     auto pads_begin_node = input_value(1).get_node_shared_ptr();
     auto pads_end_node = input_value(2).get_node_shared_ptr();
     if (arg_shape_rank.is_static() && pads_begin_node->is_constant() &&
