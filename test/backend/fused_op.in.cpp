@@ -1236,7 +1236,8 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_no_bias_no_peepholes)
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
     const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
 
-    const auto lstm_cell = make_shared<op::LSTMCell>(X, H_t, C_t, W, R, hidden_size);
+    const auto lstm_cell = make_shared<op::LSTMCell>(X, H_t, C_t, W, R, hidden_size,
+                                                     op::LSTMWeightsFormat::IOFC);
 
     auto ht_function = make_shared<Function>(make_shared<op::GetOutputElement>(lstm_cell, 0),
                                              ParameterVector{X, H_t, C_t, W, R});
@@ -1299,7 +1300,8 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_bias_peepholes)
     const auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
     const auto P = make_shared<op::Parameter>(element::f32, Shape{3 * hidden_size});
 
-    const auto lstm_cell = make_shared<op::LSTMCell>(X, H_t, C_t, W, R, B, P, hidden_size);
+    const auto lstm_cell = make_shared<op::LSTMCell>(X, H_t, C_t, W, R, B, P, hidden_size,
+                                                     op::LSTMWeightsFormat::IOFC);
 
     auto ht_function = make_shared<Function>(make_shared<op::GetOutputElement>(lstm_cell, 0),
                                              ParameterVector{X, H_t, C_t, W, R, B, P});
