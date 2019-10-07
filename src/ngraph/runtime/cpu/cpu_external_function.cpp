@@ -179,6 +179,7 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/dropout.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -449,7 +450,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Dropout), &runtime::cpu::CPU_Emitter::emit<op::Dropout>},
     {TI(ngraph::op::Tile), &runtime::cpu::CPU_Emitter::emit<op::Tile>},
     {TI(ngraph::op::Gelu), &runtime::cpu::CPU_Emitter::emit<op::Gelu>},
-    {TI(ngraph::op::GeluBackpropFactor), &runtime::cpu::CPU_Emitter::emit<op::GeluBackpropFactor>},
+    //{TI(ngraph::op::GeluBackpropFactor), &runtime::cpu::CPU_Emitter::emit<op::GeluBackpropFactor>},
+    {TI(ngraph::op::GeluBackprop), &runtime::cpu::CPU_Emitter::emit<op::GeluBackprop>},
 };
 
 static void

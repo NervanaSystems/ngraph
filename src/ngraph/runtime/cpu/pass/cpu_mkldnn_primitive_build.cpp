@@ -2152,7 +2152,7 @@ namespace ngraph
                     construct_string = writer.get_code();
                 }
                 template <>
-                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(GeluBackpropFactor)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(GeluBackprop)
                 {
                 }
 

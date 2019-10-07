@@ -44,6 +44,7 @@
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -75,6 +76,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/dropout.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -1183,6 +1185,54 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
     this->add_matcher(m, callback);
 }
 
+void ngraph::runtime::cpu::pass::CPUFusion::construct_gelubackprop()
+{
+    Shape shape{2, 2, 1, 1};
+    auto input = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto gbpfactor = std::make_shared<ngraph::op::GeluBackpropFactor>(input);
+
+    auto delta = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto mult = std::make_shared<ngraph::op::Multiply>(gbpfactor, delta);
+
+    auto callback = [](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_dropout against "
+                     << m.get_match_root()->get_name();
+        if (m.get_match_root()->get_element_type() != element::f32)
+        {
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+                         << " type is not float!";
+            return false;
+        }
+
+        auto pattern_map = m.get_pattern_map();
+        auto m_mult = std::static_pointer_cast<ngraph::op::Multiply>(m.get_match_root());
+
+        auto m_gbpfactor = std::static_pointer_cast<ngraph::op::GeluBackpropFactor>(
+                                                    m.get_match_root()->get_argument(0));
+        if (m_gbpfactor->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "GeluBackpropFactor has more than one user";
+            return false;
+        }
+
+        // we wont fuse if the alpha and the Relu output element type are not same
+        if (m_gbpfactor->get_element_type() != m_mult->get_argument(1)->get_element_type())
+        {
+            return false;
+        }
+
+        // ConvolutionBiasAdd created only if it can run with MKLDNN.
+        // No further checks needed.
+        auto gbp_n = std::make_shared<ngraph::op::GeluBackprop>(m_gbpfactor->get_argument(0),
+                                                                m_mult->get_argument(1));
+        ngraph::replace_node(m.get_match_root(), gbp_n);
+        //return true;
+
+        return false; // Change to true when implementation done
+    };
+    auto m = std::make_shared<pattern::Matcher>(mult, "CPUFusion.GeluBackprop");
+    this->add_matcher(m, callback);
+}
 void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add_relu()
 {
     Shape shape{2, 2, 1, 1};

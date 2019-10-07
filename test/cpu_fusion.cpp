@@ -33,6 +33,7 @@
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -66,6 +67,7 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/dropout.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -1079,6 +1081,58 @@ TEST(cpu_fusion, conv_add)
     int_results = execute(int_f, args, "INTERPRETER");
     cpu_results = execute(cpu_f, args, "CPU");
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+}
+
+
+TEST(cpu_fusion, fuse_gelu_backprop)
+{
+    Shape shape_a{2, 1, 60, 60};
+
+    auto make_function = [shape_a]() {
+        auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
+        auto gbpfactor = std::make_shared<op::GeluBackpropFactor>(A);
+        auto delta = std::make_shared<op::Parameter>(element::f32, shape_a);
+        auto gbp = gbpfactor * delta;
+
+        auto f = make_shared<Function>(NodeVector{gbp},
+                                       ParameterVector{A, delta});
+        return f;
+    };
+
+    auto fuse_func = make_function();
+    auto int_f = make_function();
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::VisualizeTree>("gelu_backprop_before.svg");
+        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+        pass_manager.register_pass<pass::VisualizeTree>("gelu_backprop_after.svg");
+        pass_manager.run_passes(fuse_func);
+        ASSERT_EQ(count_ops_of_type<op::GeluBackprop>(fuse_func), 1);
+    }
+
+    // Test values
+    {
+        test::Uniform<float> rng(1.0f, 100.0f);
+        vector<vector<float>> args;
+        for (shared_ptr<op::Parameter> param : fuse_func->get_parameters())
+        {
+            auto name = param->get_name();
+            vector<float> tensor_val(shape_size(param->get_shape()));
+            rng.initialize(tensor_val);
+            args.push_back(tensor_val);
+        }
+        // for float this will be 18 bits matching
+        // for bfloat this will be 6 bits matching
+        constexpr int one_third_of_available_bits = (MAX_FLOAT_BITS * 1) / 3;
+        constexpr int tolerance = FLOAT_MANTISSA_BITS - one_third_of_available_bits;
+
+        // mkldnn uses the tanh approximation of Gelu and the interpereter uses Erf.
+        // Both are equally accepted but the difference is precision is due to diff implementation 
+        auto int_results = execute(int_f, args, "INTERPRETER");
+        auto cpu_results = execute(fuse_func, args, "CPU");
+        EXPECT_TRUE(test::all_close_f(cpu_results.at(0), int_results.at(0), tolerance));
+    }
+
 }
 
 shared_ptr<Function> gen_deconv(const bool add_goe)

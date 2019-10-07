@@ -45,6 +45,7 @@
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -2453,7 +2454,7 @@ void MKLDNNEmitter::build_gelu_backward(
     const mkldnn::eltwise_backward::desc& bwd_desc,
     const mkldnn::eltwise_forward::desc& fwd_desc,
     const std::vector<size_t>& deps,
-    size_t relu_index)
+    size_t gelu_index)
 {
     size_t input_index = deps[0];
     build_memory_primitive(mkldnn_primitives, bwd_desc.data.data_desc, input_index);
@@ -2462,14 +2463,14 @@ void MKLDNNEmitter::build_gelu_backward(
     size_t result_index = deps[2];
     build_memory_primitive(mkldnn_primitives, bwd_desc.data.data_desc, result_index);
 
-    // create forward relu primitive descriptor
-    auto relu_pd = mkldnn::eltwise_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
+    // create forward gelu primitive descriptor
+    auto gelu_pd = mkldnn::eltwise_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
 
-    // create backward relu primitive_descriptor
-    auto relu_bwd_pd =
-        mkldnn::eltwise_backward::primitive_desc(bwd_desc, executor::global_cpu_engine, relu_pd);
+    // create backward gelu primitive_descriptor
+    auto gelu_bwd_pd =
+        mkldnn::eltwise_backward::primitive_desc(bwd_desc, executor::global_cpu_engine, gelu_pd);
 
-    mkldnn_primitives[relu_index] = new mkldnn::eltwise_backward(relu_bwd_pd,
+    mkldnn_primitives[gelu_index] = new mkldnn::eltwise_backward(gelu_bwd_pd,
                                                                  *mkldnn_primitives[input_index],
                                                                  *mkldnn_primitives[delta_index],
                                                                  *mkldnn_primitives[result_index]);

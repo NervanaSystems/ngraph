@@ -19,6 +19,7 @@
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -101,7 +102,7 @@ namespace ngraph
             }
 
 
-            template <>
+            /*template <>
             void Builder::BUILDER_DECL(ngraph::op::GeluBackpropFactor)
             {
                 std::cout << "GeluBackpropFactor builder begin\n";
@@ -133,7 +134,7 @@ namespace ngraph
                                     arg_fwd_buffer_index,
                                     //delta_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* /* ectx */) {
+                                                      CPUExecutionContext* /* ectx ) {
                         std::cout << "GeluBackpropFactor builder inside functor\n";
                         if (ctx->first_iteration)
                         {
@@ -162,6 +163,69 @@ namespace ngraph
                     std::cout << "GeluBackpropFactor builder NOT mkldnn\n";
                     throw ngraph_error(
                         "GeluBackpropFactor is supported with MKLDNN kernel only for f32.");
+                }
+            }*/
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::GeluBackprop)
+            {
+                std::cout << "GeluBackprop builder begin\n";
+                auto& functors = external_function->get_functors();
+
+                auto arg_fwd_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto delta_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
+                size_t count = out[0].get_size();
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    std::cout << "GeluBackprop builder mkldnn true\n";
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto bwd_desc = mkldnn_emitter->get_gelu_backward_desc(node);
+                    auto fwd_desc = mkldnn_emitter->get_gelu_forward_desc(node);
+                    QUERY_SCRATCHPAD_2ARGS(eltwise_backward, fwd_desc, bwd_desc);
+
+                    // geluBackprop needs 4 primitives: input, delta, result, and eltwise_backward.
+                    size_t gelu_b_index = mkldnn_emitter->reserve_primitive_space(4);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(gelu_b_index);
+
+                    auto functor = [&,
+                                    bwd_desc,
+                                    fwd_desc,
+                                    gelu_b_index,
+                                    arg_fwd_buffer_index,
+                                    delta_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
+                        std::cout << "GeluBackpropFactor builder inside functor\n";
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->build_gelu_backward(ctx->mkldnn_memories,
+                                                                ctx->mkldnn_primitives,
+                                                                ctx->mkldnn_scratchpad_mds,
+                                                                bwd_desc,
+                                                                fwd_desc,
+                                                                deps,
+                                                                gelu_b_index);
+                        }
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg_fwd_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[delta_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[out_buffer_index]);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, gelu_b_index, deps, cpu::mkldnn_utils::OpType::GELUBACKPROP);
+                    };
+                    functors.emplace_back(functor);
+                }
+                else
+                {
+                    std::cout << "GeluBackprop builder NOT mkldnn\n";
+                    throw ngraph_error(
+                        "GeluBackprop is supported with MKLDNN kernel only for f32.");
+                    // call the reference implementation???
                     /*std::function<decltype(runtime::cpu::kernel::gelu_backprop<float>)> kernel;
 
                     SELECT_KERNEL(
@@ -187,7 +251,7 @@ namespace ngraph
             void register_builders_gelu_cpp()
             {
                 REGISTER_OP_BUILDER(Gelu);
-                REGISTER_OP_BUILDER(GeluBackpropFactor);
+                REGISTER_OP_BUILDER(GeluBackprop);
             }
 
         }

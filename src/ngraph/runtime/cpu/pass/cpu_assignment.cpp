@@ -56,6 +56,7 @@
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -769,15 +770,11 @@ namespace ngraph
                 }
 
                 template <>
-                void CPUAssignment::ASSIGN_DECL(ngraph::op::GeluBackpropFactor)
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::GeluBackprop)
                 {
-                    std::cout << "cpu_assignment pass for GeluBackpropFactor \n";
+                    std::cout << "cpu_assignment pass for GeluBackprop \n";
                     (void)external_function;
-                    auto gelu = static_cast<ngraph::op::GeluBackpropFactor*>(node);
-
-                    //auto arg0_shape = node->get_input_shape(0);
-                    //auto arg0_rank = arg0_shape.size();
-                    //auto result_shape = node->get_output_shape(0);
+                    auto gelu = static_cast<ngraph::op::GeluBackprop*>(node);
 
                     if (node->get_input_element_type(0) == element::f32)
                     {
@@ -786,11 +783,11 @@ namespace ngraph
                         std::cout << " Setting mkldnn to true\n";
                         op_annotations->set_mkldnn_op(true);
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
-                        if (get_user_count(node->get_argument(0).get()) == 1)
+                        /*if (get_user_count(node->get_argument(0).get()) == 1)
                         {
                             // Safe to overwrite input
                             op_annotations->add_in_place_oi_pair({0, 0, true});
-                        }
+                        }*/
                         gelu->set_op_annotations(op_annotations);
                     }
                 }
@@ -1113,8 +1110,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ScatterAdd>},
     {TI(ngraph::op::Gelu),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Gelu>},
-    {TI(ngraph::op::GeluBackpropFactor),
-     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::GeluBackpropFactor>},
+    {TI(ngraph::op::GeluBackprop),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::GeluBackprop>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(
