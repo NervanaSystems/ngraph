@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/op/util/arithmetic_reduction.hpp"
+#include "ngraph/op/util/arithmetic_reductions_keep_dims.hpp"
 
 namespace ngraph
 {
@@ -27,7 +27,7 @@ namespace ngraph
             /// \brief Product reduction operation.
             ///
             /// Reduces the tensor, eliminating the specified reduction axes by taking the product.
-            class ReduceProd : public util::ArithmeticReduction
+            class ReduceProd : public util::ArithmeticReductionKeepDims
             {
             public:
                 NGRAPH_API
@@ -44,20 +44,12 @@ namespace ngraph
                            const Output<Node>& reduction_axes,
                            bool keep_dims = false);
 
-                void validate_and_infer_types() override;
-
                 size_t get_version() const override { return 1; }
-                /// \return If set to 1 it holds axes that are used for reduction.
-                /// For each such axis, output dimension is equal to 1.
-                bool get_keep_dims() const { return m_keep_dims; }
                 /// \return The default value for Product.
                 virtual std::shared_ptr<Node> get_default_value() const override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
-
-            private:
-                bool m_keep_dims;
             };
         }
     }

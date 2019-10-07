@@ -138,7 +138,7 @@ Batched, Padded, Dilated, Strided Convolution
 C++ Interface
 =============
 
-  .. doxygenclass:: ngraph::op::Convolution
+  .. doxygenclass:: ngraph::op::v0::Convolution
      :project: ngraph
      :members:
 

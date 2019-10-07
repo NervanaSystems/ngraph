@@ -20,6 +20,8 @@
 
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/shape_util.hpp"
+#include "ngraph/type/bfloat16.hpp"
+#include "ngraph/type/float16.hpp"
 
 namespace ngraph
 {

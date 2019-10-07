@@ -17,36 +17,70 @@
 #pragma once
 
 #include "ngraph/op/util/arithmetic_reduction.hpp"
+#include "ngraph/op/util/arithmetic_reductions_keep_dims.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief Max-reduction operation.
-        class Max : public util::ArithmeticReduction
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Max", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a "max" reduction operation.
-            Max() = default;
-            /// \brief Constructs a max-reduction operation.
-            ///
-            /// \param arg The tensor to be reduced.
-            /// \param reduction_axes The axis positions (0-based) to be elimaxated.
-            Max(const Output<Node>& arg, const AxisSet& reduction_axes);
-            /// \brief Constructs a "max" reduction operation.
-            ///
-            /// \param arg The tensor to be reduced.
-            /// \param reduction_axes The axis positions (0-based) to be elimaxated.
-            Max(const Output<Node>& arg, const Output<Node>& reduction_axes);
+            /// \brief Max-reduction operation.
+            class Max : public util::ArithmeticReduction
+            {
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"Max", 0};
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a "max" reduction operation.
+                Max() = default;
 
-            /// \return The default value for Max.
-            virtual std::shared_ptr<Node> get_default_value() const override;
-        };
+                /// \brief Constructs a max-reduction operation.
+                ///
+                /// \param arg The tensor to be reduced.
+                /// \param reduction_axes The axis positions (0-based) to be elimaxated.
+                Max(const Output<Node>& arg, const AxisSet& reduction_axes);
+
+                /// \brief Constructs a "max" reduction operation.
+                ///
+                /// \param arg The tensor to be reduced.
+                /// \param reduction_axes The axis positions (0-based) to be elimaxated.
+                Max(const Output<Node>& arg, const Output<Node>& reduction_axes);
+
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+                /// \return The default value for Max.
+                virtual std::shared_ptr<Node> get_default_value() const override;
+            };
+        }
+
+        namespace v1
+        {
+            class ReduceMax : public util::ArithmeticReductionKeepDims
+            {
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"ReduceMax", 1};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a summation operation.
+                ReduceMax() = default;
+                /// \brief Constructs a summation operation.
+                ///
+                /// \param arg The tensor to be summed.
+                /// \param reduction_axes The axis positions (0-based) to be eliminated.
+                /// \param keep_dims If set to 1 it holds axes that are used for reduction.
+                ReduceMax(const Output<Node>& arg,
+                          const Output<Node>& reduction_axes,
+                          bool keep_dims = false);
+
+                size_t get_version() const override { return 1; }
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        }
+
+        using v0::Max;
     }
 }
