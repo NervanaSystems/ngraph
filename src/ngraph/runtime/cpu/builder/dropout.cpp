@@ -17,7 +17,6 @@
 #include "ngraph/runtime/cpu/op/dropout.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/kernel/dropout.hpp"
-#include "ngraph/state/rng_state.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -76,7 +75,7 @@ namespace ngraph
                                out0_buffer_index,
                                out1_buffer_index,
                                vmsr,
-                               use_seed](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                               use_seed](CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         bool training = static_cast<bool>(
                             static_cast<float*>(ctx->buffer_data[arg1_buffer_index])[0]);
                         double keep_prob =
@@ -102,7 +101,7 @@ namespace ngraph
                                out0_buffer_index,
                                out1_buffer_index,
                                vmsr,
-                               use_seed](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                               use_seed](CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         bool training = static_cast<bool>(
                             static_cast<double*>(ctx->buffer_data[arg1_buffer_index])[0]);
                         double keep_prob =

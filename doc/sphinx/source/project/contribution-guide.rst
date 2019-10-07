@@ -1,11 +1,14 @@
 .. project/contribution-guide.rst:
 
 
-.._contribution_guide:
+.. _contribution_guide:
 
 ##################
 Contribution guide
 ##################
+
+
+.. contents:: 
 
 License
 =======

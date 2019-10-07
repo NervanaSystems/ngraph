@@ -23,6 +23,8 @@ set(SRC
     memory_manager.cpp
     pass/mlir_subgraph_extraction.cpp
     pass/mlir_subgraph_extraction.hpp
+    pass/memory_optimization.cpp
+    tools.cpp
 )
 
 add_library(mlir_backend SHARED ${SRC})
@@ -94,3 +96,5 @@ ngraph_tablegen(ops.cpp.inc -gen-op-defs)
 add_public_tablegen_target(ngraph_ops_gen)
 add_dependencies(mlir_backend ngraph_ops_gen)
 target_include_directories(mlir_backend PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+install(TARGETS mlir_backend DESTINATION ${NGRAPH_INSTALL_LIB})

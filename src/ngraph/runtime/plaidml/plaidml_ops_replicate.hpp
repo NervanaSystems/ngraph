@@ -39,8 +39,8 @@ namespace ngraph
 class ngraph::runtime::plaidml::op::Replicate final : public ngraph::op::Op
 {
 public:
-    static const std::string type_name;
-    const std::string& description() const override { return type_name; }
+    static constexpr NodeTypeInfo type_info{"plaidmlReplicate", 0};
+    const NodeTypeInfo& get_type_info() const override { return type_info; }
     Replicate(const Output<Node>& arg, std::size_t replication_axis, std::size_t replication_count);
 
     Replicate(const Output<Node>& arg, std::vector<std::size_t> replication_axes);

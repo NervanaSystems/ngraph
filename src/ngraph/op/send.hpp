@@ -28,8 +28,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"Send", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs an unitialized send operation.
             Send() = default;
             /// \brief Constructs a send operation.
@@ -45,7 +45,7 @@ namespace ngraph
             int get_dest_id() const;
 
         private:
-            const int m_dest_id;
+            int m_dest_id;
         };
     }
 }

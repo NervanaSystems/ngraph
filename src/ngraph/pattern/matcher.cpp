@@ -28,6 +28,11 @@ namespace ngraph
 {
     namespace pattern
     {
+        constexpr NodeTypeInfo op::AnyOf::type_info;
+        constexpr NodeTypeInfo op::Any::type_info;
+        constexpr NodeTypeInfo op::Label::type_info;
+        constexpr NodeTypeInfo op::Skip::type_info;
+
         std::shared_ptr<Node> Matcher::get_match_root() { return m_match_root; }
         bool Matcher::match_pattern(const std::shared_ptr<op::Label>& label,
                                     const std::shared_ptr<Node>& graph_node,
@@ -227,23 +232,23 @@ namespace ngraph
                          << "pattern = " << pattern_node->get_name() << " matched "
                          << graph_node->get_name();
 
-            if (auto label_node = std::dynamic_pointer_cast<op::Label>(pattern_node))
+            if (auto label_node = as_type_ptr<op::Label>(pattern_node))
             {
                 return abort_match(watermark, match_pattern(label_node, graph_node, pattern_map));
             }
 
-            if (auto skip_node = std::dynamic_pointer_cast<op::Skip>(
-                    pattern_node)) // matches PatternSkipOp semantics
+            if (auto skip_node =
+                    as_type_ptr<op::Skip>(pattern_node)) // matches PatternSkipOp semantics
             {
                 return abort_match(watermark, match_skip(skip_node, graph_node, pattern_map));
             }
 
-            if (auto any_node = std::dynamic_pointer_cast<op::Any>(pattern_node))
+            if (auto any_node = as_type_ptr<op::Any>(pattern_node))
             {
                 return abort_match(watermark, match_any(any_node, graph_node, pattern_map));
             }
 
-            if (auto any_of_node = std::dynamic_pointer_cast<op::AnyOf>(pattern_node))
+            if (auto any_of_node = as_type_ptr<op::AnyOf>(pattern_node))
             {
                 return abort_match(watermark, match_any_of(any_of_node, graph_node, pattern_map));
             }

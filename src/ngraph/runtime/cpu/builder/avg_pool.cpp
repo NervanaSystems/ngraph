@@ -55,23 +55,31 @@ namespace ngraph
                     auto avg_pool_desc =
                         mkldnn_emitter->get_avg_pooling_forward_desc<ngraph::op::AvgPool>(node,
                                                                                           false);
+                    QUERY_SCRATCHPAD(pooling_forward, avg_pool_desc);
+
                     // AvgPool needs 3 primitives: input, result, and pooling_forward.
                     size_t avg_pool_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);
 
                     auto functor =
                         [&, avg_pool_desc, avg_pool_index, arg0_buffer_index, out_buffer_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                             if (ctx->first_iteration)
                             {
-                                mkldnn_emitter->build_pooling_forward(
-                                    ctx->mkldnn_primitives, avg_pool_desc, deps, avg_pool_index);
+                                mkldnn_emitter->build_pooling_forward(ctx->mkldnn_memories,
+                                                                      ctx->mkldnn_primitives,
+                                                                      ctx->mkldnn_scratchpad_mds,
+                                                                      avg_pool_desc,
+                                                                      deps,
+                                                                      avg_pool_index);
                             }
                             cpu::mkldnn_utils::set_memory_ptr(
                                 ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
                             cpu::mkldnn_utils::set_memory_ptr(
                                 ctx, deps[1], ctx->buffer_data[out_buffer_index]);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, avg_pool_index);
+
+                            cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                                ctx, avg_pool_index, deps, cpu::mkldnn_utils::OpType::AVGPOOL);
                         };
                     functors.emplace_back(functor);
                 }
@@ -79,8 +87,7 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::avg_pool<float>)> kernel;
 
-                    SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::avg_pool);
+                    SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::avg_pool)
 
                     auto functor = [&,
                                     kernel,
@@ -93,7 +100,7 @@ namespace ngraph
                                     include_padding_in_avg_computation,
                                     arg0_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         kernel(ctx->buffer_data[arg0_buffer_index],
                                ctx->buffer_data[out_buffer_index],
                                arg0_shape,
@@ -137,6 +144,8 @@ namespace ngraph
                     auto avg_pool_desc =
                         mkldnn_emitter->get_avg_pooling_backward_desc<ngraph::op::AvgPoolBackprop>(
                             node);
+                    QUERY_SCRATCHPAD_2ARGS(avg_pooling_backward, avg_pool_fwd_desc, avg_pool_desc);
+
                     // AvgPoolBackprop needs 3 primitives: input, result, and pooling_backward.
                     size_t avg_pool_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);
@@ -147,10 +156,12 @@ namespace ngraph
                                     avg_pool_index,
                                     delta_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_pooling_backward(ctx->mkldnn_primitives,
+                            mkldnn_emitter->build_pooling_backward(ctx->mkldnn_memories,
+                                                                   ctx->mkldnn_primitives,
+                                                                   ctx->mkldnn_scratchpad_mds,
                                                                    avg_pool_desc,
                                                                    avg_pool_fwd_desc,
                                                                    deps,
@@ -160,7 +171,9 @@ namespace ngraph
                             ctx, deps[0], ctx->buffer_data[delta_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, avg_pool_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, avg_pool_index, deps, cpu::mkldnn_utils::OpType::AVGPOOLBACKPROP);
                     };
                     functors.emplace_back(functor);
                 }
@@ -168,7 +181,7 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::avg_pool_backprop<float>)> kernel;
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::avg_pool_backprop);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::avg_pool_backprop)
 
                     auto functor = [&,
                                     kernel,
@@ -181,7 +194,7 @@ namespace ngraph
                                     include_padding_in_avg_computation,
                                     delta_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         kernel(ctx->buffer_data[delta_buffer_index],
                                ctx->buffer_data[out_buffer_index],
                                delta_shape,

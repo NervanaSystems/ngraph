@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Tile::type_name{"Tile"};
+constexpr NodeTypeInfo op::Tile::type_info;
 
 op::Tile::Tile(const Output<Node>& arg, const Output<Node>& repeats)
     : Op({arg, repeats})
@@ -60,8 +60,7 @@ void op::Tile::validate_and_infer_types()
 
     auto out_shape = PartialShape::dynamic(output_rank);
 
-    if (auto const_repeats =
-            dynamic_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr()))
+    if (auto const_repeats = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr()))
     {
         if (arg_shape.is_static())
         {
@@ -95,7 +94,7 @@ shared_ptr<Node> op::Tile::copy_with_new_args(const NodeVector& new_args) const
 }
 
 // TODO: This function is not implemented!
-void op::Tile::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Tile::generate_adjoints(autodiff::Adjoints& /* adjoints */, const NodeVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for Tile");
 }

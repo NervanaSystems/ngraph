@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Less::type_name{"Less"};
+constexpr NodeTypeInfo op::Less::type_info;
 
 op::Less::Less(const Output<Node>& arg0,
                const Output<Node>& arg1,

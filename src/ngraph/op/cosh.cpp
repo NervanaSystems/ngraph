@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Cosh::type_name{"Cosh"};
+constexpr NodeTypeInfo op::Cosh::type_info;
 
 op::Cosh::Cosh(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)

@@ -250,17 +250,17 @@ int pass::MemoryVisualize::compute_op_weight(const shared_ptr<Node> exop)
     return mass;
 }
 
-size_t pass::MemoryVisualize::memory_usage(shared_ptr<Node> node)
+size_t pass::MemoryVisualize::memory_usage(shared_ptr<Node> /* node */)
 {
     return 0;
 }
 
-size_t pass::MemoryVisualize::memory_footprint(shared_ptr<Node> node)
+size_t pass::MemoryVisualize::memory_footprint(shared_ptr<Node> /* node */)
 {
     return 0;
 }
 
-size_t pass::MemoryVisualize::memory_footprint(const std::list<shared_ptr<Node>>& nodes)
+size_t pass::MemoryVisualize::memory_footprint(const std::list<shared_ptr<Node>>& /* nodes */)
 {
     return 0;
 }

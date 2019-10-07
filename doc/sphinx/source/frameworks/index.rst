@@ -1,7 +1,10 @@
 .. frameworks/index.rst
 
-Using Frameworks
-================
+
+Working with Frameworks
+=======================
+
+.. include:: overview.rst
 
 .. toctree::
    :maxdepth: 1
@@ -10,3 +13,4 @@ Using Frameworks
    onnx_integ.rst 
    paddle_integ.rst
    tensorflow_connect.rst
+   generic_configs.rst

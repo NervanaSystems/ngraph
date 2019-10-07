@@ -172,6 +172,59 @@ static std::shared_ptr<ngraph::Node>
     return std::make_shared<ngraph::op::Broadcast>(broadcasted_value, output_shape, broadcast_axes);
 }
 
+/// \brief      Broadcast input node.
+///
+/// \param[in]  value         The input Node to be broadcast.
+/// \param[in]  output_shape  The output shape.
+/// \param[in]  axis          The start index to align with output_shape
+///
+/// \return     The broadcasted Node.
+///
+static std::shared_ptr<ngraph::Node> broadcast_value_pdpd_style(
+    const ngraph::Output<ngraph::Node>& value, const ngraph::Shape& output_shape, int64_t axis)
+{
+    auto value_shape = value.get_shape();
+
+    // If node already has the required shape, return original node
+    if (output_shape == value_shape)
+    {
+        return value.as_single_output_node();
+    }
+
+    if (axis == -1)
+    {
+        axis = output_shape.size() - value_shape.size();
+    }
+
+    auto trimmed_value_shape = value_shape;
+    while (trimmed_value_shape.size() > 0 && trimmed_value_shape.back() == 1)
+    {
+        trimmed_value_shape.pop_back();
+    }
+
+    ngraph::AxisSet axes;
+    for (int64_t i = 0; i < axis; ++i)
+    {
+        axes.insert(static_cast<size_t>(i));
+    }
+
+    for (size_t i = axis + trimmed_value_shape.size(); i < output_shape.size(); ++i)
+    {
+        axes.insert(i);
+    }
+
+    auto trimmed_value = value;
+    if (value_shape != trimmed_value_shape)
+    {
+        trimmed_value = std::make_shared<ngraph::op::Reshape>(
+            value, ngraph::get_default_order(value_shape), trimmed_value_shape);
+    }
+
+    auto value_bcast = std::make_shared<ngraph::op::Broadcast>(trimmed_value, output_shape, axes);
+
+    return value_bcast;
+}
+
 namespace ngraph
 {
     namespace op
@@ -413,6 +466,22 @@ namespace ngraph
                 calculate_broadcast_axes(left_shape, new_right_shape, start_match_axis));
 
             return {left, broadcast_right};
+        }
+
+        NodeVector pdpd_style_broadcast(const NodeVector& inputs, int64_t axis)
+        {
+            if (inputs.size() <= 1)
+            {
+                return inputs;
+            }
+
+            NodeVector broadcasted_inputs{inputs[0]};
+            for (std::size_t i = 1; i < inputs.size(); ++i)
+            {
+                broadcasted_inputs.push_back(
+                    broadcast_value_pdpd_style(inputs[i], inputs[0]->get_shape(), axis));
+            }
+            return broadcasted_inputs;
         }
 
         AxisSet calculate_broadcast_axes(const Shape& output_shape,

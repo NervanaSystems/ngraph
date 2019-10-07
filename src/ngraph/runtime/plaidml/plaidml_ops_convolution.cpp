@@ -36,7 +36,7 @@ namespace ngraph
     }
 }
 
-const std::string ngraph::runtime::plaidml::op::Convolution::type_name{"PlaidMLConvolution"};
+constexpr ngraph::NodeTypeInfo ngraph::runtime::plaidml::op::Convolution::type_info;
 
 ngraph::runtime::plaidml::op::Convolution::Convolution(std::shared_ptr<ngraph::op::Convolution> src,
                                                        const OutputVector& args,
@@ -74,8 +74,7 @@ std::shared_ptr<ngraph::Node>
         m_src, as_output_vector(new_args), m_data_axes, m_filters_axes, m_output_axes);
 }
 
-const std::string ngraph::runtime::plaidml::op::ConvolutionBackpropData::type_name{
-    "PlaidMLConvolutionBackpropData"};
+constexpr ngraph::NodeTypeInfo ngraph::runtime::plaidml::op::ConvolutionBackpropData::type_info;
 
 ngraph::runtime::plaidml::op::ConvolutionBackpropData::ConvolutionBackpropData(
     std::shared_ptr<ngraph::op::ConvolutionBackpropData> src,
@@ -115,8 +114,7 @@ std::shared_ptr<ngraph::Node>
         m_src, as_output_vector(new_args), m_filters_axes, m_output_axes, m_data_axes);
 }
 
-const std::string ngraph::runtime::plaidml::op::ConvolutionBackpropFilters::type_name{
-    "PlaidMLConvolutionBackpropFilters"};
+constexpr ngraph::NodeTypeInfo ngraph::runtime::plaidml::op::ConvolutionBackpropFilters::type_info;
 
 ngraph::runtime::plaidml::op::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
     std::shared_ptr<ngraph::op::ConvolutionBackpropFilters> src,
