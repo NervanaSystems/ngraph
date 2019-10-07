@@ -618,31 +618,31 @@ void ngraph::infer_auto_padding(const Shape& image_shape,
 
 PartialShape ngraph::infer_slice_shape(const Node* node,
                                        const PartialShape& input_shape,
-                                       const std::vector<int64_t>& lb,
-                                       const std::vector<int64_t>& ub,
-                                       const std::vector<int64_t>& str,
-                                       const AxisSet& lb_mask,
-                                       const AxisSet& ub_mask,
-                                       const AxisSet& new_axis,
-                                       const AxisSet& shrink_axis,
+                                       const std::vector<int64_t>& begin,
+                                       const std::vector<int64_t>& end,
+                                       const std::vector<int64_t>& strides,
+                                       const AxisSet& begin_mask,
+                                       const AxisSet& end_mask,
+                                       const AxisSet& new_axis_mask,
+                                       const AxisSet& shrink_axis_mask,
                                        const AxisSet& ellipsis_mask)
 {
-    if (lb.size() && ub.size())
+    if (begin.size() && end.size())
     {
         NODE_VALIDATION_CHECK(node,
-                              lb.size() == ub.size(),
+                              begin.size() == end.size(),
                               "Lower bounds and Upper bounds needs to have same number of values");
     }
-    if (lb.size() && str.size())
+    if (begin.size() && strides.size())
     {
         NODE_VALIDATION_CHECK(node,
-                              lb.size() == str.size(),
+                              begin.size() == strides.size(),
                               "Lower bounds and strides needs to have same number of values");
     }
-    if (ub.size() && str.size())
+    if (end.size() && strides.size())
     {
         NODE_VALIDATION_CHECK(node,
-                              ub.size() == str.size(),
+                              end.size() == strides.size(),
                               "Upper bounds and strides needs to have same number of values");
     }
 
@@ -651,221 +651,138 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
         return PartialShape::dynamic();
     }
 
-    int max_dims = size_t(input_shape.rank()) + new_axis.size();
+    std::vector<Dimension> dim;
 
-    int bounds_size =
-        lb.size() ? lb.size() : (ub.size() ? ub.size() : (str.size() ? str.size() : 0));
-
-    int ellipsis_pos1 = ellipsis_mask.size() ? *ellipsis_mask.begin() : max_dims;
-
-    int ellipsis_pos2 = max_dims;
-    bounds_size -= ellipsis_pos1;
-    if (bounds_size > 0 && (max_dims - bounds_size) > ellipsis_pos1)
+    size_t input_shape_idx = 0;
+    for (size_t axis = 0; axis < begin.size(); ++axis)
     {
-        ellipsis_pos2 = max_dims - bounds_size;
-    }
-
-    std::vector<Dimension> begin_dms(max_dims, 0);
-    std::vector<Dimension> end_dms(max_dims, -1);
-    std::vector<Dimension> stride_dms(max_dims, 1);
-
-    std::vector<Dimension> out_dims;
-
-    int j = 0;
-    int k = 0;
-    int bj = 0;
-    int ej = 0;
-    int sj = 0;
-
-    for (int i = 0; i < max_dims; i++)
-    {
-        if (i >= ellipsis_pos1 && i < ellipsis_pos2)
+        // add all dimensions hidden under the ellipsis mask if ellipsis mask is set
+        if (ellipsis_mask.count(axis))
         {
-            if (new_axis.find(i) == new_axis.end())
+            // only one bit in ellipsis mask is allowed
+            int num_new_axis_after_ellipses = 0;
+            int num_input_axis_before_ellipses = 0;
+            for (size_t i = 0; i < axis; ++i)
             {
-                if (end_dms[i].is_static() && int64_t(end_dms[i]) < 0)
+                if (!new_axis_mask.count(i))
                 {
-                    end_dms[i] = input_shape[j++] + end_dms[i];
+                    num_input_axis_before_ellipses++;
                 }
             }
-            else
+            for (size_t i = axis + 1; i < begin.size(); ++i)
             {
-                end_dms[i] = begin_dms[i];
+                if (new_axis_mask.count(i))
+                {
+                    num_new_axis_after_ellipses++;
+                }
             }
 
-            if (end_dms[i].is_dynamic() || begin_dms[i].is_dynamic() || stride_dms[i].is_dynamic())
+            int64_t num_input_axis_after_ellipses =
+                (begin.size() - axis - num_new_axis_after_ellipses -
+                 1); // -1 because it's a position of ellipses
+            int64_t num_of_hidden_dims = input_shape.to_shape().size() -
+                                         num_input_axis_after_ellipses -
+                                         num_input_axis_before_ellipses;
+            for (int64_t i = 0; i < num_of_hidden_dims; ++i)
             {
-                out_dims.push_back(Dimension::dynamic());
-            }
-            else
-            {
-                out_dims.push_back(static_cast<int64_t>(
-                    ceil(static_cast<float>(abs(int64_t(end_dms[i]) - int64_t(begin_dms[i])) + 1) /
-                         static_cast<float>(abs(int64_t(stride_dms[i]))))));
-            }
-            k = ellipsis_pos1;
-            continue;
-        }
-        stride_dms[i] = (str.size() > sj && str[sj] != 0) ? str[sj++] : 1;
-
-        // Use lower_bounds if mask is not set
-        if (lb_mask.find(j) == lb_mask.end())
-        {
-            if (lb.size() > bj)
-            {
-                begin_dms[i] = lb[bj];
-            }
-            else if (stride_dms[i].is_dynamic())
-            {
-                begin_dms[i] = Dimension::dynamic();
-            }
-            else if (int64_t(stride_dms[i]) > 0)
-            {
-                begin_dms[i] = 0;
-            }
-            else
-            {
-                begin_dms[i] = -1;
-            }
-        }
-        else if (stride_dms[i].is_dynamic())
-        {
-            begin_dms[i] = Dimension::dynamic();
-        }
-        else if (int64_t(stride_dms[i]) > 0)
-        {
-            begin_dms[i] = 0;
-        }
-        else
-        {
-            begin_dms[i] = -1;
-        }
-
-        bj++;
-
-        if (begin_dms[i].is_static() && int64_t(begin_dms[i]) < 0)
-        {
-            begin_dms[i] = input_shape[j] + begin_dms[i];
-        }
-        // Clipping 'begin'
-        if (begin_dms[i].is_static())
-        {
-            if (int64_t(begin_dms[i]) < 0)
-            {
-                begin_dms[i] = 0;
-            }
-            else if (input_shape[j].is_dynamic())
-            {
-                begin_dms[i] = Dimension::dynamic();
-            }
-            else if (int64_t(begin_dms[i]) >= int64_t(input_shape[j]))
-            {
-                begin_dms[i] = input_shape[j] - 1;
-            }
-        }
-
-        // Use upper_bounds if mask is not set
-        if (ub_mask.find(j) == ub_mask.end())
-        {
-            Dimension end_dms_tmp;
-
-            if (ub.size() <= ej)
-            {
-                end_dms_tmp = end_dms[i];
-            }
-            else if (stride_dms[i].is_dynamic())
-            {
-                end_dms_tmp = Dimension::dynamic();
-            }
-            else if (int64_t(stride_dms[i]) > 0)
-            {
-                end_dms_tmp = ub[ej] - 1;
-            }
-            else
-            {
-                end_dms_tmp = ub[ej] + 1;
-            }
-
-            if (ub.size() > ej)
-            {
-                end_dms[i] = end_dms_tmp;
-            }
-            else if (stride_dms[i].is_dynamic())
-            {
-                end_dms[i] = Dimension::dynamic();
-            }
-            else if (int64_t(stride_dms[i]) > 0)
-            {
-                end_dms[i] = -1;
-            }
-            else
-            {
-                end_dms[i] = 0;
+                dim.emplace_back(input_shape[input_shape_idx]);
+                input_shape_idx++;
             }
         }
         else
         {
-            if (stride_dms[i].is_dynamic())
+            // add new single dimension if new_axis_mask is set
+            if (new_axis_mask.count(axis))
             {
-                end_dms[i] = Dimension::dynamic();
+                dim.emplace_back(1);
             }
-            else if (int64_t(stride_dms[i]) > 0)
+            // skip this dimension if shrink_axis_mask is set
+            else if (shrink_axis_mask.count(axis))
             {
-                end_dms[i] = -1;
+                input_shape_idx++;
             }
+            // calculating dimension (begin, end, begin_mask, end_mask, stride)
             else
             {
-                end_dms[i] = 0;
+                int64_t lb = begin[axis];
+                int64_t ub = end[axis];
+
+                // convert negative indexes to positive
+                // take max for this case: if abs(lb) > input_shape[input_shape_idx],then after
+                // conversion lb < 0
+                // so according to tensorflow and numpy we just get 0
+                if (lb < 0)
+                {
+                    lb = std::max(int64_t(input_shape[input_shape_idx]) + lb, int64_t(0));
+                }
+
+                if (ub < 0)
+                {
+                    ub = std::max(int64_t(input_shape[input_shape_idx]) + ub, int64_t(0));
+                }
+
+                // apply restrictions when begin or end values more than max possible values.
+                lb = std::min(int64_t(input_shape[input_shape_idx]), lb);
+                ub = std::min(int64_t(input_shape[input_shape_idx]), ub);
+
+                // set default value for stride or use given value
+                int64_t stride = 1;
+                if (strides.size() > axis)
+                {
+                    stride = strides[axis];
+                }
+
+                NODE_VALIDATION_CHECK(node, stride != 0, "Stride must be non-zero");
+
+                int64_t dimension = 0;
+                if (stride < 0)
+                {
+                    // apply masks
+                    if (begin_mask.count(axis))
+                    {
+                        lb = int64_t(input_shape[input_shape_idx]) - 1;
+                    }
+                    if (end_mask.count(axis))
+                    {
+                        ub = -1;
+                    }
+
+                    lb = std::min(lb, int64_t(input_shape[input_shape_idx]) - 1);
+                    lb -= 1; // we always get 1st element, so we need decrease range
+                    if (ub <= lb)
+                    {
+                        dimension = (ub - lb) / stride + 1;
+                    }
+                }
+                else
+                {
+                    // apply masks
+                    if (begin_mask.count(axis))
+                    {
+                        lb = 0;
+                    }
+                    if (end_mask.count(axis))
+                    {
+                        ub = int64_t(input_shape[input_shape_idx]);
+                    }
+
+                    lb += 1; // we always get 1st element, so we need decrease range
+                    if (ub >= lb)
+                    {
+                        dimension = (ub - lb) / stride + 1;
+                    }
+                }
+
+                dim.emplace_back(dimension);
+                input_shape_idx++;
             }
         }
-        ej++;
-
-        if (end_dms[i].is_static() && int64_t(end_dms[i]) < 0)
-        {
-            end_dms[i] = input_shape[j] + end_dms[i];
-        }
-        // Clipping 'end'
-        if (end_dms[i].is_static())
-        {
-            if (int64_t(end_dms[i]) < 0)
-            {
-                end_dms[i] = 0;
-            }
-            else if (input_shape[j].is_dynamic())
-            {
-                end_dms[i] = Dimension::dynamic();
-            }
-            else if (int64_t(end_dms[i]) >= int64_t(input_shape[j]))
-            {
-                end_dms[i] = input_shape[j] - 1;
-            }
-        }
-
-        if (new_axis.find(i) == new_axis.end())
-        {
-            j++;
-        }
-        else
-        {
-            end_dms[i] = 0;
-        }
-
-        if (shrink_axis.find(k) != shrink_axis.end())
-        {
-            end_dms[i] = begin_dms[i];
-        }
-        else if (end_dms[i].is_dynamic() || begin_dms[i].is_dynamic() || stride_dms[i].is_dynamic())
-        {
-            out_dims.push_back(Dimension::dynamic());
-        }
-        else
-        {
-            out_dims.push_back(static_cast<int64_t>(
-                ceil(static_cast<float>(abs(int64_t(end_dms[i]) - int64_t(begin_dms[i])) + 1) /
-                     static_cast<float>(abs(int64_t(stride_dms[i]))))));
-        }
-
-        k++;
     }
-    return out_dims;
+    // get remaining values
+    for (; input_shape_idx < input_shape.to_shape().size(); ++input_shape_idx)
+    {
+        dim.emplace_back(input_shape[input_shape_idx]);
+    }
+
+    return dim;
 }

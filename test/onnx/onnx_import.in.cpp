@@ -268,6 +268,31 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_missing_op_domain)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_unknown_domain)
+{
+    // the importer should not throw when it encounters an unknown domain in the model
+    EXPECT_NO_THROW(onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/unknown_domain.prototxt")));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_op_in_unknown_domain)
+{
+    try
+    {
+        onnx_import::import_onnx_model(
+            file_util::path_join(SERIALIZED_ZOO, "onnx/unknown_domain_add.prototxt"));
+
+        FAIL() << "The onnx_importer did not throw for unknown domain and op";
+    }
+    catch (const ngraph::ngraph_error& e)
+    {
+        const std::string msg = e.what();
+
+        EXPECT_NE(msg.find("unknown.domain.Add"), std::string::npos)
+            << "The error message should contain domain and op name: unknown.domain.Add";
+    }
+}
+
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_missing_input)
 {
     onnx_import::register_operator(
@@ -1608,4 +1633,30 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reverse_sequence_1_batch_0)
         {0.f, 1.f, 2.f, 3.f, 5.f, 4.f, 6.f, 7.f, 10.f, 9.f, 8.f, 11.f, 15.f, 14.f, 13.f, 12.f});
 
     test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reverse_sequence_incorrect_batch_axis)
+{
+    EXPECT_THROW(onnx_import::import_onnx_model(file_util::path_join(
+                     SERIALIZED_ZOO, "onnx/reverse_sequence_incorrect_batch_axis.prototxt")),
+                 ngraph_error)
+        << "ReverseSequence batch_axis attribute can only equal 0 or 1. Value of '2' is not "
+           "accepted.";
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reverse_sequence_incorrect_time_axis)
+{
+    EXPECT_THROW(onnx_import::import_onnx_model(file_util::path_join(
+                     SERIALIZED_ZOO, "onnx/reverse_sequence_incorrect_time_axis.prototxt")),
+                 ngraph_error)
+        << "ReverseSequence time_axis attribute can only equal 0 or 1. Value of '2' is not "
+           "accepted.";
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reverse_sequence_time_and_batch_axis_equal)
+{
+    EXPECT_THROW(onnx_import::import_onnx_model(file_util::path_join(
+                     SERIALIZED_ZOO, "onnx/reverse_sequence_time_and_batch_axis_equal.prototxt")),
+                 ngraph_error)
+        << "ReverseSequence 'time_axis' and 'batch_axis' can't be equal.";
 }

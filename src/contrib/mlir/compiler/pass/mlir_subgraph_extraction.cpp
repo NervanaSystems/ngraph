@@ -132,6 +132,7 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 #endif
 
     clean_up();
+
     return true;
 }
 
@@ -366,19 +367,19 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
             }
         }
 
-        // Any input to CK must also have at least one user in the sub-graph body
+        // Any input to CK must not have any user in the sub-graph body
         for (auto& arg : ck_node->get_arguments())
         {
             bool found = false;
             for (auto& user : arg->get_users())
             {
-                found = (node_set.find(user) != node_set.end());
+                found = (node_set.find(user) == node_set.end());
                 if (found)
                 {
                     break;
                 }
             }
-            NGRAPH_CHECK(found, "CK input is not input to sub-graph");
+            NGRAPH_CHECK(found, "CK input is input to sub-graph");
         }
     }
 }
@@ -446,12 +447,9 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
         auto data_dilation = conv_node->get_data_dilation_strides();
         auto window_dilation = conv_node->get_window_dilation_strides();
 
-        auto is_zero = [](size_t s) { return s == 0; };
         auto is_one = [](size_t s) { return s == 1; };
 
-        return std::all_of(pad_below.begin(), pad_below.end(), is_zero) &&
-               std::all_of(pad_above.begin(), pad_above.end(), is_zero) &&
-               std::all_of(data_dilation.begin(), data_dilation.end(), is_one) &&
+        return std::all_of(data_dilation.begin(), data_dilation.end(), is_one) &&
                std::all_of(window_dilation.begin(), window_dilation.end(), is_one);
     }
 

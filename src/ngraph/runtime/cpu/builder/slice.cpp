@@ -138,15 +138,15 @@ namespace ngraph
                 }
                 else
                 {
-                    if (is_strided(strides))
+                    if (is_strided(strides) && is_optimized_et(args[0].get_element_type()))
                     {
                         std::function<decltype(runtime::cpu::kernel::strided_slice<float, 2>)>
                             kernel;
 
-                        SELECT_KERNEL_BY_RANK(kernel,
-                                              args[0].get_element_type(),
-                                              arg_shape.size(),
-                                              runtime::cpu::kernel::strided_slice)
+                        SELECT_ETS_AND_RANK7(kernel,
+                                             args[0].get_element_type(),
+                                             arg_shape.size(),
+                                             runtime::cpu::kernel::strided_slice);
 
                         auto functor = [&,
                                         kernel,
@@ -169,14 +169,14 @@ namespace ngraph
                         };
                         functors.emplace_back(functor);
                     }
-                    else
+                    else if (is_optimized_et(args[0].get_element_type()))
                     {
                         std::function<decltype(runtime::cpu::kernel::slice<float, 2>)> kernel;
 
-                        SELECT_KERNEL_BY_RANK(kernel,
-                                              args[0].get_element_type(),
-                                              arg_shape.size(),
-                                              runtime::cpu::kernel::slice)
+                        SELECT_ETS_AND_RANK7(kernel,
+                                             args[0].get_element_type(),
+                                             arg_shape.size(),
+                                             runtime::cpu::kernel::slice);
 
                         auto functor = [&,
                                         kernel,
@@ -192,6 +192,31 @@ namespace ngraph
                                    out_shape,
                                    lower_bounds,
                                    ectx->arena);
+                        };
+                        functors.emplace_back(functor);
+                    }
+                    else
+                    {
+                        std::function<decltype(runtime::cpu::kernel::ref_slice<float>)> kernel;
+                        SELECT_KERNEL(
+                            kernel, args[0].get_element_type(), runtime::cpu::kernel::ref_slice);
+                        auto functor = [&,
+                                        kernel,
+                                        arg_shape,
+                                        out_shape,
+                                        lower_bounds,
+                                        upper_bounds,
+                                        strides,
+                                        arg_buffer_index,
+                                        out_buffer_index](CPURuntimeContext* ctx,
+                                                          CPUExecutionContext* /*ectx*/) {
+                            kernel(ctx->buffer_data[arg_buffer_index],
+                                   ctx->buffer_data[out_buffer_index],
+                                   arg_shape,
+                                   lower_bounds,
+                                   upper_bounds,
+                                   strides,
+                                   out_shape);
                         };
                         functors.emplace_back(functor);
                     }

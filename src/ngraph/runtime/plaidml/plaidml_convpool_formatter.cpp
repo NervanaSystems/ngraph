@@ -619,7 +619,7 @@ std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::xfs() cons
 {
     if (m_xfs.empty())
     {
-        for (int i = 0; i < m_rank; ++i)
+        for (size_t i = 0; i < m_rank; ++i)
         {
             std::ostringstream s;
             s << "xf" << i;
@@ -633,7 +633,7 @@ std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::xis() cons
 {
     if (m_xis.empty())
     {
-        for (int i = 0; i < m_rank; ++i)
+        for (size_t i = 0; i < m_rank; ++i)
         {
             std::ostringstream s;
             s << "(";
@@ -656,7 +656,7 @@ std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::xos() cons
 {
     if (m_xos.empty())
     {
-        for (int i = 0; i < m_rank; ++i)
+        for (size_t i = 0; i < m_rank; ++i)
         {
             std::ostringstream s;
             s << "xo" << i;
@@ -690,7 +690,7 @@ std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::XFs() cons
 {
     if (m_XFs.empty())
     {
-        for (int i = 0; i < m_rank; ++i)
+        for (size_t i = 0; i < m_rank; ++i)
         {
             std::ostringstream s;
             if (m_deriv == DerivType::Filter)
@@ -711,7 +711,7 @@ std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::XIs() cons
 {
     if (m_XIs.empty())
     {
-        for (int i = 0; i < m_rank; ++i)
+        for (size_t i = 0; i < m_rank; ++i)
         {
             std::ostringstream s;
             if (m_deriv == DerivType::Data && m_op == OpType::Conv)
@@ -733,7 +733,7 @@ std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::XOs() cons
     if (m_XOs.empty())
     {
         // TODO: Assumes explicit padding...
-        for (int i = 0; i < m_rank; ++i)
+        for (size_t i = 0; i < m_rank; ++i)
         {
             std::ostringstream s;
             if (m_deriv == DerivType::None)

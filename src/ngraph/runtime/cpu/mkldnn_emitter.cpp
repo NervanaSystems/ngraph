@@ -220,8 +220,7 @@ size_t MKLDNNEmitter::build_dequantization(const ngraph::Node* node,
                                            const mkldnn::memory::desc& result_desc)
 {
     auto dequantize = static_cast<const ngraph::op::Dequantize*>(node);
-    auto scale_const_op =
-        std::dynamic_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(1));
+    auto scale_const_op = as_type_ptr<ngraph::op::Constant>(dequantize->get_argument(1));
     std::vector<float> scale = {1.0f};
     if (scale_const_op != nullptr)
     {
@@ -471,7 +470,7 @@ size_t MKLDNNEmitter::reserve_primitive_space(size_t count, bool new_workspace)
     }
 #else
     m_mkldnn_primitives.resize(size + count, nullptr);
-    for (auto i = 0; i < count - 1; i++)
+    for (size_t i = 0; i < count - 1; i++)
     {
         m_primitive_deps[m_mkldnn_primitives.size() - 1].push_back(size + i);
     }

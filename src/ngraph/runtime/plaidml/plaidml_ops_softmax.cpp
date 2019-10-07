@@ -49,7 +49,7 @@ void ngraph::runtime::plaidml::ImplSoftmax::Apply()
     std::vector<std::size_t> group_idxs;
     std::vector<std::size_t> element_idxs;
 
-    for (auto didx = 0; didx < shape.size(); ++didx)
+    for (size_t didx = 0; didx < shape.size(); ++didx)
     {
         if (op().get_axes().count(didx))
         {
@@ -75,7 +75,7 @@ void ngraph::runtime::plaidml::ImplSoftmax::Apply()
 
     if (!reorder_needed)
     {
-        reshape_needed |= shape[0] != groups;
+        reshape_needed |= static_cast<int64_t>(shape[0]) != groups;
     }
     else
     {
@@ -106,11 +106,11 @@ void ngraph::runtime::plaidml::ImplSoftmax::Apply()
         output = "RO";
         if (group_idxs.size())
         {
-            reshape_needed |= shape[group_idxs[0]] != groups;
+            reshape_needed |= static_cast<int64_t>(shape[group_idxs[0]]) != groups;
         }
         else
         {
-            reshape_needed |= shape[element_idxs[0]] != groups;
+            reshape_needed |= static_cast<int64_t>(shape[element_idxs[0]]) != groups;
         }
     }
 

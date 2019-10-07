@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -32,6 +33,7 @@ namespace ngraph
                 class HalideOp : public ngraph::op::Op
                 {
                 public:
+                    CPU_BACKEND_API
                     static constexpr NodeTypeInfo type_info{"HalideOp", 0};
                     const NodeTypeInfo& get_type_info() const override { return type_info; }
                     HalideOp(const OutputVector& args,

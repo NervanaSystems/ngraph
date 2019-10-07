@@ -163,7 +163,7 @@ static std::string label_edge(const std::shared_ptr<Node>& /* src */,
     if (getenv("NGRAPH_VISUALIZE_EDGE_LABELS") != nullptr)
     {
         size_t output = 0;
-        if (auto goe = dst->as_type<op::GetOutputElement>())
+        if (auto goe = as_type_ptr<op::GetOutputElement>(dst))
         {
             output = goe->get_as_output().get_index();
         }
@@ -223,7 +223,7 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
 
         traverse_nodes(f, [&](shared_ptr<Node> node) {
 
-            if (auto ck = dynamic_pointer_cast<ngraph::op::CompiledKernel>(node))
+            if (auto ck = as_type_ptr<ngraph::op::CompiledKernel>(node))
             {
                 // print sub-graph
                 auto nodes_list = ck->get_node_list();
@@ -263,7 +263,7 @@ void pass::VisualizeTree::add_node_arguments(shared_ptr<Node> node,
     for (auto arg : node->get_arguments())
     {
         size_t jump_distance = height_maps[arg.get()].max_jump_to(height_maps[node.get()]);
-        if (arg->is_type<ngraph::op::Constant>() || arg->is_type<ngraph::op::Parameter>())
+        if (is_type<ngraph::op::Constant>(arg) || is_type<ngraph::op::Parameter>(arg))
         {
             auto clone_name = "CLONE_" + to_string(fake_node_ctr);
             auto color = (arg->description() == "Parameter" ? "blue" : "black");
@@ -416,7 +416,7 @@ string pass::VisualizeTree::get_node_name(shared_ptr<Node> node)
     {
         rc += "\\n" + node->get_name();
     }
-    if (auto ck = node->as_type<ngraph::op::CompiledKernel>())
+    if (auto ck = as_type_ptr<ngraph::op::CompiledKernel>(node))
     {
         rc += "\\n{";
         // add sub-graph node names
