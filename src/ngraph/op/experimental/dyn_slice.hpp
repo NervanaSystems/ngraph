@@ -56,20 +56,22 @@ namespace ngraph
 
             /// \brief Constructs a dynamic tensor strided slice operation.
             ///
-            /// \param data           The tensor to be sliced.
-            /// \param begin          1D input tensor with begin indexes for input blob slicing.
-            /// \param end            1D input tensor with end indexes for input blob slicing.
-            /// \param strides        The slicing strides; for example, strides of `{n,m}` means to
-            ///                       take every nth row and every mth column of the input matrix.
-            /// \param begin_mask     When begin_mask[i] equal to 1 means
-            ///                       that the corresponding dimension of the begin input is ignored
-            /// \param end_mask       When end_mask[i] is 1, the corresponding dimension of
-            ///                       the end input is ignored
-            /// \param new_axis_mask  If new_axis_mask[i] is 1, a length 1 dimension is inserted
-            ///                       on the i-th position
-            /// \param shrink_axis    If shrink_axis_mask[i] is 1, the dimension
-            ///                       on the i-th position is deleted
-            /// \param ellipsis_mask  It inserts missing dimensions on a position of a non-zero bit
+            /// \param data             The tensor to be sliced.
+            /// \param begin            1D input tensor with begin indexes for input blob slicing.
+            /// \param end              1D input tensor with end indexes for input blob slicing.
+            /// \param strides          The slicing strides; for example, strides of `{n,m}` means
+            ///                         to take every nth row and every mth column of the input
+            ///                         matrix.
+            /// \param begin_mask       When begin_mask[i] equal to 1 means that the corresponding
+            ///                         dimension of the begin input is ignored.
+            /// \param end_mask         When end_mask[i] is 1, the corresponding dimension of
+            ///                         the end input is ignored.
+            /// \param new_axis_mask    If new_axis_mask[i] is 1, a length 1 dimension is inserted
+            ///                         on the i-th position.
+            /// \param shrink_axis_mask If shrink_axis_mask[i] is 1, the dimension
+            ///                         on the i-th position is deleted.
+            /// \param ellipsis_mask    It inserts missing dimensions
+            ///                         on a position of a non-zero bit.
             DynSlice(const Output<Node>& data,
                      const Output<Node>& begin,
                      const Output<Node>& end,
@@ -82,18 +84,19 @@ namespace ngraph
 
             /// \brief Constructs a dynamic tensor strided slice operation.
             ///
-            /// \param data           The tensor to be sliced.
-            /// \param begin          1D input tensor with begin indexes for input blob slicing.
-            /// \param end            1D input tensor with end indexes for input blob slicing.
-            /// \param begin_mask     When begin_mask[i] equal to 1 means
-            ///                       that the corresponding dimension of the begin input is ignored
-            /// \param end_mask       When end_mask[i] is 1, the corresponding dimension of
-            ///                       the end input is ignored
-            /// \param new_axis_mask  If new_axis_mask[i] is 1, a length 1 dimension is inserted
-            ///                       on the i-th position
-            /// \param shrink_axis    If shrink_axis_mask[i] is 1, the dimension
-            ///                       on the i-th position is deleted
-            /// \param ellipsis_mask  It inserts missing dimensions on a position of a non-zero bit
+            /// \param data             The tensor to be sliced.
+            /// \param begin            1D input tensor with begin indexes for input blob slicing.
+            /// \param end              1D input tensor with end indexes for input blob slicing.
+            /// \param begin_mask       When begin_mask[i] equal to 1 means that the corresponding.
+            ///                         dimension of the begin input is ignored.
+            /// \param end_mask         When end_mask[i] is 1, the corresponding dimension of
+            ///                         the end input is ignored.
+            /// \param new_axis_mask    If new_axis_mask[i] is 1, a length 1 dimension is inserted
+            ///                         on the i-th position.
+            /// \param shrink_axis_mask If shrink_axis_mask[i] is 1, the dimension
+            ///                         on the i-th position is deleted.
+            /// \param ellipsis_mask    It inserts missing dimensions
+            ///                         on a position of a non-zero bit.
             DynSlice(const Output<Node>& data,
                      const Output<Node>& begin,
                      const Output<Node>& end,
