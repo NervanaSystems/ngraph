@@ -265,12 +265,12 @@ INSTANTIATE_TEST_CASE_P(
                         {0, 2, 2},   /*upper_bounds_val*/
                         {1, 1, -1}}, /*strides_val*/
 
-                       {{},   /*lower_bounds_mask*/
-                        {},   /*upper_bounds_mask*/
-                        {},   /*new_axis*/
-                        {},   /*shrink_axis*/
-                        {0}}) /*ellipsis_mask*/
-        ));
+                       {{},     /*lower_bounds_mask*/
+                        {},     /*upper_bounds_mask*/
+                        {},     /*new_axis*/
+                        {},     /*shrink_axis*/
+                        {0}})), /*ellipsis_mask*/
+    PrintToDummyParamName());
 
 void DynSlice_Test_Shape_Except(const shared_ptr<Node>& param_0,
                                 const shared_ptr<Node>& param_1,
