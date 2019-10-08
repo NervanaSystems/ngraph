@@ -160,8 +160,8 @@ Not currently a comprehensive list.
 More about Core Ops
 -------------------
 
-An ``Op``'s primary role is to function as a node in a directed acyclic graph 
-dependency computation graph.
+An ``Op``'s primary role is to function as a node in a ddirected acyclic 
+computation graph.
 
 
 *Core ops* are ops that are available and generally useful to all framework 
@@ -174,7 +174,7 @@ operations.
 
 The  input and output ports of ops are any of the functions which work with 
 ``Output<Node>/Input<Node>``. Previous functions that worked at the level 
-of ops are obsolete, like::
+of ops are deprecated, like::
 
    Node::get_element_type()
 

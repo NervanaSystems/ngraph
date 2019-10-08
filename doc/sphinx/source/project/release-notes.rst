@@ -28,6 +28,8 @@ Core updates for |version|
 + ``RPATH`` for finding openmpi
 + Negative indices/axes fixes
 + Migrate some ``get_argument`` removals
++ Negative indices/axes fixes
++ Better support for MKL-DNN 1.0 (DNNL)
 
 
 Latest documentation updates

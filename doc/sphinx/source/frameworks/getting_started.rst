@@ -10,7 +10,7 @@ with the easiest and most straightforward options.
 The easiest way to get started is to use the latest PyPI `ngraph-tensorflow-bridge`_,
 which has instructions for Linux* systems, and tips for users of Mac OS X. 
 
-You can install TensorFlow and nGraph to a virtual environment; otherwise, the code 
+You can install TensorFlow and nGraph in a virtual environment; otherwise, the code 
 will install to a system location.
 
 .. code-block:: console

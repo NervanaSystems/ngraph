@@ -1,12 +1,31 @@
 :orphan:
 
-  .. toctree::
+  .. toctree:: 
      :includehidden:
 
-     frameworks/index
-     project/index
-     python_api/index
-     inspection/index
-     core/overview
-     backends/index
-     project/extras/index
+     introduction.rst
+     features.rst
+     project/release-notes.rst
+
+     frameworks/overview.rst
+     frameworks/getting_started.rst
+     frameworks/onnx_integ.rst
+     frameworks/paddle_integ.rst
+     frameworks/tensorflow_connect.rst
+     frameworks/generic_configs.rst
+     frameworks/validated/list.rst
+
+     core/constructing-graphs/index.rst
+
+     python_api/index.rst
+     backends/index.rst
+     backends/cpp-api.rst
+
+     inspection/index.rst
+
+     project/contribution-guide.rst
+     glossary.rst
+
+
+
+

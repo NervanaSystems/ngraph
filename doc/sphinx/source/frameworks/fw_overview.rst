@@ -9,8 +9,8 @@ Overview
 
 A framework is "supported" with a framework :term:`bridge` that can be written or
 cloned and used to connect to nGraph device backends while maintaining the 
-framework's programmatic or user interface. A `bridge currently exists`_ for the 
-TensorFlow framework. We also have a :doc:`paddle_integ` bridge. Intel 
+framework's programmatic or user interface. There is a bridge for the 
+`TensorFlow framework`_. We also have a :doc:`paddle_integ` bridge. Intel 
 previously contributed work to an MXNet bridge; however, support for this 
 bridge is no longer active.
 
@@ -46,7 +46,7 @@ like TensorFlow and PyTorch.
 
 
 
-.. _bridge currently exists: https://github.com/tensorflow/ngraph-bridge/README.md
+.. _TensorFlow framework: https://github.com/tensorflow/ngraph-bridge/README.md
 .. _ONNX: http://onnx.ai/
 .. _tune the workload to extract best performance: https://ai.intel.com/accelerating-deep-learning-training-inference-system-level-optimizations
 .. _a few small: https://software.intel.com/en-us/articles/boosting-deep-learning-training-inference-performance-on-xeon-and-xeon-phi
