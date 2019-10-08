@@ -50,9 +50,8 @@ namespace ngraph
                 auto padding_above = pad->get_padding_above();
                 auto pad_mode = pad->get_pad_mode();
 
-                if ((pad_mode == ngraph::op::PadMode::CONSTANT ||
-                     pad_mode == ngraph::op::PadMode::REFLECT) &&
-                    is_optimized_et(args[0].get_element_type()))
+                if (pad_mode == ngraph::op::PadMode::CONSTANT ||
+                    pad_mode == ngraph::op::PadMode::REFLECT)
                 {
                     std::function<decltype(runtime::cpu::kernel::pad_and_slice<float, 1>)> kernel;
 
@@ -127,9 +126,8 @@ namespace ngraph
                 auto padding_above = pad->get_padding_above();
                 auto pad_mode = pad->get_pad_mode();
 
-                if ((pad_mode == ngraph::op::PadMode::CONSTANT ||
-                     pad_mode == ngraph::op::PadMode::REFLECT) &&
-                    is_optimized_et(pad->get_input_element_type(0)))
+                if (pad_mode == ngraph::op::PadMode::CONSTANT ||
+                    pad_mode == ngraph::op::PadMode::REFLECT)
                 {
                     std::function<decltype(runtime::cpu::kernel::pad_and_slice<float, 1>)> kernel;
 
