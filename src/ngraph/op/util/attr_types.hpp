@@ -136,6 +136,11 @@ namespace ngraph
 
             AutoBroadcastType m_type; // Implicit broadcasting algorithm
             int64_t m_axis;           // Axis to start alignment on
+
+            bool operator==(const AutoBroadcastSpec& a) const
+            {
+                return a.m_type == m_type && a.m_axis == m_axis;
+            }
         };
 
         std::ostream& operator<<(std::ostream& s, const AutoBroadcastType& type);

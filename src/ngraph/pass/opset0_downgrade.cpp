@@ -15,6 +15,8 @@
 //*****************************************************************************
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/pad.hpp"
 
@@ -75,6 +77,22 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 #endif
     switch (get_typeid(node))
     {
+    case OP_TYPEID::Broadcast:
+    {
+        auto tmp = dynamic_cast<const op::v1::Broadcast*>(node.get());
+        const auto arg = node->input(0).get_source_output();
+        NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
+        auto target_shape =
+            static_pointer_cast<op::Constant>(node->input_value(1).get_node_shared_ptr())
+                ->get_shape_val();
+        NGRAPH_CHECK(tmp->get_broadcast_axes().first);
+        auto replacement_node =
+            make_shared<op::v0::Broadcast>(arg, target_shape, tmp->get_broadcast_axes().second);
+
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::Pad:
     {
         auto tmp = dynamic_cast<const op::v1::Pad*>(node.get());
