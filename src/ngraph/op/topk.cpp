@@ -225,7 +225,7 @@ size_t op::v1::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,
                           k_element_type,
                           ").");
 
-    const auto k_constant = dynamic_pointer_cast<op::Constant>(node);
+    const auto k_constant = as_type_ptr<op::Constant>(node);
 
     size_t k = 0;
 

@@ -16,20 +16,23 @@
 
 #pragma once
 
-#include "ngraph/function.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace pass
     {
-        namespace intelgpu
+        class Opset0Downgrade : public NodePass
         {
-            // This function writes the input func into file in Graphviz format.
-            // On large graphs, the "dot" utility requires lot of time to visualize the input.
-            // Example: dot -Tpdf intelgpu_Function_0_orig.dot -o intelgpu_Function_0_orig.pdf
-            void visualize_tree(const std::shared_ptr<Function>& func,
-                                const std::string& file_prefix,
-                                const std::string& file_suffix);
-        }
+        public:
+            ///
+            /// \brief    Constructor for the Opset 1 downgrade transformation pass.
+            ///
+            /// \details  This transformation pass iterates over all nodes in a graph
+            /// and updates opset version 1 ops to their opset version 0 equivalents.
+            /// All ops in the final graph have opset version 0.
+            Opset0Downgrade() = default;
+            bool run_on_node(std::shared_ptr<ngraph::Node> node) override;
+        };
     }
 }

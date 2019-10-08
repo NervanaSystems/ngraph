@@ -456,6 +456,8 @@ set (SRC
     pass/nop_elimination.hpp
     pass/pass.cpp
     pass/pass.hpp
+    pass/opset0_downgrade.cpp
+    pass/opset0_downgrade.hpp
     pass/opset1_upgrade.cpp
     pass/opset1_upgrade.hpp
     pass/pass_config.cpp
@@ -636,7 +638,8 @@ endif()
 # Defines macro in C++ to load backend plugin
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 if (NOT WIN32)
-    target_link_libraries(ngraph PUBLIC dl pthread)
+    find_package(Threads REQUIRED)
+    target_link_libraries(ngraph PUBLIC dl Threads::Threads)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
