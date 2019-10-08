@@ -779,3 +779,9 @@ bool ngraph::check_for_cycles(const ngraph::Function* func,
     // no cycles
     return false;
 }
+
+void ngraph::traverse_functions(std::shared_ptr<Function> p,
+                                std::function<void(std::shared_ptr<Function>)> f)
+{
+    f(p);
+}

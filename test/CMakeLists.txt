@@ -77,6 +77,7 @@ set(SRC
     opset_pass/reverse_opset_pass.cpp
     opset_pass/softmax_opset_pass.cpp
     opset_pass/sum_opset_pass.cpp
+    opset_pass/topk_opset_pass.cpp
     partial_shape.cpp
     pass.cpp
     pass_liveness.cpp
@@ -201,10 +202,6 @@ if (NGRAPH_CPU_ENABLE)
         list(APPEND SRC halide.cpp)
     endif()
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
-endif()
-
-if (NGRAPH_INTELGPU_ENABLE)
-    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTELGPU)
 endif()
 
 if (NGRAPH_GPUH_ENABLE)

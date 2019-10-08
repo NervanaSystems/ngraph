@@ -1,5 +1,6 @@
-.. project/introduction.rst:
+.. introduction.rst:
 
+.. _introduction:
 
 Introduction
 ############
@@ -47,7 +48,7 @@ However, kernel libraries have three main problems:
 nGraph Compiler addresses the first two problems, and nGraph Compiler combined
 with PlaidML addresses the third problem. nGraph applies graph-level
 optimizations by taking the computational graph from a deep learning framework
-such as TensorFlow\* and reconstructing it with nGraph's  
+such as TensorFlow and reconstructing it with nGraph's 
 :abbr: `IR (Intermediate Representation)`. nGraph IR centralizes computational 
 graphs from various frameworks and provides a unified way to connect backends 
 for targeted hardware. To address the third problem, nGraph is integrated with 
@@ -68,9 +69,12 @@ graph, but the choice of operations in the graph may not be optimal.
 
 .. _figure-A:
 
-.. figure:: ../graphics/kernel-problem-1.png
+.. figure:: graphics/kernel-problem-1.png
    :width: 100%
    :alt:
+
+   **Figure A**: The mathematical operations in a Deep Learning stack can be 
+   simplified significantly with a graph compiler
 
 
 The computation is constructed to execute ``(A+B)*C``. With nGraph, we can
@@ -94,9 +98,11 @@ diagram.
 
 .. _figure-B:
 
-.. figure:: ../graphics/kernel-problem-2.png
+.. figure:: graphics/kernel-problem-2.png
    :width: 100%
    :alt:
+
+   **Figure B**:  A many-to-many problem
 
 Each framework must be manually integrated with each hardware-specific kernel
 library. Additionally, each integration is unique to the framework and its set
@@ -129,9 +135,11 @@ work for what will ultimately be a fragile setup that is costly to maintain.
 
 .. _figure-C:
 
-.. figure:: ../graphics/kernel-problem-3.png
+.. figure:: graphics/kernel-problem-3.png
    :width: 100%
    :alt:
+
+   **Figure C**:  Inevitable scaling problem
 
 
 Integrating PlaidML with nGraph provides flexbility to support the latest deep

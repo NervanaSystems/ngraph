@@ -188,6 +188,7 @@ max_trivial_5d_int32
 floor_int32
 any_trivial
 any_2x2x3_eliminate_dim_0
+backwards_batch_norm_training_3d
 
 # unsupported op: `GenerateMask`
 generate_mask
@@ -198,6 +199,7 @@ gather_4d_indices_no_axis_uint8
 gather_4d_indices_no_axis_2d_input
 gather_3d_indices_no_axis_2d_input
 gather_2d_indices_no_axis_2d_input
+gather_2d_negative_and_positive_indices_no_axis_2d_input
 gather_1d_indices_no_axis_1d_input
 gather_scalar_indices_no_axis_2d_input
 gather_2d_indices_axis_1_2d_input
@@ -262,6 +264,9 @@ dot_matrix_2x0_0x2
 dot_2x0_0
 auto_bcast_binary_elementwise
 max_pool_2d_1channel_1image_overpadded
+
+# node validation error: "Applying function, tensor with mismatching dimensionality: F, expected=4, got=5"
+group_conv_groups_included_in_shape
 
 # passes locally, fails in CI
 numeric_float_nan

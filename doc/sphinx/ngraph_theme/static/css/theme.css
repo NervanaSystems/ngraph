@@ -1622,6 +1622,7 @@ a.wy-text-neutral:hover {
 
 h1, h2, .rst-content .toctree-wrapper p.caption, h3, h4, h5, h6, legend {
   margin-top: 0.33em;
+  padding-top: 0.31em;
   font-weight: 700;
   font-family: Nunito, 'Nunito Sans', "IntelClear-Regular", Lato, Helvetica, "Helvetica Neue", sans;
 }
@@ -1630,8 +1631,8 @@ p {
   line-height: 23px;
   padding-bottom: 0.11em;
   padding-top: 0.11em;
-  font-size: 1.19em;
-  margin-bottom: 0.27em;
+  font-size: 1.07em;
+  margin-bottom: 0.31em;
   margin-top: 0.27em;
   font-family: Nunito, 'Nunito Sans', Helvetica, 'Helvetica Neue', sans;
 }
@@ -1696,7 +1697,6 @@ code.code-large, .rst-content tt.code-large {
 
 .wy-plain-list-disc, .rst-content .section ul, .rst-content .toctree-wrapper ul, article ul {
   list-style: disc;
-  line-height: 24px;
   margin-bottom: 24px;
 }
 .wy-plain-list-disc li, .rst-content .section ul li, .rst-content .toctree-wrapper ul li, article ul li {
@@ -1721,7 +1721,6 @@ code.code-large, .rst-content tt.code-large {
 
 .wy-plain-list-decimal, .rst-content .section ol, .rst-content ol.arabic, article ol {
   list-style: decimal;
-  line-height: 24px;
   margin-bottom: 0.5em;
 }
 .wy-plain-list-decimal li, .rst-content .section ol li, .rst-content ol.arabic li, article ol li {
@@ -2428,8 +2427,9 @@ div[class^='highlight'] pre {
   line-height: 1.0em;
 }
 .rst-content tt.literal, .rst-content tt.literal, .rst-content code.literal {
-  font-size: 101% !important;
-  color: #2e2b27;
+  font-size: 91% !important;
+  color: #152a58;
+  text-decoration: underline 2px dotted #cdcac5;
   background-color: #fff;
   line-height: 0.8955em;
 }
@@ -2654,9 +2654,9 @@ span[id*='MathJax-Span'] {
   /* border-right: 5px solid #999;*/
 }
 .wy-menu-vertical header, .wy-menu-vertical p.caption {
-  height: 33.1px;
+  height: 29.1px;
   display: inline-block;
-  line-height: 35.3px;
+  line-height: 31.3px;
   padding: 0.1 0.1 0.1 0.1;
   margin-left: 0.43em;
   padding-left: 0.23em;
@@ -2666,7 +2666,7 @@ span[id*='MathJax-Span'] {
   font-weight: bolder;
   border-top: 5px dotted #FFA400;
   border-bottom: 29px solid #d3d3d3;
-  font-size: 139%;
+  font-size: 131%;
   color: #393F4D;
   width: auto;
   white-space: nowrap;
@@ -2720,15 +2720,16 @@ span[id*='MathJax-Span'] {
   font-size: 0.8em;
   line-height: 1.6em;
   color: #393f4d;
+    max-height: 0;
+  overflow: hidden;
+
 }
 .wy-menu-vertical li.on a, .wy-menu-vertical li.current > a {
   font-family: Nunito, 'Nunito Sans', Helvetica, 'Helvetica Neue', sans;
-  position: relative;
-  padding-left: 1.1em;
+  padding-left: 0.55em;
   background-color: #fafbfd;
   color: #5c5955;
   border-right: 4px solid #FFA400;
-  margin-left: 23px;
 
 }
 .wy-menu-vertical li.on a:hover, .wy-menu-vertical li.current > a:hover {
@@ -2806,10 +2807,9 @@ span[id*='MathJax-Span'] {
 }
 .wy-menu-vertical a {
   display: inline-block;
-  line-height: 1.21em;
+  line-height: 0.93em;
   padding: 0.4045em 1.31em;
   display: block;
-  position: relative;
   font-size: 96%;
   font-family: Nunito, 'Nunito Sans', Helvetica, 'Helvetica Neue', sans;
 }
@@ -2829,6 +2829,8 @@ span[id*='MathJax-Span'] {
 .wy-menu-vertical a:active span.toctree-expand {
   color: #555;
 }
+
+
 
 .wy-side-nav-search {
   display: block;
