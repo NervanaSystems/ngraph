@@ -41,8 +41,6 @@ namespace ngraph
                     external_function->get_buffer_index(args[0].get_name()); // min_val
                 auto arg1_buffer_index =
                     external_function->get_buffer_index(args[1].get_name()); // max_val
-                auto arg2_buffer_index =
-                    external_function->get_buffer_index(args[2].get_name()); // output_shape
                 auto arg3_buffer_index =
                     external_function->get_buffer_index(args[3].get_name()); // use_fixed_seed
 
@@ -57,7 +55,6 @@ namespace ngraph
                            element_count,
                            arg0_buffer_index,
                            arg1_buffer_index,
-                           arg2_buffer_index,
                            arg3_buffer_index,
                            out_buffer_index,
                            fixed_seed](CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
