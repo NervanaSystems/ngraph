@@ -69,9 +69,9 @@ public:
     /// \returns an ngraph::ResultVector of all input parameters
     const ngraph::ResultVector& get_results() const;
 
-    /// \brief Get the default pipeline_depth for this executable
-    /// \returns default pipeline_depth
-    virtual size_t get_default_pipeline_depth() const;
+    /// \brief Get the preferred pipeline_depth for this executable
+    /// \returns  preferred pipeline_depth
+    virtual size_t get_preferred_pipeline_depth() const;
 
     /// \brief Save this compiled Executable to an output stream.
     ///    Saved stream may be read with Backend::load
@@ -116,6 +116,4 @@ protected:
 private:
     ngraph::ParameterVector m_parameters;
     ngraph::ResultVector m_results;
-    // default pipeline_depth of 2, specific executable can override.
-    size_t m_default_pipeline_depth = 2;
 };
