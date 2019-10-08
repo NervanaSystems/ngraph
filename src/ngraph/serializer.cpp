@@ -80,6 +80,7 @@
 #include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
+#include "ngraph/op/fused/layer_norm.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/mvn.hpp"
@@ -340,7 +341,7 @@ static op::AutoBroadcastSpec read_auto_broadcast(json js_node, const std::string
     {
         json j = js_node[attr];
         return op::AutoBroadcastSpec(static_cast<op::AutoBroadcastType>(j.at("type")),
-                                     j.at("axis").get<size_t>());
+                                     j.at("axis").get<int64_t>());
     }
     else
     {
@@ -358,6 +359,13 @@ static op::PadMode read_pad_mode(json node_js)
 {
     return has_key(node_js, "pad_mode") ? static_cast<op::PadMode>(node_js.at("pad_mode"))
                                         : op::PadMode::CONSTANT;
+}
+
+static op::RoundingType read_rounding_type(json node_js)
+{
+    return has_key(node_js, "rounding_type")
+               ? static_cast<op::RoundingType>(node_js.at("rounding_type"))
+               : op::RoundingType::FLOOR;
 }
 
 static json write_element_type(const ngraph::element::Type& n)
@@ -801,42 +809,77 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::AvgPool:
         {
-            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
-            auto window_movement_strides =
-                node_js.at("window_movement_strides").get<vector<size_t>>();
-            auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
-            auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
-            auto include_padding_in_avg_computation =
-                node_js.at("include_padding_in_avg_computation").get<bool>();
-            op::PadType pad_type = read_pad_type(node_js);
-            bool ceil_mode = get_or_default<bool>(node_js, "ceil_mode", false);
-            node = make_shared<op::AvgPool>(args[0],
-                                            window_shape,
-                                            window_movement_strides,
-                                            padding_below,
-                                            padding_above,
-                                            include_padding_in_avg_computation,
-                                            pad_type,
-                                            ceil_mode);
-            break;
-        }
-        case OP_TYPEID::AvgPoolBackprop:
-        {
-            auto forward_arg_shape = node_js.at("forward_arg_shape").get<vector<size_t>>();
-            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
-            auto window_movement_strides =
-                node_js.at("window_movement_strides").get<vector<size_t>>();
-            auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
-            auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
-            auto include_padding_in_avg_computation =
-                get_or_default<bool>(node_js, "include_padding_in_avg_computation", false);
-            node = make_shared<op::AvgPoolBackprop>(forward_arg_shape,
-                                                    args[0],
+            if (op_version == 0)
+            {
+                auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
+                auto window_movement_strides =
+                    node_js.at("window_movement_strides").get<vector<size_t>>();
+                auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
+                auto include_padding_in_avg_computation =
+                    node_js.at("include_padding_in_avg_computation").get<bool>();
+                op::PadType pad_type = read_pad_type(node_js);
+                bool ceil_mode = get_or_default<bool>(node_js, "ceil_mode", false);
+                node = make_shared<op::v0::AvgPool>(args[0],
                                                     window_shape,
                                                     window_movement_strides,
                                                     padding_below,
                                                     padding_above,
-                                                    include_padding_in_avg_computation);
+                                                    include_padding_in_avg_computation,
+                                                    pad_type,
+                                                    ceil_mode);
+            }
+            if (op_version == 1)
+            {
+                auto kernel = node_js.at("kernel").get<vector<size_t>>();
+                auto strides = node_js.at("strides").get<vector<size_t>>();
+                auto pads_begin = node_js.at("pads_begin").get<vector<size_t>>();
+                auto pads_end = node_js.at("pads_end").get<vector<size_t>>();
+                auto exclude_pad = node_js.at("exclude_pad").get<bool>();
+                op::PadType pad_type = read_pad_type(node_js);
+                op::RoundingType rounding_type = read_rounding_type(node_js);
+                node = make_shared<op::v1::AvgPool>(args[0],
+                                                    strides,
+                                                    pads_begin,
+                                                    pads_end,
+                                                    kernel,
+                                                    exclude_pad,
+                                                    rounding_type,
+                                                    pad_type);
+            }
+            break;
+        }
+        case OP_TYPEID::AvgPoolBackprop:
+        {
+            if (op_version == 0)
+            {
+                auto forward_arg_shape = node_js.at("forward_arg_shape").get<vector<size_t>>();
+                auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
+                auto window_movement_strides =
+                    node_js.at("window_movement_strides").get<vector<size_t>>();
+                auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
+                auto include_padding_in_avg_computation =
+                    get_or_default<bool>(node_js, "include_padding_in_avg_computation", false);
+                node = make_shared<op::v0::AvgPoolBackprop>(forward_arg_shape,
+                                                            args[0],
+                                                            window_shape,
+                                                            window_movement_strides,
+                                                            padding_below,
+                                                            padding_above,
+                                                            include_padding_in_avg_computation);
+            }
+            if (op_version == 1)
+            {
+                auto forward_arg_shape = node_js.at("forward_arg_shape").get<vector<size_t>>();
+                auto kernel = node_js.at("kernel").get<vector<size_t>>();
+                auto strides = node_js.at("strides").get<vector<size_t>>();
+                auto pads_begin = node_js.at("pads_begin").get<vector<size_t>>();
+                auto pads_end = node_js.at("pads_end").get<vector<size_t>>();
+                auto exclude_pad = get_or_default<bool>(node_js, "exclude_pad", true);
+                node = make_shared<op::v1::AvgPoolBackprop>(
+                    forward_arg_shape, args[0], strides, pads_begin, pads_end, kernel, exclude_pad);
+            }
             break;
         }
         case OP_TYPEID::BatchMatMul:
@@ -922,94 +965,136 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Convolution:
         {
-            auto window_movement_strides =
-                node_js.at("window_movement_strides").get<vector<size_t>>();
-            auto window_dilation_strides =
-                node_js.at("window_dilation_strides").get<vector<size_t>>();
-            auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
-            auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
+            if (op_version == 0)
+            {
+                auto window_movement_strides =
+                    node_js.at("window_movement_strides").get<vector<size_t>>();
+                auto window_dilation_strides =
+                    node_js.at("window_dilation_strides").get<vector<size_t>>();
+                auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
 
-            // For backwards compatibility, we accept "image_dilation_strides" in place of
-            // "data_dilation_strides", and we also allow it to be omitted altogether.
-            json data_dilation_strides;
-            if (has_key(node_js, "data_dilation_strides"))
-            {
-                data_dilation_strides = node_js["data_dilation_strides"];
-            }
-            else if (has_key(node_js, "image_dilation_strides"))
-            {
-                data_dilation_strides = node_js["image_dilation_strides"];
-            }
+                // For backwards compatibility, we accept "image_dilation_strides" in place of
+                // "data_dilation_strides", and we also allow it to be omitted altogether.
+                json data_dilation_strides;
+                if (has_key(node_js, "data_dilation_strides"))
+                {
+                    data_dilation_strides = node_js["data_dilation_strides"];
+                }
+                else if (has_key(node_js, "image_dilation_strides"))
+                {
+                    data_dilation_strides = node_js["image_dilation_strides"];
+                }
 
-            op::PadType pad_type = read_pad_type(node_js);
+                op::PadType pad_type = read_pad_type(node_js);
 
-            if (data_dilation_strides.empty())
-            {
-                node = make_shared<op::Convolution>(args[0],
-                                                    args[1],
-                                                    window_movement_strides,
-                                                    window_dilation_strides,
-                                                    padding_below,
-                                                    padding_above);
+                if (data_dilation_strides.empty())
+                {
+                    node = make_shared<op::v0::Convolution>(args[0],
+                                                            args[1],
+                                                            window_movement_strides,
+                                                            window_dilation_strides,
+                                                            padding_below,
+                                                            padding_above);
+                }
+                else
+                {
+                    node = make_shared<op::v0::Convolution>(
+                        args[0],
+                        args[1],
+                        window_movement_strides,
+                        window_dilation_strides,
+                        padding_below,
+                        padding_above,
+                        data_dilation_strides.get<std::vector<size_t>>(),
+                        pad_type);
+                }
             }
-            else
+            if (op_version == 1)
             {
-                node =
-                    make_shared<op::Convolution>(args[0],
-                                                 args[1],
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides.get<std::vector<size_t>>(),
-                                                 pad_type);
+                auto strides = node_js.at("strides").get<vector<size_t>>();
+                auto dilations = node_js.at("dilations").get<vector<size_t>>();
+                auto pads_begin = node_js.at("pads_begin").get<vector<std::ptrdiff_t>>();
+                auto pads_end = node_js.at("pads_end").get<vector<std::ptrdiff_t>>();
+
+                op::PadType auto_pad = read_pad_type(node_js);
+
+                node = make_shared<op::v1::Convolution>(
+                    args[0], args[1], strides, pads_begin, pads_end, dilations, auto_pad);
             }
             break;
         }
         case OP_TYPEID::ConvolutionBackpropData:
         {
-            auto data_batch_shape = node_js.at("data_batch_shape").get<vector<size_t>>();
-            auto window_movement_strides_forward =
-                node_js.at("window_movement_strides_forward").get<vector<size_t>>();
-            auto window_dilation_strides_forward =
-                node_js.at("window_dilation_strides_forward").get<vector<size_t>>();
-            auto padding_below_forward =
-                node_js.at("padding_below_forward").get<vector<std::ptrdiff_t>>();
-            auto padding_above_forward =
-                node_js.at("padding_above_forward").get<vector<std::ptrdiff_t>>();
-            auto data_dilation_strides_forward =
-                node_js.at("data_dilation_strides_forward").get<vector<size_t>>();
-            node = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
-                                                            args[0],
-                                                            args[1],
-                                                            window_movement_strides_forward,
-                                                            window_dilation_strides_forward,
-                                                            padding_below_forward,
-                                                            padding_above_forward,
-                                                            data_dilation_strides_forward);
+            if (op_version == 0)
+            {
+                auto data_batch_shape = node_js.at("data_batch_shape").get<vector<size_t>>();
+                auto window_movement_strides_forward =
+                    node_js.at("window_movement_strides_forward").get<vector<size_t>>();
+                auto window_dilation_strides_forward =
+                    node_js.at("window_dilation_strides_forward").get<vector<size_t>>();
+                auto padding_below_forward =
+                    node_js.at("padding_below_forward").get<vector<std::ptrdiff_t>>();
+                auto padding_above_forward =
+                    node_js.at("padding_above_forward").get<vector<std::ptrdiff_t>>();
+                auto data_dilation_strides_forward =
+                    node_js.at("data_dilation_strides_forward").get<vector<size_t>>();
+                node = make_shared<op::v0::ConvolutionBackpropData>(data_batch_shape,
+                                                                    args[0],
+                                                                    args[1],
+                                                                    window_movement_strides_forward,
+                                                                    window_dilation_strides_forward,
+                                                                    padding_below_forward,
+                                                                    padding_above_forward,
+                                                                    data_dilation_strides_forward);
+            }
+            if (op_version == 1)
+            {
+                auto data_batch_shape = node_js.at("data_batch_shape").get<vector<size_t>>();
+                auto strides = node_js.at("strides").get<vector<size_t>>();
+                auto dilations = node_js.at("dilations").get<vector<size_t>>();
+                auto pads_begin = node_js.at("pads_begin").get<vector<std::ptrdiff_t>>();
+                auto pads_end = node_js.at("pads_end").get<vector<std::ptrdiff_t>>();
+                node = make_shared<op::v1::ConvolutionBackpropData>(
+                    data_batch_shape, args[0], args[1], strides, dilations, pads_begin, pads_end);
+            }
             break;
         }
         case OP_TYPEID::ConvolutionBackpropFilters:
         {
-            auto filters_shape = node_js.at("filters_shape").get<vector<size_t>>();
-            auto window_movement_strides_forward =
-                node_js.at("window_movement_strides_forward").get<vector<size_t>>();
-            auto window_dilation_strides_forward =
-                node_js.at("window_dilation_strides_forward").get<vector<size_t>>();
-            auto padding_below_forward =
-                node_js.at("padding_below_forward").get<vector<std::ptrdiff_t>>();
-            auto padding_above_forward =
-                node_js.at("padding_above_forward").get<vector<std::ptrdiff_t>>();
-            auto data_dilation_strides_forward =
-                node_js.at("data_dilation_strides_forward").get<vector<size_t>>();
-            node = make_shared<op::ConvolutionBackpropFilters>(args[0],
-                                                               filters_shape,
-                                                               args[1],
-                                                               window_movement_strides_forward,
-                                                               window_dilation_strides_forward,
-                                                               padding_below_forward,
-                                                               padding_above_forward,
-                                                               data_dilation_strides_forward);
+            if (op_version == 0)
+            {
+                auto filters_shape = node_js.at("filters_shape").get<vector<size_t>>();
+                auto window_movement_strides_forward =
+                    node_js.at("window_movement_strides_forward").get<vector<size_t>>();
+                auto window_dilation_strides_forward =
+                    node_js.at("window_dilation_strides_forward").get<vector<size_t>>();
+                auto padding_below_forward =
+                    node_js.at("padding_below_forward").get<vector<std::ptrdiff_t>>();
+                auto padding_above_forward =
+                    node_js.at("padding_above_forward").get<vector<std::ptrdiff_t>>();
+                auto data_dilation_strides_forward =
+                    node_js.at("data_dilation_strides_forward").get<vector<size_t>>();
+                node =
+                    make_shared<op::v0::ConvolutionBackpropFilters>(args[0],
+                                                                    filters_shape,
+                                                                    args[1],
+                                                                    window_movement_strides_forward,
+                                                                    window_dilation_strides_forward,
+                                                                    padding_below_forward,
+                                                                    padding_above_forward,
+                                                                    data_dilation_strides_forward);
+            }
+            if (op_version == 1)
+            {
+                auto filters_shape = node_js.at("filters_shape").get<vector<size_t>>();
+                auto strides = node_js.at("strides").get<vector<size_t>>();
+                auto dilations = node_js.at("dilations").get<vector<size_t>>();
+                auto pads_begin = node_js.at("pads_begin").get<vector<std::ptrdiff_t>>();
+                auto pads_end = node_js.at("pads_end").get<vector<std::ptrdiff_t>>();
+                node = make_shared<op::v1::ConvolutionBackpropFilters>(
+                    args[0], filters_shape, args[1], strides, dilations, pads_begin, pads_end);
+            }
             break;
         }
         case OP_TYPEID::ConvolutionBias:
@@ -1154,7 +1239,15 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::DynReshape:
         {
-            node = make_shared<op::DynReshape>(args[0], args[1]);
+            const auto zero_flag = node_js.at("zero_flag").get<bool>();
+            if (op_version == 0)
+            {
+                node = make_shared<op::v0::DynReshape>(args[0], args[1], zero_flag);
+            }
+            if (op_version == 1)
+            {
+                node = make_shared<op::v1::Reshape>(args[0], args[1], zero_flag);
+            }
             break;
         }
         case OP_TYPEID::DynSlice:
@@ -1362,7 +1455,51 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::HardSigmoid>(args[0], alpha, beta);
             break;
         }
-
+        case OP_TYPEID::LayerNorm:
+        {
+            auto keep_stats = node_js.at("keep_stats").get<bool>();
+            auto use_affine = node_js.at("use_affine").get<bool>();
+            auto epsilon = node_js.at("epsilon").get<double>();
+            auto begin_norm_axis = node_js.at("begin_norm_axis").get<int64_t>();
+            if (use_affine)
+            {
+                node = make_shared<op::LayerNorm>(
+                    args[0], args[1], args[2], keep_stats, begin_norm_axis, epsilon);
+            }
+            else
+            {
+                node = make_shared<op::LayerNorm>(args[0], keep_stats, begin_norm_axis, epsilon);
+            }
+            break;
+        }
+        case OP_TYPEID::LayerNormBackprop:
+        {
+            auto use_stats = node_js.at("use_stats").get<bool>();
+            auto use_affine = node_js.at("use_affine").get<bool>();
+            auto epsilon = node_js.at("epsilon").get<double>();
+            auto begin_norm_axis = node_js.at("begin_norm_axis").get<int64_t>();
+            if (use_stats && use_affine)
+            {
+                node = make_shared<op::LayerNormBackprop>(
+                    args[0], args[1], args[2], args[3], args[4], begin_norm_axis, epsilon);
+            }
+            else if (use_stats)
+            {
+                node = make_shared<op::LayerNormBackprop>(
+                    args[0], args[1], args[2], args[3], begin_norm_axis, epsilon);
+            }
+            else if (use_affine)
+            {
+                node = make_shared<op::LayerNormBackprop>(
+                    args[0], args[1], args[2], begin_norm_axis, epsilon);
+            }
+            else
+            {
+                node =
+                    make_shared<op::LayerNormBackprop>(args[0], args[1], begin_norm_axis, epsilon);
+            }
+            break;
+        }
         case OP_TYPEID::Less:
         {
             node = make_shared<op::Less>(
@@ -1427,66 +1564,101 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::MaxPool:
         {
-            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
-            auto window_movement_strides =
-                node_js.at("window_movement_strides").get<vector<size_t>>();
-            // For backwards compatibility, both (but not just one) of the padding_ fields may be
-            // omitted.
-            auto padding_below_maybe = get_or_default(node_js, "padding_below", json{});
-            auto padding_above_maybe = get_or_default(node_js, "padding_above", json{});
-            op::PadType pad_type = read_pad_type(node_js);
-            if (padding_below_maybe.empty() && !padding_above_maybe.empty())
+            if (op_version == 0)
             {
-                throw runtime_error(
-                    "MaxPool: padding_below is absent but padding_above is present");
+                auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
+                auto window_movement_strides =
+                    node_js.at("window_movement_strides").get<vector<size_t>>();
+                // For backwards compatibility, both (but not just one) of the padding_ fields may
+                // be omitted.
+                auto padding_below_maybe = get_or_default(node_js, "padding_below", json{});
+                auto padding_above_maybe = get_or_default(node_js, "padding_above", json{});
+                op::PadType pad_type = read_pad_type(node_js);
+                if (padding_below_maybe.empty() && !padding_above_maybe.empty())
+                {
+                    throw runtime_error(
+                        "MaxPool: padding_below is absent but padding_above is present");
+                }
+                else if (!padding_below_maybe.empty() && padding_above_maybe.empty())
+                {
+                    throw runtime_error(
+                        "MaxPool: padding_below is present but padding_above is absent");
+                }
+                else if (!padding_below_maybe.empty() && !padding_above_maybe.empty())
+                {
+                    auto padding_below = padding_below_maybe.get<vector<size_t>>();
+                    auto padding_above = padding_above_maybe.get<vector<size_t>>();
+                    node = make_shared<op::v0::MaxPool>(args[0],
+                                                        window_shape,
+                                                        window_movement_strides,
+                                                        padding_below,
+                                                        padding_above,
+                                                        pad_type);
+                }
+                else
+                {
+                    node = make_shared<op::v0::MaxPool>(
+                        args[0], window_shape, window_movement_strides);
+                }
             }
-            else if (!padding_below_maybe.empty() && padding_above_maybe.empty())
+            if (op_version == 1)
             {
-                throw runtime_error(
-                    "MaxPool: padding_below is present but padding_above is absent");
-            }
-            else if (!padding_below_maybe.empty() && !padding_above_maybe.empty())
-            {
-                auto padding_below = padding_below_maybe.get<vector<size_t>>();
-                auto padding_above = padding_above_maybe.get<vector<size_t>>();
-                node = make_shared<op::MaxPool>(args[0],
-                                                window_shape,
-                                                window_movement_strides,
-                                                padding_below,
-                                                padding_above,
-                                                pad_type);
-            }
-            else
-            {
-                node = make_shared<op::MaxPool>(args[0], window_shape, window_movement_strides);
+                auto kernel = node_js.at("kernel").get<vector<size_t>>();
+                auto strides = node_js.at("strides").get<vector<size_t>>();
+                auto pads_begin = node_js.at("pads_begin").get<vector<size_t>>();
+                auto pads_end = node_js.at("pads_end").get<vector<size_t>>();
+                auto rounding_type = read_rounding_type(node_js);
+                op::PadType pad_type = read_pad_type(node_js);
+                node = make_shared<op::v1::MaxPool>(
+                    args[0], strides, pads_begin, pads_end, kernel, rounding_type, pad_type);
             }
             break;
         }
         case OP_TYPEID::MaxPoolBackprop:
         {
-            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
-            auto window_movement_strides =
-                node_js.at("window_movement_strides").get<vector<size_t>>();
-            auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
-            auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
-            if (args.size() == 3)
+            if (op_version == 0)
             {
-                node = make_shared<op::MaxPoolBackprop>(args[0],
-                                                        args[1],
-                                                        args[2],
-                                                        window_shape,
-                                                        window_movement_strides,
-                                                        padding_below,
-                                                        padding_above);
+                auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
+                auto window_movement_strides =
+                    node_js.at("window_movement_strides").get<vector<size_t>>();
+                auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
+                if (args.size() == 3)
+                {
+                    node = make_shared<op::v0::MaxPoolBackprop>(args[0],
+                                                                args[1],
+                                                                args[2],
+                                                                window_shape,
+                                                                window_movement_strides,
+                                                                padding_below,
+                                                                padding_above);
+                }
+                else
+                {
+                    node = make_shared<op::v0::MaxPoolBackprop>(args[0],
+                                                                args[1],
+                                                                window_shape,
+                                                                window_movement_strides,
+                                                                padding_below,
+                                                                padding_above);
+                }
             }
-            else
+            if (op_version == 1)
             {
-                node = make_shared<op::MaxPoolBackprop>(args[0],
-                                                        args[1],
-                                                        window_shape,
-                                                        window_movement_strides,
-                                                        padding_below,
-                                                        padding_above);
+                auto kernel = node_js.at("kernel").get<vector<size_t>>();
+                auto strides = node_js.at("strides").get<vector<size_t>>();
+                auto pads_begin = node_js.at("pads_begin").get<vector<size_t>>();
+                auto pads_end = node_js.at("pads_end").get<vector<size_t>>();
+                if (args.size() == 3)
+                {
+                    node = make_shared<op::v1::MaxPoolBackprop>(
+                        args[0], args[1], args[2], kernel, strides, pads_begin, pads_end);
+                }
+                else
+                {
+                    node = make_shared<op::v1::MaxPoolBackprop>(
+                        args[0], args[1], kernel, strides, pads_begin, pads_end);
+                }
             }
             break;
         }
@@ -1775,8 +1947,18 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Reverse:
         {
-            auto reversed_axes = deserialize_axis_set(node_js.at("reversed_axes"));
-            node = make_shared<op::Reverse>(args[0], reversed_axes);
+            if (op_version == 0)
+            {
+                const auto reversed_axes = deserialize_axis_set(node_js.at("reversed_axes"));
+                node = make_shared<op::Reverse>(args[0], reversed_axes);
+                break;
+            }
+            else if (op_version == 1)
+            {
+                const auto mode = node_js.at("mode").get<op::v1::Reverse::Mode>();
+                node = make_shared<op::v1::Reverse>(args[0], args[1], mode);
+                break;
+            }
             break;
         }
         case OP_TYPEID::ReverseSequence:
@@ -1964,11 +2146,24 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::TopK:
         {
-            auto top_k_axis = node_js.at("top_k_axis").get<size_t>();
-            auto k = node_js.at("k").get<size_t>();
-            auto compute_max = node_js.at("compute_max").get<bool>();
-            auto target_type = read_element_type(node_js.at("index_element_type"));
-            node = make_shared<op::TopK>(args[0], top_k_axis, target_type, k, compute_max);
+            if (op_version == 0)
+            {
+                auto top_k_axis = node_js.at("top_k_axis").get<size_t>();
+                auto k = node_js.at("k").get<size_t>();
+                auto compute_max = node_js.at("compute_max").get<bool>();
+                auto target_type = read_element_type(node_js.at("index_element_type"));
+                node = make_shared<op::TopK>(args[0], top_k_axis, target_type, k, compute_max);
+            }
+            else if (op_version == 1)
+            {
+                const auto axis = node_js.at("axis").get<size_t>();
+                const auto mode = node_js.at("mode").get<op::v1::TopK::Mode>();
+                const auto sort_type = node_js.at("sort_type").get<op::v1::TopK::SortType>();
+                const auto index_element_type = read_element_type(node_js.at("index_element_type"));
+                auto topk = make_shared<op::v1::TopK>(args[0], args[1], axis, mode, sort_type);
+                topk->set_index_element_type(index_element_type);
+                node = move(topk);
+            }
             break;
         }
         case OP_TYPEID::Transpose:
@@ -2223,28 +2418,57 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::AvgPool:
     {
-        auto tmp = dynamic_cast<const op::AvgPool*>(&n);
-        node["window_shape"] = tmp->get_window_shape();
-        node["window_movement_strides"] = tmp->get_window_movement_strides();
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
-        node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
-        node["pad_type"] = tmp->get_pad_type();
-        if (tmp->get_ceil_mode())
+        if (op_version == 0)
         {
-            node["ceil_mode"] = tmp->get_ceil_mode();
+            auto tmp = dynamic_cast<const op::v0::AvgPool*>(&n);
+            node["window_shape"] = tmp->get_window_shape();
+            node["window_movement_strides"] = tmp->get_window_movement_strides();
+            node["padding_below"] = tmp->get_padding_below();
+            node["padding_above"] = tmp->get_padding_above();
+            node["include_padding_in_avg_computation"] =
+                tmp->get_include_padding_in_avg_computation();
+            node["pad_type"] = tmp->get_pad_type();
+            if (tmp->get_ceil_mode())
+            {
+                node["ceil_mode"] = tmp->get_ceil_mode();
+            }
+        }
+        if (op_version == 1)
+        {
+            auto tmp = dynamic_cast<const op::v1::AvgPool*>(&n);
+            node["kernel"] = tmp->get_kernel();
+            node["strides"] = tmp->get_strides();
+            node["pads_begin"] = tmp->get_pads_begin();
+            node["pads_end"] = tmp->get_pads_end();
+            node["exclude_pad"] = tmp->get_exclude_pad();
+            node["auto_pad"] = tmp->get_auto_pad();
+            node["rounding_type"] = tmp->get_rounding_type();
         }
         break;
     }
     case OP_TYPEID::AvgPoolBackprop:
     {
-        auto tmp = dynamic_cast<const op::AvgPoolBackprop*>(&n);
-        node["forward_arg_shape"] = tmp->get_forward_arg_shape();
-        node["window_shape"] = tmp->get_window_shape();
-        node["window_movement_strides"] = tmp->get_window_movement_strides();
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
-        node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
+        if (op_version == 0)
+        {
+            auto tmp = dynamic_cast<const op::v0::AvgPoolBackprop*>(&n);
+            node["forward_arg_shape"] = tmp->get_forward_arg_shape();
+            node["window_shape"] = tmp->get_window_shape();
+            node["window_movement_strides"] = tmp->get_window_movement_strides();
+            node["padding_below"] = tmp->get_padding_below();
+            node["padding_above"] = tmp->get_padding_above();
+            node["include_padding_in_avg_computation"] =
+                tmp->get_include_padding_in_avg_computation();
+        }
+        if (op_version == 1)
+        {
+            auto tmp = dynamic_cast<const op::v1::AvgPoolBackprop*>(&n);
+            node["forward_arg_shape"] = tmp->get_forward_arg_shape();
+            node["kernel"] = tmp->get_kernel();
+            node["strides"] = tmp->get_strides();
+            node["pads_begin"] = tmp->get_pads_begin();
+            node["pads_end"] = tmp->get_pads_end();
+            node["exclude_pad"] = tmp->get_exclude_pad();
+        }
         break;
     }
     case OP_TYPEID::BatchMatMul: { break;
@@ -2322,35 +2546,71 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Convolution:
     {
-        auto tmp = dynamic_cast<const op::Convolution*>(&n);
-        node["window_movement_strides"] = tmp->get_window_movement_strides();
-        node["window_dilation_strides"] = tmp->get_window_dilation_strides();
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
-        node["data_dilation_strides"] = tmp->get_data_dilation_strides();
-        node["pad_type"] = tmp->get_pad_type();
+        if (op_version == 0)
+        {
+            auto tmp = dynamic_cast<const op::v0::Convolution*>(&n);
+            node["window_movement_strides"] = tmp->get_window_movement_strides();
+            node["window_dilation_strides"] = tmp->get_window_dilation_strides();
+            node["padding_below"] = tmp->get_padding_below();
+            node["padding_above"] = tmp->get_padding_above();
+            node["data_dilation_strides"] = tmp->get_data_dilation_strides();
+            node["pad_type"] = tmp->get_pad_type();
+        }
+        if (op_version == 1)
+        {
+            auto tmp = dynamic_cast<const op::v1::Convolution*>(&n);
+            node["strides"] = tmp->get_strides();
+            node["dilations"] = tmp->get_dilations();
+            node["pads_begin"] = tmp->get_pads_begin();
+            node["pads_end"] = tmp->get_pads_end();
+            node["auto_pad"] = tmp->get_auto_pad();
+        }
         break;
     }
     case OP_TYPEID::ConvolutionBackpropData:
     {
-        auto tmp = dynamic_cast<const op::ConvolutionBackpropData*>(&n);
-        node["data_batch_shape"] = tmp->get_data_batch_shape();
-        node["window_movement_strides_forward"] = tmp->get_window_movement_strides_forward();
-        node["window_dilation_strides_forward"] = tmp->get_window_dilation_strides_forward();
-        node["padding_below_forward"] = tmp->get_padding_below_forward();
-        node["padding_above_forward"] = tmp->get_padding_above_forward();
-        node["data_dilation_strides_forward"] = tmp->get_data_dilation_strides_forward();
+        if (op_version == 0)
+        {
+            auto tmp = dynamic_cast<const op::v0::ConvolutionBackpropData*>(&n);
+            node["data_batch_shape"] = tmp->get_data_batch_shape();
+            node["window_movement_strides_forward"] = tmp->get_window_movement_strides_forward();
+            node["window_dilation_strides_forward"] = tmp->get_window_dilation_strides_forward();
+            node["padding_below_forward"] = tmp->get_padding_below_forward();
+            node["padding_above_forward"] = tmp->get_padding_above_forward();
+            node["data_dilation_strides_forward"] = tmp->get_data_dilation_strides_forward();
+        }
+        if (op_version == 1)
+        {
+            auto tmp = dynamic_cast<const op::v1::ConvolutionBackpropData*>(&n);
+            node["data_batch_shape"] = tmp->get_data_batch_shape();
+            node["strides"] = tmp->get_strides();
+            node["dilations"] = tmp->get_dilations();
+            node["pads_begin"] = tmp->get_pads_begin();
+            node["pads_end"] = tmp->get_pads_end();
+        }
         break;
     }
     case OP_TYPEID::ConvolutionBackpropFilters:
     {
-        auto tmp = dynamic_cast<const op::ConvolutionBackpropFilters*>(&n);
-        node["filters_shape"] = tmp->get_filters_shape();
-        node["window_movement_strides_forward"] = tmp->get_window_movement_strides_forward();
-        node["window_dilation_strides_forward"] = tmp->get_window_dilation_strides_forward();
-        node["padding_below_forward"] = tmp->get_padding_below_forward();
-        node["padding_above_forward"] = tmp->get_padding_above_forward();
-        node["data_dilation_strides_forward"] = tmp->get_data_dilation_strides_forward();
+        if (op_version == 0)
+        {
+            auto tmp = dynamic_cast<const op::v0::ConvolutionBackpropFilters*>(&n);
+            node["filters_shape"] = tmp->get_filters_shape();
+            node["window_movement_strides_forward"] = tmp->get_window_movement_strides_forward();
+            node["window_dilation_strides_forward"] = tmp->get_window_dilation_strides_forward();
+            node["padding_below_forward"] = tmp->get_padding_below_forward();
+            node["padding_above_forward"] = tmp->get_padding_above_forward();
+            node["data_dilation_strides_forward"] = tmp->get_data_dilation_strides_forward();
+        }
+        if (op_version == 1)
+        {
+            auto tmp = dynamic_cast<const op::v1::ConvolutionBackpropFilters*>(&n);
+            node["filters_shape"] = tmp->get_filters_shape();
+            node["strides"] = tmp->get_strides();
+            node["dilations"] = tmp->get_dilations();
+            node["pads_begin"] = tmp->get_pads_begin();
+            node["pads_end"] = tmp->get_pads_end();
+        }
         break;
     }
     case OP_TYPEID::ConvolutionBias:
@@ -2433,7 +2693,19 @@ json JSONSerializer::serialize_node(const Node& n)
         node["ellipsis_mask"] = tmp->get_ellipsis_mask();
         break;
     }
-    case OP_TYPEID::DynReshape: { break;
+    case OP_TYPEID::DynReshape:
+    {
+        if (op_version == 0)
+        {
+            auto tmp = dynamic_cast<const op::v0::DynReshape*>(&n);
+            node["zero_flag"] = tmp->get_zero_flag();
+        }
+        if (op_version == 1)
+        {
+            auto tmp = dynamic_cast<const op::v1::Reshape*>(&n);
+            node["zero_flag"] = tmp->get_zero_flag();
+        }
+        break;
     }
     case OP_TYPEID::DynSlice:
     {
@@ -2581,6 +2853,24 @@ json JSONSerializer::serialize_node(const Node& n)
         node["beta"] = tmp->get_beta();
         break;
     }
+    case OP_TYPEID::LayerNorm:
+    {
+        auto tmp = dynamic_cast<const op::LayerNorm*>(&n);
+        node["keep_stats"] = tmp->get_keep_stats();
+        node["use_affine"] = tmp->get_use_affine();
+        node["epsilon"] = tmp->get_epsilon();
+        node["begin_norm_axis"] = tmp->get_begin_norm_axis();
+        break;
+    }
+    case OP_TYPEID::LayerNormBackprop:
+    {
+        auto tmp = dynamic_cast<const op::LayerNormBackprop*>(&n);
+        node["use_stats"] = tmp->get_use_stats();
+        node["use_affine"] = tmp->get_use_affine();
+        node["epsilon"] = tmp->get_epsilon();
+        node["begin_norm_axis"] = tmp->get_begin_norm_axis();
+        break;
+    }
     case OP_TYPEID::Less:
     {
         auto tmp = dynamic_cast<const op::Less*>(&n);
@@ -2636,21 +2926,45 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::MaxPool:
     {
-        auto tmp = dynamic_cast<const op::MaxPool*>(&n);
-        node["window_shape"] = tmp->get_window_shape();
-        node["window_movement_strides"] = tmp->get_window_movement_strides();
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
-        node["pad_type"] = tmp->get_pad_type();
+        if (op_version == 0)
+        {
+            auto tmp = dynamic_cast<const op::v0::MaxPool*>(&n);
+            node["window_shape"] = tmp->get_window_shape();
+            node["window_movement_strides"] = tmp->get_window_movement_strides();
+            node["padding_below"] = tmp->get_padding_below();
+            node["padding_above"] = tmp->get_padding_above();
+            node["pad_type"] = tmp->get_pad_type();
+        }
+        if (op_version == 1)
+        {
+            auto tmp = dynamic_cast<const op::v1::MaxPool*>(&n);
+            node["kernel"] = tmp->get_kernel();
+            node["strides"] = tmp->get_strides();
+            node["pads_begin"] = tmp->get_pads_begin();
+            node["pads_end"] = tmp->get_pads_end();
+            node["auto_pad"] = tmp->get_auto_pad();
+            node["rounding_type"] = tmp->get_rounding_type();
+        }
         break;
     }
     case OP_TYPEID::MaxPoolBackprop:
     {
-        auto tmp = dynamic_cast<const op::MaxPoolBackprop*>(&n);
-        node["window_shape"] = tmp->get_window_shape();
-        node["window_movement_strides"] = tmp->get_window_movement_strides();
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
+        if (op_version == 0)
+        {
+            auto tmp = dynamic_cast<const op::v0::MaxPoolBackprop*>(&n);
+            node["window_shape"] = tmp->get_window_shape();
+            node["window_movement_strides"] = tmp->get_window_movement_strides();
+            node["padding_below"] = tmp->get_padding_below();
+            node["padding_above"] = tmp->get_padding_above();
+        }
+        if (op_version == 1)
+        {
+            auto tmp = dynamic_cast<const op::v1::MaxPoolBackprop*>(&n);
+            node["kernel"] = tmp->get_kernel();
+            node["strides"] = tmp->get_strides();
+            node["pads_begin"] = tmp->get_pads_begin();
+            node["pads_end"] = tmp->get_pads_end();
+        }
         break;
     }
     case OP_TYPEID::Maximum:
@@ -2878,8 +3192,18 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Reverse:
     {
-        auto tmp = dynamic_cast<const op::Reverse*>(&n);
-        node["reversed_axes"] = serialize_axis_set(tmp->get_reversed_axes());
+        if (op_version == 0)
+        {
+            const auto tmp = dynamic_cast<const op::Reverse*>(&n);
+            node["reversed_axes"] = serialize_axis_set(tmp->get_reversed_axes());
+            break;
+        }
+        else if (op_version == 1)
+        {
+            const auto tmp = dynamic_cast<const op::v1::Reverse*>(&n);
+            node["mode"] = tmp->get_mode();
+            break;
+        }
         break;
     }
     case OP_TYPEID::ReverseSequence:
@@ -3014,11 +3338,23 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::TopK:
     {
-        auto tmp = dynamic_cast<const op::TopK*>(&n);
-        node["top_k_axis"] = tmp->get_top_k_axis();
-        node["index_element_type"] = write_element_type(tmp->get_index_element_type());
-        node["k"] = tmp->get_k();
-        node["compute_max"] = tmp->get_compute_max();
+        if (op_version == 0)
+        {
+            const auto tmp = dynamic_cast<const op::TopK*>(&n);
+            node["top_k_axis"] = tmp->get_top_k_axis();
+            node["index_element_type"] = write_element_type(tmp->get_index_element_type());
+            node["k"] = tmp->get_k();
+            node["compute_max"] = tmp->get_compute_max();
+        }
+        else if (op_version == 1)
+        {
+            const auto tmp = dynamic_cast<const op::v1::TopK*>(&n);
+            node["axis"] = tmp->get_axis();
+            node["mode"] = tmp->get_mode();
+            node["sort_type"] = tmp->get_sort_type();
+            node["index_element_type"] = write_element_type(tmp->get_index_element_type());
+        }
+
         break;
     }
     case OP_TYPEID::Transpose: { break;

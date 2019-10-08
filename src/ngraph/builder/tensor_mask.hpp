@@ -96,7 +96,8 @@ namespace ngraph
                 convert_sequence, mask_shape, non_sequence_axes);
 
             // mask = sequence_length < sequence
-            return std::make_shared<T>(broadcast_sequence, broadcast_sequence_lengths);
+            return std::make_shared<T>(broadcast_sequence, broadcast_sequence_lengths)
+                ->add_provenance_group_members_above({sequence_lengths});
         }
     }
 }

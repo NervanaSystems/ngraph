@@ -26,6 +26,7 @@ constexpr NodeTypeInfo op::LRN::type_info;
 op::LRN::LRN(const Output<Node>& arg, double alpha, double beta, double bias, size_t size)
     : LRN(arg, op::Constant::create(element::i64, Shape{1}, {1}), alpha, beta, bias, size)
 {
+    add_provenance_group_member(input_value(1).get_node_shared_ptr());
 }
 
 op::LRN::LRN(const Output<Node>& arg,

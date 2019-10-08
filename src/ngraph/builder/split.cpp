@@ -41,7 +41,9 @@ namespace
             upper_bounds.at(axis) =
                 get_valid_array_index(ends.at(index), output.get_shape().at(axis));
         }
-        return std::make_shared<op::Slice>(output, lower_bounds, upper_bounds);
+        return std::static_pointer_cast<op::Slice>(
+            std::make_shared<op::Slice>(output, lower_bounds, upper_bounds)
+                ->add_provenance_group_members_above({output}));
     }
 }
 
