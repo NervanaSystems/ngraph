@@ -105,6 +105,7 @@ static void insert_reshape(shared_ptr<Node> target, shared_ptr<Node> reshape, si
     auto arg = target->input(input_index).get_source_output();
     NGRAPH_DEBUG << "Arg shape: " << arg.get_shape();
     auto new_reshape = reshape->copy_with_new_inputs({arg});
+    new_reshape->merge_provenance_tags_from(reshape);
     NGRAPH_DEBUG << "Inserting reshape " << describe_reshape(new_reshape) << " at input "
                  << target->get_name() << " input index " << input_index;
     target->input(input_index).replace_source_output(new_reshape->output(0));
@@ -115,7 +116,7 @@ static void delete_reshape(shared_ptr<Node> reshape)
     NGRAPH_DEBUG << "Removing reshape " << reshape->get_name();
     if (!reshape->get_users().empty())
     {
-        ngraph::replace_node(reshape, reshape->get_argument(0));
+        ngraph::replace_node(reshape, reshape->get_argument(0), true);
     }
 }
 
@@ -130,6 +131,7 @@ static shared_ptr<op::Reshape> create_default_reshape(shared_ptr<Node> n)
 {
     auto default_order = ngraph::get_default_order(n->get_shape());
     auto default_reshape = make_reshape(n, default_order, n->get_shape());
+    default_reshape->merge_provenance_tags_from(n);
     NGRAPH_DEBUG << "Default reshape: " << describe_reshape(default_reshape);
     return default_reshape;
 }
@@ -230,6 +232,7 @@ void swim(Input<Node> input, shared_ptr<op::Reshape> reshape)
 
             auto new_broadcast = make_shared<op::Broadcast>(
                 broadcast_input, broadcast_reshape->get_shape(), new_broadcast_axes);
+            new_broadcast->merge_provenance_tags_from(old_broadcast);
             csw.input.replace_source_output(new_broadcast->output(0));
         }
         //TODO: Add cases to push through Reshape and BinaryElementwiseArithmetic
@@ -237,6 +240,7 @@ void swim(Input<Node> input, shared_ptr<op::Reshape> reshape)
         {
             //materialize
             auto new_reshape = csw.reshape->copy_with_new_args({n});
+            new_reshape->merge_provenance_tags_from(n);
             NGRAPH_DEBUG << "Materializing new reshape " << describe_reshape(new_reshape);
             csw.input.replace_source_output(new_reshape->output(0));
         }
