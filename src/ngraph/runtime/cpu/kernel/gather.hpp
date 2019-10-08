@@ -86,7 +86,6 @@ namespace ngraph
                         static_cast<ElementType*>(inputs), in_dims);
 
                     auto indices_ptr = static_cast<IndicesType*>(indices);
-                    IndicesType index_value;
                     auto indices_rank = indices_shape.size();
                     auto outer_loop_num = 1;
                     for (int i = 0; i < axis; i++)
@@ -126,7 +125,7 @@ namespace ngraph
                             // at axis
                             in_extents[axis] = 1;
                             // at axis, get the value from indices arg
-                            index_value = indices_ptr[0];
+                            IndicesType index_value = indices_ptr[0];
                             // take care of negative indices
                             in_offsets[axis] =
                                 index_value >= 0 ? index_value : index_value + axis_length;
@@ -199,7 +198,7 @@ namespace ngraph
                             }
                             // at axis, get the value from indices arg
                             int k = i % num_indices;
-                            index_value = indices_ptr[k];
+                            IndicesType index_value = indices_ptr[k];
                             // take care of negative indices
                             in_offsets[axis] =
                                 index_value >= 0 ? index_value : index_value + axis_length;
