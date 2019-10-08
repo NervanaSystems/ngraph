@@ -1,7 +1,7 @@
 .. frameworks/onnx_integ.rst:
 
-ONNX Support
-============
+ONNX overview
+=============
 
 nGraph is able to import and execute ONNX models. Models are converted to 
 nGraph's :abbr:`Intermediate Representation (IR)` and converted to ``Function`` 

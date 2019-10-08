@@ -1,10 +1,7 @@
 .. frameworks/paddle_integ.rst:
 
-PaddlePaddle
-============
-
-nGraph PaddlePaddle integration overview
-----------------------------------------
+PaddlePaddle integration
+========================
 
 PaddlePaddle is an open source deep learning framework developed by Baidu. It 
 aims to enable performant large-scale distributed computation for deep learning. 
