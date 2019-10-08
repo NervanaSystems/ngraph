@@ -2,7 +2,7 @@
 
 .. _core_compiler_passes:
 
-Compiler passes
+Compiler Passes
 ===============
 
 .. toctree::

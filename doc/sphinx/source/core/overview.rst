@@ -1,8 +1,8 @@
 .. core/overview.rst:
 
 
-Overview
-========
+Basic concepts
+==============
 
 .. figure:: ../graphics/nGraphCompilerstack.png
    :alt: The whole stack
