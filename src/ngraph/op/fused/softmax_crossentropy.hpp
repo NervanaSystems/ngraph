@@ -31,10 +31,10 @@ namespace ngraph
             static constexpr NodeTypeInfo type_info{"SoftmaxCrossEntropy", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             SoftmaxCrossEntropy() = default;
-            /// \brief Softamx + CrossEntropy for numerical stabilization
+            /// \brief Softamax + CrossEntropy for numerical stabilization
             /// \param arg1 Node that produces the tensor to normalize
             /// \param arg2 Node that produces OneHot Lables
-            /// \param reduction_axes axis on which to reduce the summation operation
+            /// \param reduction_axes axes on which to reduce the summation operation
             SoftmaxCrossEntropy(const Output<Node>& arg1,
                                 const Output<Node>& arg2,
                                 const AxisSet& reduction_axes);
@@ -44,9 +44,9 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            const AxisSet& get_summation_axis() const { return m_summation_axis; }
+            const AxisSet& get_reduction_axes() const { return m_reduction_axes; }
         private:
-            AxisSet m_summation_axis;
+            AxisSet m_reduction_axes;
         };
     } // namespace op
 } // namespace ngraph

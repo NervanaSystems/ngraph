@@ -1899,8 +1899,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::SoftmaxCrossEntropy:
         {
-            auto reduction_axis = node_js.at("reduction_axis");
-            node = make_shared<op::SoftmaxCrossEntropy>(args[0], args[1], reduction_axis);
+            auto reduction_axes = node_js.at("reduction_axes");
+            node = make_shared<op::SoftmaxCrossEntropy>(args[0], args[1], reduction_axes);
             break;
         }
         case OP_TYPEID::SpaceToDepth:
@@ -3016,7 +3016,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::SoftmaxCrossEntropy:
     {
         auto tmp = dynamic_cast<const op::SoftmaxCrossEntropy*>(&n);
-        node["reduction_axis"] = tmp->get_summation_axis();
+        node["reduction_axes"] = tmp->get_reduction_axes();
         break;
     }
     case OP_TYPEID::Tan: { break;

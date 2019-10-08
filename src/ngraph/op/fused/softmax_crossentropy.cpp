@@ -35,7 +35,7 @@ op::SoftmaxCrossEntropy::SoftmaxCrossEntropy(const Output<Node>& arg1,
                                              const Output<Node>& arg2,
                                              const AxisSet& reduction_axes)
     : FusedOp({arg1, arg2})
-    , m_summation_axis{reduction_axes}
+    , m_reduction_axes{reduction_axes}
 {
     constructor_validate_and_infer_types();
 }
@@ -45,13 +45,13 @@ NodeVector op::SoftmaxCrossEntropy::decompose_op() const
     auto input_to_normalize = input_value(0);
     auto one_hot_labels = input_value(1);
 
-    auto max_xj = std::make_shared<ngraph::op::Max>(input_to_normalize, m_summation_axis);
+    auto max_xj = std::make_shared<ngraph::op::Max>(input_to_normalize, m_reduction_axes);
     auto broadcast_max_xj =
         std::make_shared<ngraph::op::Broadcast>(max_xj, input_to_normalize.get_shape(), AxisSet{1});
     auto subtract = std::make_shared<ngraph::op::Subtract>(input_to_normalize, broadcast_max_xj);
     auto exp = std::make_shared<ngraph::op::Exp>(subtract);
 
-    auto sum_over_j = std::make_shared<ngraph::op::Sum>(exp, m_summation_axis);
+    auto sum_over_j = std::make_shared<ngraph::op::Sum>(exp, m_reduction_axes);
     auto log_sum_over_j = std::make_shared<ngraph::op::Log>(sum_over_j);
 
     auto subtract_max_xj_from_input =
@@ -62,7 +62,7 @@ NodeVector op::SoftmaxCrossEntropy::decompose_op() const
         std::make_shared<ngraph::op::Subtract>(subtract_max_xj_from_input, broadcast_log);
     auto multiply = std::make_shared<ngraph::op::Multiply>(
         one_hot_labels, subtract_max_xj_from_input_from_log_sum_over_j);
-    auto sum_over_k = std::make_shared<ngraph::op::Sum>(multiply, m_summation_axis);
+    auto sum_over_k = std::make_shared<ngraph::op::Sum>(multiply, m_reduction_axes);
     auto negate_summation = std::make_shared<ngraph::op::Negative>(sum_over_k);
 
     return {negate_summation};
@@ -71,5 +71,5 @@ NodeVector op::SoftmaxCrossEntropy::decompose_op() const
 shared_ptr<Node> op::SoftmaxCrossEntropy::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<SoftmaxCrossEntropy>(new_args.at(0), new_args.at(1), m_summation_axis);
+    return make_shared<SoftmaxCrossEntropy>(new_args.at(0), new_args.at(1), m_reduction_axes);
 }

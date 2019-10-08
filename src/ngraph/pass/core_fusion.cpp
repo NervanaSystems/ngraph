@@ -59,7 +59,7 @@ static shared_ptr<Node> construct_constant_node(int n)
     return op::Constant::create(element::f32, Shape{}, {n});
 }
 
-void pass::CoreFusion::construct_sigmoid_cross_entropy_fprop()
+void pass::CoreFusion::construct_softmax_cross_entropy_fprop()
 {
     auto param_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{41, 37});
     auto softmax = std::make_shared<ngraph::op::Softmax>(param_1, AxisSet{1});
@@ -70,20 +70,20 @@ void pass::CoreFusion::construct_sigmoid_cross_entropy_fprop()
     auto log = std::make_shared<ngraph::op::Log>(softmax);
     auto multiply = std::make_shared<ngraph::op::Multiply>(param_2, log);
 
-    auto summation_axis = ngraph::op::Constant::create(element::i64, Shape{}, {1});
-    auto summation_axis_label = std::make_shared<pattern::op::Label>(summation_axis);
-    auto sum = std::make_shared<ngraph::op::Sum>(multiply, summation_axis_label);
+    auto reduction_axes = ngraph::op::Constant::create(element::i64, Shape{}, {1});
+    auto reduction_axes_label = std::make_shared<pattern::op::Label>(reduction_axes);
+    auto sum = std::make_shared<ngraph::op::Sum>(multiply, reduction_axes_label);
     auto negative = std::make_shared<ngraph::op::Negative>(sum);
 
-    auto callback = [summation_axis_label, param_1, param_2](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In a callback for construct_sigmoid_cross_entropy_fprop against "
+    auto callback = [reduction_axes_label, param_1, param_2](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_softmax_cross_entropy_fprop against "
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
         auto input_to_normalize = pattern_map[param_1];
         auto one_hot_labels = pattern_map[param_2];
         auto axis_constant_op =
-            std::static_pointer_cast<ngraph::op::Constant>(pattern_map[summation_axis_label]);
+            std::static_pointer_cast<ngraph::op::Constant>(pattern_map[reduction_axes_label]);
         auto axis_to_sum = *(static_cast<size_t const*>(axis_constant_op->get_data_ptr()));
         auto softmax_crossentropy = std::make_shared<ngraph::op::SoftmaxCrossEntropy>(
             input_to_normalize, one_hot_labels, AxisSet{axis_to_sum});
@@ -91,11 +91,11 @@ void pass::CoreFusion::construct_sigmoid_cross_entropy_fprop()
 
         return true;
     };
-    auto m = std::make_shared<pattern::Matcher>(negative, "CPUFusion.SigmoidCrossEntropy");
+    auto m = std::make_shared<pattern::Matcher>(negative, "CPUFusion.SoftmaxCrossEntropy");
     this->add_matcher(m, callback);
 }
 
-void pass::CoreFusion::construct_sigmoid_cross_entropy_bprop()
+void pass::CoreFusion::construct_softmax_cross_entropy_bprop()
 {
     auto param_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{41, 37});
     auto softmax = std::make_shared<ngraph::op::Softmax>(param_1, AxisSet{1});
@@ -125,7 +125,7 @@ void pass::CoreFusion::construct_sigmoid_cross_entropy_bprop()
 
     auto callback = [constant_1_label, constant_2_label, constant_3_label, param_1, param_2](
         pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In a callback for construct_sigmoid_cross_entropy_bprop against "
+        NGRAPH_DEBUG << "In a callback for construct_softmax_cross_entropy_bprop against "
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
@@ -134,7 +134,7 @@ void pass::CoreFusion::construct_sigmoid_cross_entropy_bprop()
         // root node in the call back funtion
         return false;
     };
-    auto m = std::make_shared<pattern::Matcher>(bprop_result, "CPUFusion.SigmoidCrossEntropyBprop");
+    auto m = std::make_shared<pattern::Matcher>(bprop_result, "CPUFusion.SoftmaxCrossEntropyBprop");
     this->add_matcher(m, callback);
 }
 
