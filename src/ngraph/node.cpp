@@ -803,10 +803,10 @@ std::tuple<element::Type, PartialShape>
     {
         for (size_t i = 1; i < get_input_size(); ++i)
         {
-            NODE_VALIDATION_CHECK(		
-                 this,		
-                 element::Type::merge(element_type, element_type, get_input_element_type(i)),		
-                 "Argument element types are inconsistent.");		
+            NODE_VALIDATION_CHECK(
+                 this,
+                 element::Type::merge(element_type, element_type, get_input_element_type(i)),
+                 "Argument element types are inconsistent.");
             if (autob.m_type == op::AutoBroadcastType::NONE)
             {
                 NODE_VALIDATION_CHECK(this,
