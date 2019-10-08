@@ -137,7 +137,7 @@ void op::v1::Reverse::validate_and_infer_types()
 
         if (rev_axes_node->is_constant())
         {
-            const auto rev_axes_constant = dynamic_pointer_cast<op::Constant>(rev_axes_node);
+            const auto rev_axes_constant = as_type_ptr<op::Constant>(rev_axes_node);
 
             if (m_mode == Mode::INDEX)
             {
