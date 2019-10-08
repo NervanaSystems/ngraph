@@ -37,7 +37,7 @@ data scientists, or for deployment in cloud container environments, nGraph's
 We invite anyone working on new and novel frameworks or neural network designs 
 to explore our highly-modularized stack of components.
 
-Please read the :doc:`generic_configs` section for other framework-agnostic 
+Please read the :doc:`other` section for other framework-agnostic 
 configurations available to users of the nGraph Compiler stack. 
 
 .. figure:: ../graphics/overview-translation-flow.svg
