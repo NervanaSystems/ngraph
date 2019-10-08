@@ -294,3 +294,7 @@ layer_norm_bprop_affine
 
 # shapes with zeros dimensions like (5, 0, 5) not supported in PlaidML backend
 dyn_replace_slice
+
+# bf16 test cases not supported
+convert_float32_bf16
+convert_bf16_float32
