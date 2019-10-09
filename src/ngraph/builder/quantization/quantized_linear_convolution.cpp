@@ -62,7 +62,6 @@ namespace ngraph
                     mybias = make_shared<op::Quantize>(
                         bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
                 }
-
                 return make_shared<op::QuantizedConvolutionBias>(input,
                                                                  filter,
                                                                  mybias,
@@ -72,7 +71,9 @@ namespace ngraph
                                                                  padding_above,
                                                                  data_dilation_strides,
                                                                  requantization_scale,
-                                                                 false);
+                                                                 false)
+                    ->add_provenance_group_members_above(
+                        {input, filter, bias, input_scale, filter_scale, output_scale});
             }
         }
     }

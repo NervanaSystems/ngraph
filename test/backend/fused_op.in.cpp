@@ -540,6 +540,33 @@ NGRAPH_TEST(${BACKEND_NAME}, group_conv_input_data_variation)
     EXPECT_EQ(expected, read_vector<float>(result0));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, group_conv_groups_included_in_shape)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 4, 2, 2});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 1, 2, 1, 1});
+    auto group_conv = make_shared<op::GroupConvolution>(data,
+                                                        filters,
+                                                        Strides{1, 1},
+                                                        Strides{1, 1},
+                                                        CoordinateDiff{0, 0},
+                                                        CoordinateDiff{0, 0},
+                                                        Strides{1, 1});
+    auto f0 = make_shared<Function>(NodeVector{group_conv}, ParameterVector{data, filters});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, Shape{1, 4, 2, 2});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+    auto b = backend->create_tensor(element::f32, Shape{2, 1, 2, 1, 1});
+    copy_data(b, vector<float>{1, 2, 3, 4});
+    auto result0 = backend->create_tensor(element::f32, Shape{1, 2, 2, 2});
+    auto handle = backend->compile(f0);
+    handle->call_with_validate({result0}, {a, b});
+    vector<float> expected{11, 14, 17, 20, 79, 86, 93, 100};
+    EXPECT_EQ(expected, read_vector<float>(result0));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, space_to_depth)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{1, 2, 4, 4});

@@ -31,6 +31,7 @@ op::util::ArithmeticReduction::ArithmeticReduction(const Output<Node>& arg,
               element::i64, Shape{reduction_axes.size()}, reduction_axes.to_vector())
               ->output(0)})
 {
+    add_provenance_group_member(input_value(1).get_node_shared_ptr());
 }
 
 op::util::ArithmeticReduction::ArithmeticReduction(const Output<Node>& arg,
@@ -41,7 +42,7 @@ op::util::ArithmeticReduction::ArithmeticReduction(const Output<Node>& arg,
 
 bool op::util::ArithmeticReduction::reduction_axes_constant() const
 {
-    return input_value(1).get_node()->is_type<op::Constant>();
+    return is_type<op::Constant>(input_value(1).get_node());
 }
 
 const AxisSet op::util::ArithmeticReduction::get_reduction_axes() const

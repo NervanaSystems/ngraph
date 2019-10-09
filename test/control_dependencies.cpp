@@ -134,7 +134,7 @@ TEST(control_dependencies, clone_function_cdop)
     auto cloned_deps = cdop_clone->get_control_dependencies();
     ASSERT_EQ(cloned_deps.size(), 1);
     auto cloned_abs = *begin(cloned_deps);
-    ASSERT_TRUE(std::dynamic_pointer_cast<op::Abs>(cloned_abs));
+    ASSERT_TRUE(is_type<op::Abs>(cloned_abs));
 }
 
 TEST(control_dependencies, clone_function_cdop_abs)
@@ -156,7 +156,7 @@ TEST(control_dependencies, clone_function_cdop_abs)
     ASSERT_EQ(cloned_deps.size(), 2);
     for (auto ccdep : cloned_deps)
     {
-        ASSERT_TRUE(std::dynamic_pointer_cast<op::Abs>(ccdep));
+        ASSERT_TRUE(is_type<op::Abs>(ccdep));
     }
 }
 
@@ -202,7 +202,7 @@ TEST(control_dependencies, serialize_cdop)
     auto cloned_deps = cdop_clone->get_control_dependencies();
     ASSERT_EQ(cloned_deps.size(), 1);
     auto cloned_abs = *begin(cloned_deps);
-    ASSERT_TRUE(std::dynamic_pointer_cast<op::Abs>(cloned_abs));
+    ASSERT_TRUE(is_type<op::Abs>(cloned_abs));
 }
 
 TEST(control_dependencies, serialize_cdop_abs)
@@ -227,7 +227,7 @@ TEST(control_dependencies, serialize_cdop_abs)
     ASSERT_EQ(cloned_deps.size(), 2);
     for (auto ccdep : cloned_deps)
     {
-        ASSERT_TRUE(std::dynamic_pointer_cast<op::Abs>(ccdep));
+        ASSERT_TRUE(is_type<op::Abs>(ccdep));
     }
 }
 #endif

@@ -34,11 +34,7 @@ namespace mlir
     {
     public:
         explicit NGraphOpsDialect(mlir::MLIRContext* ctx);
-        mlir::Type parseType(llvm::StringRef tyData, mlir::Location loc) const override
-        {
-            NGRAPH_CHECK(false, "Unsupported type parsing.");
-            return mlir::Type();
-        }
+        mlir::Type parseType(llvm::StringRef tyData, mlir::Location loc) const override;
         void printType(mlir::Type type, llvm::raw_ostream& os) const override;
 
         static StringRef getDialectNamespace() { return "ng"; }

@@ -570,7 +570,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
         {
             if (is_used(n.get()))
             {
-                if (!n->is_type<op::Convolution>())
+                if (!is_type<op::Convolution>(n))
                 {
                     NGRAPH_DEBUG << "Not all live users of element wise operation are Convolution";
                     return false;

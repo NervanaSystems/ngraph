@@ -24,373 +24,588 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Batched convolution operation, with optional window dilation and stride.
-        ///
-        class Convolution : public Op
+        namespace v1
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Convolution", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a batched convolution operation.
-            Convolution() = default;
-            /// \brief Constructs a batched convolution operation.
+            /// \brief Batched convolution operation, with optional window dilation and stride.
             ///
-            /// \param data_batch The node producing the input data batch tensor.<br>
-            /// `[N, C_IN, D1, ... Df]`
-            /// \param filters The node producing the filters tensor.<br>
-            /// `[C_OUT, C_IN, F1, ... Ff]`
-            /// \param window_movement_strides The window movement strides.<br>
-            /// `[f]`
-            /// \param window_dilation_strides The window dilation strides.<br>
-            /// `[f]`
-            /// \param padding_below The padding-below sizes.<br>
-            /// `[f]`
-            /// \param padding_above The padding-above sizes.<br>
-            /// `[f]`
-            /// \param data_dilation_strides The data dilation strides.<br>
-            /// `[f]`
-            /// \param pad_type The pad type for automatically computing padding sizes.<br>
-            /// `[f]`
-            ///
-            /// Output `[N, C_OUT, R1, ... Rf]`
-            ///
-            Convolution(const Output<Node>& data_batch,
-                        const Output<Node>& filters,
-                        const Strides& window_movement_strides,
-                        const Strides& window_dilation_strides,
-                        const CoordinateDiff& padding_below,
-                        const CoordinateDiff& padding_above,
-                        const Strides& data_dilation_strides,
-                        const PadType& pad_type = PadType::EXPLICIT);
-
-            /// \brief Constructs a batched convolution operation with no data dilation (i.e., all
-            ///        data dilation strides are 1).
-            ///
-            /// \param data_batch The node producing the input data batch tensor.<br>
-            /// `[N, C_IN, D1, ... Df]`
-            /// \param filters The node producing the filters tensor.<br>
-            /// `[C_OUT, C_IN, F1, ... Ff]`
-            /// \param window_movement_strides The window movement strides.<br>
-            /// `[f]`
-            /// \param window_dilation_strides The window dilation strides.<br>
-            /// `[f]`
-            /// \param padding_below The padding-below sizes.<br>
-            /// `[f]`
-            /// \param padding_above The padding-above sizes.<br>
-            /// `[f]`
-            ///
-            /// Output `[N, C_OUT, R1, ... Rf]`
-            ///
-            Convolution(const Output<Node>& data_batch,
-                        const Output<Node>& filters,
-                        const Strides& window_movement_strides,
-                        const Strides& window_dilation_strides,
-                        const CoordinateDiff& padding_below,
-                        const CoordinateDiff& padding_above);
-
-            /// \brief Constructs a batched convolution operation with no padding or data dilation
-            ///        (i.e., padding above and below are 0 everywhere, and all data dilation
-            ///        strides are 1).
-            ///
-            /// \param data_batch The node producing the input data batch tensor.<br>
-            /// `[N, C_IN, D1, ... Df]`
-            /// \param filters The node producing the filters tensor.<br>
-            /// `[C_OUT, C_IN, F1, ... Ff]`
-            /// \param window_movement_strides The window movement strides.<br>
-            /// `[f]`
-            /// \param window_dilation_strides The window dilation strides.<br>
-            /// `[f]`
-            ///
-            /// Output `[N, C_OUT, R1, ... Rf]`
-            ///
-            Convolution(const Output<Node>& data_batch,
-                        const Output<Node>& filters,
-                        const Strides& window_movement_strides,
-                        const Strides& window_dilation_strides);
-
-            /// \brief Constructs a batched convolution operation with no window dilation, padding,
-            ///        or data dilation (i.e., padding above and below are 0 everywhere, and all
-            ///        window/data dilation strides are 1).
-            ///
-            /// \param data_batch The node producing the input data batch tensor.<br>
-            /// `[N, C_IN, D1, ... Df]`
-            /// \param filters The node producing the filters tensor.<br>
-            /// `[C_OUT, C_IN, F1, ... Ff]`
-            /// \param window_movement_strides The window movement strides.<br>
-            /// `[f]`
-            ///
-            /// Output `[N, C_OUT, R1, ... Rf]`
-            ///
-            Convolution(const Output<Node>& data_batch,
-                        const Output<Node>& filters,
-                        const Strides& window_movement_strides);
-
-            /// \brief Constructs a batched convolution operation with no window dilation or
-            ///        movement stride (i.e., padding above and below are 0 everywhere, and all
-            ///        window/data dilation strides and window movement strides are 1).
-            ///
-            /// \param data_batch The node producing the input data batch tensor.<br>
-            /// `[N, C_IN, D1, ... Df]`
-            /// \param filters The node producing the filters tensor.<br>
-            /// `[C_OUT, C_IN, F1, ... Ff]`
-            ///
-            /// Output `[N, C_OUT, R1, ... Rf]`
-            ///
-            Convolution(const Output<Node>& data_batch, const Output<Node>& filters);
-
-            void validate_and_infer_types() override;
-
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-            void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
-
-            /// \return The window movement strides.
-            const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
-            void set_window_movement_strides(const Strides& window_movement_strides)
+            class Convolution : public Op
             {
-                m_window_movement_strides = window_movement_strides;
-            }
-            /// \return The window dilation strides.
-            const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
-            void set_window_dilation_strides(const Strides& window_dilation_strides)
-            {
-                m_window_dilation_strides = window_dilation_strides;
-            }
-            /// \return The padding-below sizes (possibly negative).
-            const CoordinateDiff& get_padding_below() const { return m_padding_below; }
-            void set_padding_below(const CoordinateDiff& padding_below)
-            {
-                m_padding_below = padding_below;
-            }
-            /// \return The padding-above sizes (possibly negative).
-            const CoordinateDiff& get_padding_above() const { return m_padding_above; }
-            void set_adding_above(const CoordinateDiff& padding_above)
-            {
-                m_padding_above = padding_above;
-            }
-            /// \return The input data dilation strides.
-            const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
-            void set_data_dilation_strides(const Strides& data_dilation_strides)
-            {
-                m_data_dilation_strides = data_dilation_strides;
-            }
-            /// \return The pad type for convolution.
-            const PadType& get_pad_type() const { return m_pad_type; }
-            void set_pad_type(const PadType& pad_type) { m_pad_type = pad_type; }
-            /// \return The default value for Convolution.
-            virtual std::shared_ptr<Node> get_default_value() const override;
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"Convolution", 1};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a batched convolution operation.
+                Convolution() = default;
+                /// \brief Constructs a batched convolution operation.
+                ///
+                /// \param data_batch The node producing the input data batch tensor.<br>
+                /// `[N, C_IN, D1, ... Df]`
+                /// \param filters The node producing the filters tensor.<br>
+                /// `[C_OUT, C_IN, F1, ... Ff]`
+                /// \param strides The strides.<br>
+                /// `[f]`
+                /// \param dilations The dilations.<br>
+                /// `[f]`
+                /// \param pads_begin The beginning of padding shape.<br>
+                /// `[f]`
+                /// \param pads_end The end of padding shape.<br>
+                /// `[f]`
+                /// \param auto_pad The pad type for automatically computing padding sizes.<br>
+                /// `[f]`
+                ///
+                /// Output `[N, C_OUT, R1, ... Rf]`
+                ///
+                Convolution(const Output<Node>& data_batch,
+                            const Output<Node>& filters,
+                            const Strides& strides,
+                            const CoordinateDiff& pads_begin,
+                            const CoordinateDiff& pads_end,
+                            const Strides& dilations,
+                            const PadType& auto_pad = PadType::EXPLICIT);
 
-        protected:
-            Strides m_window_movement_strides;
-            Strides m_window_dilation_strides;
-            CoordinateDiff m_padding_below;
-            CoordinateDiff m_padding_above;
-            Strides m_data_dilation_strides;
-            PadType m_pad_type;
-        };
+                size_t get_version() const override { return 1; }
+                void validate_and_infer_types() override;
 
-        /// \brief Data batch backprop for batched convolution operation.
-        class ConvolutionBackpropData : public Op
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+                void generate_adjoints(autodiff::Adjoints& adjoints,
+                                       const NodeVector& deltas) override;
+
+                /// \return The strides.
+                const Strides& get_strides() const { return m_strides; }
+                void set_strides(const Strides& strides) { m_strides = strides; }
+                /// \return The dilations.
+                const Strides& get_dilations() const { return m_dilations; }
+                void set_dilations(const Strides& dilations) { m_dilations = dilations; }
+                /// \return The padding-below sizes (possibly negative).
+                const CoordinateDiff& get_pads_begin() const { return m_pads_begin; }
+                void set_pads_begin(const CoordinateDiff& pads_begin) { m_pads_begin = pads_begin; }
+                /// \return The padding-above sizes (possibly negative).
+                const CoordinateDiff& get_pads_end() const { return m_pads_end; }
+                void set_adding_above(const CoordinateDiff& pads_end) { m_pads_end = pads_end; }
+                /// \return The pad type for convolution.
+                const PadType& get_auto_pad() const { return m_auto_pad; }
+                void set_auto_pad(const PadType& auto_pad) { m_auto_pad = auto_pad; }
+                /// \return The default value for Convolution.
+                virtual std::shared_ptr<Node> get_default_value() const override;
+
+            protected:
+                Strides m_strides;
+                Strides m_dilations;
+                CoordinateDiff m_pads_begin;
+                CoordinateDiff m_pads_end;
+                PadType m_auto_pad;
+            };
+
+            /// \brief Data batch backprop for batched convolution operation.
+            class ConvolutionBackpropData : public Op
+            {
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"ConvolutionBackpropData", 1};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a batched-convolution data batch-backprop operation.
+                ConvolutionBackpropData() = default;
+                /// \brief Constructs a batched-convolution data batch-backprop operation.
+                ///
+                /// \param data_batch_shape The shape of the data batch from forward-prop.
+                /// \param filters The node producing the filters from forward-prop.
+                /// \param output_delta The node producing output delta.
+                /// \param strides The strides from forward-prop.
+                /// \param dilations The dilations from forward-prop.
+                /// \param pads_begin The padding-below sizes from forward-prop.
+                /// \param pads_end The padding-above sizes from forward-prop.
+                ConvolutionBackpropData(const Shape& data_batch_shape,
+                                        const Output<Node>& filters,
+                                        const Output<Node>& output_delta,
+                                        const Strides& strides,
+                                        const Strides& dilations,
+                                        const CoordinateDiff& pads_begin,
+                                        const CoordinateDiff& pads_end);
+
+                size_t get_version() const override { return 1; }
+                void validate_and_infer_types() override;
+
+                void generate_adjoints(autodiff::Adjoints& adjoints,
+                                       const NodeVector& deltas) override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+                /// \return The data batch shape.
+                const Shape& get_data_batch_shape() const { return m_data_batch_shape; }
+                void set_data_batch_shape(const Shape& data_batch_shape)
+                {
+                    m_data_batch_shape = data_batch_shape;
+                }
+                /// \return The strides from the forward prop.
+                const Strides& get_strides() const { return m_strides; }
+                void set_strides(const Strides& strides) { m_strides = strides; }
+                /// \return The dilations from the forward prop.
+                const Strides& get_dilations() const { return m_dilations; }
+                void set_dilations(const Strides& dilations) { m_dilations = dilations; }
+                /// \return The padding-below sizes (possibly negative) from the forward prop.
+                const CoordinateDiff& get_pads_begin() const { return m_pads_begin; }
+                void set_pads_begin(const CoordinateDiff& pads_begin) { m_pads_begin = pads_begin; }
+                /// \return The padding-above sizes (possibly negative) from the forward prop.
+                const CoordinateDiff& get_pads_end() const { return m_pads_end; }
+                void set_pads_end(const CoordinateDiff& pads_end) { m_pads_end = pads_end; }
+                // Compute the pad_above values to be used if in a convolution
+                CoordinateDiff compute_backward_delta_out_pad_above() const;
+                CoordinateDiff compute_backward_delta_out_pad_below() const;
+
+            protected:
+                Shape m_data_batch_shape;
+                Strides m_strides;
+                Strides m_dilations;
+                CoordinateDiff m_pads_begin;
+                CoordinateDiff m_pads_end;
+            };
+
+            /// \brief Filters backprop for batched convolution operation.
+            class ConvolutionBackpropFilters : public Op
+            {
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"ConvolutionBackpropFilters", 1};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a batched-convolution filter-backprop operation.
+                ConvolutionBackpropFilters() = default;
+                /// \brief Constructs a batched-convolution filter-backprop operation.
+                ///
+                /// \param data_batch The tensor producing the data batch from forward-prop.
+                /// \param filters_shape The shape of the filters from forward-prop.
+                /// \param output_delta The node producing output delta.
+                /// \param strides The strides from forward-prop.
+                /// \param dilations The dilations from forward-prop.
+                /// \param pads_begin The padding-below sizes from forward-prop.
+                /// \param pads_end The padding-above sizes from forward-prop.
+                ConvolutionBackpropFilters(const Output<Node>& data_batch,
+                                           const Shape& filters_shape,
+                                           const Output<Node>& output_delta,
+                                           const Strides& strides,
+                                           const Strides& dilations,
+                                           const CoordinateDiff& pads_begin,
+                                           const CoordinateDiff& pads_end);
+
+                size_t get_version() const override { return 1; }
+                void validate_and_infer_types() override;
+
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+                /// \return The filters tensor shape.
+                const Shape& get_filters_shape() const { return m_filters_shape; }
+                /// \return The strides from the forward prop.
+                const Strides& get_strides() const { return m_strides; }
+                void set_strides(const Strides& strides) { m_strides = strides; }
+                /// \return The dilations from the forward prop.
+                const Strides& get_dilations() const { return m_dilations; }
+                void set_dilations(const Strides& dilations) { m_dilations = dilations; }
+                /// \return The padding-below sizes (possibly negative) from the forward prop.
+                const CoordinateDiff& get_pads_begin() const { return m_pads_begin; }
+                void set_pads_begin(const CoordinateDiff& pads_begin) { m_pads_begin = pads_begin; }
+                /// \return The padding-above sizes (possibly negative) from the forward prop.
+                const CoordinateDiff& get_pads_end() const { return m_pads_end; }
+                void set_pads_end(const CoordinateDiff& pads_end) { m_pads_end = pads_end; }
+                // Compute the pad_above value to be used if in a convolution
+                CoordinateDiff compute_backward_in_pad_above() const;
+
+            protected:
+                Shape m_filters_shape;
+                Strides m_strides;
+                Strides m_dilations;
+                CoordinateDiff m_pads_begin;
+                CoordinateDiff m_pads_end;
+            };
+
+        } // namespace v1
+
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"ConvolutionBackpropData", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a batched-convolution data batch-backprop operation.
-            ConvolutionBackpropData() = default;
-            /// \brief Constructs a batched-convolution data batch-backprop operation.
+            /// \brief Batched convolution operation, with optional window dilation and stride.
             ///
-            /// \param data_batch_shape The shape of the data batch from forward-prop.
-            /// \param filters The node producing the filters from forward-prop.
-            /// \param output_delta The node producing output delta.
-            /// \param window_movement_strides_forward The window movement strides from
-            ///                                        forward-prop.
-            /// \param window_dilation_strides_forward The window dilation strides from
-            ///                                        forward-prop.
-            /// \param padding_below_forward The padding-below sizes from forward-prop.
-            /// \param padding_above_forward The padding-above sizes from forward-prop.
-            /// \param data_dilation_strides_forward The data dilation strides from forward-prop.
-            ConvolutionBackpropData(const Shape& data_batch_shape,
-                                    const Output<Node>& filters,
-                                    const Output<Node>& output_delta,
-                                    const Strides& window_movement_strides_forward,
-                                    const Strides& window_dilation_strides_forward,
-                                    const CoordinateDiff& padding_below_forward,
-                                    const CoordinateDiff& padding_above_forward,
-                                    const Strides& data_dilation_strides_forward);
+            class Convolution : public Op
+            {
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"Convolution", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a batched convolution operation.
+                Convolution() = default;
+                /// \brief Constructs a batched convolution operation.
+                ///
+                /// \param data_batch The node producing the input data batch tensor.<br>
+                /// `[N, C_IN, D1, ... Df]`
+                /// \param filters The node producing the filters tensor.<br>
+                /// `[C_OUT, C_IN, F1, ... Ff]`
+                /// \param window_movement_strides The window movement strides.<br>
+                /// `[f]`
+                /// \param window_dilation_strides The window dilation strides.<br>
+                /// `[f]`
+                /// \param padding_below The padding-below sizes.<br>
+                /// `[f]`
+                /// \param padding_above The padding-above sizes.<br>
+                /// `[f]`
+                /// \param data_dilation_strides The data dilation strides.<br>
+                /// `[f]`
+                /// \param pad_type The pad type for automatically computing padding sizes.<br>
+                /// `[f]`
+                ///
+                /// Output `[N, C_OUT, R1, ... Rf]`
+                ///
+                Convolution(const Output<Node>& data_batch,
+                            const Output<Node>& filters,
+                            const Strides& window_movement_strides,
+                            const Strides& window_dilation_strides,
+                            const CoordinateDiff& padding_below,
+                            const CoordinateDiff& padding_above,
+                            const Strides& data_dilation_strides,
+                            const PadType& pad_type = PadType::EXPLICIT);
 
-            void validate_and_infer_types() override;
+                /// \brief Constructs a batched convolution operation with no data dilation (i.e.,
+                /// all
+                ///        data dilation strides are 1).
+                ///
+                /// \param data_batch The node producing the input data batch tensor.<br>
+                /// `[N, C_IN, D1, ... Df]`
+                /// \param filters The node producing the filters tensor.<br>
+                /// `[C_OUT, C_IN, F1, ... Ff]`
+                /// \param window_movement_strides The window movement strides.<br>
+                /// `[f]`
+                /// \param window_dilation_strides The window dilation strides.<br>
+                /// `[f]`
+                /// \param padding_below The padding-below sizes.<br>
+                /// `[f]`
+                /// \param padding_above The padding-above sizes.<br>
+                /// `[f]`
+                ///
+                /// Output `[N, C_OUT, R1, ... Rf]`
+                ///
+                Convolution(const Output<Node>& data_batch,
+                            const Output<Node>& filters,
+                            const Strides& window_movement_strides,
+                            const Strides& window_dilation_strides,
+                            const CoordinateDiff& padding_below,
+                            const CoordinateDiff& padding_above);
 
-            void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                /// \brief Constructs a batched convolution operation with no padding or data
+                /// dilation
+                ///        (i.e., padding above and below are 0 everywhere, and all data dilation
+                ///        strides are 1).
+                ///
+                /// \param data_batch The node producing the input data batch tensor.<br>
+                /// `[N, C_IN, D1, ... Df]`
+                /// \param filters The node producing the filters tensor.<br>
+                /// `[C_OUT, C_IN, F1, ... Ff]`
+                /// \param window_movement_strides The window movement strides.<br>
+                /// `[f]`
+                /// \param window_dilation_strides The window dilation strides.<br>
+                /// `[f]`
+                ///
+                /// Output `[N, C_OUT, R1, ... Rf]`
+                ///
+                Convolution(const Output<Node>& data_batch,
+                            const Output<Node>& filters,
+                            const Strides& window_movement_strides,
+                            const Strides& window_dilation_strides);
 
-            /// \return The data batch shape.
-            const Shape& get_data_batch_shape() const { return m_data_batch_shape; }
-            void set_data_batch_shape(const Shape& data_batch_shape)
-            {
-                m_data_batch_shape = data_batch_shape;
-            }
-            /// \return The window movement strides from the forward prop.
-            const Strides& get_window_movement_strides_forward() const
-            {
-                return m_window_movement_strides_forward;
-            }
-            void set_window_movement_strides_forward(const Strides& window_movement_strides_forward)
-            {
-                m_window_movement_strides_forward = window_movement_strides_forward;
-            }
-            /// \return The window dilation strides from the forward prop.
-            const Strides& get_window_dilation_strides_forward() const
-            {
-                return m_window_dilation_strides_forward;
-            }
-            void set_window_dilation_strides_forward(const Strides& window_dilation_strides_forward)
-            {
-                m_window_dilation_strides_forward = window_dilation_strides_forward;
-            }
-            /// \return The padding-below sizes (possibly negative) from the forward prop.
-            const CoordinateDiff& get_padding_below_forward() const
-            {
-                return m_padding_below_forward;
-            }
-            void set_padding_below_forward(const CoordinateDiff& padding_below_forward)
-            {
-                m_padding_below_forward = padding_below_forward;
-            }
-            /// \return The padding-above sizes (possibly negative) from the forward prop.
-            const CoordinateDiff& get_padding_above_forward() const
-            {
-                return m_padding_above_forward;
-            }
-            void set_padding_above_forward(const CoordinateDiff& padding_above_forward)
-            {
-                m_padding_above_forward = padding_above_forward;
-            }
-            /// \return The input data dilation strides from the forward prop.
-            const Strides& get_data_dilation_strides_forward() const
-            {
-                return m_data_dilation_strides_forward;
-            }
-            void set_data_dilation_strides_forward(const Strides& data_dilation_strides_forward)
-            {
-                m_data_dilation_strides_forward = data_dilation_strides_forward;
-            }
+                /// \brief Constructs a batched convolution operation with no window dilation,
+                /// padding,
+                ///        or data dilation (i.e., padding above and below are 0 everywhere, and all
+                ///        window/data dilation strides are 1).
+                ///
+                /// \param data_batch The node producing the input data batch tensor.<br>
+                /// `[N, C_IN, D1, ... Df]`
+                /// \param filters The node producing the filters tensor.<br>
+                /// `[C_OUT, C_IN, F1, ... Ff]`
+                /// \param window_movement_strides The window movement strides.<br>
+                /// `[f]`
+                ///
+                /// Output `[N, C_OUT, R1, ... Rf]`
+                ///
+                Convolution(const Output<Node>& data_batch,
+                            const Output<Node>& filters,
+                            const Strides& window_movement_strides);
 
-            // Compute the pad_above values to be used if in a convolution
-            CoordinateDiff compute_backward_delta_out_pad_above() const;
-            CoordinateDiff compute_backward_delta_out_pad_below() const;
+                /// \brief Constructs a batched convolution operation with no window dilation or
+                ///        movement stride (i.e., padding above and below are 0 everywhere, and all
+                ///        window/data dilation strides and window movement strides are 1).
+                ///
+                /// \param data_batch The node producing the input data batch tensor.<br>
+                /// `[N, C_IN, D1, ... Df]`
+                /// \param filters The node producing the filters tensor.<br>
+                /// `[C_OUT, C_IN, F1, ... Ff]`
+                ///
+                /// Output `[N, C_OUT, R1, ... Rf]`
+                ///
+                Convolution(const Output<Node>& data_batch, const Output<Node>& filters);
 
-        protected:
-            Shape m_data_batch_shape;
-            Strides m_window_movement_strides_forward;
-            Strides m_window_dilation_strides_forward;
-            CoordinateDiff m_padding_below_forward;
-            CoordinateDiff m_padding_above_forward;
-            Strides m_data_dilation_strides_forward;
-        };
+                void validate_and_infer_types() override;
 
-        /// \brief Filters backprop for batched convolution operation.
-        class ConvolutionBackpropFilters : public Op
-        {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"ConvolutionBackpropFilters", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a batched-convolution filter-backprop operation.
-            ConvolutionBackpropFilters() = default;
-            /// \brief Constructs a batched-convolution filter-backprop operation.
-            ///
-            /// \param data_batch The tensor producing the data batch from forward-prop.
-            /// \param filters_shape The shape of the filters from forward-prop.
-            /// \param output_delta The node producing output delta.
-            /// \param window_movement_strides_forward The window movement strides from
-            ///                                        forward-prop.
-            /// \param window_dilation_strides_forward The window dilation strides from
-            ///                                        forward-prop.
-            /// \param padding_below_forward The padding-below sizes from forward-prop.
-            /// \param padding_above_forward The padding-above sizes from forward-prop.
-            /// \param data_dilation_strides_forward The data dilation strides from forward-prop.
-            ConvolutionBackpropFilters(const Output<Node>& data_batch,
-                                       const Shape& filters_shape,
-                                       const Output<Node>& output_delta,
-                                       const Strides& window_movement_strides_forward,
-                                       const Strides& window_dilation_strides_forward,
-                                       const CoordinateDiff& padding_below_forward,
-                                       const CoordinateDiff& padding_above_forward,
-                                       const Strides& data_dilation_strides_forward);
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+                void generate_adjoints(autodiff::Adjoints& adjoints,
+                                       const NodeVector& deltas) override;
 
-            void validate_and_infer_types() override;
+                /// \return The window movement strides.
+                const Strides& get_window_movement_strides() const
+                {
+                    return m_window_movement_strides;
+                }
+                void set_window_movement_strides(const Strides& window_movement_strides)
+                {
+                    m_window_movement_strides = window_movement_strides;
+                }
+                /// \return The window dilation strides.
+                const Strides& get_window_dilation_strides() const
+                {
+                    return m_window_dilation_strides;
+                }
+                void set_window_dilation_strides(const Strides& window_dilation_strides)
+                {
+                    m_window_dilation_strides = window_dilation_strides;
+                }
+                /// \return The padding-below sizes (possibly negative).
+                const CoordinateDiff& get_padding_below() const { return m_padding_below; }
+                void set_padding_below(const CoordinateDiff& padding_below)
+                {
+                    m_padding_below = padding_below;
+                }
+                /// \return The padding-above sizes (possibly negative).
+                const CoordinateDiff& get_padding_above() const { return m_padding_above; }
+                void set_adding_above(const CoordinateDiff& padding_above)
+                {
+                    m_padding_above = padding_above;
+                }
+                /// \return The input data dilation strides.
+                const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
+                void set_data_dilation_strides(const Strides& data_dilation_strides)
+                {
+                    m_data_dilation_strides = data_dilation_strides;
+                }
+                /// \return The pad type for convolution.
+                const PadType& get_pad_type() const { return m_pad_type; }
+                void set_pad_type(const PadType& pad_type) { m_pad_type = pad_type; }
+                /// \return The default value for Convolution.
+                virtual std::shared_ptr<Node> get_default_value() const override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+            protected:
+                Strides m_window_movement_strides;
+                Strides m_window_dilation_strides;
+                CoordinateDiff m_padding_below;
+                CoordinateDiff m_padding_above;
+                Strides m_data_dilation_strides;
+                PadType m_pad_type;
+            };
 
-            /// \return The filters tensor shape.
-            const Shape& get_filters_shape() const { return m_filters_shape; }
-            /// \return The window movement strides from the forward prop.
-            const Strides& get_window_movement_strides_forward() const
+            /// \brief Data batch backprop for batched convolution operation.
+            class ConvolutionBackpropData : public Op
             {
-                return m_window_movement_strides_forward;
-            }
-            void set_window_movement_strides_forward(const Strides& window_movement_strides_forward)
-            {
-                m_window_movement_strides_forward = window_movement_strides_forward;
-            }
-            /// \return The window dilation strides from the forward prop.
-            const Strides& get_window_dilation_strides_forward() const
-            {
-                return m_window_dilation_strides_forward;
-            }
-            void set_window_dilation_strides_forward(const Strides& window_dilation_strides_forward)
-            {
-                m_window_dilation_strides_forward = window_dilation_strides_forward;
-            }
-            /// \return The padding-below sizes (possibly negative) from the forward prop.
-            const CoordinateDiff& get_padding_below_forward() const
-            {
-                return m_padding_below_forward;
-            }
-            void set_padding_below_forward(const CoordinateDiff& padding_below_forward)
-            {
-                m_padding_below_forward = padding_below_forward;
-            }
-            /// \return The padding-above sizes (possibly negative) from the forward prop.
-            const CoordinateDiff& get_padding_above_forward() const
-            {
-                return m_padding_above_forward;
-            }
-            void set_padding_above_forward(const CoordinateDiff& padding_above_forward)
-            {
-                m_padding_above_forward = padding_above_forward;
-            }
-            /// \return The data dilation strides from the forward prop.
-            const Strides& get_data_dilation_strides_forward() const
-            {
-                return m_data_dilation_strides_forward;
-            }
-            void set_data_dilation_strides_forward(const Strides& data_dilation_strides_forward)
-            {
-                m_data_dilation_strides_forward = data_dilation_strides_forward;
-            }
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"ConvolutionBackpropData", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a batched-convolution data batch-backprop operation.
+                ConvolutionBackpropData() = default;
+                /// \brief Constructs a batched-convolution data batch-backprop operation.
+                ///
+                /// \param data_batch_shape The shape of the data batch from forward-prop.
+                /// \param filters The node producing the filters from forward-prop.
+                /// \param output_delta The node producing output delta.
+                /// \param window_movement_strides_forward The window movement strides from
+                ///                                        forward-prop.
+                /// \param window_dilation_strides_forward The window dilation strides from
+                ///                                        forward-prop.
+                /// \param padding_below_forward The padding-below sizes from forward-prop.
+                /// \param padding_above_forward The padding-above sizes from forward-prop.
+                /// \param data_dilation_strides_forward The data dilation strides from
+                /// forward-prop.
+                ConvolutionBackpropData(const Shape& data_batch_shape,
+                                        const Output<Node>& filters,
+                                        const Output<Node>& output_delta,
+                                        const Strides& window_movement_strides_forward,
+                                        const Strides& window_dilation_strides_forward,
+                                        const CoordinateDiff& padding_below_forward,
+                                        const CoordinateDiff& padding_above_forward,
+                                        const Strides& data_dilation_strides_forward);
 
-            // Compute the pad_above value to be used if in a convolution
-            CoordinateDiff compute_backward_in_pad_above() const;
+                void validate_and_infer_types() override;
 
-        protected:
-            Shape m_filters_shape;
-            Strides m_window_movement_strides_forward;
-            Strides m_window_dilation_strides_forward;
-            CoordinateDiff m_padding_below_forward;
-            CoordinateDiff m_padding_above_forward;
-            Strides m_data_dilation_strides_forward;
-        };
+                void generate_adjoints(autodiff::Adjoints& adjoints,
+                                       const NodeVector& deltas) override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+                /// \return The data batch shape.
+                const Shape& get_data_batch_shape() const { return m_data_batch_shape; }
+                void set_data_batch_shape(const Shape& data_batch_shape)
+                {
+                    m_data_batch_shape = data_batch_shape;
+                }
+                /// \return The window movement strides from the forward prop.
+                const Strides& get_window_movement_strides_forward() const
+                {
+                    return m_window_movement_strides_forward;
+                }
+                void set_window_movement_strides_forward(
+                    const Strides& window_movement_strides_forward)
+                {
+                    m_window_movement_strides_forward = window_movement_strides_forward;
+                }
+                /// \return The window dilation strides from the forward prop.
+                const Strides& get_window_dilation_strides_forward() const
+                {
+                    return m_window_dilation_strides_forward;
+                }
+                void set_window_dilation_strides_forward(
+                    const Strides& window_dilation_strides_forward)
+                {
+                    m_window_dilation_strides_forward = window_dilation_strides_forward;
+                }
+                /// \return The padding-below sizes (possibly negative) from the forward prop.
+                const CoordinateDiff& get_padding_below_forward() const
+                {
+                    return m_padding_below_forward;
+                }
+                void set_padding_below_forward(const CoordinateDiff& padding_below_forward)
+                {
+                    m_padding_below_forward = padding_below_forward;
+                }
+                /// \return The padding-above sizes (possibly negative) from the forward prop.
+                const CoordinateDiff& get_padding_above_forward() const
+                {
+                    return m_padding_above_forward;
+                }
+                void set_padding_above_forward(const CoordinateDiff& padding_above_forward)
+                {
+                    m_padding_above_forward = padding_above_forward;
+                }
+                /// \return The input data dilation strides from the forward prop.
+                const Strides& get_data_dilation_strides_forward() const
+                {
+                    return m_data_dilation_strides_forward;
+                }
+                void set_data_dilation_strides_forward(const Strides& data_dilation_strides_forward)
+                {
+                    m_data_dilation_strides_forward = data_dilation_strides_forward;
+                }
+
+                // Compute the pad_above values to be used if in a convolution
+                CoordinateDiff compute_backward_delta_out_pad_above() const;
+                CoordinateDiff compute_backward_delta_out_pad_below() const;
+
+            protected:
+                Shape m_data_batch_shape;
+                Strides m_window_movement_strides_forward;
+                Strides m_window_dilation_strides_forward;
+                CoordinateDiff m_padding_below_forward;
+                CoordinateDiff m_padding_above_forward;
+                Strides m_data_dilation_strides_forward;
+            };
+
+            /// \brief Filters backprop for batched convolution operation.
+            class ConvolutionBackpropFilters : public Op
+            {
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"ConvolutionBackpropFilters", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a batched-convolution filter-backprop operation.
+                ConvolutionBackpropFilters() = default;
+                /// \brief Constructs a batched-convolution filter-backprop operation.
+                ///
+                /// \param data_batch The tensor producing the data batch from forward-prop.
+                /// \param filters_shape The shape of the filters from forward-prop.
+                /// \param output_delta The node producing output delta.
+                /// \param window_movement_strides_forward The window movement strides from
+                /// forward-prop. \param window_dilation_strides_forward The window dilation strides
+                /// from forward-prop. \param padding_below_forward The padding-below sizes from
+                /// forward-prop. \param padding_above_forward The padding-above sizes from
+                /// forward-prop. \param data_dilation_strides_forward The data dilation strides
+                /// from forward-prop.
+                ConvolutionBackpropFilters(const Output<Node>& data_batch,
+                                           const Shape& filters_shape,
+                                           const Output<Node>& output_delta,
+                                           const Strides& window_movement_strides_forward,
+                                           const Strides& window_dilation_strides_forward,
+                                           const CoordinateDiff& padding_below_forward,
+                                           const CoordinateDiff& padding_above_forward,
+                                           const Strides& data_dilation_strides_forward);
+
+                void validate_and_infer_types() override;
+
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+                /// \return The filters tensor shape.
+                const Shape& get_filters_shape() const { return m_filters_shape; }
+                /// \return The window movement strides from the forward prop.
+                const Strides& get_window_movement_strides_forward() const
+                {
+                    return m_window_movement_strides_forward;
+                }
+                void set_window_movement_strides_forward(
+                    const Strides& window_movement_strides_forward)
+                {
+                    m_window_movement_strides_forward = window_movement_strides_forward;
+                }
+                /// \return The window dilation strides from the forward prop.
+                const Strides& get_window_dilation_strides_forward() const
+                {
+                    return m_window_dilation_strides_forward;
+                }
+                void set_window_dilation_strides_forward(
+                    const Strides& window_dilation_strides_forward)
+                {
+                    m_window_dilation_strides_forward = window_dilation_strides_forward;
+                }
+                /// \return The padding-below sizes (possibly negative) from the forward prop.
+                const CoordinateDiff& get_padding_below_forward() const
+                {
+                    return m_padding_below_forward;
+                }
+                void set_padding_below_forward(const CoordinateDiff& padding_below_forward)
+                {
+                    m_padding_below_forward = padding_below_forward;
+                }
+                /// \return The padding-above sizes (possibly negative) from the forward prop.
+                const CoordinateDiff& get_padding_above_forward() const
+                {
+                    return m_padding_above_forward;
+                }
+                void set_padding_above_forward(const CoordinateDiff& padding_above_forward)
+                {
+                    m_padding_above_forward = padding_above_forward;
+                }
+                /// \return The data dilation strides from the forward prop.
+                const Strides& get_data_dilation_strides_forward() const
+                {
+                    return m_data_dilation_strides_forward;
+                }
+                void set_data_dilation_strides_forward(const Strides& data_dilation_strides_forward)
+                {
+                    m_data_dilation_strides_forward = data_dilation_strides_forward;
+                }
+
+                // Compute the pad_above value to be used if in a convolution
+                CoordinateDiff compute_backward_in_pad_above() const;
+
+            protected:
+                Shape m_filters_shape;
+                Strides m_window_movement_strides_forward;
+                Strides m_window_dilation_strides_forward;
+                CoordinateDiff m_padding_below_forward;
+                CoordinateDiff m_padding_above_forward;
+                Strides m_data_dilation_strides_forward;
+            };
+
+        } // namespace v0
 
         namespace util
         {
             // This is a legacy function, retained because the CPU backend uses it for now.
-            // TODO: Update CPU backend to use the new stuff in validation_util.hpp, and remove
-            // this function.
+            // TODO: Update CPU backend to use the new stuff in validation_util.hpp, and remove this
+            // function.
             Shape infer_convolution_output_shape(const Node* node,
                                                  const Shape& data_batch_shape,
                                                  const Shape& filters_shape,
@@ -405,6 +620,10 @@ namespace ngraph
                                                  size_t output_channel_axis_filters,
                                                  size_t batch_axis_result,
                                                  size_t output_channel_axis_result);
-        }
-    }
-}
+        } // namespace util
+
+        using v0::Convolution;
+        using v0::ConvolutionBackpropData;
+        using v0::ConvolutionBackpropFilters;
+    } // namespace op
+} // namespace ngraph

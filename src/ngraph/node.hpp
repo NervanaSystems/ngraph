@@ -39,6 +39,7 @@
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/placement.hpp"
 #include "ngraph/strides.hpp"
+#include "ngraph/type.hpp"
 
 namespace ngraph
 {
@@ -81,19 +82,13 @@ namespace ngraph
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
 
-    struct NodeTypeInfo
-    {
-        const char* name;
-        uint64_t version;
-    };
+    using NodeTypeInfo = DiscreteTypeInfo;
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// or a (possibly empty) tuple of values.
     class Node : public std::enable_shared_from_this<Node>
     {
-        static constexpr NodeTypeInfo type_info{"Node", 0};
-
         // For access to generate_adjoints.
         friend class autodiff::Adjoints;
 
@@ -150,14 +145,11 @@ namespace ngraph
         void safe_delete(NodeVector& nodes, bool recurse);
 
     public:
+        NGRAPH_API
+        static constexpr NodeTypeInfo type_info{"Node", 0};
+
         virtual ~Node();
 
-        /// Tests if a node is of op type T
-        template <typename NodeType>
-        bool is_type() const
-        {
-            return &get_type_info() == &NodeType::type_info;
-        }
         virtual bool is_unary_elementwise_arithmetic() const { return false; }
         virtual bool is_binary_elementwise_arithmetic() const { return false; }
         virtual bool is_binary_elementwise_comparison() const { return false; }
@@ -180,7 +172,7 @@ namespace ngraph
         virtual const char* get_type_name() const
         {
             auto& info = get_type_info();
-            if (is_type<Node>())
+            if (is_type<Node>(this))
             {
                 // Transitional definition
                 return description().c_str();
@@ -259,7 +251,7 @@ namespace ngraph
                              const element::Type& element_type,
                              const PartialShape& pshape);
 
-        bool is_parameter() const;
+        virtual bool is_parameter() const { return false; }
         virtual bool is_output() const;
         virtual bool is_constant() const;
         virtual bool is_null() const { return false; }
@@ -419,7 +411,31 @@ namespace ngraph
 
         const std::unordered_set<std::string>& get_provenance_tags() const;
         void add_provenance_tag(const std::string& tag);
+        template <typename T>
+        void add_provenance_tags(T tag_set)
+        {
+            for (auto tag : tag_set)
+            {
+                add_provenance_tag(tag);
+            }
+        }
+        /// \brief Adds tag_set to this node and all intermediate nodes above base
+        void add_provenance_tags_above(const OutputVector& base,
+                                       const std::unordered_set<std::string>& tag_set);
         void remove_provenance_tag(const std::string& tag);
+        /// \brief Add node to additional nodes that receive tags
+        void add_provenance_group_member(const std::shared_ptr<Node>& node);
+        /// \brief Remove node to additional nodes that receive tags
+        void remove_provenance_group_member(const std::shared_ptr<Node>& node);
+        /// \brief Replace current_node with replacement_node and transfer tags
+        void replace_provenance_group_member(const std::shared_ptr<Node>& current_node,
+                                             const std::shared_ptr<Node>& replacement_node);
+        /// \return Provenance group nodes
+        const std::set<std::shared_ptr<Node>>& get_provenance_group_members() const;
+
+        /// \brief Add all nodes between this node and nodes in base as additional nodes to receive
+        /// provenance tags.
+        std::shared_ptr<Node> add_provenance_group_members_above(const OutputVector& base);
 
         // to be used when nodes are replaced
         void merge_provenance_tags_from(const std::shared_ptr<const Node>& source);
@@ -482,42 +498,13 @@ namespace ngraph
         NGRAPH_API
         static std::atomic<size_t> m_next_instance_id;
         std::unordered_set<std::string> m_provenance_tags;
+        std::set<std::shared_ptr<Node>> m_provenance_group;
         std::deque<descriptor::Input> m_inputs;
         std::deque<descriptor::Output> m_outputs;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
         size_t m_placement_index = placement_invalid;
     };
-
-    /// Casts a Node* to a NodeType* if it is of type NodeType, nullptr otherwise
-    template <typename NodeType>
-    NodeType* as_type(Node* node)
-    {
-        return node->template is_type<NodeType>() ? static_cast<NodeType*>(node) : nullptr;
-    }
-
-    /// Casts a Node* to a NodePtr* if it is of type NodePtr, nullptr otherwise
-    template <typename NodeType>
-    const NodeType* as_type(const Node* node)
-    {
-        return node->template is_type<NodeType>() ? static_cast<const NodeType*>(node) : nullptr;
-    }
-
-    /// Casts a Node to a shared_ptr<NodePtr> if it is of type NodePtr, nullptr otherwise
-    template <typename NodeType>
-    std::shared_ptr<NodeType> as_type_ptr(std::shared_ptr<Node> node_ptr)
-    {
-        return node_ptr->template is_type<NodeType>() ? std::static_pointer_cast<NodeType>(node_ptr)
-                                                      : std::shared_ptr<NodeType>();
-    }
-
-    /// Casts a Node to a shared_ptr<NodePtr> if it is of type NodePtr, nullptr otherwise
-    template <typename NodeType>
-    std::shared_ptr<const NodeType> as_type_ptr(std::shared_ptr<const Node> node_ptr)
-    {
-        return node_ptr->template is_type<NodeType>() ? std::static_pointer_cast<NodeType>(node_ptr)
-                                                      : std::shared_ptr<NodeType>();
-    }
 
     /// \brief A handle for one of a node's inputs.
     template <typename NodeType>
@@ -876,8 +863,8 @@ namespace ngraph
         bool m_is_short;
     };
 }
-#define NODE_VALIDATION_CHECK(node, cond, ...)                                                     \
-    NGRAPH_CHECK_HELPER(::ngraph::NodeValidationFailure, (node), (cond), ##__VA_ARGS__)
+#define NODE_VALIDATION_CHECK(node, ...)                                                           \
+    NGRAPH_CHECK_HELPER(::ngraph::NodeValidationFailure, (node), __VA_ARGS__)
 
 namespace ngraph
 {

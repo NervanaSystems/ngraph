@@ -28,6 +28,7 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "onehot.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -51,16 +52,15 @@ namespace ngraph
                         std::make_shared<ngraph::op::Slice>(values, Coordinate{1}, Coordinate{2});
                     auto axis = node.get_attribute_value<std::int64_t>("axis", -1);
 
-                    if (axis < 0)
-                    {
-                        axis += indices_shape.size() + 1;
-                    }
+                    // Accepted range for axis is [-r-1, r] where r = rank(indices). Validate
+                    // against rank+1.
+                    std::size_t valid_axis = common::validate_axis(node,
+                                                                   axis,
+                                                                   indices_shape.size() + 1,
+                                                                   -indices_shape.size() - 1,
+                                                                   indices_shape.size());
 
-                    ASSERT_VALID_ARGUMENT(node, (axis >= 0) && (axis <= indices_shape.size()))
-                        << "invalid 'axis' attribute: "
-                        << node.get_attribute_value<std::int64_t>("axis", -1);
-
-                    auto constant_depth = std::dynamic_pointer_cast<ngraph::op::Constant>(depth);
+                    auto constant_depth = ngraph::as_type_ptr<ngraph::op::Constant>(depth);
 
                     ASSERT_VALID_ARGUMENT(node, constant_depth)
                         << "Only constant values for depth input are supported for the OneHot "
@@ -74,10 +74,11 @@ namespace ngraph
                     // axis = 1
                     // depth = 10
                     // output_shape = (2, 10, 2)
-                    output_shape.insert(std::next(std::begin(output_shape), axis), depth_value);
+                    output_shape.insert(std::next(std::begin(output_shape), valid_axis),
+                                        depth_value);
 
                     std::shared_ptr<ngraph::Node> one_hot = std::make_shared<ngraph::op::Convert>(
-                        std::make_shared<ngraph::op::OneHot>(indices, output_shape, axis),
+                        std::make_shared<ngraph::op::OneHot>(indices, output_shape, valid_axis),
                         values->get_element_type());
                     auto broadcasted_values =
                         ngraph::op::numpy_style_broadcast({one_hot, on_value, off_value});
