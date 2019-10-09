@@ -53,14 +53,6 @@ op::v0::Softmax::Softmax(const Output<Node>& arg, const AxisSet& axes)
                               input_shape,
                               ").");
     }
-    if (input_shape.is_static())
-    {
-        set_output_type(0, get_input_element_type(0), input_shape.to_shape());
-    }
-    else
-    {
-        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
-    }
 
     // empty axes == all axes
     if (m_axes.size() == 0)
@@ -69,6 +61,19 @@ op::v0::Softmax::Softmax(const Output<Node>& arg, const AxisSet& axes)
         {
             m_axes.insert(i);
         }
+    }
+}
+
+void op::v0::Softmax::validate_and_infer_types()
+{
+    const PartialShape& input_shape = get_input_partial_shape(0);
+    if (input_shape.is_static())
+    {
+        set_output_type(0, get_input_element_type(0), input_shape.to_shape());
+    }
+    else
+    {
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
     }
 }
 
@@ -128,7 +133,11 @@ op::v1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
                           ") is out of bounds (argument shape: ",
                           input_shape,
                           ").");
+}
 
+void op::v1::Softmax::validate_and_infer_types()
+{
+    const PartialShape& input_shape = get_input_partial_shape(0);
     if (input_shape.is_static())
         set_output_type(0, get_input_element_type(0), input_shape.to_shape());
     else
