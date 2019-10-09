@@ -24,10 +24,10 @@ config.name = 'nGraph MLIR Compiler'
 config.test_format = lit.formats.ShTest(not llvm_config.use_lit_shell)
 
 # test_source_root: The root path where tests are located.
-config.test_source_root = config.ngraph_mlir_test_dir
+config.test_source_root = config.ngraph_mlir_test_src_dir
 
 # test_exec_root: The root path where tests should be run.
-config.test_exec_root = config.ngraph_mlir_test_dir
+config.test_exec_root = config.ngraph_mlir_test_build_dir
 
 llvm_config.use_default_substitutions()
 

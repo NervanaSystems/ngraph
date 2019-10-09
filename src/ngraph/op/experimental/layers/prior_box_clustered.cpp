@@ -72,7 +72,7 @@ void op::PriorBoxClustered::validate_and_infer_types()
 
     set_input_is_relevant_to_shape(0);
 
-    if (auto const_shape = dynamic_pointer_cast<op::Constant>(get_argument(0)))
+    if (auto const_shape = as_type_ptr<op::Constant>(input_value(0).get_node_shared_ptr()))
     {
         NODE_VALIDATION_CHECK(this,
                               shape_size(const_shape->get_shape()) == 2,

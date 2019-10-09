@@ -23,6 +23,8 @@ set(SRC
     memory_manager.cpp
     pass/mlir_subgraph_extraction.cpp
     pass/mlir_subgraph_extraction.hpp
+    pass/memory_optimization.cpp
+    tools.cpp
 )
 
 add_library(mlir_backend SHARED ${SRC})

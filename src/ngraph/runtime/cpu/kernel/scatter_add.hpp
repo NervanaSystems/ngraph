@@ -21,6 +21,7 @@
 
 #include "ngraph/coordinate.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
+#include "ngraph/runtime/reference/scatter_add.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -42,7 +43,7 @@ namespace ngraph
                     {
                         partial_sum[j] = partial_sum[j + 1] * shape[j + 1];
                     }
-                    for (int j = 0; j < rank; j++)
+                    for (size_t j = 0; j < rank; j++)
                     {
                         indices[j] = index / partial_sum[j];
                         index = index % partial_sum[j];
@@ -71,13 +72,13 @@ namespace ngraph
                     Eigen::array<Eigen::Index, Rank2> updates_dims, updates_extents,
                         updates_offsets;
 
-                    for (int i = 0; i < Rank1; i++)
+                    for (size_t i = 0; i < Rank1; i++)
                     {
                         in_extents[i] = in_dims[i] = inputs_shape[i];
                         in_offsets[i] = 0;
                     }
                     in_extents[0] = 1;
-                    for (int i = 0; i < Rank2; i++)
+                    for (size_t i = 0; i < Rank2; i++)
                     {
                         updates_extents[i] = updates_dims[i] = updates_shape[i];
                         updates_offsets[i] = 0;
@@ -111,11 +112,11 @@ namespace ngraph
                     else
                     {
                         std::vector<int> leading_indices(indices_rank);
-                        for (int i = 0; i < shape_size(indices_shape); i++)
+                        for (size_t i = 0; i < shape_size(indices_shape); i++)
                         {
                             in_offsets[0] = indices_ptr[i];
                             get_leading_indices(indices_shape, i, leading_indices);
-                            for (int j = 0; j < indices_rank; j++)
+                            for (size_t j = 0; j < indices_rank; j++)
                             {
                                 updates_extents[j] = 1;
                                 updates_offsets[j] = leading_indices[j];
@@ -167,6 +168,46 @@ namespace ngraph
                                                                     indices_shape,
                                                                     updates_shape,
                                                                     arena);
+                }
+
+                template <typename ElementType>
+                void ref_scatter_add_i32(void* inputs,
+                                         void* indices,
+                                         void* updates,
+                                         void* output,
+                                         const Shape& inputs_shape,
+                                         const Shape& indices_shape,
+                                         const Shape& updates_shape,
+                                         const Shape& output_shape)
+                {
+                    reference::scatter_add<ElementType, int32_t>(static_cast<ElementType*>(inputs),
+                                                                 static_cast<int32_t*>(indices),
+                                                                 static_cast<ElementType*>(updates),
+                                                                 static_cast<ElementType*>(output),
+                                                                 inputs_shape,
+                                                                 indices_shape,
+                                                                 updates_shape,
+                                                                 output_shape);
+                }
+
+                template <typename ElementType>
+                void ref_scatter_add_i64(void* inputs,
+                                         void* indices,
+                                         void* updates,
+                                         void* output,
+                                         const Shape& inputs_shape,
+                                         const Shape& indices_shape,
+                                         const Shape& updates_shape,
+                                         const Shape& output_shape)
+                {
+                    reference::scatter_add<ElementType, int64_t>(static_cast<ElementType*>(inputs),
+                                                                 static_cast<int64_t*>(indices),
+                                                                 static_cast<ElementType*>(updates),
+                                                                 static_cast<ElementType*>(output),
+                                                                 inputs_shape,
+                                                                 indices_shape,
+                                                                 updates_shape,
+                                                                 output_shape);
                 }
             }
         }

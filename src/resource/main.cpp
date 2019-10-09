@@ -72,7 +72,7 @@ int main(int argc, char** argv)
     string output_path;
     string base_name;
 
-    for (size_t i = 1; i < argc; i++)
+    for (int64_t i = 1; i < argc; i++)
     {
         string arg = argv[i];
         if (arg == "--output")
