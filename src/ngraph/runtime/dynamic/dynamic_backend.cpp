@@ -26,6 +26,7 @@
 #include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/dyn_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/pass/shape_relevance.hpp"
 #include "ngraph/specialize_function.hpp"
 #include "ngraph/util.hpp"
@@ -174,6 +175,7 @@ bool runtime::dynamic::DynamicExecutable::call(
     }
 
     pass::Manager passes;
+    passes.register_pass<pass::Opset0Downgrade>();
     passes.register_pass<pass::ConstantFolding>();
     passes.register_pass<pass::DynElimination>();
     passes.set_per_pass_validation(false);
