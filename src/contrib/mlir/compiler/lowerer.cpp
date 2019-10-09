@@ -591,11 +591,8 @@ namespace
 
         {
             IndexHandle n, k;
-            LoopBuilder(&n, nLb, nUb, nStep)([&] {
-                LoopBuilder(&k, kLb, kUb, kStep)([&] {
-                    iRes(n, k) = zeroInit;
-                });
-            });
+            LoopBuilder(&n, nLb, nUb, nStep)(
+                [&] { LoopBuilder(&k, kLb, kUb, kStep)([&] { iRes(n, k) = zeroInit; }); });
         }
         LoopBuilder(&n, nLb, nUb, nStep)([&] {
             LoopBuilder(&m, mLb, mUb, mStep)([&] {

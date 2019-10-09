@@ -29,7 +29,6 @@ func @simple_gather(%arg0: !ng.tensor<16x!ng.i64>, %arg1: !ng.tensor<512x32xf32>
 // CHECK:       mulf
 // CHECK:       [[R:%.*]] = addf 
 // CHECK:       affine.store [[R]], [[RESULT]]{{\[}}[[K]], [[M]]{{\]}}
-
 func @simple_dot(%arg0: !ng.tensor<16x8xf32>, %arg1: !ng.tensor<8x32xf32>) -> !ng.tensor<16x32xf32> {
    %0 = "ng.dot"(%arg0, %arg1) : (!ng.tensor<16x8xf32>, !ng.tensor<8x32xf32>) -> !ng.tensor<16x32xf32>
   "ng.return"(%0) : (!ng.tensor<16x32xf32>) -> ()
