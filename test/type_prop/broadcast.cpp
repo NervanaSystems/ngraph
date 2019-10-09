@@ -199,12 +199,23 @@ TEST(type_prop, broadcast_partial_rank_static_dynamic_shape_mismatch_wrong_size)
     }
 }
 
-TEST(type_prop, broadcast_v1)
+TEST(type_prop, broadcast_v1_numpy)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{3, 1});
     auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
 
-    auto bc = make_shared<op::v1::Broadcast>(param, target_shape, op::AutoBroadcastType::NUMPY);
+    auto bc = make_shared<op::v1::Broadcast>(param, target_shape);
+    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_shape(), (Shape{2, 3, 6}));
+}
+
+TEST(type_prop, broadcast_v1_pdpd)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{3, 1});
+    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
+
+    auto bc = make_shared<op::v1::Broadcast>(
+        param, target_shape, op::AutoBroadcastSpec(op::AutoBroadcastType::PDPD, 1));
     ASSERT_EQ(bc->get_element_type(), element::f32);
     ASSERT_EQ(bc->get_shape(), (Shape{2, 3, 6}));
 }
