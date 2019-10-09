@@ -1,24 +1,23 @@
 .. frameworks/validated/list.rst: 
 
-#################################
-Validated workloads by framework
-#################################
+.. _validated:
 
-We validated performance [#f1]_ for the following TensorFlow\* and MXNet\* 
-workloads:
 
-* :ref:`tensorflow_valid`
-* :ref:`mxnet_valid`
-* :ref:`onnx_valid`
-* :ref:`testing_latency`
+Validated workloads
+###################
 
-.. _tensorflow_valid:
+We have validated performance [#f1]_ for the following workloads:
 
-TensorFlow 
-==========
+.. contents::
+   :local:
+
+.. _cpu_tensorflow:
+
+CPU Tensorflow
+==============
 
 .. csv-table::
-   :header: "TensorFlow Workload", "Genre of Deep Learning"
+   :header: "TensorFlow Workload", "Genre of Deep learning"
    :widths: 27, 53
    :escape: ~
 
@@ -28,12 +27,11 @@ TensorFlow
    Inception V4, Image recognition
    Inception-ResNetv2, Image recognition
    MobileNet v1, Image recognition
-   MobileNet v2, Image recognition
+   Faster RCNN, Object detection
    VGG16, Image recognition
    SSD-VGG16, Object detection
    SSD-MobileNetv1, Object detection
    R-FCN, Object detection
-   Faster RCNN, Object detection
    Yolo v2, Object detection
    Transformer-LT, Language translation
    Wide & Deep, Recommender system
@@ -44,40 +42,10 @@ TensorFlow
    A3C, Reinforcement learning
 
 
-.. _mxnet_valid:
+.. _cpu_onnx:
 
-MXNet
-=====
-
-.. csv-table::
-   :header: "MXNet Workload", "Genre of Deep Learning"
-   :widths: 27, 53
-   :escape: ~
-
-   Resnet50 v1, Image recognition
-   Resnet50 v2, Image recognition
-   DenseNet-121, Image recognition
-   InceptionV3, Image recognition
-   InceptionV4, Image recognition
-   Inception-ResNetv2, Image recognition
-   MobileNet v1, Image recognition
-   SqueezeNet v1 and v1.1, Image recognition
-   VGG16, Image recognition
-   Faster RCNN, Object detection
-   SSD-VGG16, Object detection
-   GNMT, Language translation
-   Transformer-LT, Language translation
-   Wide & Deep, Recommender system
-   WaveNet, Speech generation
-   DeepSpeech2, Speech recognition
-   DCGAN, Generative adversarial network
-   A3C, Reinforcement learning
-
-
-.. _onnx_valid:
-
-ONNX
-====
+CPU ONNX
+========
 
 Additionally, we validated the following workloads are functional through 
 `nGraph ONNX importer`_. ONNX models can be downloaded from the `ONNX Model Zoo`_.
@@ -87,15 +55,14 @@ Additionally, we validated the following workloads are functional through
    :widths: 27, 53
    :escape: ~
 
-   ResNet-50, Image recognition
-   ResNet-50-v2, Image recognition
    DenseNet-121, Image recognition
    Inception-v1, Image recognition
    Inception-v2, Image recognition
+   ResNet-50, Image recognition
    Mobilenet, Image recognition
    Shufflenet, Image recognition
    SqueezeNet, Image recognition
-   VGG-19, Image recognition
+   VGG-16, Image recognition
    ZFNet-512, Image recognition
    MNIST, Image recognition
    Emotion-FERPlus, Image recognition
@@ -104,6 +71,40 @@ Additionally, we validated the following workloads are functional through
    BVLC CaffeNet, Image recognition
    BVLC R-CNN ILSVRC13, Object detection
    ArcFace, Face Detection and Recognition
+
+
+.. _gpu_tensorflow:
+
+GPU TensorFlow
+==============
+
+.. csv-table::
+   :header: "TensorFlow Workload", "Genre of Deep Learning"
+   :escape: ~
+
+
+   Resnet50 v2, Image recognition 
+   Inception V3, Image recognition
+   Inception V4, Image recognition
+   Inception-ResNetv2, Image recognition
+   VGG-16, Image recognition 
+
+
+.. _gpu_onnx:
+
+GPU ONNX
+========
+
+.. csv-table::
+   :header: "ONNX Workload", "Genre of Deep Learning"
+   :escape: ~
+
+   Inception V1, Image recognition 
+   Inception V2, Image recognition 
+   ResNet-50, Image recognition 
+   SqueezeNet, Image recognition 
+   
+
 
 
 .. important:: Please see Intel's `Optimization Notice`_ for details on disclaimers. 
@@ -133,4 +134,3 @@ Additionally, we validated the following workloads are functional through
    to Intel microarchitecture are reserved for Intel microprocessors. Please refer to the 
    applicable product User and Reference Guides for more information regarding the specific 
    instruction sets covered by this notice.
-

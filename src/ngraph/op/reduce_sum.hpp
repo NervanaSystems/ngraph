@@ -17,7 +17,7 @@
 #pragma once
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/op/util/arithmetic_reduction.hpp"
+#include "ngraph/op/util/arithmetic_reductions_keep_dims.hpp"
 
 namespace ngraph
 {
@@ -74,7 +74,7 @@ namespace ngraph
             /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
             /// | \f$N[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by summation. |
             // clang-format off
-            class ReduceSum : public util::ArithmeticReduction
+            class ReduceSum : public util::ArithmeticReductionKeepDims
             {
             public:
                 NGRAPH_API
@@ -91,12 +91,8 @@ namespace ngraph
                           const Output<Node>& reduction_axes,
                           bool keep_dims = false);
 
-                void validate_and_infer_types() override;
-
                 size_t get_version() const override { return 1; }
-                /// \return If set to 1 it holds axes that are used for reduction.
-                /// For each such axis, output dimension is equal to 1.
-                bool get_keep_dims() const { return m_keep_dims; }
+
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -106,9 +102,6 @@ namespace ngraph
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const NodeVector& deltas) override;
-
-            private:
-                bool m_keep_dims;
             };
         }
     }

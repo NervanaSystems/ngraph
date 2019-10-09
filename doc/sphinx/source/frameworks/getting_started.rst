@@ -22,7 +22,7 @@ will install to a system location.
    pip install tensorflow
    pip install ngraph-tensorflow-bridge
 
-.. note:: You may need to use the latest versions of ```tensorflow``` and the bridge
+.. note:: You may need to use the latest versions of ``tensorflow`` and the bridge
    to get pip installs to work.  See the :doc:`tensorflow_connect` file for more
    detail about working with TensorFlow\*.
 

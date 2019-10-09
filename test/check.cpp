@@ -62,7 +62,7 @@ TEST(check, check_with_explanation)
     catch (const CheckFailure& e)
     {
         check_failure_thrown = true;
-        EXPECT_PRED_FORMAT2(testing::IsSubstring, "Check '(false)' failed at", e.what());
+        EXPECT_PRED_FORMAT2(testing::IsSubstring, "Check 'false' failed at", e.what());
         EXPECT_PRED_FORMAT2(testing::IsSubstring, "xyzzyxyzzy123", e.what());
     }
 

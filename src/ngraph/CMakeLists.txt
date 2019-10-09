@@ -254,6 +254,8 @@ set (SRC
     op/product.hpp
     op/reduce_prod.cpp
     op/reduce_prod.hpp
+    op/reduce_mean.cpp
+    op/reduce_mean.hpp
     op/reduce_sum.cpp
     op/reduce_sum.hpp
     op/quantize.cpp
@@ -336,6 +338,8 @@ set (SRC
     op/fused/group_conv_transpose.cpp
     op/fused/gru_cell.cpp
     op/fused/gru_cell.hpp
+    op/fused/layer_norm.cpp
+    op/fused/layer_norm.hpp
     op/fused/lstm_cell.cpp
     op/fused/lstm_cell.hpp
     op/fused/matmul.cpp
@@ -362,10 +366,14 @@ set (SRC
     op/fused/squeeze.hpp
     op/fused/unsqueeze.cpp
     op/fused/unsqueeze.hpp
+    op/util/attr_types.cpp
+    op/util/attr_types.hpp
     op/util/activation_functions.cpp
     op/util/activation_functions.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
+    op/util/arithmetic_reductions_keep_dims.hpp
+    op/util/arithmetic_reductions_keep_dims.cpp
     op/util/binary_elementwise_arithmetic.cpp
     op/util/binary_elementwise_arithmetic.hpp
     op/util/binary_elementwise_comparison.cpp
@@ -448,8 +456,8 @@ set (SRC
     pass/nop_elimination.hpp
     pass/pass.cpp
     pass/pass.hpp
-    pass/opset1_downgrade.cpp
-    pass/opset1_downgrade.hpp
+    pass/opset0_downgrade.cpp
+    pass/opset0_downgrade.hpp
     pass/opset1_upgrade.cpp
     pass/opset1_upgrade.hpp
     pass/pass_config.cpp
@@ -630,7 +638,8 @@ endif()
 # Defines macro in C++ to load backend plugin
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 if (NOT WIN32)
-    target_link_libraries(ngraph PUBLIC dl pthread)
+    find_package(Threads REQUIRED)
+    target_link_libraries(ngraph PUBLIC dl Threads::Threads)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)

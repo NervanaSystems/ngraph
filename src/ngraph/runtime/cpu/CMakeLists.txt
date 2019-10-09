@@ -66,6 +66,7 @@ set(SRC
     builder/max_pool.cpp
     builder/min.cpp
     builder/one_hot.cpp
+    builder/random_uniform.cpp
     builder/relu.cpp
     builder/pad.cpp
     builder/product.cpp
@@ -210,9 +211,8 @@ if (NGRAPH_CPU_ENABLE)
     if (NGRAPH_ENABLE_CPU_CONV_AUTO)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_ENABLE_CPU_CONV_AUTO")
     endif()
-    if(NGRAPH_TBB_ENABLE)
-        set_source_files_properties(cpu_external_function.cpp
-            PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
+    if (NGRAPH_TBB_ENABLE)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_TBB_ENABLE")
     endif()
     if (NGRAPH_HALIDE)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_HALIDE")
@@ -247,13 +247,15 @@ if (NGRAPH_CPU_ENABLE)
     endforeach()
 
     add_dependencies(cpu_backend libmkldnn ext_eigen)
-   	target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libtbb)
-        
+   	target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen)
     if (NGRAPH_JSON_ENABLE)
         target_link_libraries(cpu_backend PUBLIC libjson)
+    endif()    
+    if (NGRAPH_TBB_ENABLE)
+        target_link_libraries(cpu_backend PUBLIC libtbb)
     endif()
     if (NOT NGRAPH_DEX_ONLY)
-        target_link_libraries(cpu_backend PUBLIC codegen)
+        target_link_libraries(cpu_backend PRIVATE codegen)
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
 
