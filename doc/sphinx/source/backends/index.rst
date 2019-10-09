@@ -9,7 +9,6 @@ Working with Backends
 * :ref:`ngraph_bridge`
 * :ref:`opencl`
 
-
 .. _what_is_backend:
 
 What is a backend?

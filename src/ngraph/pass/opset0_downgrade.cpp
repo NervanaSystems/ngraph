@@ -13,13 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "ngraph/pass/opset1_downgrade.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/reverse.hpp"
-#include "ngraph/type.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -53,7 +52,7 @@ static OP_TYPEID get_typeid(shared_ptr<Node> node)
 }
 // END mapping to OP_TYPEID
 
-bool pass::Opset1Downgrade::run_on_node(shared_ptr<Node> node)
+bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 {
     bool modified = false;
 
@@ -81,11 +80,10 @@ bool pass::Opset1Downgrade::run_on_node(shared_ptr<Node> node)
     case OP_TYPEID::Pad:
     {
         auto tmp = dynamic_cast<const op::v1::Pad*>(node.get());
-        auto replacement_node = make_shared<op::v0::Pad>(node->input(0).get_source_output(),
-                                                         node->input(3).get_source_output(),
-                                                         tmp->get_pads_begin(),
-                                                         tmp->get_pads_end(),
-                                                         tmp->get_pad_mode());
+        const auto pad_arg = node->input(0).get_source_output();
+        const auto pad_value = node->input(3).get_source_output();
+        auto replacement_node = make_shared<op::v0::Pad>(
+            pad_arg, pad_value, tmp->get_pads_begin(), tmp->get_pads_end(), tmp->get_pad_mode());
 
         replace_node(node, replacement_node);
         modified = true;

@@ -3,7 +3,7 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/opset1_downgrade.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "util/type_prop.hpp"
 
@@ -53,7 +53,7 @@ TEST(opset_downgrade, opset1_pad_downgrade_pass)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg, arg_pad_value});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Downgrade>();
+    pass_manager.register_pass<pass::Opset0Downgrade>();
     pass_manager.run_passes(f);
 
     auto pad_s0_result = f->get_results().at(0);

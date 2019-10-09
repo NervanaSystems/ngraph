@@ -19,7 +19,7 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/opset1_downgrade.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "util/type_prop.hpp"
 
@@ -52,7 +52,7 @@ TEST(opset_upgrade, opset1_reverse_upgrade)
     EXPECT_EQ(rev_axes_input_shape, Shape{2});
 }
 
-TEST(opset_downgrade, opset1_reverse_downgrade_index_mode)
+TEST(opset_downgrade, opset0_reverse_downgrade_index_mode)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2});
     const auto reverse_axes =
@@ -64,7 +64,7 @@ TEST(opset_downgrade, opset1_reverse_downgrade_index_mode)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Downgrade>();
+    pass_manager.register_pass<pass::Opset0Downgrade>();
     pass_manager.run_passes(f);
 
     const auto pass_replacement_node =
@@ -76,7 +76,7 @@ TEST(opset_downgrade, opset1_reverse_downgrade_index_mode)
     EXPECT_EQ(reverse_v0->get_reversed_axes(), AxisSet({1, 2}));
 }
 
-TEST(opset_downgrade, opset1_reverse_downgrade_mask_mode)
+TEST(opset_downgrade, opset0_reverse_downgrade_mask_mode)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2});
     const auto reverse_axes =
@@ -88,7 +88,7 @@ TEST(opset_downgrade, opset1_reverse_downgrade_mask_mode)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Downgrade>();
+    pass_manager.register_pass<pass::Opset0Downgrade>();
     pass_manager.run_passes(f);
 
     const auto pass_replacement_node =
@@ -100,7 +100,7 @@ TEST(opset_downgrade, opset1_reverse_downgrade_mask_mode)
     EXPECT_EQ(reverse_v0->get_reversed_axes(), AxisSet({0, 2}));
 }
 
-TEST(opset_downgrade, opset1_reverse_downgrade_axes_not_constant)
+TEST(opset_downgrade, opset0_reverse_downgrade_axes_not_constant)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2});
     const auto axes = make_shared<op::Parameter>(element::boolean, Shape{3});
@@ -110,11 +110,11 @@ TEST(opset_downgrade, opset1_reverse_downgrade_axes_not_constant)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data, axes});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Downgrade>();
+    pass_manager.register_pass<pass::Opset0Downgrade>();
     try
     {
         pass_manager.run_passes(f);
-        FAIL() << "Exception after Opset1Downgrade pass was not thrown.";
+        FAIL() << "Exception after Opset0Downgrade pass was not thrown.";
     }
     catch (const ngraph_error& error)
     {

@@ -4079,8 +4079,7 @@ namespace ngraph
                 get_goe_input_output(ngraph::descriptor::Output* output)
             {
                 auto it = output;
-                while (auto goe =
-                           std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(it->get_node()))
+                while (auto goe = as_type_ptr<ngraph::op::GetOutputElement>(it->get_node()))
                 {
                     it = &goe->get_inputs().at(0).get_output();
                 }
@@ -4154,7 +4153,7 @@ namespace ngraph
                             loop_symbol_table.at(get_goe_input_output(&input.get_output())));
                     }
 
-                    if (std::dynamic_pointer_cast<ngraph::op::Relu>(op_node))
+                    if (as_type_ptr<ngraph::op::Relu>(op_node))
                     {
                         auto casted_zero = std::string("static_cast<") +
                                            op->get_element_type().c_type_string() +
