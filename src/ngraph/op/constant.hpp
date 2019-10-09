@@ -30,7 +30,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Class for constants.
-        class Constant : public Node
+        class Constant : public Op
         {
         public:
             NGRAPH_API
@@ -251,7 +251,7 @@ namespace ngraph
         protected:
             void* get_data_ptr_nc() { return (m_data ? m_data->get_ptr() : nullptr); }
             Constant(const OutputVector& args)
-                : Node(args)
+                : Op(args)
                 , m_shape({})
             {
             }
