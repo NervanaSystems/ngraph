@@ -83,7 +83,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
     {
     case OP_TYPEID::Pad:
     {
-        auto tmp = dynamic_cast<const op::v1::Pad*>(node.get());
+        auto tmp = as_type_ptr<op::v1::Pad>(node);
         const auto pad_arg = node->input(0).get_source_output();
         const auto pad_value = node->input(3).get_source_output();
         auto replacement_node = make_shared<op::v0::Pad>(
@@ -164,7 +164,6 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif
-
-        return modified;
     }
+    return modified;
 }
