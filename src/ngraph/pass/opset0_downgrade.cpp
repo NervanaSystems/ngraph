@@ -97,7 +97,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
                      "Unable to convert Reverse:v1 to Reverse:v0 "
                      "if reduction axes are not constant. Node: ",
                      *node);
-        const auto axes_node_const = dynamic_pointer_cast<op::Constant>(axes_node);
+        const auto axes_node_const = as_type_ptr<op::Constant>(axes_node);
         AxisSet axes{};
         if (tmp->get_mode() == op::v1::Reverse::Mode::INDEX)
         {
