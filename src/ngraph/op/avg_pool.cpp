@@ -410,10 +410,10 @@ op::v1::AvgPool::AvgPool(const Output<Node>& arg,
                          bool exclude_pad,
                          op::RoundingType rounding_type)
     : AvgPool(arg,
-              kernel,
               strides,
               pads_begin,
               pads_end,
+              kernel,
               exclude_pad,
               rounding_type,
               op::PadType::EXPLICIT)
