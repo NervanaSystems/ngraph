@@ -240,6 +240,7 @@ TEST(type_prop, broadcast_v1_fail_rank)
     try
     {
         auto bc = make_shared<op::v1::Broadcast>(param, target_shape, axes_mapping);
+        FAIL() << "Broadcast: target shape mismatch with input rank not detected";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -262,6 +263,7 @@ TEST(type_prop, broadcast_v1_fail_transpose)
     try
     {
         auto bc = make_shared<op::v1::Broadcast>(param, target_shape, axes_mapping);
+        FAIL() << "Broadcast: transpose prohibition not detected";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -284,6 +286,7 @@ TEST(type_prop, broadcast_v1_fail_axes_map)
     try
     {
         auto bc = make_shared<op::v1::Broadcast>(param, target_shape, axes_mapping);
+        FAIL() << "Broadcast: wrong axes_map not detected";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -304,10 +307,109 @@ TEST(type_prop, broadcast_v1_fail_axes_map_shape)
     try
     {
         auto bc = make_shared<op::v1::Broadcast>(param, target_shape, axes_mapping);
+        FAIL() << "Broadcast: wrong target shape not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Broadcast target[axes_mapping[1]] Expected 1. Got 3");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, broadcast_v1_shape_wrong_rank)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1, 1});
+    auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{1});
+
+    try
+    {
+        auto bc = make_shared<op::v1::Broadcast>(arg, bc_shape, bc_axes);
+        FAIL() << "DynBroadcast: wrong shape rank not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Broadcast shape rank must be 1");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, broadcast_v1_axes_wrong_rank)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{2, 2});
+
+    try
+    {
+        auto bc = make_shared<op::v1::Broadcast>(arg, bc_shape, bc_axes);
+        FAIL() << "Broadcast: axes shape rank not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Broadcast axes rank must be 1");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, broadcast_v1_output_partial_shape_dynamic)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    auto bc = make_shared<op::v1::Broadcast>(arg, bc_shape, bc_axes);
+    ASSERT_TRUE(bc->get_output_partial_shape(0).is_dynamic());
+}
+
+TEST(type_prop, broadcast_v1_broadcast_shape_et_wrong)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    // wrong element type
+    auto bc_shape = make_shared<op::Parameter>(element::boolean, Shape{1});
+    auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    try
+    {
+        auto bc = make_shared<op::v1::Broadcast>(arg, bc_shape, bc_axes);
+        FAIL() << "Broadcast: did not detect shape element type not i64";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Broadcast shape must have element type i64"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, broadcast_v1_axes_et_wrong)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
+    // wrong element type
+    auto bc_axes = make_shared<op::Parameter>(element::f32, Shape{2});
+
+    try
+    {
+        auto bc = make_shared<op::v1::Broadcast>(arg, bc_shape, bc_axes);
+        FAIL() << "Broadcast: did not detect axes element type not i64";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Broadcast axes must have element type i64"));
     }
     catch (...)
     {

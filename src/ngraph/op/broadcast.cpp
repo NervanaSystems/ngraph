@@ -161,7 +161,7 @@ void op::v1::Broadcast::validate_and_infer_types()
                                   " doesn't match rank of input tensor ",
                                   arg_shape.size());
 
-            if (input_value(1).get_node_shared_ptr()->is_constant() ||
+            if (input_value(1).get_node_shared_ptr()->is_constant() &&
                 input_value(2).get_node_shared_ptr()->is_constant())
             {
                 auto target_shape =
@@ -237,8 +237,9 @@ void op::v1::Broadcast::validate_and_infer_types()
         }
     }
 
-    set_input_is_relevant_to_shape(0); // Result element type
-    set_input_is_relevant_to_shape(1); // Result shape
+    set_input_is_relevant_to_shape(0); // arg - Result element type
+    set_input_is_relevant_to_shape(1); // target_shape - Result shape
+    set_input_is_relevant_to_shape(2); // axes_mapping - Broadcast type
     set_output_type(0, get_input_element_type(0), result_shape);
 }
 

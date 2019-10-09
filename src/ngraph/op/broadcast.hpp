@@ -175,6 +175,7 @@ namespace ngraph
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const NodeVector& deltas) override;
 
+            private:
                 AutoBroadcastSpec m_broadcast_spec;
             };
         } // namespace v1
