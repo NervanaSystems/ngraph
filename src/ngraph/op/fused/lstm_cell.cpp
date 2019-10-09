@@ -293,9 +293,10 @@ shared_ptr<Node> ngraph::op::LSTMCell::convert_node_format(const Output<Node>& n
 
     NodeVector splitted_node = builder::split(node, s_gates_count);
     NodeVector nodes_in_new_format;
-    for (const auto& data : gate_order_conversion_map.at(m_weights_format))
+    nodes_in_new_format.reserve(s_gates_count);
+    for (const auto& axis : gate_order_conversion_map.at(m_weights_format))
     {
-        nodes_in_new_format.push_back(splitted_node.at(data));
+        nodes_in_new_format.push_back(splitted_node.at(axis));
     }
     return make_shared<op::Concat>(nodes_in_new_format, 0);
 }
