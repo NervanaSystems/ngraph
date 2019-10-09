@@ -13,12 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/pass/opset0_downgrade.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -80,8 +80,9 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
     case OP_TYPEID::DynReshape:
     {
         auto tmp = as_type_ptr<op::v1::Reshape>(node);
-        auto replacement_node = make_shared<op::v0::DynReshape>(
-            node->input(0).get_source_output(), node->input(1).get_source_output(), tmp->get_zero_flag());
+        auto replacement_node = make_shared<op::v0::DynReshape>(node->input(0).get_source_output(),
+                                                                node->input(1).get_source_output(),
+                                                                tmp->get_zero_flag());
         replace_node(node, replacement_node);
         modified = true;
         break;

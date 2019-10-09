@@ -49,12 +49,12 @@ TEST(opset_upgrade, opset1_dyn_reshape_upgrade)
 
 TEST(opset_downgrade, opset1_reshape_downgrade)
 {
-    const auto arg = make_shared<op::Parameter>(element::f32, Shape{ 1, 2, 3 });
-    const auto pattern = make_shared<op::Parameter>(element::i64, Shape{ 6 });
+    const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    const auto pattern = make_shared<op::Parameter>(element::i64, Shape{6});
 
     const auto dyn_reshape_v0 = make_shared<op::v1::Reshape>(arg, pattern, true);
     const auto result = make_shared<op::Result>(dyn_reshape_v0);
-    auto f = make_shared<Function>(ResultVector{ result }, ParameterVector{ arg, pattern });
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg, pattern});
 
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<pass::Opset0Downgrade>();
