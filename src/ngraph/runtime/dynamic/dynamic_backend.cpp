@@ -22,6 +22,7 @@
 #include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/dyn_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -78,23 +79,26 @@ runtime::dynamic::DynamicExecutable::DynamicExecutable(shared_ptr<Function> wrap
     set_parameters_and_results(*wrapped_function);
 }
 
+// Due to clang++-3.9 bugs, this needs to be a non-static separate function from
+// count_dyn_nodes.
+bool is_dynamic_op(const std::shared_ptr<Node>& op)
+{
+    return is_type<op::Transpose>(op) || is_type<op::DynBroadcast>(op) ||
+           is_type<op::DynReplaceSlice>(op) || is_type<op::DynSlice>(op) ||
+           is_type<op::v1::Reshape>(op) || is_type<op::DynReshape>(op) || is_type<op::Range>(op);
+}
+
 // Helper for a vile hack in DynamicExecutable::call. See body of that function for details.
 static size_t count_dyn_nodes(const shared_ptr<ngraph::Function>& f)
 {
     size_t count = 0;
     for (auto op : f->get_ops())
     {
-        if (std::dynamic_pointer_cast<op::Transpose>(op) ||
-            std::dynamic_pointer_cast<op::DynBroadcast>(op) ||
-            std::dynamic_pointer_cast<op::DynReplaceSlice>(op) ||
-            std::dynamic_pointer_cast<op::DynSlice>(op) ||
-            std::dynamic_pointer_cast<op::DynReshape>(op) ||
-            std::dynamic_pointer_cast<op::Range>(op))
+        if (is_dynamic_op(op))
         {
             count++;
         }
     }
-
     return count;
 }
 

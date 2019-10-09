@@ -71,7 +71,7 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
     {
         ck->insert_to_input_map(it.first, it.second);
     }
-    return ck;
+    return std::move(ck);
 }
 
 ngraph::op::CompiledKernel::CompiledKernel(const OutputVector& node_list,
