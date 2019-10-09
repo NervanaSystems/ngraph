@@ -116,7 +116,8 @@ static void delete_reshape(shared_ptr<Node> reshape)
     NGRAPH_DEBUG << "Removing reshape " << reshape->get_name();
     if (!reshape->get_users().empty())
     {
-        ngraph::replace_node(reshape, reshape->input(0).get_source_output().get_node_shared_ptr(), true);
+        ngraph::replace_node(
+            reshape, reshape->input(0).get_source_output().get_node_shared_ptr(), true);
     }
 }
 
