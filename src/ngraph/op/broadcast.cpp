@@ -58,7 +58,6 @@ std::pair<bool, AxisSet> op::v1::Broadcast::get_broadcast_axes() const
         {
             auto target_shape = input(1).get_shape();
             NGRAPH_CHECK(target_shape.size() == 1);
-            auto target_rank = target_shape[0];
             auto axes_mapping_val =
                 static_pointer_cast<op::Constant>(input_value(2).get_node_shared_ptr())
                     ->get_axis_vector_val();
@@ -87,7 +86,7 @@ std::pair<bool, AxisSet> op::v1::Broadcast::get_broadcast_axes() const
                                   ? m_broadcast_spec.m_axis
                                   : target_shape.size() - arg_shape.size();
             NGRAPH_CHECK(start_axis >= 0);
-            for (auto i = 0; i < target_shape.size(); i++)
+            for (size_t i = 0; i < target_shape.size(); i++)
             {
                 if (i < start_axis || target_shape[i] != arg_shape[i - start_axis])
                 {
@@ -179,7 +178,7 @@ void op::v1::Broadcast::validate_and_infer_types()
                     axes_mapping_val,
                     " not in sorted order");
 
-                for (auto i = 0; i < axes_mapping_val.size(); i++)
+                for (size_t i = 0; i < axes_mapping_val.size(); i++)
                 {
                     NODE_VALIDATION_CHECK(this,
                                           axes_mapping_val[i] < target_shape.size(),

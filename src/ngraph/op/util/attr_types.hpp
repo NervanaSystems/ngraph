@@ -102,6 +102,7 @@ namespace ngraph
         enum class AutoBroadcastType
         {
             NONE = 0,
+            EXPLICIT = NONE,
             NUMPY,
             PDPD
         };

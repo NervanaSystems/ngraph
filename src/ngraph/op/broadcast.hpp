@@ -152,7 +152,8 @@ namespace ngraph
                 ///                       axes
                 Broadcast(const Output<Node>& arg,
                           const Output<Node>& target_shape,
-                          const AutoBroadcastSpec& broadcast_spec);
+                          const AutoBroadcastSpec& broadcast_spec =
+                              AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 
                 size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
