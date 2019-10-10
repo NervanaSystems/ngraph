@@ -25,7 +25,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(serialize, opset1_sum_upgrade)
+TEST(opset_transform, opset1_sum_upgrade_pass)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     const AxisSet reduction_axes{1, 2};

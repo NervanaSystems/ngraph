@@ -25,7 +25,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(serialize, opset1_reverse_upgrade)
+TEST(opset_transform, opset1_reverse_upgrade_pass)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2});
     const AxisSet reverse_axes{1, 2};
