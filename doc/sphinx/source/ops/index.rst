@@ -160,15 +160,30 @@ Not currently a comprehensive list.
 More about Core Ops
 -------------------
 
-An ``Op``'s primary role is to function as a node in a directed acyclic graph 
-dependency computation graph.  
+An ``Op``'s primary role is to function as a node in a ddirected acyclic 
+computation graph.
+
 
 *Core ops* are ops that are available and generally useful to all framework 
 bridges and that can be compiled by all transformers. A framework bridge may 
 define framework-specific ops to simplify graph construction, provided that the 
 bridge can enable every transformer to replace all such ops with equivalent 
-clusters or subgraphs composed of core ops. In a similar manner, transformers may define 
-transformer-specific ops to represent kernels or other intermediate operations. 
+clusters or subgraphs composed of core ops. In a similar manner, transformers 
+may define transformer-specific ops to represent kernels or other intermediate 
+operations. 
+
+The  input and output ports of ops are any of the functions which work with 
+``Output<Node>/Input<Node>``. Previous functions that worked at the level 
+of ops are deprecated, like::
+
+   Node::get_element_type()
+
+as it does not take any input. This function has been replaced with new 
+functions like::
+
+   Node::get_output_element_type(index) 
+
+where there is no ambiguity.
 
 If a framework supports extending the set of ops it offers, a bridge may even 
 expose transformer-specific ops to the framework user.
