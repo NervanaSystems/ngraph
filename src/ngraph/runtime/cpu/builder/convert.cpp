@@ -45,6 +45,11 @@ namespace ngraph
                     SELECT_KERNEL(
                         kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_bool)
                 }
+                else if (args[0].get_element_type() == element::bf16 &&
+                         out[0].get_element_type() == element::f32)
+                {
+                    kernel = runtime::cpu::kernel::convert_to_float32<bfloat16>;
+                }
                 else if (out[0].get_element_type() == element::f32)
                 {
                     SELECT_KERNEL(kernel,
@@ -96,6 +101,11 @@ namespace ngraph
                 {
                     SELECT_KERNEL(
                         kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_u64)
+                }
+                else if (args[0].get_element_type() == element::f32 &&
+                         out[0].get_element_type() == element::bf16)
+                {
+                    kernel = runtime::cpu::kernel::convert_to_bf16<float>;
                 }
                 else
                 {
