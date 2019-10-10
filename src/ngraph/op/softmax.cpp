@@ -117,19 +117,6 @@ void op::v0::Softmax::validate_and_infer_types()
     set_input_is_relevant_to_shape(1);
 }
 
-void op::v0::Softmax::validate_and_infer_types()
-{
-    const PartialShape& input_shape = get_input_partial_shape(0);
-    if (input_shape.is_static())
-    {
-        set_output_type(0, get_input_element_type(0), input_shape.to_shape());
-    }
-    else
-    {
-        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
-    }
-}
-
 shared_ptr<Node> op::v0::Softmax::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
