@@ -2169,55 +2169,36 @@ TEST(cpu_test, max_pool_bf16)
     vector<float> a_data = {
         0.5f, 1.5f, 0.5f, 2.5f, 1.5f, 0.5f, 3.5f, 2.5f, 0.5f, 0.5f, 2.5f, 0.5f, 0.5f, 0.5f, 1.5f};
 
-    // allocate memory for destination
-    int size = a_data.size() * sizeof(float) / 2;
-    void* bf16_dst = std::malloc(size);
-    // convert float data to bfloat16
-    ngraph::test::float_to_bf16(a_data.data(), bf16_dst, a_data.size());
-
-    auto A = make_shared<op::Parameter>(element::bf16, shape_a);
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A_bf16 = make_shared<op::Convert>(A, element::bf16);
     auto QMP = make_shared<ngraph::op::MaxPool>(
-        A, window_shape, window_movement_strides, padding_below, padding_above);
+        A_bf16, window_shape, window_movement_strides, padding_below, padding_above);
     auto f = make_shared<Function>(NodeVector{QMP}, ParameterVector{A});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
-    auto a = backend->create_tensor(element::bf16, shape_a);
-    a->write(bf16_dst, size);
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, a_data);
     auto result = backend->create_tensor(element::bf16, shape_r);
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    // convert the output back to float
-    void* fp_dst = malloc(shape_size(shape_r) * 4);
-    ngraph::test::bf16_to_float(
-        static_pointer_cast<runtime::cpu::CPUTensorView>(result)->get_data_ptr(),
-        fp_dst,
-        shape_size(shape_r));
-    auto b = backend->create_tensor(element::f32, shape_r);
-    b->write(fp_dst, shape_size(shape_r) * 4);
-    EXPECT_EQ((vector<float>{3.5f, 3.5f, 2.5f, 3.5f, 3.5f, 2.5f}), read_vector<float>(b));
+    EXPECT_EQ((vector<bfloat16>{3.5, 3.5, 2.5, 3.5, 3.5, 2.5}), read_vector<bfloat16>(result));
 }
 
 TEST(cpu_test, convolution_simple_bf16)
 {
     Shape shape_a{1, 2, 2, 2};
-    auto A = make_shared<op::Parameter>(element::bf16, shape_a);
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 2, 1, 1};
-    auto B = make_shared<op::Parameter>(element::bf16, shape_b);
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{1, 2, 2, 2};
 
     vector<float> input = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
     vector<float> weights = {3.0f, 3.0f, 3.0f, 3.0f};
 
-    int input_size = input.size() * sizeof(float) / 2;
-    int weights_size = weights.size() * sizeof(float) / 2;
-    void* bf16_input_dst = std::malloc(input_size);
-    void* bf16_weights_dst = std::malloc(weights_size);
-    // convert float data to bfloat16
-    ngraph::test::float_to_bf16(input.data(), bf16_input_dst, input.size());
-    ngraph::test::float_to_bf16(weights.data(), bf16_weights_dst, weights.size());
-
-    auto conv1 = make_shared<op::Convolution>(A,
-                                              B,
+    auto A_bf16 = make_shared<op::Convert>(A, element::bf16);
+    auto B_bf16 = make_shared<op::Convert>(B, element::bf16);
+    auto conv1 = make_shared<op::Convolution>(A_bf16,
+                                              B_bf16,
                                               Strides{1, 1},
                                               Strides{1, 1},
                                               CoordinateDiff{0, 0},
@@ -2229,24 +2210,15 @@ TEST(cpu_test, convolution_simple_bf16)
     auto backend = runtime::Backend::create("CPU");
 
     // Create some tensors for input/output
-    auto a = backend->create_tensor(element::bf16, shape_a);
-    a->write(bf16_input_dst, input_size);
-    auto b = backend->create_tensor(element::bf16, shape_b);
-    b->write(bf16_weights_dst, weights_size);
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, input);
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, weights);
     auto result = backend->create_tensor(element::bf16, shape_r);
-
-    vector<float> expected_result{18.0f, 24.0f, 30.0f, 36.0f, 18.0f, 24.0f, 30.0f, 36.0f};
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    // convert the output back to float
-    void* fp_dst = malloc(shape_size(shape_r) * 4);
-    ngraph::test::bf16_to_float(
-        static_pointer_cast<runtime::cpu::CPUTensorView>(result)->get_data_ptr(),
-        fp_dst,
-        shape_size(shape_r));
-    auto c = backend->create_tensor(element::f32, shape_r);
-    c->write(fp_dst, shape_size(shape_r) * 4);
-    EXPECT_TRUE(test::all_close_f(vector<float>{expected_result}, read_vector<float>(c)));
+    EXPECT_EQ((vector<bfloat16>{18.0, 24.0, 30.0, 36.0, 18.0, 24.0, 30.0, 36.0}),
+              read_vector<bfloat16>(result));
 }
 #endif
