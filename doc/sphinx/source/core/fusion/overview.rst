@@ -1,4 +1,6 @@
-.. fusion/overview.rst
+.. core/fusion/overview.rst
+
+.. _fusion_overview:
 
 Overview: Optimize graphs with nGraph Compiler fusions
 -------------------------------------------------------
