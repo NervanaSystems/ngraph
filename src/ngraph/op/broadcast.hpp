@@ -128,7 +128,7 @@ namespace ngraph
                 /// \brief Constructs a broadcast operation.
                 ///
                 /// \param arg            Node that produces the input tensor to be broadcast.
-                /// \param target_shape   The shape of the output tensor.
+                /// \param target_shape   Node that provides the shape of the output tensor.
                 /// \param axes_mapping   The axis positions (0-based) in the result that correspond
                 ///                       to input axes. 'Arg' tensor is broadcast along the
                 ///                       remaining

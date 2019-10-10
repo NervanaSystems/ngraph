@@ -11,7 +11,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(opset_upgrade, opset1_broadcast_upgrade_pass)
+TEST(opset_transform, opset1_broadcast_upgrade_pass)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{5, 6});
 
@@ -40,7 +40,7 @@ TEST(opset_upgrade, opset1_broadcast_upgrade_pass)
               (AxisSet{1, 3}));
 }
 
-TEST(opset_downgrade, opset1_broadcast_downgrade_pass)
+TEST(opset_transform, opset1_broadcast_downgrade_pass)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{5}, {3, 1, 4, 2, 3});
