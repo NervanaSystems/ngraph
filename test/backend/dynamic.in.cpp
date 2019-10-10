@@ -23,6 +23,11 @@
 using namespace std;
 using namespace ngraph;
 
+#ifdef NGRAPH_UNIT_TEST_OPENVINO_ENABLE
+#include "util/backend_utils.hpp"
+#define runtime runtime2
+#endif
+
 static string s_manifest = "${MANIFEST}";
 
 NGRAPH_TEST(${BACKEND_NAME}, create_dynamic_backend)

@@ -183,40 +183,55 @@ endif()
 set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
     NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/src/ngraph")
 
-if (NGRAPH_INTERPRETER_ENABLE)
-    list(APPEND SRC
-        backend_debug_api.cpp
-        builder.cpp
-        backend_api.cpp)
-    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
-endif()
+if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
+    message(STATUS "NGRAPH_UNIT_TEST_OPENVINO_ENABLE = TRUE")
+    add_definitions(-DNGRAPH_UNIT_TEST_OPENVINO_ENABLE)
 
-if (NGRAPH_CPU_ENABLE)
-    list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
-    list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp cpu_debug_tracer.cpp)
-    if (NOT NGRAPH_DEX_ONLY)
-        list(APPEND SRC cpu_codegen.cpp)
+    if (ENABLE_MKL_DNN)
+        message(STATUS "NGRAPH_TESTS: CPU enabled")
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
     endif()
-    if (NGRAPH_HALIDE)
-        list(APPEND SRC halide.cpp)
+
+    if (ENABLE_CLDNN)
+        message(STATUS "NGRAPH_TESTS: GPU enabled")
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
     endif()
-    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
-endif()
+else()
+    if (NGRAPH_INTERPRETER_ENABLE)
+        list(APPEND SRC
+            backend_debug_api.cpp
+            builder.cpp
+            backend_api.cpp)
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
+    endif()
 
-if (NGRAPH_INTELGPU_ENABLE)
-    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTELGPU)
-endif()
+    if (NGRAPH_CPU_ENABLE)
+        list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
+        list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp cpu_debug_tracer.cpp)
+        if (NOT NGRAPH_DEX_ONLY)
+            list(APPEND SRC cpu_codegen.cpp)
+        endif()
+        if (NGRAPH_HALIDE)
+            list(APPEND SRC halide.cpp)
+        endif()
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
+    endif()
 
-if (NGRAPH_GPUH_ENABLE)
-    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPUH)
-endif()
+    if (NGRAPH_INTELGPU_ENABLE)
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTELGPU)
+    endif()
 
-if (NGRAPH_PLAIDML_ENABLE)
-    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
-endif()
+    if (NGRAPH_GPUH_ENABLE)
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPUH)
+    endif()
 
-if (NGRAPH_GENERIC_CPU_ENABLE)
-    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GCPU)
+    if (NGRAPH_PLAIDML_ENABLE)
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
+    endif()
+
+    if (NGRAPH_GENERIC_CPU_ENABLE)
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GCPU)
+    endif()
 endif()
 
 add_definitions("-DTEST_FILES=\"${CMAKE_CURRENT_SOURCE_DIR}/files\"")
@@ -232,101 +247,101 @@ add_subdirectory(util)
 # such as ${BACKEND_NAME} with their values, such as CPU, GPU, or INTERPRETER.
 set(MULTI_TEST_SRC
     backend/abc.in.cpp
-    backend/abs.in.cpp
-    backend/acos.in.cpp
-    backend/add.in.cpp
-    backend/aliased_output.in.cpp
-    backend/all.in.cpp
-    backend/any.in.cpp
-    backend/api.in.cpp
-    backend/arg_reduce.in.cpp
-    backend/asin.in.cpp
-    backend/atan.in.cpp
-    backend/auto_broadcast.in.cpp
-    backend/autodiff.in.cpp
-    backend/batch_mat_mul.in.cpp
-    backend/batch_norm.in.cpp
-    backend/broadcast.in.cpp
-    backend/builder_flatten.in.cpp
-    backend/ceiling.in.cpp
-    backend/comparison.in.cpp
-    backend/computation_reuse.in.cpp
-    backend/concat.in.cpp
-    backend/constant.in.cpp
-    backend/convert.in.cpp
-    backend/convolution_reference.in.cpp
-    backend/convolution.in.cpp
-    backend/cos.in.cpp
-    backend/cosh.in.cpp
-    backend/divide.in.cpp
-    backend/dot.in.cpp
-    backend/dyn_broadcast.in.cpp
-    backend/dyn_replace_slice_reference.in.cpp
-    backend/dyn_reshape.in.cpp
-    backend/dyn_slice_reference.in.cpp
-    backend/dynamic.in.cpp
-    backend/embedding_lookup.in.cpp
-    backend/erf.in.cpp
-    backend/exp.in.cpp
-    backend/floor.in.cpp
-    backend/function_name.in.cpp
-    backend/fused_op.in.cpp
-    backend/gather.in.cpp
-    backend/gelu.in.cpp
-    backend/generate_mask.in.cpp
-    backend/layer_norm.in.cpp
-    backend/log.in.cpp
-    backend/logical_and.in.cpp
-    backend/logical_or.in.cpp
-    backend/logical_xor.in.cpp
-    backend/lrn.in.cpp
-    backend/max.in.cpp
-    backend/maximum.in.cpp
-    backend/min.in.cpp
-    backend/minimum.in.cpp
-    backend/multiple_backends.in.cpp
-    backend/multiple_result.in.cpp
-    backend/multiply.in.cpp
-    backend/negative.in.cpp
-    backend/node_name.in.cpp
-    backend/not.in.cpp
-    backend/numeric.in.cpp
-    backend/one_hot.in.cpp
-    backend/pad.in.cpp
-    backend/parameter_as_output.in.cpp
-    backend/pool.in.cpp
-    backend/power.in.cpp
-    backend/product.in.cpp
-    backend/quantize_dequantize.in.cpp
-    backend/quantized_convolution.in.cpp
-    backend/quantized_dot.in.cpp
-    backend/random_uniform.in.cpp
-    backend/range.in.cpp
-    backend/relu.in.cpp
-    backend/replace_slice.in.cpp
-    backend/reshape.in.cpp
-    backend/reverse_sequence.in.cpp
-    backend/reverse.in.cpp
-    backend/scatter.in.cpp
-    backend/select.in.cpp
-    backend/shape_of.in.cpp
-    backend/sigmoid.in.cpp
-    backend/sign.in.cpp
-    backend/sin.in.cpp
-    backend/sinh.in.cpp
-    backend/slice.in.cpp
-    backend/softmax.in.cpp
-    backend/sqrt.in.cpp
-    backend/subtract.in.cpp
-    backend/sum.in.cpp
-    backend/tan.in.cpp
-    backend/tanh.in.cpp
-    backend/tensorview_custom_mem.in.cpp
-    backend/topk.in.cpp
-    backend/transpose.in.cpp
-    backend/unhandled_op.in.cpp
-    backend/validate_call.in.cpp
-    backend/zero_sized.in.cpp
+#    backend/abs.in.cpp
+#    backend/acos.in.cpp
+#    backend/add.in.cpp
+#    backend/aliased_output.in.cpp
+#    backend/all.in.cpp
+#    backend/any.in.cpp
+#    backend/api.in.cpp
+#    backend/arg_reduce.in.cpp
+#    backend/asin.in.cpp
+#    backend/atan.in.cpp
+#    backend/auto_broadcast.in.cpp
+#    backend/autodiff.in.cpp
+#    backend/batch_mat_mul.in.cpp
+#    backend/batch_norm.in.cpp
+#    backend/broadcast.in.cpp
+#    backend/builder_flatten.in.cpp
+#    backend/ceiling.in.cpp
+#    backend/comparison.in.cpp
+#    backend/computation_reuse.in.cpp
+#    backend/concat.in.cpp
+#    backend/constant.in.cpp
+#    backend/convert.in.cpp
+#    backend/convolution_reference.in.cpp
+#    backend/convolution.in.cpp
+#    backend/cos.in.cpp
+#    backend/cosh.in.cpp
+#    backend/divide.in.cpp
+#    backend/dot.in.cpp
+#    backend/dyn_broadcast.in.cpp
+#    backend/dyn_replace_slice_reference.in.cpp
+#    backend/dyn_reshape.in.cpp
+#    backend/dyn_slice_reference.in.cpp
+#    backend/dynamic.in.cpp
+#    backend/embedding_lookup.in.cpp
+#    backend/erf.in.cpp
+#    backend/exp.in.cpp
+#    backend/floor.in.cpp
+#    backend/function_name.in.cpp
+#    backend/fused_op.in.cpp
+#    backend/gather.in.cpp
+#    backend/gelu.in.cpp
+#    backend/generate_mask.in.cpp
+#    backend/layer_norm.in.cpp
+#    backend/log.in.cpp
+#    backend/logical_and.in.cpp
+#    backend/logical_or.in.cpp
+#    backend/logical_xor.in.cpp
+#    backend/lrn.in.cpp
+#    backend/max.in.cpp
+#    backend/maximum.in.cpp
+#    backend/min.in.cpp
+#    backend/minimum.in.cpp
+#    backend/multiple_backends.in.cpp
+#    backend/multiple_result.in.cpp
+#    backend/multiply.in.cpp
+#    backend/negative.in.cpp
+#    backend/node_name.in.cpp
+#    backend/not.in.cpp
+#    backend/numeric.in.cpp
+#    backend/one_hot.in.cpp
+#    backend/pad.in.cpp
+#    backend/parameter_as_output.in.cpp
+#    backend/pool.in.cpp
+#    backend/power.in.cpp
+#    backend/product.in.cpp
+#    backend/quantize_dequantize.in.cpp
+#    backend/quantized_convolution.in.cpp
+#    backend/quantized_dot.in.cpp
+#    backend/random_uniform.in.cpp
+#    backend/range.in.cpp
+#    backend/relu.in.cpp
+#    backend/replace_slice.in.cpp
+#    backend/reshape.in.cpp
+#    backend/reverse_sequence.in.cpp
+#    backend/reverse.in.cpp
+#    backend/scatter.in.cpp
+#    backend/select.in.cpp
+#    backend/shape_of.in.cpp
+#    backend/sigmoid.in.cpp
+#    backend/sign.in.cpp
+#    backend/sin.in.cpp
+#    backend/sinh.in.cpp
+#    backend/slice.in.cpp
+#    backend/softmax.in.cpp
+#    backend/sqrt.in.cpp
+#    backend/subtract.in.cpp
+#    backend/sum.in.cpp
+#    backend/tan.in.cpp
+#    backend/tanh.in.cpp
+#    backend/tensorview_custom_mem.in.cpp
+#    backend/topk.in.cpp
+#    backend/transpose.in.cpp
+#    backend/unhandled_op.in.cpp
+#    backend/validate_call.in.cpp
+#    backend/zero_sized.in.cpp
 )
 
 if (NGRAPH_MLIR_ENABLE)
@@ -390,6 +405,13 @@ endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
 target_link_libraries(unit-test PRIVATE ngraph libgtest)
+
+#
+#if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
+#    target_include_directories(unit-test PUBLIC ${IE_MAIN_SOURCE_DIR}/include)
+#    target_link_libraries(unit-test PUBLIC inference_engine)
+#endif()
+
 target_compile_definitions(unit-test PRIVATE NGRAPH_VERSION_LABEL="${NGRAPH_VERSION_LABEL}")
 if (NGRAPH_JSON_ENABLE)
     target_link_libraries(unit-test PRIVATE libjson)
