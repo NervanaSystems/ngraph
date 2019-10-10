@@ -343,7 +343,7 @@ set(MULTI_TEST_SRC
 #    backend/unhandled_op.in.cpp
 #    backend/validate_call.in.cpp
 #    backend/zero_sized.in.cpp
-#)
+)
 
 if (NGRAPH_MLIR_ENABLE)
     list(APPEND MULTI_TEST_SRC backend/mlir.in.cpp)
