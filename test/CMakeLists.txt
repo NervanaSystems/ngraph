@@ -258,7 +258,7 @@ set(MULTI_TEST_SRC
 #    backend/asin.in.cpp
 #    backend/atan.in.cpp
 #    backend/auto_broadcast.in.cpp
-#    backend/autodiff.in.cpp
+##    backend/autodiff.in.cpp
 #    backend/batch_mat_mul.in.cpp
 #    backend/batch_norm.in.cpp
 #    backend/broadcast.in.cpp
@@ -269,7 +269,7 @@ set(MULTI_TEST_SRC
 #    backend/concat.in.cpp
 #    backend/constant.in.cpp
 #    backend/convert.in.cpp
-#    backend/convolution_reference.in.cpp
+##    backend/convolution_reference.in.cpp
 #    backend/convolution.in.cpp
 #    backend/cos.in.cpp
 #    backend/cosh.in.cpp
@@ -337,12 +337,13 @@ set(MULTI_TEST_SRC
 #    backend/tan.in.cpp
 #    backend/tanh.in.cpp
 #    backend/tensorview_custom_mem.in.cpp
-#    backend/topk.in.cpp
+##        Need to fix it:
+##    backend/topk.in.cpp
 #    backend/transpose.in.cpp
 #    backend/unhandled_op.in.cpp
 #    backend/validate_call.in.cpp
 #    backend/zero_sized.in.cpp
-)
+#)
 
 if (NGRAPH_MLIR_ENABLE)
     list(APPEND MULTI_TEST_SRC backend/mlir.in.cpp)
@@ -405,12 +406,6 @@ endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
 target_link_libraries(unit-test PRIVATE ngraph libgtest)
-
-#
-#if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
-#    target_include_directories(unit-test PUBLIC ${IE_MAIN_SOURCE_DIR}/include)
-#    target_link_libraries(unit-test PUBLIC inference_engine)
-#endif()
 
 target_compile_definitions(unit-test PRIVATE NGRAPH_VERSION_LABEL="${NGRAPH_VERSION_LABEL}")
 if (NGRAPH_JSON_ENABLE)
