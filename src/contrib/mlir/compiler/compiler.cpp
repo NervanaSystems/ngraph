@@ -750,8 +750,8 @@ void MLIRCompiler::bindArguments(std::vector<void*>& externalTensors)
     // Assign external tensor pointers to invocation arguments.
     for (size_t i = 0, numArgs = m_invokeArgs.size(); i < numArgs; ++i)
     {
-        auto* memRefArg = *((mlir::StaticFloatMemRef**)m_invokeArgs[i]);
-        memRefArg->data = (float*)(*m_externalTensors)[i];
+        auto* memRefArg = *(reinterpret_cast<mlir::StaticFloatMemRef**>(m_invokeArgs[i]));
+        memRefArg->data = reinterpret_cast<float*>((*m_externalTensors)[i]);
     }
 }
 
@@ -777,7 +777,7 @@ void MLIRCompiler::cleanup()
     // Free void double pointer arguments without freeing external tensor data.
     for (auto* arg : m_invokeArgs)
     {
-        auto* memRefArg = *((mlir::StaticFloatMemRef**)arg);
+        auto* memRefArg = *(reinterpret_cast<mlir::StaticFloatMemRef**>(arg));
         free(memRefArg);
         free(arg);
     }
