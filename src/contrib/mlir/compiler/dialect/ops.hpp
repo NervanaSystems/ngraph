@@ -28,6 +28,7 @@
 
 namespace mlir
 {
+#include "ops_interfaces.h.inc"
 #define GET_OP_CLASSES
 #include "ops.h.inc"
 #undef GET_OP_CLASSES

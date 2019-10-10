@@ -88,13 +88,22 @@ function(ngraph_tablegen ofn)
 endfunction()
 
 set(MLIR_TABLEGEN_EXE mlir-tblgen)
-set(LLVM_TARGET_DEFINITIONS dialect/ops.td)
 
+# table-gen ops.td
+set(LLVM_TARGET_DEFINITIONS dialect/ops.td)
 ngraph_tablegen(ops.h.inc -gen-op-decls)
 ngraph_tablegen(ops.cpp.inc -gen-op-defs)
-
 add_public_tablegen_target(ngraph_ops_gen)
-add_dependencies(mlir_backend ngraph_ops_gen)
+
+# table-gen ops_interfaces.td
+set(LLVM_TARGET_DEFINITIONS dialect/ops_interfaces.td)
+ngraph_tablegen(ops_interfaces.h.inc -gen-op-interface-decls)
+ngraph_tablegen(ops_interfaces.cpp.inc -gen-op-interface-defs)
+add_public_tablegen_target(ngraph_ops_interfaces_gen)
+
+add_dependencies(mlir_backend ngraph_ops_gen ngraph_ops_interfaces_gen)
 target_include_directories(mlir_backend PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+
 
 install(TARGETS mlir_backend DESTINATION ${NGRAPH_INSTALL_LIB})

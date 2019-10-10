@@ -22,7 +22,7 @@
 // not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
 
 include "mlir/IR/OpBase.td"
-
+include "dialect/ops_interfaces.td"
 // nGraph Dialect operations definitions
 //
 // This files declares nGraph operations that table-gen uses to create C++ code
@@ -38,14 +38,12 @@ include "mlir/IR/OpBase.td"
 //
 // Each def will corresponding to a C++ class
 
-
 def NG_Dialect : Dialect {
   let name = "ng";
   // TODO: Have the dialect under its own mlir::ngraph namespace
   // At mlir top-level for now
   let cppNamespace = "";
 }
-
 
 // nGraph Types
 // This defines records equivalent to nGraph types. It doesn't generate code.
@@ -62,14 +60,17 @@ def NG_MemRefType : Type<IsMemRefTypePred, "MemRef Type">;
 class NG_Op<string mnemonic, list<OpTrait> traits = []> :
     Op<NG_Dialect, mnemonic, traits> {}
 
+class NG_Versioned_Op<string mnemonic, list<OpTrait> traits = []> :
+    NG_Op<mnemonic, !listconcat(traits, [OpVersionInterface])> {}
+
 // Operations producing single result.
 // Will set OneResult trait based on Results out dag.
 class NG_OneResult_Op<string mnemonic, list<OpTrait> traits = []> :
-      NG_Op<mnemonic, traits>, Results<(outs NG_TensorType:$res)> {}
+      NG_Versioned_Op<mnemonic, traits>, Results<(outs NG_TensorType:$res)> {}
 
 // Operations producing no results
 class NG_ZeroResult_Op<string mnemonic, list<OpTrait> traits = []> :
-      NG_Op<mnemonic, traits>, Results<(outs)> {}
+      NG_Versioned_Op<mnemonic, traits>, Results<(outs)> {}
 
 // Base class for arithmetic unary operations without side effects.
 class NG_Unary_Arith_Op<string mnemonic, list<OpTrait> traits = []> :
@@ -128,54 +129,67 @@ class NG_Terminator_Op<string mnemonic, list<OpTrait> traits = []> :
     NG_Op<mnemonic, !listconcat(traits, [Terminator])>,
     Arguments<(ins Variadic<NG_TensorType>:$args)>, Results<(outs)> {}
 
+// Version 0 Ops
+// TODO: Move to separate file
+
+class NG_OP_V0
+{
+    code extraClassDeclaration = [{
+    // Return the version of the Op
+    unsigned getVersion() {
+      return 0;
+    }
+  }];
+}
+
 // Unary Operations
-def NGAbsOp      : NG_Unary_Arith_Op<"abs">;
-def NGACosOp     : NG_Unary_Arith_Op<"acos">;
-def NGASinOp     : NG_Unary_Arith_Op<"asin">;
-def NGATanOp     : NG_Unary_Arith_Op<"atan">;
-def NGCeilOp     : NG_Unary_Arith_Op<"ceil">;
-def NGConvertOp  : NG_Unary_Arith_Op<"conv">;
-def NGCosOp      : NG_Unary_Arith_Op<"cos">;
-def NGCoshOp     : NG_Unary_Arith_Op<"cosh">;
-def NGExpOp      : NG_Unary_Arith_Op<"exp">;
-def NGFloorOp    : NG_Unary_Arith_Op<"floor">;
-def NGLogOp      : NG_Unary_Arith_Op<"log">;
-def NGNegOp      : NG_Unary_Arith_Op<"neg">;
-def NGNotOp      : NG_Unary_Arith_Op<"not">;
-def NGSignOp     : NG_Unary_Arith_Op<"sign">;
-def NGSinOp      : NG_Unary_Arith_Op<"sin">;
-def NGSinhOp     : NG_Unary_Arith_Op<"sinh">;
-def NGTanOp      : NG_Unary_Arith_Op<"tan">;
-def NGTanhOp     : NG_Unary_Arith_Op<"tanh">;
-def NGSqrtOp     : NG_Unary_Arith_Op<"sqrt">;
-def NGReluOp     : NG_Unary_Arith_Op<"relu">;
+def NGAbsOp      : NG_Unary_Arith_Op<"abs">, NG_OP_V0;
+def NGACosOp     : NG_Unary_Arith_Op<"acos">, NG_OP_V0;
+def NGASinOp     : NG_Unary_Arith_Op<"asin">, NG_OP_V0;
+def NGATanOp     : NG_Unary_Arith_Op<"atan">, NG_OP_V0;
+def NGCeilOp     : NG_Unary_Arith_Op<"ceil">, NG_OP_V0;
+def NGConvertOp  : NG_Unary_Arith_Op<"conv">, NG_OP_V0;
+def NGCosOp      : NG_Unary_Arith_Op<"cos">,  NG_OP_V0;
+def NGCoshOp     : NG_Unary_Arith_Op<"cosh">, NG_OP_V0;
+def NGExpOp      : NG_Unary_Arith_Op<"exp">,  NG_OP_V0;
+def NGFloorOp    : NG_Unary_Arith_Op<"floor">,NG_OP_V0;
+def NGNegOp      : NG_Unary_Arith_Op<"neg">, NG_OP_V0;
+def NGLogOp      : NG_Unary_Arith_Op<"log">, NG_OP_V0;
+def NGNotOp      : NG_Unary_Arith_Op<"not">, NG_OP_V0;
+def NGSignOp     : NG_Unary_Arith_Op<"sign">, NG_OP_V0;
+def NGSinOp      : NG_Unary_Arith_Op<"sin">, NG_OP_V0;
+def NGSinhOp     : NG_Unary_Arith_Op<"sinh">, NG_OP_V0;
+def NGTanOp      : NG_Unary_Arith_Op<"tan">, NG_OP_V0;
+def NGTanhOp     : NG_Unary_Arith_Op<"tanh">, NG_OP_V0;
+def NGSqrtOp     : NG_Unary_Arith_Op<"sqrt">, NG_OP_V0;
+def NGReluOp     : NG_Unary_Arith_Op<"relu">, NG_OP_V0;
 
 // Binary Operations
-def NGAddOp      : NG_Binary_Arith_Op<"add", [Commutative]>;
-def NGAndOp      : NG_Binary_Arith_Op<"and", [Commutative]>;
-def NGSubOp      : NG_Binary_Arith_Op<"sub">;
-def NGDivOp      : NG_Binary_Arith_Op<"div">;
-def NGMaxOp      : NG_Binary_Arith_Op<"max", [Commutative]>;
-def NGMinOp      : NG_Binary_Arith_Op<"min", [Commutative]>;
-def NGMulOp      : NG_Binary_Arith_Op<"mul", [Commutative]>;
-def NGPowOp      : NG_Binary_Arith_Op<"pow">;
+def NGAddOp      : NG_Binary_Arith_Op<"add", [Commutative]>, NG_OP_V0;
+def NGAndOp      : NG_Binary_Arith_Op<"and", [Commutative]>, NG_OP_V0;
+def NGSubOp      : NG_Binary_Arith_Op<"sub">, NG_OP_V0;
+def NGDivOp      : NG_Binary_Arith_Op<"div">, NG_OP_V0;
+def NGMaxOp      : NG_Binary_Arith_Op<"max", [Commutative]>, NG_OP_V0;
+def NGMinOp      : NG_Binary_Arith_Op<"min", [Commutative]>, NG_OP_V0;
+def NGMulOp      : NG_Binary_Arith_Op<"mul", [Commutative]>, NG_OP_V0;
+def NGPowOp      : NG_Binary_Arith_Op<"pow">, NG_OP_V0;
 
 // Comparison
-def NGEqOp        : NG_Cmp_Op<"equal">;
-def NGGreaterOp   : NG_Cmp_Op<"greater">;
-def NGGreaterEqOp : NG_Cmp_Op<"greater.eq">;
-def NGLessOp      : NG_Cmp_Op<"less">;
-def NGLessEqOp    : NG_Cmp_Op<"less.eq">;
-def NGNotEqOp     : NG_Cmp_Op<"not.equal">;
+def NGEqOp        : NG_Cmp_Op<"equal">, NG_OP_V0;
+def NGGreaterOp   : NG_Cmp_Op<"greater">, NG_OP_V0;
+def NGGreaterEqOp : NG_Cmp_Op<"greater.eq">, NG_OP_V0;
+def NGLessOp      : NG_Cmp_Op<"less">, NG_OP_V0;
+def NGLessEqOp    : NG_Cmp_Op<"less.eq">, NG_OP_V0;
+def NGNotEqOp     : NG_Cmp_Op<"not.equal">, NG_OP_V0;
 
 // Other
-def NGSelectOp    : NG_Ternary_Op<"select">
+def NGSelectOp    : NG_Ternary_Op<"select">, NG_OP_V0
 {
   let verifier = [{ return verifyOp(this); }];
 }
 
 // Dot Product
-def NGDotOp : NG_Binary_Op<"dot">
+def NGDotOp : NG_Binary_Op<"dot">, NG_OP_V0
 {
   // TODO: Add reduction axis attribute when needed.
   let verifier = [{ return verifyOp(this); }];
@@ -186,7 +200,8 @@ def NGDotOp : NG_Binary_Op<"dot">
 // do that.
 def NGConcatOp :
     NG_OneResult_Op<"concat", [NoSideEffect]>,
-    Arguments<(ins Variadic<NG_TensorType>:$args, I64Attr:$concatenation_axis)>
+    Arguments<(ins Variadic<NG_TensorType>:$args, I64Attr:$concatenation_axis)>,
+    NG_OP_V0
 {
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
 
@@ -208,49 +223,49 @@ class NG_Axis_Reduction_Op<string mnemonic, list<OpTrait> traits = []> :
 }
 
 // Axis reduction operations.
-def NGSumRedOp : NG_Axis_Reduction_Op<"sum.red">
+def NGSumRedOp : NG_Axis_Reduction_Op<"sum.red">, NG_OP_V0
 {
   let summary = "Axis sum reduction of a tensor.";
   let verifier = [{ return verifyAxisReductionOp(this); }];
 }
 
-def NGProdRedOp : NG_Axis_Reduction_Op<"prod.red">
+def NGProdRedOp : NG_Axis_Reduction_Op<"prod.red">, NG_OP_V0
 {
   let summary = "Axis product reduction of a tensor.";
   let verifier = [{ return verifyAxisReductionOp(this); }];
 }
 
-def NGMinRedOp : NG_Axis_Reduction_Op<"min.red">
+def NGMinRedOp : NG_Axis_Reduction_Op<"min.red">, NG_OP_V0
 {
   let summary = "Axis minimum reduction of a tensor.";
   let verifier = [{ return verifyAxisReductionOp(this); }];
 }
 
-def NGMaxRedOp : NG_Axis_Reduction_Op<"max.red">
+def NGMaxRedOp : NG_Axis_Reduction_Op<"max.red">, NG_OP_V0
 {
   let summary = "Axis maximum reduction of a tensor.";
   let verifier = [{ return verifyAxisReductionOp(this); }];
 }
 
-def NGArgMinRedOp : NG_Axis_Reduction_Op<"argmin.red">
+def NGArgMinRedOp : NG_Axis_Reduction_Op<"argmin.red">, NG_OP_V0
 {
   let summary = "Axis minimum index reduction of a tensor.";
   let verifier = [{ return verifyIndexReductionOp(this); }];
 }
 
-def NGArgMaxRedOp : NG_Axis_Reduction_Op<"argmax.red">
+def NGArgMaxRedOp : NG_Axis_Reduction_Op<"argmax.red">, NG_OP_V0
 {
   let summary = "Axis maximum index reduction of a tensor.";
   let verifier = [{ return verifyIndexReductionOp(this); }];
 }
 
-def NGAllRedOp : NG_Axis_Reduction_Op<"all.red">
+def NGAllRedOp : NG_Axis_Reduction_Op<"all.red">, NG_OP_V0
 {
   let summary = "Axis logical AND reduction of a boolean tensor.";
   let verifier = [{ return verifyLogicalReductionOp(this); }];
 }
 
-def NGAnyRedOp : NG_Axis_Reduction_Op<"any.red">
+def NGAnyRedOp : NG_Axis_Reduction_Op<"any.red">, NG_OP_V0
 {
   let summary = "Axis logical OR reduction of a boolean tensor.";
   let verifier = [{ return verifyLogicalReductionOp(this); }];
@@ -259,7 +274,8 @@ def NGAnyRedOp : NG_Axis_Reduction_Op<"any.red">
 // Gather
 def NGGatherOp : 
     NG_OneResult_Op<"gather", [NoSideEffect]>,
-    Arguments<(ins NG_TensorType:$params, NG_TensorType:$indices, I64Attr:$axis)>
+    Arguments<(ins NG_TensorType:$params, NG_TensorType:$indices, I64Attr:$axis)>,
+    NG_OP_V0
 {
   let summary = "Gather slices from params along the specified axis according to indices";
   let description = [{
@@ -280,7 +296,8 @@ def NGConvolutionOp :
     Arguments<(ins NG_TensorType:$images, NG_TensorType:$filters, 
                I64ArrayAttr:$strides,
                I64ArrayAttr:$padBelow,
-               I64ArrayAttr:$padAbove)>
+               I64ArrayAttr:$padAbove)>,
+    NG_OP_V0
 {
   let summary = "Convolution of a tensor of filters over a tensor of images with padding support";
   let description = [{
@@ -300,6 +317,7 @@ def NGConvolutionOp :
     void setStrides(ArrayAttr& arrayAttr)  { this->setAttr("strides", arrayAttr);  }
     void setPadBelow(ArrayAttr& arrayAttr) { this->setAttr("padBelow", arrayAttr); }
     void setPadAbove(ArrayAttr& arrayAttr) { this->setAttr("padAbove", arrayAttr); }
+    unsigned getVersion() { return 0; }
   }];
 }
 

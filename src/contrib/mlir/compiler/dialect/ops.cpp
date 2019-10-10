@@ -330,6 +330,8 @@ mlir::IntegerAttr getBufferId(mlir::Operation* op)
 
 namespace mlir
 {
+#include "ops_interfaces.cpp.inc"
+
 #define GET_OP_CLASSES
 #include "ops.cpp.inc"
 }
