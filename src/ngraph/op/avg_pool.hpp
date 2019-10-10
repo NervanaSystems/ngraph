@@ -179,7 +179,7 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 AvgPoolBackprop() = default;
                 AvgPoolBackprop(const Shape& forward_arg_shape,
-                                const std::shared_ptr<Node>& delta,
+                                const Output<Node>& delta,
                                 const Shape& window_shape,
                                 const Strides& window_movement_strides,
                                 const Shape& padding_below,
