@@ -49,9 +49,10 @@ namespace ngraph
             {
                 inline NodeVector mul(const Node& node)
                 {
-                    NodeVector ng_inputs{ngraph::op::numpy_style_broadcast(node.get_ng_inputs())};
-                    return {
-                        std::make_shared<ngraph::op::Multiply>(ng_inputs.at(0), ng_inputs.at(1))};
+                    return {std::make_shared<ngraph::op::Multiply>(
+                        node.get_ng_inputs().at(0),
+                        node.get_ng_inputs().at(1),
+                        ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY))};
                 }
 
             } // namespace set_7

@@ -110,3 +110,62 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_float32_bool)
     handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<char>{0, 1, 1, 0, 1, 1, 1, 1, 1}), read_vector<char>(result));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, convert_float32_bf16)
+{
+    Shape shape_a{1, 1, 3, 5};
+
+    // input data
+    vector<float> a_data = {
+        0.5f, 1.5f, 0.5f, 2.5f, 1.5f, 0.5f, 3.5f, 2.5f, 0.5f, 0.5f, 2.5f, 0.5f, 0.5f, 0.5f, 1.5f};
+
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto convert = make_shared<op::Convert>(A, element::bf16);
+    auto f = make_shared<Function>(NodeVector{convert}, ParameterVector{A});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, a_data);
+    auto result = backend->create_tensor(element::bf16, shape_a);
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ((vector<bfloat16>{
+                  0.5, 1.5, 0.5, 2.5, 1.5, 0.5, 3.5, 2.5, 0.5, 0.5, 2.5, 0.5, 0.5, 0.5, 1.5}),
+              read_vector<bfloat16>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, convert_bf16_float32)
+{
+    Shape shape_a{1, 1, 3, 5};
+
+    // input data
+    vector<bfloat16> a_data = {
+        0.5, 1.5, 0.5, 2.5, 1.5, 0.5, 3.5, 2.5, 0.5, 0.5, 2.5, 0.5, 0.5, 0.5, 1.5};
+
+    auto A = make_shared<op::Parameter>(element::bf16, shape_a);
+    auto convert = make_shared<op::Convert>(A, element::f32);
+    auto f = make_shared<Function>(NodeVector{convert}, ParameterVector{A});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::bf16, shape_a);
+    copy_data(a, a_data);
+    auto result = backend->create_tensor(element::f32, shape_a);
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ((vector<float>{0.5f,
+                             1.5f,
+                             0.5f,
+                             2.5f,
+                             1.5f,
+                             0.5f,
+                             3.5f,
+                             2.5f,
+                             0.5f,
+                             0.5f,
+                             2.5f,
+                             0.5f,
+                             0.5f,
+                             0.5f,
+                             1.5f}),
+              read_vector<float>(result));
+}

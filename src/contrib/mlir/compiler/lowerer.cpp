@@ -737,28 +737,29 @@ namespace
         // Let indices rank : M
         // Let axis be A
         // Generate
-        // params loops
-        // for P_0: 0 -> params.dim[0]
-        //   for P_1: 0 -> params.dim[1]
-        //     for P_2: 0 -> params.dim[2]
+        // indices loops
+        // for I_0:0 -> indices.dim[0]
         // ...
-        //       for P_(A-1):0 -> params.dim[A-1]
-        //         for P_(A+1):0 -> params.dim[A+1]
+        //   for I_(M-1):0 -> indices.dim[M-1]
+        //     params loops
+        //     for P_0: 0 -> params.dim[0]
+        //       for P_1: 0 -> params.dim[1]
+        //         for P_2: 0 -> params.dim[2]
         // ...
-        //           for P_(N-1):0 -> params.dim[N-1]
-        //             indices loops
-        //             for I_0:0 -> indices.dim[0]
+        //           for P_(A-1):0 -> params.dim[A-1]
+        //             for P_(A+1):0 -> params.dim[A+1]
         // ...
-        //               for I_(M-1):0 -> indices.dim[M-1]
+        //               for P_(N-1):0 -> params.dim[N-1]
         //                 res[P_0, P_1, .. P_(A-1), I_0, .., I_(M-1), P_(A+1), ... P_(N-1)] =
         //                   params[P_0, P_1, .. P_(A-1), indices[I_0, .., I_(M-1)],
         //                          P_(A+1), ... P_(N-1)];
 
-        LoopNestBuilder(paramsIVPtrs, paramsLbs, paramsUbs, paramsSteps)([&] {
-            LoopNestBuilder(indicesIVPtrs, indicesLbs, indicesUbs, indicesSteps)([&] {
-                // Load axis value from indices array and cast it to Index Type
-                ValueHandle axisIdx = ValueHandle::create<IndexCastOp>(
-                    (ValueHandle)iIndices(indicesIVs), rewriter.getIndexType());
+        LoopNestBuilder(indicesIVPtrs, indicesLbs, indicesUbs, indicesSteps)([&] {
+            // Load axis value from indices array and cast it to Index Type
+            ValueHandle axisIdx = ValueHandle::create<IndexCastOp>(
+                (ValueHandle)iIndices(indicesIVs), rewriter.getIndexType());
+
+            LoopNestBuilder(paramsIVPtrs, paramsLbs, paramsUbs, paramsSteps)([&] {
                 // construct indices for param
                 // [P_0, P_1, .. P_axis-1, Indices[I0, I1, .. I_k-1], P_axis+1, P_axis+2, .. P_n-1]
                 for (auto i = 0, j = 0; i < vParams.rank(); i++)

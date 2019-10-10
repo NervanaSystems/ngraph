@@ -43,80 +43,77 @@
 #define KERNEL_CT_R1_R2(K, KV, R1, R2, CT) KV = K<CT, R1, R2>
 
 // Helper macros
-#define EXPAND_ET11_AND_RANK7(K, KV, ET, R, S, ...)                                                \
-    EXPAND_ET11(K, KV, ET, EXPAND_RANK7, R, S, ##__VA_ARGS__)
-#define EXPAND_RANK5_AND_ET4(K, KV, R, ET, S, ...)                                                 \
-    EXPAND_RANK5(K, KV, R, EXPAND_ET4, ET, S, ##__VA_ARGS__)
+#define EXPAND_ET11_AND_RANK7(K, KV, ET, R, S) EXPAND_ET11(K, KV, ET, EXPAND_RANK7_1, R, S)
+#define EXPAND_RANK5_AND_ET4(K, KV, R, ET, S, A1) EXPAND_RANK5(K, KV, R, EXPAND_ET4, ET, S, A1)
 #define EXPAND_RANK35_AND_ET4(K, KV, R1, R2, ET, S)                                                \
     EXPAND_RANK3(K, KV, R1, EXPAND_RANK5_AND_ET4, R2, ET, S)
-#define EXPAND_ETS_AND_RANK7(K, KV, ET, R, S, ...)                                                 \
-    EXPAND_ETS(K, KV, ET, EXPAND_RANK7, R, S, ##__VA_ARGS__)
+#define EXPAND_ETS_AND_RANK7(K, KV, ET, R, S) EXPAND_ETS_2(K, KV, ET, EXPAND_RANK7_1, R, S)
 
 // Expander Macros that instantiate kernels for various element types and ranks
-#define EXPAND_ET4(K, KV, ET, S, ...)                                                              \
+#define EXPAND_ET4(K, KV, ET, S, A1, A2)                                                           \
     if (ET == element::f32)                                                                        \
     {                                                                                              \
-        EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, float));                                              \
+        EXPAND_MACRO(S(K, KV, A1, A2, float));                                                     \
     }                                                                                              \
     else if (ET == element::f64)                                                                   \
     {                                                                                              \
-        EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, double));                                             \
+        EXPAND_MACRO(S(K, KV, A1, A2, double));                                                    \
     }                                                                                              \
     else if (ET == element::i8)                                                                    \
     {                                                                                              \
-        EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, int8_t));                                             \
+        EXPAND_MACRO(S(K, KV, A1, A2, int8_t));                                                    \
     }                                                                                              \
     else if (ET == element::u8)                                                                    \
     {                                                                                              \
-        EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, uint8_t));                                            \
+        EXPAND_MACRO(S(K, KV, A1, A2, uint8_t));                                                   \
     }                                                                                              \
     else                                                                                           \
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);
 
-#define EXPAND_ET11(K, KV, ET, S, ...)                                                             \
+#define EXPAND_ET11(K, KV, ET, S, A1, A2)                                                          \
     if (ET == element::boolean)                                                                    \
     {                                                                                              \
-        EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, char));                                               \
+        EXPAND_MACRO(S(K, KV, A1, A2, char));                                                      \
     }                                                                                              \
     else if (ET == element::f32)                                                                   \
     {                                                                                              \
-        EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, float));                                              \
+        EXPAND_MACRO(S(K, KV, A1, A2, float));                                                     \
     }                                                                                              \
     else if (ET == element::f64)                                                                   \
     {                                                                                              \
-        EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, double));                                             \
+        EXPAND_MACRO(S(K, KV, A1, A2, double));                                                    \
     }                                                                                              \
     else if (ET == element::i8)                                                                    \
     {                                                                                              \
-        EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, int8_t));                                             \
+        EXPAND_MACRO(S(K, KV, A1, A2, int8_t));                                                    \
     }                                                                                              \
     else if (ET == element::i16)                                                                   \
     {                                                                                              \
-        EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, int16_t));                                            \
+        EXPAND_MACRO(S(K, KV, A1, A2, int16_t));                                                   \
     }                                                                                              \
     else if (ET == element::i32)                                                                   \
     {                                                                                              \
-        EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, int32_t));                                            \
+        EXPAND_MACRO(S(K, KV, A1, A2, int32_t));                                                   \
     }                                                                                              \
     else if (ET == element::i64)                                                                   \
     {                                                                                              \
-        EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, int64_t));                                            \
+        EXPAND_MACRO(S(K, KV, A1, A2, int64_t));                                                   \
     }                                                                                              \
     else if (ET == element::u8)                                                                    \
     {                                                                                              \
-        EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, uint8_t));                                            \
+        EXPAND_MACRO(S(K, KV, A1, A2, uint8_t));                                                   \
     }                                                                                              \
     else if (ET == element::u16)                                                                   \
     {                                                                                              \
-        EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, uint16_t));                                           \
+        EXPAND_MACRO(S(K, KV, A1, A2, uint16_t));                                                  \
     }                                                                                              \
     else if (ET == element::u32)                                                                   \
     {                                                                                              \
-        EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, uint32_t));                                           \
+        EXPAND_MACRO(S(K, KV, A1, A2, uint32_t));                                                  \
     }                                                                                              \
     else if (ET == element::u64)                                                                   \
     {                                                                                              \
-        EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, uint64_t));                                           \
+        EXPAND_MACRO(S(K, KV, A1, A2, uint64_t));                                                  \
     }                                                                                              \
     else                                                                                           \
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);
@@ -176,84 +173,144 @@
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);
 
 // Expand only selected datatypes. Named macros (e.g., F32_SELECT) are expanded based on build-flags
-#define EXPAND_ETS(K, KV, ET, S, ...)                                                              \
+#define EXPAND_ETS(K, KV, ET, S)                                                                   \
     if (BOOLEAN_EN && ET == element::boolean)                                                      \
     {                                                                                              \
-        BOOLEAN_SELECT(S, K, KV, ##__VA_ARGS__, char);                                             \
+        BOOLEAN_SELECT(S, K, KV, char);                                                            \
     }                                                                                              \
     else if (F32_EN && ET == element::f32)                                                         \
     {                                                                                              \
-        F32_SELECT(S, K, KV, ##__VA_ARGS__, float);                                                \
+        F32_SELECT(S, K, KV, float);                                                               \
     }                                                                                              \
     else if (F64_EN && ET == element::f64)                                                         \
     {                                                                                              \
-        F64_SELECT(S, K, KV, ##__VA_ARGS__, double);                                               \
+        F64_SELECT(S, K, KV, double);                                                              \
     }                                                                                              \
     else if (I8_EN && ET == element::i8)                                                           \
     {                                                                                              \
-        I8_SELECT(S, K, KV, ##__VA_ARGS__, int8_t);                                                \
+        I8_SELECT(S, K, KV, int8_t);                                                               \
     }                                                                                              \
     else if (I16_EN && ET == element::i16)                                                         \
     {                                                                                              \
-        I16_SELECT(S, K, KV, ##__VA_ARGS__, int16_t);                                              \
+        I16_SELECT(S, K, KV, int16_t);                                                             \
     }                                                                                              \
     else if (I32_EN && ET == element::i32)                                                         \
     {                                                                                              \
-        I32_SELECT(S, K, KV, ##__VA_ARGS__, int32_t);                                              \
+        I32_SELECT(S, K, KV, int32_t);                                                             \
     }                                                                                              \
     else if (I64_EN && ET == element::i64)                                                         \
     {                                                                                              \
-        I64_SELECT(S, K, KV, ##__VA_ARGS__, int64_t);                                              \
+        I64_SELECT(S, K, KV, int64_t);                                                             \
     }                                                                                              \
     else if (U8_EN && ET == element::u8)                                                           \
     {                                                                                              \
-        U8_SELECT(S, K, KV, ##__VA_ARGS__, uint8_t);                                               \
+        U8_SELECT(S, K, KV, uint8_t);                                                              \
     }                                                                                              \
     else if (U16_EN && ET == element::u16)                                                         \
     {                                                                                              \
-        U16_SELECT(S, K, KV, ##__VA_ARGS__, uint16_t);                                             \
+        U16_SELECT(S, K, KV, uint16_t);                                                            \
     }                                                                                              \
     else if (U32_EN && ET == element::u32)                                                         \
     {                                                                                              \
-        U32_SELECT(S, K, KV, ##__VA_ARGS__, uint32_t);                                             \
+        U32_SELECT(S, K, KV, uint32_t);                                                            \
     }                                                                                              \
     else if (U64_EN && ET == element::u64)                                                         \
     {                                                                                              \
-        U64_SELECT(S, K, KV, ##__VA_ARGS__, uint64_t);                                             \
+        U64_SELECT(S, K, KV, uint64_t);                                                            \
     }                                                                                              \
     else                                                                                           \
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);
 
-#define EXPAND_RANK3(K, KV, R, S, ...)                                                             \
+#define EXPAND_ETS_2(K, KV, ET, S, A1, A2)                                                         \
+    if (BOOLEAN_EN && ET == element::boolean)                                                      \
+    {                                                                                              \
+        BOOLEAN_SELECT(S, K, KV, A1, A2, char);                                                    \
+    }                                                                                              \
+    else if (F32_EN && ET == element::f32)                                                         \
+    {                                                                                              \
+        F32_SELECT(S, K, KV, A1, A2, float);                                                       \
+    }                                                                                              \
+    else if (F64_EN && ET == element::f64)                                                         \
+    {                                                                                              \
+        F64_SELECT(S, K, KV, A1, A2, double);                                                      \
+    }                                                                                              \
+    else if (I8_EN && ET == element::i8)                                                           \
+    {                                                                                              \
+        I8_SELECT(S, K, KV, A1, A2, int8_t);                                                       \
+    }                                                                                              \
+    else if (I16_EN && ET == element::i16)                                                         \
+    {                                                                                              \
+        I16_SELECT(S, K, KV, A1, A2, int16_t);                                                     \
+    }                                                                                              \
+    else if (I32_EN && ET == element::i32)                                                         \
+    {                                                                                              \
+        I32_SELECT(S, K, KV, A1, A2, int32_t);                                                     \
+    }                                                                                              \
+    else if (I64_EN && ET == element::i64)                                                         \
+    {                                                                                              \
+        I64_SELECT(S, K, KV, A1, A2, int64_t);                                                     \
+    }                                                                                              \
+    else if (U8_EN && ET == element::u8)                                                           \
+    {                                                                                              \
+        U8_SELECT(S, K, KV, A1, A2, uint8_t);                                                      \
+    }                                                                                              \
+    else if (U16_EN && ET == element::u16)                                                         \
+    {                                                                                              \
+        U16_SELECT(S, K, KV, A1, A2, uint16_t);                                                    \
+    }                                                                                              \
+    else if (U32_EN && ET == element::u32)                                                         \
+    {                                                                                              \
+        U32_SELECT(S, K, KV, A1, A2, uint32_t);                                                    \
+    }                                                                                              \
+    else if (U64_EN && ET == element::u64)                                                         \
+    {                                                                                              \
+        U64_SELECT(S, K, KV, A1, A2, uint64_t);                                                    \
+    }                                                                                              \
+    else                                                                                           \
+        throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);
+
+#define EXPAND_RANK3(K, KV, R, S, A1, A2, A3)                                                      \
     switch (R)                                                                                     \
     {                                                                                              \
-    case 1: EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, 1)); break;                                       \
-    case 2: EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, 2)); break;                                       \
-    case 3: EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, 3)); break;                                       \
+    case 1: EXPAND_MACRO(S(K, KV, A1, A2, A3, 1)); break;                                          \
+    case 2: EXPAND_MACRO(S(K, KV, A1, A2, A3, 2)); break;                                          \
+    case 3: EXPAND_MACRO(S(K, KV, A1, A2, A3, 3)); break;                                          \
     default: throw ngraph_error("Unsupported rank " + std::to_string(R) + " for kernel " #K);      \
     }
 
-#define EXPAND_RANK5(K, KV, R, S, ...)                                                             \
+#define EXPAND_RANK5(K, KV, R, S, A1, A2, A3)                                                      \
     switch (R)                                                                                     \
     {                                                                                              \
-    case 1: EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, 1)); break;                                       \
-    case 2: EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, 2)); break;                                       \
-    case 3: EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, 3)); break;                                       \
-    case 4: EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, 4)); break;                                       \
-    case 5: EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, 5)); break;                                       \
+    case 1: EXPAND_MACRO(S(K, KV, A1, A2, A3, 1)); break;                                          \
+    case 2: EXPAND_MACRO(S(K, KV, A1, A2, A3, 2)); break;                                          \
+    case 3: EXPAND_MACRO(S(K, KV, A1, A2, A3, 3)); break;                                          \
+    case 4: EXPAND_MACRO(S(K, KV, A1, A2, A3, 4)); break;                                          \
+    case 5: EXPAND_MACRO(S(K, KV, A1, A2, A3, 5)); break;                                          \
     default: throw ngraph_error("Unsupported rank " + std::to_string(R) + " for kernel " #K);      \
     }
 
-#define EXPAND_RANK7(K, KV, R, S, ...)                                                             \
+#define EXPAND_RANK7(K, KV, R, S, A1, A2)                                                          \
     switch (R)                                                                                     \
     {                                                                                              \
-    case 1: EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, 1)); break;                                       \
-    case 2: EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, 2)); break;                                       \
-    case 3: EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, 3)); break;                                       \
-    case 4: EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, 4)); break;                                       \
-    case 5: EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, 5)); break;                                       \
-    case 6: EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, 6)); break;                                       \
-    case 7: EXPAND_MACRO(S(K, KV, ##__VA_ARGS__, 7)); break;                                       \
+    case 1: EXPAND_MACRO(S(K, KV, A1, A2, 1)); break;                                              \
+    case 2: EXPAND_MACRO(S(K, KV, A1, A2, 2)); break;                                              \
+    case 3: EXPAND_MACRO(S(K, KV, A1, A2, 3)); break;                                              \
+    case 4: EXPAND_MACRO(S(K, KV, A1, A2, 4)); break;                                              \
+    case 5: EXPAND_MACRO(S(K, KV, A1, A2, 5)); break;                                              \
+    case 6: EXPAND_MACRO(S(K, KV, A1, A2, 6)); break;                                              \
+    case 7: EXPAND_MACRO(S(K, KV, A1, A2, 7)); break;                                              \
+    default: throw ngraph_error("Unsupported rank " + std::to_string(R) + " for kernel " #K);      \
+    }
+#define EXPAND_RANK7_1(K, KV, R, S, A1)                                                            \
+    switch (R)                                                                                     \
+    {                                                                                              \
+    case 1: EXPAND_MACRO(S(K, KV, A1, 1)); break;                                                  \
+    case 2: EXPAND_MACRO(S(K, KV, A1, 2)); break;                                                  \
+    case 3: EXPAND_MACRO(S(K, KV, A1, 3)); break;                                                  \
+    case 4: EXPAND_MACRO(S(K, KV, A1, 4)); break;                                                  \
+    case 5: EXPAND_MACRO(S(K, KV, A1, 5)); break;                                                  \
+    case 6: EXPAND_MACRO(S(K, KV, A1, 6)); break;                                                  \
+    case 7: EXPAND_MACRO(S(K, KV, A1, 7)); break;                                                  \
     default: throw ngraph_error("Unsupported rank " + std::to_string(R) + " for kernel " #K);      \
     }
 

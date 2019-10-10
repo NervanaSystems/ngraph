@@ -22,14 +22,18 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+#include "ngraph/builder/norm.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/fused_op_decomposition.hpp"
+#include "ngraph/pass/manager.hpp"
 #include "ngraph/provenance.hpp"
 
 using namespace std;
 using namespace ngraph;
 using ::testing::Return;
 
-using ProvSet = std::set<std::string>;
+using ProvSet = std::unordered_set<std::string>;
 
 TEST(provenance, provenance)
 {
@@ -311,5 +315,129 @@ TEST(provenance, provenance)
 
         EXPECT_EQ(d->get_provenance_tags(), (ProvSet{"tag_c", "tag_d"}));
         EXPECT_EQ(e->get_provenance_tags(), (ProvSet{"tag_c", "tag_e"}));
+    }
+}
+
+TEST(provenance, add_group_above)
+{
+    auto p1 = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
+    p1->add_provenance_tag("P1");
+    auto p2 = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
+    p2->add_provenance_tag("P2");
+    auto a1 = p1 + p2;
+    auto m1 = (a1 * a1)->add_provenance_group_members_above({p1, p2});
+    m1->add_provenance_tag("m1");
+    EXPECT_EQ(p1->get_provenance_tags(), (ProvSet{"P1"}));
+    EXPECT_EQ(p2->get_provenance_tags(), (ProvSet{"P2"}));
+    EXPECT_EQ(a1->get_provenance_tags(), (ProvSet{"m1"}));
+    EXPECT_EQ(m1->get_provenance_tags(), (ProvSet{"m1"}));
+}
+
+TEST(provenance, builder)
+{
+    auto p1 = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
+    p1->add_provenance_tag("P1");
+    auto norm = builder::lp_norm(p1, {0}, 1, 0);
+    norm->add_provenance_tag("norm");
+    for (auto node : topological_sort(NodeVector{norm}))
+    {
+        if (node == p1)
+        {
+            EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"P1"}));
+        }
+        else
+        {
+            EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"norm"}));
+        }
+    }
+}
+
+TEST(provenance, fused)
+{
+    auto p1 = make_shared<op::Parameter>(element::f32, PartialShape{2, 3, 4});
+    p1->add_provenance_tag("P1");
+    auto g = make_shared<op::Gelu>(p1);
+    g->add_provenance_tag("G");
+    auto r = make_shared<op::Result>(g);
+    auto f = make_shared<Function>(ResultVector{r}, ParameterVector{p1});
+    pass::Manager manager;
+    manager.register_pass<pass::FusedOpDecomposition>();
+    manager.run_passes(f);
+    traverse_nodes(f, [&](const std::shared_ptr<Node>& node) {
+        if (node == p1)
+        {
+            EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"P1"}));
+        }
+        else if (node == r)
+        {
+        }
+        else
+        {
+            EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"G"}));
+        }
+    });
+}
+
+TEST(provenance, topk_setk)
+{
+    auto p1 = make_shared<op::Parameter>(element::f32, PartialShape{20, 3, 4});
+    p1->add_provenance_tag("P1");
+    auto tk = make_shared<op::TopK>(p1, 0, element::i32, 10);
+    tk->add_provenance_tag("TK");
+    auto tkc0 = tk->input_value(1).get_node_shared_ptr();
+    tkc0->add_provenance_tag("TKC0");
+    for (auto node : topological_sort(NodeVector{tk}))
+    {
+        if (node == p1)
+        {
+            EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"P1"}));
+        }
+        else if (node == tkc0)
+        {
+            EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"TK", "TKC0"}));
+        }
+        else
+        {
+            EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"TK"}));
+        }
+    }
+    tk->set_k(5);
+    auto tkc1 = tk->input_value(1).get_node_shared_ptr();
+    tkc1->add_provenance_tag("TKC1");
+    for (auto node : topological_sort(NodeVector{tk}))
+    {
+        if (node == p1)
+        {
+            EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"P1"}));
+        }
+        else if (node == tkc1)
+        {
+            EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"TK", "TKC0", "TKC1"}));
+        }
+        else
+        {
+            EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"TK"}));
+        }
+    }
+}
+
+TEST(provenance, empty_group)
+{
+    auto p1 = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
+    p1->add_provenance_tag("P1");
+    auto abs = make_shared<op::Abs>(p1);
+    // Make sure group is empty
+    abs->add_provenance_group_members_above({abs});
+    abs->add_provenance_tag("abs");
+    for (auto node : topological_sort(NodeVector{abs}))
+    {
+        if (node == p1)
+        {
+            EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"P1"}));
+        }
+        else
+        {
+            EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"abs"}));
+        }
     }
 }

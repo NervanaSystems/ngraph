@@ -66,6 +66,32 @@ namespace ngraph
                                                     static_cast<ElementType*>(out0),
                                                     arg2_shape);
                 }
+
+                template <typename ElementType>
+                void batch_norm_backprop(double eps,
+                                         const void* arg0,
+                                         const void* arg1,
+                                         const void* arg2,
+                                         const void* arg3,
+                                         const void* arg4,
+                                         const void* arg5,
+                                         void* out0,
+                                         void* out1,
+                                         void* out2,
+                                         const Shape& arg2_shape)
+                {
+                    reference::batch_norm_backprop(eps,
+                                                   static_cast<const ElementType*>(arg0),
+                                                   static_cast<const ElementType*>(arg1),
+                                                   static_cast<const ElementType*>(arg2),
+                                                   static_cast<const ElementType*>(arg3),
+                                                   static_cast<const ElementType*>(arg4),
+                                                   static_cast<const ElementType*>(arg5),
+                                                   static_cast<ElementType*>(out0),
+                                                   static_cast<ElementType*>(out1),
+                                                   static_cast<ElementType*>(out2),
+                                                   arg2_shape);
+                }
             }
         }
     }
