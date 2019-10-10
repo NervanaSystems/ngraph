@@ -740,7 +740,7 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_c_2x2_shape)
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
     const auto axes = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{1});
     float eps{1e-6f};
-    auto eps_mode = op::EpsMode::MAX;
+    auto eps_mode = op::EpsMode::ADD;
 
     auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
     auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data});
@@ -764,7 +764,7 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_c_2x4_shape)
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
     const auto axes = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{1});
     float eps{1e-6f};
-    auto eps_mode = op::EpsMode::MAX;
+    auto eps_mode = op::EpsMode::ADD;
 
     auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
     auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data});

@@ -17,7 +17,7 @@
 
 import numpy as np
 
-input = np.arange(1, 25, 1).reshape(1, 2, 3, 4).astype(np.float32)
+input = np.arange(1, 5, 1).reshape(2,2).astype(np.float32)
 eps = np.array([1e-6]).astype(np.float32)
 # across chw axes
 norm = np.sqrt(np.sum(np.power(input, 2), axis=(1), keepdims=True) + eps)
