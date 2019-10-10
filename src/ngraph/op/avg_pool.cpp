@@ -234,13 +234,13 @@ shared_ptr<Node> op::v0::AvgPool::get_default_value() const
 }
 
 op::v0::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
-                                         const shared_ptr<Node>& delta,
+                                         const Output<Node>& delta,
                                          const Shape& window_shape,
                                          const Strides& window_movement_strides,
                                          const Shape& padding_below,
                                          const Shape& padding_above,
                                          bool include_padding_in_avg_computation)
-    : Op(check_single_output_args({delta}))
+    : Op({delta})
     , m_forward_arg_shape(forward_arg_shape)
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
