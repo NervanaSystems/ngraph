@@ -58,7 +58,7 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
-                bool axes_constant() const;
+                bool are_axes_constant() const;
                 const AxisSet get_axes() const;
                 void set_axes(const AxisSet& axes);
 

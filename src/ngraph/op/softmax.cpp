@@ -46,7 +46,7 @@ op::v0::Softmax::Softmax(const Output<Node>& arg, const Output<Node>& axes)
     constructor_validate_and_infer_types();
 }
 
-bool op::v0::Softmax::axes_constant() const
+bool op::v0::Softmax::are_axes_constant() const
 {
     return input_value(1).get_node_shared_ptr()->is_constant();
 }
@@ -89,7 +89,7 @@ void op::v0::Softmax::validate_and_infer_types()
     {
         set_output_type(0, get_input_element_type(0), input_shape.to_shape());
 
-        if (axes_constant())
+        if (are_axes_constant())
         {
             auto m_axes = get_axes();
             for (auto axis : m_axes)
@@ -126,7 +126,7 @@ shared_ptr<Node> op::v0::Softmax::copy_with_new_args(const NodeVector& new_args)
 void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     auto delta = deltas.at(0);
-    NGRAPH_CHECK(axes_constant(), "axes need to be constant");
+    NGRAPH_CHECK(are_axes_constant(), "axes need to be constant");
     auto axes = get_axes();
 
     auto z = delta * shared_from_this();
