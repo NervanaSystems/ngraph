@@ -777,6 +777,8 @@ void MLIRCompiler::cleanup()
     // Free void double pointer arguments without freeing external tensor data.
     for (auto* arg : m_invokeArgs)
     {
+        auto* memRefArg = *((mlir::StaticFloatMemRef**)arg);
+        free(memRefArg);
         free(arg);
     }
 
