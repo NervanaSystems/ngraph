@@ -15,6 +15,9 @@
 //*****************************************************************************
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/pad.hpp"
 
@@ -87,6 +90,86 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
+    case OP_TYPEID::ConvolutionBackpropData:
+    {
+        auto tmp = dynamic_cast<const op::v1::ConvolutionBackpropData*>(node.get());
+        NGRAPH_CHECK(node->input_value(0).get_node_shared_ptr()->is_constant());
+        auto data_batch_shape =
+            static_pointer_cast<op::Constant>(node->input_value(0).get_node_shared_ptr())
+                ->get_shape_val();
+        const auto filters = node->input(1).get_source_output();
+        const auto output_delta = node->input(2).get_source_output();
+        auto strides = tmp->get_strides();
+        auto dilations = tmp->get_dilations();
+        auto pads_begin = tmp->get_pads_begin();
+        auto pads_end = tmp->get_pads_end();
+        vector<size_t> data_dilations = {1};
+        auto replacement_node = make_shared<op::v0::ConvolutionBackpropData>(data_batch_shape,
+                                                                             filters,
+                                                                             output_delta,
+                                                                             strides,
+                                                                             dilations,
+                                                                             pads_begin,
+                                                                             pads_end,
+                                                                             data_dilations);
+
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::ConvolutionBackpropFilters:
+    {
+        auto tmp = dynamic_cast<const op::v1::ConvolutionBackpropFilters*>(node.get());
+        NGRAPH_CHECK(node->input_value(2).get_node_shared_ptr()->is_constant());
+        auto filters_shape =
+            static_pointer_cast<op::Constant>(node->input_value(2).get_node_shared_ptr())
+                ->get_shape_val();
+        auto data_batch = node->input(0).get_source_output();
+        auto output_delta = node->input(1).get_source_output();
+        auto strides = tmp->get_strides();
+        auto dilations = tmp->get_dilations();
+        auto pads_begin = tmp->get_pads_begin();
+        auto pads_end = tmp->get_pads_end();
+        vector<size_t> data_dilations = {1};
+        auto replacement_node = make_shared<op::v0::ConvolutionBackpropFilters>(data_batch,
+                                                                                filters_shape,
+                                                                                output_delta,
+                                                                                strides,
+                                                                                dilations,
+                                                                                pads_begin,
+                                                                                pads_end,
+                                                                                data_dilations);
+
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+
+    /*
+        case OP_TYPEID::AvgPoolBackprop:
+        {
+            auto tmp = dynamic_cast<const op::v1::AvgPoolBackprop*>(node.get());
+
+            auto exclude_pad = tmp->get_exclude_pad();
+            auto pads_begin = tmp->get_pads_begin();
+            auto pads_end = tmp->get_pads_end();
+            auto strides = tmp->get_strides();
+            auto kernel = tmp->get_kernel();
+
+            auto replacement_node =
+                make_shared<op::v0::AvgPoolBackprop>(node->input(1).get_source_output(),
+                                                     node->input(0).get_source_output(),
+                                                     strides,
+                                                     pads_begin,
+                                                     pads_end,
+                                                     kernel,
+                                                     exclude_pad);
+            replace_node(node, replacement_node);
+            modified = true;
+            break;
+        }
+    */
+
     default: break;
     }
 #if defined(__clang__)
