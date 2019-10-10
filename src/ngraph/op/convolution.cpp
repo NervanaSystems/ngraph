@@ -217,6 +217,12 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
 
     element::Type forward_result_et;
     PartialShape forward_result_shape;
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+
+    if (input_value(0).get_node_shared_ptr()->is_constant())
+    {
+        data_batch_shape = get_data_batch_shape();
+    }
 
     NODE_VALIDATION_CHECK(
         this,
@@ -227,14 +233,15 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
         filters_et,
         ").");
 
-    forward_result_shape = infer_convolution_forward(this,
-                                                     get_data_batch_shape(),
-                                                     Strides(get_data_batch_shape().size() - 2, 0),
-                                                     m_pads_begin,
-                                                     m_pads_end,
-                                                     filters_shape,
-                                                     m_strides,
-                                                     m_dilations);
+    forward_result_shape =
+        infer_convolution_forward(this,
+                                  data_batch_shape,
+                                  Strides(static_cast<size_t>(data_batch_shape.rank()) - 2, 0),
+                                  m_pads_begin,
+                                  m_pads_end,
+                                  filters_shape,
+                                  m_strides,
+                                  m_dilations);
 
     NODE_VALIDATION_CHECK(this,
                           forward_result_shape.compatible(delta_shape),
@@ -245,7 +252,8 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
                           delta_shape,
                           ").");
 
-    set_output_type(0, forward_result_et, get_data_batch_shape());
+    set_input_is_relevant_to_value(0);
+    set_output_type(0, forward_result_et, data_batch_shape);
 }
 
 void op::v1::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints,
@@ -444,6 +452,12 @@ void op::v1::ConvolutionBackpropFilters::validate_and_infer_types()
 
     element::Type forward_result_et;
     PartialShape forward_result_shape;
+    PartialShape filters_shape{PartialShape::dynamic()};
+
+    if (input_value(2).get_node_shared_ptr()->is_constant())
+    {
+        filters_shape = get_filters_shape();
+    }
 
     NODE_VALIDATION_CHECK(
         this,
@@ -460,7 +474,7 @@ void op::v1::ConvolutionBackpropFilters::validate_and_infer_types()
                                   Strides(static_cast<size_t>(data_batch_shape.rank()) - 2, 1),
                                   m_pads_begin,
                                   m_pads_end,
-                                  get_filters_shape(),
+                                  filters_shape,
                                   m_strides,
                                   m_dilations);
 
@@ -473,7 +487,8 @@ void op::v1::ConvolutionBackpropFilters::validate_and_infer_types()
                           delta_shape,
                           ").");
 
-    set_output_type(0, forward_result_et, get_filters_shape());
+    set_input_is_relevant_to_value(2);
+    set_output_type(0, forward_result_et, filters_shape);
 }
 
 shared_ptr<Node>
