@@ -3,13 +3,14 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-TEST(serialize, opset1_pad_pass)
+TEST(opset_upgrade, opset1_pad_upgrade_pass)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{5, 6});
     auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
@@ -36,4 +37,33 @@ TEST(serialize, opset1_pad_pass)
 
     EXPECT_EQ(pad_v1_node->get_pads_begin(), padding_below);
     EXPECT_EQ(pad_v1_node->get_pads_end(), padding_above);
+}
+
+TEST(opset_downgrade, opset1_pad_downgrade_pass)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{5, 6});
+    auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto pads_begin =
+        make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
+    const auto pads_end = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{3, 4});
+    auto pad_mode = op::PadMode::EDGE;
+
+    auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value, pad_mode);
+    auto result = make_shared<op::Result>(pad_v1);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg, arg_pad_value});
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.run_passes(f);
+
+    auto pad_s0_result = f->get_results().at(0);
+    auto node = pad_s0_result->input(0).get_source_output().get_node_shared_ptr();
+    auto pad_v0_node = static_pointer_cast<op::v0::Pad>(node);
+
+    EXPECT_EQ(pad_v0_node->description(), "Pad");
+    EXPECT_EQ(pad_v0_node->get_version(), 0);
+    EXPECT_EQ(pad_v0_node->get_pad_mode(), pad_mode);
+
+    EXPECT_EQ(pad_v0_node->get_padding_below(), CoordinateDiff({1, 2}));
+    EXPECT_EQ(pad_v0_node->get_padding_above(), CoordinateDiff({3, 4}));
 }

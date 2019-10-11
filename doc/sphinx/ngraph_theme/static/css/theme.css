@@ -1645,6 +1645,7 @@ h1 {
 h2 {
   font-size: 133%;
   text-decoration: underline 4px dotted #D3D3D3;
+  margin-top: -2px;
 }
 
 h2, .rst-content .toctree-wrapper p.caption {
