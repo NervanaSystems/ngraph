@@ -441,3 +441,104 @@ def test_space_to_depth_operator():
                         4, 6, 12, 14, 20, 22, 28, 30,
                         5, 7, 13, 15, 21, 23, 29, 31], dtype=np.float32).reshape(1, 8, 2, 2)
     assert np.allclose(result, expected)
+
+
+def test_rnn_cell_operator():
+    runtime = get_runtime()
+
+    batch_size = 2
+    input_size = 3
+    hidden_size = 3
+
+    X_shape = [batch_size, input_size]
+    W_shape = [hidden_size, input_size]
+    R_shape = [hidden_size, hidden_size]
+    H_t_shape = [batch_size, hidden_size]
+    B_shape = [2 * hidden_size]
+
+    parameter_X = ng.parameter(X_shape, name='X', dtype=np.float32)
+    parameter_W = ng.parameter(W_shape, name='W', dtype=np.float32)
+    parameter_R = ng.parameter(R_shape, name='R', dtype=np.float32)
+    parameter_H_t = ng.parameter(H_t_shape, name='H_t', dtype=np.float32)
+    parameter_B = ng.parameter(B_shape, name='B', dtype=np.float32)
+
+    X_value = np.array([0.3432185, 0.612268, 0.20272376,
+                        0.9513413, 0.30585995, 0.7265472],
+                       dtype=np.float32).reshape(X_shape)
+    W_value = np.array([0.41930267, 0.7872176, 0.89940447,
+                        0.23659843, 0.24676207, 0.17101714,
+                        0.3147149, 0.6555601, 0.4559603],
+                       dtype=np.float32).reshape(W_shape)
+    R_value = np.array([0.8374871, 0.86660194, 0.82114047,
+                        0.71549815, 0.18775631, 0.3182116,
+                        0.25392973, 0.38301638, 0.85531586],
+                       dtype=np.float32).reshape(R_shape)
+    H_t_value = np.array([0.12444675, 0.52055854, 0.46489045,
+                          0.4983964, 0.7730452, 0.28439692],
+                         dtype=np.float32).reshape(H_t_shape)
+    B_value = np.array([0.45513555, 0.96227735, 0.24737759,
+                        0.57380486, 0.67398053, 0.18968852],
+                       dtype=np.float32).reshape(B_shape)
+    activations = ['sigmoid']
+    activation_alpha = []
+    activation_beta = []
+    clip = 2.88
+
+    model = ng.rnn_cell(parameter_X,
+                        parameter_W,
+                        parameter_R,
+                        parameter_H_t,
+                        hidden_size,
+                        parameter_B,
+                        activations,
+                        activation_alpha,
+                        activation_beta,
+                        clip)
+    computation = runtime.computation(model,
+                                      parameter_X,
+                                      parameter_W,
+                                      parameter_R,
+                                      parameter_H_t,
+                                      parameter_B)
+
+    result = computation(X_value, W_value, R_value, H_t_value, B_value)
+    expected = np.array([0.94126844, 0.9036043, 0.841243,
+                         0.9468489, 0.934215, 0.873708],
+                        dtype=np.float32).reshape(batch_size, hidden_size)
+
+    assert np.allclose(result, expected)
+
+
+def test_group_convolution_operator():
+    runtime = get_runtime()
+
+    data_shape = [1, 4, 2, 2]
+    filters_shape = [2, 2, 1, 1]
+
+    parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    parameter_filters = ng.parameter(filters_shape, name='Filters', dtype=np.float32)
+
+    data_value = np.arange(start=1.0, stop=17.0, dtype=np.float32).reshape(data_shape)
+    filters_value = np.arange(start=1.0, stop=5.0, dtype=np.float32).reshape(filters_shape)
+    window_movement_strides = [1, 1]
+    window_dilation_strides = [1, 1]
+    padding_below = [0, 0]
+    padding_above = [0, 0]
+    data_dilation_strides = [1, 1]
+    groups = 2
+
+    model = ng.group_convolution(parameter_data,
+                                 parameter_filters,
+                                 window_movement_strides,
+                                 window_dilation_strides,
+                                 padding_below, padding_above,
+                                 data_dilation_strides,
+                                 groups,
+                                 0)
+    computation = runtime.computation(model, parameter_data, parameter_filters)
+
+    result = computation(data_value, filters_value)
+    expected = np.array([11, 14, 17, 20, 79, 86, 93, 100],
+                        dtype=np.float32).reshape(1, 2, 2, 2)
+
+    assert np.allclose(result, expected)
