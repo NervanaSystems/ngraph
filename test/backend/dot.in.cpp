@@ -254,7 +254,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_0_0)
     EXPECT_TRUE(test::all_close_f((vector<float>{0}), read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
+NGRAPH_TEST(${BACKEND_NAME}, MLIR_DISABLE_TEST(dot_matrix_2x0_0x2))
 {
     Shape shape_a{2, 0};
     Shape shape_b{0, 2};
