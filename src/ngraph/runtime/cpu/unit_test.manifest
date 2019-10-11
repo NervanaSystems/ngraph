@@ -28,3 +28,6 @@ random_uniform_all_static_seed_used
 random_uniform_seed_use_dynamic
 random_uniform_all_static_range_dynamic
 random_uniform_dynamic_shapes
+
+# ONNX TopK with dynamic K
+top_k_opset_10
