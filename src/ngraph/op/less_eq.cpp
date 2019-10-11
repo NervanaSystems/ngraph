@@ -19,12 +19,12 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::LessEq::type_name{"LessEq"};
+constexpr NodeTypeInfo op::LessEq::type_info;
 
 op::LessEq::LessEq(const Output<Node>& arg0,
                    const Output<Node>& arg1,
-                   const AutoBroadcastSpec& autob)
-    : BinaryElementwiseComparison(arg0, arg1, autob)
+                   const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseComparison(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }

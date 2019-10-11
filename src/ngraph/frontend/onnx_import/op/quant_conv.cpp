@@ -82,7 +82,8 @@ namespace ngraph
                         {
                             // Split one convolution op to N ops where N is the number of groups
                             // and concat results after computation.
-                            // reference: https://github.com/NervanaSystems/ngraph-mxnet/blob/fdd692/src/ngraph/ngraph_emitter.cc#L822-L856
+                            // reference:
+                            // https://github.com/NervanaSystems/ngraph-mxnet/blob/fdd692/src/ngraph/ngraph_emitter.cc#L822-L856
                             std::size_t n_data_channels{data->get_shape().at(1)};
                             std::size_t n_filters_channels{filters->get_shape().at(0)};
 
@@ -97,7 +98,7 @@ namespace ngraph
                                 filters->get_shape().size());
                             std::vector<std::size_t> filters_upper_bounds{filters->get_shape()};
 
-                            for (std::size_t group{0}; group < groups; ++group)
+                            for (int64_t group{0}; group < groups; ++group)
                             {
                                 // slice data
                                 data_lower_bounds[1] = group * data_group_size;
@@ -201,9 +202,11 @@ namespace ngraph
                     auto output_scale = inputs.at(6);
                     auto output_zero_point = inputs.at(7);
 
-                    ASSERT_VALID_ARGUMENT(node,
-                                          ((groups >= 0) && (groups <= data->get_shape().at(1)) &&
-                                           (groups <= filters->get_shape().at(0))))
+                    ASSERT_VALID_ARGUMENT(
+                        node,
+                        ((groups >= 0) &&
+                         (groups <= static_cast<int64_t>(data->get_shape().at(1))) &&
+                         (groups <= static_cast<int64_t>(filters->get_shape().at(0)))))
                         << "incorrect value of 'group' attribute: " << groups;
 
                     std::size_t n_data_channels{data->get_shape().at(1)};
@@ -270,7 +273,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

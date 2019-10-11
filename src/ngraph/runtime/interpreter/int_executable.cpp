@@ -28,6 +28,7 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/chrome_trace.hpp"
 #include "ngraph/serializer.hpp"
@@ -47,6 +48,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
     pass_manager.register_pass<pass::FusedOpDecomposition>();
+    pass_manager.register_pass<pass::Opset0Downgrade>();
     pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.run_passes(m_function);
@@ -111,7 +113,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
     for (size_t output_count = 0; output_count < get_results().size(); ++output_count)
     {
         auto output = get_results()[output_count];
-        if (!dynamic_pointer_cast<op::Result>(output))
+        if (!is_type<op::Result>(output))
         {
             throw ngraph_error("One of function's outputs isn't op::Result");
         }

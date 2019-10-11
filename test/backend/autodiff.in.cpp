@@ -1659,9 +1659,47 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, backwards_batch_norm_training)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_batch_norm_training_4d)
 {
     const Shape input_shape{10, 4, 5, 5};
+    const Shape channel_shape{input_shape.at(1)};
+    const double eps = 1e-3;
+
+    // Need to keep the output elements for mean and variance from going out of scope
+    // and getting freed.
+    NodeVector goes;
+
+    auto make_graph = [&input_shape, &channel_shape, &eps, &goes] {
+        const element::Type& et = element::f32;
+        auto input = make_shared<op::Parameter>(et, input_shape);
+        auto gamma = make_shared<op::Parameter>(et, channel_shape);
+        auto beta = make_shared<op::Parameter>(et, channel_shape);
+        auto BN = make_shared<op::BatchNormTraining>(input, gamma, beta, eps);
+        auto normed_input = make_shared<op::Result>(make_shared<op::GetOutputElement>(BN, 0));
+        auto mean = make_shared<op::Result>(make_shared<op::GetOutputElement>(BN, 1));
+        auto variance = make_shared<op::Result>(make_shared<op::GetOutputElement>(BN, 2));
+        goes.push_back(mean);
+        goes.push_back(variance);
+        // TODO autodiff testing with more than one result
+        auto f =
+            make_shared<Function>(ResultVector{normed_input}, ParameterVector{input, gamma, beta});
+        return f;
+    };
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    using T = float;
+    test::Uniform<T> rng(-5.0, 2.0);
+    auto input = rng.initialize(backend->create_tensor<T>(input_shape));
+    auto gamma = rng.initialize(backend->create_tensor<T>(channel_shape));
+    auto beta = rng.initialize(backend->create_tensor<T>(channel_shape));
+
+    EXPECT_TRUE(
+        autodiff_numeric_compare<T>(backend.get(), make_graph, {input, gamma, beta}, .005, .005));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, backwards_batch_norm_training_3d)
+{
+    const Shape input_shape{10, 4, 5};
     const Shape channel_shape{input_shape.at(1)};
     const double eps = 1e-3;
 

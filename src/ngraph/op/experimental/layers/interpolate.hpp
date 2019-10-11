@@ -37,15 +37,15 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"Interpolate", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a Interpolate operation
             ///
             /// \param image	    Input image
             /// \param output_shape Output shape of spatial axes
             /// \param attrs        Interpolation attributes
-            Interpolate(const std::shared_ptr<Node>& image,
-                        const std::shared_ptr<Node>& output_shape,
+            Interpolate(const Output<Node>& image,
+                        const Output<Node>& output_shape,
                         const InterpolateAttrs& attrs);
 
             void validate_and_infer_types() override;

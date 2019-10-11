@@ -22,25 +22,27 @@ namespace ngraph
 {
     namespace op
     {
+        // clang-format off
         /// \brief Elementwise Local Response Normalization (LRN) operation.
         ///
         /// ## Inputs
         ///
-        /// |       | Type                              | Description                                     |
-        /// | ----- | --------------------------------- | ----------------------------------------------- |
+        /// |       | Type                                    | Description                                     |
+        /// | ----- | --------------------------------------- | ----------------------------------------------- |
         /// | `arg` | \f$N[n, c, d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and numeric element type. |
         ///
         /// ## Output
         ///
-        /// | Type                   | Description                                                                          |
-        /// | ---------------------- | ------------------------------------------------------------------------------------ |
+        /// | Type                         | Description                                                                                                                                                                                  |
+        /// | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$N[n, c, d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[n, c, d_1,\dots,d_n] = \frac{N[n,i,d_1,\dots,d_n]}{ (bias + alpha * (\sum_{i=max(0,(nsize-1)/2)}^{min(C, (nsize-1)/2)+1} N[n,i,d_1,\dots,d_n]^{2}) ^ {2})}\f$ |
+        // clang-format on
         class LRN : public Op
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"LRN", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a LRN operation.
             LRN() = default;
             /// \brief Constructs a LRN operation.
@@ -67,6 +69,8 @@ namespace ngraph
             void set_bias(double bias) { m_bias = bias; }
             size_t get_nsize() const { return m_size; }
             void set_nsize(size_t size) { m_size = size; }
+            AxisSet get_reduction_axes() const;
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;

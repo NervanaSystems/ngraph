@@ -17,7 +17,6 @@
 #pragma once
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/graph_util.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
 
 namespace ngraph
@@ -29,14 +28,14 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"EmbeddingLookup", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a EmbeddingLookup operation.
             EmbeddingLookup() = default;
             /// \brief Constructs a EmbeddingLookup operation.
             ///
-            /// EmbeddingLookup constructs an output tensor by replacing every index in a given input tensor
-            /// with a row (from the weights matrix) at that index
+            /// EmbeddingLookup constructs an output tensor by replacing every index in a given
+            /// input tensor with a row (from the weights matrix) at that index
             ///
             /// \param data The input indices for tokens to be translated into embeddings
             /// \param weights is a dense matrix [N,M] where each row 0..N
@@ -49,7 +48,8 @@ namespace ngraph
 
             void validate_and_infer_types() override;
 
-            void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override
+            void generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                   const NodeVector& /* deltas */) override
             {
                 throw ngraph_error("Not yet implemented");
             }

@@ -112,7 +112,7 @@
 #include "ngraph/util.hpp"
 
 #ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/compiler.hpp"
+#include "contrib/mlir/compiler/compiler.hpp"
 #endif
 
 using namespace std;
@@ -142,7 +142,7 @@ namespace ngraph
                 auto& functors = external_function->get_functors();
                 const ngraph::op::Divide* divop = static_cast<const ngraph::op::Divide*>(node);
                 std::function<void(void*, void*, void*, size_t, bool, int)> kernel;
-                SELECT_KERNEL(kernel, args[0].get_element_type(), runtime::cpu::kernel::divide);
+                SELECT_KERNEL(kernel, args[0].get_element_type(), runtime::cpu::kernel::divide)
                 auto element_count = out[0].get_size();
                 auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
@@ -204,6 +204,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::And)
             {
+                (void)node;
                 auto& functors = external_function->get_functors();
 
                 auto element_count = out[0].get_size();
@@ -226,6 +227,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Or)
             {
+                (void)node;
                 auto& functors = external_function->get_functors();
 
                 auto element_count = out[0].get_size();
@@ -248,6 +250,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Xor)
             {
+                (void)node;
                 auto& functors = external_function->get_functors();
 
                 auto element_count = out[0].get_size();
@@ -347,7 +350,31 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Result)
             {
-                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::result);
+                if (args[0].get_element_type() == element::bf16)
+                {
+                    auto& functors = external_function->get_functors();
+                    std::function<void(void*, void*, size_t, int)> kernel;
+
+                    kernel = ngraph::runtime::cpu::kernel::result<bfloat16>;
+
+                    auto element_count = out[0].get_size();
+                    auto arg0_buffer_index =
+                        external_function->get_buffer_index(args[0].get_name());
+                    auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
+
+                    auto functor = [&, kernel, element_count, arg0_buffer_index, out0_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[out0_buffer_index],
+                               element_count,
+                               ectx->arena);
+                    };
+                    functors.emplace_back(functor);
+                }
+                else
+                {
+                    BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::result);
+                }
             }
 
             template <>
@@ -401,6 +428,8 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Constant)
             {
+                (void)args;
+                (void)out;
                 auto& functors = external_function->get_functors();
 
                 vector<size_t> dest_indices;
@@ -416,7 +445,7 @@ namespace ngraph
                     external_function->get_buffer_index(node->get_output_tensor(0).get_name());
                 auto size = node->get_output_tensor(0).size();
                 auto functor = [&, dest_indices, src_index, size](CPURuntimeContext* ctx,
-                                                                  CPUExecutionContext* ectx) {
+                                                                  CPUExecutionContext* /* ectx */) {
                     for (auto p : dest_indices)
                     {
                         memcpy(ctx->buffer_data[p], ctx->buffer_data[src_index], size);
@@ -448,8 +477,7 @@ namespace ngraph
             {
                 const ngraph::op::Divide* divop = static_cast<const ngraph::op::Divide*>(node);
                 std::function<void(void*, void*, void*, size_t, bool, int)> kernel;
-                SELECT_KERNEL(
-                    kernel, node->get_input_element_type(0), runtime::cpu::kernel::divide);
+                SELECT_KERNEL(kernel, node->get_input_element_type(0), runtime::cpu::kernel::divide)
                 auto element_count = shape_size(node->get_shape());
                 bool pythondiv = divop->is_pythondiv();
                 auto functor = [&, kernel, element_count, pythondiv](
@@ -614,66 +642,69 @@ namespace ngraph
                 return build_cf_dispatcher_cpu;
             }
 
-            REGISTER_OP_BUILDER(Constant);
-            REGISTER_OP_BUILDER(Result);
-            REGISTER_OP_BUILDER(Subtract);
-            REGISTER_OP_BUILDER(Multiply);
-            REGISTER_OP_BUILDER(Divide);
-            REGISTER_OP_BUILDER(Power);
-            REGISTER_OP_BUILDER(Abs);
-            REGISTER_OP_BUILDER(Acos);
-            REGISTER_OP_BUILDER(Asin);
-            REGISTER_OP_BUILDER(Atan);
-            REGISTER_OP_BUILDER(Ceiling);
-            REGISTER_OP_BUILDER(Cos);
-            REGISTER_OP_BUILDER(Cosh)
-            REGISTER_OP_BUILDER(Floor);
-            REGISTER_OP_BUILDER(Negative);
-            REGISTER_OP_BUILDER(Exp);
-            REGISTER_OP_BUILDER(Log);
-            REGISTER_OP_BUILDER(Sqrt);
-            REGISTER_OP_BUILDER(Sign);
-            REGISTER_OP_BUILDER(Sin);
-            REGISTER_OP_BUILDER(Sinh);
-            REGISTER_OP_BUILDER(Tan);
-            REGISTER_OP_BUILDER(Tanh);
+            void register_cpu_builders()
+            {
+                REGISTER_OP_BUILDER(Constant);
+                REGISTER_OP_BUILDER(Result);
+                REGISTER_OP_BUILDER(Subtract);
+                REGISTER_OP_BUILDER(Multiply);
+                REGISTER_OP_BUILDER(Divide);
+                REGISTER_OP_BUILDER(Power);
+                REGISTER_OP_BUILDER(Abs);
+                REGISTER_OP_BUILDER(Acos);
+                REGISTER_OP_BUILDER(Asin);
+                REGISTER_OP_BUILDER(Atan);
+                REGISTER_OP_BUILDER(Ceiling);
+                REGISTER_OP_BUILDER(Cos);
+                REGISTER_OP_BUILDER(Cosh);
+                REGISTER_OP_BUILDER(Floor);
+                REGISTER_OP_BUILDER(Negative);
+                REGISTER_OP_BUILDER(Exp);
+                REGISTER_OP_BUILDER(Log);
+                REGISTER_OP_BUILDER(Sqrt);
+                REGISTER_OP_BUILDER(Sign);
+                REGISTER_OP_BUILDER(Sin);
+                REGISTER_OP_BUILDER(Sinh);
+                REGISTER_OP_BUILDER(Tan);
+                REGISTER_OP_BUILDER(Tanh);
 
-            REGISTER_OP_BUILDER(Not);
-            REGISTER_OP_BUILDER(Equal);
-            REGISTER_OP_BUILDER(NotEqual);
-            REGISTER_OP_BUILDER(Greater);
-            REGISTER_OP_BUILDER(GreaterEq);
-            REGISTER_OP_BUILDER(Less);
-            REGISTER_OP_BUILDER(LessEq);
-            REGISTER_OP_BUILDER(Maximum);
-            REGISTER_OP_BUILDER(Minimum);
-            REGISTER_OP_BUILDER(And);
-            REGISTER_OP_BUILDER(Or);
-            REGISTER_OP_BUILDER(Xor);
+                REGISTER_OP_BUILDER(Not);
+                REGISTER_OP_BUILDER(Equal);
+                REGISTER_OP_BUILDER(NotEqual);
+                REGISTER_OP_BUILDER(Greater);
+                REGISTER_OP_BUILDER(GreaterEq);
+                REGISTER_OP_BUILDER(Less);
+                REGISTER_OP_BUILDER(LessEq);
+                REGISTER_OP_BUILDER(Maximum);
+                REGISTER_OP_BUILDER(Minimum);
+                REGISTER_OP_BUILDER(And);
+                REGISTER_OP_BUILDER(Or);
+                REGISTER_OP_BUILDER(Xor);
 
-            REGISTER_CF_BUILDER(Add);
-            REGISTER_CF_BUILDER(Subtract);
-            REGISTER_CF_BUILDER(Multiply);
-            REGISTER_CF_BUILDER(Divide);
-            REGISTER_CF_BUILDER(Minimum);
-            REGISTER_CF_BUILDER(Maximum);
-            REGISTER_CF_BUILDER(Abs);
-            REGISTER_CF_BUILDER(Negative);
-            REGISTER_CF_BUILDER(Relu);
-            REGISTER_CF_BUILDER(Sqrt);
-            REGISTER_CF_BUILDER(Floor);
-            REGISTER_CF_BUILDER(Ceiling);
-            REGISTER_CF_BUILDER(Equal);
-            REGISTER_CF_BUILDER(NotEqual);
-            REGISTER_CF_BUILDER(Greater);
-            REGISTER_CF_BUILDER(GreaterEq);
-            REGISTER_CF_BUILDER(Less);
-            REGISTER_CF_BUILDER(LessEq);
-            REGISTER_CF_BUILDER(And);
-            REGISTER_CF_BUILDER(Or);
-            REGISTER_CF_BUILDER(Xor);
-            REGISTER_CF_BUILDER(Sign);
-            REGISTER_CF_BUILDER(Not);
+                REGISTER_CF_BUILDER(Add);
+                REGISTER_CF_BUILDER(Subtract);
+                REGISTER_CF_BUILDER(Multiply);
+                REGISTER_CF_BUILDER(Divide);
+                REGISTER_CF_BUILDER(Minimum);
+                REGISTER_CF_BUILDER(Maximum);
+                REGISTER_CF_BUILDER(Abs);
+                REGISTER_CF_BUILDER(Negative);
+                REGISTER_CF_BUILDER(Relu);
+                REGISTER_CF_BUILDER(Sqrt);
+                REGISTER_CF_BUILDER(Floor);
+                REGISTER_CF_BUILDER(Ceiling);
+                REGISTER_CF_BUILDER(Equal);
+                REGISTER_CF_BUILDER(NotEqual);
+                REGISTER_CF_BUILDER(Greater);
+                REGISTER_CF_BUILDER(GreaterEq);
+                REGISTER_CF_BUILDER(Less);
+                REGISTER_CF_BUILDER(LessEq);
+                REGISTER_CF_BUILDER(And);
+                REGISTER_CF_BUILDER(Or);
+                REGISTER_CF_BUILDER(Xor);
+                REGISTER_CF_BUILDER(Sign);
+                REGISTER_CF_BUILDER(Not);
+            }
         }
     }
 }

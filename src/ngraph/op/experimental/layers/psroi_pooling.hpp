@@ -26,8 +26,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"PSROIPooling", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a PSROIPooling operation
             ///
             /// \param input          Input feature map {N, C, ...}
@@ -38,8 +38,8 @@ namespace ngraph
             /// \param spatial_bins_x Numbers of bins to divide the input feature maps over width
             /// \param spatial_bins_y Numbers of bins to divide the input feature maps over height
             /// \param mode           Mode of pooling - Avg or Bilinear
-            PSROIPooling(const std::shared_ptr<Node>& input,
-                         const std::shared_ptr<Node>& coords,
+            PSROIPooling(const Output<Node>& input,
+                         const Output<Node>& coords,
                          const size_t output_dim,
                          const size_t group_size,
                          const float spatial_scale,

@@ -26,8 +26,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"ROIPooling", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a ROIPooling operation
             ///
             /// \param input          Input feature map {N, C, ...}
@@ -35,8 +35,8 @@ namespace ngraph
             /// \param output_size    Height/Width of ROI output features
             /// \param spatial_scale  Ratio of input feature map over input image size
             /// \param method         Method of pooling - Max or Bilinear
-            ROIPooling(const std::shared_ptr<Node>& input,
-                       const std::shared_ptr<Node>& coords,
+            ROIPooling(const Output<Node>& input,
+                       const Output<Node>& coords,
                        const Shape& output_size,
                        const float spatial_scale,
                        const std::string& method);

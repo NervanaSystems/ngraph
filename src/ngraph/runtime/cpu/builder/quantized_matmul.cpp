@@ -46,8 +46,6 @@ namespace ngraph
                     external_function->get_buffer_index(args[2].get_name()); // scale
                 auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
-                auto scales_size = shape_size(args[2].get_shape());
-
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
@@ -58,11 +56,12 @@ namespace ngraph
                     auto ip_attr =
                         mkldnn_emitter->get_inner_product_forward_attr<ngraph::op::QuantizedMatmul>(
                             node);
+                    QUERY_SCRATCHPAD_2ARGS(ip_forward, ip_desc, ip_attr);
+
                     size_t ip_index = mkldnn_emitter->inner_product_forward_init(false);
                     auto& deps = mkldnn_emitter->get_primitive_deps(ip_index);
 
                     auto functor = [&,
-                                    scales_size,
                                     ip_desc,
                                     ip_attr,
                                     deps,
@@ -71,7 +70,7 @@ namespace ngraph
                                     arg1_buffer_index,
                                     arg2_buffer_index,
                                     out0_buffer_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) mutable {
+                                                       CPUExecutionContext* /* ectx */) mutable {
                         if (ctx->first_iteration)
                         {
                             vector<float> dyn_scales;
@@ -79,7 +78,9 @@ namespace ngraph
                                 *(static_cast<float*>(ctx->buffer_data[arg2_buffer_index])));
                             ip_attr.set_output_scales(0, dyn_scales);
                             mkldnn_emitter->build_inner_product_forward<false>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 ip_desc,
                                 ip_attr,
                                 executor::global_cpu_engine,
@@ -92,7 +93,9 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out0_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, ip_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, ip_index, deps, cpu::mkldnn_utils::OpType::QUANTIZEDMATMUL);
                     };
                     functors.emplace_back(functor);
                 }
@@ -101,10 +104,8 @@ namespace ngraph
                     throw ngraph_error("Unsupported QuantizedMatmul");
                 }
             }
-            REGISTER_OP_BUILDER(QuantizedMatmul);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_quantized_matmul_cpp() {}
-#endif
+
+            void register_builders_quantized_matmul_cpp() { REGISTER_OP_BUILDER(QuantizedMatmul); }
         }
     }
 }

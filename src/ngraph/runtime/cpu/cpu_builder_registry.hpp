@@ -15,7 +15,6 @@
 //*****************************************************************************
 #pragma once
 
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
 namespace ngraph
 {
     namespace runtime
@@ -57,6 +56,7 @@ namespace ngraph
             void register_builders_quantized_conv_cpp();
             void register_builders_quantized_dot_cpp();
             void register_builders_quantized_matmul_cpp();
+            void register_builders_random_uniform_cpp();
             void register_builders_reduce_function_cpp();
             void register_builders_relu_cpp();
             void register_builders_replace_slice_cpp();
@@ -75,7 +75,7 @@ namespace ngraph
             void register_builders_tile_cpp();
             void register_builders_topk_cpp();
             void register_builders_update_slice_cpp();
+            void register_cpu_builders();
         }
     }
 }
-#endif

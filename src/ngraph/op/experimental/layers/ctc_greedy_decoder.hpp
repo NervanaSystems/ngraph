@@ -26,15 +26,15 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"CTCGreedyDecoder", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a CTCGreedyDecoder operation
             ///
             /// \param input              Logits on which greedy decoding is performed
             /// \param seq_len            Sequence lengths
             /// \param ctc_merge_repeated Whether to merge repeated labels
-            CTCGreedyDecoder(const std::shared_ptr<Node>& input,
-                             const std::shared_ptr<Node>& seq_len,
+            CTCGreedyDecoder(const Output<Node>& input,
+                             const Output<Node>& seq_len,
                              const bool ctc_merge_repeated);
 
             void validate_and_infer_types() override;

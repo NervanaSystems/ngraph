@@ -23,22 +23,28 @@ namespace ngraph
 {
     namespace pass
     {
-        template <typename T>
-        NodeVector explicit_broadcast(std::shared_ptr<T>& node)
+        NodeVector explicit_broadcast(std::shared_ptr<Node>& node)
         {
             NodeVector rc;
-
-            if (node->get_autob().m_type == op::AutoBroadcastType::NONE)
+            if (node->supports_auto_broadcast())
             {
-                rc = node->get_arguments();
-            }
-            else if (node->get_autob().m_type == op::AutoBroadcastType::NUMPY)
-            {
-                rc = op::numpy_style_broadcast(node->get_arguments());
-            }
-            else
-            {
-                throw ngraph_error("Unsupported implicit broadcast type");
+                auto autob = node->get_autob();
+                if (autob.m_type == op::AutoBroadcastType::NONE)
+                {
+                    rc = node->get_arguments();
+                }
+                else if (autob.m_type == op::AutoBroadcastType::NUMPY)
+                {
+                    rc = op::numpy_style_broadcast(node->get_arguments());
+                }
+                else if (autob.m_type == op::AutoBroadcastType::PDPD)
+                {
+                    rc = op::pdpd_style_broadcast(node->get_arguments(), autob.m_axis);
+                }
+                else
+                {
+                    throw ngraph_error("Unsupported implicit broadcast type");
+                }
             }
             return rc;
         }

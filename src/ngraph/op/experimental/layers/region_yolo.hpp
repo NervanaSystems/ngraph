@@ -26,8 +26,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"RegionYolo", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a RegionYolo operation
             ///
             /// \param input          Input
@@ -38,7 +38,7 @@ namespace ngraph
             /// \param mask           Mask
             /// \param axis           Axis to begin softmax on
             /// \param end_axis       Axis to end softmax on
-            RegionYolo(const std::shared_ptr<Node>& input,
+            RegionYolo(const Output<Node>& input,
                        const size_t num_coords,
                        const size_t num_classes,
                        const size_t num_regions,

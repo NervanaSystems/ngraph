@@ -58,17 +58,17 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"Proposal", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a Proposal operation
             ///
             /// \param class_probs     Class probability scores
             /// \param class_logits    Class prediction logits
             /// \param image_shape     Shape of image
             /// \param attrs           Proposal op attributes
-            Proposal(const std::shared_ptr<Node>& class_probs,
-                     const std::shared_ptr<Node>& class_logits,
-                     const std::shared_ptr<Node>& image_shape,
+            Proposal(const Output<Node>& class_probs,
+                     const Output<Node>& class_logits,
+                     const Output<Node>& image_shape,
                      const ProposalAttrs& attrs);
 
             void validate_and_infer_types() override;

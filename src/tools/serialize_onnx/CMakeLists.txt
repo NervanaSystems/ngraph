@@ -17,3 +17,5 @@
 add_executable(serialize_onnx serialize_onnx.cpp)
 add_dependencies(serialize_onnx ngraph)
 target_link_libraries(serialize_onnx ngraph)
+
+install(TARGETS serialize_onnx RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})

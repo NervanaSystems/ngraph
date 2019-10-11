@@ -23,21 +23,23 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Operation which "adds" axes to an input tensor, replicating elements from the input as needed along the new axes.
+        /// \brief Operation which "adds" axes to an input tensor, replicating elements from the
+        ///        input as needed along the new axes.
         class Broadcast : public Op
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"Broadcast", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a broadcast operation.
             Broadcast() = default;
             /// \brief Constructs a broadcast operation.
             ///
             /// \param arg            Node that produces the input tensor to be broadcast.
             /// \param shape          The shape of the output tensor.
-            /// \param broadcast_axes The axis positions (0-based) in the result that are being broadcast. The
-            ///                        remaining axes in shape must be the same as the shape of arg.
+            /// \param broadcast_axes The axis positions (0-based) in the result that are being
+            ///                       broadcast. The remaining axes in shape must be the same as
+            ///                       the shape of arg.
             Broadcast(const Output<Node>& arg, const Shape& shape, const AxisSet& broadcast_axes);
 
             void validate_and_infer_types() override;
@@ -69,8 +71,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"BroadcastLike", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Broadcast arg to the same shape as like_arg.
             BroadcastLike() = default;
             /// \brief Broadcast arg to the same shape as like_arg.
