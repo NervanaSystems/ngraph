@@ -222,7 +222,7 @@ static std::shared_ptr<ngraph::Node> broadcast_value_pdpd_style(
 
     auto value_bcast = std::make_shared<ngraph::op::Broadcast>(trimmed_value, output_shape, axes);
 
-    return value_bcast;
+    return std::move(value_bcast);
 }
 
 namespace ngraph
