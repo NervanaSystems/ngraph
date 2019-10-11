@@ -23,6 +23,7 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/power.hpp"
+#include "ngraph/op/reduce_sum.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/shape.hpp"
@@ -103,9 +104,14 @@ namespace ngraph
         shared_ptr<Node> l2_norm(const Output<Node>& value,
                                  const AxisSet& reduction_axes,
                                  float bias,
-                                 BiasMode bias_mode)
+                                 BiasMode bias_mode,
+                                 bool keep_dims)
         {
-            shared_ptr<Node> values{make_shared<op::Sum>(value * value, reduction_axes)};
+            shared_ptr<Node> values{make_shared<op::v1::ReduceSum>(
+                value * value,
+                make_shared<op::Constant>(
+                    element::i64, Shape{reduction_axes.size()}, reduction_axes.to_vector()),
+                keep_dims)};
 
             shared_ptr<Node> bias_node{
                 op::Constant::create(values->get_element_type(),

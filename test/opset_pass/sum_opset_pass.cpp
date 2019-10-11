@@ -19,13 +19,14 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-TEST(serialize, opset1_sum_upgrade)
+TEST(opset_transform, opset1_reduce_sum_upgrade_pass)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     const AxisSet reduction_axes{1, 2};
@@ -40,9 +41,130 @@ TEST(serialize, opset1_sum_upgrade)
 
     const auto pass_replacement_node =
         f->get_result()->input(0).get_source_output().get_node_shared_ptr();
-    const auto reduce_sum_v1 = static_pointer_cast<op::v1::ReduceProd>(pass_replacement_node);
+    const auto reduce_sum_v1 = static_pointer_cast<op::v1::ReduceSum>(pass_replacement_node);
 
     EXPECT_EQ(reduce_sum_v1->description(), "Sum");
     EXPECT_EQ(reduce_sum_v1->get_version(), 1);
     EXPECT_EQ(reduce_sum_v1->get_keep_dims(), false);
+}
+
+TEST(opset_transform, opset0_reduce_sum_downgrade_pass)
+{
+    const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    const auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{0, 1});
+
+    const auto sum_v1 = make_shared<op::v1::ReduceSum>(data, axes, true);
+    const auto result = make_shared<op::Result>(sum_v1);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.run_passes(f);
+
+    const auto reshape_replacement_node =
+        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto reshape = static_pointer_cast<op::Reshape>(reshape_replacement_node);
+    const auto sum_replace_node =
+        reshape_replacement_node->input(0).get_source_output().get_node_shared_ptr();
+    const auto sum_v0 = static_pointer_cast<op::v0::Sum>(sum_replace_node);
+
+    EXPECT_EQ(reshape->description(), "Reshape");
+    EXPECT_EQ(reshape->get_version(), 0);
+    EXPECT_EQ(sum_v0->description(), "Sum");
+    EXPECT_EQ(sum_v0->get_version(), 0);
+}
+
+TEST(opset_transform, opset0_reduce_sum_downgrade_pass_not_constant_axes)
+{
+    const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    const auto axes = make_shared<op::Parameter>(element::f32, Shape{1});
+
+    const auto sum_v1 = make_shared<op::v1::ReduceSum>(data, axes, true);
+    const auto result = make_shared<op::Result>(sum_v1);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data, axes});
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Opset0Downgrade>();
+    try
+    {
+        pass_manager.run_passes(f);
+        FAIL() << "Exception after Opset0Downgrade pass was not thrown.";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Unable to convert ReduceSum:v1 to Sum:v0 "
+                        "if reduction axes are not constant (for keep_dims=true)"));
+    }
+    catch (...)
+    {
+        FAIL() << "ReduceSum pass failed for unexpected reason";
+    }
+}
+
+TEST(opset_transform, opset0_reduce_sum_downgrade_pass_output_not_static)
+{
+    const auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    const auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{0, 1});
+
+    const auto sum_v1 = make_shared<op::v1::ReduceSum>(data, axes, true);
+    const auto result = make_shared<op::Result>(sum_v1);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Opset0Downgrade>();
+    try
+    {
+        pass_manager.run_passes(f);
+        FAIL() << "Exception after Opset0Downgrade pass was not thrown.";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Unable to convert ReduceSum:v1 to Sum:v0 "
+                                         "if output shape is dynamic (for keep_dims=true)"));
+    }
+    catch (...)
+    {
+        FAIL() << "ReduceSum pass failed for unexpected reason";
+    }
+}
+
+TEST(opset_transform, opset0_reduce_sum_downgrade_pass_out_shape_if_keep_dims)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
+    auto keep_dims = true;
+    auto reduce_sum_v1 = make_shared<op::v1::ReduceSum>(arg, axes, keep_dims);
+    const auto result = make_shared<op::Result>(reduce_sum_v1);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.run_passes(f);
+
+    const auto replacement_node =
+        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+
+    ASSERT_TRUE(replacement_node->get_output_partial_shape(0).compatible(PartialShape{3, 1, 1}));
+}
+
+TEST(opset_transform, opset0_reduce_sum_downgrade_pass_out_shape_if_not_keep_dims)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
+    auto keep_dims = false;
+    auto reduce_sum_v1 = make_shared<op::v1::ReduceSum>(arg, axes, keep_dims);
+    const auto result = make_shared<op::Result>(reduce_sum_v1);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.run_passes(f);
+
+    const auto replacement_node =
+        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+
+    ASSERT_TRUE(replacement_node->get_output_partial_shape(0).compatible(PartialShape{3}));
 }
