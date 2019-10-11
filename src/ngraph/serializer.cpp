@@ -3355,7 +3355,6 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::TopK:
     {
-        auto tmp = dynamic_cast<const op::TopK*>(&n);
         if (op_version == 0)
         {
             const auto tmp = static_cast<const op::TopK*>(&n);
