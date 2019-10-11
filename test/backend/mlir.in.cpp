@@ -25,6 +25,14 @@
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
 
+#include "mlir/IR/OperationSupport.h"
+#include "mlir/IR/Builders.h"
+#include "mlir/IR/StandardTypes.h"
+#include "contrib/mlir/compiler/dialect/dialect.hpp"
+#include "contrib/mlir/compiler/dialect/ops.hpp"
+#include "contrib/mlir/compiler/dialect/type.hpp"
+#include "contrib/mlir/compiler/tools.hpp"
+
 using namespace std;
 using namespace ngraph;
 
@@ -280,4 +288,34 @@ NGRAPH_TEST(${BACKEND_NAME}, mlir_multi_call)
     handle->call_with_validate({result}, {a, b, c});
     EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
                                   vector<float>{35.f, 40.f, 45.f, 68.f, 82.f, 96.f}));
+}
+
+// (nmostafa): 
+// Move this test to a different file under test/mlir/. 
+NGRAPH_TEST(${BACKEND_NAME}, mlir_op_versions)
+{
+    using namespace mlir;
+    // Initialize before any context declarations
+    ngraph::runtime::ngmlir::initializeNGraphMLIR();    
+    MLIRContext context;
+    llvm::SmallVector<mlir::Type, 1> resultTypes;
+
+    OpBuilder builder(&context);
+    resultTypes.push_back(mlir::NGTensorType::get(&context, mlir::NGFloatType::getF16(&context), {2,2}));
+
+    auto operation = Operation::create(
+        mlir::UnknownLoc::get(&context), OperationName("ng.gather", &context), resultTypes,
+        llvm::None, llvm::None, llvm::None, 0, false);
+    
+    EXPECT_TRUE(llvm::dyn_cast<OpVersion0>(operation) != nullptr);
+    EXPECT_TRUE(llvm::dyn_cast<OpVersion1>(operation) == nullptr);
+
+    operation = Operation::create(
+        mlir::UnknownLoc::get(&context), OperationName("ng.gather.v1", &context), resultTypes,
+        llvm::None, llvm::None, llvm::None, 0, false);
+    
+    EXPECT_TRUE(llvm::dyn_cast<OpVersion1>(operation) != nullptr);
+    EXPECT_TRUE(llvm::dyn_cast<OpVersion0>(operation) == nullptr);
+ 
+
 }

@@ -104,6 +104,4 @@ add_public_tablegen_target(ngraph_ops_interfaces_gen)
 add_dependencies(mlir_backend ngraph_ops_gen ngraph_ops_interfaces_gen)
 target_include_directories(mlir_backend PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
-
-
 install(TARGETS mlir_backend DESTINATION ${NGRAPH_INSTALL_LIB})
