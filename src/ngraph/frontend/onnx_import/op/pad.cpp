@@ -60,12 +60,14 @@ namespace ngraph
                     ngraph::CoordinateDiff padding_below = paddings.first;
                     ngraph::CoordinateDiff padding_above = paddings.second;
 
-                    return {std::make_shared<ngraph::op::Pad>(
+                    return {std::make_shared<ngraph::op::v1::Pad>(
                         data,
                         std::make_shared<ngraph::op::Constant>(
+                            element::i64, ngraph::Shape{padding_below.size()}, padding_below),
+                        std::make_shared<ngraph::op::Constant>(
+                            element::i64, ngraph::Shape{padding_above.size()}, padding_above),
+                        std::make_shared<ngraph::op::Constant>(
                             data->get_element_type(), ngraph::Shape{}, std::vector<double>{value}),
-                        padding_below,
-                        padding_above,
                         pad_mode)};
                 }
 

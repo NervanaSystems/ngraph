@@ -61,8 +61,6 @@ static llvm::cl::opt<bool>
                   llvm::cl::desc("Run the verifier after each transformation pass"),
                   llvm::cl::init(true));
 
-static std::vector<const mlir::PassRegistryEntry*>* pass_list;
-
 int main(int argc, char** argv)
 {
     llvm::InitLLVM y(argc, argv);
@@ -70,11 +68,7 @@ int main(int argc, char** argv)
 
     // Register any pass manager command line options.
     mlir::registerPassManagerCLOptions();
-
-    // Parse pass names in main to ensure static initialization completed.
-    llvm::cl::list<const mlir::PassRegistryEntry*, bool, mlir::PassNameParser> pass_list(
-        "", llvm::cl::desc("Compiler passes to run"));
-    ::pass_list = &pass_list;
+    mlir::PassPipelineCLParser passPipeline("", "Compiler passes to run");
     llvm::cl::ParseCommandLineOptions(argc, argv, "nGraph MLIR modular optimizer driver\n");
 
     // Set up the input file.
@@ -87,7 +81,7 @@ int main(int argc, char** argv)
 
     return failed(mlir::MlirOptMain(output->os(),
                                     std::move(file),
-                                    pass_list,
+                                    passPipeline,
                                     split_input_file,
                                     verify_diagnostics,
                                     verify_passes));

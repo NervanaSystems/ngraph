@@ -14,10 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/visibility.hpp"
+#pragma once
 
-#ifdef INTELGPU_BACKEND_EXPORTS // defined if we are building the INTELGPU_BACKEND
-#define INTELGPU_BACKEND_API NGRAPH_HELPER_DLL_EXPORT
-#else
-#define INTELGPU_BACKEND_API NGRAPH_HELPER_DLL_IMPORT
-#endif
+#include <pybind11/pybind11.h>
+
+namespace py = pybind11;
+
+void regclass_pyngraph_op_RNNCell(py::module m);

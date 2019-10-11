@@ -225,7 +225,7 @@ size_t op::v1::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,
                           k_element_type,
                           ").");
 
-    const auto k_constant = dynamic_pointer_cast<op::Constant>(node);
+    const auto k_constant = as_type_ptr<op::Constant>(node);
 
     size_t k = 0;
 
@@ -282,7 +282,7 @@ shared_ptr<Node> op::v1::TopK::copy_with_new_args(const NodeVector& new_args) co
 
     new_v1_topk->set_index_element_type(m_index_element_type);
 
-    return new_v1_topk;
+    return std::move(new_v1_topk);
 }
 
 op::v1::TopK::Mode op::v1::TopK::mode_from_string(const std::string& mode) const
