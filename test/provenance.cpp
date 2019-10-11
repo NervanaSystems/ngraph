@@ -396,7 +396,7 @@ TEST(provenance, topk_setk)
         {
             EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"TK", "TKC0"}));
         }
-        else
+        else if (node == tk)
         {
             EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"TK"}));
         }
@@ -414,7 +414,7 @@ TEST(provenance, topk_setk)
         {
             EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"TK", "TKC0", "TKC1"}));
         }
-        else
+        else if (node == tk)
         {
             EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"TK"}));
         }

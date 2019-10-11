@@ -174,9 +174,17 @@ void op::TopK::validate_and_infer_types()
 
     if (input_rank.is_static())
     {
-        if (top_k_axis.is_static() && k != 0)
+        if (top_k_axis.is_static())
         {
-            output_shape[static_cast<size_t>(top_k_axis)] = k;
+            if (k != 0)
+            {
+                output_shape[static_cast<size_t>(top_k_axis)] = k;
+            }
+            else if (k == 0 && output_shape[static_cast<size_t>(top_k_axis)].is_static())
+            {
+                output_shape[static_cast<size_t>(top_k_axis)] =
+                    input_shape[static_cast<size_t>(top_k_axis)];
+            }
         }
         else
         {
