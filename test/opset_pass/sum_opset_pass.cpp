@@ -26,7 +26,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(opset_upgrade, opset1_sum_upgrade)
+TEST(opset_transform, opset1_reduce_sum_upgrade_pass)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     const AxisSet reduction_axes{1, 2};
@@ -48,7 +48,7 @@ TEST(opset_upgrade, opset1_sum_upgrade)
     EXPECT_EQ(reduce_sum_v1->get_keep_dims(), false);
 }
 
-TEST(opset_downgrade, opset0_red_sum_downgrade)
+TEST(opset_transform, opset0_reduce_sum_downgrade_pass)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     const auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{0, 1});
@@ -74,7 +74,7 @@ TEST(opset_downgrade, opset0_red_sum_downgrade)
     EXPECT_EQ(sum_v0->get_version(), 0);
 }
 
-TEST(opset_downgrade, opset0_red_sum_downgrade_not_constant_axes)
+TEST(opset_transform, opset0_reduce_sum_downgrade_pass_not_constant_axes)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     const auto axes = make_shared<op::Parameter>(element::f32, Shape{1});
@@ -103,7 +103,7 @@ TEST(opset_downgrade, opset0_red_sum_downgrade_not_constant_axes)
     }
 }
 
-TEST(opset_downgrade, opset0_red_sum_downgrade_output_not_static)
+TEST(opset_transform, opset0_reduce_sum_downgrade_pass_output_not_static)
 {
     const auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     const auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{0, 1});
@@ -131,7 +131,7 @@ TEST(opset_downgrade, opset0_red_sum_downgrade_output_not_static)
     }
 }
 
-TEST(opset_downgrade, opset0_red_sum_downgrade_out_shape_if_keep_dims)
+TEST(opset_transform, opset0_reduce_sum_downgrade_pass_out_shape_if_keep_dims)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
     auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
@@ -150,7 +150,7 @@ TEST(opset_downgrade, opset0_red_sum_downgrade_out_shape_if_keep_dims)
     ASSERT_TRUE(replacement_node->get_output_partial_shape(0).compatible(PartialShape{3, 1, 1}));
 }
 
-TEST(opset_downgrade, opset0_red_sum_downgrade_out_shape_if_not_keep_dims)
+TEST(opset_transform, opset0_reduce_sum_downgrade_pass_out_shape_if_not_keep_dims)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
     auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
