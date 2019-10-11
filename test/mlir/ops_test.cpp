@@ -15,16 +15,16 @@
 //*****************************************************************************
 
 // ops tests for nGraph MLIR dialect
-// Test certain invariants about 
+// Test certain invariants about
 #include "gtest/gtest.h"
 
-#include "mlir/IR/OperationSupport.h"
-#include "mlir/IR/Builders.h"
-#include "mlir/IR/StandardTypes.h"
 #include "contrib/mlir/compiler/dialect/dialect.hpp"
 #include "contrib/mlir/compiler/dialect/ops.hpp"
 #include "contrib/mlir/compiler/dialect/type.hpp"
 #include "contrib/mlir/compiler/tools.hpp"
+#include "mlir/IR/Builders.h"
+#include "mlir/IR/OperationSupport.h"
+#include "mlir/IR/StandardTypes.h"
 
 using namespace mlir;
 
@@ -45,19 +45,30 @@ TEST(MLIR, op_version_interface)
     llvm::SmallVector<mlir::Type, 1> resultTypes;
 
     OpBuilder builder(&context);
-    resultTypes.push_back(mlir::NGTensorType::get(&context, mlir::NGFloatType::getF16(&context), {2,2}));
+    resultTypes.push_back(
+        mlir::NGTensorType::get(&context, mlir::NGFloatType::getF16(&context), {2, 2}));
 
-    auto operation = Operation::create(
-        mlir::UnknownLoc::get(&context), OperationName("ng.gather", &context), resultTypes,
-        llvm::None, llvm::None, llvm::None, 0, false);
-    
+    auto operation = Operation::create(mlir::UnknownLoc::get(&context),
+                                       OperationName("ng.gather", &context),
+                                       resultTypes,
+                                       llvm::None,
+                                       llvm::None,
+                                       llvm::None,
+                                       0,
+                                       false);
+
     EXPECT_TRUE(llvm::dyn_cast<OpVersion0>(operation) != nullptr);
     EXPECT_TRUE(llvm::dyn_cast<OpVersion1>(operation) == nullptr);
 
-    operation = Operation::create(
-        mlir::UnknownLoc::get(&context), OperationName("ng.gather.v1", &context), resultTypes,
-        llvm::None, llvm::None, llvm::None, 0, false);
-    
+    operation = Operation::create(mlir::UnknownLoc::get(&context),
+                                  OperationName("ng.gather.v1", &context),
+                                  resultTypes,
+                                  llvm::None,
+                                  llvm::None,
+                                  llvm::None,
+                                  0,
+                                  false);
+
     EXPECT_TRUE(llvm::dyn_cast<OpVersion1>(operation) != nullptr);
     EXPECT_TRUE(llvm::dyn_cast<OpVersion0>(operation) == nullptr);
 }
@@ -70,16 +81,21 @@ TEST(MLIR, fused_ops_interface)
     llvm::SmallVector<mlir::Type, 1> resultTypes;
 
     OpBuilder builder(&context);
-    resultTypes.push_back(mlir::NGTensorType::get(&context, mlir::NGFloatType::getF16(&context), {2,2}));
+    resultTypes.push_back(
+        mlir::NGTensorType::get(&context, mlir::NGFloatType::getF16(&context), {2, 2}));
 
-    auto operation = Operation::create(
-        mlir::UnknownLoc::get(&context), OperationName("ng.squeeze", &context), resultTypes,
-        llvm::None, llvm::None, llvm::None, 0, false);
-    
+    auto operation = Operation::create(mlir::UnknownLoc::get(&context),
+                                       OperationName("ng.squeeze", &context),
+                                       resultTypes,
+                                       llvm::None,
+                                       llvm::None,
+                                       llvm::None,
+                                       0,
+                                       false);
+
     EXPECT_TRUE(llvm::dyn_cast<FusedOp>(operation) != nullptr);
     if (auto fusedOp = llvm::dyn_cast<FusedOp>(operation))
     {
         fusedOp.decompose();
     }
-
 }

@@ -179,4 +179,3 @@ def NGConvolutionOp :
     unsigned getVersion() { return 0; }
   }];
 }
-
