@@ -37,6 +37,7 @@
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/op/util/op_annotations.hpp"
 #include "ngraph/placement.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type.hpp"
@@ -485,6 +486,15 @@ namespace ngraph
         /// \throw std::out_of_range if the node does not have at least `output_index+1` outputs.
         Output<const Node> output(size_t output_index) const;
 
+        void set_op_annotations(std::shared_ptr<ngraph::op::util::OpAnnotations> op_annotations)
+        {
+            m_op_annotations = op_annotations;
+        }
+        std::shared_ptr<ngraph::op::util::OpAnnotations> get_op_annotations() const
+        {
+            return m_op_annotations;
+        }
+
     private:
         descriptor::Input& get_input_descriptor(size_t position);
         descriptor::Output& get_output_descriptor(size_t position);
@@ -504,6 +514,7 @@ namespace ngraph
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
         size_t m_placement_index = placement_invalid;
+        std::shared_ptr<ngraph::op::util::OpAnnotations> m_op_annotations;
     };
 
     /// \brief A handle for one of a node's inputs.
@@ -863,8 +874,8 @@ namespace ngraph
         bool m_is_short;
     };
 }
-#define NODE_VALIDATION_CHECK(node, cond, ...)                                                     \
-    NGRAPH_CHECK_HELPER(::ngraph::NodeValidationFailure, (node), (cond), ##__VA_ARGS__)
+#define NODE_VALIDATION_CHECK(node, ...)                                                           \
+    NGRAPH_CHECK_HELPER(::ngraph::NodeValidationFailure, (node), __VA_ARGS__)
 
 namespace ngraph
 {

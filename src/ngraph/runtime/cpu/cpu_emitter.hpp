@@ -24,9 +24,12 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/gather.hpp"
+#include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/min.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/reverse.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
@@ -125,12 +128,9 @@ namespace ngraph
         class QuantizedMaxPool;
         class QuantizedAvgPool;
         class MaxPoolWithIndices;
-        class Reverse;
         class ReverseSequence;
         class MaxPoolWithIndicesBackprop;
-        class Max;
         class Erf;
-        class Min;
         class ReluBackprop;
         class Relu;
         class CPULeakyRelu;

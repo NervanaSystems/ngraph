@@ -1,9 +1,9 @@
-.. frameworks/generic_configs.rst:
+.. frameworks/other.rst:
 
-.. _generic_configs: 
+.. _fw_other: 
 
-Integrating new frameworks
-==========================
+Integrating other frameworks
+============================
 
 This section details some of the *configuration options* and some of the 
 *environment variables* that can be used to tune for optimal performance when 

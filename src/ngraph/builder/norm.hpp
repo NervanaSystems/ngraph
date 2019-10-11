@@ -68,13 +68,15 @@ namespace ngraph
         /// \param[in]  reduction_axes  The axes along which we calculate norm.
         /// \param[in]  bias            The bias combined with calculated sum.
         /// \param[in]  bias_mode       The method of bias application.
+        /// \param[in]  keep_dims       The flag indicates if axes will be removed or kept.
         ///
         /// \return     L-2 norm of value.
         ///
         std::shared_ptr<Node> l2_norm(const Output<Node>& value,
                                       const AxisSet& reduction_axes,
                                       float bias = 0.f,
-                                      BiasMode bias_mode = BiasMode::ADD);
+                                      BiasMode bias_mode = BiasMode::ADD,
+                                      bool keep_dims = false);
 
         /// \brief      Creates node which calculates L-p norm on input tensor.
         ///

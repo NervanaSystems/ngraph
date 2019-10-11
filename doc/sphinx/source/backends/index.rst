@@ -51,7 +51,7 @@ How to use?
 #. A single iteration of the executable is executed by calling the ``call``
    method on the ``Executable`` object.
 
-.. figure:: ../graphics/execution-interface.png
+.. figure:: ../graphics/ExecutionInterfaceRunGraphs.png
    :width: 650px
 
    The execution interface for nGraph 
@@ -68,6 +68,13 @@ interface; each backend implements the following five functions:
   for later execution.
 * And, finally, the ``call()`` method is used to invoke an nGraph function 
   against a particular set of tensors.
+
+How to display ngraph-related passes executed during runtime?
+-------------------------------------------------------------
+
+One easy way to get info about passes is to set the environment variable 
+:envvar:`NGRAPH_PROFILE_PASS_ENABLE=1`. With this set, the pass manager 
+will dump the name and execution time of each pass.
 
 
 .. _ngraph_bridge:
