@@ -150,3 +150,6 @@ include "dialect/ops_v0.td"
 
 // Version 1 Ops
 include "dialect/ops_v1.td"
+
+// Fused Ops
+include "dialect/fused_ops.td"

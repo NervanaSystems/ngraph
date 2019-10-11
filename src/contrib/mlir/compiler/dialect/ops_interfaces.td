@@ -33,11 +33,32 @@ include "mlir/IR/OpBase.td"
 //	if (dyn_cast<OpVersion0Interface>(op))
 
 def OpVersion0 : OpInterface<"OpVersion0"> {
+    let description=[{
+        Interface for Version 0 Ops
+    }];
     // Interface is empty for now. 
 }
 
 def OpVersion1 : OpInterface<"OpVersion1"> {
+    let description=[{
+        Interface for Version 1 Ops
+    }];
     // Interface is empty for now. 
+}
+
+def FusedOp : OpInterface<"FusedOp"> {
+    let description=[{
+        Interface for fused ops. 
+        Provides an API to decompose an op
+    }];
+   
+    let methods = [
+        InterfaceMethod<
+            "Decompose the operation",
+            "void",
+            "decompose"
+        >
+    ];
 }
 
 #endif // NG_OP_INTERFACES
