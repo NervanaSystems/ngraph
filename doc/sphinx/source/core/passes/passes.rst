@@ -1,6 +1,8 @@
-.. core/passes:
+.. core/passes/passes.rst:
 
-Compiler passes
+.. _core_compiler_passes:
+
+Compiler Passes
 ===============
 
 .. toctree::
@@ -11,9 +13,8 @@ Compiler passes
    passes-that-use-matcher.rst
 
 
-
-Overview
---------
+Basic concepts
+--------------
 
 *Generic graph optimization passes*
 

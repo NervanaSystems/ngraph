@@ -1,10 +1,7 @@
 .. frameworks/paddle_integ.rst:
 
-PaddlePaddle
-============
-
-nGraph PaddlePaddle integration overview
-----------------------------------------
+PaddlePaddle integration
+========================
 
 PaddlePaddle is an open source deep learning framework developed by Baidu. It 
 aims to enable performant large-scale distributed computation for deep learning. 
@@ -67,7 +64,7 @@ is organized in the following file structure:
 
 .. _figure-paddle-dir:
 
-.. figure:: ../graphics/paddlepaddle_directory.png
+.. figure:: ../graphics/PaddlePaddleDir.svg
    :width: 555px
    :alt: 
 
@@ -135,8 +132,8 @@ and nGraph bridges are provided below:
      are managed through a map.
    - SetOutputNode: sets the constructed node to the map.
    - Related code :
-     + ``Paddle/fluid/operators/ngraph/ngraph_bridge.h`` `link to ngraph_bridge header code`_
-     + ``Paddle/fluid/operators/ngraph/ngraph_bridge.cc``  `link to ngraph_bridge cpp code`_
+      - ``Paddle/fluid/operators/ngraph/ngraph_bridge.h`` `link to ngraph_bridge header code`_
+      - ``Paddle/fluid/operators/ngraph/ngraph_bridge.cc``  `link to ngraph_bridge cpp code`_
 
 nGraph compilation control and trigger method
 ----------------------------------------------
@@ -149,8 +146,9 @@ nGraph compilation control and trigger method
 
 #. **Trigger Control** -- ``FLAGS_use_ngraph`` triggers nGraph. If this option 
    is set to ``true``, nGraph will be triggered by the PaddlePaddle executor 
-   to convert and execute the supported subgraph. `Examples are provided`_ under    
-   ``paddle/benchmark/fluid/ngraph``. 
+   to convert and execute the supported subgraph. Demos are provided under    
+   ``paddle/benchmark/fluid/train/demo`` (link `train_demo`_) and ``paddle/benchmark/fluid/train/imdb_demo`` 
+   (link `imdb_demo`_) 
 
 
 .. _link to ngraph_engine_op header code: https://github.com/PaddlePaddle/Paddle/blob/develop/paddle/fluid/operators/ngraph/ngraph_engine_op.h
@@ -160,5 +158,5 @@ nGraph compilation control and trigger method
 .. _located in the ngraph ops: https://github.com/PaddlePaddle/Paddle/tree/develop/paddle/fluid/operators/ngraph/ops
 .. _link to ngraph_bridge header code: https://github.com/PaddlePaddle/Paddle/blob/develop/paddle/fluid/operators/ngraph/ngraph_bridge.h
 .. _link to ngraph_bridge cpp code: https://github.com/PaddlePaddle/Paddle/blob/develop/paddle/fluid/operators/ngraph/ngraph_bridge.cc
-.. _Examples are provided: https://github.com/PaddlePaddle/Paddle/tree/develop/benchmark/fluid
-
+.. _train_demo: https://github.com/PaddlePaddle/Paddle/tree/develop/paddle/fluid/train/demo
+.. _imdb_demo: https://github.com/PaddlePaddle/Paddle/tree/develop/paddle/fluid/train/imdb_demo
