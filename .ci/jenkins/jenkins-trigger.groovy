@@ -26,7 +26,7 @@ String JENKINS_BRANCH = "master"
 String TIMEOUTTIME = "3600"
 
 // Constants
-JENKINS_DIR = '.'
+JENKINS_DIR = '.' 
 
 timestamps {
 
