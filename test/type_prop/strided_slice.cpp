@@ -23,54 +23,184 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(type_prop, strided_slice_convert_mask)
+TEST(type_prop, strided_slice_begin_incorrect_type)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5, 6});
-    const auto begin = op::Constant::create(element::i64, Shape{5}, {0, 1, 2, 3, 1});
-    const auto end = op::Constant::create(element::i64, Shape{5}, {1, 3, 3, 5, 6});
-    const auto strides = op::Constant::create(element::i64, Shape{5}, {1, 1, 1, 2, 2});
-
-    const std::vector<int64_t> begin_mask{1, 0, 1, 0, 1};
-    const std::vector<int64_t> end_mask{0, 1, 0, 1, 0};
-    const std::vector<int64_t> new_axis_mask{0, 0, 0, 0, 0};
-    const std::vector<int64_t> shrink_axis_mask{1, 1, 1, 1, 1};
-    const std::vector<int64_t> ellipsis_mask{0, 0, 1, 0, 0};
-
-    auto strided_slice = make_shared<op::StridedSlice>(arg,
-                                                       begin,
-                                                       end,
-                                                       strides,
-                                                       begin_mask,
-                                                       end_mask,
-                                                       new_axis_mask,
-                                                       shrink_axis_mask,
-                                                       ellipsis_mask);
-
-    EXPECT_EQ(strided_slice->get_lower_bounds_mask(), AxisSet({0, 2, 4}));
-    EXPECT_EQ(strided_slice->get_upper_bounds_mask(), AxisSet({1, 3}));
-    EXPECT_EQ(strided_slice->get_new_axis(), AxisSet{});
-    EXPECT_EQ(strided_slice->get_shrink_axis(), AxisSet({0, 1, 2, 3, 4}));
-    EXPECT_EQ(strided_slice->get_ellipsis_mask(), AxisSet({2}));
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto begin = make_shared<op::Parameter>(element::i32, Shape{4});
+    auto end = make_shared<op::Parameter>(element::i64, Shape{4});
+    try
+    {
+        auto strided_slice = make_shared<op::StridedSlice>(
+            data, begin, end, vector<int64_t>{1, 0, 1, 0}, vector<int64_t>{1, 0, 1, 0});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect begin type exception not thrown.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Begin mask must have element type i64"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }
 
-TEST(type_prop, strided_slice_default_value)
+TEST(type_prop, strided_slice_end_incorrect_type)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5, 6});
-    const auto begin = op::Constant::create(element::i64, Shape{5}, {0, 1, 2, 3, 1});
-    const auto end = op::Constant::create(element::i64, Shape{5}, {1, 3, 3, 5, 6});
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto begin = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto end = make_shared<op::Parameter>(element::i32, Shape{4});
+    try
+    {
+        auto strided_slice = make_shared<op::StridedSlice>(
+            data, begin, end, vector<int64_t>{1, 0, 1, 0}, vector<int64_t>{1, 0, 1, 0});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect end type exception not thrown.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("End mask must have element type i64"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
 
-    const std::vector<int64_t> begin_mask{1, 0, 1, 0, 1};
-    const std::vector<int64_t> end_mask{0, 1, 0, 1, 0};
-    const std::vector<int64_t> new_axis_mask{0, 0, 0, 1, 0};
-    const std::vector<int64_t> shrink_axis_mask{1, 0, 0, 0, 0};
+TEST(type_prop, strided_slice_incompatible_size_of_masks_attr)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto begin = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto end = make_shared<op::Parameter>(element::i64, Shape{4});
+    try
+    {
+        auto strided_slice = make_shared<op::StridedSlice>(data,
+                                                           begin,
+                                                           end,
+                                                           vector<int64_t>{1, 0, 1, 0},
+                                                           vector<int64_t>{1, 0, 1, 0},
+                                                           vector<int64_t>{1, 0, 1, 0, 1});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incompatible size od masks exception not thrown.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("All maks of StridedSlice should have the same size"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
 
-    auto strided_slice = make_shared<op::StridedSlice>(
-        arg, begin, end, begin_mask, end_mask, new_axis_mask, shrink_axis_mask);
+TEST(type_prop, strided_slice_mask_incorrect_value)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto begin = make_shared<op::Parameter>(element::i64, Shape{4, 5});
+    auto end = make_shared<op::Parameter>(element::i64, Shape{4});
+    try
+    {
+        auto strided_slice = make_shared<op::StridedSlice>(
+            data, begin, end, vector<int64_t>{1, 0, 1, 0}, vector<int64_t>{1, 0, 1, 2});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect values of StridedSlice mask exception not thrown.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("All maks elements of StridedSlice should have be 0 or 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
 
-    auto stride_input = strided_slice->input_value(3).get_node_shared_ptr();
-    auto stride_inpu_const = as_type_ptr<op::Constant>(stride_input);
-    auto stride_vec = stride_inpu_const->get_vector<int64_t>();
+TEST(type_prop, strided_slice_begin_incorrect_shape)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto begin = make_shared<op::Parameter>(element::i64, Shape{4, 5});
+    auto end = make_shared<op::Parameter>(element::i64, Shape{4});
+    try
+    {
+        auto strided_slice = make_shared<op::StridedSlice>(
+            data, begin, end, vector<int64_t>{1, 0, 1, 0}, vector<int64_t>{1, 0, 1, 0});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect shape of begin exception not thrown.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Begin input must be 1D (begin rank:"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
 
-    EXPECT_EQ(stride_vec.size(), begin_mask.size());
-    EXPECT_TRUE(std::all_of(stride_vec.begin(), stride_vec.end(), [](size_t e) { return e == 1; }));
+TEST(type_prop, strided_slice_begin_incorrect_elem_number)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto begin = make_shared<op::Parameter>(element::i64, Shape{5});
+    auto end = make_shared<op::Parameter>(element::i64, Shape{4});
+    try
+    {
+        auto strided_slice = make_shared<op::StridedSlice>(
+            data, begin, end, vector<int64_t>{1, 0, 1, 0}, vector<int64_t>{1, 0, 1, 0});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect elements number of begin exception not thrown.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Begin input must have: 4 elements"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, strided_slice_end_incorrect_elem_number)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto begin = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto end = make_shared<op::Parameter>(element::i64, Shape{5});
+    try
+    {
+        auto strided_slice = make_shared<op::StridedSlice>(
+            data, begin, end, vector<int64_t>{1, 0, 1, 0}, vector<int64_t>{1, 0, 1, 0});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect elements number of end exception not thrown.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("End input must have: 4 elements"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, strided_slice_end_incorrect_shape)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto begin = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto end = make_shared<op::Parameter>(element::i64, Shape{4, 5});
+    try
+    {
+        auto strided_slice = make_shared<op::StridedSlice>(
+            data, begin, end, vector<int64_t>{1, 0, 1, 0}, vector<int64_t>{1, 0, 1, 0});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect shape of end exception not thrown.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("End input must be 1D (end rank:"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }

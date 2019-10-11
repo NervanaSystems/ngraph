@@ -198,6 +198,8 @@ set (SRC
     op/experimental/layers/roi_pooling.cpp
     op/experimental/random_uniform.hpp
     op/experimental/random_uniform.cpp
+    op/experimental/strided_slice.cpp
+    op/experimental/strided_slice.hpp
     op/floor.cpp
     op/floor.hpp
     op/gather.cpp
