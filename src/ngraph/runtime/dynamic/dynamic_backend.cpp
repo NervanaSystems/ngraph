@@ -98,6 +98,14 @@ static size_t count_dyn_nodes(const shared_ptr<ngraph::Function>& f)
     return count;
 }
 
+int runtime::dynamic::DynamicExecutable::current_pipeline_stage(
+    const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+    const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
+{
+    return 0;
+}
+
+
 bool runtime::dynamic::DynamicExecutable::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)

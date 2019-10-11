@@ -70,6 +70,12 @@ runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_stri
     set_parameters_and_results(*m_function);
 }
 
+int runtime::interpreter::INTExecutable::current_pipeline_stage(const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                               const vector<shared_ptr<runtime::Tensor>>& inputs)
+{
+    return 0;
+}
+
 bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {

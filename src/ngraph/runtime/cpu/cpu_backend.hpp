@@ -89,6 +89,8 @@ namespace ngraph
                                bool performance_counters_enabled);
                 bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
+                int current_pipeline_stage(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                          const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
 
                 std::shared_ptr<CPU_CallFrame> get_call_frame();
 

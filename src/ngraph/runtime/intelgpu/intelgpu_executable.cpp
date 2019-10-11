@@ -87,6 +87,12 @@ runtime::intelgpu::IntelGPUExecutable::IntelGPUExecutable(shared_ptr<Function> f
     set_parameters_and_results(*func);
 }
 
+int runtime::intelgpu::IntelGPUExecutable::current_pipeline_stage(const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                                 const vector<shared_ptr<runtime::Tensor>>& inputs)
+{
+    return 0;
+}
+
 bool runtime::intelgpu::IntelGPUExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                  const vector<shared_ptr<runtime::Tensor>>& inputs)
 {

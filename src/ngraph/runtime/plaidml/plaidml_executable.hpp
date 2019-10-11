@@ -48,6 +48,8 @@ public:
     virtual ~PlaidML_Executable() {}
     bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
               const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) final;
+    int current_pipeline_stage(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+              const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) final;
 
     std::vector<PerformanceCounter> get_performance_data() const final;
 

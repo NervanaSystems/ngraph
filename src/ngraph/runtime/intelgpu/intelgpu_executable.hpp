@@ -45,6 +45,9 @@ public:
     bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
               const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
 
+    int current_pipeline_stage(const std::vector<std::shared_ptr<Tensor>>& outputs,
+              const std::vector<std::shared_ptr<Tensor>>& intputs) override;
+
     std::vector<PerformanceCounter> get_performance_data() const override;
 
 private:

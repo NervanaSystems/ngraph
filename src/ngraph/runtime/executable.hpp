@@ -43,6 +43,10 @@ public:
     /// \returns true if iteration is successful, false otherwise
     virtual bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                       const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) = 0;
+    /// \brief Returns the current pipeline stage being executed
+    virtual int current_pipeline_stage(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                               const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) = 0;
+
 
     /// \brief Executes a single iteration of a Function.
     /// \param outputs vector of runtime::Tensor used as outputs

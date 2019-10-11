@@ -78,6 +78,12 @@ runtime::nop::NOPExecutable::NOPExecutable(shared_ptr<Function> function,
     set_parameters_and_results(*function);
 }
 
+int runtime::nop::NOPExecutable::current_pipeline_stage(const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                       const vector<shared_ptr<runtime::Tensor>>& inputs)
+{
+    return 0;
+}
+
 bool runtime::nop::NOPExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                        const vector<shared_ptr<runtime::Tensor>>& inputs)
 {

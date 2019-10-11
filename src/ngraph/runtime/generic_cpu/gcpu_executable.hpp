@@ -183,6 +183,9 @@ public:
     bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,
               const std::vector<std::shared_ptr<Tensor>>& intputs) override;
 
+    int current_pipeline_stage(const std::vector<std::shared_ptr<Tensor>>& outputs,
+              const std::vector<std::shared_ptr<Tensor>>& intputs) override;
+
     virtual void save(std::ostream& output_stream) override;
 
     void set_nan_check(bool enable);

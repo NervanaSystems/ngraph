@@ -37,6 +37,13 @@ ngraph::runtime::plaidml::PlaidML_Executable::PlaidML_Executable(Build build,
     NGRAPH_DEBUG << "Compiled PlaidML function " << this;
 }
 
+int ngraph::runtime::plaidml::PlaidML_Executable::current_pipeline_stage(
+    const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+    const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
+{
+    return 0;
+}
+
 bool ngraph::runtime::plaidml::PlaidML_Executable::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)

@@ -177,6 +177,12 @@ std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Executabl
     return instance.m_call_frame;
 }
 
+int runtime::cpu::CPU_Executable::current_pipeline_stage(const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                        const vector<shared_ptr<runtime::Tensor>>& inputs)
+{
+    return 0;
+}
+
 bool runtime::cpu::CPU_Executable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                         const vector<shared_ptr<runtime::Tensor>>& inputs)
 {

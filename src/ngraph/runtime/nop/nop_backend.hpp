@@ -55,4 +55,6 @@ public:
     NOPExecutable(std::shared_ptr<Function> function, bool enable_performance_collection = false);
     bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
               const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
+    int current_pipeline_stage(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+              const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
 };

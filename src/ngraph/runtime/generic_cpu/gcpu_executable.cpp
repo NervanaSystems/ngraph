@@ -71,6 +71,12 @@ runtime::gcpu::GCPUExecutable::GCPUExecutable(const std::string& model_string)
     set_parameters_and_results(*m_function);
 }
 
+int runtime::gcpu::GCPUExecutable::current_pipeline_stage(const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                         const vector<shared_ptr<runtime::Tensor>>& inputs)
+{
+    return 0;
+}
+
 bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                          const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
