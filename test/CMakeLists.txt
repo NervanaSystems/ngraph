@@ -169,6 +169,7 @@ set(SRC
     type_prop/unsqueeze.cpp
     type_prop_benchmark.cpp
     type_prop_layers.cpp
+    mlir/ops_test.cpp
     util.cpp
     zero_dim_tensor_elimination.cpp
 )
