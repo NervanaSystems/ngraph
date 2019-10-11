@@ -34,11 +34,11 @@ constexpr NodeTypeInfo op::LSTMSequence::type_info;
 NodeVector op::LSTMSequence::decompose_op() const
 {
     NodeVector results;
-    if (m_direction == "forward" || m_direction == "reverse")
+    if (m_direction == direction::FORWARD || m_direction == direction::REVERSE)
     {
-        results = lstm_pass(m_direction == "reverse");
+        results = lstm_pass(m_direction == direction::REVERSE);
     }
-    if (m_direction == "bidirectional")
+    if (m_direction == direction::BIDIRECTIONAL)
     {
         NodeVector fwd_results{lstm_pass()};
         NodeVector rev_results{lstm_pass(true)};
@@ -212,19 +212,10 @@ shared_ptr<Node> op::LSTMSequence::prepare_input(Output<Node> node, bool is_reve
 {
     // In bidirectional mode inputs are stacked together, so we must split them.
     shared_ptr<Node> tmp = node.get_node_shared_ptr();
-    if (m_direction == "bidirectional")
+    if (m_direction == direction::BIDIRECTIONAL)
     {
         tmp = builder::split(node, 2).at(is_reverse ? 1 : 0);
     }
     // Since we have forward LSTM we can squeeze `num_directions` axis from inputs.
     return builder::squeeze(tmp);
-}
-
-void op::LSTMSequence::pre_validate_and_infer_types()
-{
-    NGRAPH_CHECK(m_direction == "bidirectional" || m_direction == "forward" ||
-                     m_direction == "reverse",
-                 "Provided direction: ",
-                 m_direction,
-                 " is invalid");
 }

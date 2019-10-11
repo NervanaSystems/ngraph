@@ -25,6 +25,7 @@
 #include "ngraph/frontend/onnx_import/op/lstm.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/lstm_sequence.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -173,11 +174,28 @@ namespace ngraph
                               node.get_attribute_value<std::int64_t>("input_forget", 0))}
                     {
                         m_clip_threshold = std::abs(m_clip_threshold);
-                        m_direction = ngraph::to_lower(
-                            node.get_attribute_value<std::string>("direction", {"forward"}));
+                        std::string direction = ngraph::to_lower(
+                            node.get_attribute_value<std::string>("direction", "forward"));
+                        NGRAPH_CHECK(direction == "bidirectional" || direction == "forward" ||
+                                         direction == "reverse",
+                                     "Provided direction: ",
+                                     direction,
+                                     " is invalid");
+                        if (direction == "forward")
+                        {
+                            m_direction = ngraph::op::LSTMSequence::direction::FORWARD;
+                        }
+                        else if (direction == "reverse")
+                        {
+                            m_direction = ngraph::op::LSTMSequence::direction::REVERSE;
+                        }
+                        else // (direction == "bidirectional")
+                        {
+                            m_direction = ngraph::op::LSTMSequence::direction::BIDIRECTIONAL;
+                        }
                     }
 
-                    std::string m_direction;
+                    ngraph::op::LSTMSequence::direction m_direction;
                     std::int64_t m_hidden_size;
                     float m_clip_threshold;
                     std::vector<std::string> m_activations;
@@ -195,23 +213,25 @@ namespace ngraph
                     LSTMNgInputMap input_map{node};
                     LSTMAttributes attributes{node};
 
-                    return std::make_shared<ngraph::op::LSTMSequence>(
-                               input_map.at(LSTMInput::LSTM_INPUT_X),
-                               input_map.at(LSTMInput::LSTM_INPUT_INIT_H),
-                               input_map.at(LSTMInput::LSTM_INPUT_INIT_C),
-                               input_map.at(LSTMInput::LSTM_INPUT_SEQ_LENGTHS),
-                               input_map.at(LSTMInput::LSTM_INPUT_W),
-                               input_map.at(LSTMInput::LSTM_INPUT_R),
-                               input_map.at(LSTMInput::LSTM_INPUT_B),
-                               input_map.at(LSTMInput::LSTM_INPUT_P),
-                               attributes.m_hidden_size,
-                               attributes.m_direction,
-                               attributes.m_activation_alpha,
-                               attributes.m_activation_beta,
-                               attributes.m_activations,
-                               attributes.m_clip_threshold,
-                               attributes.m_input_forget)
-                        ->decompose_op();
+                    auto lstmSequence = std::make_shared<ngraph::op::LSTMSequence>(
+                        input_map.at(LSTMInput::LSTM_INPUT_X),
+                        input_map.at(LSTMInput::LSTM_INPUT_INIT_H),
+                        input_map.at(LSTMInput::LSTM_INPUT_INIT_C),
+                        input_map.at(LSTMInput::LSTM_INPUT_SEQ_LENGTHS),
+                        input_map.at(LSTMInput::LSTM_INPUT_W),
+                        input_map.at(LSTMInput::LSTM_INPUT_R),
+                        input_map.at(LSTMInput::LSTM_INPUT_B),
+                        input_map.at(LSTMInput::LSTM_INPUT_P),
+                        attributes.m_hidden_size,
+                        attributes.m_direction,
+                        attributes.m_activation_alpha,
+                        attributes.m_activation_beta,
+                        attributes.m_activations,
+                        attributes.m_clip_threshold,
+                        attributes.m_input_forget);
+                    return {std::make_shared<ngraph::op::GetOutputElement>(lstmSequence, 0),
+                            std::make_shared<ngraph::op::GetOutputElement>(lstmSequence, 1),
+                            std::make_shared<ngraph::op::GetOutputElement>(lstmSequence, 2)};
                 }
             } // namespace set_1
 

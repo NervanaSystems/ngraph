@@ -44,6 +44,13 @@ namespace ngraph
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             LSTMSequence() = default;
 
+            enum class direction
+            {
+                FORWARD,
+                REVERSE,
+                BIDIRECTIONAL
+            };
+
             explicit LSTMSequence(const Output<Node>& X,
                                   const Output<Node>& initial_hidden_state,
                                   const Output<Node>& initial_cell_state,
@@ -53,7 +60,7 @@ namespace ngraph
                                   const Output<Node>& B,
                                   const Output<Node>& P,
                                   const std::int64_t hidden_size,
-                                  const std::string direction,
+                                  const direction direction,
                                   const std::vector<float> activations_alpha = {},
                                   const std::vector<float> activations_beta = {},
                                   const std::vector<std::string> activations = {},
@@ -80,7 +87,7 @@ namespace ngraph
                                   const Output<Node>& R,
                                   const Output<Node>& B,
                                   const std::int64_t hidden_size,
-                                  const std::string direction,
+                                  const direction direction,
                                   const std::vector<float> activations_alpha = {},
                                   const std::vector<float> activations_beta = {},
                                   const std::vector<std::string> activations = {},
@@ -104,8 +111,6 @@ namespace ngraph
             {
             }
 
-            void pre_validate_and_infer_types() override;
-
             virtual NodeVector decompose_op() const override;
 
             virtual std::shared_ptr<Node>
@@ -115,7 +120,7 @@ namespace ngraph
             std::vector<float> get_activations_beta() const { return m_activations_beta; }
             std::vector<std::string> get_activations() const { return m_activations; }
             float get_clip_threshold() const { return m_clip_threshold; }
-            std::string get_direction() const { return m_direction; }
+            direction get_direction() const { return m_direction; }
             std::int64_t get_hidden_size() const { return m_hidden_size; }
             bool get_input_forget() const { return m_input_forget; }
         private:
@@ -147,7 +152,7 @@ namespace ngraph
             const std::vector<float> m_activations_beta;
             const std::vector<std::string> m_activations;
             const float m_clip_threshold;
-            const std::string m_direction;
+            const direction m_direction;
             const std::int64_t m_hidden_size;
             const bool m_input_forget;
         };

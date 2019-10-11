@@ -1558,7 +1558,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto activations_alpha = node_js.at("activations_alpha").get<vector<float>>();
             auto activations_beta = node_js.at("activations_beta").get<vector<float>>();
             auto input_forget = node_js.at("input_forget").get<bool>();
-            auto direction = node_js.at("direction").get<string>();
+            auto direction = node_js.at("direction").get<op::LSTMSequence::direction>();
             if (args.size() == 8)
             {
                 node = make_shared<op::LSTMSequence>(args[0],
