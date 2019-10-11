@@ -41,6 +41,9 @@ namespace ngraph
 
             } // namespace  detail
 
+            using RuntimeReductionFunction = std::function<std::shared_ptr<ngraph::Node>(
+                const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&, bool)>;
+
             using ReductionFunction = std::function<std::shared_ptr<ngraph::Node>(
                 const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet&)>;
 
@@ -58,6 +61,22 @@ namespace ngraph
                 make_ng_reduction_op(const Node& node,
                                      const std::shared_ptr<ngraph::Node>& ng_input,
                                      ReductionFunction reduction_function);
+
+            ///
+            /// \brief      Create an nGraph version of an ONNX reduction operation.
+            ///
+            /// \param[in]  node                The node representing incoming ONNX operation.
+            /// \param[in]  ng_input            The input (nGraph) Tensor.
+            /// \param[in]  reduction_function  The reduction function defining arithmetic dynamic
+            /// reduction
+            ///                                 operation (e.g. ReduceProd, ReduceSum).
+            ///
+            /// \return     nGraph node equivalent of the ONNX operation.
+            ///
+            std::shared_ptr<ngraph::Node>
+                make_ng_reduction_op(const Node& node,
+                                     const std::shared_ptr<ngraph::Node>& ng_input,
+                                     RuntimeReductionFunction reduction_function);
 
             template <class IndexReduction>
             std::shared_ptr<ngraph::Node> make_ng_index_reduction_op(const Node& node)

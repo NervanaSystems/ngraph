@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "exceptions.hpp"
+#include "ngraph/op/constant.hpp"
 #include "reduction.hpp"
 #include "utils/common.hpp"
 
@@ -78,6 +79,31 @@ namespace ngraph
                     op_node,
                     ngraph::get_default_order(op_node->get_shape().size()),
                     Shape{output_shape});
+            }
+
+            std::shared_ptr<ngraph::Node>
+                make_ng_reduction_op(const Node& node,
+                                     const std::shared_ptr<ngraph::Node>& ng_input,
+                                     RuntimeReductionFunction reduction_function)
+            {
+                auto data_shape = ng_input->get_shape();
+
+                auto reduction_axes = detail::get_reduction_axes(node);
+
+                ASSERT_VALID_ARGUMENT(node, reduction_axes.size() <= data_shape.size())
+                    << "provided reduction axes count (" << reduction_axes.size()
+                    << ") is larger than input tensor rank (" << data_shape.size() << ")";
+
+                std::int64_t keepdims = node.get_attribute_value<std::int64_t>("keepdims", 1);
+
+                std::shared_ptr<ngraph::Node> op_node = reduction_function(
+                    ng_input,
+                    std::make_shared<ngraph::op::Constant>(element::i64,
+                                                           ngraph::Shape{reduction_axes.size()},
+                                                           reduction_axes.to_vector()),
+                    static_cast<bool>(keepdims));
+
+                return op_node;
             }
 
         } // namespace  reduction
