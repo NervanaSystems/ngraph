@@ -63,6 +63,7 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Greater(m_op);
     regclass_pyngraph_op_GreaterEq(m_op);
     regclass_pyngraph_op_GRN(m_op);
+    regclass_pyngraph_op_GroupConvolution(m_op);
     regclass_pyngraph_op_HardSigmoid(m_op);
     regclass_pyngraph_op_Less(m_op);
     regclass_pyngraph_op_LessEq(m_op);
@@ -95,6 +96,7 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_ReplaceSlice(m_op);
     regclass_pyngraph_op_Reshape(m_op);
     regclass_pyngraph_op_Reverse(m_op);
+    regclass_pyngraph_op_RNNCell(m_op);
     regclass_pyngraph_op_ScaleShift(m_op);
     regclass_pyngraph_op_Select(m_op);
     regclass_pyngraph_op_ShuffleChannels(m_op);

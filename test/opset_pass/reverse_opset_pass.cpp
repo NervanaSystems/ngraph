@@ -26,7 +26,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(opset_upgrade, opset1_reverse_upgrade)
+TEST(opset_transform, opset1_reverse_upgrade_pass)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2});
     const AxisSet reverse_axes{1, 2};
@@ -52,7 +52,7 @@ TEST(opset_upgrade, opset1_reverse_upgrade)
     EXPECT_EQ(rev_axes_input_shape, Shape{2});
 }
 
-TEST(opset_downgrade, opset0_reverse_downgrade_index_mode)
+TEST(opset_transform, opset0_reverse_downgrade_pass_index_mode)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2});
     const auto reverse_axes =
@@ -76,7 +76,7 @@ TEST(opset_downgrade, opset0_reverse_downgrade_index_mode)
     EXPECT_EQ(reverse_v0->get_reversed_axes(), AxisSet({1, 2}));
 }
 
-TEST(opset_downgrade, opset0_reverse_downgrade_mask_mode)
+TEST(opset_transform, opset0_reverse_downgrade_pass_mask_mode)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2});
     const auto reverse_axes =
@@ -100,7 +100,7 @@ TEST(opset_downgrade, opset0_reverse_downgrade_mask_mode)
     EXPECT_EQ(reverse_v0->get_reversed_axes(), AxisSet({0, 2}));
 }
 
-TEST(opset_downgrade, opset0_reverse_downgrade_axes_not_constant)
+TEST(opset_transform, opset0_reverse_downgrade_pass_axes_not_constant)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2});
     const auto axes = make_shared<op::Parameter>(element::boolean, Shape{3});
