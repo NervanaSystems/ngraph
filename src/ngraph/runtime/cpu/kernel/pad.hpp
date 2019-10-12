@@ -67,15 +67,19 @@ namespace ngraph
                                    const Shape& output_shape,
                                    const CoordinateDiff& padding_below,
                                    const CoordinateDiff& padding_above,
+                                   const ngraph::op::PadMode pad_mode,
                                    int arena)
                 {
-                    Eigen::array<Eigen::Index, Rank> out_dims, in_dims;
+                    Eigen::array<Eigen::Index, Rank> out_dims, in_dims, temp_dims;
                     Eigen::array<Eigen::IndexPair<size_t>, Rank> padding;
                     Eigen::array<Eigen::Index, Rank> indices;
+
+                    bool has_negative_below_padding = false;
 
                     for (size_t i = 0; i < Rank; i++)
                     {
                         out_dims[i] = output_shape[i];
+                        temp_dims[i] = output_shape[i];
                         in_dims[i] = input_shape[i];
 
                         padding[i] = {
@@ -88,6 +92,8 @@ namespace ngraph
                         {
                             NGRAPH_CHECK(padding_below[i] > INT_MIN);
                             indices[i] = -padding_below[i];
+                            temp_dims[i] -= padding_below[i];
+                            has_negative_below_padding = true;
                         }
                         else
                         {
@@ -97,12 +103,93 @@ namespace ngraph
 
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> out(
                         static_cast<ElementType*>(output), out_dims);
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> temp(
+                        static_cast<ElementType*>(output), temp_dims);
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
                         static_cast<ElementType*>(input), in_dims);
 
-                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
-                        in.pad(padding, *static_cast<ElementType*>(pad_value))
-                            .slice(indices, out_dims);
+                    if (pad_mode == ngraph::op::PadMode::CONSTANT)
+                    {
+                        out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = in.pad(padding, *static_cast<ElementType*>(pad_value))
+                                          .slice(indices, out_dims);
+                    }
+                    else
+                    {
+                        // clang-format off
+                        // PadMode::REFLECT
+                        // We should have dim >= 2 for each dim.
+                        // Example:
+                        //
+                        // Input shape:     [4]
+                        // Padding:         6 below, 13 above
+                        // Output shape:    [23]
+                        //
+                        // Input:                       1 2 3 4
+                        // Expected output: 1 2 3 4 3 2 1 2 3 4 3 2 1 2 3 4 3 2 1 2 3 4 3
+                        // Pattern: ... | original n elements | middle (n - 2) elements of original n in reverse order |
+                        //                original n elements | middle (n - 2) elements of original n in reverse order | ...
+                        //              | 1 2 3 4 | 3 2 | 1 2 3 4 | 3 2 | 1 2 3 4 | 3 2 | 1 2 3 4 | 3
+                        // clang-format on
+                        auto generator =
+                            [&](const Eigen::array<Eigen::DenseIndex, Rank>& out_index) {
+                                Eigen::array<Eigen::DenseIndex, Rank> in_index;
+                                for (size_t i = 0; i < Rank; i++)
+                                {
+                                    auto origin_length = in_dims[i];
+                                    auto p_below = padding_below[i] >= 0 ? padding_below[i] : 0;
+                                    if (out_index[i] < p_below)
+                                    {
+                                        // padding below
+                                        auto reverse = p_below - out_index[i];
+                                        auto res = reverse % (origin_length * 2 - 2);
+                                        if (res <= origin_length - 2)
+                                        {
+                                            // copy one of the middle n-2 items
+                                            in_index[i] = res;
+                                        }
+                                        else
+                                        {
+                                            // copy one of the n items
+                                            in_index[i] = origin_length * 2 - 2 - res;
+                                        }
+                                    }
+                                    else if (out_index[i] < in_dims[i] + p_below)
+                                    {
+                                        // original
+                                        in_index[i] = out_index[i] - p_below;
+                                    }
+                                    else
+                                    {
+                                        // padding above
+                                        auto pos = out_index[i] - in_dims[i] - p_below;
+                                        auto res = pos % (origin_length * 2 - 2);
+                                        if (res < origin_length - 2)
+                                        {
+                                            // copy one of the middle n-2 items
+                                            in_index[i] = origin_length - 2 - res;
+                                        }
+                                        else
+                                        {
+                                            // copy one of the n items
+                                            in_index[i] = res - (origin_length - 2);
+                                        }
+                                    }
+                                }
+                                return in(in_index);
+                            };
+
+                        if (has_negative_below_padding)
+                        {
+                            out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                                arena)) = temp.generate(generator).slice(indices, out_dims);
+                        }
+                        else
+                        {
+                            out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                                arena)) = out.generate(generator);
+                        }
+                    }
                 }
 
                 template <typename ElementType>
