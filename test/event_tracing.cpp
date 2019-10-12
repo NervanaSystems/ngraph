@@ -63,7 +63,6 @@ TEST(event_tracing, event_file)
 TEST(event_tracing, event_writer_callback)
 {
     // Create the event writer
-    int event_count = 0;
     vector<ngraph::Event> event_list;
     auto event_writer = [&](const ngraph::Event& event) { event_list.push_back(event); };
 
