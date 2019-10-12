@@ -657,6 +657,22 @@ if(WIN32)
 endif()
 
 #-----------------------------------------------------------------------------------------------
+# Export ngraph target for external projects
+#-----------------------------------------------------------------------------------------------
+
+export(TARGETS ngraph NAMESPACE ngraph:: FILE "${CMAKE_BINARY_DIR}/ngraph_targets.cmake")
+
+configure_file(
+    "${ngraph_SOURCE_DIR}/cmake/Export/NGraphConfig.cmake.in"
+    "${CMAKE_BINARY_DIR}/NGraphConfig.cmake"
+    COPYONLY)
+
+configure_file(
+    "${ngraph_SOURCE_DIR}/cmake/Export/NGraphConfig-version.cmake.in"
+    "${CMAKE_BINARY_DIR}/NGraphConfig-version.cmake"
+    @ONLY)
+
+#-----------------------------------------------------------------------------------------------
 # Installation logic...
 #-----------------------------------------------------------------------------------------------
 
