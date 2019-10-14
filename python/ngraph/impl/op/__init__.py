@@ -83,6 +83,7 @@ from _pyngraph.op import GetOutputElement
 from _pyngraph.op import Greater
 from _pyngraph.op import GreaterEq
 from _pyngraph.op import GRN
+from _pyngraph.op import GroupConvolution
 from _pyngraph.op import HardSigmoid
 from _pyngraph.op import Less
 from _pyngraph.op import LessEq
@@ -115,6 +116,7 @@ from _pyngraph.op import ReluBackprop
 from _pyngraph.op import ReplaceSlice
 from _pyngraph.op import Reshape
 from _pyngraph.op import Reverse
+from _pyngraph.op import RNNCell
 from _pyngraph.op import ScaleShift
 from _pyngraph.op import Select
 from _pyngraph.op import ShuffleChannels

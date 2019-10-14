@@ -10,7 +10,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(upgrade_pass, opset1_avgpool_pass)
+TEST(opset_transform, opset1_avgpool_upgrade_pass)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6, 9});
     Shape pads_begin{0, 0};
@@ -46,7 +46,7 @@ TEST(upgrade_pass, opset1_avgpool_pass)
     EXPECT_EQ(avg_pool_v1_node->get_auto_pad(), pad_mode);
 }
 
-TEST(upgrade_pass, opset1_maxpool_pass)
+TEST(opset_transform, opset1_maxpool_upgrade_pass)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6, 9});
     Shape pads_begin{0, 0};
