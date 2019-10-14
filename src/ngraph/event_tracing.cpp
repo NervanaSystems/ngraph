@@ -29,11 +29,11 @@ static bool read_tracing_env_var()
     return (std::getenv("NGRAPH_ENABLE_TRACING") != nullptr);
 }
 
-mutex ngraph::Event::s_file_mutex;
-ofstream ngraph::Event::s_event_log;
-bool ngraph::Event::s_tracing_enabled = read_tracing_env_var();
-bool ngraph::Event::s_event_writer_registered = false;
-std::function<void(const ngraph::Event& event)> ngraph::Event::s_event_writer;
+NGRAPH_API mutex ngraph::Event::s_file_mutex;
+NGRAPH_API ofstream ngraph::Event::s_event_log;
+NGRAPH_API bool ngraph::Event::s_tracing_enabled = read_tracing_env_var();
+NGRAPH_API bool ngraph::Event::s_event_writer_registered = false;
+NGRAPH_API std::function<void(const ngraph::Event& event)> ngraph::Event::s_event_writer;
 
 void ngraph::Event::write_trace(const ngraph::Event& event)
 {
