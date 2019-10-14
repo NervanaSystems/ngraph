@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Interpolate::type_name{"Interpolate"};
+constexpr NodeTypeInfo op::Interpolate::type_info;
 
 op::Interpolate::Interpolate(const Output<Node>& image,
                              const Output<Node>& output_shape,
@@ -49,7 +49,7 @@ void op::Interpolate::validate_and_infer_types()
         }
     }
 
-    if (auto const_shape = dynamic_pointer_cast<op::Constant>(get_argument(1)))
+    if (auto const_shape = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr()))
     {
         auto out_shape = static_cast<const int64_t*>(const_shape->get_data_ptr());
         size_t i = 0;

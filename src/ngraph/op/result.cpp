@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Result::type_name{"Result"};
+constexpr NodeTypeInfo op::Result::type_info;
 
 op::Result::Result(const Output<Node>& arg, bool needs_default_layout)
     : Op({arg})

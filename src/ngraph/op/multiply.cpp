@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Multiply::type_name{"Multiply"};
+constexpr NodeTypeInfo op::Multiply::type_info;
 
 op::Multiply::Multiply(const Output<Node>& arg0,
                        const Output<Node>& arg1,

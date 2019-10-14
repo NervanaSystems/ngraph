@@ -236,7 +236,7 @@ void ngraph::runtime::plaidml::ImplAvgPoolBackprop::Apply()
     ret.add(cpf.O_in_header(incoming_deriv))
         .add(builder::Input{one, "One"})
         .add(builder::Output{"DI"});
-    for (int i = 2; i < forward_arg_shape.size(); ++i)
+    for (size_t i = 2; i < forward_arg_shape.size(); ++i)
     {
         std::ostringstream s;
         s << "XI" << i - 2;

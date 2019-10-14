@@ -14,10 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 
+#if defined(NGRAPH_TBB_ENABLE)
 #include <tbb/tbb_stddef.h>
+#endif
 
 #include "cpu_backend_visibility.h"
 
+#include "ngraph/component_manager.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
@@ -35,58 +38,21 @@
 using namespace ngraph;
 using namespace std;
 
-runtime::BackendConstructor* runtime::cpu::get_backend_constructor_pointer()
+extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend()
 {
-    class CPU_BackendConstructor : public runtime::BackendConstructor
-    {
-    public:
-        std::shared_ptr<runtime::Backend> create(const std::string& config) override
+    runtime::BackendManager::register_backend("CPU", [](const std::string& /* config */) {
+        static bool is_initialized = false;
+        if (!is_initialized)
         {
-            static bool s_is_initialized = false;
-            if (!s_is_initialized)
-            {
-                s_is_initialized = true;
-                tbb::TBB_runtime_interface_version();
-                ngraph::runtime::cpu::register_builders();
-            }
-            return make_shared<runtime::cpu::CPU_Backend>();
-        }
-    };
-
-    static unique_ptr<runtime::BackendConstructor> s_backend_constructor(
-        new CPU_BackendConstructor());
-    return s_backend_constructor.get();
-}
-
-#if !defined(NGRAPH_CPU_STATIC_LIB_ENABLE)
-extern "C" CPU_BACKEND_API runtime::BackendConstructor* get_backend_constructor_pointer()
-{
-    return runtime::cpu::get_backend_constructor_pointer();
-}
+#if defined(NGRAPH_TBB_ENABLE)
+            // Force TBB to link to the backend
+            tbb::TBB_runtime_interface_version();
 #endif
-
-void runtime::cpu::static_initialize()
-{
-    static bool s_is_initialized = false;
-    if (!s_is_initialized)
-    {
-        s_is_initialized = true;
-        BackendManager::register_backend("CPU", runtime::cpu::get_backend_constructor_pointer());
-    }
-}
-
-namespace
-{
-    static class CPUStaticInit
-    {
-    public:
-        CPUStaticInit()
-        {
-            runtime::BackendManager::register_backend(
-                "CPU", runtime::cpu::get_backend_constructor_pointer());
+            ngraph::runtime::cpu::register_builders();
+            is_initialized = true;
         }
-        ~CPUStaticInit() {}
-    } s_cpu_static_init;
+        return make_shared<runtime::cpu::CPU_Backend>();
+    });
 }
 
 runtime::cpu::CPU_Backend::~CPU_Backend()
@@ -241,7 +207,7 @@ vector<runtime::PerformanceCounter> runtime::cpu::CPU_Executable::get_performanc
     return rc;
 }
 
-bool runtime::cpu::CPU_Backend::is_supported(const Node& op) const
+bool runtime::cpu::CPU_Backend::is_supported(const Node& /* op */) const
 {
     return true;
 }

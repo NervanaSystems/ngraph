@@ -53,17 +53,15 @@ namespace ngraph
                 /// Get sub-graph id
                 int get_id() const { return m_graph_id; }
                 /// Get all nodes in the sub-graph.
-                NodeSet& get_nodes() { return m_nodes; }
+                NodeVector& get_nodes() { return m_nodes; }
                 /// Get input nodes. Predecessors to head nodes.
-                NodeSet& get_inputs() { return m_input_nodes; }
+                NodeVector& get_inputs() { return m_input_node_vector; }
                 /// Get output nodes. Nodes in the sub-graph with edges to external nodes.
-                NodeSet& get_outputs() { return m_output_nodes; }
+                NodeVector& get_outputs() { return m_output_nodes; }
                 /// Add a list of input nodes to the sub-graph.
-                template <typename T>
-                void add_inputs(T& inputs);
+                void add_inputs(NodeVector& inputs);
                 /// Add a list of output nodes to the sub-graph.
-                template <typename T>
-                void add_outputs(T& outputs);
+                void add_outputs(NodeVector& outputs);
                 /// Merges sub-graph (other) into this sub-graph. other will be destroyed.
                 void merge(MLIRSubgraph& other);
                 /// Add one node to the sub-graph.
@@ -73,10 +71,13 @@ namespace ngraph
                 // Unique ID for this sub-graph.
                 int m_graph_id;
                 // Actual nodes of the sub-graph
-                NodeSet m_nodes;
-                // Predecessor to head nodes in the sub-graph.
-                NodeSet m_input_nodes;
-                NodeSet m_output_nodes;
+                NodeVector m_nodes;
+                // Predecessor to head nodes in the sub-graph. Both containers have the same
+                // elements. Set is only used for efficient look-up operations.
+                NodeVector m_input_node_vector;
+                NodeSet m_input_node_set;
+
+                NodeVector m_output_nodes;
                 MLIRSubgraphExtractionPass& m_pass;
                 static int m_curr_graph_id;
             };

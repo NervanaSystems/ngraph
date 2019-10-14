@@ -41,8 +41,8 @@ namespace ngraph
 class ngraph::runtime::plaidml::op::ImplicitBroadcast final : public ngraph::op::Op
 {
 public:
-    static const std::string type_name;
-    const std::string& description() const override { return type_name; }
+    static constexpr NodeTypeInfo type_info{"plaidmlImplicitBroadcast", 0};
+    const NodeTypeInfo& get_type_info() const override { return type_info; }
     ImplicitBroadcast(const Output<Node>& input, const Shape& shape);
 
     void validate_and_infer_types() final;

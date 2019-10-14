@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::AllReduce::type_name{"AllReduce"};
+constexpr NodeTypeInfo op::AllReduce::type_info;
 
 op::AllReduce::AllReduce(const Output<Node>& arg, reduction::Type reduce_type)
     : Op({arg})

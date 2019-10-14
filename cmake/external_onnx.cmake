@@ -44,7 +44,7 @@ ExternalProject_Add(
     CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
     CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
     CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}
-               -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+               -DCMAKE_CXX_FLAGS=${CMAKE_ORIGINAL_CXX_FLAGS}
                -DONNX_GEN_PB_TYPE_STUBS=OFF
                -DCMAKE_PREFIX_PATH=${Protobuf_INSTALL_PREFIX}
                -DONNX_ML=TRUE
@@ -85,7 +85,7 @@ set(ONNX_LIBRARIES ${ONNX_LIBRARY} ${ONNX_PROTO_LIBRARY})
 if (NOT TARGET onnx::libonnx)
     add_library(onnx::libonnx UNKNOWN IMPORTED)
     set_target_properties(onnx::libonnx PROPERTIES
-            INTERFACE_INCLUDE_DIRECTORIES ${ONNX_INCLUDE_DIR}
+            INTERFACE_SYSTEM_INCLUDE_DIRECTORIES ${ONNX_INCLUDE_DIR}
             IMPORTED_LOCATION ${ONNX_LIBRARY})
     add_dependencies(onnx::libonnx ext_onnx)
 endif()
@@ -93,7 +93,7 @@ endif()
 if (NOT TARGET onnx::libonnx_proto)
     add_library(onnx::libonnx_proto UNKNOWN IMPORTED)
     set_target_properties(onnx::libonnx_proto PROPERTIES
-            INTERFACE_INCLUDE_DIRECTORIES ${ONNX_PROTO_INCLUDE_DIR}
+            INTERFACE_SYSTEM_INCLUDE_DIRECTORIES ${ONNX_PROTO_INCLUDE_DIR}
             IMPORTED_LOCATION ${ONNX_PROTO_LIBRARY})
     add_dependencies(onnx::libonnx_proto ext_onnx)
 endif()

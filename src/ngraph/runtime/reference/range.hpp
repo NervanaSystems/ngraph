@@ -22,6 +22,8 @@
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/check.hpp"
 #include "ngraph/coordinate_transform.hpp"
+#include "ngraph/type/bfloat16.hpp"
+#include "ngraph/type/float16.hpp"
 
 namespace ngraph
 {

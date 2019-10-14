@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Proposal::type_name{"Proposal"};
+constexpr NodeTypeInfo op::Proposal::type_info;
 
 op::Proposal::Proposal(const Output<Node>& class_probs,
                        const Output<Node>& class_logits,

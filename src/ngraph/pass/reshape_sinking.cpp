@@ -47,7 +47,7 @@ using ReshapeMap = unordered_map<shared_ptr<Node>, shared_ptr<op::Reshape>>;
 static string describe_reshape(shared_ptr<Node> node)
 {
     stringstream ss;
-    auto reshape = dynamic_pointer_cast<op::Reshape>(node);
+    auto reshape = as_type_ptr<op::Reshape>(node);
     ss << reshape->get_name()
        << " ( axis order = " << ngraph::vector_to_string(reshape->get_input_order())
        << " , shape = " << vector_to_string(reshape->get_shape()) << " ) "
@@ -167,14 +167,14 @@ void swim(Input<Node> input, shared_ptr<op::Reshape> reshape)
         work_queue.pop_front();
         auto n = csw.input.get_source_output().get_node_shared_ptr();
         NGRAPH_DEBUG << "Processing (swimming) " << n->get_name();
-        if (auto unary = dynamic_pointer_cast<op::util::UnaryElementwiseArithmetic>(n))
+        if (n->is_unary_elementwise_arithmetic())
         {
-            Swimmer nsw{unary->input(0), csw.reshape};
+            Swimmer nsw{n->input(0), csw.reshape};
             work_queue.push_back(nsw);
             NGRAPH_DEBUG << "Propagating reshape " << describe_reshape(csw.reshape) << " for "
-                         << n->get_name() << " to " << unary->get_argument(0);
+                         << n->get_name() << " to " << n->get_argument(0);
         }
-        else if (dynamic_pointer_cast<op::Broadcast>(n))
+        else if (is_type<op::Broadcast>(n))
         {
             auto old_broadcast = static_pointer_cast<op::Broadcast>(n);
             auto broadcast_axes = old_broadcast->get_broadcast_axes();
@@ -324,16 +324,16 @@ static void sink_reshape(shared_ptr<op::Reshape> reshape,
     }
 }
 
-static void sink_unary(shared_ptr<op::util::UnaryElementwiseArithmetic> n,
+static void sink_unary(shared_ptr<Node> n,
                        ReshapeMap& reorders,
-                       set<shared_ptr<Node>>& reshapes_to_delete)
+                       set<shared_ptr<Node>>& /* reshapes_to_delete */)
 {
     auto arg_reshape = read_reshapemap(reorders, n->get_argument(0));
     NGRAPH_DEBUG << "Propagating " << describe_reshape(arg_reshape) << " for " << n->get_name();
     write_reshapemap(reorders, n, arg_reshape);
 }
 
-static void sink_binary(shared_ptr<op::util::BinaryElementwiseArithmetic> binary,
+static void sink_binary(shared_ptr<Node> binary,
                         ReshapeMap& reorders,
                         set<shared_ptr<Node>>& reshapes_to_delete)
 {
@@ -373,7 +373,7 @@ static void sink_binary(shared_ptr<op::util::BinaryElementwiseArithmetic> binary
 
 static void sink_slice(shared_ptr<op::Slice> n,
                        ReshapeMap& reorders,
-                       set<shared_ptr<Node>>& reshapes_to_delete)
+                       set<shared_ptr<Node>>& /* reshapes_to_delete */)
 {
     auto arg_reshape = reorders.at(n->get_argument(0));
     auto order = arg_reshape->get_input_order();
@@ -399,8 +399,9 @@ static void sink_slice(shared_ptr<op::Slice> n,
     write_reshapemap(reorders, new_slice, new_reshape);
 }
 
-static void
-    sink_pad(shared_ptr<op::Pad> n, ReshapeMap& reorders, set<shared_ptr<Node>>& reshapes_to_delete)
+static void sink_pad(shared_ptr<op::Pad> n,
+                     ReshapeMap& reorders,
+                     set<shared_ptr<Node>>& /* reshapes_to_delete */)
 {
     auto arg_reshape = reorders.at(n->get_argument(0));
     auto order = arg_reshape->get_input_order();
@@ -425,7 +426,7 @@ static void
 }
 static void sink_quantize(shared_ptr<op::Quantize> quantize,
                           ReshapeMap& reorders,
-                          set<shared_ptr<Node>>& reshapes_to_delete)
+                          set<shared_ptr<Node>>& /* reshapes_to_delete */)
 {
     auto arg_reshape = reorders.at(quantize->get_argument(0));
     AxisSet axes_in_def_order =
@@ -492,7 +493,7 @@ static void sink_concat(shared_ptr<op::Concat> n,
 
 static void sink_dequantize(shared_ptr<op::Dequantize> dequantize,
                             ReshapeMap& reorders,
-                            set<shared_ptr<Node>>& reshapes_to_delete)
+                            set<shared_ptr<Node>>& /* reshapes_to_delete */)
 {
     auto arg_reshape = reorders.at(dequantize->get_argument(0));
     AxisSet axes_in_def_order =
@@ -532,31 +533,31 @@ bool ngraph::pass::ReshapeSinking::run_on_function(shared_ptr<ngraph::Function> 
             results.push_back(n);
         }
 
-        if (auto reshape = dynamic_pointer_cast<op::Reshape>(n))
+        if (auto reshape = as_type_ptr<op::Reshape>(n))
         {
             sink_reshape(reshape, reorders, reshapes_to_delete);
         }
-        else if (auto unary = dynamic_pointer_cast<op::util::UnaryElementwiseArithmetic>(n))
+        else if (n->is_unary_elementwise_arithmetic())
         {
-            sink_unary(unary, reorders, reshapes_to_delete);
+            sink_unary(n, reorders, reshapes_to_delete);
         }
-        else if (auto binary = dynamic_pointer_cast<op::util::BinaryElementwiseArithmetic>(n))
+        else if (n->is_binary_elementwise_arithmetic())
         {
-            sink_binary(binary, reorders, reshapes_to_delete);
+            sink_binary(n, reorders, reshapes_to_delete);
         }
-        else if (auto goe = dynamic_pointer_cast<op::GetOutputElement>(n))
+        else if (auto goe = as_type_ptr<op::GetOutputElement>(n))
         {
             write_reshapemap(reorders, goe, create_default_reshape(goe));
         }
-        else if (auto quantize = dynamic_pointer_cast<op::Quantize>(n))
+        else if (auto quantize = as_type_ptr<op::Quantize>(n))
         {
             sink_quantize(quantize, reorders, reshapes_to_delete);
         }
-        else if (auto dequantize = dynamic_pointer_cast<op::Dequantize>(n))
+        else if (auto dequantize = as_type_ptr<op::Dequantize>(n))
         {
             sink_dequantize(dequantize, reorders, reshapes_to_delete);
         }
-        else if (auto slice = dynamic_pointer_cast<op::Slice>(n))
+        else if (auto slice = as_type_ptr<op::Slice>(n))
         {
             // A heuristic. If Reshape has multiple slice users, if sunk
             // it will be replicated by the number of its users
@@ -577,11 +578,11 @@ bool ngraph::pass::ReshapeSinking::run_on_function(shared_ptr<ngraph::Function> 
                 materialize_shapes(n, reorders, reshapes_to_delete);
             }
         }
-        else if (auto pad = dynamic_pointer_cast<op::Pad>(n))
+        else if (auto pad = as_type_ptr<op::Pad>(n))
         {
             sink_pad(pad, reorders, reshapes_to_delete);
         }
-        else if (auto concat = dynamic_pointer_cast<op::Concat>(n))
+        else if (auto concat = as_type_ptr<op::Concat>(n))
         {
             sink_concat(concat, reorders, reshapes_to_delete);
         }

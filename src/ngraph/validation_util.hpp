@@ -94,12 +94,12 @@ namespace ngraph
 
     PartialShape infer_slice_shape(const Node* node,
                                    const PartialShape& input_shape,
-                                   const std::vector<int64_t>& lb,
-                                   const std::vector<int64_t>& ub,
-                                   const std::vector<int64_t>& str,
-                                   const AxisSet& lb_mask,
-                                   const AxisSet& ub_mask,
-                                   const AxisSet& new_axis,
-                                   const AxisSet& shrink_mask,
+                                   const std::vector<int64_t>& begin,
+                                   const std::vector<int64_t>& end,
+                                   const std::vector<int64_t>& strides,
+                                   const AxisSet& begin_mask,
+                                   const AxisSet& end_mask,
+                                   const AxisSet& new_axis_mask,
+                                   const AxisSet& shrink_axis_mask,
                                    const AxisSet& ellipsis_mask);
 }

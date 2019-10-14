@@ -30,8 +30,8 @@ namespace ngraph
             {
             public:
                 NGRAPH_API
-                static const std::string type_name;
-                const std::string& description() const override { return type_name; }
+                static constexpr NodeTypeInfo type_info{"Softmax", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Softmax() = default;
                 /// \brief Constructs a softmax operation.
                 ///
@@ -42,18 +42,29 @@ namespace ngraph
                 /// Output `[d0, ...]`
                 ///
                 Softmax(const Output<Node>& arg, const AxisSet& axes);
+                /// \brief Constructs a softmax operation.
+                ///
+                /// \param arg Node that produces the first input tensor.<br>
+                /// `[d0, ...]`
+                /// \param axes node produces the axis positions (0-based) on which to calculate the
+                /// softmax.
+                ///
+                /// Output `[d0, ...]`
+                ///
+                Softmax(const Output<Node>& arg, const Output<Node>& axes);
+
+                void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
-                const AxisSet& get_axes() const { return m_axes; }
-                void set_axes(const AxisSet& axes) { m_axes = axes; }
+                bool are_axes_constant() const;
+                const AxisSet get_axes() const;
+                void set_axes(const AxisSet& axes);
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const NodeVector& deltas) override;
-
-            private:
-                AxisSet m_axes;
             };
         }
 
@@ -63,8 +74,8 @@ namespace ngraph
             {
             public:
                 NGRAPH_API
-                static const std::string type_name;
-                const std::string& description() const override { return type_name; }
+                static constexpr NodeTypeInfo type_info{"Softmax", 1};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Softmax()
                     : m_axis(0)
                 {
@@ -78,6 +89,8 @@ namespace ngraph
                 /// Output `[d0, ...]`
                 ///
                 Softmax(const Output<Node>& arg, const size_t axis);
+
+                void validate_and_infer_types() override;
 
                 size_t get_version() const override { return 1; }
                 virtual std::shared_ptr<Node>

@@ -71,12 +71,9 @@ namespace ngraph
                         bool include_control_deps,
                         const NodeVector& subgraph_params = {});
 
-    inline void traverse_functions(std::shared_ptr<Function> p,
-                                   std::function<void(std::shared_ptr<Function>)> f)
-        NGRAPH_DEPRECATED("Replace with f(p)")
-    {
-        f(p);
-    };
+    void traverse_functions(std::shared_ptr<Function> p,
+                            std::function<void(std::shared_ptr<Function>)> f)
+        NGRAPH_DEPRECATED("Replace with f(p)");
 
     /// \brief Replace the node `target` with the node `replacement`, i.e.,
     ///        redirect all users and control dependencies of `target` to

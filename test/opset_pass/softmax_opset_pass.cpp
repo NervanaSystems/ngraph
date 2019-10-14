@@ -25,7 +25,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(serialize, opset1_softmax_pass_axis)
+TEST(opset_transform, opset1_softmax_upgrade_pass_axis)
 {
     const size_t axis = 2;
     const AxisSet axes{axis};
@@ -47,7 +47,7 @@ TEST(serialize, opset1_softmax_pass_axis)
     EXPECT_EQ(softmax_s1_node->get_version(), 1);
 }
 
-TEST(serialize, opset1_softmax_pass_axis_exception)
+TEST(opset_transform, opset1_softmax_upgrade_pass_axis_exception)
 {
     const AxisSet axes{1, 2};
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
@@ -89,7 +89,7 @@ namespace fake_v2
     };
 }
 
-TEST(serialize, opset1_softmax_pass_incorrect_op_version)
+TEST(opset_transform, opset1_softmax_upgrade_pass_incorrect_op_version)
 {
     const AxisSet axes{2};
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
