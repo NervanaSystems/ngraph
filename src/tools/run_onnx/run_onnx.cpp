@@ -14,24 +14,24 @@
 // limitations under the License.
 //*****************************************************************************
 
-// tool to import and run an ONNX model 
+// tool to import and run an ONNX model
 
 #include <fstream>
 #include <iostream>
 #include <string>
 
+#include "../../../test/util/test_tools.hpp"
 #include "gtest/gtest.h"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
-#include "ngraph/serializer.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
-#include "../../../test/util/test_tools.hpp"
+#include "ngraph/serializer.hpp"
+#include "ngraph/util.hpp"
 
 static std::mt19937_64 random_generator;
 
 using namespace std;
-using namespace  ngraph;
+using namespace ngraph;
 
 void help()
 {
@@ -47,7 +47,6 @@ OPTIONS
 
 )###";
 }
-
 
 int main(int argc, char** argv)
 {
@@ -83,42 +82,46 @@ int main(int argc, char** argv)
         std::shared_ptr<ngraph::Function> function = ngraph::onnx_import::import_onnx_model(model);
         auto backend = ngraph::runtime::Backend::create("CPU");
 
-        std::uniform_int_distribution<int> distribution(1,6);
-        
-        //Creating inputs
+        std::uniform_int_distribution<int> distribution(1, 6);
+
+        // Creating inputs
         vector<shared_ptr<runtime::Tensor>> inputs;
         auto params = function->get_parameters();
-        for(int i=0; i<params.size(); i++){
-        auto tensor = backend->create_tensor(params.at(i)->get_element_type(),
-                                                       params.at(i)->get_shape());
-        auto tensor_size = params.at(i)->get_shape().size();
-        std::uniform_int_distribution<int> distribution(0, 255);
-        vector<float> v_a(tensor_size, 0);
-        double r = 0;
-        for (int i = 0; i < tensor_size; i++)
+        for (int i = 0; i < params.size(); i++)
         {
-            v_a[i] = distribution(random_generator);
-            r += static_cast<double>(v_a[i]);
-        }
-        copy_data(tensor, v_a);
-        inputs.push_back(tensor);
+            auto tensor =
+                backend->create_tensor(params.at(i)->get_element_type(), params.at(i)->get_shape());
+            auto tensor_size = params.at(i)->get_shape().size();
+            std::uniform_int_distribution<int> distribution(0, 255);
+            vector<float> v_a(tensor_size, 0);
+            double r = 0;
+            for (int i = 0; i < tensor_size; i++)
+            {
+                v_a[i] = distribution(random_generator);
+                r += static_cast<double>(v_a[i]);
+            }
+            copy_data(tensor, v_a);
+            inputs.push_back(tensor);
         }
 
-        //Creating outputs
+        // Creating outputs
         vector<shared_ptr<runtime::Tensor>> outputs;
         auto outputs_size = function->get_results().size();
-        for(int i=0; i< outputs_size; i++){
-            auto tensor = backend->create_tensor(function->get_output_element_type(i),  function->get_output_shape(i));
+        for (int i = 0; i < outputs_size; i++)
+        {
+            auto tensor = backend->create_tensor(function->get_output_element_type(i),
+                                                 function->get_output_shape(i));
             outputs.push_back(tensor);
         }
         auto handle = backend->compile(function);
-        if(handle->call_with_validate(outputs, inputs)){
-            cout<< "PASSED"<<endl;
+        if (handle->call_with_validate(outputs, inputs))
+        {
+            cout << "PASSED" << endl;
         }
-        else{
-            cout<< "FAILED" <<endl;
+        else
+        {
+            cout << "FAILED" << endl;
         }
-
     }
     else
     {
@@ -126,9 +129,10 @@ int main(int argc, char** argv)
         return 2;
     }
     ifstream d(input);
-    if(d){
-        const string s= input;
-       // auto data = read_binary_file(s);
+    if (d)
+    {
+        const string s = input;
+        // auto data = read_binary_file(s);
     }
     else
     {
@@ -137,6 +141,4 @@ int main(int argc, char** argv)
     }
 
     return 0;
-
 }
-
