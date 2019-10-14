@@ -55,10 +55,6 @@ op::FakeQuantize::FakeQuantize(const Output<Node>& data,
 void op::FakeQuantize::pre_validate_and_infer_types()
 {
     PartialShape data_pshape = get_input_partial_shape(0);
-    const auto& input_low_pshape = get_input_partial_shape(1);
-    const auto& input_high_pshape = get_input_partial_shape(2);
-    const auto& output_low_pshape = get_input_partial_shape(3);
-    const auto& output_high_pshape = get_input_partial_shape(4);
 
     for (auto i = 1; i <= 4; i++)
     {
