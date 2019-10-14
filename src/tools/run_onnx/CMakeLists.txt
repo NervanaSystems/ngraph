@@ -11,17 +11,12 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-# limitations under the License.
+# limitations under the License. 
 # ******************************************************************************
 
-if(LINUX)
-    set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-endif()
+ set(CMAKE_INSTALL_INCLUDEDIR "test")
+add_executable(run_onnx run_onnx.cpp)
+add_dependencies(run_onnx ngraph)
+target_link_libraries(run_onnx ngraph libgtest)
 
-add_subdirectory(nbench)
-add_subdirectory(ngraph-to-plaidml)
-add_subdirectory(reserialize)
-if (NGRAPH_ONNX_IMPORT_ENABLE)
-    add_subdirectory(serialize_onnx)
-    add_subdirectory(run_onnx)
-endif()
+install(TARGETS run_onnx RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN}) 
