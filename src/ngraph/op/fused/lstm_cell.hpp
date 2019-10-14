@@ -122,7 +122,7 @@ namespace ngraph
             /// \param[in]  C_t                The cell state tensor at current time step with
             ///                                shape: [batch_size, hidden_size].
             /// \param[in]  W                  The weight tensor with shape: [4*hidden_size,
-            ///                                input_size]. input_size].
+            ///                                input_size].
             /// \param[in]  R                  The recurrence weight tensor with shape:
             ///                                [4*hidden_size, hidden_size].
             /// \param[in]  B                  The bias tensor for gates with shape:

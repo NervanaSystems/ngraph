@@ -217,6 +217,7 @@ NodeVector op::LSTMCell::decompose_op() const
     Output<Node> bias = input_value(5);
     NodeVector p_iof = builder::split(input_value(6), s_peepholes_count);
 
+    // Converting to IFCO format since it's DNNL default.
     if (m_weights_format != op::LSTMWeightsFormat::IFCO)
     {
         W = convert_node_format(W);
@@ -312,7 +313,12 @@ shared_ptr<Node> op::LSTMCell::copy_with_new_args(const NodeVector& new_args) co
                                      new_args.at(3),
                                      new_args.at(4),
                                      get_hidden_size(),
-                                     get_weights_format());
+                                     get_weights_format(),
+                                     get_activations(),
+                                     get_activations_alpha(),
+                                     get_activations_beta(),
+                                     get_clip(),
+                                     m_input_forget);
     }
     else if (new_args.size() == 7)
     {
