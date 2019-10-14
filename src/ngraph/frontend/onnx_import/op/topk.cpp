@@ -19,14 +19,15 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "topk.hpp"
 #include "utils/common.hpp"
 
+/// \return Parse node attribute value for axis and adjust for negative value if needed.
 static std::int64_t get_axis(const ngraph::onnx_import::Node& node)
 {
-    // Parse node attribute value for axis (adjust for negative value if needed).
     std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
 
     auto data = node.get_ng_inputs().at(0);
@@ -34,11 +35,27 @@ static std::int64_t get_axis(const ngraph::onnx_import::Node& node)
     return ngraph::onnx_import::common::validate_axis(node, axis, data_rank);
 }
 
-static ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& top_k)
+/// \return Return the second input to the TopK node reshaped to a scalar.
+static std::shared_ptr<ngraph::Node> get_k(const ngraph::onnx_import::Node& node)
+{
+    auto k_node = node.get_ng_inputs().at(1);
+    NGRAPH_CHECK(shape_size(k_node->get_shape()) == 1 ,
+                 "ONNX TopK operator: 'K' parameter must contain a single positive value.",
+                 node);
+
+    return std::make_shared<ngraph::op::Reshape>(
+            k_node,
+            ngraph::get_default_order(k_node->get_shape().size()),
+            ngraph::Shape{});
+
+}
+
+/// \return Return the outputs of the TopK node.
+static ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node)
 {
     std::shared_ptr<ngraph::Node> indices =
-        std::make_shared<ngraph::op::GetOutputElement>(top_k, 0);
-    std::shared_ptr<ngraph::Node> values = std::make_shared<ngraph::op::GetOutputElement>(top_k, 1);
+        std::make_shared<ngraph::op::GetOutputElement>(node, 0);
+    std::shared_ptr<ngraph::Node> values = std::make_shared<ngraph::op::GetOutputElement>(node, 1);
 
     return {values, indices};
 }
@@ -83,12 +100,16 @@ namespace ngraph
             {
                 NodeVector topk(const Node& node)
                 {
+                    // Process inputs
                     auto data = node.get_ng_inputs().at(0);
-                    auto k = node.get_ng_inputs().at(1);
+                    auto k = get_k(node);
+
+                    // Process attributes
                     const auto axis = get_axis(node);
                     const auto largest = node.get_attribute_value<std::int64_t>("largest", 1);
                     const auto sorted = node.get_attribute_value<std::int64_t>("sorted", 1);
 
+                    // Map attribute values to nGraph enums
                     const auto mode =
                         largest ? ngraph::op::v1::TopK::Mode::MAX : ngraph::op::v1::TopK::Mode::MIN;
                     const auto sort_type = sorted ? ngraph::op::v1::TopK::SortType::SORT_VALUES
