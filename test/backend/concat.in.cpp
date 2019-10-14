@@ -46,16 +46,15 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_negative_axis)
     copy_data(a, vector<float>{2, 4, 8, 16});
     auto b = backend->create_tensor(element::f32, Shape{2, 3});
     copy_data(b, vector<float>{1, 2, 4, 8, 16, 32});
-    auto c = backend->create_tensor(element::f32, Shape{2, 8});
+    auto c = backend->create_tensor(element::f32, Shape{2, 3});
     copy_data(c, vector<float>{2, 3, 5, 7, 11, 13});
     auto result = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
-
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c});
+    ASSERT_EQ(result->get_shape(), (Shape{2, 8}));
     EXPECT_TRUE(
         test::all_close_f((vector<float>{2, 4, 1, 2, 4, 2, 3, 5, 8, 16, 8, 16, 32, 7, 11, 13}),
-                          read_vector<float>(result),
-                          MIN_FLOAT_TOLERANCE_BITS));
+                          read_vector<float>(result)));
 }
 NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_colwise)
 {
