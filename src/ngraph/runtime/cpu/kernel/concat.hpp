@@ -50,7 +50,7 @@ namespace ngraph
 
                     Eigen::array<Eigen::Index, Rank> in_dims, concat_pos;
                     concat_pos.fill(static_cast<Eigen::Index>(0));
-
+                    std::cout << "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\n";
                     for (size_t i = 0; i < input_shapes.size(); i++)
                     {
                         for (int j = 0; j < Rank; j++)
