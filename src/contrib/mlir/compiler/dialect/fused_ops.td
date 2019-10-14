@@ -18,6 +18,9 @@
 // All Operations in this file implement FusedOp interface.
 //===----------------------------------------------------------------------===//
 
+#ifdef NG_FUSED_OPS
+#else
+#define NG_FUSED_OPS
 // Squeeze Op
 def NGSqueezeOp : 
     NG_OneResult_Op<"squeeze", [NoSideEffect, FusedOp]>,
@@ -39,3 +42,4 @@ def NGSqueezeOp :
     
   }];
 }
+#endif //NG_FUSED_OPS
