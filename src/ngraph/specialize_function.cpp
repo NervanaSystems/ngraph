@@ -24,7 +24,7 @@ std::shared_ptr<Function>
     ngraph::specialize_function(std::shared_ptr<Function> f,
                                 const std::vector<element::Type>& parameter_element_types,
                                 const std::vector<PartialShape>& parameter_shapes,
-                                const std::vector<void*>& parameter_values)
+                                const std::vector<void*>& parameter_values, bool constant_folding)
 {
     NGRAPH_CHECK(f->get_parameters().size() == parameter_shapes.size());
     NGRAPH_CHECK(f->get_parameters().size() == parameter_element_types.size());
@@ -34,8 +34,6 @@ std::shared_ptr<Function>
 
     for (size_t i = 0; i < parameter_shapes.size(); i++)
     {
-        NGRAPH_CHECK(
-            parameter_shapes[i].refines(f->get_parameters()[i]->get_output_partial_shape(0)));
         NGRAPH_CHECK(f->get_parameters()[i]->get_element_type().is_dynamic() ||
                      parameter_element_types[i] == f->get_parameters()[i]->get_element_type());
 
@@ -66,11 +64,13 @@ std::shared_ptr<Function>
             new_args.push_back(output.for_node(m[output.get_node()]));
         }
         m[old_node.get()] = old_node->copy_with_new_inputs(new_args);
+        m[old_node.get()]->set_friendly_name(old_node->get_friendly_name());
     }
 
     ParameterVector new_parameters = f->get_parameters();
     for (size_t i = 0; i < new_parameters.size(); i++)
     {
+        auto name = new_parameters[i]->get_friendly_name();
         new_parameters[i] = as_type_ptr<op::Parameter>(m[new_parameters[i].get()]);
 
         // If the replacement for a Parameter is not itself a Parameter, we must have replaced it
@@ -81,15 +81,20 @@ std::shared_ptr<Function>
             new_parameters[i] =
                 std::make_shared<op::Parameter>(parameter_element_types[i], parameter_shapes[i]);
         }
+        new_parameters[i]->set_friendly_name(name);
     }
 
     ResultVector new_results = f->get_results();
     for (size_t i = 0; i < new_results.size(); i++)
     {
+        auto name = new_results[i]->get_friendly_name();
         new_results[i] = std::static_pointer_cast<op::Result>(m[new_results[i].get()]);
+        new_results[i]->set_friendly_name(name);
     }
 
     auto function = std::make_shared<Function>(new_results, new_parameters);
-    ngraph::pass::ConstantFolding().run_on_function(function);
+    if (constant_folding) {
+        ngraph::pass::ConstantFolding().run_on_function(function);
+    }
     return function;
 }
