@@ -2077,8 +2077,15 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             if (op_version == 0)
             {
-                auto softmax_axes = deserialize_axis_set(node_js.at("softmax_axes"));
-                node = make_shared<op::Softmax>(args[0], softmax_axes);
+                if (has_key(node_js, "softmax_axes"))
+                {
+                    auto softmax_axes = deserialize_axis_set(node_js.at("softmax_axes"));
+                    node = make_shared<op::Softmax>(args[0], softmax_axes);
+                }
+                else
+                {
+                    node = make_shared<op::Softmax>(args[0], args[1]);
+                }
             }
             if (op_version == 1)
             {
@@ -2377,7 +2384,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Add:
     {
-        auto tmp = dynamic_cast<const op::Add*>(&n);
+        auto tmp = static_cast<const op::Add*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -2386,21 +2393,21 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::ArgMin:
     {
-        auto tmp = dynamic_cast<const op::ArgMin*>(&n);
+        auto tmp = static_cast<const op::ArgMin*>(&n);
         node["axis"] = tmp->get_reduction_axis();
         node["index_element_type"] = write_element_type(tmp->get_element_type());
         break;
     }
     case OP_TYPEID::ArgMax:
     {
-        auto tmp = dynamic_cast<const op::ArgMax*>(&n);
+        auto tmp = static_cast<const op::ArgMax*>(&n);
         node["axis"] = tmp->get_reduction_axis();
         node["index_element_type"] = write_element_type(tmp->get_element_type());
         break;
     }
     case OP_TYPEID::All:
     {
-        auto tmp = dynamic_cast<const op::All*>(&n);
+        auto tmp = static_cast<const op::All*>(&n);
         node["reduction_axes"] = serialize_axis_set(tmp->get_reduction_axes());
         break;
     }
@@ -2408,7 +2415,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::And:
     {
-        auto tmp = dynamic_cast<const op::And*>(&n);
+        auto tmp = static_cast<const op::And*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -2417,7 +2424,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Any:
     {
-        auto tmp = dynamic_cast<const op::Any*>(&n);
+        auto tmp = static_cast<const op::Any*>(&n);
         node["reduction_axes"] = serialize_axis_set(tmp->get_reduction_axes());
         break;
     }
@@ -2429,7 +2436,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         if (op_version == 0)
         {
-            auto tmp = dynamic_cast<const op::v0::AvgPool*>(&n);
+            auto tmp = static_cast<const op::v0::AvgPool*>(&n);
             node["window_shape"] = tmp->get_window_shape();
             node["window_movement_strides"] = tmp->get_window_movement_strides();
             node["padding_below"] = tmp->get_padding_below();
@@ -2444,7 +2451,7 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         if (op_version == 1)
         {
-            auto tmp = dynamic_cast<const op::v1::AvgPool*>(&n);
+            auto tmp = static_cast<const op::v1::AvgPool*>(&n);
             node["kernel"] = tmp->get_kernel();
             node["strides"] = tmp->get_strides();
             node["pads_begin"] = tmp->get_pads_begin();
@@ -2459,7 +2466,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         if (op_version == 0)
         {
-            auto tmp = dynamic_cast<const op::v0::AvgPoolBackprop*>(&n);
+            auto tmp = static_cast<const op::v0::AvgPoolBackprop*>(&n);
             node["forward_arg_shape"] = tmp->get_forward_arg_shape();
             node["window_shape"] = tmp->get_window_shape();
             node["window_movement_strides"] = tmp->get_window_movement_strides();
@@ -2470,7 +2477,7 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         if (op_version == 1)
         {
-            auto tmp = dynamic_cast<const op::v1::AvgPoolBackprop*>(&n);
+            auto tmp = static_cast<const op::v1::AvgPoolBackprop*>(&n);
             node["forward_arg_shape"] = tmp->get_forward_arg_shape();
             node["kernel"] = tmp->get_kernel();
             node["strides"] = tmp->get_strides();
@@ -2484,25 +2491,25 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::BatchNormTraining:
     {
-        auto tmp = dynamic_cast<const op::BatchNormTraining*>(&n);
+        auto tmp = static_cast<const op::BatchNormTraining*>(&n);
         node["eps"] = tmp->get_eps_value();
         break;
     }
     case OP_TYPEID::BatchNormInference:
     {
-        auto tmp = dynamic_cast<const op::BatchNormInference*>(&n);
+        auto tmp = static_cast<const op::BatchNormInference*>(&n);
         node["eps"] = tmp->get_eps_value();
         break;
     }
     case OP_TYPEID::BatchNormTrainingBackprop:
     {
-        auto tmp = dynamic_cast<const op::BatchNormTrainingBackprop*>(&n);
+        auto tmp = static_cast<const op::BatchNormTrainingBackprop*>(&n);
         node["eps"] = tmp->get_eps_value();
         break;
     }
     case OP_TYPEID::Broadcast:
     {
-        auto tmp = dynamic_cast<const op::Broadcast*>(&n);
+        auto tmp = static_cast<const op::Broadcast*>(&n);
         node["axes"] = serialize_axis_set(tmp->get_broadcast_axes());
         node["shape"] = tmp->get_broadcast_shape();
         break;
@@ -2511,7 +2518,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::BroadcastLike:
     {
-        auto tmp = dynamic_cast<const op::BroadcastLike*>(&n);
+        auto tmp = static_cast<const op::BroadcastLike*>(&n);
         node["initial_axes"] = serialize_axis_set(tmp->get_initial_broadcast_axes());
         break;
     }
@@ -2519,20 +2526,20 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Clamp:
     {
-        auto tmp = dynamic_cast<const op::Clamp*>(&n);
+        auto tmp = static_cast<const op::Clamp*>(&n);
         node["min"] = tmp->get_min();
         node["max"] = tmp->get_max();
         break;
     }
     case OP_TYPEID::Concat:
     {
-        auto tmp = dynamic_cast<const op::Concat*>(&n);
+        auto tmp = static_cast<const op::Concat*>(&n);
         node["axis"] = tmp->get_concatenation_axis();
         break;
     }
     case OP_TYPEID::Constant:
     {
-        auto tmp = dynamic_cast<const op::Constant*>(&n);
+        auto tmp = static_cast<const op::Constant*>(&n);
         if (tmp->are_all_data_elements_bitwise_identical() && shape_size(tmp->get_shape()) > 0)
         {
             vector<string> vs;
@@ -2549,7 +2556,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Convert:
     {
-        auto tmp = dynamic_cast<const op::Convert*>(&n);
+        auto tmp = static_cast<const op::Convert*>(&n);
         node["target_type"] = write_element_type(tmp->get_convert_element_type());
         break;
     }
@@ -2557,7 +2564,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         if (op_version == 0)
         {
-            auto tmp = dynamic_cast<const op::v0::Convolution*>(&n);
+            auto tmp = static_cast<const op::v0::Convolution*>(&n);
             node["window_movement_strides"] = tmp->get_window_movement_strides();
             node["window_dilation_strides"] = tmp->get_window_dilation_strides();
             node["padding_below"] = tmp->get_padding_below();
@@ -2567,7 +2574,7 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         if (op_version == 1)
         {
-            auto tmp = dynamic_cast<const op::v1::Convolution*>(&n);
+            auto tmp = static_cast<const op::v1::Convolution*>(&n);
             node["strides"] = tmp->get_strides();
             node["dilations"] = tmp->get_dilations();
             node["pads_begin"] = tmp->get_pads_begin();
@@ -2580,7 +2587,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         if (op_version == 0)
         {
-            auto tmp = dynamic_cast<const op::v0::ConvolutionBackpropData*>(&n);
+            auto tmp = static_cast<const op::v0::ConvolutionBackpropData*>(&n);
             node["data_batch_shape"] = tmp->get_data_batch_shape();
             node["window_movement_strides_forward"] = tmp->get_window_movement_strides_forward();
             node["window_dilation_strides_forward"] = tmp->get_window_dilation_strides_forward();
@@ -2590,7 +2597,7 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         if (op_version == 1)
         {
-            auto tmp = dynamic_cast<const op::v1::ConvolutionBackpropData*>(&n);
+            auto tmp = static_cast<const op::v1::ConvolutionBackpropData*>(&n);
             node["data_batch_shape"] = tmp->get_data_batch_shape();
             node["strides"] = tmp->get_strides();
             node["dilations"] = tmp->get_dilations();
@@ -2603,7 +2610,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         if (op_version == 0)
         {
-            auto tmp = dynamic_cast<const op::v0::ConvolutionBackpropFilters*>(&n);
+            auto tmp = static_cast<const op::v0::ConvolutionBackpropFilters*>(&n);
             node["filters_shape"] = tmp->get_filters_shape();
             node["window_movement_strides_forward"] = tmp->get_window_movement_strides_forward();
             node["window_dilation_strides_forward"] = tmp->get_window_dilation_strides_forward();
@@ -2613,7 +2620,7 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         if (op_version == 1)
         {
-            auto tmp = dynamic_cast<const op::v1::ConvolutionBackpropFilters*>(&n);
+            auto tmp = static_cast<const op::v1::ConvolutionBackpropFilters*>(&n);
             node["filters_shape"] = tmp->get_filters_shape();
             node["strides"] = tmp->get_strides();
             node["dilations"] = tmp->get_dilations();
@@ -2624,7 +2631,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::ConvolutionBias:
     {
-        auto tmp = dynamic_cast<const op::ConvolutionBias*>(&n);
+        auto tmp = static_cast<const op::ConvolutionBias*>(&n);
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         node["window_dilation_strides"] = tmp->get_window_dilation_strides();
         node["padding_below"] = tmp->get_padding_below();
@@ -2634,7 +2641,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::ConvolutionBiasAdd:
     {
-        auto tmp = dynamic_cast<const op::ConvolutionBiasAdd*>(&n);
+        auto tmp = static_cast<const op::ConvolutionBiasAdd*>(&n);
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         node["window_dilation_strides"] = tmp->get_window_dilation_strides();
         node["padding_below"] = tmp->get_padding_below();
@@ -2644,7 +2651,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
     {
-        auto tmp = dynamic_cast<const op::ConvolutionBiasBackpropFiltersBias*>(&n);
+        auto tmp = static_cast<const op::ConvolutionBiasBackpropFiltersBias*>(&n);
         node["filters_shape"] = tmp->get_filters_shape();
         node["bias_shape"] = tmp->get_bias_shape();
         node["window_movement_strides_forward"] = tmp->get_window_movement_strides_forward();
@@ -2660,21 +2667,21 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Dequantize:
     {
-        auto tmp = dynamic_cast<const op::Dequantize*>(&n);
+        auto tmp = static_cast<const op::Dequantize*>(&n);
         node["type"] = write_element_type(tmp->get_element_type());
         node["axes"] = serialize_axis_set(tmp->get_axes());
         break;
     }
     case OP_TYPEID::DepthToSpace:
     {
-        auto tmp = dynamic_cast<const op::DepthToSpace*>(&n);
+        auto tmp = static_cast<const op::DepthToSpace*>(&n);
         node["type"] = write_element_type(tmp->get_element_type());
         node["block_size"] = tmp->get_block_size();
         break;
     }
     case OP_TYPEID::Divide:
     {
-        auto tmp = dynamic_cast<const op::Divide*>(&n);
+        auto tmp = static_cast<const op::Divide*>(&n);
         node["pythondiv"] = tmp->is_pythondiv();
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
@@ -2684,7 +2691,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Dot:
     {
-        auto tmp = dynamic_cast<const op::Dot*>(&n);
+        auto tmp = static_cast<const op::Dot*>(&n);
         node["reduction_axes_count"] = tmp->get_reduction_axes_count();
         break;
     }
@@ -2694,7 +2701,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::DynReplaceSlice:
     {
-        auto tmp = dynamic_cast<const op::DynReplaceSlice*>(&n);
+        auto tmp = static_cast<const op::DynReplaceSlice*>(&n);
         node["lower_bounds_mask"] = tmp->get_lower_bounds_mask();
         node["upper_bounds_mask"] = tmp->get_upper_bounds_mask();
         node["new_axis"] = tmp->get_new_axis();
@@ -2706,19 +2713,19 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         if (op_version == 0)
         {
-            auto tmp = dynamic_cast<const op::v0::DynReshape*>(&n);
+            auto tmp = static_cast<const op::v0::DynReshape*>(&n);
             node["zero_flag"] = tmp->get_zero_flag();
         }
         if (op_version == 1)
         {
-            auto tmp = dynamic_cast<const op::v1::Reshape*>(&n);
+            auto tmp = static_cast<const op::v1::Reshape*>(&n);
             node["zero_flag"] = tmp->get_zero_flag();
         }
         break;
     }
     case OP_TYPEID::DynSlice:
     {
-        auto tmp = dynamic_cast<const op::DynSlice*>(&n);
+        auto tmp = static_cast<const op::DynSlice*>(&n);
         node["lower_bounds_mask"] = tmp->get_lower_bounds_mask();
         node["upper_bounds_mask"] = tmp->get_upper_bounds_mask();
         node["new_axis"] = tmp->get_new_axis();
@@ -2728,7 +2735,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Elu:
     {
-        auto tmp = dynamic_cast<const op::Elu*>(&n);
+        auto tmp = static_cast<const op::Elu*>(&n);
         node["alpha"] = tmp->get_alpha();
         break;
     }
@@ -2736,7 +2743,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Equal:
     {
-        auto tmp = dynamic_cast<const op::Equal*>(&n);
+        auto tmp = static_cast<const op::Equal*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -2749,7 +2756,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::FakeQuantize:
     {
-        auto tmp = dynamic_cast<const op::FakeQuantize*>(&n);
+        auto tmp = static_cast<const op::FakeQuantize*>(&n);
         node["levels"] = tmp->get_levels();
         break;
     }
@@ -2759,7 +2766,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         if (op_version == 0)
         {
-            auto tmp = dynamic_cast<const op::v0::Gather*>(&n);
+            auto tmp = static_cast<const op::v0::Gather*>(&n);
             node["axis"] = tmp->get_axis();
         }
         break;
@@ -2768,7 +2775,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::GetOutputElement:
     {
-        auto tmp = dynamic_cast<const op::GetOutputElement*>(&n);
+        auto tmp = static_cast<const op::GetOutputElement*>(&n);
         node["n"] = tmp->get_n();
         break;
     }
@@ -2778,7 +2785,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Gemm:
     {
-        auto tmp = dynamic_cast<const op::Gemm*>(&n);
+        auto tmp = static_cast<const op::Gemm*>(&n);
         node["alpha"] = tmp->get_alpha();
         node["beta"] = tmp->get_beta();
         node["transA"] = tmp->get_transA();
@@ -2787,7 +2794,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::GenerateMask:
     {
-        auto tmp = dynamic_cast<const op::GenerateMask*>(&n);
+        auto tmp = static_cast<const op::GenerateMask*>(&n);
         node["output_shape"] = tmp->get_mask_shape();
         node["type"] = write_element_type(tmp->get_element_type());
         node["use_seed"] = tmp->get_use_seed();
@@ -2797,7 +2804,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Greater:
     {
-        auto tmp = dynamic_cast<const op::Greater*>(&n);
+        auto tmp = static_cast<const op::Greater*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -2806,7 +2813,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::GreaterEq:
     {
-        auto tmp = dynamic_cast<const op::GreaterEq*>(&n);
+        auto tmp = static_cast<const op::GreaterEq*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -2815,13 +2822,13 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::GRN:
     {
-        auto tmp = dynamic_cast<const op::GRN*>(&n);
+        auto tmp = static_cast<const op::GRN*>(&n);
         node["bias"] = tmp->get_bias();
         break;
     }
     case OP_TYPEID::GRUCell:
     {
-        auto tmp = dynamic_cast<const op::GRUCell*>(&n);
+        auto tmp = static_cast<const op::GRUCell*>(&n);
         node["hidden_size"] = tmp->get_hidden_size();
         node["clip"] = tmp->get_clip();
         node["activations"] = tmp->get_activations();
@@ -2832,7 +2839,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::GroupConvolution:
     {
-        auto tmp = dynamic_cast<const op::GroupConvolution*>(&n);
+        auto tmp = static_cast<const op::GroupConvolution*>(&n);
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         node["window_dilation_strides"] = tmp->get_window_dilation_strides();
         node["padding_below"] = tmp->get_padding_below();
@@ -2844,7 +2851,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::GroupConvolutionTranspose:
     {
-        auto tmp = dynamic_cast<const op::GroupConvolutionTranspose*>(&n);
+        auto tmp = static_cast<const op::GroupConvolutionTranspose*>(&n);
         node["strides"] = tmp->get_strides();
         node["dilations"] = tmp->get_dilations();
         node["padding_begin"] = tmp->get_padding_begin();
@@ -2857,14 +2864,14 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::HardSigmoid:
     {
-        auto tmp = dynamic_cast<const op::HardSigmoid*>(&n);
+        auto tmp = static_cast<const op::HardSigmoid*>(&n);
         node["alpha"] = tmp->get_alpha();
         node["beta"] = tmp->get_beta();
         break;
     }
     case OP_TYPEID::LayerNorm:
     {
-        auto tmp = dynamic_cast<const op::LayerNorm*>(&n);
+        auto tmp = static_cast<const op::LayerNorm*>(&n);
         node["keep_stats"] = tmp->get_keep_stats();
         node["use_affine"] = tmp->get_use_affine();
         node["epsilon"] = tmp->get_epsilon();
@@ -2873,7 +2880,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::LayerNormBackprop:
     {
-        auto tmp = dynamic_cast<const op::LayerNormBackprop*>(&n);
+        auto tmp = static_cast<const op::LayerNormBackprop*>(&n);
         node["use_stats"] = tmp->get_use_stats();
         node["use_affine"] = tmp->get_use_affine();
         node["epsilon"] = tmp->get_epsilon();
@@ -2882,7 +2889,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Less:
     {
-        auto tmp = dynamic_cast<const op::Less*>(&n);
+        auto tmp = static_cast<const op::Less*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -2891,7 +2898,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::LessEq:
     {
-        auto tmp = dynamic_cast<const op::LessEq*>(&n);
+        auto tmp = static_cast<const op::LessEq*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -2902,7 +2909,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::LRN:
     {
-        auto tmp = dynamic_cast<const op::LRN*>(&n);
+        auto tmp = static_cast<const op::LRN*>(&n);
         node["alpha"] = tmp->get_alpha();
         node["beta"] = tmp->get_beta();
         node["bias"] = tmp->get_bias();
@@ -2911,7 +2918,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::LSTMCell:
     {
-        auto tmp = dynamic_cast<const op::LSTMCell*>(&n);
+        auto tmp = static_cast<const op::LSTMCell*>(&n);
         node["hidden_size"] = tmp->get_hidden_size();
         node["weights_format"] = tmp->get_weights_format();
         node["clip"] = tmp->get_clip();
@@ -2923,14 +2930,14 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::MatMul:
     {
-        auto tmp = dynamic_cast<const op::MatMul*>(&n);
+        auto tmp = static_cast<const op::MatMul*>(&n);
         node["transpose_a"] = tmp->get_transpose_a();
         node["transpose_b"] = tmp->get_transpose_b();
         break;
     }
     case OP_TYPEID::Max:
     {
-        auto tmp = dynamic_cast<const op::Max*>(&n);
+        auto tmp = static_cast<const op::Max*>(&n);
         node["reduction_axes"] = serialize_axis_set(tmp->get_reduction_axes());
         break;
     }
@@ -2938,7 +2945,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         if (op_version == 0)
         {
-            auto tmp = dynamic_cast<const op::v0::MaxPool*>(&n);
+            auto tmp = static_cast<const op::v0::MaxPool*>(&n);
             node["window_shape"] = tmp->get_window_shape();
             node["window_movement_strides"] = tmp->get_window_movement_strides();
             node["padding_below"] = tmp->get_padding_below();
@@ -2947,7 +2954,7 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         if (op_version == 1)
         {
-            auto tmp = dynamic_cast<const op::v1::MaxPool*>(&n);
+            auto tmp = static_cast<const op::v1::MaxPool*>(&n);
             node["kernel"] = tmp->get_kernel();
             node["strides"] = tmp->get_strides();
             node["pads_begin"] = tmp->get_pads_begin();
@@ -2961,7 +2968,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         if (op_version == 0)
         {
-            auto tmp = dynamic_cast<const op::v0::MaxPoolBackprop*>(&n);
+            auto tmp = static_cast<const op::v0::MaxPoolBackprop*>(&n);
             node["window_shape"] = tmp->get_window_shape();
             node["window_movement_strides"] = tmp->get_window_movement_strides();
             node["padding_below"] = tmp->get_padding_below();
@@ -2969,7 +2976,7 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         if (op_version == 1)
         {
-            auto tmp = dynamic_cast<const op::v1::MaxPoolBackprop*>(&n);
+            auto tmp = static_cast<const op::v1::MaxPoolBackprop*>(&n);
             node["kernel"] = tmp->get_kernel();
             node["strides"] = tmp->get_strides();
             node["pads_begin"] = tmp->get_pads_begin();
@@ -2979,7 +2986,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Maximum:
     {
-        auto tmp = dynamic_cast<const op::Maximum*>(&n);
+        auto tmp = static_cast<const op::Maximum*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -2988,13 +2995,13 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Min:
     {
-        auto tmp = dynamic_cast<const op::Min*>(&n);
+        auto tmp = static_cast<const op::Min*>(&n);
         node["reduction_axes"] = serialize_axis_set(tmp->get_reduction_axes());
         break;
     }
     case OP_TYPEID::Minimum:
     {
-        auto tmp = dynamic_cast<const op::Minimum*>(&n);
+        auto tmp = static_cast<const op::Minimum*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -3003,7 +3010,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Multiply:
     {
-        auto tmp = dynamic_cast<const op::Multiply*>(&n);
+        auto tmp = static_cast<const op::Multiply*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -3012,7 +3019,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::MVN:
     {
-        auto tmp = dynamic_cast<const op::MVN*>(&n);
+        auto tmp = static_cast<const op::MVN*>(&n);
         node["reduction_axes"] = serialize_axis_set(tmp->get_reduction_axes());
         node["normalize_variance"] = tmp->get_normalize_variance();
         node["eps"] = tmp->get_eps();
@@ -3022,14 +3029,14 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::NormalizeL2:
     {
-        auto tmp = dynamic_cast<const op::NormalizeL2*>(&n);
+        auto tmp = static_cast<const op::NormalizeL2*>(&n);
         node["eps"] = tmp->get_eps();
         node["eps_mode"] = tmp->get_eps_mode();
         break;
     }
     case OP_TYPEID::NotEqual:
     {
-        auto tmp = dynamic_cast<const op::NotEqual*>(&n);
+        auto tmp = static_cast<const op::NotEqual*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -3040,14 +3047,14 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::OneHot:
     {
-        auto tmp = dynamic_cast<const op::OneHot*>(&n);
+        auto tmp = static_cast<const op::OneHot*>(&n);
         node["shape"] = write_partial_shape(tmp->get_output_partial_shape(0));
         node["one_hot_axis"] = tmp->get_one_hot_axis();
         break;
     }
     case OP_TYPEID::Or:
     {
-        auto tmp = dynamic_cast<const op::Or*>(&n);
+        auto tmp = static_cast<const op::Or*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -3058,21 +3065,21 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         if (op_version == 0)
         {
-            auto tmp = dynamic_cast<const op::v0::Pad*>(&n);
+            auto tmp = static_cast<const op::v0::Pad*>(&n);
             node["padding_below"] = tmp->get_padding_below();
             node["padding_above"] = tmp->get_padding_above();
             node["pad_mode"] = tmp->get_pad_mode();
         }
         if (op_version == 1)
         {
-            auto tmp = dynamic_cast<const op::v1::Pad*>(&n);
+            auto tmp = static_cast<const op::v1::Pad*>(&n);
             node["pad_mode"] = tmp->get_pad_mode();
         }
         break;
     }
     case OP_TYPEID::Parameter:
     {
-        auto tmp = dynamic_cast<const op::Parameter*>(&n);
+        auto tmp = static_cast<const op::Parameter*>(&n);
         node["shape"] = write_partial_shape(tmp->get_output_partial_shape(0));
         node["cacheable"] = tmp->get_cacheable();
         node["element_type"] = write_element_type(tmp->get_element_type());
@@ -3080,7 +3087,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Passthrough:
     {
-        auto tmp = dynamic_cast<const op::Passthrough*>(&n);
+        auto tmp = static_cast<const op::Passthrough*>(&n);
         node["logical_type"] = tmp->logical_type();
         node["language"] = tmp->language();
         node["function"] = tmp->function();
@@ -3105,14 +3112,14 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         if (op_version == 1)
         {
-            auto tmp = dynamic_cast<const op::v1::ReduceProd*>(&n);
+            auto tmp = static_cast<const op::v1::ReduceProd*>(&n);
             node["keep_dims"] = tmp->get_keep_dims();
         }
         break;
     }
     case OP_TYPEID::Power:
     {
-        auto tmp = dynamic_cast<const op::Power*>(&n);
+        auto tmp = static_cast<const op::Power*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -3121,7 +3128,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Quantize:
     {
-        auto tmp = dynamic_cast<const op::Quantize*>(&n);
+        auto tmp = static_cast<const op::Quantize*>(&n);
         node["type"] = write_element_type(tmp->get_element_type());
         node["axes"] = serialize_axis_set(tmp->get_axes());
         node["round_mode"] = tmp->get_round_mode();
@@ -3137,7 +3144,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::QuantizedConvolution:
     {
-        auto tmp = dynamic_cast<const op::QuantizedConvolution*>(&n);
+        auto tmp = static_cast<const op::QuantizedConvolution*>(&n);
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         node["window_dilation_strides"] = tmp->get_window_dilation_strides();
         node["padding_below"] = tmp->get_padding_below();
@@ -3153,7 +3160,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::QuantizedDot:
     {
-        auto tmp = dynamic_cast<const op::QuantizedDot*>(&n);
+        auto tmp = static_cast<const op::QuantizedDot*>(&n);
         node["reduction_axes_count"] = tmp->get_reduction_axes_count();
         node["output_type"] = write_element_type(tmp->get_element_type());
         node["input0_axes"] = tmp->get_input0_axes();
@@ -3163,13 +3170,13 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Recv:
     {
-        auto tmp = dynamic_cast<const op::Recv*>(&n);
+        auto tmp = static_cast<const op::Recv*>(&n);
         node["source_id"] = tmp->get_src_id();
         break;
     }
     case OP_TYPEID::RandomUniform:
     {
-        auto tmp = dynamic_cast<const op::RandomUniform*>(&n);
+        auto tmp = static_cast<const op::RandomUniform*>(&n);
         node["fixed_seed"] = tmp->get_fixed_seed();
         break;
     }
@@ -3181,7 +3188,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::ReplaceSlice:
     {
-        auto tmp = dynamic_cast<const op::ReplaceSlice*>(&n);
+        auto tmp = static_cast<const op::ReplaceSlice*>(&n);
         node["lower_bounds"] = tmp->get_lower_bounds();
         node["upper_bounds"] = tmp->get_upper_bounds();
         node["strides"] = tmp->get_strides();
@@ -3189,14 +3196,14 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Reshape:
     {
-        auto tmp = dynamic_cast<const op::Reshape*>(&n);
+        auto tmp = static_cast<const op::Reshape*>(&n);
         node["input_order"] = tmp->get_input_order();
         node["output_shape"] = tmp->get_output_shape();
         break;
     }
     case OP_TYPEID::Result:
     {
-        auto tmp = dynamic_cast<const op::Result*>(&n);
+        auto tmp = static_cast<const op::Result*>(&n);
         node["needs_default_layout"] = tmp->needs_default_layout();
         break;
     }
@@ -3204,13 +3211,13 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         if (op_version == 0)
         {
-            const auto tmp = dynamic_cast<const op::Reverse*>(&n);
+            const auto tmp = static_cast<const op::Reverse*>(&n);
             node["reversed_axes"] = serialize_axis_set(tmp->get_reversed_axes());
             break;
         }
         else if (op_version == 1)
         {
-            const auto tmp = dynamic_cast<const op::v1::Reverse*>(&n);
+            const auto tmp = static_cast<const op::v1::Reverse*>(&n);
             node["mode"] = tmp->get_mode();
             break;
         }
@@ -3218,14 +3225,14 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::ReverseSequence:
     {
-        auto tmp = dynamic_cast<const op::ReverseSequence*>(&n);
+        auto tmp = static_cast<const op::ReverseSequence*>(&n);
         node["batch_axis"] = tmp->get_batch_axis();
         node["sequence_axis"] = tmp->get_sequence_axis();
         break;
     }
     case OP_TYPEID::RNNCell:
     {
-        auto tmp = dynamic_cast<const op::RNNCell*>(&n);
+        auto tmp = static_cast<const op::RNNCell*>(&n);
         node["hidden_size"] = tmp->get_hidden_size();
         node["clip"] = tmp->get_clip();
         node["activations"] = tmp->get_activations();
@@ -3235,7 +3242,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::ScalarConstantLike:
     {
-        auto tmp = dynamic_cast<const op::ScalarConstantLikeBase*>(&n);
+        auto tmp = static_cast<const op::ScalarConstantLikeBase*>(&n);
         auto constant = tmp->as_constant();
         node["value"] = constant->get_value_strings()[0];
         node["element_type"] = write_element_type(constant->get_element_type());
@@ -3251,7 +3258,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Send:
     {
-        auto tmp = dynamic_cast<const op::Send*>(&n);
+        auto tmp = static_cast<const op::Send*>(&n);
         node["dest_id"] = tmp->get_dest_id();
         break;
     }
@@ -3259,7 +3266,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::ShuffleChannels:
     {
-        const auto tmp = dynamic_cast<const op::ShuffleChannels*>(&n);
+        const auto tmp = static_cast<const op::ShuffleChannels*>(&n);
         node["axis"] = tmp->get_axis();
         node["groups"] = tmp->get_groups();
         break;
@@ -3276,7 +3283,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Slice:
     {
-        auto tmp = dynamic_cast<const op::Slice*>(&n);
+        auto tmp = static_cast<const op::Slice*>(&n);
         node["lower_bounds"] = tmp->get_lower_bounds();
         node["upper_bounds"] = tmp->get_upper_bounds();
         node["strides"] = tmp->get_strides();
@@ -3284,14 +3291,14 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::SpaceToDepth:
     {
-        auto tmp = dynamic_cast<const op::SpaceToDepth*>(&n);
+        auto tmp = static_cast<const op::SpaceToDepth*>(&n);
         node["type"] = write_element_type(tmp->get_element_type());
         node["block_size"] = tmp->get_block_size();
         break;
     }
     case OP_TYPEID::Split:
     {
-        auto tmp = dynamic_cast<const op::Split*>(&n);
+        auto tmp = static_cast<const op::Split*>(&n);
         node["axis"] = tmp->get_axis();
         node["splits"] = tmp->get_splits();
         break;
@@ -3306,7 +3313,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Subtract:
     {
-        auto tmp = dynamic_cast<const op::Subtract*>(&n);
+        auto tmp = static_cast<const op::Subtract*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -3321,7 +3328,7 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         if (op_version == 1)
         {
-            auto tmp = dynamic_cast<const op::v1::ReduceSum*>(&n);
+            auto tmp = static_cast<const op::v1::ReduceSum*>(&n);
             node["keep_dims"] = tmp->get_keep_dims();
         }
         break;
@@ -3330,12 +3337,11 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         if (op_version == 0)
         {
-            auto tmp = dynamic_cast<const op::v0::Softmax*>(&n);
-            node["softmax_axes"] = serialize_axis_set(tmp->get_axes());
+            break;
         }
         if (op_version == 1)
         {
-            auto tmp = dynamic_cast<const op::v1::Softmax*>(&n);
+            auto tmp = static_cast<const op::v1::Softmax*>(&n);
             node["softmax_axis"] = tmp->get_axis();
         }
         break;
@@ -3350,7 +3356,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         if (op_version == 0)
         {
-            const auto tmp = dynamic_cast<const op::TopK*>(&n);
+            const auto tmp = static_cast<const op::TopK*>(&n);
             node["top_k_axis"] = tmp->get_top_k_axis();
             node["index_element_type"] = write_element_type(tmp->get_index_element_type());
             node["k"] = tmp->get_k();
@@ -3358,7 +3364,7 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         else if (op_version == 1)
         {
-            const auto tmp = dynamic_cast<const op::v1::TopK*>(&n);
+            const auto tmp = static_cast<const op::v1::TopK*>(&n);
             node["axis"] = tmp->get_axis();
             node["mode"] = tmp->get_mode();
             node["sort_type"] = tmp->get_sort_type();
@@ -3373,7 +3379,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Xor:
     {
-        auto tmp = dynamic_cast<const op::Xor*>(&n);
+        auto tmp = static_cast<const op::Xor*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
