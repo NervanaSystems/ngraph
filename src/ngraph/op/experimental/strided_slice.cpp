@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/fused/strided_slice.hpp"
+#include "ngraph/op/experimental/strided_slice.hpp"
 #include "ngraph/op/constant.hpp"
 
 #include <algorithm>
@@ -33,7 +33,7 @@ op::StridedSlice::StridedSlice(const Output<Node>& data,
                                const std::vector<int64_t>& new_axis_mask,
                                const std::vector<int64_t>& shrink_axis_mask,
                                const std::vector<int64_t>& ellipsis_mask)
-    : FusedOp({data, begin, end, stride})
+    : Op({data, begin, end, stride})
     , m_begin_mask{begin_mask}
     , m_end_mask{end_mask}
     , m_new_axis_mask{new_axis_mask}
@@ -65,7 +65,7 @@ op::StridedSlice::StridedSlice(const Output<Node>& data,
 {
 }
 
-void op::StridedSlice::pre_validate_and_infer_types()
+void op::StridedSlice::validate_and_infer_types()
 {
     const auto& begin_mask_et = get_input_element_type(1);
     const auto& end_mask_et = get_input_element_type(2);
@@ -147,35 +147,22 @@ void op::StridedSlice::pre_validate_and_infer_types()
     }
 }
 
-AxisSet op::StridedSlice::convert_mask_to_axis_set(const std::vector<int64_t>& mask) const
-{
-    AxisSet axis_set{};
-    for (auto i = 0; i < mask.size(); ++i)
-    {
-        if (mask[i] == 1)
-        {
-            axis_set.emplace(i);
-        }
-    }
-    return axis_set;
-}
-
-shared_ptr<Node> op::DynSlice::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::StridedSlice::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<DynSlice>(new_args.at(0),
-                                 new_args.at(1),
-                                 new_args.at(2),
-                                 new_args.at(3),
-                                 begin_mask,
-                                 end_mask,
-                                 new_axis_mask,
-                                 shrink_axis_mask,
-                                 ellipsis_mask)
+    return make_shared<StridedSlice>(new_args.at(0),
+        new_args.at(1),
+        new_args.at(2),
+        new_args.at(3),
+        m_begin_mask,
+        m_end_mask,
+        m_new_axis_mask,
+        m_shrink_axis_mask,
+        m_ellipsis_mask);
 }
 
-void op::DynSlice::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+void op::StridedSlice::generate_adjoints(autodiff::Adjoints& /* adjoints */,
                                      const NodeVector& /* deltas */)
 {
-    throw ngraph_error("generate_adjoints not implemented for DynSlice");
+    throw ngraph_error("generate_adjoints not implemented for StridedSlice");
 }

@@ -20,20 +20,20 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
 #include "ngraph/op/util/attr_types.hpp"
-#include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief  Normalization input tensor with L2 norm.
-        ///
-        class StridedSlice : public ngraph::op::util::FusedOp
+        /// \brief Takes a slice of an input tensor, i.e., the sub-tensor that resides within a
+        ///        bounding box, optionally with stride.
+        class StridedSlice : public Op
         {
         public:
             NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"StridedSlice", 0};
+            static constexpr NodeTypeInfo type_info{"DynSlice", 1};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             StridedSlice() = default;
 
@@ -94,9 +94,13 @@ namespace ngraph
             const std::vector<int64_t>& get_new_axis_mask() const { return m_new_axis_mask; }
             const std::vector<int64_t>& get_shrink_axis_mask() const { return m_shrink_axis_mask; }
             const std::vector<int64_t>& get_ellipsis_mask() const { return m_ellipsis_mask; }
-            void pre_validate_and_infer_types() override;
 
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+            void validate_and_infer_types() override;
+
+        protected:
+            void generate_adjoints(autodiff::Adjoints& adjoints,
+                const NodeVector& deltas) override;
 
         private:
             std::vector<int64_t> m_begin_mask;
