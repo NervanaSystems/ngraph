@@ -67,6 +67,7 @@ TEST(event_tracing, event_writer_callback)
     auto event_writer = [&](const ngraph::Event& event) { event_list.push_back(event); };
 
     map<string, unique_ptr<ngraph::Event>> expected_event_table;
+    mutex expected_event_table_mtx;
 
     ngraph::Event::enable_event_tracing();
     ngraph::Event::register_event_writer(event_writer);
@@ -78,6 +79,8 @@ TEST(event_tracing, event_writer_callback)
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
         event->Stop();
         ngraph::Event::write_trace(*event);
+
+        lock_guard<mutex> lock(expected_event_table_mtx);
         expected_event_table[event->get_name()] = move(event);
     };
 
