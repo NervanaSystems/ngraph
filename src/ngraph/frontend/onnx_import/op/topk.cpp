@@ -79,6 +79,28 @@ namespace ngraph
                 }
             }
 
+            namespace set_11
+            {
+                NodeVector topk(const Node& node)
+                {
+                    auto data = node.get_ng_inputs().at(0);
+                    auto k = node.get_ng_inputs().at(1);
+                    const auto axis = get_axis(node);
+                    const auto largest = node.get_attribute_value<std::int64_t>("largest", 1);
+                    const auto sorted = node.get_attribute_value<std::int64_t>("sorted", 1);
+
+                    const auto mode =
+                        largest ? ngraph::op::v1::TopK::Mode::MAX : ngraph::op::v1::TopK::Mode::MIN;
+                    const auto sort_type = sorted ? ngraph::op::v1::TopK::SortType::SORT_VALUES
+                                                  : ngraph::op::v1::TopK::SortType::NONE;
+
+                    std::shared_ptr<ngraph::Node> top_k = std::make_shared<ngraph::op::v1::TopK>(
+                        data, k, axis, mode, sort_type, element::i64);
+
+                    return get_outputs(top_k);
+                }
+            }
+
         } // namespace op
 
     } // namespace onnx_import
