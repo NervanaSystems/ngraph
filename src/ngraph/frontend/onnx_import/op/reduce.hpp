@@ -28,7 +28,8 @@
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/product.hpp"
+#include "ngraph/op/reduce_prod.hpp"
+#include "ngraph/op/reduce_sum.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "utils/reduction.hpp"
@@ -128,7 +129,8 @@ namespace ngraph
                                                        std::placeholders::_1,
                                                        std::placeholders::_2,
                                                        0.f,
-                                                       ngraph::builder::BiasMode::ADD);
+                                                       ngraph::builder::BiasMode::ADD,
+                                                       false);
                     return {reduction::make_ng_reduction_op(
                         node, node.get_ng_inputs().at(0), l2_norm_reduction)};
                 }
@@ -208,9 +210,10 @@ namespace ngraph
                     return {reduction::make_ng_reduction_op(
                         node,
                         node.get_ng_inputs().at(0),
-                        std::make_shared<ngraph::op::Product,
+                        std::make_shared<ngraph::op::v1::ReduceProd,
                                          const std::shared_ptr<ngraph::Node>&,
-                                         const ngraph::AxisSet&>)};
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         bool>)};
                 }
 
                 /// \brief      Compute the sum of the input tensor's elements along the provided
@@ -230,9 +233,10 @@ namespace ngraph
                     return {reduction::make_ng_reduction_op(
                         node,
                         node.get_ng_inputs().at(0),
-                        std::make_shared<ngraph::op::Sum,
+                        std::make_shared<ngraph::op::v1::ReduceSum,
                                          const std::shared_ptr<ngraph::Node>&,
-                                         const ngraph::AxisSet&>)};
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         bool>)};
                 }
 
                 /// \brief      Compute the sum square of the input tensor's element along the
