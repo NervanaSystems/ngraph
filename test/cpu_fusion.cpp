@@ -1083,8 +1083,13 @@ TEST(cpu_fusion, conv_add)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
+static double gelu_backprop_factor(double x)
+{
+    auto pi = 4.0 * std::atan(1.0);
+    return 0.5 * (1.0 + erf(x * sqrt(1.0 / 2.0))) + (x * exp(-x * x / 2.0)) / sqrt(2.0 * pi);
+}
 
-TEST(cpu_fusion, fuse_gelu_backprop)
+TEST(cpu_fusion, fuse_gelu_backprop_f32)
 {
     Shape shape_a{2, 1, 60, 60};
 
@@ -1098,9 +1103,8 @@ TEST(cpu_fusion, fuse_gelu_backprop)
                                        ParameterVector{A, delta});
         return f;
     };
-
     auto fuse_func = make_function();
-    auto int_f = make_function();
+    // Test fusion
     {
         pass::Manager pass_manager;
         pass_manager.register_pass<pass::VisualizeTree>("gelu_backprop_before.svg");
@@ -1121,18 +1125,30 @@ TEST(cpu_fusion, fuse_gelu_backprop)
             rng.initialize(tensor_val);
             args.push_back(tensor_val);
         }
-        // for float this will be 18 bits matching
-        // for bfloat this will be 6 bits matching
-        constexpr int one_third_of_available_bits = (MAX_FLOAT_BITS * 1) / 3;
-        constexpr int tolerance = FLOAT_MANTISSA_BITS - one_third_of_available_bits;
 
-        // mkldnn uses the tanh approximation of Gelu and the interpereter uses Erf.
-        // Both are equally accepted but the difference is precision is due to diff implementation 
-        auto int_results = execute(int_f, args, "INTERPRETER");
-        auto cpu_results = execute(fuse_func, args, "CPU");
-        EXPECT_TRUE(test::all_close_f(cpu_results.at(0), int_results.at(0), tolerance));
+
+        auto backend = runtime::Backend::create("CPU");
+
+        // Create some tensors for input/output
+        auto a = backend->create_tensor(element::f32, shape_a);
+        auto delta = backend->create_tensor(element::f32, shape_a);
+        copy_data(a, args[0]);
+        copy_data(delta, args[1]);
+        auto result = backend->create_tensor(element::f32, shape_a);
+
+        std::transform(args[0].begin(), args[0].end(), args[0].begin(), [](float x) -> float {
+            return static_cast<float>(gelu_backprop_factor(static_cast<double>(x)));
+        });
+
+        std::transform(args[0].begin(), args[0].end(), args[1].begin(), args[0].begin(), [](float x, float delta) -> float {
+            return static_cast<float>(x * delta);
+        });
+
+        auto handle = backend->compile(fuse_func);
+        handle->call_with_validate({result}, {a, delta});
+        EXPECT_TRUE(test::all_close(args[0], read_vector<float>(result), 0.007f, 0.007f));
+
     }
-
 }
 
 shared_ptr<Function> gen_deconv(const bool add_goe)

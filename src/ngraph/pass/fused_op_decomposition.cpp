@@ -23,11 +23,18 @@ using namespace ngraph;
 pass::FusedOpDecomposition::FusedOpDecomposition(op_query_t callback)
     : m_has_direct_support{callback}
 {
+    std::cout << "FusedOpDecomposition pass ctor\n";
 }
 
 bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
 {
+    std::cout << "FusedOpDecomposition pass run_on_node\n";
     bool modified = false;
+    /*if (node->get_type_name() == "GeluBackpropFactor")
+    {
+        std::cout << "Not decomposing GeluBpF\n";
+        return modified;
+    }*/
 
     if (node->supports_decompose())
     {

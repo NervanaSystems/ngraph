@@ -110,6 +110,7 @@ shared_ptr<Node> op::GeluBackpropFactor::copy_with_new_args(const NodeVector& ne
 
 NodeVector op::GeluBackpropFactor::decompose_op() const
 {
+    std::cout << "GeluBackpropFactor::decompose_op called, "<< get_type_name() <<"\n\n";
     auto x = input_value(0);
 
     // 0.5 * (1 + erf( x * sqrt(1/2))

@@ -39,6 +39,7 @@ namespace ngraph
                 auto input_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
                 size_t count = out[0].get_size();
+                std::cout << "\tcount = " << count <<"\n";
 
                 //auto alpha = static_cast<const ngraph::op::BoundedRelu*>(node)->get_alpha();
 
@@ -100,71 +101,6 @@ namespace ngraph
                     functors.emplace_back(functor);*/
                 }
             }
-
-
-            /*template <>
-            void Builder::BUILDER_DECL(ngraph::op::GeluBackpropFactor)
-            {
-                std::cout << "GeluBackpropFactor builder begin\n";
-                auto& functors = external_function->get_functors();
-
-                auto arg_fwd_buffer_index = external_function->get_buffer_index(args[0].get_name());
-                //auto delta_buffer_index = external_function->get_buffer_index(args[1].get_name());
-                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
-                size_t count = out[0].get_size();
-
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
-                {
-                    std::cout << "GeluBackpropFactor builder mkldnn true\n";
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto bwd_desc = mkldnn_emitter->get_gelu_backward_desc(node);
-                    std::cout << "GeluBackpropFactor builder after backward desc\n";
-                    auto fwd_desc = mkldnn_emitter->get_gelu_forward_desc(node);
-                    std::cout << "GeluBackpropFactor builder after forward desc\n";
-                    QUERY_SCRATCHPAD_2ARGS(eltwise_backward, fwd_desc, bwd_desc);
-
-                    // geluBackprop needs 3 primitives: input, result, and eltwise_backward.
-                    size_t gelu_index = mkldnn_emitter->reserve_primitive_space(3);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(gelu_index);
-
-                    auto functor = [&,
-                                    bwd_desc,
-                                    fwd_desc,
-                                    gelu_index,
-                                    arg_fwd_buffer_index,
-                                    //delta_buffer_index,
-                                    out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* /* ectx ) {
-                        std::cout << "GeluBackpropFactor builder inside functor\n";
-                        if (ctx->first_iteration)
-                        {
-                            mkldnn_emitter->build_gelu_backward(ctx->mkldnn_memories,
-                                                                ctx->mkldnn_primitives,
-                                                                ctx->mkldnn_scratchpad_mds,
-                                                                bwd_desc,
-                                                                fwd_desc,
-                                                                deps,
-                                                                gelu_index);
-                        }
-                        cpu::mkldnn_utils::set_memory_ptr(
-                            ctx, deps[0], ctx->buffer_data[arg_fwd_buffer_index]);
-                        //cpu::mkldnn_utils::set_memory_ptr(
-                        //    ctx, deps[1], ctx->buffer_data[delta_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
-                            ctx, deps[1], ctx->buffer_data[out_buffer_index]);
-
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, gelu_index, deps, cpu::mkldnn_utils::OpType::GELUBACKPROP);
-                    };
-                    functors.emplace_back(functor);
-                }
-                else
-                {
-                    std::cout << "GeluBackpropFactor builder NOT mkldnn\n";
-                    throw ngraph_error(
-                        "GeluBackpropFactor is supported with MKLDNN kernel only for f32.");
-                }
-            }*/
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::GeluBackprop)
