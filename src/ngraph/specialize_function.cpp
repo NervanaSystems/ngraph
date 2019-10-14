@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <pass/constant_folding.hpp>
 #include "ngraph/specialize_function.hpp"
 #include "ngraph/op/constant.hpp"
 
@@ -88,5 +89,7 @@ std::shared_ptr<Function>
         new_results[i] = std::static_pointer_cast<op::Result>(m[new_results[i].get()]);
     }
 
-    return std::make_shared<Function>(new_results, new_parameters);
+    auto function = std::make_shared<Function>(new_results, new_parameters);
+    ngraph::pass::ConstantFolding().run_on_function(function);
+    return function;
 }
