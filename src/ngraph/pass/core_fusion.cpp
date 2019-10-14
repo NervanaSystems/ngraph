@@ -91,7 +91,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_fprop()
 
         return true;
     };
-    auto m = std::make_shared<pattern::Matcher>(negative, "CPUFusion.SoftmaxCrossEntropy");
+    auto m = std::make_shared<pattern::Matcher>(negative, "CoreFusion.SoftmaxCrossEntropy");
     this->add_matcher(m, callback);
 }
 
@@ -134,7 +134,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop()
         // root node in the call back funtion
         return false;
     };
-    auto m = std::make_shared<pattern::Matcher>(bprop_result, "CPUFusion.SoftmaxCrossEntropyBprop");
+    auto m = std::make_shared<pattern::Matcher>(bprop_result, "CoreFusion.SoftmaxCrossEntropyBprop");
     this->add_matcher(m, callback);
 }
 
