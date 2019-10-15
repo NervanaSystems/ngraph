@@ -30,18 +30,14 @@ Core updates for |version|
 + Migrate some ``get_argument`` removals
 + Negative indices/axes fixes
 + Better support for MKL-DNN 1.0 (DNNL)
-
++ Additional constant element types
 
 Latest documentation updates
 ----------------------------
 
-+ Note the only support for nGPU is now through PlaidML; nGraph support for nGPU 
-  (via cuDNN) has been deprecated.  
-+ iGPU works only with nGraph version `0.24`.
 + Add new Sphinx-friendly theme (can be built natively for an alternative to ngraph.ai docs). 
 + Update PaddlePaddle documentation to reflect demo directories instead of example directory.
 + Update doc regarding the validation of ``Sum`` op.
-
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
 
@@ -58,6 +54,10 @@ Changelog on Previous Releases
 + Allow provenance merging to be disabled
 + Remove some white-listed compiler warnings
 + Provenance, builders, ops that make ops, and fused op expansions
++ Note the only support for nGPU is now through PlaidML; nGraph support for nGPU
+  (via cuDNN) has been deprecated.
++ iGPU works only with nGraph version `0.24`.
+
 
 
 0.25.0
