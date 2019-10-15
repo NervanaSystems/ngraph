@@ -52,19 +52,7 @@ static std::shared_ptr<ngraph::Node> get_k(const ngraph::onnx_import::Node& node
                  "ONNX TopK operator: 'K' parameter must contain a single positive value.",
                  node);
 
-    // If k_node is a Constant, recreate as constant with Shape{}
-    if (k_node->is_constant())
-    {
-        std::vector<std::int64_t> value =
-                ngraph::as_type_ptr<ngraph::op::Constant>(k_node)->get_vector<std::int64_t>();
-        return ngraph::builder::make_constant(k_node->get_element_type(), ngraph::Shape{}, value.front());
-    }
-
-    return std::make_shared<ngraph::op::Reshape>(
-            k_node,
-            ngraph::get_default_order(k_node->get_shape().size()),
-            ngraph::Shape{});
-
+    return ngraph::onnx_import::reshape::interpret_as_scalar<int64_t>(k_node);
 }
 
 /// \return Return the outputs of the TopK node.

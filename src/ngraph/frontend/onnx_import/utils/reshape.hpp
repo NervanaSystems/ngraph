@@ -21,9 +21,20 @@
 #include <string>
 #include <vector>
 
+
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/shape.hpp"
+
+
+
+#include "ngraph/builder/make_constant.hpp"
+#include "ngraph/builder/reshape.hpp"
+#include "ngraph/op/reshape.hpp"
+#include "utils/common.hpp"
+#include "utils/reshape.hpp"
+#include "ngraph/shape.hpp"
+
 
 namespace ngraph
 {
@@ -33,7 +44,7 @@ namespace ngraph
         {
             /// \brief      Infer `output_shape` dimension values.
             ///
-            /// \par Inferention rules
+            /// \par Inference rules
             ///     \li         The input_shape may consist at most on -1 value. In this case the
             ///                 value is inferred from the size of the tensor and the remaining
             ///                 dimensions.
@@ -44,7 +55,7 @@ namespace ngraph
             /// \param[in]  input_shape   The input node shape.
             /// \param[in]  output_shape  The requested output shape for the input node data.
             ///
-            /// \return     A vector containig new, valid node shape.
+            /// \return     A vector containing new, valid node shape.
             ///
             std::vector<std::size_t> infer_dimensions(const std::string& node_name,
                                                       const std::vector<std::size_t>& input_shape,
@@ -60,8 +71,31 @@ namespace ngraph
             ///
             /// \return     Original node or a node representing a reshape of the original.
             ///
-            std::shared_ptr<ngraph::Node>
-                interpret_as_scalar(const std::shared_ptr<ngraph::Node>& node);
+            template<typename T>
+            std::shared_ptr<ngraph::Node> interpret_as_scalar(const std::shared_ptr<ngraph::Node> &node)
+            {
+                // If k_node is a Constant, recreate as constant with Shape{}
+                if (node->is_constant())
+                {
+                    std::vector<T> value =
+                            ngraph::as_type_ptr<ngraph::op::Constant>(node)->get_vector<T>();
+                    return ngraph::builder::make_constant(node->get_element_type(), ngraph::Shape{}, value.front());
+                }
+
+                Shape node_shape = node->get_shape();
+
+                // If node is already a scalar, return original
+                if (node_shape.empty())
+                {
+                    return node;
+                }
+
+                NGRAPH_CHECK((shape_size(node_shape) == 1),
+                             "Scalar value can't be derived from a node with ",
+                             node_shape);
+
+                return ngraph::builder::reshape(node, Shape{});
+            }
 
         } // namespace  reshape
     }     // namespace onnx_import
