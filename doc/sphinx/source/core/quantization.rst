@@ -45,12 +45,12 @@ values to quantized values
 | Operator             | Description                                   |
 +======================+===============================================+
 | Quantize             | Maps real values (r) to quantized values (q)  |
-|                      | using scale (s), zero point (z),              | 
-|                      | and round mode; produces a quantized tensor   |                    
+|                      | using scale (s), zero point (z),              |
+|                      | and round mode; produces a quantized tensor   |
 +----------------------+-----------------------------------------------+
 | Dequantize           | Maps quantized values (q) to real values (r)  |
-|                      | using scale (s) and zero point (z); converts  |  
-|                      | a quantized tensor to a floating point tensor |             
+|                      | using scale (s) and zero point (z); converts  |
+|                      | a quantized tensor to a floating point tensor |
 +----------------------+-----------------------------------------------+
 | FakeQuantize         | Performs element-wise linear quantization     |
 +----------------------+-----------------------------------------------+
@@ -72,12 +72,12 @@ model created from frameworks with fused ops to nGraph.
 | Operator                          | Description                      |
 +===================================+==================================+
 | QuantizedConvolutionBias          | Performs quantized convolution   |
-|                                   | with bias                        |           
+|                                   | with bias                        |
 +-----------------------------------+----------------------------------+
 | QuantizedConvolutionBiasAdd       | Performs quantized convolution   |
 |                                   | with bias and add                |
 +-----------------------------------+----------------------------------+
-| QuantizedConvolutionBiasSignedAdd | Performs quantized convolution   |  
+| QuantizedConvolutionBiasSignedAdd | Performs quantized convolution   |
 |                                   | with bias and signed add         |
 +-----------------------------------+----------------------------------+
 | QuantizedConvolutionRelu          | Performs quantized convolution   |
@@ -130,9 +130,9 @@ Quantized builders help nGraph framework bridges by:
 | Category                            | Builder                           | Description                            |
 +=====================================+===================================+========================================+
 | Scaled Mode                         | ScaledQuantize                    | Converts min and max to scale          |
-| Min / Max Builders                  |                                   | and zero point using a scaled mode     | 
+| Min / Max Builders                  |                                   | and zero point using a scaled mode     |
 |                                     |                                   | calculation and then constructs and    |
-|                                     |                                   | returns an nGraph Quantize operator.   | 
+|                                     |                                   | returns an nGraph Quantize operator.   |
 |                                     +-----------------------------------+----------------------------------------+
 |                                     | ScaledDequantize                  | Converts min and max to scale          |
 |                                     |                                   | and zero point using a scaled mode     |
@@ -140,10 +140,10 @@ Quantized builders help nGraph framework bridges by:
 |                                     |                                   | returns an nGraph Dequantize operator. |
 +-------------------------------------+-----------------------------------+----------------------------------------+
 | Quantized Convolution               | ScaledQuantizedConvolution        | Constructs a quantized convolution     |
-| and Variants                        |                                   | with an optional ReLu.                 | 
+| and Variants                        |                                   | with an optional ReLu.                 |
 |                                     +-----------------------------------+----------------------------------------+
 |                                     | ScaledQuantizedConvolutionBias    | Constructs a quantized convolution     |
-|                                     |                                   | with bias and an optional ReLu.        | 
+|                                     |                                   | with bias and an optional ReLu.        |
 |                                     +-----------------------------------+----------------------------------------+
 |                                     | ScaledQuantizedConvolutionBiasAdd | Constructs a quantized convolution     |
 |                                     |                                   | with bias and an optional ReLu, where  |
@@ -151,10 +151,10 @@ Quantized builders help nGraph framework bridges by:
 |                                     |                                   | of another convolution (sum_input)     |
 +-------------------------------------+-----------------------------------+----------------------------------------+
 | Quantized Dot (Matmul)              | ScaledQuantizedDot                | Constructs a quantized dot (Matmul)    |
-| and Variants                        |                                   | with an optional ReLu.                 |             
+| and Variants                        |                                   | with an optional ReLu.                 |
 |                                     +-----------------------------------+----------------------------------------+
-|                                     | ScaledQuantizedDotBias            | Constructs a quantized dot (Matmul)    | 
+|                                     | ScaledQuantizedDotBias            | Constructs a quantized dot (Matmul)    |
 |                                     |                                   | with bias and an optional ReLu.        |
 +-------------------------------------+-----------------------------------+----------------------------------------+
 | Quantized Concat                    | ScaledQuantizedConcat             | Constructs a quantized concayconcat.   |
-+-------------------------------------+-----------------------------------+----------------------------------------|
++-------------------------------------+-----------------------------------+----------------------------------------+
