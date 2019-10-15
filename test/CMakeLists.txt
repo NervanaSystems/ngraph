@@ -70,6 +70,7 @@ set(SRC
     nop_elimination.cpp
     op.cpp
     opset_pass/convolution_opset_pass.cpp
+    opset_pass/generate_mask_opset_pass.cpp
     opset_pass/gather_opset_pass.cpp
     opset_pass/pad_opset_pass.cpp
     opset_pass/poolings_opset_pass.cpp
