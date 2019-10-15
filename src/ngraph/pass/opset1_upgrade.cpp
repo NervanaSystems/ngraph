@@ -367,6 +367,10 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
     case OP_TYPEID::Softmax:
     {
         auto tmp = dynamic_cast<const op::v0::Softmax*>(node.get());
+
+        NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant(),
+                     "axes parameter is expected to be a static constant");
+
         AxisSet axes = tmp->get_axes();
 
         NGRAPH_CHECK(
