@@ -19,10 +19,9 @@
 #include <iterator>
 #include <numeric>
 
-#include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/make_constant.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/shape.hpp"
-
 
 namespace ngraph
 {
@@ -85,7 +84,8 @@ namespace ngraph
                 return inferred_dims;
             }
 
-            std::shared_ptr<ngraph::Node> interpret_as_scalar(const std::shared_ptr<ngraph::Node> &node)
+            std::shared_ptr<ngraph::Node>
+                interpret_as_scalar(const std::shared_ptr<ngraph::Node>& node)
             {
                 Shape node_shape = node->get_shape();
 
@@ -103,9 +103,9 @@ namespace ngraph
                 if (node->is_constant())
                 {
                     const auto value =
-                            ngraph::as_type_ptr<ngraph::op::Constant>(node)->get_data_ptr();
+                        ngraph::as_type_ptr<ngraph::op::Constant>(node)->get_data_ptr();
                     return std::make_shared<ngraph::op::Constant>(
-                            node->get_element_type(), ngraph::Shape{}, value);
+                        node->get_element_type(), ngraph::Shape{}, value);
                 }
 
                 return ngraph::builder::reshape(node, Shape{});
