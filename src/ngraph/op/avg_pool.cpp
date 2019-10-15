@@ -587,12 +587,6 @@ void op::v1::AvgPoolBackprop::validate_and_infer_types()
         this, m_forward_arg_shape, pads_begin, pads_end, m_kernel, m_strides, m_exclude_pad);
 
     const PartialShape& delta_shape = get_input_partial_shape(0);
-    PartialShape forward_arg_shape{PartialShape::dynamic()};
-
-    if (input_value(1).get_node_shared_ptr()->is_constant())
-    {
-        forward_arg_shape = get_forward_arg_shape();
-    }
 
     NODE_VALIDATION_CHECK(
         this,

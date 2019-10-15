@@ -151,31 +151,6 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         break;
     }
 
-    /*
-        case OP_TYPEID::AvgPoolBackprop:
-        {
-            auto tmp = dynamic_cast<const op::v1::AvgPoolBackprop*>(node.get());
-
-            auto exclude_pad = tmp->get_exclude_pad();
-            auto pads_begin = tmp->get_pads_begin();
-            auto pads_end = tmp->get_pads_end();
-            auto strides = tmp->get_strides();
-            auto kernel = tmp->get_kernel();
-
-            auto replacement_node =
-                make_shared<op::v0::AvgPoolBackprop>(node->input(1).get_source_output(),
-                                                     node->input(0).get_source_output(),
-                                                     strides,
-                                                     pads_begin,
-                                                     pads_end,
-                                                     kernel,
-                                                     exclude_pad);
-            replace_node(node, replacement_node);
-            modified = true;
-            break;
-        }
-    */
-
     case OP_TYPEID::Product:
     {
         auto tmp = as_type_ptr<op::v1::ReduceProd>(node);
