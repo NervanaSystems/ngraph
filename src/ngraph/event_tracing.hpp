@@ -31,6 +31,7 @@
 #include <unistd.h>
 #endif
 #include <functional>
+#include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
 {
@@ -125,11 +126,11 @@ namespace ngraph
         std::string m_category;
         std::string m_args;
 
-        static std::mutex s_file_mutex;
-        static std::ofstream s_event_log;
-        static bool s_tracing_enabled;
-        static std::function<void(const Event& event)> s_event_writer;
-        static bool s_event_writer_registered;
+        NGRAPH_API static std::mutex s_file_mutex;
+        NGRAPH_API static std::ofstream s_event_log;
+        NGRAPH_API static bool s_tracing_enabled;
+        NGRAPH_API static std::function<void(const Event& event)> s_event_writer;
+        NGRAPH_API static bool s_event_writer_registered;
     };
 
 } // namespace ngraph
