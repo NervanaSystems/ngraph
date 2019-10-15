@@ -82,7 +82,7 @@ namespace ngraph
                 NodeVector topk(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
-                    auto k = node.get_ng_inputs().at(1);
+                    auto k = get_k(node);
                     auto axis = get_axis(node);
 
                     std::shared_ptr<ngraph::Node> top_k =
