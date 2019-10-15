@@ -20,6 +20,7 @@
 #pragma once
 
 #include <memory>
+#include <mlir/IR/Module.h>
 
 namespace ngraph
 {
@@ -35,11 +36,14 @@ namespace ngraph
                     CPU
                     /* Add more backends here */
                 };
-
+                MLIRBackend(mlir::ModuleOp module)
+                : m_module(module)
+                {}
                 /// Factory method to create new backends of certain kind. 
                 template<typename ...T>
                 static std::shared_ptr<MLIRBackend> create_backend(Kind kind, T&&... args);
                 
+                /// Generate code for the module
                 virtual void codegen() = 0;
 
                 Kind getKind()
@@ -47,7 +51,15 @@ namespace ngraph
                     return m_kind;
                 }
                 
+                mlir::OwningModuleRef& get_module() 
+                { 
+                    return m_module; 
+                }
+
                 protected:
+                
+                mlir::OwningModuleRef m_module;
+                mlir::MLIRContext m_context;
                 Kind m_kind;
             };
         }

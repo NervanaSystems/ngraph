@@ -69,6 +69,8 @@ namespace ngraph
                     CompiledKernel* compiled_kernel =
                         static_cast<CompiledKernel*>(const_cast<Node*>(node));
                     bool is_module_ready = true;
+
+                    // TODO: Convert this to use CPURuntime. Use temp compiler/backend to compile. Store compiled module into CPURuntime. 
                     auto it = ctx->mlir_compilers.find(compiled_kernel);
 
                     if (it == ctx->mlir_compilers.end())
@@ -83,6 +85,7 @@ namespace ngraph
                     {
                         mlir_compiler.compile();
                     }
+                    
                     mlir_compiler.run(ptr_args);
                 };
 

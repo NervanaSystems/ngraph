@@ -21,6 +21,7 @@
 
 #include <memory>
 #include "backend.hpp"
+
 namespace ngraph
 {
     namespace runtime
@@ -29,7 +30,8 @@ namespace ngraph
         {
             class MLIRCPUBackend : public MLIRBackend
             {
-                MLIRCPUBackend() 
+                MLIRCPUBackend(mlir::ModuleOp module) 
+                : MLIRBackend(module)
                 {
                     m_kind = MLIRBackend::CPU;
                 }
@@ -40,6 +42,10 @@ namespace ngraph
                 {
                     return kind == MLIRBackend::CPU;
                 }
+
+                private:
+                void lowerNgDialect();
+                void optimize();
 
             };
         }

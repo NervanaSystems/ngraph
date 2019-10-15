@@ -22,8 +22,6 @@
 #include "dialect/dialect.hpp"
 #include "dialect/ops.hpp"
 #include "dialect/type.hpp"
-// TODO Remove this: 
-#include "contrib/mlir/backend/pass/affine_lowerer.hpp"
 
 #include "ngraph/check.hpp"
 #include "ngraph/descriptor/tensor.hpp"
@@ -103,29 +101,6 @@ static llvm::cl::opt<bool> clEnableNgInPlaceMemoryOpt(
     llvm::cl::init(false),
     llvm::cl::desc("Enable ngraph dialect in-place memory optimization pass"));
 
-static llvm::cl::opt<bool>
-    clEnableAffineLoopFusion("ngraph-affine-loop-fusion",
-                             llvm::cl::init(false),
-                             llvm::cl::desc("Enable loop fusion optimization in Affine dialect"));
-
-static llvm::cl::opt<bool>
-    clEnableAffineLoopTiling("ngraph-affine-loop-tile",
-                             llvm::cl::init(false),
-                             llvm::cl::desc("Enable loop tiling optimization in Affine dialect"));
-
-static llvm::cl::opt<unsigned>
-    clLoopTilingCacheLevel("ngraph-affine-loop-tile-cache-level",
-                           llvm::cl::init(2),
-                           llvm::cl::desc("Cache level to which to apply affine loop tiling."));
-
-static llvm::cl::opt<unsigned> clLoopTilingCacheSize(
-    "ngraph-affine-loop-tile-cache-size",
-    llvm::cl::init(0),
-    llvm::cl::desc(
-        "Cache size to use in affine loop tiling. If not zero, it overrides the cache-size "
-        "inferred from the host CPU using for the cache level specified by "
-        "-ngraph-loop-tile-cache-level."));
-
 // *** Debug flags ***
 
 static llvm::cl::opt<bool>
@@ -140,33 +115,6 @@ static llvm::cl::opt<std::string>
 #define COMPILE_OP_DECL(op_name)                                                                   \
     createOp<op_name>(MLIRCompiler & compiler, const ngraph::Node* ngNode)
 
-// Default optimization level.
-llvm::CodeGenOpt::Level MLIRCompiler::mlirOptLevel = llvm::CodeGenOpt::Level::Aggressive;
-
-// Target machine will be properly initialized by `init_mlir`.
-std::unique_ptr<llvm::TargetMachine> MLIRCompiler::targetMachine;
-
-/// Creates target machine for current host.
-static llvm::Expected<std::unique_ptr<llvm::TargetMachine>>
-    createDefaultTargetMachine(unsigned optLevel)
-{
-    auto machineBuilder = llvm::orc::JITTargetMachineBuilder::detectHost();
-    if (!machineBuilder)
-    {
-        return machineBuilder.takeError();
-    }
-
-    // Relocation model and code model are kept to default values. CodeGen optimization level
-    // matches LLVM recommendations, i.e.:
-    // enum Level {
-    //   None,        // -O0
-    //   Less,        // -O1
-    //   Default,     // -O2, -Os
-    //   Aggressive   // -O3
-    // };
-    machineBuilder->setCodeGenOptLevel((llvm::CodeGenOpt::Level)optLevel);
-    return machineBuilder->createTargetMachine();
-}
 
 void MLIRCompiler::init_mlir()
 {
@@ -185,21 +133,6 @@ void MLIRCompiler::init_mlir()
         mlir::registerPassManagerCLOptions();
         llvm::cl::ParseEnvironmentOptions("ngraph", "NGRAPH_MLIR_OPTIONS", "");
 
-        // Override default optimization level with macro value.
-        if (char* optLevelStr = std::getenv("NGRAPH_MLIR_OPT_LEVEL"))
-        {
-            unsigned clOptLevel = std::stoi(optLevelStr);
-            NGRAPH_CHECK(clOptLevel >= 0 && clOptLevel <= 3, "Invalid optimization level");
-            mlirOptLevel = (llvm::CodeGenOpt::Level)clOptLevel;
-        }
-
-        // Initialize LLVM targets and target machine for current host.
-        llvm::InitializeNativeTarget();
-        llvm::InitializeNativeTargetAsmPrinter();
-        auto expectedTargetMachine = createDefaultTargetMachine(mlirOptLevel);
-        NGRAPH_CHECK(expectedTargetMachine, "Invalid target machine");
-        targetMachine = std::move(*expectedTargetMachine);
-
         initialized = true;
     }
 }
@@ -208,7 +141,8 @@ void MLIRCompiler::compile()
 {
     buildNgDialectModule();
     optimizeNgDialect();
-    lowerNgDialect();
+    // REMOVE
+//    lowerNgDialect();
 }
 
 void MLIRCompiler::run(std::vector<void*>& externalTensors)
@@ -353,56 +287,6 @@ MLIRCompiler::TensorInfo MLIRCompiler::getTensorValue(descriptor::Tensor* tensor
     return it->second;
 }
 
-// Lowers nGraph dialect all the way to LLVM module.
-void MLIRCompiler::lowerNgDialect()
-{
-    // Lower NG dialect to Affine
-    mlir::PassManager pm(&m_context);
-    pm.addPass(mlir::createDialectLoweringPass());
-    pm.addPass(mlir::createCanonicalizerPass());
-
-    // Apply any generic pass manager command line options.
-    mlir::applyPassManagerCLOptions(pm);
-
-    if (failed(pm.run(m_module.get())))
-    {
-        NGRAPH_CHECK(false, "MLIR pass manager failed");
-    }
-
-    if (failed(m_module->verify()))
-    {
-        NGRAPH_CHECK(false, "Incorrect module after dialect lowering");
-    }
-
-    optimize();
-
-    NGRAPH_CHECK(m_module, "MLIR module is not ready.");
-
-    // Lower Standard dialect to LLVM dialect.
-    mlir::LLVMTypeConverter llvmConverter(&m_context);
-    mlir::OwningRewritePatternList patterns;
-    mlir::populateLoopToStdConversionPatterns(patterns, &m_context);
-    mlir::populateStdToLLVMConversionPatterns(llvmConverter, patterns);
-
-    mlir::ConversionTarget target(m_context);
-    target.addLegalDialect<mlir::LLVM::LLVMDialect>();
-    target.addLegalOp<mlir::ModuleOp, mlir::ModuleTerminatorOp>();
-    target.addDynamicallyLegalOp<mlir::FuncOp>(
-        [&](mlir::FuncOp op) { return llvmConverter.isSignatureLegal(op.getType()); });
-    auto result = applyFullConversion(*m_module, target, std::move(patterns), &llvmConverter);
-    NGRAPH_CHECK(succeeded(result), "Standard to LLVM dialect conversion failed");
-
-    dumpMlirModule("LLVM-IR Dialect Conversion");
-
-    // Create an MLIR execution engine. We use a null MLIR pass manager for now to make sure we
-    // don't run MLIR passes that were already run. We also pass a default transformer created with
-    // the default or user-provided optimization level.
-    auto llvmTransformer =
-        mlir::makeOptimizingTransformer(mlirOptLevel, /*sizeLevel=*/0, targetMachine.get());
-    auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvmTransformer, mlirOptLevel);
-    NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
-    m_engine = std::move(maybeEngine.get());
-}
 
 /// Returns the cache level size from `targetInfo` for the `cacheLevel` provided. If `userCacheSize`
 /// is not zero, it returns `userCacheSize`.
@@ -430,57 +314,6 @@ static unsigned getCacheLevelSize(llvm::TargetTransformInfo& targetInfo,
 
     NGRAPH_CHECK(optCacheLevelSize.hasValue() && "Cache level size is not available in TTI");
     return optCacheLevelSize.getValue();
-}
-
-// Receives affine dialect as input and applies affine and standard dialect based optimizations.
-// Lowering from affine dialect to standard dialect happens along the way. Output consists of
-// standard dialect only ops.
-void MLIRCompiler::optimize()
-{
-    // Create target transform info to obtain some target information to be used in MLIR
-    // optimizations. This is a temporary attempt to retrieve some target information by reusing
-    // LLVM TTI infra while MLIR does not have target model.
-    llvm::LLVMContext llvmContext;
-    auto module = std::unique_ptr<llvm::Module>(new llvm::Module("test", llvmContext));
-    module->setDataLayout(targetMachine->createDataLayout());
-    auto ttiSetupFunc = llvm::cast<llvm::Function>(
-        module
-            ->getOrInsertFunction("__ngraph_tti_setup",
-                                  llvm::FunctionType::get(llvm::Type::getVoidTy(llvmContext), {}))
-            .getCallee());
-    auto targetInfo = targetMachine->getTargetTransformInfo(*ttiSetupFunc);
-
-    // Populate pass manager with affine dialect optimizations.
-    mlir::PassManager pm(&m_context);
-    if (clEnableAffineLoopFusion)
-    {
-        pm.addPass(mlir::createLoopFusionPass());
-    }
-
-    if (clEnableAffineLoopTiling)
-    {
-        unsigned cacheLevelSize =
-            getCacheLevelSize(targetInfo, clLoopTilingCacheLevel, clLoopTilingCacheSize);
-        LLVM_DEBUG(llvm::dbgs() << "Enabling Affine Loop Tiling for cache level "
-                                << clLoopTilingCacheLevel
-                                << ": "
-                                << cacheLevelSize
-                                << " bytes.\n");
-        pm.addPass(mlir::createLoopTilingPass(cacheLevelSize));
-    }
-
-    // Populate pass manager with affine dialect to Std dialect conversion.
-    pm.addPass(mlir::createLowerAffinePass());
-
-    // Apply any generic pass manager command line options.
-    mlir::applyPassManagerCLOptions(pm);
-
-    // Run pass manager passes.
-    auto result = pm.run(m_module.get());
-    NGRAPH_CHECK(succeeded(result), "Affine optimizaitons and convertion to Std dialect failed");
-
-    // Run Std dialect optimizations.
-    // TODO
 }
 
 // MLIR builders
@@ -721,108 +554,6 @@ void MLIRCompiler::optimizeNgDialect()
     {
         NGRAPH_CHECK(false, "MLIR pass manager failed");
     }
-}
-
-// Binds MLIR function arguments to the proper values. This includes externally allocated tensors
-// helpers to be used inside the function.
-void MLIRCompiler::bindArguments(std::vector<void*>& externalTensors)
-{
-    NGRAPH_CHECK(m_module, "MLIR module is not ready.");
-
-    mlir::FuncOp func = m_module->lookupSymbol<mlir::FuncOp>("main");
-    NGRAPH_CHECK(func && !func.getBlocks().empty(), "Function not found");
-
-    // Set external arguments
-    NGRAPH_CHECK(m_compiledKernel, "No compiled kernel set for compiler");
-    NGRAPH_CHECK((m_compiledKernel->get_arguments().size() +
-                  m_compiledKernel->get_kernel_outputs().size()) == externalTensors.size(),
-                 "Number of arguments and outputs doesn't match number of tensors");
-    m_externalTensors = &externalTensors;
-
-    // Create list with a type-erased double pointer for each invocation arguments.
-    // We currently use 'allocateMemrefArgs', which creates the arguments list per call ABI (see
-    // comment below).
-    // StaticFloatMemref is just a struct with the actual pointer to the data.
-
-    auto expectedArguments = allocateMemrefArgs();
-    NGRAPH_CHECK(expectedArguments.size(), "Arguments can't be created");
-    m_invokeArgs = std::move(expectedArguments);
-
-    NGRAPH_CHECK(m_invokeArgs.size() == m_externalTensors->size(),
-                 "Number of external tensors doesn't match number of function arguments");
-
-    // Assign external tensor pointers to invocation arguments.
-    for (size_t i = 0, numArgs = m_invokeArgs.size(); i < numArgs; ++i)
-    {
-        auto* memRefArg = *(reinterpret_cast<mlir::StaticFloatMemRef**>(m_invokeArgs[i]));
-        memRefArg->data = reinterpret_cast<float*>((*m_externalTensors)[i]);
-    }
-}
-
-// Lowers standard dialect to LLVM dialect and uses the MLIR execution engine to execute the code.
-void MLIRCompiler::execute()
-{
-    // Invoke the JIT-compiled function with the arguments. Note that, for API
-    // uniformity reasons, it takes a list of type-erased pointers to arguments.
-    // Please, note that 'invoke' method is overloaded with a parameter pack version.
-    // Make sure the MutableArrayRef version is invoked.
-    auto invocationResult = m_engine->invoke("main", llvm::MutableArrayRef<void*>(m_invokeArgs));
-
-    if (clDumpObjectFile)
-    {
-        m_engine->dumpToObjectFile(clObjectFilename.empty() ? "jitted_mlir.o"
-                                                            : clObjectFilename.getValue());
-    }
-    NGRAPH_CHECK(!invocationResult, "JIT invocation of 'main' failed\n");
-}
-
-void MLIRCompiler::cleanup()
-{
-    // Free void double pointer arguments without freeing external tensor data.
-    for (auto* arg : m_invokeArgs)
-    {
-        auto* memRefArg = *(reinterpret_cast<mlir::StaticFloatMemRef**>(arg));
-        free(memRefArg);
-        free(arg);
-    }
-
-    // Free MLIR function builder.
-    if (m_builder)
-    {
-        m_builder.reset(nullptr);
-    }
-}
-
-// The current call ABI takes a single arg pointer (argPtr) pointing to a list of args.
-// Each arg is a  pointer to a StaticFloatMemRef which contains a data pointer
-//
-// The args are laid out as follows
-// argPtr-> arg[0]-> StaticFloatMemRef -> <data>
-//          arg[1]-> StaticFloatMemRef -> <data>
-//          ...
-SmallVector<void*, 8> MLIRCompiler::allocateMemrefArgs()
-{
-    SmallVector<void*, 8> args;
-    for (auto i = 0; i < m_externalTensors->size(); i++)
-    {
-        auto descriptor = allocateMemrefDescriptor();
-        mlir::StaticFloatMemRef** arg =
-            reinterpret_cast<mlir::StaticFloatMemRef**>(malloc(sizeof(mlir::StaticFloatMemRef*)));
-        *arg = descriptor;
-        args.push_back(arg);
-    }
-    return args;
-}
-
-mlir::StaticFloatMemRef* MLIRCompiler::allocateMemrefDescriptor()
-{
-    // We only use StaticFloatMemRef because that's what MLIR currently offers.
-    // We should expand this with different types and dynamic MemRefs
-    auto* descriptor =
-        reinterpret_cast<mlir::StaticFloatMemRef*>(malloc(sizeof(mlir::StaticFloatMemRef)));
-    NGRAPH_CHECK(descriptor != nullptr, "NULL MemRef descriptor");
-    descriptor->data = nullptr;
-    return descriptor;
 }
 
 void MLIRCompiler::dumpMlirModule(const std::string msg)

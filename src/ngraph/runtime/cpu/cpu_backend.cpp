@@ -33,6 +33,7 @@
 
 #ifdef NGRAPH_MLIR_ENABLE
 #include "contrib/mlir/core/compiler.hpp"
+#include "contrib/mlir/backend/cpu_backend.hpp"
 #endif
 
 using namespace ngraph;
@@ -96,6 +97,8 @@ shared_ptr<runtime::Executable>
     {
         // Initialize MLIR compiler
         ngmlir::MLIRCompiler::init_mlir();
+        // Initialize MLIR backend
+        ngmlir::MLIRCPUBackend::init();
     }
 #endif
 
