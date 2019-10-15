@@ -41,6 +41,7 @@ values to quantized values
 
 .. table:: nGraph Quantized Ops
 
+
 +----------------------+-----------------------------------------------+
 | Operator             | Description                                   |
 +======================+===============================================+
@@ -63,10 +64,12 @@ values to quantized values
 +----------------------+-----------------------------------------------+
 
 Some frameworks such as TensorFlow have fused (or layer) ops. nGraph provides
-optional operations (Table 2) to help users easily translate (map) any quantized
-model created from frameworks with fused ops to nGraph.
+optional operations (listed in the following table) to help users easily
+translate (map) any quantized model created from frameworks with fused ops to
+nGraph.
 
 .. table:: Experimental Quantized Ops (optional)
+
 
 +-----------------------------------+----------------------------------+
 | Operator                          | Description                      |
