@@ -61,6 +61,7 @@ namespace ngraph
             ///             tensors of shape {1}. This function will provide a reshape of
             ///             such a node with Shape{1} into a scalar with Shape{}.
             ///
+            /// \tparam T   type of data contained by the node
             /// \param[in]  node   Node to reshape.
             ///
             /// \return     Original node or a node representing a reshape of the original.
