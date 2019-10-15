@@ -17,6 +17,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
@@ -83,6 +84,61 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 #endif
     switch (get_typeid(node))
     {
+    case OP_TYPEID::Convolution:
+    {
+        auto tmp = as_type_ptr<op::v1::Convolution>(node);
+        const auto data_arg = node->input(0).get_source_output();
+        const auto filters_arg = node->input(1).get_source_output();
+        auto replacement_node = make_shared<op::v0::Convolution>(data_arg,
+                                                                 filters_arg,
+                                                                 tmp->get_strides(),
+                                                                 tmp->get_dilations(),
+                                                                 tmp->get_pads_begin(),
+                                                                 tmp->get_pads_end(),
+                                                                 Strides{1, 1},
+                                                                 tmp->get_auto_pad());
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::ConvolutionBackpropData:
+    {
+        auto tmp = as_type_ptr<op::v1::ConvolutionBackpropData>(node);
+        const auto filters_arg = node->input(0).get_source_output();
+        const auto delta_arg = node->input(1).get_source_output();
+        const size_t num_spatial_dims = delta_arg.get_shape().size() - 2;
+        auto replacement_node =
+            make_shared<op::v0::ConvolutionBackpropData>(tmp->get_data_batch_shape(),
+                                                         filters_arg,
+                                                         delta_arg,
+                                                         tmp->get_strides(),
+                                                         tmp->get_dilations(),
+                                                         tmp->get_pads_begin(),
+                                                         tmp->get_pads_end(),
+                                                         Strides(num_spatial_dims, 1));
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::ConvolutionBackpropFilters:
+    {
+        auto tmp = as_type_ptr<op::v1::ConvolutionBackpropFilters>(node);
+        const auto data_arg = node->input(0).get_source_output();
+        const auto delta_arg = node->input(1).get_source_output();
+        const size_t num_spatial_dims = data_arg.get_shape().size() - 2;
+        auto replacement_node =
+            make_shared<op::v0::ConvolutionBackpropFilters>(data_arg,
+                                                            tmp->get_filters_shape(),
+                                                            delta_arg,
+                                                            tmp->get_strides(),
+                                                            tmp->get_dilations(),
+                                                            tmp->get_pads_begin(),
+                                                            tmp->get_pads_end(),
+                                                            Strides(num_spatial_dims, 1));
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::Pad:
     {
         auto tmp = as_type_ptr<op::v1::Pad>(node);
