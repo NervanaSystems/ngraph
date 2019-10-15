@@ -19,20 +19,12 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/get_output_element.hpp"
-#include "ngraph/op/reshape.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "topk.hpp"
 #include "utils/common.hpp"
-
-
-#include "ngraph/builder/make_constant.hpp"
-#include "ngraph/op/reshape.hpp"
-#include "utils/common.hpp"
 #include "utils/reshape.hpp"
-#include "ngraph/shape.hpp"
-
-
 
 /// \return Parse node attribute value for axis and adjust for negative value if needed.
 static std::int64_t get_axis(const ngraph::onnx_import::Node& node)
@@ -48,7 +40,7 @@ static std::int64_t get_axis(const ngraph::onnx_import::Node& node)
 static std::shared_ptr<ngraph::Node> get_k(const ngraph::onnx_import::Node& node)
 {
     auto k_node = node.get_ng_inputs().at(1);
-    NGRAPH_CHECK(shape_size(k_node->get_shape()) == 1 ,
+    NGRAPH_CHECK(shape_size(k_node->get_shape()) == 1,
                  "ONNX TopK operator: 'K' parameter must contain a single positive value.",
                  node);
 
@@ -58,8 +50,7 @@ static std::shared_ptr<ngraph::Node> get_k(const ngraph::onnx_import::Node& node
 /// \return Return the outputs of the TopK node.
 static ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node)
 {
-    std::shared_ptr<ngraph::Node> indices =
-        std::make_shared<ngraph::op::GetOutputElement>(node, 0);
+    std::shared_ptr<ngraph::Node> indices = std::make_shared<ngraph::op::GetOutputElement>(node, 0);
     std::shared_ptr<ngraph::Node> values = std::make_shared<ngraph::op::GetOutputElement>(node, 1);
 
     return {values, indices};

@@ -21,20 +21,14 @@
 #include <string>
 #include <vector>
 
-
 #include "ngraph/axis_vector.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/shape.hpp"
-
-
-
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/reshape.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "utils/common.hpp"
-#include "utils/reshape.hpp"
 #include "ngraph/shape.hpp"
-
+#include "ngraph/shape.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -71,15 +65,17 @@ namespace ngraph
             ///
             /// \return     Original node or a node representing a reshape of the original.
             ///
-            template<typename T>
-            std::shared_ptr<ngraph::Node> interpret_as_scalar(const std::shared_ptr<ngraph::Node> &node)
+            template <typename T>
+            std::shared_ptr<ngraph::Node>
+                interpret_as_scalar(const std::shared_ptr<ngraph::Node>& node)
             {
                 // If k_node is a Constant, recreate as constant with Shape{}
                 if (node->is_constant())
                 {
                     std::vector<T> value =
-                            ngraph::as_type_ptr<ngraph::op::Constant>(node)->get_vector<T>();
-                    return ngraph::builder::make_constant(node->get_element_type(), ngraph::Shape{}, value.front());
+                        ngraph::as_type_ptr<ngraph::op::Constant>(node)->get_vector<T>();
+                    return ngraph::builder::make_constant(
+                        node->get_element_type(), ngraph::Shape{}, value.front());
                 }
 
                 Shape node_shape = node->get_shape();
