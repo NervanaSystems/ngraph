@@ -16,27 +16,25 @@
 
 #pragma once
 
-#include <string>
-
+#include "core/node.hpp"
 #include "ngraph/node.hpp"
 
 namespace ngraph
 {
-    namespace op
+    namespace onnx_import
     {
-        /// Root of all actual ops
-        class Op : public Node
+        namespace op
         {
-        public:
-            virtual bool is_op() const override { return true; }
-        protected:
-            Op()
-                : Node()
+            namespace set_1
+            // Expand operator has been available since version 8 of the default ONNX operator set.
+            // Currently, Expand is assigned to version 1 due to temporary reason.
             {
-            }
-            Op(const NodeVector& arguments);
-            Op(const OutputVector& arguments);
-            Op(const std::string& node_type, const NodeVector& arguments);
-        };
-    }
-}
+                NodeVector expand(const Node& node);
+
+            } // namespace set_1
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

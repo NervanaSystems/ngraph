@@ -589,10 +589,14 @@ namespace
         IndexedValue iRes(result), iLhs(lhs), iRhs(rhs);
         ValueHandle zeroInit(rewriter.create<ConstantOp>(loc, rewriter.getZeroAttr(elemTy)));
 
+        {
+            IndexHandle n, k;
+            LoopBuilder(&n, nLb, nUb, nStep)(
+                [&] { LoopBuilder(&k, kLb, kUb, kStep)([&] { iRes(n, k) = zeroInit; }); });
+        }
         LoopBuilder(&n, nLb, nUb, nStep)([&] {
-            LoopBuilder(&k, kLb, kUb, kStep)([&] {
-                iRes(n, k) = zeroInit;
-                LoopBuilder(&m, mLb, mUb, mStep)([&] { iRes(n, k) += iLhs(n, m) * iRhs(m, k); });
+            LoopBuilder(&m, mLb, mUb, mStep)([&] {
+                LoopBuilder(&k, kLb, kUb, kStep)([&] { iRes(n, k) += iLhs(n, m) * iRhs(m, k); });
             });
         });
 

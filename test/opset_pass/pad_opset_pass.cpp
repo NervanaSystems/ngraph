@@ -10,7 +10,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(opset_upgrade, opset1_pad_upgrade_pass)
+TEST(opset_transform, opset1_pad_upgrade_pass)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{5, 6});
     auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
@@ -39,7 +39,7 @@ TEST(opset_upgrade, opset1_pad_upgrade_pass)
     EXPECT_EQ(pad_v1_node->get_pads_end(), padding_above);
 }
 
-TEST(opset_downgrade, opset1_pad_downgrade_pass)
+TEST(opset_transform, opset1_pad_downgrade_pass)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{5, 6});
     auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});

@@ -16,27 +16,8 @@
 
 #pragma once
 
-#include <string>
+#include <pybind11/pybind11.h>
 
-#include "ngraph/node.hpp"
+namespace py = pybind11;
 
-namespace ngraph
-{
-    namespace op
-    {
-        /// Root of all actual ops
-        class Op : public Node
-        {
-        public:
-            virtual bool is_op() const override { return true; }
-        protected:
-            Op()
-                : Node()
-            {
-            }
-            Op(const NodeVector& arguments);
-            Op(const OutputVector& arguments);
-            Op(const std::string& node_type, const NodeVector& arguments);
-        };
-    }
-}
+void regclass_pyngraph_op_RNNCell(py::module m);
