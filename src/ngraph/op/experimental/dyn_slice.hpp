@@ -39,9 +39,9 @@ namespace ngraph
                 /// \param arg The tensor to be sliced.
                 /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).
                 /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
-                /// \param strides The slicing strides; for example, strides of `{n,m}` means to
-                /// take
-                ///                every nth row and every mth column of the input matrix.
+                /// \param strides The slicing strides; for example, strides of `{n,m}`
+                ///                means to take every nth row and every mth column
+                ///                of the input matrix.
                 /// \param lower_bounds_mask Ignores lower_bounds for axis with the mask set
                 /// \param upper_bounds_mask Ignores upper_bounds for axis with the mask set
                 /// \param new_axis          Add dimension one axis at the set positions
