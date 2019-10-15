@@ -97,7 +97,7 @@ public:
             construct_dropout();
             construct_batch_norm_infer_relu_with_multiply_add();
 #if MKLDNN_VERSION_MAJOR < 1
-// construct_gelubackprop();
+            construct_gelubackprop();
 #endif
         }
     }
