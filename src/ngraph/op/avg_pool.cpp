@@ -596,8 +596,7 @@ void op::v1::AvgPoolBackprop::validate_and_infer_types()
 
     if (input_value(1).get_node_shared_ptr()->is_constant())
     {
-        forward_arg_shape = static_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr())
-                                ->get_shape_val();
+        forward_arg_shape = get_forward_arg_shape();
     }
 
     PartialShape forward_result_shape = infer_batched_pooling_forward(
@@ -615,7 +614,7 @@ void op::v1::AvgPoolBackprop::validate_and_infer_types()
         delta_shape,
         ").");
 
-    set_input_is_relevant_to_value(1);
+    set_input_is_relevant_to_shape(1);
     set_output_type(0, get_input_element_type(0), forward_arg_shape);
 }
 
