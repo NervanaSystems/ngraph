@@ -147,7 +147,6 @@ namespace ngraph
         void safe_delete(NodeVector& nodes, bool recurse);
 
     public:
-        NGRAPH_API
         static constexpr NodeTypeInfo type_info{"Node", 0};
 
         virtual ~Node();
@@ -510,7 +509,6 @@ namespace ngraph
         size_t m_instance_id{m_next_instance_id.fetch_add(1)};
         std::string m_friendly_name;
         std::string m_unique_name;
-        NGRAPH_API
         static std::atomic<size_t> m_next_instance_id;
         std::unordered_set<std::string> m_provenance_tags;
         std::set<std::shared_ptr<Node>> m_provenance_group;
@@ -536,6 +534,12 @@ namespace ngraph
             , m_index(index)
         {
         }
+
+        Input() = default;
+        Input(const Input &) = default;
+        Input(Input &&) = default;
+        Input & operator=(const Input &) = default;
+        Input & operator=(Input &&) = default;
 
         /// \return A pointer to the node referenced by this input handle.
         NodeType* get_node() const { return m_node; }
@@ -635,6 +639,10 @@ namespace ngraph
 
         /// A null output
         Output() = default;
+        Output(const Output &) = default;
+        Output(Output &&) = default;
+        Output & operator=(const Output &) = default;
+        Output & operator=(Output &&) = default;
 
         /// This output position for a different node
         Output<NodeType> for_node(const std::shared_ptr<NodeType>& node)
@@ -710,6 +718,9 @@ namespace ngraph
         std::shared_ptr<NodeType> m_node;
         size_t m_index{0};
     };
+
+    template class NGRAPH_API Input<Node>;
+    template class NGRAPH_API Output<Node>;
 
     inline Input<Node> Node::input(size_t input_index)
     {

@@ -354,7 +354,7 @@ namespace ngraph
             Constant operator=(const Constant&) = delete;
         };
 
-        class ScalarConstantLikeBase : public Constant
+        class NGRAPH_API ScalarConstantLikeBase : public Constant
         {
         public:
             static constexpr NodeTypeInfo type_info{"ScalarConstantLikeBase", 0};

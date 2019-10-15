@@ -33,7 +33,6 @@ namespace ngraph
             class NGRAPH_API DynReshape : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"DynReshape", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 DynReshape() = default;

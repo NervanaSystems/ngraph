@@ -31,14 +31,13 @@ namespace ngraph
         /// N.B. Not all backends support all operation languages; a
         /// given backend might only support a given passthrough
         /// operation language in certain modes.
-        class NGRAPH_API Passthrough;
+        class Passthrough;
     }
 }
 
 class NGRAPH_API ngraph::op::Passthrough final : public Op
 {
 public:
-    NGRAPH_API
     static constexpr NodeTypeInfo type_info{"Passthrough", 0};
     const NodeTypeInfo& get_type_info() const override { return type_info; }
     Passthrough() = default;
