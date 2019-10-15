@@ -1083,6 +1083,7 @@ TEST(cpu_fusion, conv_add)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
+#if MKLDNN_VERSION_MAJOR < 1
 static double gelu_backprop_factor(double x)
 {
     auto pi = 4.0 * std::atan(1.0);
@@ -1099,8 +1100,7 @@ TEST(cpu_fusion, fuse_gelu_backprop_f32)
         auto delta = std::make_shared<op::Parameter>(element::f32, shape_a);
         auto gbp = gbpfactor * delta;
 
-        auto f = make_shared<Function>(NodeVector{gbp},
-                                       ParameterVector{A, delta});
+        auto f = make_shared<Function>(NodeVector{gbp}, ParameterVector{A, delta});
         return f;
     };
     auto fuse_func = make_function();
@@ -1126,7 +1126,6 @@ TEST(cpu_fusion, fuse_gelu_backprop_f32)
             args.push_back(tensor_val);
         }
 
-
         auto backend = runtime::Backend::create("CPU");
 
         // Create some tensors for input/output
@@ -1140,16 +1139,18 @@ TEST(cpu_fusion, fuse_gelu_backprop_f32)
             return static_cast<float>(gelu_backprop_factor(static_cast<double>(x)));
         });
 
-        std::transform(args[0].begin(), args[0].end(), args[1].begin(), args[0].begin(), [](float x, float delta) -> float {
-            return static_cast<float>(x * delta);
-        });
+        std::transform(args[0].begin(),
+                       args[0].end(),
+                       args[1].begin(),
+                       args[0].begin(),
+                       [](float x, float delta) -> float { return static_cast<float>(x * delta); });
 
         auto handle = backend->compile(fuse_func);
         handle->call_with_validate({result}, {a, delta});
         EXPECT_TRUE(test::all_close(args[0], read_vector<float>(result), 0.007f, 0.007f));
-
     }
 }
+#endif
 
 shared_ptr<Function> gen_deconv(const bool add_goe)
 {

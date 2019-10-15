@@ -450,7 +450,6 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Dropout), &runtime::cpu::CPU_Emitter::emit<op::Dropout>},
     {TI(ngraph::op::Tile), &runtime::cpu::CPU_Emitter::emit<op::Tile>},
     {TI(ngraph::op::Gelu), &runtime::cpu::CPU_Emitter::emit<op::Gelu>},
-    //{TI(ngraph::op::GeluBackpropFactor), &runtime::cpu::CPU_Emitter::emit<op::GeluBackpropFactor>},
     {TI(ngraph::op::GeluBackprop), &runtime::cpu::CPU_Emitter::emit<op::GeluBackprop>},
 };
 
@@ -492,11 +491,6 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
 
     ngraph::pass::Manager pass_manager;
-    if (std::getenv("NGRAPH_ENABLE_VISUALIZE_TRACING"))
-    {
-        // Enable per_pass_validation if required for debug purpose
-        pass_manager.set_per_pass_validation(false);
-    }
     register_common_passes(pass_manager, pass_config);
 
     // Build mkldnn primitives for codegen.
@@ -1204,29 +1198,36 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         }
         else if (typeid(ngraph::op::GeluBackpropFactor) == typeid(node))
         {
+#if MKLDNN_VERSION_MAJOR < 1
+            // TODO: will be supported in mkldnn v1.1
             if (node.input(0).get_element_type() == element::f32)
             {
-                std::cout << "Don't decompose GeluBackpropFactor, cpu backend supports for f32\n";
+                // return true only if cpu_fusion construct_gelubackprop() is enabled
                 return true;
             }
             else
             {
-                std::cout << "Decompose GeluBackpropFactor, cpu backend NOT supports for f64\n";
                 return false;
             }
+#else
+            return false;
+#endif
         }
         else if (typeid(ngraph::op::Gelu) == typeid(node))
         {
+#if MKLDNN_VERSION_MAJOR < 1
+            // TODO: will be supported in mkldnn v1.1
             if (node.input(0).get_element_type() == element::f32)
             {
-                std::cout << "Don't decompose Gelu, cpu backend supports for f32\n";
                 return true;
             }
             else
             {
-                std::cout << "Decompose Gelu, cpu backend does not supports for f64\n";
                 return false;
             }
+#else
+            return false;
+#endif
         }
 
         if (dex)
@@ -1760,7 +1761,6 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         }
     }
     // This check ensures we have exactly one functor for Op.
-    std::cout << "Before error: m_op_attrs.size = " << m_op_attrs.size() << ", functors.size = " << functors.size() <<"\n";
     NGRAPH_CHECK(m_op_attrs.size() == functors.size());
 
     executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {

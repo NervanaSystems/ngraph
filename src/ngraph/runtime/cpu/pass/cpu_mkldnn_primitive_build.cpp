@@ -48,6 +48,7 @@
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -2108,7 +2109,7 @@ namespace ngraph
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Gelu)
                 {
                     auto gelu_node = static_cast<const ngraph::op::Gelu*>(node);
-                    //float alpha = bounded_relu_node->get_alpha();
+                    // float alpha = bounded_relu_node->get_alpha();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
@@ -2128,7 +2129,7 @@ namespace ngraph
                     mkldnn_emitter.reserve_descriptor_space(descs.size());
                     serialize_memory_descs(desc_file, descs, deps[0]);
 
-                    //writer << "const float alpha = " << alpha << ";\n";
+                    // writer << "const float alpha = " << alpha << ";\n";
                     writer << "auto gelu_desc = "
                               "mkldnn::eltwise_forward::desc(mkldnn::prop_kind::forward, "
                               "mkldnn::algorithm::eltwise_gelu, "

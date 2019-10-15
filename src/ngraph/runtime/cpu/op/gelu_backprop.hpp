@@ -37,7 +37,6 @@ namespace ngraph
             ///
             /// \param arg Node that produces the gelu forward input tensor.
             GeluBackprop(const Output<ngraph::Node>& arg, const Output<ngraph::Node>& delta);
-            //GeluBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

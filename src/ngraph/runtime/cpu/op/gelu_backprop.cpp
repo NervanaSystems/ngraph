@@ -21,7 +21,6 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::GeluBackprop::type_info;
 
-//op::GeluBackprop::GeluBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
 op::GeluBackprop::GeluBackprop(const Output<ngraph::Node>& arg, const Output<ngraph::Node>& delta)
     : BinaryElementwiseArithmetic(arg, delta)
 {

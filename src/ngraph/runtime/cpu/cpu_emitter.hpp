@@ -32,6 +32,7 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 
 #define EMITTER_DECL(op_name)                                                                      \
     emit<op_name>(CPU_ExternalFunction * external_function,                                        \
@@ -152,6 +153,7 @@ namespace ngraph
         class Tile;
         class Gelu;
         class RandomUniform;
+        class GeluBackprop;
     }
     namespace runtime
     {
@@ -449,6 +451,8 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Gelu);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::RandomUniform);
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::GeluBackprop);
         }
     }
 }

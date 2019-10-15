@@ -33,20 +33,14 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Gelu)
             {
-                std::cout << "In Builder for Gelu \n";
                 auto& functors = external_function->get_functors();
 
                 auto input_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
                 size_t count = out[0].get_size();
-                std::cout << "\tcount = " << count <<"\n";
 
-                //auto alpha = static_cast<const ngraph::op::BoundedRelu*>(node)->get_alpha();
-
-                std::cout << "\tuse mkldnn = " << runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node) << "\n";
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    std::cout << "Registering functor for Gelu\n";
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto gelu_desc = mkldnn_emitter->get_gelu_forward_desc(node);
                     QUERY_SCRATCHPAD(eltwise_forward, gelu_desc);
@@ -55,20 +49,16 @@ namespace ngraph
                     auto gelu_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(gelu_index);
 
-                    auto functor = [&,
-                                    gelu_desc,
-                                    gelu_index,
-                                    input_buffer_index,
-                                    out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* /* ectx */) {
+                    auto functor = [&, gelu_desc, gelu_index, input_buffer_index, out_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_gelu(ctx->mkldnn_memories,
-                                                               ctx->mkldnn_primitives,
-                                                               ctx->mkldnn_scratchpad_mds,
-                                                               gelu_desc,
-                                                               deps,
-                                                               gelu_index);
+                                                       ctx->mkldnn_primitives,
+                                                       ctx->mkldnn_scratchpad_mds,
+                                                       gelu_desc,
+                                                       deps,
+                                                       gelu_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[input_buffer_index]);
@@ -78,34 +68,17 @@ namespace ngraph
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
                             ctx, gelu_index, deps, cpu::mkldnn_utils::OpType::GELU);
                     };
-                    std::cout << "Registered functor for Gelu\n";
                     functors.emplace_back(functor);
                 }
                 else
                 {
-                    throw ngraph_error(
-                        "Gelu is supported with MKLDNN kernel only for f32.");
-                    /*std::function<decltype(runtime::cpu::kernel::bounded_relu<float>)> kernel;
-
-                    SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::bounded_relu)
-
-                    auto functor = [&, kernel, alpha, count, input_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(ctx->buffer_data[input_buffer_index],
-                               ctx->buffer_data[out_buffer_index],
-                               alpha,
-                               count,
-                               ectx->arena);
-                    };
-                    functors.emplace_back(functor);*/
+                    throw ngraph_error("Gelu is supported with MKLDNN kernel only for f32.");
                 }
             }
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::GeluBackprop)
             {
-                std::cout << "GeluBackprop builder begin\n";
                 auto& functors = external_function->get_functors();
 
                 auto arg_fwd_buffer_index = external_function->get_buffer_index(args[0].get_name());
@@ -115,7 +88,6 @@ namespace ngraph
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    std::cout << "GeluBackprop builder mkldnn true\n";
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto bwd_desc = mkldnn_emitter->get_gelu_backward_desc(node);
                     auto fwd_desc = mkldnn_emitter->get_gelu_forward_desc(node);
@@ -133,7 +105,6 @@ namespace ngraph
                                     delta_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
                                                       CPUExecutionContext* /* ectx */) {
-                        std::cout << "GeluBackpropFactor builder inside functor\n";
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_gelu_backward(ctx->mkldnn_memories,
@@ -158,29 +129,7 @@ namespace ngraph
                 }
                 else
                 {
-                    std::cout << "GeluBackprop builder NOT mkldnn\n";
-                    throw ngraph_error(
-                        "GeluBackprop is supported with MKLDNN kernel only for f32.");
-                    // call the reference implementation???
-                    /*std::function<decltype(runtime::cpu::kernel::gelu_backprop<float>)> kernel;
-
-                    SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::gelu_backprop)
-
-                    auto functor = [&,
-                                    kernel,
-                                    count,
-                                    arg_fwd_buffer_index,
-                                    delta_buffer_index,
-                                    out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
-                        kernel(ctx->buffer_data[arg_fwd_buffer_index],
-                               ctx->buffer_data[delta_buffer_index],
-                               ctx->buffer_data[out_buffer_index],
-                               count,
-                               ectx->arena);
-                    };
-                    functors.emplace_back(functor);*/
+                    throw ngraph_error("GeluBackprop is supported only for f32 with mkldnn.");
                 }
             }
 
@@ -189,7 +138,6 @@ namespace ngraph
                 REGISTER_OP_BUILDER(Gelu);
                 REGISTER_OP_BUILDER(GeluBackprop);
             }
-
         }
     }
 }

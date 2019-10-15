@@ -38,8 +38,8 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/gelu.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/quantize.hpp"
@@ -1186,12 +1186,12 @@ namespace ngraph
                                 size_t gelu_index);
 
                 void build_gelu_backward(std::vector<mkldnn::memory*>& mkldnn_memories,
-                                        std::vector<mkldnn::primitive*>& mkldnn_primitives,
-                                        std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
-                                        const mkldnn::eltwise_backward::desc& bwd_desc,
-                                        const mkldnn::eltwise_forward::desc& fwd_desc,
-                                        const std::vector<size_t>& deps,
-                                        size_t gelu_index);
+                                         std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                         std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
+                                         const mkldnn::eltwise_backward::desc& bwd_desc,
+                                         const mkldnn::eltwise_forward::desc& fwd_desc,
+                                         const std::vector<size_t>& deps,
+                                         size_t gelu_index);
 
 #if MKLDNN_VERSION_MAJOR >= 1
                 // TODO(jmenon): Get rid of TensorViewWrappers at some point

@@ -1185,6 +1185,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
     this->add_matcher(m, callback);
 }
 
+#if MKLDNN_VERSION_MAJOR < 1
 void ngraph::runtime::cpu::pass::CPUFusion::construct_gelubackprop()
 {
     Shape shape{2, 2, 1, 1};
@@ -1208,7 +1209,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_gelubackprop()
         auto m_mult = std::static_pointer_cast<ngraph::op::Multiply>(m.get_match_root());
 
         auto m_gbpfactor = std::static_pointer_cast<ngraph::op::GeluBackpropFactor>(
-                                                    m.get_match_root()->get_argument(0));
+            m.get_match_root()->get_argument(0));
         if (m_gbpfactor->get_users().size() > 1)
         {
             NGRAPH_DEBUG << "GeluBackpropFactor has more than one user";
@@ -1226,13 +1227,13 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_gelubackprop()
         auto gbp_n = std::make_shared<ngraph::op::GeluBackprop>(m_gbpfactor->get_argument(0),
                                                                 m_mult->get_argument(1));
         ngraph::replace_node(m.get_match_root(), gbp_n);
-        //return true;
-
-        return false; // Change to true when implementation done
+        return true;
     };
     auto m = std::make_shared<pattern::Matcher>(mult, "CPUFusion.GeluBackprop");
     this->add_matcher(m, callback);
 }
+#endif
+
 void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add_relu()
 {
     Shape shape{2, 2, 1, 1};
