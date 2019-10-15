@@ -31,6 +31,7 @@ namespace ngraph
                                     const Shape& output_shape,
                                     const CoordinateDiff& padding_below,
                                     const CoordinateDiff& padding_above,
+                                    const ngraph::op::PadMode pad_mode,
                                     int arena)
                 {
                     pad_and_slice<float, 4>(input,
@@ -40,6 +41,7 @@ namespace ngraph
                                             output_shape,
                                             padding_below,
                                             padding_above,
+                                            pad_mode,
                                             arena);
                 }
             }

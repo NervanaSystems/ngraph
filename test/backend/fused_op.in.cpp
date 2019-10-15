@@ -734,6 +734,61 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_123axes_5d)
     test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_c_2x2_shape)
+{
+    Shape data_shape{2, 2};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    const auto axes = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{1});
+    float eps{1e-6f};
+    auto eps_mode = op::EpsMode::ADD;
+
+    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
+    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data});
+
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    vector<float> input_data(shape_size(data_shape));
+    iota(begin(input_data), end(input_data), 1);
+
+    test_case.add_input<float>(input_data);
+
+    test_case.add_expected_output<float>(data_shape,
+                                         {0.44721353f, 0.89442706f, 0.60000002f, 0.80000001f});
+
+    test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_c_2x4_shape)
+{
+    Shape data_shape{2, 4};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    const auto axes = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{1});
+    float eps{1e-6f};
+    auto eps_mode = op::EpsMode::ADD;
+
+    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
+    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data});
+
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    vector<float> input_data(shape_size(data_shape));
+    iota(begin(input_data), end(input_data), 1);
+
+    test_case.add_input<float>(input_data);
+
+    test_case.add_expected_output<float>(data_shape,
+                                         {0.18257418f,
+                                          0.36514837f,
+                                          0.54772252f,
+                                          0.73029673f,
+                                          0.37904903f,
+                                          0.45485884f,
+                                          0.53066862f,
+                                          0.60647845f});
+
+    test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_4d_max_bias)
 {
     Shape data_shape{1, 2, 3, 4};
