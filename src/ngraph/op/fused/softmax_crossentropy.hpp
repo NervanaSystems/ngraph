@@ -48,5 +48,29 @@ namespace ngraph
         private:
             AxisSet m_reduction_axes;
         };
+
+        class SoftmaxCrossEntropyBackprop : public util::FusedOp
+        {
+        public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"SoftmaxCrossEntropyBackprop", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            SoftmaxCrossEntropyBackprop() = default;
+
+            /// \brief Backprop for SoftmaxCrossEntropy
+            /// \param delta Node that produces the delta during bprop
+            /// \param softmax Node that produces softmax from fprop
+            /// \param onehot Node that produces OneHot Labels from fprop
+            SoftmaxCrossEntropyBackprop(const Output<Node>& delta,
+                                        const Output<Node>& softmax,
+                                        const Output<Node>& onehot);
+
+            virtual NodeVector decompose_op() const override;
+
+            void pre_validate_and_infer_types() override;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+        };
     } // namespace op
 } // namespace ngraph

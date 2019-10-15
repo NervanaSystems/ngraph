@@ -73,3 +73,40 @@ shared_ptr<Node> op::SoftmaxCrossEntropy::copy_with_new_args(const NodeVector& n
     check_new_args_count(this, new_args);
     return make_shared<SoftmaxCrossEntropy>(new_args.at(0), new_args.at(1), m_reduction_axes);
 }
+
+constexpr NodeTypeInfo op::SoftmaxCrossEntropyBackprop::type_info;
+
+op::SoftmaxCrossEntropyBackprop::SoftmaxCrossEntropyBackprop(const Output<Node>& delta,
+                                                             const Output<Node>& softmax,
+                                                             const Output<Node>& onehot)
+    : FusedOp({delta, softmax, onehot})
+{
+    constructor_validate_and_infer_types();
+}
+
+void op::SoftmaxCrossEntropyBackprop::pre_validate_and_infer_types()
+{
+    element::Type input_element_type = get_input_element_type(0);
+
+    NODE_VALIDATION_CHECK(this,
+                          input_element_type.is_dynamic() || input_element_type.is_real(),
+                          "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
+                          input_element_type,
+                          ").");
+}
+
+shared_ptr<Node>
+    op::SoftmaxCrossEntropyBackprop::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<SoftmaxCrossEntropyBackprop>(new_args.at(0), new_args.at(1), new_args.at(2));
+}
+
+NodeVector op::SoftmaxCrossEntropyBackprop::decompose_op() const
+{
+    auto delta = input_value(0);
+    auto softmax = input_value(1);
+    auto one_hot_labels = input_value(2);
+
+    return {delta * (softmax - one_hot_labels)};
+}
