@@ -44,7 +44,7 @@ static std::shared_ptr<ngraph::Node> get_k(const ngraph::onnx_import::Node& node
                  "ONNX TopK operator: 'K' parameter must contain a single positive value.",
                  node);
 
-    return ngraph::onnx_import::reshape::interpret_as_scalar<int64_t>(k_node);
+    return ngraph::onnx_import::reshape::interpret_as_scalar(k_node);
 }
 
 /// \return Return the outputs of the TopK node.

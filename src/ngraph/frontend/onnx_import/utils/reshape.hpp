@@ -22,13 +22,7 @@
 #include <vector>
 
 #include "ngraph/axis_vector.hpp"
-#include "ngraph/builder/make_constant.hpp"
-#include "ngraph/builder/reshape.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/reshape.hpp"
-#include "ngraph/shape.hpp"
-#include "ngraph/shape.hpp"
-#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -61,38 +55,12 @@ namespace ngraph
             ///             tensors of shape {1}. This function will provide a reshape of
             ///             such a node with Shape{1} into a scalar with Shape{}.
             ///
-            /// \tparam T   type of data contained by the node
             /// \param[in]  node   Node to reshape.
             ///
             /// \return     Original node or a node representing a reshape of the original.
             ///
-            template <typename T>
             std::shared_ptr<ngraph::Node>
-                interpret_as_scalar(const std::shared_ptr<ngraph::Node>& node)
-            {
-                Shape node_shape = node->get_shape();
-
-                // If node is already a scalar, return original
-                if (node_shape.empty())
-                {
-                    return node;
-                }
-
-                NGRAPH_CHECK((shape_size(node_shape) == 1),
-                             "Scalar value can't be derived from a node with ",
-                             node_shape);
-
-                // If node is a Constant, recreate as Constant with Shape{}
-                if (node->is_constant())
-                {
-                    std::vector<T> value =
-                        ngraph::as_type_ptr<ngraph::op::Constant>(node)->get_vector<T>();
-                    return ngraph::builder::make_constant(
-                        node->get_element_type(), ngraph::Shape{}, value.front());
-                }
-
-                return ngraph::builder::reshape(node, Shape{});
-            }
+                interpret_as_scalar(const std::shared_ptr<ngraph::Node>& node);
 
         } // namespace  reshape
     }     // namespace onnx_import
