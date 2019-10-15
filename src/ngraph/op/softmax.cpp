@@ -76,11 +76,7 @@ void op::v0::Softmax::set_axes(const AxisSet& axes)
 void op::v0::Softmax::validate_and_infer_types()
 {
     const PartialShape& input_shape = get_input_partial_shape(0);
-    NODE_VALIDATION_CHECK(this,
-                          input_shape.rank().is_static(),
-                          "Input node rank must be static (input_shape=",
-                          input_shape,
-                          ").");
+
     if (input_shape.is_dynamic())
     {
         set_output_type(0, get_input_element_type(0), input_shape);

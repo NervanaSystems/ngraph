@@ -13,7 +13,7 @@
 .. ---------------------------------------------------------------------------
 
 
-nGraph Compiler stack Documentation 
+nGraph Compiler Stack Documentation 
 ###################################
 
 
