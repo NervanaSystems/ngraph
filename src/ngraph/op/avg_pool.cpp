@@ -599,17 +599,16 @@ void op::v1::AvgPoolBackprop::validate_and_infer_types()
     CoordinateDiff pads_begin(m_pads_begin.begin(), m_pads_begin.end());
     CoordinateDiff pads_end(m_pads_end.begin(), m_pads_end.end());
 
+    PartialShape forward_result_shape = infer_batched_pooling_forward(
+        this, get_forward_arg_shape(), pads_begin, pads_end, m_kernel, m_strides, m_exclude_pad);
+
+    const PartialShape& delta_shape = get_input_partial_shape(0);
     PartialShape forward_arg_shape{PartialShape::dynamic()};
 
     if (input_value(1).get_node_shared_ptr()->is_constant())
     {
         forward_arg_shape = get_forward_arg_shape();
     }
-
-    PartialShape forward_result_shape = infer_batched_pooling_forward(
-        this, forward_arg_shape, pads_begin, pads_end, m_kernel, m_strides, m_exclude_pad);
-
-    const PartialShape& delta_shape = get_input_partial_shape(0);
 
     NODE_VALIDATION_CHECK(
         this,
