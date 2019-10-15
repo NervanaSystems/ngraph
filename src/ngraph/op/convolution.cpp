@@ -215,7 +215,7 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
 
     forward_result_shape = infer_convolution_forward(this,
                                                      m_data_batch_shape,
-                                                     Strides(m_data_batch_shape.size() - 2, 0),
+                                                     Strides(m_data_batch_shape.size() - 2, 1),
                                                      m_pads_begin,
                                                      m_pads_end,
                                                      filters_shape,
