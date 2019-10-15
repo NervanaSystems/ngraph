@@ -70,15 +70,6 @@ namespace ngraph
             std::shared_ptr<ngraph::Node>
                 interpret_as_scalar(const std::shared_ptr<ngraph::Node>& node)
             {
-                // If k_node is a Constant, recreate as constant with Shape{}
-                if (node->is_constant())
-                {
-                    std::vector<T> value =
-                        ngraph::as_type_ptr<ngraph::op::Constant>(node)->get_vector<T>();
-                    return ngraph::builder::make_constant(
-                        node->get_element_type(), ngraph::Shape{}, value.front());
-                }
-
                 Shape node_shape = node->get_shape();
 
                 // If node is already a scalar, return original
@@ -90,6 +81,15 @@ namespace ngraph
                 NGRAPH_CHECK((shape_size(node_shape) == 1),
                              "Scalar value can't be derived from a node with ",
                              node_shape);
+
+                // If node is a Constant, recreate as Constant with Shape{}
+                if (node->is_constant())
+                {
+                    std::vector<T> value =
+                        ngraph::as_type_ptr<ngraph::op::Constant>(node)->get_vector<T>();
+                    return ngraph::builder::make_constant(
+                        node->get_element_type(), ngraph::Shape{}, value.front());
+                }
 
                 return ngraph::builder::reshape(node, Shape{});
             }
