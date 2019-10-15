@@ -75,11 +75,11 @@ TEST(type_prop, strided_slice_incompatible_size_of_masks_attr)
     try
     {
         auto strided_slice = make_shared<op::v1::StridedSlice>(data,
-                                                           begin,
-                                                           end,
-                                                           vector<int64_t>{1, 0, 1, 0},
-                                                           vector<int64_t>{1, 0, 1, 0},
-                                                           vector<int64_t>{1, 0, 1, 0, 1});
+                                                               begin,
+                                                               end,
+                                                               vector<int64_t>{1, 0, 1, 0},
+                                                               vector<int64_t>{1, 0, 1, 0},
+                                                               vector<int64_t>{1, 0, 1, 0, 1});
         // Should have thrown, so fail if it didn't
         FAIL() << "Incompatible size od masks exception not thrown.";
     }
@@ -108,8 +108,8 @@ TEST(type_prop, strided_slice_mask_incorrect_value)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(), std::string("All maks elements of StridedSlice must have be 0 or 1"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("All maks elements of StridedSlice must have be 0 or 1"));
     }
     catch (...)
     {

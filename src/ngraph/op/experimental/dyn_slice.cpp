@@ -27,14 +27,14 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::v0::DynSlice::type_info;
 
 op::v0::DynSlice::DynSlice(const Output<Node>& arg,
-                       const Output<Node>& lower_bounds,
-                       const Output<Node>& upper_bounds,
-                       const Output<Node>& strides,
-                       const AxisSet& lower_bounds_mask,
-                       const AxisSet& upper_bounds_mask,
-                       const AxisSet& new_axis,
-                       const AxisSet& shrink_axis,
-                       const AxisSet& ellipsis_mask)
+                           const Output<Node>& lower_bounds,
+                           const Output<Node>& upper_bounds,
+                           const Output<Node>& strides,
+                           const AxisSet& lower_bounds_mask,
+                           const AxisSet& upper_bounds_mask,
+                           const AxisSet& new_axis,
+                           const AxisSet& shrink_axis,
+                           const AxisSet& ellipsis_mask)
     : Op({arg, lower_bounds, upper_bounds, strides})
     , m_lower_bounds_mask(lower_bounds_mask)
     , m_upper_bounds_mask(upper_bounds_mask)
@@ -115,18 +115,18 @@ shared_ptr<Node> op::v0::DynSlice::copy_with_new_args(const NodeVector& new_args
 {
     check_new_args_count(this, new_args);
     return make_shared<v0::DynSlice>(new_args.at(0),
-                                 new_args.at(1),
-                                 new_args.at(2),
-                                 new_args.at(3),
-                                 m_lower_bounds_mask,
-                                 m_upper_bounds_mask,
-                                 m_new_axis,
-                                 m_shrink_axis,
-                                 m_ellipsis_mask);
+                                     new_args.at(1),
+                                     new_args.at(2),
+                                     new_args.at(3),
+                                     m_lower_bounds_mask,
+                                     m_upper_bounds_mask,
+                                     m_new_axis,
+                                     m_shrink_axis,
+                                     m_ellipsis_mask);
 }
 
 void op::v0::DynSlice::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                     const NodeVector& /* deltas */)
+                                         const NodeVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for DynSlice");
 }

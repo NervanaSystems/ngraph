@@ -50,14 +50,14 @@ void check_strided_slice_success(const element::Type& input_element_type,
     std::iota(input_values.begin(), input_values.end(), static_cast<T>(0));
 
     auto strided_slice = std::make_shared<op::v1::StridedSlice>(arg,
-                                                            begin_op,
-                                                            end_op,
-                                                            strides_op,
-                                                            begin_mask,
-                                                            end_mask,
-                                                            new_axis_mask,
-                                                            shrink_axis_mask,
-                                                            ellipsis_mask);
+                                                                begin_op,
+                                                                end_op,
+                                                                strides_op,
+                                                                begin_mask,
+                                                                end_mask,
+                                                                new_axis_mask,
+                                                                shrink_axis_mask,
+                                                                ellipsis_mask);
 
     auto f = std::make_shared<Function>(NodeVector{strided_slice},
                                         ParameterVector{arg, begin_op, end_op, strides_op});
@@ -107,13 +107,13 @@ void check_strided_slice_stride_optional_success(const element::Type& input_elem
     std::iota(input_values.begin(), input_values.end(), static_cast<T>(0));
 
     auto strided_slice = std::make_shared<op::v1::StridedSlice>(arg,
-                                                            begin_op,
-                                                            end_op,
-                                                            begin_mask,
-                                                            end_mask,
-                                                            new_axis_mask,
-                                                            shrink_axis_mask,
-                                                            ellipsis_mask);
+                                                                begin_op,
+                                                                end_op,
+                                                                begin_mask,
+                                                                end_mask,
+                                                                new_axis_mask,
+                                                                shrink_axis_mask,
+                                                                ellipsis_mask);
 
     auto f = std::make_shared<Function>(NodeVector{strided_slice},
                                         ParameterVector{arg, begin_op, end_op});

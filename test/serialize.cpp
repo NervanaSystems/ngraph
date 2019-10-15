@@ -443,30 +443,30 @@ TEST(serialize, opset1_pad)
 
 TEST(serialize, opset1_strided_slice)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{ 2, 4, 6, 8 });
-    auto begin = make_shared<op::Parameter>(element::i64, Shape{ 4 });
-    auto end = make_shared<op::Parameter>(element::i64, Shape{ 4 });
-    auto strides = make_shared<op::Parameter>(element::i64, Shape{ 4 });
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto begin = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto end = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
 
-    const std::vector<int64_t> begin_mask{ 1, 0, 1, 0 };
-    const std::vector<int64_t> end_mask{ 1, 1, 1, 0 };
-    const std::vector<int64_t> new_axis_mask{ 0, 0, 1, 1 };
-    const std::vector<int64_t> shrink_axis_mask{ 0, 0, 0, 0 };
-    const std::vector<int64_t> ellipsis_mask{ 1, 1, 1, 1 };
+    const std::vector<int64_t> begin_mask{1, 0, 1, 0};
+    const std::vector<int64_t> end_mask{1, 1, 1, 0};
+    const std::vector<int64_t> new_axis_mask{0, 0, 1, 1};
+    const std::vector<int64_t> shrink_axis_mask{0, 0, 0, 0};
+    const std::vector<int64_t> ellipsis_mask{1, 1, 1, 1};
 
     auto strided_slice_in = make_shared<op::v1::StridedSlice>(data,
-        begin,
-        end,
-        strides,
-        begin_mask,
-        end_mask,
-        new_axis_mask,
-        shrink_axis_mask,
-        ellipsis_mask);
+                                                              begin,
+                                                              end,
+                                                              strides,
+                                                              begin_mask,
+                                                              end_mask,
+                                                              new_axis_mask,
+                                                              shrink_axis_mask,
+                                                              ellipsis_mask);
 
     auto result = make_shared<op::Result>(strided_slice_in);
-    auto f = make_shared<Function>(ResultVector{ result },
-        ParameterVector{ data, begin, end, strides });
+    auto f =
+        make_shared<Function>(ResultVector{result}, ParameterVector{data, begin, end, strides});
     string s = serialize(f);
 
     shared_ptr<Function> g = deserialize(s);
