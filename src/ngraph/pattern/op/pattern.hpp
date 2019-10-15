@@ -46,6 +46,7 @@ namespace ngraph
                 }
 
                 Predicate get_predicate() const;
+
             protected:
                 std::function<bool(std::shared_ptr<Node>)> m_predicate;
             };

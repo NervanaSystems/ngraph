@@ -54,7 +54,15 @@ void pass::PassBase::set_property(const PassPropertyMask& prop, bool value)
 
 // RTTI
 
-pass::ModulePass::~ModulePass() {}
-pass::FunctionPass::~FunctionPass() {}
-pass::NodePass::~NodePass() {}
-pass::CallGraphPass::~CallGraphPass() {}
+pass::ModulePass::~ModulePass()
+{
+}
+pass::FunctionPass::~FunctionPass()
+{
+}
+pass::NodePass::~NodePass()
+{
+}
+pass::CallGraphPass::~CallGraphPass()
+{
+}

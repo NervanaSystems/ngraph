@@ -45,7 +45,8 @@ private:
     void construct_reshapex2_pattern();
 };
 
-class NGRAPH_API ngraph::pass::RecurrentReshapeElimination : public ngraph::pass::RecurrentGraphRewrite
+class NGRAPH_API ngraph::pass::RecurrentReshapeElimination
+    : public ngraph::pass::RecurrentGraphRewrite
 {
 public:
     RecurrentReshapeElimination()

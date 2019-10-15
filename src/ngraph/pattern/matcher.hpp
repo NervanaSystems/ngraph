@@ -90,7 +90,6 @@ namespace ngraph
             }
 
             virtual ~Matcher() {}
-
             /// \brief Matches a pattern to \p graph_node
             ///
             /// \param graph_node is an input graph to be matched against
