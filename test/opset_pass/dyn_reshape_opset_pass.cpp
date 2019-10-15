@@ -26,7 +26,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(opset_upgrade, opset1_dyn_reshape_upgrade)
+TEST(opset_transform, opset1_dyn_reshape_upgrade_pass)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     const auto pattern = make_shared<op::Parameter>(element::i64, Shape{6});
@@ -47,7 +47,7 @@ TEST(opset_upgrade, opset1_dyn_reshape_upgrade)
     EXPECT_EQ(reshape_v1->get_version(), 1);
 }
 
-TEST(opset_downgrade, opset1_reshape_downgrade)
+TEST(opset_transform, opset1_reshape_downgrade_pass)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     const auto pattern = make_shared<op::Parameter>(element::i64, Shape{6});
