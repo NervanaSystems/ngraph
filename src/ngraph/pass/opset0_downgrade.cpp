@@ -166,6 +166,22 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         auto tmp = as_type_ptr<op::v1::ReduceSum>(node);
         auto replacement_node = make_shared<op::v0::Sum>(node->input(0).get_source_output(),
                                                          node->input(1).get_source_output());
+        // Convert negative axis to real axis if possible
+        if (tmp->reduction_axes_constant() &&
+            replacement_node->get_output_partial_shape(0).is_static())
+        {
+            auto axes_node = as_type<op::Constant>(tmp->input_value(1).get_node());
+            std::vector<int64_t> real_axis_vec;
+            auto input_rank = static_cast<int64_t>(tmp->get_input_shape(0).size());
+            for (auto axis : axes_node->get_vector<int64_t>())
+            {
+                real_axis_vec.emplace_back(axis >= 0 ? axis : input_rank + axis);
+            }
+            auto real_axes_node =
+                make_shared<op::Constant>(element::i64, Shape{real_axis_vec.size()}, real_axis_vec);
+            replacement_node =
+                make_shared<op::v0::Sum>(node->input(0).get_source_output(), real_axes_node);
+        }
         if (tmp->get_keep_dims())
         {
             NGRAPH_CHECK(tmp->reduction_axes_constant(),
