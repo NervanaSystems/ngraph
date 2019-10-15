@@ -25,6 +25,15 @@
 #include "topk.hpp"
 #include "utils/common.hpp"
 
+
+#include "ngraph/builder/make_constant.hpp"
+#include "ngraph/op/reshape.hpp"
+#include "utils/common.hpp"
+#include "utils/reshape.hpp"
+#include "ngraph/shape.hpp"
+
+
+
 /// \return Parse node attribute value for axis and adjust for negative value if needed.
 static std::int64_t get_axis(const ngraph::onnx_import::Node& node)
 {
@@ -42,6 +51,14 @@ static std::shared_ptr<ngraph::Node> get_k(const ngraph::onnx_import::Node& node
     NGRAPH_CHECK(shape_size(k_node->get_shape()) == 1 ,
                  "ONNX TopK operator: 'K' parameter must contain a single positive value.",
                  node);
+
+    // If k_node is a Constant, recreate as constant with Shape{}
+    if (k_node->is_constant())
+    {
+        std::vector<std::int64_t> value =
+                ngraph::as_type_ptr<ngraph::op::Constant>(k_node)->get_vector<std::int64_t>();
+        return ngraph::builder::make_constant(k_node->get_element_type(), ngraph::Shape{}, value.front());
+    }
 
     return std::make_shared<ngraph::op::Reshape>(
             k_node,
@@ -110,13 +127,12 @@ namespace ngraph
                     const auto sorted = node.get_attribute_value<std::int64_t>("sorted", 1);
 
                     // Map attribute values to nGraph enums
-                    const auto mode =
-                        largest ? ngraph::op::v1::TopK::Mode::MAX : ngraph::op::v1::TopK::Mode::MIN;
-                    const auto sort_type = sorted ? ngraph::op::v1::TopK::SortType::SORT_VALUES
-                                                  : ngraph::op::v1::TopK::SortType::NONE;
+                    const auto compute_max = static_cast<bool>(largest);
+                    const auto sort_type = sorted ? ngraph::op::TopK::SortType::SORT_VALUES
+                                                  : ngraph::op::TopK::SortType::NONE;
 
-                    std::shared_ptr<ngraph::Node> top_k = std::make_shared<ngraph::op::v1::TopK>(
-                        data, k, axis, mode, sort_type, element::i64);
+                    std::shared_ptr<ngraph::Node> top_k = std::make_shared<ngraph::op::TopK>(
+                        data, k, axis, element::i64, compute_max, sort_type);
 
                     return get_outputs(top_k);
                 }
