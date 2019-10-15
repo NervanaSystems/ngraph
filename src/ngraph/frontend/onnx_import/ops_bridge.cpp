@@ -53,6 +53,7 @@
 #include "op/equal.hpp"
 #include "op/erf.hpp"
 #include "op/exp.hpp"
+#include "op/expand.hpp"
 #include "op/eye_like.hpp"
 #include "op/flatten.hpp"
 #include "op/floor.hpp"
@@ -264,6 +265,7 @@ namespace ngraph
             REGISTER_OPERATOR("Equal", 1, equal);
             REGISTER_OPERATOR("Erf", 1, erf);
             REGISTER_OPERATOR("Exp", 1, exp);
+            REGISTER_OPERATOR("Expand", 1, expand);
             REGISTER_OPERATOR("EyeLike", 1, eye_like);
             REGISTER_OPERATOR("Flatten", 1, flatten);
             REGISTER_OPERATOR("Floor", 1, floor);
@@ -345,6 +347,7 @@ namespace ngraph
             REGISTER_OPERATOR("Tanh", 1, tanh);
             REGISTER_OPERATOR("ThresholdedRelu", 1, thresholded_relu);
             REGISTER_OPERATOR("TopK", 1, topk);
+            REGISTER_OPERATOR("TopK", 10, topk);
             REGISTER_OPERATOR("Transpose", 1, transpose);
             REGISTER_OPERATOR("Unsqueeze", 1, unsqueeze);
             REGISTER_OPERATOR("Where", 1, where);

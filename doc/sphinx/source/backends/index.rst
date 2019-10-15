@@ -6,8 +6,8 @@ Working with Backends
 
 * :ref:`what_is_backend`
 * :ref:`how_to_use`
-* :ref:`miscellaneous_resources`
-
+* :ref:`ngraph_bridge`
+* :ref:`opencl`
 
 .. _what_is_backend:
 
@@ -51,7 +51,7 @@ How to use?
 #. A single iteration of the executable is executed by calling the ``call``
    method on the ``Executable`` object.
 
-.. figure:: ../graphics/execution-interface.png
+.. figure:: ../graphics/ExecutionInterfaceRunGraphs.png
    :width: 650px
 
    The execution interface for nGraph 
@@ -69,35 +69,18 @@ interface; each backend implements the following five functions:
 * And, finally, the ``call()`` method is used to invoke an nGraph function 
   against a particular set of tensors.
 
+How to display ngraph-related passes executed during runtime?
+-------------------------------------------------------------
 
-.. _miscellaneous_resources: 
-
-Miscellaneous resources
-=======================
-
-Additional resources for device or framework-specific configurations:
-
-OpenCL
-------
-
-OpenCL is needed for the :doc:`plaidml-ng-api/index`; this is not needed if 
-you have only a CPU backend.  
-
-#. Install the latest Linux driver for your system. You can find a list 
-   of drivers at https://software.intel.com/en-us/articles/opencl-drivers;
-   You may need to install `OpenCL SDK`_ in case of an ``libOpenCL.so`` absence.
-
-#. Any user added to "video" group: 
-
-   .. code-block:: console 
-
-      sudo usermod –a –G video <user_id>
-
-   may, for example, be able to find details at the ``/sys/module/[system]/parameters/`` location. 
+One easy way to get info about passes is to set the environment variable 
+:envvar:`NGRAPH_PROFILE_PASS_ENABLE=1`. With this set, the pass manager 
+will dump the name and execution time of each pass.
 
 
-nGraph Bridge from TensorFlow\*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _ngraph_bridge:
+
+nGraph bridge
+-------------
 
 When specified as the generic backend -- either manually or automatically 
 from a framework --  ``NGRAPH`` defaults to CPU, and it also allows for 
@@ -119,6 +102,26 @@ depending on the parameters specified.
 * ``NGRAPH_INTELGPU_DUMP_FUNCTION`` -- dumps nGraph’s functions 
   in dot format.
 
+.. _opencl: 
+
+OpenCL
+------
+
+OpenCL is only needed for the :doc:`plaidml-ng-api/index`; if you have only 
+a CPU backend, it is not needed.
+
+#. Install the latest Linux driver for your system. You can find a list 
+   of drivers at https://software.intel.com/en-us/articles/opencl-drivers;
+   You may need to install `OpenCL SDK`_ in case of an ``libOpenCL.so`` absence.
+
+#. Any user added to "video" group:
+
+   .. code-block:: console
+
+      sudo usermod –a –G video <user_id>
+
+   may, for example, be able to find details at the ``/sys/module/[system]/parameters/`` 
+   location.
 
 .. _axpy.py example: https://github.com/tensorflow/ngraph-bridge/blob/master/examples/axpy.py
 .. _OpenCL SDK: https://software.intel.com/en-us/opencl-sdk

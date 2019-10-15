@@ -23,6 +23,7 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/power.hpp"
+#include "ngraph/op/reduce_sum.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/shape.hpp"
@@ -65,7 +66,8 @@ namespace ngraph
                     values->get_shape(),
                     vector<float>(shape_size(values->get_shape()), 1.f / p_norm));
 
-                return {make_shared<op::Power>(values, inv_p_node)};
+                return {make_shared<op::Power>(values, inv_p_node)
+                            ->add_provenance_group_members_above({value})};
             }
         }
 
@@ -81,7 +83,8 @@ namespace ngraph
             shared_ptr<Node> non_zero_values = make_shared<op::Convert>(
                 make_shared<op::NotEqual>(value, zero_node), value.get_element_type());
 
-            return make_shared<op::Sum>(non_zero_values, reduction_axes);
+            return make_shared<op::Sum>(non_zero_values, reduction_axes)
+                ->add_provenance_group_members_above({value});
         }
 
         shared_ptr<Node>
@@ -95,30 +98,37 @@ namespace ngraph
                                      values->get_shape(),
                                      vector<float>(shape_size(values->get_shape()), bias))};
 
-            return values + bias_node;
+            return (values + bias_node)->add_provenance_group_members_above({value});
         }
 
         shared_ptr<Node> l2_norm(const Output<Node>& value,
                                  const AxisSet& reduction_axes,
                                  float bias,
-                                 BiasMode bias_mode)
+                                 BiasMode bias_mode,
+                                 bool keep_dims)
         {
-            shared_ptr<Node> values{make_shared<op::Sum>(value * value, reduction_axes)};
+            shared_ptr<Node> values{make_shared<op::v1::ReduceSum>(
+                value * value,
+                make_shared<op::Constant>(
+                    element::i64, Shape{reduction_axes.size()}, reduction_axes.to_vector()),
+                keep_dims)};
 
             shared_ptr<Node> bias_node{
                 op::Constant::create(values->get_element_type(),
                                      values->get_shape(),
                                      vector<float>(shape_size(values->get_shape()), bias))};
+            shared_ptr<Node> result;
             switch (bias_mode)
             {
             case BiasMode::MAX:
             {
-                return {make_shared<op::Sqrt>(make_shared<op::Maximum>(values, bias_node))};
+                result = make_shared<op::Sqrt>(make_shared<op::Maximum>(values, bias_node));
+                break;
             }
             case BiasMode::ADD:
-            default: { return {make_shared<op::Sqrt>(values + bias_node)};
+            default: result = make_shared<op::Sqrt>(values + bias_node);
             }
-            }
+            return result->add_provenance_group_members_above({value});
         }
 
         shared_ptr<Node> lp_norm(const Output<Node>& value,

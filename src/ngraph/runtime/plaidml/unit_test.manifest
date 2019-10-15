@@ -48,6 +48,8 @@ topk_max_sort_index                     # No plans to implement TopK
 topk_min_sort_index                     # No plans to implement TopK
 topk_2d_max_one_with_equal_values       # No plans to implement TopK
 model_top_k                             # No plans to implement TopK
+top_k_opset_10                          # No plans to implement TopK
+top_k_opset_10_const_k                  # No plans to implement TopK
 
 # unsupported op: `Erf`
 erf
@@ -95,6 +97,8 @@ model_reverse_sequence_1_batch_0
 model_dequantize_linear_scalar_zero_scale_int8
 model_softmax
 avg_pool_3d_uneven_strided_padded
+auto_bcast_binary_elementwise_pdpd
+auto_bcast_binary_elementwise_pdpd_dynamic
 rnn_cell_activation_function
 gru_cell_bias_clip
 gru_cell_linear_before_reset
@@ -186,6 +190,7 @@ max_trivial_5d_int32
 floor_int32
 any_trivial
 any_2x2x3_eliminate_dim_0
+backwards_batch_norm_training_3d
 
 # unsupported op: `GenerateMask`
 generate_mask
@@ -196,6 +201,7 @@ gather_4d_indices_no_axis_uint8
 gather_4d_indices_no_axis_2d_input
 gather_3d_indices_no_axis_2d_input
 gather_2d_indices_no_axis_2d_input
+gather_2d_negative_and_positive_indices_no_axis_2d_input
 gather_1d_indices_no_axis_1d_input
 gather_scalar_indices_no_axis_2d_input
 gather_2d_indices_axis_1_2d_input
@@ -261,6 +267,9 @@ dot_2x0_0
 auto_bcast_binary_elementwise
 max_pool_2d_1channel_1image_overpadded
 
+# node validation error: "Applying function, tensor with mismatching dimensionality: F, expected=4, got=5"
+group_conv_groups_included_in_shape
+
 # passes locally, fails in CI
 numeric_float_nan
 fake_quantize_with_clip_across_channels
@@ -279,3 +288,19 @@ random_uniform_all_static_seed_used
 random_uniform_seed_use_dynamic
 random_uniform_all_static_range_dynamic
 random_uniform_dynamic_shapes
+
+# Fused op test fails on mac
+layer_norm_affine_stats
+layer_norm_bprop_affine_stats
+layer_norm_bprop_affine
+
+# shapes with zeros dimensions like (5, 0, 5) not supported in PlaidML backend
+dyn_replace_slice
+
+# bf16 test cases not supported
+convert_float32_bf16
+convert_bf16_float32
+
+# infinitive values are returned for below cases
+normalize_across_c_2x2_shape
+normalize_across_c_2x4_shape
