@@ -14,27 +14,34 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+// NOTE: This file follows nGraph format style.
+// Follows nGraph naming convention for public APIs only, else MLIR naming convention.
 
 #pragma once
 
-#include "contrib/mlir/compiler/compiler.hpp"
-
-#include <mlir/Pass/Pass.h>
-
+#include <memory>
+#include "backend.hpp"
 namespace ngraph
 {
     namespace runtime
     {
         namespace ngmlir
         {
-            class MLIRCompiler;
+            class MLIRCPUBackend : public MLIRBackend
+            {
+                MLIRCPUBackend() 
+                {
+                    m_kind = MLIRBackend::CPU;
+                }
+                
+                virtual void codegen();
+                
+                static bool kindof(unsigned kind)
+                {
+                    return kind == MLIRBackend::CPU;
+                }
+
+            };
         }
     }
-}
-
-namespace mlir
-{
-    std::unique_ptr<Pass> createDialectLoweringPass();
 }

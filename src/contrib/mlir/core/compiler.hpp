@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "memory_manager.hpp"
+#include "contrib/mlir/runtime/cpu/memory_manager.hpp"
 #include "ngraph/node.hpp"
 
 #include <mlir/ExecutionEngine/ExecutionEngine.h>

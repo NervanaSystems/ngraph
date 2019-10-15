@@ -14,16 +14,24 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+// NOTE: This file follows nGraph format style.
+// Follows nGraph naming convention for public APIs only, else MLIR naming convention.
 
-#include "tools.hpp"
+#include "ngraph/check.hpp"
+#include "cpu_backend.hpp"
+#include <memory>
 
-#include "dialect/dialect.hpp"
+using namespace ngraph::runtime::ngmlir;
 
-#include <mlir/IR/Dialect.h>
-
-void ngraph::runtime::ngmlir::initializeNGraphMLIR()
+/// Factory method to create new backends of certain kind. 
+template<typename ...T>
+static std::shared_ptr<MLIRBackend> MLIRBackend::create_backend(Kind kind, T&&... args)
 {
-    mlir::registerDialect<mlir::NGraphOpsDialect>();
+    switch (kind)
+    {
+        case MLIRBackend::CPU:
+            return std::make_shared<MLIRCPUBackend>(std::forward<T>(args)...);
+        default:
+            NGRAPH_UNREACHABLE("Unsupported MLIR backend");
+    }
 }

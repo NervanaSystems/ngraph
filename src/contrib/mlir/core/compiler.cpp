@@ -22,7 +22,9 @@
 #include "dialect/dialect.hpp"
 #include "dialect/ops.hpp"
 #include "dialect/type.hpp"
-#include "lowerer.hpp"
+// TODO Remove this: 
+#include "contrib/mlir/backend/pass/affine_lowerer.hpp"
+
 #include "ngraph/check.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/graph_util.hpp"
@@ -46,8 +48,10 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
 #include "ngraph/type/element_type.hpp"
-#include "pass/memory_optimization.hpp"
-#include "tools.hpp"
+// TODO: Remove this
+#include "contrib/mlir/backend/pass/memory_optimization.hpp"
+//
+#include "utils.hpp"
 
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
