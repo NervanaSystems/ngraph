@@ -690,7 +690,6 @@ void op::v1::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const Node
     auto delta = deltas.at(0);
 
     auto operand = input_value(0);
-    auto& operand_shape = get_input_shape(0);
     auto backprop = make_shared<op::v1::AvgPoolBackprop>(
         delta, input_value(1), m_strides, m_pads_begin, m_pads_end, m_kernel, m_exclude_pad);
     adjoints.add_delta(operand, backprop);
