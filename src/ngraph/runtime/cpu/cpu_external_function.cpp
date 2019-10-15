@@ -1202,6 +1202,32 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
                 return false;
             }
         }
+        else if (typeid(ngraph::op::GeluBackpropFactor) == typeid(node))
+        {
+            if (node.input(0).get_element_type() == element::f32)
+            {
+                std::cout << "Don't decompose GeluBackpropFactor, cpu backend supports for f32\n";
+                return true;
+            }
+            else
+            {
+                std::cout << "Decompose GeluBackpropFactor, cpu backend NOT supports for f64\n";
+                return false;
+            }
+        }
+        else if (typeid(ngraph::op::Gelu) == typeid(node))
+        {
+            if (node.input(0).get_element_type() == element::f32)
+            {
+                std::cout << "Don't decompose Gelu, cpu backend supports for f32\n";
+                return true;
+            }
+            else
+            {
+                std::cout << "Decompose Gelu, cpu backend does not supports for f64\n";
+                return false;
+            }
+        }
 
         if (dex)
         {

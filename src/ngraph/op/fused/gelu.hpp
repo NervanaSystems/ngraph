@@ -62,7 +62,7 @@ namespace ngraph
             GeluBackpropFactor(const Output<Node>& x);
 
             virtual NodeVector decompose_op() const override;
-            virtual bool supports_decompose() const override { return false; }
+            //virtual bool supports_decompose() const override { return false; }
             void pre_validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
