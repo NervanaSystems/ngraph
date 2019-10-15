@@ -24,9 +24,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::DynSlice::type_info;
+constexpr NodeTypeInfo op::v0::DynSlice::type_info;
 
-op::DynSlice::DynSlice(const Output<Node>& arg,
+op::v0::DynSlice::DynSlice(const Output<Node>& arg,
                        const Output<Node>& lower_bounds,
                        const Output<Node>& upper_bounds,
                        const Output<Node>& strides,
@@ -45,7 +45,7 @@ op::DynSlice::DynSlice(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-void op::DynSlice::validate_and_infer_types()
+void op::v0::DynSlice::validate_and_infer_types()
 {
     auto lower_bounds_et = get_input_element_type(1);
     auto upper_bounds_et = get_input_element_type(2);
@@ -111,10 +111,10 @@ void op::DynSlice::validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::DynSlice::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::DynSlice::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<DynSlice>(new_args.at(0),
+    return make_shared<v0::DynSlice>(new_args.at(0),
                                  new_args.at(1),
                                  new_args.at(2),
                                  new_args.at(3),
@@ -125,7 +125,7 @@ shared_ptr<Node> op::DynSlice::copy_with_new_args(const NodeVector& new_args) co
                                  m_ellipsis_mask);
 }
 
-void op::DynSlice::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+void op::v0::DynSlice::generate_adjoints(autodiff::Adjoints& /* adjoints */,
                                      const NodeVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for DynSlice");

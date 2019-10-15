@@ -14,26 +14,27 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/experimental/strided_slice.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/experimental/strided_slice.hpp"
+#include "ngraph/validation_util.hpp"
 
 #include <algorithm>
 
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::StridedSlice::type_info;
+constexpr NodeTypeInfo op::v1::StridedSlice::type_info;
 
-op::StridedSlice::StridedSlice(const Output<Node>& data,
+op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
                                const Output<Node>& begin,
                                const Output<Node>& end,
-                               const Output<Node>& stride,
+                               const Output<Node>& strides,
                                const std::vector<int64_t>& begin_mask,
                                const std::vector<int64_t>& end_mask,
                                const std::vector<int64_t>& new_axis_mask,
                                const std::vector<int64_t>& shrink_axis_mask,
                                const std::vector<int64_t>& ellipsis_mask)
-    : Op({data, begin, end, stride})
+    : Op({data, begin, end, strides})
     , m_begin_mask{begin_mask}
     , m_end_mask{end_mask}
     , m_new_axis_mask{new_axis_mask}
@@ -43,7 +44,7 @@ op::StridedSlice::StridedSlice(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-op::StridedSlice::StridedSlice(const Output<Node>& data,
+op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
                                const Output<Node>& begin,
                                const Output<Node>& end,
                                const std::vector<int64_t>& begin_mask,
@@ -65,7 +66,7 @@ op::StridedSlice::StridedSlice(const Output<Node>& data,
 {
 }
 
-void op::StridedSlice::validate_and_infer_types()
+void op::v1::StridedSlice::validate_and_infer_types()
 {
     const auto& begin_mask_et = get_input_element_type(1);
     const auto& end_mask_et = get_input_element_type(2);
@@ -87,7 +88,7 @@ void op::StridedSlice::validate_and_infer_types()
             std::all_of(
                 m_shrink_axis_mask.begin(), m_shrink_axis_mask.end(), are_mask_elem_in_range) &&
             std::all_of(m_ellipsis_mask.begin(), m_ellipsis_mask.end(), are_mask_elem_in_range),
-        "All maks elements of StridedSlice should have be 0 or 1");
+        "All maks elements of StridedSlice must have be 0 or 1");
 
     const vector<size_t> attr_sizes = {m_begin_mask.size(),
                                        m_end_mask.size(),
@@ -96,10 +97,10 @@ void op::StridedSlice::validate_and_infer_types()
                                        m_ellipsis_mask.size()};
     const auto are_attr_sizes_eq =
         std::all_of(attr_sizes.begin(), attr_sizes.end(), [&attr_sizes](size_t s) {
-            return s == 0 || attr_sizes[0] == s;
+            return (s == 0) || (attr_sizes[0] == s);
         });
     NODE_VALIDATION_CHECK(
-        this, are_attr_sizes_eq, "All maks of StridedSlice should have the same size");
+        this, are_attr_sizes_eq, "All maks of StridedSlice must have the same size");
 
     const auto mask_size = m_begin_mask.size();
     const auto& data_rank = get_input_partial_shape(0).rank();
@@ -117,16 +118,6 @@ void op::StridedSlice::validate_and_infer_types()
                               begin_shape.rank(),
                               ").");
     }
-    if (begin_shape[0].is_static())
-    {
-        NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(begin_shape[0]) == mask_size,
-                              "Begin input must have: ",
-                              mask_size,
-                              " elements, but have: ",
-                              begin_shape[0]);
-    }
-
     const auto& end_shape = get_input_partial_shape(2);
     if (end_shape.rank().is_static())
     {
@@ -136,21 +127,53 @@ void op::StridedSlice::validate_and_infer_types()
                               end_shape.rank(),
                               ").");
     }
-    if (end_shape[0].is_static())
+
+    set_input_is_relevant_to_shape(1);
+    set_input_is_relevant_to_shape(2);
+    set_input_is_relevant_to_shape(3);
+
+    auto begin_const = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr());
+    auto end_const = as_type_ptr<op::Constant>(input_value(2).get_node_shared_ptr());
+    auto strides = as_type_ptr<op::Constant>(input_value(3).get_node_shared_ptr());
+
+    if (begin_const && end_const && strides)
     {
-        NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(end_shape[0]) == mask_size,
-                              "End input must have: ",
-                              mask_size,
-                              " elements, but have: ",
-                              end_shape[0]);
+        set_output_type(0,
+            get_input_element_type(0),
+            infer_slice_shape(this,
+                get_input_partial_shape(0),
+                begin_const->get_vector<int64_t>(),
+                end_const->get_vector<int64_t>(),
+                strides->get_vector<int64_t>(),
+                convert_mask_to_axis_set(get_begin_mask()),
+                convert_mask_to_axis_set(get_end_mask()),
+                convert_mask_to_axis_set(get_new_axis_mask()),
+                convert_mask_to_axis_set(get_shrink_axis_mask()),
+                convert_mask_to_axis_set(get_ellipsis_mask())));
+    }
+    else
+    {
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic(data_rank));
     }
 }
 
-shared_ptr<Node> op::StridedSlice::copy_with_new_args(const NodeVector& new_args) const
+AxisSet op::v1::StridedSlice::convert_mask_to_axis_set(const std::vector<int64_t>& mask) const
+{
+    AxisSet axis_set{};
+    for (size_t i = 0; i < static_cast<size_t>(mask.size()); ++i)
+    {
+        if (mask[i] == 1)
+        {
+            axis_set.emplace(i);
+        }
+    }
+    return axis_set;
+}
+
+shared_ptr<Node> op::v1::StridedSlice::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<StridedSlice>(new_args.at(0),
+    return make_shared<v1::StridedSlice>(new_args.at(0),
         new_args.at(1),
         new_args.at(2),
         new_args.at(3),
@@ -161,7 +184,7 @@ shared_ptr<Node> op::StridedSlice::copy_with_new_args(const NodeVector& new_args
         m_ellipsis_mask);
 }
 
-void op::StridedSlice::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+void op::v1::StridedSlice::generate_adjoints(autodiff::Adjoints& /* adjoints */,
                                      const NodeVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for StridedSlice");

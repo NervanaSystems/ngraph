@@ -49,7 +49,7 @@ void check_strided_slice_success(const element::Type& input_element_type,
     std::vector<T> input_values(shape_size(input_shape));
     std::iota(input_values.begin(), input_values.end(), static_cast<T>(0));
 
-    auto strided_slice = std::make_shared<op::StridedSlice>(arg,
+    auto strided_slice = std::make_shared<op::v1::StridedSlice>(arg,
                                                             begin_op,
                                                             end_op,
                                                             strides_op,
@@ -106,7 +106,7 @@ void check_strided_slice_stride_optional_success(const element::Type& input_elem
     std::vector<T> input_values(shape_size(input_shape));
     std::iota(input_values.begin(), input_values.end(), static_cast<T>(0));
 
-    auto strided_slice = std::make_shared<op::StridedSlice>(arg,
+    auto strided_slice = std::make_shared<op::v1::StridedSlice>(arg,
                                                             begin_op,
                                                             end_op,
                                                             begin_mask,

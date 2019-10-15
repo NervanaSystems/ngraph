@@ -13,12 +13,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/experimental/dyn_slice.hpp"
+#include "ngraph/op/experimental/strided_slice.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
+
+#include <algorithm>
 
 using namespace std;
 using namespace ngraph;
@@ -77,6 +81,37 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 #endif
     switch (get_typeid(node))
     {
+    case OP_TYPEID::DynSlice:
+    {
+        auto convert_mask_to_axes = [](const std::vector<int64_t>& mask)
+        {
+            AxisSet axes{};
+            for (auto i = 0; i < mask.size(); ++i)
+            {
+                if (mask[i] == 1)
+                {
+                    axes.emplace(i);
+                }
+            }
+            return axes;
+        };
+
+        auto tmp = as_type_ptr<op::v1::StridedSlice>(node);
+        auto replacement_node = make_shared<op::v0::DynSlice>(
+            node->input(0).get_source_output(), // arg
+            node->input(1).get_source_output(), // lower_bounds
+            node->input(2).get_source_output(), // upper_bounds
+            node->input(3).get_source_output(), // strides
+            convert_mask_to_axes(tmp->get_begin_mask()),
+            convert_mask_to_axes(tmp->get_end_mask()),
+            convert_mask_to_axes(tmp->get_new_axis_mask()),
+            convert_mask_to_axes(tmp->get_shrink_axis_mask()),
+            convert_mask_to_axes(tmp->get_ellipsis_mask())
+            );
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::Pad:
     {
         auto tmp = dynamic_cast<const op::v1::Pad*>(node.get());

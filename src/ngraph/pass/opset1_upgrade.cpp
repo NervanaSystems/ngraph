@@ -14,6 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 #include "ngraph/pass/opset1_upgrade.hpp"
+#include "ngraph/op/experimental/dyn_slice.hpp"
+#include "ngraph/op/experimental/strided_slice.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/constant.hpp"
@@ -376,6 +378,40 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 
         auto replacement_node =
             make_shared<op::v1::Softmax>(node->input(0).get_source_output(), axes.to_vector()[0]);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::DynSlice:
+    {
+        const auto input_rank = node->input_value(0).get_partial_shape().rank();
+        NGRAPH_CHECK(
+            input_rank.is_static(),
+            "Unable to convert DynSlice:0 to StridedSlice:1 when input rank is dynamic. Node: ",
+            *node);
+        auto convert_axes_to_mask = [&input_rank](const AxisSet& axes)
+        {
+            std::vector<int64_t> mask(static_cast<size_t>(input_rank), 0);
+            for (const auto& axis : axes)
+            {
+                mask[axis] = 1;
+            }
+            return mask;
+        };
+
+        auto tmp = as_type_ptr<op::v0::DynSlice>(node);
+        convert_axes_to_mask(tmp->get_lower_bounds_mask());
+        auto replacement_node = make_shared<op::v1::StridedSlice>(
+            node->input(0).get_source_output(), // data
+            node->input(1).get_source_output(), // begin
+            node->input(2).get_source_output(), // end
+            node->input(3).get_source_output(), // strides
+            convert_axes_to_mask(tmp->get_lower_bounds_mask()),
+            convert_axes_to_mask(tmp->get_upper_bounds_mask()),
+            convert_axes_to_mask(tmp->get_new_axis()),
+            convert_axes_to_mask(tmp->get_shrink_axis()),
+            convert_axes_to_mask(tmp->get_ellipsis_mask())
+            );
         replace_node(node, replacement_node);
         modified = true;
         break;
