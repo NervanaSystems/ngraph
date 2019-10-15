@@ -134,7 +134,8 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop()
         // root node in the call back funtion
         return false;
     };
-    auto m = std::make_shared<pattern::Matcher>(bprop_result, "CoreFusion.SoftmaxCrossEntropyBprop");
+    auto m =
+        std::make_shared<pattern::Matcher>(bprop_result, "CoreFusion.SoftmaxCrossEntropyBprop");
     this->add_matcher(m, callback);
 }
 
