@@ -32,8 +32,9 @@ set(SRC
     core/dialect/ops.cpp
     core/pass/mlir_subgraph_extraction.cpp
     core/pass/mlir_subgraph_extraction.hpp
-    core/utils.cpp
     runtime/cpu/memory_manager.cpp
+    runtime/cpu/runtime.cpp
+    utils.cpp
 )
 
 add_library(mlir_backend SHARED ${SRC})

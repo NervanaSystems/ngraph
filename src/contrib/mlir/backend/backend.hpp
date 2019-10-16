@@ -34,14 +34,15 @@ namespace ngraph
                 enum Kind
                 {
                     CPU
-                    /* Add more backends here */
+                    /* Add more backend kinds here */
                 };
-                MLIRBackend(mlir::ModuleOp module)
-                : m_module(module)
+                MLIRBackend(mlir::OwningModuleRef& module)
+                : m_module(std::move(module))
                 {}
-                /// Factory method to create new backends of certain kind. 
-                template<typename ...T>
-                static std::shared_ptr<MLIRBackend> create_backend(Kind kind, T&&... args);
+
+                MLIRBackend(mlir::ModuleOp& moduleOp)
+                : m_module(moduleOp)
+                {}
                 
                 /// Generate code for the module
                 virtual void codegen() = 0;

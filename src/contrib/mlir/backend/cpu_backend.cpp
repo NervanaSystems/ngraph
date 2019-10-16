@@ -20,6 +20,8 @@
 #include "cpu_backend.hpp"
 #include "ngraph/check.hpp"
 #include "contrib/mlir/backend/pass/affine_lowerer.hpp"
+#include "contrib/mlir/utils.hpp"
+#include "contrib/mlir/backend/pass/memory_optimization.hpp"
 
 // TODO: Clean up unneeded files
 #include <llvm/ADT/STLExtras.h>
@@ -43,6 +45,15 @@
 #include <mlir/Transforms/DialectConversion.h>
 #include <mlir/Transforms/Passes.h>
 
+
+#define DEBUG_TYPE "mlir-cpu-backend"
+
+// *** Optimization flags ***
+
+static llvm::cl::opt<bool> clEnableNgInPlaceMemoryOpt(
+    "ng-inplace-mem-opt",
+    llvm::cl::init(false),
+    llvm::cl::desc("Enable ngraph dialect in-place memory optimization pass"));
 
 static llvm::cl::opt<bool>
     clEnableAffineLoopFusion("ngraph-affine-loop-fusion",
@@ -81,11 +92,95 @@ static llvm::cl::opt<std::string>
 using namespace ngraph::runtime::ngmlir;
 
 
+// Default optimization level.
+llvm::CodeGenOpt::Level MLIRCPUBackend::mlirOptLevel = llvm::CodeGenOpt::Level::Aggressive;
+
+std::unique_ptr<llvm::TargetMachine> MLIRCPUBackend::targetMachine;
+
+/// Creates target machine for current host.
+static llvm::Expected<std::unique_ptr<llvm::TargetMachine>>
+    createDefaultTargetMachine(unsigned optLevel)
+{
+    auto machineBuilder = llvm::orc::JITTargetMachineBuilder::detectHost();
+    if (!machineBuilder)
+    {
+        return machineBuilder.takeError();
+    }
+
+    // Relocation model and code model are kept to default values. CodeGen optimization level
+    // matches LLVM recommendations, i.e.:
+    // enum Level {
+    //   None,        // -O0
+    //   Less,        // -O1
+    //   Default,     // -O2, -Os
+    //   Aggressive   // -O3
+    // };
+    machineBuilder->setCodeGenOptLevel((llvm::CodeGenOpt::Level)optLevel);
+    return machineBuilder->createTargetMachine();
+}
+
+/// Returns the cache level size from `targetInfo` for the `cacheLevel` provided. If `userCacheSize`
+/// is not zero, it returns `userCacheSize`.
+static unsigned getCacheLevelSize(llvm::TargetTransformInfo& targetInfo,
+                                  unsigned cacheLevel,
+                                  unsigned userCacheSize)
+{
+    if (userCacheSize)
+    {
+        return userCacheSize;
+    }
+
+    llvm::Optional<unsigned> optCacheLevelSize;
+    switch (cacheLevel)
+    {
+    case 1:
+        optCacheLevelSize = targetInfo.getCacheSize(llvm::TargetTransformInfo::CacheLevel::L1D);
+        break;
+    case 2:
+        optCacheLevelSize = targetInfo.getCacheSize(llvm::TargetTransformInfo::CacheLevel::L2D);
+        break;
+    default:
+        NGRAPH_UNREACHABLE("Unsupported cache level: ", cacheLevel, ". Only 1 and 2 are supported");
+    }
+
+    NGRAPH_CHECK(optCacheLevelSize.hasValue() && "Cache level size is not available in TTI");
+    return optCacheLevelSize.getValue();
+}
+
+// Global Initialization for all CPU backends
+void MLIRCPUBackend::init()
+{
+    // Mutex to safely initialize MLIR.
+    static std::mutex mlirInitMutex;
+    static bool initialized = false;
+
+    std::unique_lock<std::mutex> lock(mlirInitMutex);
+
+    if (!initialized)
+    {
+        // Override default optimization level with macro value.
+        if (char* optLevelStr = std::getenv("NGRAPH_MLIR_OPT_LEVEL"))
+        {
+            unsigned clOptLevel = std::stoi(optLevelStr);
+            NGRAPH_CHECK(clOptLevel >= 0 && clOptLevel <= 3, "Invalid optimization level");
+            mlirOptLevel = (llvm::CodeGenOpt::Level)clOptLevel;
+        }
+
+        // Initialize LLVM targets and target machine for current host.
+        llvm::InitializeNativeTarget();
+        llvm::InitializeNativeTargetAsmPrinter();
+        auto expectedTargetMachine = createDefaultTargetMachine(mlirOptLevel);
+        NGRAPH_CHECK(expectedTargetMachine, "Invalid target machine");
+        targetMachine = std::move(*expectedTargetMachine);
+
+        initialized = true;
+    }
+}
 
 void MLIRCPUBackend::codegen()
 {
+    optimizeNgDialect();
     lowerNgDialect();
-
 }
 
 // Lowers nGraph dialect all the way to LLVM module.
@@ -99,7 +194,7 @@ void MLIRCPUBackend::lowerNgDialect()
     // Apply any generic pass manager command line options.
     mlir::applyPassManagerCLOptions(pm);
 
-    if (mlir::failed(pm.run(m_module.get()))
+    if (failed(pm.run(m_module.get())))
     {
         NGRAPH_CHECK(false, "MLIR pass manager failed");
     }
@@ -109,7 +204,7 @@ void MLIRCPUBackend::lowerNgDialect()
         NGRAPH_CHECK(false, "Incorrect module after dialect lowering");
     }
 
-    optimize();
+    optimizeAffineDialect();
 
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
@@ -124,16 +219,16 @@ void MLIRCPUBackend::lowerNgDialect()
     target.addLegalOp<mlir::ModuleOp, mlir::ModuleTerminatorOp>();
     target.addDynamicallyLegalOp<mlir::FuncOp>(
         [&](mlir::FuncOp op) { return llvmConverter.isSignatureLegal(op.getType()); });
-    auto result = mlir::applyFullConversion(m_module, target, std::move(patterns), &llvmConverter);
+    auto result = mlir::applyFullConversion(m_module.get(), target, std::move(patterns), &llvmConverter);
     NGRAPH_CHECK(succeeded(result), "Standard to LLVM dialect conversion failed");
-    // TODO: Enable after moving to utils
-    //dumpMlirModule("LLVM-IR Dialect Conversion");
+    
+    dumpMlirModule("LLVM-IR Dialect Conversion", m_module.get());
 }
 
 // Receives affine dialect as input and applies affine and standard dialect based optimizations.
 // Lowering from affine dialect to standard dialect happens along the way. Output consists of
 // standard dialect only ops.
-void MLIRCPUBackend::optimize()
+void MLIRCPUBackend::optimizeAffineDialect()
 {
     // Create target transform info to obtain some target information to be used in MLIR
     // optimizations. This is a temporary attempt to retrieve some target information by reusing
@@ -179,4 +274,19 @@ void MLIRCPUBackend::optimize()
 
     // Run Std dialect optimizations.
     // TODO
+}
+
+void MLIRCPUBackend::optimizeNgDialect()
+{
+    mlir::PassManager pm(&m_context);
+    mlir::applyPassManagerCLOptions(pm);
+    if (clEnableNgInPlaceMemoryOpt)
+    {
+        pm.addPass(mlir::createMemoryOptimizationPass());
+    }
+
+    if (failed(pm.run(m_module.get())))
+    {
+        NGRAPH_CHECK(false, "MLIR pass manager failed");
+    }
 }

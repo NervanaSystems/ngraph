@@ -19,11 +19,12 @@
 
 #include "runtime.hpp"
 #include "ngraph/check.hpp"
-
+#include "contrib/mlir/backend/cpu_backend.hpp"
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
 #include <llvm/IR/Module.h>
+#include <mlir/IR/Function.h>
 #include <llvm/Support/ErrorOr.h>
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Support/SourceMgr.h>
@@ -33,6 +34,7 @@
 #include <mlir/ExecutionEngine/MemRefUtils.h>
 #include <mlir/ExecutionEngine/OptUtils.h>
 
+
 using llvm::SmallVector;
 using llvm::StringRef;
 using llvm::ArrayRef;
@@ -40,78 +42,27 @@ using llvm::ArrayRef;
 using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
 
+#define DEBUG_TYPE "mlir-cpu-runtime"
 
-// Default optimization level.
-llvm::CodeGenOpt::Level MLIRCPURuntime::mlirOptLevel = llvm::CodeGenOpt::Level::Aggressive;
+static llvm::cl::opt<bool>
+    clDumpObjectFile("ngraph-dump-mlir-object-file",
+                     llvm::cl::desc("Dump MLIR JITted-compiled object to file specified with "
+                                    "-object-filename (<input file>.o by default)."));
 
-std::unique_ptr<llvm::TargetMachine> MLIRCPURuntime::targetMachine;
-
-/// Creates target machine for current host.
-static llvm::Expected<std::unique_ptr<llvm::TargetMachine>>
-    createDefaultTargetMachine(unsigned optLevel)
-{
-    auto machineBuilder = llvm::orc::JITTargetMachineBuilder::detectHost();
-    if (!machineBuilder)
-    {
-        return machineBuilder.takeError();
-    }
-
-    // Relocation model and code model are kept to default values. CodeGen optimization level
-    // matches LLVM recommendations, i.e.:
-    // enum Level {
-    //   None,        // -O0
-    //   Less,        // -O1
-    //   Default,     // -O2, -Os
-    //   Aggressive   // -O3
-    // };
-    machineBuilder->setCodeGenOptLevel((llvm::CodeGenOpt::Level)optLevel);
-    return machineBuilder->createTargetMachine();
-}
-
-// Global Initialization
-void MLIRCPURuntime::init()
-{
-    // Mutex to safely initialize MLIR.
-    static std::mutex mlirInitMutex;
-    static bool initialized = false;
-
-    std::unique_lock<std::mutex> lock(mlirInitMutex);
-
-    if (!initialized)
-    {
-        // Override default optimization level with macro value.
-        if (char* optLevelStr = std::getenv("NGRAPH_MLIR_OPT_LEVEL"))
-        {
-            unsigned clOptLevel = std::stoi(optLevelStr);
-            NGRAPH_CHECK(clOptLevel >= 0 && clOptLevel <= 3, "Invalid optimization level");
-            mlirOptLevel = (llvm::CodeGenOpt::Level)clOptLevel;
-        }
-
-        // Initialize LLVM targets and target machine for current host.
-        llvm::InitializeNativeTarget();
-        llvm::InitializeNativeTargetAsmPrinter();
-        auto expectedTargetMachine = createDefaultTargetMachine(mlirOptLevel);
-        NGRAPH_CHECK(expectedTargetMachine, "Invalid target machine");
-        targetMachine = std::move(*expectedTargetMachine);
-
-        initialized = true;
-    }
-}
+static llvm::cl::opt<std::string>
+    clObjectFilename("ngraph-mlir-object-filename",
+                     llvm::cl::desc("Dump MLIR JITted-compiled object to file jitted_mlir.o"));
 
 void MLIRCPURuntime::run(std::vector<void*>& externalTensors)
 {
-    
-
     // Create an MLIR execution engine. We use a null MLIR pass manager for now to make sure we
     // don't run MLIR passes that were already run. We also pass a default transformer created with
     // the default or user-provided optimization level.
     auto llvmTransformer =
-        mlir::makeOptimizingTransformer(mlirOptLevel, /*sizeLevel=*/0, targetMachine.get());
-    auto maybeEngine = mlir::ExecutionEngine::create(m_module, llvmTransformer, mlirOptLevel);
+        mlir::makeOptimizingTransformer(MLIRCPUBackend::mlirOptLevel, /*sizeLevel=*/0, MLIRCPUBackend::targetMachine.get());
+    auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvmTransformer, MLIRCPUBackend::mlirOptLevel);
     NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
     m_engine = std::move(maybeEngine.get());
-
-
 
     bindArguments(externalTensors);
     execute();
@@ -128,11 +79,7 @@ void MLIRCPURuntime::bindArguments(std::vector<void*>& externalTensors)
     NGRAPH_CHECK(func && !func.getBlocks().empty(), "Function not found");
 
     // Set external arguments
-    NGRAPH_CHECK(m_compiledKernel, "No compiled kernel set for compiler");
-    NGRAPH_CHECK((m_compiledKernel->get_arguments().size() +
-                  m_compiledKernel->get_kernel_outputs().size()) == externalTensors.size(),
-                 "Number of arguments and outputs doesn't match number of tensors");
-    m_externalTensors = &externalTensors;
+     m_externalTensors = &externalTensors;
 
     // Create list with a type-erased double pointer for each invocation arguments.
     // We currently use 'allocateMemrefArgs', which creates the arguments list per call ABI (see
@@ -179,12 +126,6 @@ void MLIRCPURuntime::cleanup()
         auto* memRefArg = *(reinterpret_cast<mlir::StaticFloatMemRef**>(arg));
         free(memRefArg);
         free(arg);
-    }
-
-    // Free MLIR function builder.
-    if (m_builder)
-    {
-        m_builder.reset(nullptr);
     }
 }
 

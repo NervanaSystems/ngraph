@@ -28,12 +28,6 @@
 #include <mlir/IR/Module.h>
 #include <mlir/IR/Types.h>
 
-namespace llvm
-{
-    class TargetMachine;
-}
-
-
 namespace ngraph
 {
     namespace runtime
@@ -43,8 +37,12 @@ namespace ngraph
             class MLIRCPURuntime
             {
                 public:
-                MLIRCPURuntime(mlir::ModuleOp module) 
-                : m_module(module) {}
+                MLIRCPURuntime(mlir::OwningModuleRef& module) 
+                : m_module(std::move(module)) {}
+
+                MLIRCPURuntime(mlir::ModuleOp& moduleOp) 
+                : m_module(moduleOp) {}
+                
                 /// Executes a pre-compiled subgraph
                 void run(std::vector<void*>& externalTensors);
                 
@@ -63,7 +61,6 @@ namespace ngraph
                 /// Helper to allocate a mem ref object. Handles static shapes only for now.
                 mlir::StaticFloatMemRef* allocateMemrefDescriptor();
 
-
                 private:
                 // Pointers to externally allocated memory for sub-graph's input and output tensors.
                 std::vector<void*>* m_externalTensors;
@@ -71,19 +68,6 @@ namespace ngraph
                 llvm::SmallVector<void*, 8> m_invokeArgs;
                 mlir::OwningModuleRef m_module;
                 std::unique_ptr<mlir::ExecutionEngine> m_engine;
-
-                // JIT optimization level
-                static llvm::CodeGenOpt::Level mlirOptLevel;
-
-                // LLVM target machine to be used by this MLIR compiler instance to retrieve
-                // information about target features.
-                // TODO: Note that, unfortunatelly, MLIR/OrcJIT execution engine creates its own
-                // target machine for compilation internally. This target machine is for non-JIT
-                // related stuff. We should change OrcJIT API so that we can pass an external target
-                // machine or configuration flags.
-                // TODO: Move target machine to external nGraph backend when multiple backends start
-                // to use MLIR.
-                static std::unique_ptr<llvm::TargetMachine> targetMachine;
             };
         }
     }

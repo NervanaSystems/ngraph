@@ -17,6 +17,8 @@
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 
 #include "contrib/mlir/core/compiler.hpp"
+#include "contrib/mlir/backend/cpu_backend.hpp"
+#include "contrib/mlir/runtime/cpu/runtime.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 
@@ -68,25 +70,22 @@ namespace ngraph
                     // Compile nodes within the CompiledKernel op.
                     CompiledKernel* compiled_kernel =
                         static_cast<CompiledKernel*>(const_cast<Node*>(node));
-                    bool is_module_ready = true;
 
-                    // TODO: Convert this to use CPURuntime. Use temp compiler/backend to compile. Store compiled module into CPURuntime. 
-                    auto it = ctx->mlir_compilers.find(compiled_kernel);
+                    auto it = ctx->mlir_runtimes.find(compiled_kernel);
 
-                    if (it == ctx->mlir_compilers.end())
+                    if (it == ctx->mlir_runtimes.end())
                     {
-                        // create a new compiler for the CK
-                        ctx->mlir_compilers.emplace(compiled_kernel, compiled_kernel);
-                        is_module_ready = false;
-                    }
-
-                    MLIRCompiler& mlir_compiler = ctx->mlir_compilers.find(compiled_kernel)->second;
-                    if (!is_module_ready)
-                    {
+                        // compile the sub-graph and create a new runtime
+                        MLIRCompiler mlir_compiler(compiled_kernel);
                         mlir_compiler.compile();
+                        MLIRCPUBackend mlir_backend(mlir_compiler.get_module());
+                        mlir_backend.codegen();
+                        
+                        ctx->mlir_runtimes.emplace(compiled_kernel, mlir_backend.get_module());
                     }
-                    
-                    mlir_compiler.run(ptr_args);
+
+                    MLIRCPURuntime& mlir_runtime = ctx->mlir_runtimes.find(compiled_kernel)->second;
+                    mlir_runtime.run(ptr_args);
                 };
 
                 functors.emplace_back(functor);

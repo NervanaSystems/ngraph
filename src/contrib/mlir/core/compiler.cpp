@@ -46,10 +46,8 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
 #include "ngraph/type/element_type.hpp"
-// TODO: Remove this
-#include "contrib/mlir/backend/pass/memory_optimization.hpp"
-//
-#include "utils.hpp"
+
+#include "contrib/mlir/utils.hpp"
 
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
@@ -85,32 +83,8 @@ using llvm::ArrayRef;
 using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
 
-// *** Debug flags ***
-
-static llvm::cl::opt<bool> clPrintIRAfterAll(
-    "ngraph-print-ir-after-all",
-    llvm::cl::init(false),
-    llvm::cl::desc(
-        "Print IR after transformation that are not implemented as passes in the MLIRCompiler. It "
-        "complements MLIR -print-ir-after-all and LLVM -print-after-all flags"));
-
-// *** Optimization flags ***
-
-static llvm::cl::opt<bool> clEnableNgInPlaceMemoryOpt(
-    "ng-inplace-mem-opt",
-    llvm::cl::init(false),
-    llvm::cl::desc("Enable ngraph dialect in-place memory optimization pass"));
 
 // *** Debug flags ***
-
-static llvm::cl::opt<bool>
-    clDumpObjectFile("ngraph-dump-mlir-object-file",
-                     llvm::cl::desc("Dump MLIR JITted-compiled object to file specified with "
-                                    "-object-filename (<input file>.o by default)."));
-
-static llvm::cl::opt<std::string>
-    clObjectFilename("ngraph-mlir-object-filename",
-                     llvm::cl::desc("Dump MLIR JITted-compiled object to file jitted_mlir.o"));
 
 #define COMPILE_OP_DECL(op_name)                                                                   \
     createOp<op_name>(MLIRCompiler & compiler, const ngraph::Node* ngNode)
@@ -140,16 +114,11 @@ void MLIRCompiler::init_mlir()
 void MLIRCompiler::compile()
 {
     buildNgDialectModule();
-    optimizeNgDialect();
-    // REMOVE
-//    lowerNgDialect();
-}
-
-void MLIRCompiler::run(std::vector<void*>& externalTensors)
-{
-    bindArguments(externalTensors);
-    execute();
-    cleanup();
+    // Free MLIR function builder.
+    if (m_builder)
+    {
+        m_builder.reset(nullptr);
+    }
 }
 
 // Creates an MLIR module and function with nGraph dialect ops from the input CompiledKernel.
@@ -199,7 +168,7 @@ void MLIRCompiler::buildNgDialectModule()
         NGRAPH_CHECK(false, "Invalid module after lowering to NG dialect");
     }
 
-    dumpMlirModule("nGraph Dialect Construction");
+    dumpMlirModule("nGraph Dialect Construction", m_module.get());
 }
 
 template <typename T>
@@ -288,6 +257,9 @@ MLIRCompiler::TensorInfo MLIRCompiler::getTensorValue(descriptor::Tensor* tensor
 }
 
 
+// REMOVE
+#if 0
+
 /// Returns the cache level size from `targetInfo` for the `cacheLevel` provided. If `userCacheSize`
 /// is not zero, it returns `userCacheSize`.
 static unsigned getCacheLevelSize(llvm::TargetTransformInfo& targetInfo,
@@ -315,7 +287,7 @@ static unsigned getCacheLevelSize(llvm::TargetTransformInfo& targetInfo,
     NGRAPH_CHECK(optCacheLevelSize.hasValue() && "Cache level size is not available in TTI");
     return optCacheLevelSize.getValue();
 }
-
+#endif
 // MLIR builders
 #define TI(x) std::type_index(typeid(x))
 
@@ -539,29 +511,4 @@ mlir::Operation* MLIRCompiler::createIndexReduction(const ngraph::Node* ngNode)
         m_builder->getI64ArrayAttr({(int64_t)idxRed->get_reduction_axis()});
     op->setAttr("axes", redAxesAttr);
     return op;
-}
-
-void MLIRCompiler::optimizeNgDialect()
-{
-    mlir::PassManager pm(&m_context);
-    mlir::applyPassManagerCLOptions(pm);
-    if (clEnableNgInPlaceMemoryOpt)
-    {
-        pm.addPass(mlir::createMemoryOptimizationPass());
-    }
-
-    if (failed(pm.run(m_module.get())))
-    {
-        NGRAPH_CHECK(false, "MLIR pass manager failed");
-    }
-}
-
-void MLIRCompiler::dumpMlirModule(const std::string msg)
-{
-    if (clPrintIRAfterAll)
-    {
-        llvm::dbgs() << "*** IR Dump After " << msg << " ***\n";
-        m_module->dump();
-        llvm::dbgs() << "\n\n";
-    }
 }

@@ -20,7 +20,13 @@
 #pragma once
 
 #include <memory>
+#include "llvm/Support/CodeGen.h"
 #include "backend.hpp"
+
+namespace llvm
+{
+    class TargetMachine;
+}
 
 namespace ngraph
 {
@@ -30,8 +36,17 @@ namespace ngraph
         {
             class MLIRCPUBackend : public MLIRBackend
             {
-                MLIRCPUBackend(mlir::ModuleOp module) 
+                public:
+                static void init();
+
+                MLIRCPUBackend(mlir::OwningModuleRef& module) 
                 : MLIRBackend(module)
+                {
+                    m_kind = MLIRBackend::CPU;
+                }
+                
+                MLIRCPUBackend(mlir::ModuleOp& moduleOp) 
+                : MLIRBackend(moduleOp)
                 {
                     m_kind = MLIRBackend::CPU;
                 }
@@ -44,9 +59,23 @@ namespace ngraph
                 }
 
                 private:
+                void optimizeNgDialect();
                 void lowerNgDialect();
-                void optimize();
+                void optimizeAffineDialect();
 
+                public:
+                // JIT optimization level
+                static llvm::CodeGenOpt::Level mlirOptLevel;
+
+                // LLVM target machine to be used by this MLIR compiler instance to retrieve
+                // information about target features.
+                // TODO: Note that, unfortunatelly, MLIR/OrcJIT execution engine creates its own
+                // target machine for compilation internally. This target machine is for non-JIT
+                // related stuff. We should change OrcJIT API so that we can pass an external target
+                // machine or configuration flags.
+                // TODO: Move target machine to external nGraph backend when multiple backends start
+                // to use MLIR.
+                static std::unique_ptr<llvm::TargetMachine> targetMachine;
             };
         }
     }
