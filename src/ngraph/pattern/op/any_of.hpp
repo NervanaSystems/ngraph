@@ -35,7 +35,6 @@ namespace ngraph
             class NGRAPH_API AnyOf : public Pattern
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"patternAnyOf", 0};
                 const NodeTypeInfo& get_type_info() const override;
                 /// \brief creates a AnyOf node containing a sub-pattern described by \sa type and

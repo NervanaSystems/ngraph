@@ -31,7 +31,6 @@ namespace ngraph
             class NGRAPH_API Convolution : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Convolution", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a batched convolution operation.
@@ -101,7 +100,6 @@ namespace ngraph
             class NGRAPH_API ConvolutionBackpropData : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ConvolutionBackpropData", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a batched-convolution data batch-backprop operation.
@@ -165,7 +163,6 @@ namespace ngraph
             class NGRAPH_API ConvolutionBackpropFilters : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ConvolutionBackpropFilters", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a batched-convolution filter-backprop operation.
@@ -227,7 +224,6 @@ namespace ngraph
             class NGRAPH_API Convolution : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Convolution", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a batched convolution operation.
@@ -402,7 +398,6 @@ namespace ngraph
             class NGRAPH_API ConvolutionBackpropData : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ConvolutionBackpropData", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a batched-convolution data batch-backprop operation.
@@ -507,7 +502,6 @@ namespace ngraph
             class NGRAPH_API ConvolutionBackpropFilters : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ConvolutionBackpropFilters", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a batched-convolution filter-backprop operation.

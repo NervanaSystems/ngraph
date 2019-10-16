@@ -31,7 +31,6 @@ namespace ngraph
             class NGRAPH_API Skip : public Pattern
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"patternSkip", 0};
                 const NodeTypeInfo& get_type_info() const override;
                 Skip(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)

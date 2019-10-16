@@ -535,12 +535,6 @@ namespace ngraph
         {
         }
 
-        Input() = default;
-        Input(const Input &) = default;
-        Input(Input &&) = default;
-        Input & operator=(const Input &) = default;
-        Input & operator=(Input &&) = default;
-
         /// \return A pointer to the node referenced by this input handle.
         NodeType* get_node() const { return m_node; }
         /// \return The index of the input referred to by this input handle.
@@ -639,10 +633,6 @@ namespace ngraph
 
         /// A null output
         Output() = default;
-        Output(const Output &) = default;
-        Output(Output &&) = default;
-        Output & operator=(const Output &) = default;
-        Output & operator=(Output &&) = default;
 
         /// This output position for a different node
         Output<NodeType> for_node(const std::shared_ptr<NodeType>& node)

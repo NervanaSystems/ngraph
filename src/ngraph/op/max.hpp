@@ -29,7 +29,6 @@ namespace ngraph
             class NGRAPH_API Max : public util::ArithmeticReduction
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Max", 0};
 
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
@@ -61,7 +60,6 @@ namespace ngraph
             class NGRAPH_API ReduceMax : public util::ArithmeticReductionKeepDims
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ReduceMax", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a summation operation.

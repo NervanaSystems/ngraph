@@ -77,7 +77,6 @@ namespace ngraph
             class NGRAPH_API Sum : public util::ArithmeticReduction
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{ "Sum", 0 };
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a summation operation.

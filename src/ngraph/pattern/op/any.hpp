@@ -29,7 +29,6 @@ namespace ngraph
             class NGRAPH_API Any : public Pattern
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"patternAny", 0};
                 const NodeTypeInfo& get_type_info() const override;
                 /// \brief creates a Any node containing a sub-pattern described by \sa type and \sa

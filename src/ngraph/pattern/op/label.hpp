@@ -31,7 +31,6 @@ namespace ngraph
             class NGRAPH_API Label : public Pattern
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"patternLabel", 0};
                 const NodeTypeInfo& get_type_info() const override;
                 /// \brief creates a Label node containing a sub-pattern described by \sa type and

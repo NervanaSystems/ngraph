@@ -30,7 +30,6 @@ namespace ngraph
             class NGRAPH_API AvgPool : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"AvgPool", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a batched average pooling operation.
@@ -174,7 +173,6 @@ namespace ngraph
             class NGRAPH_API AvgPoolBackprop : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"AvgPoolBackprop", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 AvgPoolBackprop() = default;
@@ -222,7 +220,6 @@ namespace ngraph
             class NGRAPH_API AvgPool : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"AvgPool", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a batched average pooling operation.
@@ -323,7 +320,6 @@ namespace ngraph
             class NGRAPH_API AvgPoolBackprop : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"AvgPoolBackprop", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 AvgPoolBackprop() = default;
