@@ -115,3 +115,7 @@ namespace ngraph
         using TensorViewPtrs = std::vector<std::shared_ptr<Tensor>>;
     }
 }
+
+#include "paranoid_vector.h"
+using PTV = paranoid_vector<std::shared_ptr<ngraph::runtime::Tensor>>;
+
