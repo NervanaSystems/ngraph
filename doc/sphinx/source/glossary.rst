@@ -17,6 +17,11 @@ Glossary
       A component of nGraph that acts as a backend for a framework,
       allowing the framework to define and execute computations.
 
+   builder
+
+       A builder is a function that creates a sub-graph and returns 
+       a root node to the bridge.  See also: :doc:`provenance/overview`.
+
    data-flow graph
 
       Data-flow graphs are used to implement deep learning models. In  

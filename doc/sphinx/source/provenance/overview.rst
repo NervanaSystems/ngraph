@@ -16,7 +16,7 @@ to the framework ops that create the nGraph nodes. We can only do this for
 those transformations that take place in nGraph: the information stored 
 in the nodes can include additional details about how the device code was 
 chosen. For example, whenever a graph transformation is performed with one 
-of the nGraph core :doc:`../ops/index.rst`, a lower level of abstraction 
+of the nGraph core :doc:`../ops/index`, a lower level of abstraction 
 can record information about the transformation that may be useful to 
 anyone wondering why a kernel was "chosen"; a complete description of the 
 steps leading to the device kernels being used, as well as all of the 
@@ -37,37 +37,10 @@ of the returned node, where it sets tags. The remaining nodes' tags are set
 by associating a set of nodes, called a *provenance group*, with the node. Any 
 tags added to the node are also added to the nodes in the provenance group.
 
+An updated implementation of the functionality of builders is the fused op, 
+a node that can replace itself with a subgraph. When the node is expanded 
+into a subgraph, a vector of values is returned, corresponding to outputs 
+of the original fused op; the tags of the fused op are added to all nodes 
+in the values in reverse dataflow direction, up to (though not including) the 
+input values of the fused op.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-. 

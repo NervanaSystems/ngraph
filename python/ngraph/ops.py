@@ -39,13 +39,14 @@ from ngraph.utils.input_validation import assert_list_of_ints
 from ngraph.utils.reduction import get_reduction_axes
 from ngraph.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
     NodeInput, ScalarData, as_node
-from ngraph.utils.types import get_element_type
+from ngraph.utils.types import get_element_type \
 
-
+ 
 @nameable_op
 def parameter(shape, dtype=np.float32, name=None):
     # type: (TensorShape, NumericType, str) -> Parameter
     """Return an ngraph Parameter object."""
+    
     assert_list_of_ints(shape, 'Parameter shape must be a list of integer values.')
     element_type = get_element_type(dtype)
     return Parameter(element_type, Shape(shape))
@@ -94,11 +95,12 @@ def shuffle_channels(data, axis, groups, name=None):  # type: (Node, int, int, s
 
     :code:`output` = reshape(:code:`data_trnasposed`, [N, C, H, W])
 
+
     For example:
 
     .. code-block:: python
 
-        Inputs: tensor of shape [1, 6, 2, 2]
+       Inputs: tensor of shape [1, 6, 2, 2]
 
                 data = [[[[ 0.,  1.], [ 2.,  3.]],
                          [[ 4.,  5.], [ 6.,  7.]],
@@ -110,7 +112,7 @@ def shuffle_channels(data, axis, groups, name=None):  # type: (Node, int, int, s
                 axis = 1
                 groups = 3
 
-        Output: tensor of shape [1, 6, 2, 2]
+       Output: tensor of shape [1, 6, 2, 2]
 
                 output = [[[[ 0.,  1.], [ 2.,  3.]],
                            [[ 8.,  9.], [10., 11.]],
@@ -993,6 +995,7 @@ def fake_quantize(data, input_low, input_high, output_low, output_high, levels, 
     Input floating point values are quantized into a discrete set of floating point values.
 
     .. code-block:: python
+
         if x <= input_low:
             output = output_low
         if x > input_high:
