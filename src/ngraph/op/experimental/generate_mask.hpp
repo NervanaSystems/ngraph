@@ -38,17 +38,6 @@ namespace ngraph
                 /// probability and training/inference mode
                 GenerateMask() = default;
 
-#if 0
-            /// Switch to dynamic arguments when all transformers have switched to using the node values
-            /// \brief Constructs a GenerateMask node with a given shape, seed,
-            /// probability and training/inference mode
-            GenerateMask(const Output<Node>& training,
-                         const Output<Node>& shape,
-                         const Output<Node>& probability,
-                         const Output<Node>& seed,
-                         const Output<Node>& use_seed,
-                         const element::Type& element_type);
-#endif
                 /// \brief Constructs a GenerateMask node with a given shape, seed,
                 /// probability and training/inference mode
                 GenerateMask(const Output<Node>& training,

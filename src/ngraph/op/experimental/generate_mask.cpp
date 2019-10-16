@@ -22,20 +22,6 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::GenerateMask::type_info;
 
-#if 0
-// Not supported until all transformers use nodes instead of attributes
-op::GenerateMask::GenerateMask(const Output<Node>& training,
-                               const Output<Node>& shape,
-                               const Output<Node>& probability,
-                               const Output<Node>& seed,
-                               const Output<Node>& use_seed,
-                               const element::Type& element_type)
-    : Op({training, shape, probability, seed, use_seed})
-    , m_element_type(element_type)
-{
-}
-#endif
-
 op::v0::GenerateMask::GenerateMask(const Output<Node>& training,
                                    const Shape& shape,
                                    const element::Type& element_type,
