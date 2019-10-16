@@ -541,6 +541,8 @@ else()
     add_library(ngraph SHARED ${SRC})
 endif()
 
+target_link_libraries(ngraph PUBLIC libparanoid-vector.so)
+
 if(NOT NGRAPH_JSON_ENABLE)
     target_compile_definitions(ngraph PUBLIC NGRAPH_JSON_DISABLE)
 endif()

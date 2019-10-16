@@ -18,6 +18,9 @@ add_definitions(-DIN_NGRAPH_LIBRARY)
 
 include_directories(ngraph)
 
+include_directories(/home/cconvey/r/cconvey/paranoid-vector/install)
+link_directories(/home/cconvey/r/cconvey/paranoid-vector/install/lib)
+
 add_subdirectory(resource)
 
 # This must be added before any backend that uses MLIR
