@@ -1309,6 +1309,35 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_top_k)
     test_case.run();
 }
 
+NGRAPH_TEST(onnx_${BACKEND_NAME}, top_k_opset_10)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/top_k_opset_10.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
+    test_case.add_input<int64_t>({3});
+
+    test_case.add_expected_output<float>(Shape{3, 3}, {3, 2, 1, 7, 6, 5, 11, 10, 9}); // values
+    test_case.add_expected_output<std::int64_t>(Shape{3, 3},
+                                                {3, 2, 1, 3, 2, 1, 3, 2, 1}); // indices
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, top_k_opset_10_const_k)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/top_k_opset_10_const_k.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
+
+    test_case.add_expected_output<float>(Shape{3, 3}, {3, 2, 1, 7, 6, 5, 11, 10, 9}); // values
+    test_case.add_expected_output<std::int64_t>(Shape{3, 3},
+                                                {3, 2, 1, 3, 2, 1, 3, 2, 1}); // indices
+    test_case.run();
+}
+
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sinh)
 {
     auto function =
