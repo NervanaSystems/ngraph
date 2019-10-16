@@ -116,8 +116,8 @@ namespace ngraph
                 /// \param pads_begin The padding-below sizes from forward-prop.
                 /// \param pads_end The padding-above sizes from forward-prop.
                 ConvolutionBackpropData(const Output<Node>& filters,
-                                        const Output<Node>& data_batch_shape,
                                         const Output<Node>& output_delta,
+                                        const Output<Node>& data_batch_shape,
                                         const Strides& strides,
                                         const Strides& dilations,
                                         const CoordinateDiff& pads_begin,
