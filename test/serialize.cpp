@@ -96,6 +96,32 @@ TEST(serialize, main)
     EXPECT_EQ((vector<float>{50, 72, 98, 128}), read_vector<float>(result));
 }
 
+TEST(serialize, main_attrs)
+{
+    // First create "f(A,B,C) = (A+B)*C".
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C}, "f");
+    auto results = serialize_attrs(f->get_results());
+    for (auto& attrs : deserialize_attrs(results))
+    {
+        EXPECT_EQ(size_t(attrs.first.rank()), shape.size());
+        EXPECT_EQ(size_t(attrs.first[0]), 2);
+        EXPECT_EQ(size_t(attrs.first[1]), 2);
+        EXPECT_EQ(element::f32, attrs.second);
+    }
+    auto params = serialize_attrs(f->get_parameters());
+    for (auto& attrs : deserialize_attrs(params))
+    {
+        EXPECT_EQ(size_t(attrs.first.rank()), shape.size());
+        EXPECT_EQ(size_t(attrs.first[0]), 2);
+        EXPECT_EQ(size_t(attrs.first[1]), 2);
+        EXPECT_EQ(element::f32, attrs.second);
+    }
+}
+
 TEST(serialize, friendly_name)
 {
     // First create "f(A,B,C) = (A+B)*C".

@@ -458,6 +458,37 @@ std::string ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t ind
     return ::serialize(func, indent, false);
 }
 
+template <typename T>
+std::string ngraph::serialize_attrs(const std::vector<std::shared_ptr<T>>& nodes)
+{
+    json attrs = json::array();
+    for (const auto& n : nodes)
+    {
+        json j;
+        j["type"] = write_element_type(n->output(0).get_element_type());
+        j["shape"] = write_partial_shape(n->get_output_partial_shape(0));
+        attrs.push_back(j);
+    }
+    return attrs.dump();
+}
+template std::string ngraph::serialize_attrs<ngraph::op::Result>(
+    const std::vector<std::shared_ptr<ngraph::op::Result>>& nodes);
+template std::string ngraph::serialize_attrs<ngraph::op::Parameter>(
+    const std::vector<std::shared_ptr<ngraph::op::Parameter>>& nodes);
+
+std::vector<std::pair<PartialShape, element::Type>>
+    ngraph::deserialize_attrs(const std::string& str)
+{
+    std::vector<std::pair<PartialShape, element::Type>> outs;
+    json js = json::parse(str);
+    for (auto& j : js)
+    {
+        auto s = read_partial_shape(j["shape"]);
+        auto t = read_element_type(j["type"]);
+        outs.emplace_back(s, t);
+    }
+    return outs;
+}
 shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
 {
     shared_ptr<Function> rc;
