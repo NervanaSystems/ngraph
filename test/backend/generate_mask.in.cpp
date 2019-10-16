@@ -99,15 +99,14 @@ NGRAPH_TEST(${BACKEND_NAME}, generate_mask2)
 
 NGRAPH_TEST(${BACKEND_NAME}, dyn_generate_mask)
 {
-    Shape scalar{};
     const unsigned int seed = 777;
     auto training = op::Constant::create(element::f32, Shape{}, {1});
     auto result_shape =
         make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
     auto gen_mask =
-        make_shared<op::v1::GenerateMask>(training, result_shape, element::f32, seed, 0.5, false);
+        make_shared<op::v1::GenerateMask>(training, result_shape, element::f32, seed, 0.5, true);
     auto gen_mask2 =
-        make_shared<op::v1::GenerateMask>(training, result_shape, element::f32, seed, 0.5, false);
+        make_shared<op::v1::GenerateMask>(training, result_shape, element::f32, seed, 0.5, true);
     auto f = make_shared<Function>(NodeVector{gen_mask, gen_mask2}, ParameterVector{result_shape});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
@@ -133,8 +132,8 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_generate_mask)
     handle->call_with_validate({result_tv1_2, result_tv2_2}, {shape_result});
     auto result1_2 = read_vector<float>(result_tv1_2);
     auto result2_2 = read_vector<float>(result_tv2_2);
-    ASSERT_FALSE(test::all_close_f(result1, result1_2));
+    ASSERT_TRUE(test::all_close_f(result1, result1_2));
     ASSERT_FALSE(std::any_of(result1_2.begin(), result1_2.end(), is_not_zero_or_one));
-    ASSERT_FALSE(test::all_close_f(result2, result2_2));
+    ASSERT_TRUE(test::all_close_f(result2, result2_2));
     ASSERT_FALSE(std::any_of(result2_2.begin(), result2_2.end(), is_not_zero_or_one));
 }

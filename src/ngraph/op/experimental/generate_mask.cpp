@@ -50,7 +50,7 @@ op::v0::GenerateMask::GenerateMask(const Output<Node>& training,
 shared_ptr<Node> op::v0::GenerateMask::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<GenerateMask>(
+    return make_shared<v0::GenerateMask>(
         new_args.at(0), m_shape, m_element_type, m_seed, m_probability, m_use_seed);
 }
 
@@ -94,7 +94,7 @@ op::v1::GenerateMask::GenerateMask(const Output<Node>& training,
 shared_ptr<Node> op::v1::GenerateMask::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<GenerateMask>(
+    return make_shared<v1::GenerateMask>(
         new_args.at(0), new_args.at(1), m_element_type, m_seed, m_probability, m_use_seed);
 }
 
