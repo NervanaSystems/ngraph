@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Sin::type_name{"Sin"};
+constexpr NodeTypeInfo op::Sin::type_info;
 
 op::Sin::Sin(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)

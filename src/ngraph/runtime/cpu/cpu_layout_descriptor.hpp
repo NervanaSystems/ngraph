@@ -50,7 +50,12 @@ namespace ngraph
                 void set_mkldnn_md(const mkldnn::memory::desc& md);
                 bool is_mkldnn_layout() const
                 {
+#if MKLDNN_VERSION_MAJOR < 1
                     return m_mkldnn_md.data.format != mkldnn::memory::format::format_undef;
+#else
+                    return static_cast<mkldnn::memory::format_kind>(m_mkldnn_md.data.format_kind) !=
+                           mkldnn::memory::format_kind::undef;
+#endif
                 }
                 bool is_row_major_layout();
 

@@ -15,11 +15,12 @@
 //*****************************************************************************
 
 #include "ngraph/op/experimental/generate_mask.hpp"
+#include "ngraph/op/constant.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-const string op::GenerateMask::type_name{"GenerateMask"};
+constexpr NodeTypeInfo op::GenerateMask::type_info;
 
 #if 0
 // Not supported until all transformers use nodes instead of attributes
@@ -53,6 +54,10 @@ op::GenerateMask::GenerateMask(const Output<Node>& training,
                  make_shared<op::Constant>(element::i32, Shape{}, std::vector<int32_t>{use_seed}));
     set_argument(3, make_shared<op::Constant>(element::u64, Shape{}, std::vector<uint64_t>{seed}));
     set_argument(4, make_shared<op::Constant>(element::f64, Shape{}, std::vector<double>{prob}));
+    add_provenance_group_member(input_value(1).get_node_shared_ptr());
+    add_provenance_group_member(input_value(2).get_node_shared_ptr());
+    add_provenance_group_member(input_value(3).get_node_shared_ptr());
+    add_provenance_group_member(input_value(4).get_node_shared_ptr());
     constructor_validate_and_infer_types();
 }
 

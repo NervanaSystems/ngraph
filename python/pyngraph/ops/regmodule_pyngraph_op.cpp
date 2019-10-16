@@ -49,6 +49,7 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Cos(m_op);
     regclass_pyngraph_op_Cosh(m_op);
     regclass_pyngraph_op_DepthToSpace(m_op);
+    regclass_pyngraph_op_Dequantize(m_op);
     regclass_pyngraph_op_Divide(m_op);
     regclass_pyngraph_op_Dot(m_op);
     regclass_pyngraph_op_Elu(m_op);
@@ -62,6 +63,7 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Greater(m_op);
     regclass_pyngraph_op_GreaterEq(m_op);
     regclass_pyngraph_op_GRN(m_op);
+    regclass_pyngraph_op_GroupConvolution(m_op);
     regclass_pyngraph_op_HardSigmoid(m_op);
     regclass_pyngraph_op_Less(m_op);
     regclass_pyngraph_op_LessEq(m_op);
@@ -86,11 +88,15 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Power(m_op);
     regclass_pyngraph_op_PRelu(m_op);
     regclass_pyngraph_op_Product(m_op);
+    regclass_pyngraph_op_Quantize(m_op);
+    regclass_pyngraph_op_QuantizedConvolution(m_op);
+    regclass_pyngraph_op_QuantizedDot(m_op);
     regclass_pyngraph_op_Relu(m_op);
     regclass_pyngraph_op_ReluBackprop(m_op);
     regclass_pyngraph_op_ReplaceSlice(m_op);
     regclass_pyngraph_op_Reshape(m_op);
     regclass_pyngraph_op_Reverse(m_op);
+    regclass_pyngraph_op_RNNCell(m_op);
     regclass_pyngraph_op_ScaleShift(m_op);
     regclass_pyngraph_op_Select(m_op);
     regclass_pyngraph_op_ShuffleChannels(m_op);

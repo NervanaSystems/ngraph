@@ -19,6 +19,7 @@
 #include "mean_variance_normalization.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/fused/mvn.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -47,9 +48,11 @@ namespace ngraph
                 NodeVector mean_variance_normalization(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
-                    auto axes = node.get_attribute_value<std::vector<size_t>>("axes", {0, 2, 3});
+                    auto axes = node.get_attribute_value<std::vector<int64_t>>("axes", {0, 2, 3});
+                    std::vector<std::size_t> valid_axes =
+                        common::validate_axes(node, axes, data->get_shape().size());
 
-                    return {std::make_shared<ngraph::op::MVN>(data, AxisSet(axes))};
+                    return {std::make_shared<ngraph::op::MVN>(data, AxisSet(valid_axes))};
                 }
 
             } // namespace set_9

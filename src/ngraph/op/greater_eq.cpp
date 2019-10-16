@@ -19,12 +19,12 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::GreaterEq::type_name{"GreaterEq"};
+constexpr NodeTypeInfo op::GreaterEq::type_info;
 
 op::GreaterEq::GreaterEq(const Output<Node>& arg0,
                          const Output<Node>& arg1,
-                         const AutoBroadcastSpec& autob)
-    : BinaryElementwiseComparison(arg0, arg1, autob)
+                         const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseComparison(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }

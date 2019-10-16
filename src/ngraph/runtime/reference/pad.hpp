@@ -69,7 +69,7 @@ namespace ngraph
                 {
                     const Coordinate& out_coord = *output_it;
 
-                    T v;
+                    T v(0);
 
                     switch (pad_mode)
                     {

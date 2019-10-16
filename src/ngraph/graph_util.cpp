@@ -28,7 +28,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
-#include "ngraph/op/result.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/provenance.hpp"
@@ -139,10 +138,12 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
         throw ngraph_error("Result nodes cannot be replaced.");
     }
 
-    if (target->get_users().empty())
-    {
-        throw ngraph_error("replacing an unreachable node");
-    }
+    NGRAPH_CHECK(!target->get_users().empty(),
+                 "Attempted to replace unreachable node '",
+                 *target,
+                 "'. Replacement: '",
+                 *replacement,
+                 "'");
 
     // Fix input/output descriptors
     NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
@@ -151,14 +152,20 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     {
         auto common_args = ngraph::find_common_args(target, replacement);
 
-        auto set_replacement_prov = [replacement](std::shared_ptr<Node> node) {
-            replacement->merge_provenance_tags_from(node);
+        std::set<string> removed_subgraph_tags;
+
+        auto set_replacement_prov = [&removed_subgraph_tags](std::shared_ptr<Node> node) {
+            for (auto tag : node->get_provenance_tags())
+            {
+                removed_subgraph_tags.insert(tag);
+            }
         };
 
         traverse_nodes({target}, set_replacement_prov, false, common_args);
+        replacement->add_provenance_tags(removed_subgraph_tags);
 
-        auto set_prov_new_nodes = [replacement](std::shared_ptr<Node> node) {
-            node->merge_provenance_tags_from(replacement);
+        auto set_prov_new_nodes = [&removed_subgraph_tags](std::shared_ptr<Node> node) {
+            node->add_provenance_tags(removed_subgraph_tags);
         };
 
         traverse_nodes({replacement}, set_prov_new_nodes, false, common_args);
@@ -177,6 +184,35 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
 
     replacement->add_node_control_dependents(target);
     target->clear_control_dependents();
+}
+
+void ngraph::replace_nodes(
+    const std::shared_ptr<Function>& f,
+    const unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Parameter>>&
+        parameter_replacement_map,
+    const unordered_map<shared_ptr<Node>, shared_ptr<Node>>& body_replacement_map)
+{
+    auto& params = f->get_parameters();
+
+    for (size_t i = 0; i < params.size(); i++)
+    {
+        if (parameter_replacement_map.count(params[i]) != 0 &&
+            parameter_replacement_map.at(params[i]) != params[i])
+        {
+            f->replace_parameter(i, parameter_replacement_map.at(params[i]));
+        }
+    }
+
+    for (auto& kv : body_replacement_map)
+    {
+        auto& k = kv.first;
+        auto& v = kv.second;
+
+        if (k != v)
+        {
+            f->replace_node(k, v);
+        }
+    }
 }
 
 // Check if all paths from X to a result go through Y
@@ -246,6 +282,8 @@ std::list<std::shared_ptr<ngraph::Node>>
             {
                 cloned_node->add_provenance_tag(tag);
             }
+            cloned_node->set_op_annotations(node->get_op_annotations());
+
             node_map[node.get()] = cloned_node;
         }
     }
@@ -276,7 +314,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function&
     ResultVector cloned_results;
     for (shared_ptr<Node> node : func.get_results())
     {
-        auto result = std::dynamic_pointer_cast<op::Result>(node_map.at(node.get()));
+        auto result = as_type_ptr<op::Result>(node_map.at(node.get()));
         if (!result)
         {
             throw ngraph_error("Results should be of type op::Result");
@@ -286,7 +324,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function&
     std::vector<std::shared_ptr<op::Parameter>> cloned_params;
     for (auto param : func.get_parameters())
     {
-        cloned_params.push_back(std::dynamic_pointer_cast<op::Parameter>(node_map.at(param.get())));
+        cloned_params.push_back(as_type_ptr<op::Parameter>(node_map.at(param.get())));
     }
 
     // create and return cloned function
@@ -295,7 +333,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function&
 
 bool ngraph::is_equal_to_const_value(std::string const_value, const Output<Node>& reduce_constant)
 {
-    if (auto rc = dynamic_pointer_cast<ngraph::op::Constant>(reduce_constant.get_node_shared_ptr()))
+    if (auto rc = as_type_ptr<ngraph::op::Constant>(reduce_constant.get_node_shared_ptr()))
     {
         auto cshape = rc->get_shape();
         size_t n = shape_size(cshape);
@@ -726,7 +764,7 @@ bool ngraph::check_for_cycles(const ngraph::Function* func,
         {
             is_bkwd_cycle = true;
             return true;
-        };
+        }
     }
 
     for (auto param : func->get_parameters())
@@ -738,8 +776,14 @@ bool ngraph::check_for_cycles(const ngraph::Function* func,
         {
             is_bkwd_cycle = false;
             return true;
-        };
+        }
     }
     // no cycles
     return false;
+}
+
+void ngraph::traverse_functions(std::shared_ptr<Function> p,
+                                std::function<void(std::shared_ptr<Function>)> f)
+{
+    f(p);
 }

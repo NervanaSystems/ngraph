@@ -62,7 +62,8 @@ namespace ngraph
                                                  output_type,
                                                  input0_axes,
                                                  input1_axes,
-                                                 output_axes);
+                                                 output_axes)
+                ->add_provenance_group_members_above({input0, input1});
         }
 
         shared_ptr<Node> QuantizedDotBiasBuilder(const Output<Node>& input,
@@ -102,7 +103,16 @@ namespace ngraph
                     bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
             }
             return make_shared<op::QuantizedDotBias>(
-                input, filters, mybias, requantization_scale, requantize, with_relu);
+                       input, filters, mybias, requantization_scale, requantize, with_relu)
+                ->add_provenance_group_members_above({input,
+                                                      filters,
+                                                      bias,
+                                                      min_input,
+                                                      max_input,
+                                                      min_filter,
+                                                      max_filter,
+                                                      min_output,
+                                                      max_output});
         }
     }
 }

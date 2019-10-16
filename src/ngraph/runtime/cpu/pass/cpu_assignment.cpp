@@ -77,6 +77,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Add)
                 {
+                    (void)external_function;
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg1_shape = node->get_input_shape(1);
                     auto arg0_rank = arg0_shape.size();
@@ -98,6 +99,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Concat)
                 {
+                    (void)external_function;
                     if ((node->get_input_element_type(0) == element::f32 ||
                          node->get_input_element_type(0) == element::i8 ||
                          node->get_input_element_type(0) == element::u8) &&
@@ -127,6 +129,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Convolution)
                 {
+                    (void)external_function;
                     if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::Convolution>(node))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -136,6 +139,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::GroupConvolution)
                 {
+                    (void)external_function;
                     if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::GroupConvolution>(node))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -145,6 +149,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::GroupConvolutionBias)
                 {
+                    (void)external_function;
                     if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::GroupConvolutionBias>(node))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -154,6 +159,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ConvolutionRelu)
                 {
+                    (void)external_function;
                     if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::ConvolutionRelu>(node))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -163,6 +169,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ConvolutionBiasAdd)
                 {
+                    (void)external_function;
                     auto convolution = static_cast<ngraph::op::ConvolutionBiasAdd*>(node);
 
                     if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::ConvolutionBiasAdd>(node))
@@ -180,6 +187,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::GetOutputElement)
                 {
+                    (void)external_function;
                     auto goe = static_cast<ngraph::op::GetOutputElement*>(node);
                     auto op_annotations =
                         std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -190,6 +198,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ConvolutionAdd)
                 {
+                    (void)external_function;
                     auto convolution = static_cast<ngraph::op::ConvolutionAdd*>(node);
 
                     if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::ConvolutionAdd>(node))
@@ -207,6 +216,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormInferenceRelu)
                 {
+                    (void)external_function;
                     if (mkldnn_utils::can_use_mkldnn_batchnorm_fprop(node))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -216,6 +226,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormTrainingRelu)
                 {
+                    (void)external_function;
                     if (mkldnn_utils::can_use_mkldnn_batchnorm_fprop(node))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -225,6 +236,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::DeconvolutionBias)
                 {
+                    (void)external_function;
                     auto convolution = static_cast<ngraph::op::DeconvolutionBias*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
@@ -259,6 +271,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ConvolutionBackpropData)
                 {
+                    (void)external_function;
                     auto convolution = static_cast<ngraph::op::ConvolutionBackpropData*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
@@ -284,6 +297,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ConvolutionBackpropFilters)
                 {
+                    (void)external_function;
                     auto convolution = static_cast<ngraph::op::ConvolutionBackpropFilters*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
@@ -309,6 +323,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ConvolutionBias)
                 {
+                    (void)external_function;
                     if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::ConvolutionBias>(node))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -318,6 +333,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ConvolutionBiasBackpropFiltersBias)
                 {
+                    (void)external_function;
                     auto convolution =
                         static_cast<ngraph::op::ConvolutionBiasBackpropFiltersBias*>(node);
 
@@ -343,6 +359,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::AvgPool)
                 {
+                    (void)external_function;
                     auto avg_pool = static_cast<ngraph::op::AvgPool*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
@@ -362,6 +379,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::AvgPoolBackprop)
                 {
+                    (void)external_function;
                     auto avg_pool = static_cast<ngraph::op::AvgPoolBackprop*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
@@ -379,6 +397,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::MaxPool)
                 {
+                    (void)external_function;
                     auto max_pool = static_cast<ngraph::op::MaxPool*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
@@ -389,7 +408,8 @@ namespace ngraph
                          (arg0_rank == 5 && max_pool->get_window_shape().size() == 3)) &&
                         (node->get_input_element_type(0) == element::f32 ||
                          node->get_input_element_type(0) == element::u8 ||
-                         node->get_input_element_type(0) == element::i8))
+                         node->get_input_element_type(0) == element::i8 ||
+                         node->get_input_element_type(0) == element::bf16))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -398,6 +418,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::MaxPoolWithIndices)
                 {
+                    (void)external_function;
                     auto max_pool = static_cast<ngraph::op::MaxPoolWithIndices*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
@@ -414,6 +435,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::MaxPoolBackprop)
                 {
+                    (void)external_function;
                     auto max_pool = static_cast<ngraph::op::MaxPoolBackprop*>(node);
 
                     auto arg1_shape = node->get_input_shape(1);
@@ -431,6 +453,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::MaxPoolWithIndicesBackprop)
                 {
+                    (void)external_function;
                     auto max_pool = static_cast<ngraph::op::MaxPoolWithIndicesBackprop*>(node);
 
                     auto arg1_shape = node->get_input_shape(1);
@@ -447,6 +470,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Relu)
                 {
+                    (void)external_function;
                     auto relu = static_cast<ngraph::op::Relu*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
@@ -471,6 +495,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ReplaceSlice)
                 {
+                    (void)external_function;
                     auto replace_slice = static_cast<ngraph::op::ReplaceSlice*>(node);
 
                     // ReplaceSlice is independent of data type. Hence not checking type
@@ -487,6 +512,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::UpdateSlice)
                 {
+                    (void)external_function;
                     auto update_slice = static_cast<ngraph::op::UpdateSlice*>(node);
 
                     auto op_annotations =
@@ -502,6 +528,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ScatterAdd)
                 {
+                    (void)external_function;
                     auto update_slice = static_cast<ngraph::op::ScatterAdd*>(node);
 
                     auto op_annotations =
@@ -517,6 +544,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::LRN)
                 {
+                    (void)external_function;
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg0_rank = arg0_shape.size();
                     auto result_shape = node->get_output_shape(0);
@@ -530,6 +558,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Sigmoid)
                 {
+                    (void)external_function;
                     if (node->get_input_element_type(0) == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -539,6 +568,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::SigmoidBackprop)
                 {
+                    (void)external_function;
                     if (node->get_input_element_type(0) == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -548,6 +578,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ReluBackprop)
                 {
+                    (void)external_function;
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg0_rank = arg0_shape.size();
                     auto result_shape = node->get_output_shape(0);
@@ -562,6 +593,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormTraining)
                 {
+                    (void)external_function;
                     if (mkldnn_utils::can_use_mkldnn_batchnorm_fprop(node))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -571,6 +603,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormInference)
                 {
+                    (void)external_function;
                     if (mkldnn_utils::can_use_mkldnn_batchnorm_fprop(node))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -580,6 +613,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormTrainingBackprop)
                 {
+                    (void)external_function;
                     if (mkldnn_utils::can_use_mkldnn_batchnorm_bprop(node))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -589,8 +623,10 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Lstm)
                 {
+                    (void)external_function;
                     auto src_layer_rank = node->get_input_shape(0).size();
                     auto src_iter_rank = node->get_input_shape(1).size();
+#if MKLDNN_VERSION_MAJOR < 1
                     auto weights_layer_rank = node->get_input_shape(2).size();
                     auto weights_iter_rank = node->get_input_shape(3).size();
                     auto bias_rank = node->get_input_shape(4).size();
@@ -601,13 +637,28 @@ namespace ngraph
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
+#else
+                    auto src_iter_c_rank = node->get_input_shape(2).size();
+                    auto weights_layer_rank = node->get_input_shape(3).size();
+                    auto weights_iter_rank = node->get_input_shape(4).size();
+                    auto bias_rank = node->get_input_shape(5).size();
+                    if ((src_layer_rank == 2 && src_iter_rank == 2 && src_iter_c_rank == 2 &&
+                         weights_layer_rank == 2 && weights_iter_rank == 2 && bias_rank == 1 &&
+                         node->get_input_element_type(0) == element::f32 &&
+                         node->get_input_element_type(1) == element::f32))
+                    {
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
+                    }
+#endif
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Rnn)
                 {
+                    (void)external_function;
                     auto src_layer_rank = node->get_input_shape(0).size();
                     auto src_iter_rank = node->get_input_shape(1).size();
+#if MKLDNN_VERSION_MAJOR < 1
                     auto weights_layer_rank = node->get_input_shape(2).size();
                     auto weights_iter_rank = node->get_input_shape(3).size();
                     auto bias_rank = node->get_input_shape(4).size();
@@ -618,11 +669,25 @@ namespace ngraph
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
+#else
+                    auto src_iter_c_rank = node->get_input_shape(2).size();
+                    auto weights_layer_rank = node->get_input_shape(3).size();
+                    auto weights_iter_rank = node->get_input_shape(4).size();
+                    auto bias_rank = node->get_input_shape(5).size();
+                    if ((src_layer_rank == 2 && src_iter_rank == 2 && src_iter_c_rank == 2 &&
+                         weights_layer_rank == 2 && weights_iter_rank == 2 && bias_rank == 1 &&
+                         node->get_input_element_type(0) == element::f32 &&
+                         node->get_input_element_type(1) == element::f32))
+                    {
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
+                    }
+#endif
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Softmax)
                 {
+                    (void)external_function;
                     auto softmax = static_cast<ngraph::op::Softmax*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
@@ -640,6 +705,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Slice)
                 {
+                    (void)external_function;
                     auto slice = static_cast<ngraph::op::Slice*>(node);
                     auto strides = slice->get_strides();
                     if (!is_strided(strides) && node->get_input_element_type(0) == element::f32)
@@ -651,6 +717,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BoundedRelu)
                 {
+                    (void)external_function;
                     auto bounded_relu = static_cast<ngraph::op::BoundedRelu*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
@@ -675,6 +742,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::CPULeakyRelu)
                 {
+                    (void)external_function;
                     auto leaky_relu = static_cast<ngraph::op::CPULeakyRelu*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
@@ -699,13 +767,14 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConvolution)
                 {
+                    (void)external_function;
                     auto qconv = static_cast<ngraph::op::QuantizedConvolution*>(node);
                     auto input_zero_point =
-                        dynamic_pointer_cast<ngraph::op::Constant>(qconv->get_argument(3));
+                        as_type_ptr<ngraph::op::Constant>(qconv->get_argument(3));
                     auto filter_zero_point =
-                        dynamic_pointer_cast<ngraph::op::Constant>(qconv->get_argument(5));
+                        as_type_ptr<ngraph::op::Constant>(qconv->get_argument(5));
                     auto output_zero_point =
-                        dynamic_pointer_cast<ngraph::op::Constant>(qconv->get_argument(7));
+                        as_type_ptr<ngraph::op::Constant>(qconv->get_argument(7));
                     if (node->get_input_element_type(0) == element::u8 &&
                         node->get_input_element_type(1) == element::i8)
                     {
@@ -725,18 +794,21 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConvolutionRelu)
                 {
+                    (void)external_function;
                     runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConvolutionBias)
                 {
+                    (void)external_function;
                     runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConvolutionBiasAdd)
                 {
+                    (void)external_function;
                     auto quantized_conv_bias =
                         static_cast<ngraph::op::QuantizedConvolutionBiasAdd*>(node);
                     auto op_annotations =
@@ -751,6 +823,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConvolutionBiasSignedAdd)
                 {
+                    (void)external_function;
                     auto quantized_conv_bias =
                         static_cast<ngraph::op::QuantizedConvolutionBiasSignedAdd*>(node);
                     auto op_annotations =
@@ -765,6 +838,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedDotBias)
                 {
+                    (void)external_function;
                     if (node->get_input_element_type(0) == element::u8 &&
                         node->get_input_element_type(1) == element::i8)
                     {
@@ -775,6 +849,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedMatmul)
                 {
+                    (void)external_function;
                     if (node->get_input_element_type(0) == element::u8 &&
                         node->get_input_element_type(1) == element::i8)
                     {
@@ -785,6 +860,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Dequantize)
                 {
+                    (void)external_function;
                     auto dequantize = static_cast<ngraph::op::Dequantize*>(node);
                     // TODO(nbpatel): Support dynamic offset via mkldnn
                     // Go through reference if the offset is not a constant
@@ -823,6 +899,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Quantize)
                 {
+                    (void)external_function;
                     auto quantize = static_cast<ngraph::op::Quantize*>(node);
                     // TODO(nbpatel): Support dynamic offset via mkldnn
                     // Go through reference if the offset is not a constant
@@ -872,6 +949,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Convert)
                 {
+                    (void)external_function;
                     auto convert = static_cast<ngraph::op::Convert*>(node);
                     if ((node->get_input_element_type(0) == element::i8 &&
                          node->get_output_element_type(0) == element::u8) ||

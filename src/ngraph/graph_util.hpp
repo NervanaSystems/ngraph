@@ -71,12 +71,9 @@ namespace ngraph
                         bool include_control_deps,
                         const NodeVector& subgraph_params = {});
 
-    inline void traverse_functions(std::shared_ptr<Function> p,
-                                   std::function<void(std::shared_ptr<Function>)> f)
-        NGRAPH_DEPRECATED("Replace with f(p)")
-    {
-        f(p);
-    };
+    void traverse_functions(std::shared_ptr<Function> p,
+                            std::function<void(std::shared_ptr<Function>)> f)
+        NGRAPH_DEPRECATED("Replace with f(p)");
 
     /// \brief Replace the node `target` with the node `replacement`, i.e.,
     ///        redirect all users and control dependencies of `target` to
@@ -213,6 +210,34 @@ namespace ngraph
     ///        shared_ptr<Node> M = make_shared<SomeUnaryOp>(new_N);
     ///        replace_node(N, M);
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
+
+    /// \brief Replace multiple nodes in a function.
+    /// \param f Function where replacement is taking place.
+    /// \param parameter_replacement_map A mapping from parameter shared pointers to parameter
+    ///                                  shared pointers. For each pair (k,v) in the map, parameter
+    ///                                  k is replaced by parameter v, except if k==v or k is not a
+    ///                                  parameter bound by f, in which case the pair (k,v) is
+    ///                                  ignored.
+    /// \param body_replacement_map A mapping from node shared pointers to node shared pointers.
+    ///                             For each pair (k,v) in the map, node k is replaced by node v,
+    ///                             except if k==v, the pair (k,v) is ignored.
+    ///                             Note that if k is a parameter, its users will be redirected to
+    ///                             v, but k will _not_ be replaced in the function's parameter
+    ///                             list.
+    ///
+    /// Limitations:
+    ///
+    ///    - No check is made that the replaced nodes in `parameter_replacement_map` are actually
+    ///      among the bound parameters of `f`. (If a parameter appears in the map that is not
+    ///      bound by `f`, it will be silently ignored.)
+    ///    - If a parameter node appears as a key in both `parameter_replacement_map` _and_ in
+    ///      `body_replacement_map`, behavior is unspecified.
+    void replace_nodes(
+        const std::shared_ptr<Function>& f,
+        const std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<op::Parameter>>&
+            parameter_replacement_map,
+        const std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>>&
+            body_replacement_map);
 
     NodeVector find_common_args(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 

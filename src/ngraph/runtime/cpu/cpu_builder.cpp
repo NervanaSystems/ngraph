@@ -112,7 +112,7 @@
 #include "ngraph/util.hpp"
 
 #ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/compiler.hpp"
+#include "contrib/mlir/compiler/compiler.hpp"
 #endif
 
 using namespace std;
@@ -142,7 +142,7 @@ namespace ngraph
                 auto& functors = external_function->get_functors();
                 const ngraph::op::Divide* divop = static_cast<const ngraph::op::Divide*>(node);
                 std::function<void(void*, void*, void*, size_t, bool, int)> kernel;
-                SELECT_KERNEL(kernel, args[0].get_element_type(), runtime::cpu::kernel::divide);
+                SELECT_KERNEL(kernel, args[0].get_element_type(), runtime::cpu::kernel::divide)
                 auto element_count = out[0].get_size();
                 auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
@@ -204,6 +204,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::And)
             {
+                (void)node;
                 auto& functors = external_function->get_functors();
 
                 auto element_count = out[0].get_size();
@@ -226,6 +227,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Or)
             {
+                (void)node;
                 auto& functors = external_function->get_functors();
 
                 auto element_count = out[0].get_size();
@@ -248,6 +250,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Xor)
             {
+                (void)node;
                 auto& functors = external_function->get_functors();
 
                 auto element_count = out[0].get_size();
@@ -347,7 +350,31 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Result)
             {
-                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::result);
+                if (args[0].get_element_type() == element::bf16)
+                {
+                    auto& functors = external_function->get_functors();
+                    std::function<void(void*, void*, size_t, int)> kernel;
+
+                    kernel = ngraph::runtime::cpu::kernel::result<bfloat16>;
+
+                    auto element_count = out[0].get_size();
+                    auto arg0_buffer_index =
+                        external_function->get_buffer_index(args[0].get_name());
+                    auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
+
+                    auto functor = [&, kernel, element_count, arg0_buffer_index, out0_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[out0_buffer_index],
+                               element_count,
+                               ectx->arena);
+                    };
+                    functors.emplace_back(functor);
+                }
+                else
+                {
+                    BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::result);
+                }
             }
 
             template <>
@@ -401,6 +428,8 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Constant)
             {
+                (void)args;
+                (void)out;
                 auto& functors = external_function->get_functors();
 
                 vector<size_t> dest_indices;
@@ -416,7 +445,7 @@ namespace ngraph
                     external_function->get_buffer_index(node->get_output_tensor(0).get_name());
                 auto size = node->get_output_tensor(0).size();
                 auto functor = [&, dest_indices, src_index, size](CPURuntimeContext* ctx,
-                                                                  CPUExecutionContext* ectx) {
+                                                                  CPUExecutionContext* /* ectx */) {
                     for (auto p : dest_indices)
                     {
                         memcpy(ctx->buffer_data[p], ctx->buffer_data[src_index], size);
@@ -448,8 +477,7 @@ namespace ngraph
             {
                 const ngraph::op::Divide* divop = static_cast<const ngraph::op::Divide*>(node);
                 std::function<void(void*, void*, void*, size_t, bool, int)> kernel;
-                SELECT_KERNEL(
-                    kernel, node->get_input_element_type(0), runtime::cpu::kernel::divide);
+                SELECT_KERNEL(kernel, node->get_input_element_type(0), runtime::cpu::kernel::divide)
                 auto element_count = shape_size(node->get_shape());
                 bool pythondiv = divop->is_pythondiv();
                 auto functor = [&, kernel, element_count, pythondiv](

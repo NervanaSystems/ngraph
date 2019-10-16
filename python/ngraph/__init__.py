@@ -45,6 +45,7 @@ from ngraph.ops import convolution_backprop_data
 from ngraph.ops import cos
 from ngraph.ops import cosh
 from ngraph.ops import depth_to_space
+from ngraph.ops import dequantize
 from ngraph.ops import divide
 from ngraph.ops import dot
 from ngraph.ops import elu
@@ -58,6 +59,7 @@ from ngraph.ops import get_output_element
 from ngraph.ops import greater
 from ngraph.ops import greater_eq
 from ngraph.ops import grn
+from ngraph.ops import group_convolution
 from ngraph.ops import hard_sigmoid
 from ngraph.ops import less
 from ngraph.ops import less_eq
@@ -81,10 +83,14 @@ from ngraph.ops import parameter
 from ngraph.ops import power
 from ngraph.ops import prod
 from ngraph.ops import prelu
+from ngraph.ops import quantize
+from ngraph.ops import quantized_convolution
+from ngraph.ops import quantized_dot
 from ngraph.ops import relu
 from ngraph.ops import replace_slice
 from ngraph.ops import reshape
 from ngraph.ops import reverse
+from ngraph.ops import rnn_cell
 from ngraph.ops import scale_shift
 from ngraph.ops import select
 from ngraph.ops import shuffle_channels

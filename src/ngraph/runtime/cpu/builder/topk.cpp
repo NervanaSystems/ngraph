@@ -52,6 +52,7 @@ namespace ngraph
                 auto out_shape = out[0].get_shape();
                 auto k = topk->get_k();
                 auto compute_max = topk->get_compute_max();
+                auto sort = topk->get_sort();
 
                 auto element_type = args[0].get_element_type();
                 if (element_type == element::f32)
@@ -64,10 +65,11 @@ namespace ngraph
                                    axis,
                                    k,
                                    compute_max,
+                                   sort,
                                    arg_buffer_index,
                                    out_indices_buffer_index,
                                    out_values_buffer_index](CPURuntimeContext* ctx,
-                                                            CPUExecutionContext* ectx) {
+                                                            CPUExecutionContext* /* ectx */) {
                             ngraph::runtime::reference::topk<float, int64_t>(
                                 static_cast<float*>(ctx->buffer_data[arg_buffer_index]),
                                 static_cast<int64_t*>(ctx->buffer_data[out_indices_buffer_index]),
@@ -76,7 +78,8 @@ namespace ngraph
                                 out_shape,
                                 axis,
                                 k,
-                                compute_max);
+                                compute_max,
+                                sort);
                         };
                     }
                     else
@@ -87,10 +90,11 @@ namespace ngraph
                                    axis,
                                    k,
                                    compute_max,
+                                   sort,
                                    arg_buffer_index,
                                    out_indices_buffer_index,
                                    out_values_buffer_index](CPURuntimeContext* ctx,
-                                                            CPUExecutionContext* ectx) {
+                                                            CPUExecutionContext* /* ectx */) {
                             ngraph::runtime::reference::topk<float, int32_t>(
                                 static_cast<float*>(ctx->buffer_data[arg_buffer_index]),
                                 static_cast<int32_t*>(ctx->buffer_data[out_indices_buffer_index]),
@@ -99,7 +103,8 @@ namespace ngraph
                                 out_shape,
                                 axis,
                                 k,
-                                compute_max);
+                                compute_max,
+                                sort);
                         };
                     }
                 }
@@ -113,10 +118,11 @@ namespace ngraph
                                    axis,
                                    k,
                                    compute_max,
+                                   sort,
                                    arg_buffer_index,
                                    out_indices_buffer_index,
                                    out_values_buffer_index](CPURuntimeContext* ctx,
-                                                            CPUExecutionContext* ectx) {
+                                                            CPUExecutionContext* /* ectx */) {
                             ngraph::runtime::reference::topk<double, int64_t>(
                                 static_cast<double*>(ctx->buffer_data[arg_buffer_index]),
                                 static_cast<int64_t*>(ctx->buffer_data[out_indices_buffer_index]),
@@ -125,7 +131,8 @@ namespace ngraph
                                 out_shape,
                                 axis,
                                 k,
-                                compute_max);
+                                compute_max,
+                                sort);
                         };
                     }
                     else
@@ -136,10 +143,11 @@ namespace ngraph
                                    axis,
                                    k,
                                    compute_max,
+                                   sort,
                                    arg_buffer_index,
                                    out_indices_buffer_index,
                                    out_values_buffer_index](CPURuntimeContext* ctx,
-                                                            CPUExecutionContext* ectx) {
+                                                            CPUExecutionContext* /* ectx */) {
                             ngraph::runtime::reference::topk<double, int32_t>(
                                 static_cast<double*>(ctx->buffer_data[arg_buffer_index]),
                                 static_cast<int32_t*>(ctx->buffer_data[out_indices_buffer_index]),
@@ -148,7 +156,8 @@ namespace ngraph
                                 out_shape,
                                 axis,
                                 k,
-                                compute_max);
+                                compute_max,
+                                sort);
                         };
                     }
                 }
@@ -162,10 +171,11 @@ namespace ngraph
                                    axis,
                                    k,
                                    compute_max,
+                                   sort,
                                    arg_buffer_index,
                                    out_indices_buffer_index,
                                    out_values_buffer_index](CPURuntimeContext* ctx,
-                                                            CPUExecutionContext* ectx) {
+                                                            CPUExecutionContext* /* ectx */) {
                             ngraph::runtime::reference::topk<int32_t, int64_t>(
                                 static_cast<int32_t*>(ctx->buffer_data[arg_buffer_index]),
                                 static_cast<int64_t*>(ctx->buffer_data[out_indices_buffer_index]),
@@ -174,7 +184,8 @@ namespace ngraph
                                 out_shape,
                                 axis,
                                 k,
-                                compute_max);
+                                compute_max,
+                                sort);
                         };
                     }
                     else
@@ -185,10 +196,11 @@ namespace ngraph
                                    axis,
                                    k,
                                    compute_max,
+                                   sort,
                                    arg_buffer_index,
                                    out_indices_buffer_index,
                                    out_values_buffer_index](CPURuntimeContext* ctx,
-                                                            CPUExecutionContext* ectx) {
+                                                            CPUExecutionContext* /* ectx */) {
                             ngraph::runtime::reference::topk<int32_t, int32_t>(
                                 static_cast<int32_t*>(ctx->buffer_data[arg_buffer_index]),
                                 static_cast<int32_t*>(ctx->buffer_data[out_indices_buffer_index]),
@@ -197,7 +209,8 @@ namespace ngraph
                                 out_shape,
                                 axis,
                                 k,
-                                compute_max);
+                                compute_max,
+                                sort);
                         };
                     }
                 }

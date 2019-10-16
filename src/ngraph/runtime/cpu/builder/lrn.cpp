@@ -44,31 +44,41 @@ namespace ngraph
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto lrn_desc = mkldnn_emitter->get_lrn_forward_desc(node);
+                    QUERY_SCRATCHPAD(lrn_forward, lrn_desc);
+
                     // LRN needs 3 primitives: input, result, and lrn_forward.
                     auto lrn_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(lrn_index);
 
                     functor = [&, lrn_desc, lrn_index, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_lrn_forward(
-                                ctx->mkldnn_primitives, lrn_desc, deps, lrn_index);
+                            mkldnn_emitter->build_lrn_forward(ctx->mkldnn_memories,
+                                                              ctx->mkldnn_primitives,
+                                                              ctx->mkldnn_scratchpad_mds,
+                                                              lrn_desc,
+                                                              deps,
+                                                              lrn_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, lrn_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, lrn_index, deps, cpu::mkldnn_utils::OpType::LRN);
                     };
                 }
                 else
                 {
+                    AxisSet axes = lrn->get_reduction_axes();
                     double alpha = lrn->get_alpha();
                     double beta = lrn->get_beta();
                     double bias = lrn->get_bias();
                     double nsize = lrn->get_nsize();
                     Shape arg_shape = args[0].get_shape();
+                    Shape axes_shape = args[1].get_shape();
 
                     auto element_type = lrn->get_element_type();
                     if (element_type == element::f32)
@@ -78,12 +88,14 @@ namespace ngraph
                                    beta,
                                    bias,
                                    arg_shape,
+                                   axes_shape,
                                    nsize,
                                    arg_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
+                                                     CPUExecutionContext* /* ectx */) {
                             ngraph::runtime::reference::lrn<float>(
                                 static_cast<float*>(ctx->buffer_data[arg_buffer_index]),
+                                axes,
                                 static_cast<float*>(ctx->buffer_data[out_buffer_index]),
                                 arg_shape,
                                 alpha,
@@ -99,12 +111,14 @@ namespace ngraph
                                    beta,
                                    bias,
                                    arg_shape,
+                                   axes_shape,
                                    nsize,
                                    arg_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
+                                                     CPUExecutionContext* /* ectx */) {
                             ngraph::runtime::reference::lrn<double>(
                                 static_cast<double*>(ctx->buffer_data[arg_buffer_index]),
+                                axes,
                                 static_cast<double*>(ctx->buffer_data[out_buffer_index]),
                                 arg_shape,
                                 alpha,
