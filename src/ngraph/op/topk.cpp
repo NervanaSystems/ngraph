@@ -40,6 +40,7 @@ op::v0::TopK::TopK(const Output<Node>& arg,
     , m_sort(sort)
 {
     add_provenance_group_member(input_value(1).get_node_shared_ptr());
+    add_provenance_group_member(input_value(2).get_node_shared_ptr());
     constructor_validate_and_infer_types();
 }
 
@@ -54,6 +55,7 @@ op::v0::TopK::TopK(const Output<Node>& arg,
     , m_compute_max(compute_max)
     , m_sort(sort)
 {
+    add_provenance_group_member(input_value(2).get_node_shared_ptr());
     constructor_validate_and_infer_types();
 }
 
@@ -91,6 +93,7 @@ void op::v0::TopK::set_k(size_t k)
     shared_ptr<Node> current_const =
         get_input_size() == 1 ? nullptr : input_value(1).get_node_shared_ptr();
     auto replacement_const = op::Constant::create(element::i64, Shape{1}, {k})->output(0);
+    this->input(1).replace_source_output(replacement_const);
     replace_provenance_group_member(current_const, replacement_const.get_node_shared_ptr());
 }
 
@@ -117,8 +120,10 @@ Dimension op::v0::TopK::get_top_k_axis_dynamic() const
 
 void op::v0::TopK::set_top_k_axis(size_t top_k_axis)
 {
-    this->input(2).replace_source_output(
-        op::Constant::create(element::i64, Shape{1}, {top_k_axis})->output(0));
+    shared_ptr<Node> current_const = input_value(2).get_node_shared_ptr();
+    auto replacement_const = op::Constant::create(element::i64, Shape{1}, {top_k_axis})->output(0);
+    this->input(2).replace_source_output(replacement_const);
+    replace_provenance_group_member(current_const, replacement_const.get_node_shared_ptr());
 }
 
 void op::v0::TopK::validate_and_infer_types()
