@@ -24,14 +24,14 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::TopK::type_info;
+constexpr NodeTypeInfo op::v0::TopK::type_info;
 
-op::TopK::TopK(const Output<Node>& arg,
-               size_t top_k_axis,
-               const element::Type& index_element_type,
-               size_t k,
-               bool compute_max,
-               SortType sort)
+op::v0::TopK::TopK(const Output<Node>& arg,
+                   size_t top_k_axis,
+                   const element::Type& index_element_type,
+                   size_t k,
+                   bool compute_max,
+                   SortType sort)
     : Op({arg,
           op::Constant::create(element::i64, Shape{1}, {k})->output(0),
           op::Constant::create(element::i64, Shape{1}, {top_k_axis})->output(0)})
@@ -43,12 +43,12 @@ op::TopK::TopK(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::TopK::TopK(const Output<Node>& arg,
-               const Output<Node>& k,
-               size_t top_k_axis,
-               const element::Type& index_element_type,
-               bool compute_max,
-               SortType sort)
+op::v0::TopK::TopK(const Output<Node>& arg,
+                   const Output<Node>& k,
+                   size_t top_k_axis,
+                   const element::Type& index_element_type,
+                   bool compute_max,
+                   SortType sort)
     : Op({arg, k, op::Constant::create(element::i64, Shape{1}, {top_k_axis})->output(0)})
     , m_index_element_type(index_element_type)
     , m_compute_max(compute_max)
@@ -57,12 +57,12 @@ op::TopK::TopK(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::TopK::TopK(const Output<Node>& arg,
-               const Output<Node>& k,
-               const Output<Node>& top_k_axis,
-               const element::Type& index_element_type,
-               bool compute_max,
-               SortType sort)
+op::v0::TopK::TopK(const Output<Node>& arg,
+                   const Output<Node>& k,
+                   const Output<Node>& top_k_axis,
+                   const element::Type& index_element_type,
+                   bool compute_max,
+                   SortType sort)
     : Op({arg, k, top_k_axis})
     , m_index_element_type(index_element_type)
     , m_compute_max(compute_max)
@@ -71,7 +71,7 @@ op::TopK::TopK(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-size_t op::TopK::get_k() const
+size_t op::v0::TopK::get_k() const
 {
     size_t k = 0;
     if (auto const_op = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr()))
@@ -86,7 +86,7 @@ size_t op::TopK::get_k() const
     return k;
 }
 
-void op::TopK::set_k(size_t k)
+void op::v0::TopK::set_k(size_t k)
 {
     shared_ptr<Node> current_const =
         get_input_size() == 1 ? nullptr : input_value(1).get_node_shared_ptr();
@@ -94,7 +94,7 @@ void op::TopK::set_k(size_t k)
     replace_provenance_group_member(current_const, replacement_const.get_node_shared_ptr());
 }
 
-size_t op::TopK::get_top_k_axis() const
+size_t op::v0::TopK::get_top_k_axis() const
 {
     auto d = get_top_k_axis_dynamic();
     NGRAPH_CHECK(d.is_static(),
@@ -102,7 +102,7 @@ size_t op::TopK::get_top_k_axis() const
     return static_cast<size_t>(d);
 }
 
-Dimension op::TopK::get_top_k_axis_dynamic() const
+Dimension op::v0::TopK::get_top_k_axis_dynamic() const
 {
     auto const_op = dynamic_pointer_cast<op::Constant>(input_value(2).get_node_shared_ptr());
     if (const_op)
@@ -115,13 +115,13 @@ Dimension op::TopK::get_top_k_axis_dynamic() const
     }
 }
 
-void op::TopK::set_top_k_axis(size_t top_k_axis)
+void op::v0::TopK::set_top_k_axis(size_t top_k_axis)
 {
     this->input(2).replace_source_output(
         op::Constant::create(element::i64, Shape{1}, {top_k_axis})->output(0));
 }
 
-void op::TopK::validate_and_infer_types()
+void op::v0::TopK::validate_and_infer_types()
 {
     const PartialShape& input_shape = get_input_partial_shape(0);
     Rank input_rank = input_shape.rank();
@@ -201,7 +201,7 @@ void op::TopK::validate_and_infer_types()
     set_output_type(1, input_element_type, output_shape);
 }
 
-shared_ptr<Node> op::TopK::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::TopK::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<TopK>(new_args.at(0),
@@ -212,7 +212,8 @@ shared_ptr<Node> op::TopK::copy_with_new_args(const NodeVector& new_args) const
                              m_sort);
 }
 
-void op::TopK::generate_adjoints(autodiff::Adjoints& /* adjoints */, const NodeVector& /* deltas */)
+void op::v0::TopK::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                     const NodeVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }
