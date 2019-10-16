@@ -78,6 +78,11 @@ namespace ngraph
             element::Type m_element_type;
             bool m_is_relevant_to_shapes;
         };
+
+        namespace v1
+        {
+            using op::Parameter;
+        }
     }
     using ParameterVector = std::vector<std::shared_ptr<op::Parameter>>;
 }

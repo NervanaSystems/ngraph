@@ -50,5 +50,10 @@ namespace ngraph
         private:
             double m_alpha;
         };
+
+        namespace v1
+        {
+            using op::Elu;
+        }
     } // namespace op
 } // namespace ngraph

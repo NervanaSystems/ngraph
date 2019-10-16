@@ -80,5 +80,11 @@ namespace ngraph
         private:
             ProposalAttrs m_attrs;
         };
+
+        namespace v1
+        {
+            using op::Proposal;
+            using op::ProposalAttrs;
+        }
     }
 }

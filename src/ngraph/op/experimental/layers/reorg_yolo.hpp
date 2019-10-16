@@ -43,5 +43,10 @@ namespace ngraph
         private:
             Strides m_strides;
         };
+
+        namespace v1
+        {
+            using op::ReorgYolo;
+        }
     }
 }

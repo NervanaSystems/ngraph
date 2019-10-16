@@ -55,5 +55,10 @@ namespace ngraph
             const double m_min;
             const double m_max;
         };
+
+        namespace v1
+        {
+            using op::Clamp;
+        }
     }
 }

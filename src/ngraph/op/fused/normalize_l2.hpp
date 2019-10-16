@@ -63,5 +63,10 @@ namespace ngraph
             float m_eps;
             EpsMode m_eps_mode;
         };
+
+        namespace v1
+        {
+            using op::NormalizeL2;
+        }
     }
 }

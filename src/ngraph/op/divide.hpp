@@ -62,6 +62,11 @@ namespace ngraph
         protected:
             bool m_pythondiv{true};
         };
+
+        namespace v1
+        {
+            using op::Divide;
+        }
     }
 
     std::shared_ptr<Node> operator/(const Output<Node>& arg0, const Output<Node>& arg1);

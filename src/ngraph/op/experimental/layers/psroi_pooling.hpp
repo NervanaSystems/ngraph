@@ -66,5 +66,10 @@ namespace ngraph
             int m_spatial_bins_y;
             std::string m_mode;
         };
+
+        namespace v1
+        {
+            using op::PSROIPooling;
+        }
     }
 }

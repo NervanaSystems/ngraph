@@ -38,5 +38,10 @@ namespace ngraph
 
             void validate_and_infer_types() override;
         };
+
+        namespace v1
+        {
+            using op::ShapeOf;
+        }
     }
 }

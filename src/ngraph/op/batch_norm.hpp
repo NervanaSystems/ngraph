@@ -200,5 +200,10 @@ namespace ngraph
 
             double m_epsilon;
         };
+
+        namespace v1
+        {
+            using op::BatchNormInference;
+        }
     }
 }

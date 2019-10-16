@@ -57,5 +57,11 @@ namespace ngraph
         private:
             InterpolateAttrs m_attrs;
         };
+
+        namespace v1
+        {
+            using op::Interpolate;
+            using op::InterpolateAttrs;
+        }
     }
 }

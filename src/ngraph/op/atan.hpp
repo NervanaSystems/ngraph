@@ -51,5 +51,10 @@ namespace ngraph
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
         };
+
+        namespace v1
+        {
+            using op::Atan;
+        }
     }
 }

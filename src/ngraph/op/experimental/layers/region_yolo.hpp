@@ -68,5 +68,10 @@ namespace ngraph
             int m_axis;
             int m_end_axis;
         };
+
+        namespace v1
+        {
+            using op::RegionYolo;
+        }
     }
 }

@@ -41,5 +41,10 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
         };
+
+        namespace v1
+        {
+            using op::Squeeze;
+        }
     }
 }

@@ -74,5 +74,11 @@ namespace ngraph
         private:
             DetectionOutputAttrs m_attrs;
         };
+
+        namespace v1
+        {
+            using op::DetectionOutput;
+            using op::DetectionOutputAttrs;
+        }
     }
 }

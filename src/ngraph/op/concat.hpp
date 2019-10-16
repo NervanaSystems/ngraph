@@ -61,5 +61,10 @@ namespace ngraph
                                            const NodeVector& deltas) override;
             size_t m_axis;
         };
+
+        namespace v1
+        {
+            using op::Concat;
+        }
     }
 }

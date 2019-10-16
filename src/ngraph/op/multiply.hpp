@@ -48,6 +48,11 @@ namespace ngraph
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
         };
+
+        namespace v1
+        {
+            using op::Multiply;
+        }
     };
 
     std::shared_ptr<Node> operator*(const Output<Node>& arg0, const Output<Node>& arg1);

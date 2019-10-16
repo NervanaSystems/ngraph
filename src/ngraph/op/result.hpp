@@ -52,6 +52,12 @@ namespace ngraph
         private:
             bool m_needs_default_layout{false};
         };
+
+        namespace v1
+        {
+            using op::Result;
+        }
+
     }
     using ResultVector = std::vector<std::shared_ptr<op::Result>>;
 }

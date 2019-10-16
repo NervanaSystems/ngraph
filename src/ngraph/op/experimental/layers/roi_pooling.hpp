@@ -54,5 +54,10 @@ namespace ngraph
             float m_spatial_scale;
             std::string m_method;
         };
+
+        namespace v1
+        {
+            using op::ROIPooling;
+        }
     }
 }
