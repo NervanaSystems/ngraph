@@ -1050,7 +1050,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             if (op_version == 1)
             {
-                auto data_batch_shape = node_js.at("data_batch_shape").get<vector<size_t>>();
                 auto strides = node_js.at("strides").get<vector<size_t>>();
                 auto dilations = node_js.at("dilations").get<vector<size_t>>();
                 auto pads_begin = node_js.at("pads_begin").get<vector<std::ptrdiff_t>>();

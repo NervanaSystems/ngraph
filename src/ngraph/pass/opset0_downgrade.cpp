@@ -99,12 +99,12 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
     case OP_TYPEID::ConvolutionBackpropData:
     {
         auto tmp = dynamic_cast<const op::v1::ConvolutionBackpropData*>(node.get());
-        NGRAPH_CHECK(node->input_value(0).get_node_shared_ptr()->is_constant());
+        NGRAPH_CHECK(node->input_value(2).get_node_shared_ptr()->is_constant());
         auto data_batch_shape =
-            static_pointer_cast<op::Constant>(node->input_value(0).get_node_shared_ptr())
+            static_pointer_cast<op::Constant>(node->input_value(2).get_node_shared_ptr())
                 ->get_shape_val();
-        const auto filters = node->input(1).get_source_output();
-        const auto output_delta = node->input(2).get_source_output();
+        const auto filters = node->input(0).get_source_output();
+        const auto output_delta = node->input(1).get_source_output();
         auto strides = tmp->get_strides();
         auto dilations = tmp->get_dilations();
         auto pads_begin = tmp->get_pads_begin();

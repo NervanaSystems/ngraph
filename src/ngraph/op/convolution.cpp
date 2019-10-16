@@ -139,7 +139,7 @@ void op::v1::Convolution::generate_adjoints(autodiff::Adjoints& adjoints, const 
 
     adjoints.add_delta(x,
                        make_shared<op::v1::ConvolutionBackpropData>(
-                           x, f, delta, m_strides, m_dilations, m_pads_begin, m_pads_end));
+                           f, delta, x, m_strides, m_dilations, m_pads_begin, m_pads_end));
 
     adjoints.add_delta(f,
                        make_shared<op::v1::ConvolutionBackpropFilters>(
@@ -152,14 +152,14 @@ shared_ptr<Node> op::v1::Convolution::get_default_value() const
     return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
 }
 
-op::v1::ConvolutionBackpropData::ConvolutionBackpropData(const Output<Node>& data_batch_shape,
-                                                         const Output<Node>& filters,
+op::v1::ConvolutionBackpropData::ConvolutionBackpropData(const Output<Node>& filters,
                                                          const Output<Node>& output_delta,
+                                                         const Output<Node>& data_batch_shape,
                                                          const Strides& strides,
                                                          const Strides& dilations,
                                                          const CoordinateDiff& pads_begin,
                                                          const CoordinateDiff& pads_end)
-    : Op({data_batch_shape, filters, output_delta})
+    : Op({filters, output_delta, data_batch_shape})
     , m_strides(strides)
     , m_dilations(dilations)
     , m_pads_begin(pads_begin)
@@ -171,7 +171,7 @@ op::v1::ConvolutionBackpropData::ConvolutionBackpropData(const Output<Node>& dat
 const Shape op::v1::ConvolutionBackpropData::get_data_batch_shape() const
 {
     Shape shape;
-    if (auto const_op = as_type<op::Constant>(input_value(0).get_node()))
+    if (auto const_op = as_type<op::Constant>(input_value(2).get_node()))
     {
         shape = const_op->get_shape_val();
     }
@@ -180,7 +180,7 @@ const Shape op::v1::ConvolutionBackpropData::get_data_batch_shape() const
 
 void op::v1::ConvolutionBackpropData::set_data_batch_shape(const Shape& shape)
 {
-    this->input(0).replace_source_output(
+    this->input(2).replace_source_output(
         op::Constant::create(element::i64, Shape{shape.size()}, shape)->output(0));
 }
 void op::v1::ConvolutionBackpropData::validate_and_infer_types()
@@ -219,7 +219,7 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
     PartialShape forward_result_shape;
     PartialShape data_batch_shape{PartialShape::dynamic()};
 
-    if (input_value(0).get_node_shared_ptr()->is_constant())
+    if (input_value(2).get_node_shared_ptr()->is_constant())
     {
         data_batch_shape = get_data_batch_shape();
     }
@@ -233,15 +233,14 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
         filters_et,
         ").");
 
-    forward_result_shape =
-        infer_convolution_forward(this,
-                                  data_batch_shape,
-                                  Strides(static_cast<size_t>(data_batch_shape.rank()) - 2, 0),
-                                  m_pads_begin,
-                                  m_pads_end,
-                                  filters_shape,
-                                  m_strides,
-                                  m_dilations);
+    forward_result_shape = infer_convolution_forward(this,
+                                                     data_batch_shape,
+                                                     Strides({1}),
+                                                     m_pads_begin,
+                                                     m_pads_end,
+                                                     filters_shape,
+                                                     m_strides,
+                                                     m_dilations);
 
     NODE_VALIDATION_CHECK(this,
                           forward_result_shape.compatible(delta_shape),
@@ -252,14 +251,14 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
                           delta_shape,
                           ").");
 
-    set_input_is_relevant_to_shape(0);
+    set_input_is_relevant_to_shape(2);
     set_output_type(0, forward_result_et, data_batch_shape);
 }
 
 void op::v1::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints,
                                                         const NodeVector& deltas)
 {
-    if (auto const_op = as_type<op::Constant>(input_value(0).get_node()))
+    if (auto const_op = as_type<op::Constant>(input_value(2).get_node()))
     {
     }
     else
