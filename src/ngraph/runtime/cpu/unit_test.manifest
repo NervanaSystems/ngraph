@@ -24,6 +24,3 @@ lrn_6D_across_2_axes
 
 # ONNX TopK with dynamic K
 top_k_opset_10
-
-# ONNX TopK with dynamic K
-top_k_opset_10
