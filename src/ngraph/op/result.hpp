@@ -57,7 +57,6 @@ namespace ngraph
         {
             using op::Result;
         }
-
     }
     using ResultVector = std::vector<std::shared_ptr<op::Result>>;
 }
