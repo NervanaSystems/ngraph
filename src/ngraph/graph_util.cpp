@@ -282,6 +282,8 @@ std::list<std::shared_ptr<ngraph::Node>>
             {
                 cloned_node->add_provenance_tag(tag);
             }
+            cloned_node->set_op_annotations(node->get_op_annotations());
+
             node_map[node.get()] = cloned_node;
         }
     }
