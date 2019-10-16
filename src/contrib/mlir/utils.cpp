@@ -25,7 +25,6 @@
 #include <llvm/Support/Debug.h>
 #include <mlir/IR/Dialect.h>
 
-
 static llvm::cl::opt<bool> clPrintIRAfterAll(
     "ngraph-print-ir-after-all",
     llvm::cl::init(false),

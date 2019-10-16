@@ -34,32 +34,23 @@ namespace ngraph
     {
         namespace ngmlir
         {
+            /// A CPU Runtime is an MLIR runtime that owns an MLIR context and a module
+            /// The module should be in LLVM dialect and ready to be lowered via an MLIR
+            /// ExecutionEngine
             class MLIRCPURuntime
             {
-                public:
-                                
-                void set_module(mlir::OwningModuleRef& module)
-                {
-                    m_module = std::move(module);
-                }
-
-                void set_module(mlir::ModuleOp& module)
-                {
-                    m_module = module;
-                }
+            public:
+                /// Sets the MLIR module that this runtime will own
+                void set_module(mlir::OwningModuleRef& module) { m_module = std::move(module); }
+                /// Overload with module op
+                void set_module(mlir::ModuleOp& module) { m_module = module; }
                 /// Executes a pre-compiled subgraph
                 void run(std::vector<void*>& externalTensors);
-                
-                mlir::OwningModuleRef& get_module()
-                {
-                    return m_module;
-                }
 
-                mlir::MLIRContext& get_context() 
-                {
-                    return m_context;
-                }
-                private:
+                /// Get the MLIR module that this runtime owns
+                mlir::OwningModuleRef& get_module() { return m_module; }
+                mlir::MLIRContext& get_context() { return m_context; }
+            private:
                 void bindArguments(std::vector<void*>& externalTensors);
                 void execute();
                 void cleanup();
@@ -70,7 +61,7 @@ namespace ngraph
                 /// Helper to allocate a mem ref object. Handles static shapes only for now.
                 mlir::StaticFloatMemRef* allocateMemrefDescriptor();
 
-                private:
+            private:
                 // Pointers to externally allocated memory for sub-graph's input and output tensors.
                 std::vector<void*>* m_externalTensors;
                 // Arguments for the MLIR function generated for the nGraph sub-graph.

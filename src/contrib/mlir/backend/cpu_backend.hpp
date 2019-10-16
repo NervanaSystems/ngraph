@@ -20,8 +20,8 @@
 #pragma once
 
 #include <memory>
-#include "llvm/Support/CodeGen.h"
 #include "backend.hpp"
+#include "llvm/Support/CodeGen.h"
 
 namespace llvm
 {
@@ -36,34 +36,30 @@ namespace ngraph
         {
             class MLIRCPUBackend : public MLIRBackend
             {
-                public:
+            public:
                 static void init();
 
-                MLIRCPUBackend(mlir::OwningModuleRef& module, mlir::MLIRContext& context) 
-                : MLIRBackend(module, context)
+                MLIRCPUBackend(mlir::OwningModuleRef& module, mlir::MLIRContext& context)
+                    : MLIRBackend(module, context)
                 {
                     m_kind = MLIRBackend::CPU;
-                }
-                
-                MLIRCPUBackend(mlir::ModuleOp& moduleOp, mlir::MLIRContext& context) 
-                : MLIRBackend(moduleOp, context)
-                {
-                    m_kind = MLIRBackend::CPU;
-                }
-                
-                virtual void codegen();
-                
-                static bool kindof(unsigned kind)
-                {
-                    return kind == MLIRBackend::CPU;
                 }
 
-                private:
+                MLIRCPUBackend(mlir::ModuleOp& moduleOp, mlir::MLIRContext& context)
+                    : MLIRBackend(moduleOp, context)
+                {
+                    m_kind = MLIRBackend::CPU;
+                }
+
+                virtual void codegen();
+
+                static bool kindof(unsigned kind) { return kind == MLIRBackend::CPU; }
+            private:
                 void optimizeNgDialect();
                 void lowerNgDialect();
                 void optimizeAffineDialect();
 
-                public:
+            public:
                 // JIT optimization level
                 static llvm::CodeGenOpt::Level mlirOptLevel;
 

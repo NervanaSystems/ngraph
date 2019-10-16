@@ -33,7 +33,7 @@ set(SRC
     core/pass/mlir_subgraph_extraction.cpp
     core/pass/mlir_subgraph_extraction.hpp
     runtime/cpu/memory_manager.cpp
-    runtime/cpu/runtime.cpp
+    runtime/cpu/cpu_runtime.cpp
     utils.cpp
 )
 

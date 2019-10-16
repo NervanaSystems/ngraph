@@ -32,8 +32,8 @@
 #include "ngraph/util.hpp"
 
 #ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/core/compiler.hpp"
 #include "contrib/mlir/backend/cpu_backend.hpp"
+#include "contrib/mlir/core/compiler.hpp"
 #endif
 
 using namespace ngraph;

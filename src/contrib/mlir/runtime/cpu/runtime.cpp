@@ -18,13 +18,10 @@
 // Follows nGraph naming convention for public APIs only, else MLIR naming convention.
 
 #include "runtime.hpp"
-#include "ngraph/check.hpp"
-#include "contrib/mlir/backend/cpu_backend.hpp"
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
 #include <llvm/IR/Module.h>
-#include <mlir/IR/Function.h>
 #include <llvm/Support/ErrorOr.h>
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Support/SourceMgr.h>
@@ -33,7 +30,9 @@
 #include <mlir/ExecutionEngine/ExecutionEngine.h>
 #include <mlir/ExecutionEngine/MemRefUtils.h>
 #include <mlir/ExecutionEngine/OptUtils.h>
-
+#include <mlir/IR/Function.h>
+#include "contrib/mlir/backend/cpu_backend.hpp"
+#include "ngraph/check.hpp"
 
 using llvm::SmallVector;
 using llvm::StringRef;
@@ -58,9 +57,10 @@ void MLIRCPURuntime::run(std::vector<void*>& externalTensors)
     // Create an MLIR execution engine. We use a null MLIR pass manager for now to make sure we
     // don't run MLIR passes that were already run. We also pass a default transformer created with
     // the default or user-provided optimization level.
-    auto llvmTransformer =
-        mlir::makeOptimizingTransformer(MLIRCPUBackend::mlirOptLevel, /*sizeLevel=*/0, MLIRCPUBackend::targetMachine.get());
-    auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvmTransformer, MLIRCPUBackend::mlirOptLevel);
+    auto llvmTransformer = mlir::makeOptimizingTransformer(
+        MLIRCPUBackend::mlirOptLevel, /*sizeLevel=*/0, MLIRCPUBackend::targetMachine.get());
+    auto maybeEngine = mlir::ExecutionEngine::create(
+        m_module.get(), llvmTransformer, MLIRCPUBackend::mlirOptLevel);
     NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
     m_engine = std::move(maybeEngine.get());
 
@@ -79,7 +79,7 @@ void MLIRCPURuntime::bindArguments(std::vector<void*>& externalTensors)
     NGRAPH_CHECK(func && !func.getBlocks().empty(), "Function not found");
 
     // Set external arguments
-     m_externalTensors = &externalTensors;
+    m_externalTensors = &externalTensors;
 
     // Create list with a type-erased double pointer for each invocation arguments.
     // We currently use 'allocateMemrefArgs', which creates the arguments list per call ABI (see
@@ -128,7 +128,6 @@ void MLIRCPURuntime::cleanup()
         free(arg);
     }
 }
-
 
 // The current call ABI takes a single arg pointer (argPtr) pointing to a list of args.
 // Each arg is a  pointer to a StaticFloatMemRef which contains a data pointer

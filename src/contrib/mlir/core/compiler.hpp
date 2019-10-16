@@ -20,9 +20,9 @@
 #pragma once
 
 #include "contrib/mlir/runtime/cpu/memory_manager.hpp"
-#include "ngraph/node.hpp"
 #include "ngraph/check.hpp"
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/node.hpp"
 
 #include <mlir/ExecutionEngine/MemRefUtils.h>
 #include <mlir/IR/Builders.h>
@@ -64,19 +64,16 @@ namespace ngraph
                 using TensorList = std::vector<descriptor::Tensor*>;
                 using TypeList = llvm::SmallVector<mlir::Type, 4>;
 
-                MLIRCompiler(const ngraph::op::CompiledKernel* compiled_kernel, mlir::MLIRContext& context)
-                    : m_compiledKernel(compiled_kernel),
-                    m_context(context)
+                MLIRCompiler(const ngraph::op::CompiledKernel* compiled_kernel,
+                             mlir::MLIRContext& context)
+                    : m_compiledKernel(compiled_kernel)
+                    , m_context(context)
                 {
                 }
 
                 /// Compiles a subgraph with MLIR
                 void compile();
-                mlir::OwningModuleRef& get_module()
-                {
-                    return m_module;
-                }
-                
+                mlir::OwningModuleRef& get_module() { return m_module; }
             private:
                 struct TensorInfo
                 {
@@ -143,7 +140,6 @@ namespace ngraph
                 // use for MLIR dialect gen
                 TensorToInfoMap m_tensorToValueMap;
                 static const MLIRCompOpMap opDispatcher;
-
             };
         }
     }

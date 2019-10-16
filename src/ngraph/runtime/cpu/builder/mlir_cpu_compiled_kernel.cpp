@@ -16,8 +16,8 @@
 
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 
-#include "contrib/mlir/core/compiler.hpp"
 #include "contrib/mlir/backend/cpu_backend.hpp"
+#include "contrib/mlir/core/compiler.hpp"
 #include "contrib/mlir/runtime/cpu/runtime.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
@@ -77,10 +77,13 @@ namespace ngraph
                     {
                         // Compile the sub-graph and create a new runtime
                         // We must create an MLIRContext that out lives the compilation/execution
-                        // The runtime contains the context and gets store in the CK cache 
+                        // The runtime contains the context and gets store in the CK cache
 
-                        ctx->mlir_runtimes.emplace(std::piecewise_construct, std::make_tuple(compiled_kernel), std::make_tuple());
-                        MLIRCPURuntime& mlir_runtime = ctx->mlir_runtimes.find(compiled_kernel)->second;
+                        ctx->mlir_runtimes.emplace(std::piecewise_construct,
+                                                   std::make_tuple(compiled_kernel),
+                                                   std::make_tuple());
+                        MLIRCPURuntime& mlir_runtime =
+                            ctx->mlir_runtimes.find(compiled_kernel)->second;
 
                         mlir::MLIRContext& context = mlir_runtime.get_context();
 
@@ -88,14 +91,14 @@ namespace ngraph
                         mlir_compiler.compile();
                         MLIRCPUBackend mlir_backend(mlir_compiler.get_module(), context);
                         mlir_backend.codegen();
-                        
+
                         mlir_runtime.set_module(mlir_backend.get_module());
                         mlir_runtime.run(ptr_args);
                     }
                     else
                     {
                         MLIRCPURuntime& mlir_runtime = it->second;
-                        mlir_runtime.run(ptr_args);    
+                        mlir_runtime.run(ptr_args);
                     }
                 };
 

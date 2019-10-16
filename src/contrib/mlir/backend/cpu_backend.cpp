@@ -18,10 +18,10 @@
 // Follows nGraph naming convention for public APIs only, else MLIR naming convention.
 
 #include "cpu_backend.hpp"
-#include "ngraph/check.hpp"
 #include "contrib/mlir/backend/pass/affine_lowerer.hpp"
-#include "contrib/mlir/utils.hpp"
 #include "contrib/mlir/backend/pass/memory_optimization.hpp"
+#include "contrib/mlir/utils.hpp"
+#include "ngraph/check.hpp"
 
 // TODO: Clean up unneeded files
 #include <llvm/ADT/STLExtras.h>
@@ -44,7 +44,6 @@
 #include <mlir/Target/LLVMIR.h>
 #include <mlir/Transforms/DialectConversion.h>
 #include <mlir/Transforms/Passes.h>
-
 
 #define DEBUG_TYPE "mlir-cpu-backend"
 
@@ -207,10 +206,11 @@ void MLIRCPUBackend::lowerNgDialect()
     target.addLegalOp<mlir::ModuleOp, mlir::ModuleTerminatorOp>();
     target.addDynamicallyLegalOp<mlir::FuncOp>(
         [&](mlir::FuncOp op) { return llvmConverter.isSignatureLegal(op.getType()); });
-        
-    auto result = mlir::applyFullConversion(m_module.get(), target, std::move(patterns), &llvmConverter);
+
+    auto result =
+        mlir::applyFullConversion(m_module.get(), target, std::move(patterns), &llvmConverter);
     NGRAPH_CHECK(succeeded(result), "Standard to LLVM dialect conversion failed");
-    
+
     dumpMlirModule("LLVM-IR Dialect Conversion", m_module.get());
 }
 

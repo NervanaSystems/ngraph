@@ -17,21 +17,19 @@
 // NOTE: This file follows nGraph format style.
 // Follows nGraph naming convention for public APIs only, else MLIR naming convention.
 
-#include "ngraph/check.hpp"
-#include "cpu_backend.hpp"
 #include <memory>
+#include "cpu_backend.hpp"
+#include "ngraph/check.hpp"
 
 using namespace ngraph::runtime::ngmlir;
 
-/// Factory method to create new backends of certain kind. 
-template<typename ...T>
+/// Factory method to create new backends of certain kind.
+template <typename... T>
 static std::shared_ptr<MLIRBackend> MLIRBackend::create_backend(Kind kind, T&&... args)
 {
     switch (kind)
     {
-        case MLIRBackend::CPU:
-            return std::make_shared<MLIRCPUBackend>(std::forward<T>(args)...);
-        default:
-            NGRAPH_UNREACHABLE("Unsupported MLIR backend");
+    case MLIRBackend::CPU: return std::make_shared<MLIRCPUBackend>(std::forward<T>(args)...);
+    default: NGRAPH_UNREACHABLE("Unsupported MLIR backend");
     }
 }
