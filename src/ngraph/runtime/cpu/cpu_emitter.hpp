@@ -23,6 +23,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -144,7 +145,6 @@ namespace ngraph
         class Or;
         class Xor;
         class CompiledKernel;
-        class GenerateMask;
         class Dropout;
         class Dequantize;
         class Quantize;
