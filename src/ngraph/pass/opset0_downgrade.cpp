@@ -25,6 +25,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/topk.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -192,6 +193,43 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         {
             replace_node(node, replacement_node);
         }
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::TopK:
+    {
+        const auto tmp = as_type_ptr<op::v1::TopK>(node);
+        const auto axis = tmp->get_axis();
+        const auto sort_type = tmp->get_sort_type();
+        const auto index_elem_type = tmp->get_index_element_type();
+
+        bool comnpute_max;
+        switch (tmp->get_mode())
+        {
+        case op::v1::TopK::Mode::MAX:
+            comnpute_max = true;
+            break;
+        case op::v1::TopK::Mode::MIN:
+            comnpute_max = false;
+            break;
+        default:
+            NGRAPH_CHECK(true,
+                "Mode ", static_cast<int>(tmp->get_mode()), " is not supported during TopK:1 to TopK:0 conversion. Node: ", *node);
+            break;
+        }
+
+        const auto arg_node = node->input_value(0);
+        const auto k_node = node->input_value(1);
+
+        auto replacement_node =
+            make_shared<op::v0::TopK>(arg_node,
+                                      k_node,
+                                      axis,
+                                      index_elem_type,
+                                      comnpute_max,
+                                      sort_type);
+
+        replace_node(node, replacement_node);
         modified = true;
         break;
     }

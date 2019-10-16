@@ -24,9 +24,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::TopK::type_info;
+constexpr NodeTypeInfo op::v0::TopK::type_info;
 
-op::TopK::TopK(const Output<Node>& arg,
+op::v0::TopK::TopK(const Output<Node>& arg,
                size_t top_k_axis,
                const element::Type& index_element_type,
                size_t k,
@@ -42,7 +42,7 @@ op::TopK::TopK(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::TopK::TopK(const Output<Node>& arg,
+op::v0::TopK::TopK(const Output<Node>& arg,
                const Output<Node>& k,
                size_t top_k_axis,
                const element::Type& index_element_type,
@@ -57,7 +57,7 @@ op::TopK::TopK(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-size_t op::TopK::get_k() const
+size_t op::v0::TopK::get_k() const
 {
     size_t k = 0;
     if (auto const_op = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr()))
@@ -71,7 +71,7 @@ size_t op::TopK::get_k() const
     return k;
 }
 
-void op::TopK::set_k(size_t k)
+void op::v0::TopK::set_k(size_t k)
 {
     shared_ptr<Node> current_const =
         get_input_size() == 1 ? nullptr : input_value(1).get_node_shared_ptr();
@@ -79,7 +79,7 @@ void op::TopK::set_k(size_t k)
     replace_provenance_group_member(current_const, replacement_const.get_node_shared_ptr());
 }
 
-void op::TopK::validate_and_infer_types()
+void op::v0::TopK::validate_and_infer_types()
 {
     const PartialShape& input_shape = get_input_partial_shape(0);
     Rank input_rank = input_shape.rank();
@@ -129,14 +129,14 @@ void op::TopK::validate_and_infer_types()
     set_output_type(1, input_element_type, output_shape);
 }
 
-shared_ptr<Node> op::TopK::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::TopK::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<TopK>(
+    return make_shared<v0::TopK>(
         new_args.at(0), new_args.at(1), m_top_k_axis, m_index_element_type, m_compute_max, m_sort);
 }
 
-void op::TopK::generate_adjoints(autodiff::Adjoints& /* adjoints */, const NodeVector& /* deltas */)
+void op::v0::TopK::generate_adjoints(autodiff::Adjoints& /* adjoints */, const NodeVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }
