@@ -39,7 +39,8 @@ from ngraph.utils.input_validation import assert_list_of_ints
 from ngraph.utils.reduction import get_reduction_axes
 from ngraph.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
     NodeInput, ScalarData, as_node
-from ngraph.utils.types import get_element_type \
+
+from ngraph.utils.types import get_element_type
 
  
 @nameable_op
