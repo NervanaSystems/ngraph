@@ -28,7 +28,7 @@ static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::C
 {
     vector<char> out_vec(shape_size(reduction_node->get_shape()));
 
-    if (auto all = dynamic_pointer_cast<::ngraph::op::All>(reduction_node))
+    if (auto all = as_type_ptr<::ngraph::op::All>(reduction_node))
     {
         runtime::reference::all(constant->get_vector<char>().data(),
                                 out_vec.data(),
@@ -36,7 +36,7 @@ static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::C
                                 reduction_node->get_shape(),
                                 all->get_reduction_axes());
     }
-    else if (auto any = dynamic_pointer_cast<::ngraph::op::Any>(reduction_node))
+    else if (auto any = as_type_ptr<::ngraph::op::Any>(reduction_node))
     {
         runtime::reference::any(constant->get_vector<char>().data(),
                                 out_vec.data(),

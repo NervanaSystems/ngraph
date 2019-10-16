@@ -30,6 +30,7 @@
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
+#include "util/test_case.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
 
@@ -418,4 +419,20 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_split_variable_parts_2d)
         EXPECT_EQ(outputs[i].size(), expected_outputs[i].size());
         EXPECT_TRUE(test::all_close_f(outputs[i], expected_outputs[i]));
     }
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_expand_static_shape)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/expand_static_shape.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    // input data shape (3,1)
+    test_case.add_input(std::vector<float>{1, 2, 3});
+
+    test_case.add_expected_output<float>(Shape{2, 3, 6},
+                                         {1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+                                          1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3});
+
+    test_case.run();
 }

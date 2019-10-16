@@ -36,7 +36,7 @@ namespace ngraph
         /// \param path The path to the output file
         std::string get_directory(const std::string& path);
 
-        /// \brief Serialize a Function to as a json file
+        /// \brief Joins multiple paths into a single path
         /// \param s1 Left side of path
         /// \param s2 Right side of path
         std::string path_join(const std::string& s1, const std::string& s2);

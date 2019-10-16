@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Exp::type_name{"Exp"};
+constexpr NodeTypeInfo op::Exp::type_info;
 
 op::Exp::Exp(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)

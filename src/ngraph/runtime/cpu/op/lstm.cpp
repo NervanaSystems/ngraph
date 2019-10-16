@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const std::string op::Lstm::type_name{"Lstm"};
+constexpr NodeTypeInfo op::Lstm::type_info;
 
 #if MKLDNN_VERSION_MAJOR >= 1
 shared_ptr<Node> op::Lstm::copy_with_new_args(const NodeVector& new_args) const

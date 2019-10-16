@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::ArgMax::type_name{"ArgMax"};
+constexpr NodeTypeInfo op::ArgMax::type_info;
 
 op::ArgMax::ArgMax(const Output<Node>& arg, size_t axis, const element::Type& index_element_type)
     : op::util::IndexReduction(arg, axis, index_element_type)

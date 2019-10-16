@@ -905,7 +905,7 @@ TEST(all_close_f, inf_nan)
 
 TEST(all_close_f, double_inf_nan)
 {
-    double zero = 0.f;
+    double zero = 0;
     double infinity = numeric_limits<double>::infinity();
     double neg_infinity = -numeric_limits<double>::infinity();
     double quiet_nan = numeric_limits<double>::quiet_NaN();

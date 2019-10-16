@@ -42,7 +42,7 @@ ngraph::runtime::plaidml::pass::ConcatSplit::ConcatSplit()
             while (b != e)
             {
                 NodeVector::iterator p;
-                if (e - b < kMaxConcatInputs)
+                if (e < b + kMaxConcatInputs)
                 {
                     p = e;
                 }

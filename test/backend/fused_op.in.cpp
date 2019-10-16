@@ -566,6 +566,33 @@ NGRAPH_TEST(${BACKEND_NAME}, group_conv_input_data_variation)
     EXPECT_EQ(expected, read_vector<float>(result0));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, group_conv_groups_included_in_shape)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 4, 2, 2});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 1, 2, 1, 1});
+    auto group_conv = make_shared<op::GroupConvolution>(data,
+                                                        filters,
+                                                        Strides{1, 1},
+                                                        Strides{1, 1},
+                                                        CoordinateDiff{0, 0},
+                                                        CoordinateDiff{0, 0},
+                                                        Strides{1, 1});
+    auto f0 = make_shared<Function>(NodeVector{group_conv}, ParameterVector{data, filters});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, Shape{1, 4, 2, 2});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+    auto b = backend->create_tensor(element::f32, Shape{2, 1, 2, 1, 1});
+    copy_data(b, vector<float>{1, 2, 3, 4});
+    auto result0 = backend->create_tensor(element::f32, Shape{1, 2, 2, 2});
+    auto handle = backend->compile(f0);
+    handle->call_with_validate({result0}, {a, b});
+    vector<float> expected{11, 14, 17, 20, 79, 86, 93, 100};
+    EXPECT_EQ(expected, read_vector<float>(result0));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, space_to_depth)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{1, 2, 4, 4});
@@ -730,6 +757,61 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_123axes_5d)
                      0.18472293f, 0.19827265f, 0.210042f,   0.26388991f, 0.27262488f, 0.280056f,
                      0.34305686f, 0.34697714f, 0.35007f,    0.42222384f, 0.42132938f, 0.420084f,
                      0.50139081f, 0.49568161f, 0.49009803f, 0.58055776f, 0.57003385f, 0.560112f});
+    test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_c_2x2_shape)
+{
+    Shape data_shape{2, 2};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    const auto axes = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{1});
+    float eps{1e-6f};
+    auto eps_mode = op::EpsMode::ADD;
+
+    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
+    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data});
+
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    vector<float> input_data(shape_size(data_shape));
+    iota(begin(input_data), end(input_data), 1);
+
+    test_case.add_input<float>(input_data);
+
+    test_case.add_expected_output<float>(data_shape,
+                                         {0.44721353f, 0.89442706f, 0.60000002f, 0.80000001f});
+
+    test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_c_2x4_shape)
+{
+    Shape data_shape{2, 4};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    const auto axes = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{1});
+    float eps{1e-6f};
+    auto eps_mode = op::EpsMode::ADD;
+
+    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
+    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data});
+
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    vector<float> input_data(shape_size(data_shape));
+    iota(begin(input_data), end(input_data), 1);
+
+    test_case.add_input<float>(input_data);
+
+    test_case.add_expected_output<float>(data_shape,
+                                         {0.18257418f,
+                                          0.36514837f,
+                                          0.54772252f,
+                                          0.73029673f,
+                                          0.37904903f,
+                                          0.45485884f,
+                                          0.53066862f,
+                                          0.60647845f});
+
     test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
 

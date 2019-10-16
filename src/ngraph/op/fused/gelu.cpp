@@ -29,7 +29,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Gelu::type_name{"Gelu"};
+constexpr NodeTypeInfo op::Gelu::type_info;
 
 op::Gelu::Gelu(const Output<Node>& data)
     : FusedOp({data})
@@ -83,7 +83,7 @@ void op::Gelu::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector&
     adjoints.add_delta(x, delta * (make_shared<op::GeluBackpropFactor>(x)));
 }
 
-const string op::GeluBackpropFactor::type_name{"GeluBackpropFactor"};
+constexpr NodeTypeInfo op::GeluBackpropFactor::type_info;
 
 op::GeluBackpropFactor::GeluBackpropFactor(const Output<Node>& x)
     : FusedOp({x})

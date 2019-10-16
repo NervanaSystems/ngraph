@@ -31,9 +31,10 @@ namespace ngraph
             {
                 inline NodeVector greater(const Node& node)
                 {
-                    NodeVector ng_inputs{ngraph::op::numpy_style_broadcast(node.get_ng_inputs())};
-                    return {
-                        std::make_shared<ngraph::op::Greater>(ng_inputs.at(0), ng_inputs.at(1))};
+                    return {std::make_shared<ngraph::op::Greater>(
+                        node.get_ng_inputs().at(0),
+                        node.get_ng_inputs().at(1),
+                        ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY))};
                 }
 
             } // namespace set_1

@@ -27,7 +27,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::NormalizeL2::type_name{"NormalizeL2"};
+constexpr NodeTypeInfo op::NormalizeL2::type_info;
 
 op::NormalizeL2::NormalizeL2(const Output<Node>& data,
                              const Output<Node>& axes,
@@ -53,8 +53,8 @@ void op::NormalizeL2::pre_validate_and_infer_types()
     if (axes_rank.is_static())
     {
         NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(axes_rank) == 1,
-                              "Input axes must have rank equals 1 (axes rank: ",
+                              static_cast<size_t>(axes_rank) <= 1,
+                              "Input axes must be scalar or have rank equal to 1 (axes rank: ",
                               axes_rank,
                               ").");
 
@@ -80,7 +80,7 @@ AxisSet op::NormalizeL2::get_reduction_axes() const
 {
     AxisSet axes;
     auto axes_input_node = input_value(1).get_node_shared_ptr();
-    if (auto const_op = dynamic_pointer_cast<op::Constant>(axes_input_node))
+    if (auto const_op = as_type_ptr<op::Constant>(axes_input_node))
     {
         axes = const_op->get_axis_set_val();
     }
@@ -97,7 +97,7 @@ NodeVector op::NormalizeL2::decompose_op() const
     // Calculate l2 norm across axes determined by axes input
     auto builder_bias_mode =
         (m_eps_mode == EpsMode::MAX) ? builder::BiasMode::MAX : builder::BiasMode::ADD;
-    Output<Node> norm = builder::l2_norm(data, reduction_axes, m_eps, builder_bias_mode);
+    Output<Node> norm = builder::l2_norm(data, reduction_axes, m_eps, builder_bias_mode, true);
 
     data = make_shared<op::Divide>(data, norm, AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 
