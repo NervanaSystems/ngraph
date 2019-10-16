@@ -63,7 +63,10 @@ namespace ngraph
             /// \param onehot Node that produces OneHot Labels from fprop
             SoftmaxCrossEntropyBackprop(const Output<Node>& delta,
                                         const Output<Node>& softmax,
-                                        const Output<Node>& onehot);
+                                        const Output<Node>& labels,
+                                        const AxisSet& reduction_axes,
+                                        bool soft_label = false,
+                                        int ignore_index = -100);
 
             virtual NodeVector decompose_op() const override;
 
@@ -71,6 +74,13 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+            const AxisSet& get_reduction_axes() const { return m_reduction_axes; }
+            const bool get_soft_label() const { return m_soft_label; }
+            const int get_ignore_index() const { return m_ignore_index; }
+        private:
+            AxisSet m_reduction_axes;
+            bool m_soft_label;
+            int m_ignore_index;
         };
     } // namespace op
 } // namespace ngraph

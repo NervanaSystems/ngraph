@@ -78,8 +78,14 @@ constexpr NodeTypeInfo op::SoftmaxCrossEntropyBackprop::type_info;
 
 op::SoftmaxCrossEntropyBackprop::SoftmaxCrossEntropyBackprop(const Output<Node>& delta,
                                                              const Output<Node>& softmax,
-                                                             const Output<Node>& onehot)
-    : FusedOp({delta, softmax, onehot})
+                                                             const Output<Node>& labels,
+                                                             const AxisSet& reduction_axes,
+                                                             bool soft_label,
+                                                             int ignore_index)
+    : FusedOp({delta, softmax, labels})
+    , m_reduction_axes{reduction_axes}
+    , m_soft_label(soft_label)
+    , m_ignore_index(ignore_index)
 {
     constructor_validate_and_infer_types();
 }
@@ -99,14 +105,30 @@ shared_ptr<Node>
     op::SoftmaxCrossEntropyBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<SoftmaxCrossEntropyBackprop>(new_args.at(0), new_args.at(1), new_args.at(2));
+    return make_shared<SoftmaxCrossEntropyBackprop>(new_args.at(0),
+                                                    new_args.at(1),
+                                                    new_args.at(2),
+                                                    m_reduction_axes,
+                                                    m_soft_label,
+                                                    m_ignore_index);
 }
 
 NodeVector op::SoftmaxCrossEntropyBackprop::decompose_op() const
 {
     auto delta = input_value(0);
     auto softmax = input_value(1);
-    auto one_hot_labels = input_value(2);
+    auto labels = input_value(2);
 
-    return {delta * (softmax - one_hot_labels)};
+    if (m_soft_label)
+    {
+        auto delta_mul_labels = std::make_shared<ngraph::op::Multiply>(delta, labels);
+        auto summation_delta_mul_labels =
+            std::make_shared<ngraph::op::Sum>(delta_mul_labels, m_reduction_axes);
+        auto subtract = summation_delta_mul_labels - delta_mul_labels;
+        return {softmax * subtract};
+    }
+    else
+    {
+        return {nullptr};
+    }
 }

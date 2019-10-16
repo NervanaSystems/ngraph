@@ -2092,6 +2092,15 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::SoftmaxCrossEntropy>(args[0], args[1], reduction_axes);
             break;
         }
+        case OP_TYPEID::SoftmaxCrossEntropyBackprop:
+        {
+            auto reduction_axes = node_js.at("reduction_axes");
+            auto soft_label = node_js.at("soft_label");
+            auto ignore_index = node_js.at("ignore_index");
+            node = make_shared<op::SoftmaxCrossEntropyBackprop>(
+                args[0], args[1], args[2], reduction_axes, soft_label, ignore_index);
+            break;
+        }
         case OP_TYPEID::SpaceToDepth:
         {
             auto block_size = node_js.at("block_size").get<size_t>();
@@ -3345,8 +3354,16 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::SoftmaxCrossEntropy:
     {
-        auto tmp = dynamic_cast<const op::SoftmaxCrossEntropy*>(&n);
+        auto tmp = static_cast<const op::SoftmaxCrossEntropy*>(&n);
         node["reduction_axes"] = tmp->get_reduction_axes();
+        break;
+    }
+    case OP_TYPEID::SoftmaxCrossEntropyBackprop:
+    {
+        auto tmp = static_cast<const op::SoftmaxCrossEntropyBackprop*>(&n);
+        node["reduction_axes"] = tmp->get_reduction_axes();
+        node["soft_label"] = tmp->get_soft_label();
+        node["ignore_index"] = tmp->get_ignore_index();
         break;
     }
     case OP_TYPEID::Tan: { break;

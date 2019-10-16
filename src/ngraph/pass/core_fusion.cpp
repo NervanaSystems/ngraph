@@ -36,6 +36,7 @@
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
+#include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/relu.hpp"
@@ -95,47 +96,62 @@ void pass::CoreFusion::construct_softmax_cross_entropy_fprop()
     this->add_matcher(m, callback);
 }
 
-void pass::CoreFusion::construct_softmax_cross_entropy_bprop()
+void pass::CoreFusion::construct_softmax_cross_entropy_bprop_v1()
 {
-    auto param_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{41, 37});
-    auto softmax = std::make_shared<ngraph::op::Softmax>(param_1, AxisSet{1});
-    auto param_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{41, 37});
-    auto subtract = std::make_shared<ngraph::op::Subtract>(softmax, param_2);
+    // Softmax bprop
+    auto input_x = std::make_shared<pattern::op::Label>(element::f32, Shape{41, 37});
+    auto constant_1 = ngraph::op::Constant::create(element::i64, Shape{1}, {1});
+    auto max_x = std::make_shared<ngraph::op::Max>(input_x, constant_1);
+    auto broadcast_max_x =
+        std::make_shared<ngraph::op::Broadcast>(max_x, Shape{41, 37}, AxisSet{1});
+    auto subtract_input_x = std::make_shared<ngraph::op::Subtract>(input_x, broadcast_max_x);
+    auto constant_2 = ngraph::op::Constant::create(element::f32, Shape{41, 37}, {1});
+    auto maximum = std::make_shared<ngraph::op::Maximum>(constant_2, subtract_input_x);
+    auto softmax = std::make_shared<ngraph::op::Softmax>(maximum, AxisSet{1});
+    auto softmax_label = std::make_shared<pattern::op::Label>(softmax);
 
-    auto constant_1 = ngraph::op::Constant::create(element::f32, Shape{1}, {1});
-    auto constant_1_label = std::make_shared<pattern::op::Label>(constant_1);
-    auto constant_2 = ngraph::op::Constant::create(element::f32, Shape{1}, {1});
-    auto constant_2_label = std::make_shared<pattern::op::Label>(constant_2);
+    // Cross Entropy Bprop
+    auto delta_label = std::make_shared<pattern::op::Label>(element::f32, Shape{41, 37});
+    auto labels_y = std::make_shared<pattern::op::Label>(element::f32, Shape{41, 37});
+    auto negative_y = std::make_shared<ngraph::op::Negative>(labels_y);
+    auto multiply_ce = std::make_shared<ngraph::op::Multiply>(negative_y, delta_label);
 
-    auto divide = std::make_shared<ngraph::op::Divide>(constant_1_label, constant_2_label);
-    auto broadcast_1 =
-        std::make_shared<ngraph::op::Broadcast>(divide, Shape{41, 1, 1}, AxisSet{0, 1});
-    auto reshape_1 =
-        std::make_shared<ngraph::op::Reshape>(broadcast_1, AxisVector{0, 1, 2}, Shape{41, 1});
+    // summation
+    auto divide_sm_ce = std::make_shared<ngraph::op::Divide>(multiply_ce, softmax_label);
+    auto multiply_sm_ce = std::make_shared<ngraph::op::Multiply>(softmax_label, divide_sm_ce);
+    auto reduction_axes_label = std::make_shared<pattern::op::Label>(element::i64, Shape{1});
+    auto summation = std::make_shared<ngraph::op::Sum>(multiply_sm_ce, reduction_axes_label);
+    auto broadcast_summation =
+        std::make_shared<ngraph::op::Broadcast>(summation, Shape{41, 37}, AxisSet{1});
 
-    auto constant_3 = ngraph::op::Constant::create(element::f32, Shape{41, 1}, {1});
-    auto constant_3_label = std::make_shared<pattern::op::Label>(constant_3);
-    auto add = std::make_shared<ngraph::op::Add>(reshape_1, constant_3_label);
-    auto reshape_2 = std::make_shared<ngraph::op::Reshape>(add, AxisVector{0, 1}, Shape{41});
-    auto broadcast_2 =
-        std::make_shared<ngraph::op::Broadcast>(reshape_2, Shape{41, 37}, AxisSet{1});
+    auto subtract = std::make_shared<ngraph::op::Subtract>(divide_sm_ce, broadcast_summation);
+    auto multiply = std::make_shared<ngraph::op::Multiply>(softmax_label, subtract);
 
-    auto multiply = std::make_shared<ngraph::op::Multiply>(broadcast_2, subtract);
-    auto bprop_result = std::make_shared<ngraph::op::Result>(multiply);
+    auto callback =
+        [input_x, delta_label, labels_y, reduction_axes_label, softmax_label](pattern::Matcher& m) {
+            NGRAPH_DEBUG << "In a callback for construct_softmax_cross_entropy_bprop against "
+                         << m.get_match_root()->get_name();
 
-    auto callback = [constant_1_label, constant_2_label, constant_3_label, param_1, param_2](
-        pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In a callback for construct_softmax_cross_entropy_bprop against "
-                     << m.get_match_root()->get_name();
+            // TODO(pthoreho): Add Fused Sofmax+Crossentropy bprop op and replace it with the
+            // matched
+            // root node in the call back funtion
+            auto pattern_map = m.get_pattern_map();
+            auto input = pattern_map[input_x];
+            auto labels = pattern_map[labels_y];
+            auto delta = pattern_map[delta_label];
+            auto softmax = pattern_map[softmax_label];
 
-        auto pattern_map = m.get_pattern_map();
-
-        // TODO(pthoreho): Add Fused Sofmax+Crossentropy bprop op and replace it with the matched
-        // root node in the call back funtion
-        return false;
-    };
-    auto m =
-        std::make_shared<pattern::Matcher>(bprop_result, "CoreFusion.SoftmaxCrossEntropyBprop");
+            auto axis_constant_op =
+                std::static_pointer_cast<ngraph::op::Constant>(pattern_map[reduction_axes_label]);
+            auto axis_to_sum = *(static_cast<size_t const*>(axis_constant_op->get_data_ptr()));
+            auto one_hot_y =
+                std::make_shared<ngraph::op::OneHot>(labels, input->get_shape(), size_t(1));
+            auto sm_ce_bprop = std::make_shared<ngraph::op::SoftmaxCrossEntropyBackprop>(
+                delta, softmax, labels, AxisSet{axis_to_sum}, true);
+            ngraph::replace_node(m.get_match_root(), sm_ce_bprop);
+            return true;
+        };
+    auto m = std::make_shared<pattern::Matcher>(multiply, "CoreFusion.SoftmaxCrossEntropyBprop");
     this->add_matcher(m, callback);
 }
 
