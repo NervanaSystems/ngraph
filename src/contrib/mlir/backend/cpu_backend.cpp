@@ -78,19 +78,7 @@ static llvm::cl::opt<unsigned> clLoopTilingCacheSize(
         "inferred from the host CPU using for the cache level specified by "
         "-ngraph-loop-tile-cache-level."));
 
-// *** Debug flags ***
-
-static llvm::cl::opt<bool>
-    clDumpObjectFile("ngraph-dump-mlir-object-file",
-                     llvm::cl::desc("Dump MLIR JITted-compiled object to file specified with "
-                                    "-object-filename (<input file>.o by default)."));
-
-static llvm::cl::opt<std::string>
-    clObjectFilename("ngraph-mlir-object-filename",
-                     llvm::cl::desc("Dump MLIR JITted-compiled object to file jitted_mlir.o"));
-
 using namespace ngraph::runtime::ngmlir;
-
 
 // Default optimization level.
 llvm::CodeGenOpt::Level MLIRCPUBackend::mlirOptLevel = llvm::CodeGenOpt::Level::Aggressive;
@@ -219,6 +207,7 @@ void MLIRCPUBackend::lowerNgDialect()
     target.addLegalOp<mlir::ModuleOp, mlir::ModuleTerminatorOp>();
     target.addDynamicallyLegalOp<mlir::FuncOp>(
         [&](mlir::FuncOp op) { return llvmConverter.isSignatureLegal(op.getType()); });
+        
     auto result = mlir::applyFullConversion(m_module.get(), target, std::move(patterns), &llvmConverter);
     NGRAPH_CHECK(succeeded(result), "Standard to LLVM dialect conversion failed");
     

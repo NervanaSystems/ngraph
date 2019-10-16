@@ -37,18 +37,27 @@ namespace ngraph
             class MLIRCPURuntime
             {
                 public:
-                MLIRCPURuntime(mlir::OwningModuleRef& module) 
-                : m_module(std::move(module)) {}
+                                
+                void set_module(mlir::OwningModuleRef& module)
+                {
+                    m_module = std::move(module);
+                }
 
-                MLIRCPURuntime(mlir::ModuleOp& moduleOp) 
-                : m_module(moduleOp) {}
-                
+                void set_module(mlir::ModuleOp& module)
+                {
+                    m_module = module;
+                }
                 /// Executes a pre-compiled subgraph
                 void run(std::vector<void*>& externalTensors);
                 
                 mlir::OwningModuleRef& get_module()
                 {
                     return m_module;
+                }
+
+                mlir::MLIRContext& get_context() 
+                {
+                    return m_context;
                 }
                 private:
                 void bindArguments(std::vector<void*>& externalTensors);
@@ -68,6 +77,7 @@ namespace ngraph
                 llvm::SmallVector<void*, 8> m_invokeArgs;
                 mlir::OwningModuleRef m_module;
                 std::unique_ptr<mlir::ExecutionEngine> m_engine;
+                mlir::MLIRContext m_context;
             };
         }
     }

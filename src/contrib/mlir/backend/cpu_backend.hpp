@@ -39,14 +39,14 @@ namespace ngraph
                 public:
                 static void init();
 
-                MLIRCPUBackend(mlir::OwningModuleRef& module) 
-                : MLIRBackend(module)
+                MLIRCPUBackend(mlir::OwningModuleRef& module, mlir::MLIRContext& context) 
+                : MLIRBackend(module, context)
                 {
                     m_kind = MLIRBackend::CPU;
                 }
                 
-                MLIRCPUBackend(mlir::ModuleOp& moduleOp) 
-                : MLIRBackend(moduleOp)
+                MLIRCPUBackend(mlir::ModuleOp& moduleOp, mlir::MLIRContext& context) 
+                : MLIRBackend(moduleOp, context)
                 {
                     m_kind = MLIRBackend::CPU;
                 }

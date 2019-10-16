@@ -64,8 +64,9 @@ namespace ngraph
                 using TensorList = std::vector<descriptor::Tensor*>;
                 using TypeList = llvm::SmallVector<mlir::Type, 4>;
 
-                MLIRCompiler(const ngraph::op::CompiledKernel* compiled_kernel)
-                    : m_compiledKernel(compiled_kernel)
+                MLIRCompiler(const ngraph::op::CompiledKernel* compiled_kernel, mlir::MLIRContext& context)
+                    : m_compiledKernel(compiled_kernel),
+                    m_context(context)
                 {
                 }
 
@@ -75,6 +76,7 @@ namespace ngraph
                 {
                     return m_module;
                 }
+                
             private:
                 struct TensorInfo
                 {
@@ -126,7 +128,7 @@ namespace ngraph
 
                 // MLIR context that holds all the MLIR information related to the sub-graph
                 // compilation.
-                mlir::MLIRContext m_context;
+                mlir::MLIRContext& m_context;
 
                 mlir::OwningModuleRef m_module;
                 std::unique_ptr<mlir::OpBuilder> m_builder;

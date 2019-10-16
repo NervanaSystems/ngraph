@@ -36,12 +36,12 @@ namespace ngraph
                     CPU
                     /* Add more backend kinds here */
                 };
-                MLIRBackend(mlir::OwningModuleRef& module)
-                : m_module(std::move(module))
+                MLIRBackend(mlir::OwningModuleRef& module, mlir::MLIRContext& context)
+                : m_module(std::move(module)), m_context(context)
                 {}
 
-                MLIRBackend(mlir::ModuleOp& moduleOp)
-                : m_module(moduleOp)
+                MLIRBackend(mlir::ModuleOp& moduleOp, mlir::MLIRContext& context)
+                : m_module(moduleOp), m_context(context)
                 {}
                 
                 /// Generate code for the module
@@ -60,7 +60,8 @@ namespace ngraph
                 protected:
                 
                 mlir::OwningModuleRef m_module;
-                mlir::MLIRContext m_context;
+                // REMOVE and unifty under a wrapper class
+                mlir::MLIRContext& m_context;
                 Kind m_kind;
             };
         }

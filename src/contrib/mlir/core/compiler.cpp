@@ -256,38 +256,6 @@ MLIRCompiler::TensorInfo MLIRCompiler::getTensorValue(descriptor::Tensor* tensor
     return it->second;
 }
 
-
-// REMOVE
-#if 0
-
-/// Returns the cache level size from `targetInfo` for the `cacheLevel` provided. If `userCacheSize`
-/// is not zero, it returns `userCacheSize`.
-static unsigned getCacheLevelSize(llvm::TargetTransformInfo& targetInfo,
-                                  unsigned cacheLevel,
-                                  unsigned userCacheSize)
-{
-    if (userCacheSize)
-    {
-        return userCacheSize;
-    }
-
-    llvm::Optional<unsigned> optCacheLevelSize;
-    switch (cacheLevel)
-    {
-    case 1:
-        optCacheLevelSize = targetInfo.getCacheSize(llvm::TargetTransformInfo::CacheLevel::L1D);
-        break;
-    case 2:
-        optCacheLevelSize = targetInfo.getCacheSize(llvm::TargetTransformInfo::CacheLevel::L2D);
-        break;
-    default:
-        NGRAPH_UNREACHABLE("Unsupported cache level: ", cacheLevel, ". Only 1 and 2 are supported");
-    }
-
-    NGRAPH_CHECK(optCacheLevelSize.hasValue() && "Cache level size is not available in TTI");
-    return optCacheLevelSize.getValue();
-}
-#endif
 // MLIR builders
 #define TI(x) std::type_index(typeid(x))
 

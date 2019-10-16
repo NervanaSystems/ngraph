@@ -75,17 +75,28 @@ namespace ngraph
 
                     if (it == ctx->mlir_runtimes.end())
                     {
-                        // compile the sub-graph and create a new runtime
-                        MLIRCompiler mlir_compiler(compiled_kernel);
+                        // Compile the sub-graph and create a new runtime
+                        // We must create an MLIRContext that out lives the compilation/execution
+                        // The runtime contains the context and gets store in the CK cache 
+
+                        ctx->mlir_runtimes.emplace(std::piecewise_construct, std::make_tuple(compiled_kernel), std::make_tuple());
+                        MLIRCPURuntime& mlir_runtime = ctx->mlir_runtimes.find(compiled_kernel)->second;
+
+                        mlir::MLIRContext& context = mlir_runtime.get_context();
+
+                        MLIRCompiler mlir_compiler(compiled_kernel, context);
                         mlir_compiler.compile();
-                        MLIRCPUBackend mlir_backend(mlir_compiler.get_module());
+                        MLIRCPUBackend mlir_backend(mlir_compiler.get_module(), context);
                         mlir_backend.codegen();
                         
-                        ctx->mlir_runtimes.emplace(compiled_kernel, mlir_backend.get_module());
+                        mlir_runtime.set_module(mlir_backend.get_module());
+                        mlir_runtime.run(ptr_args);
                     }
-
-                    MLIRCPURuntime& mlir_runtime = ctx->mlir_runtimes.find(compiled_kernel)->second;
-                    mlir_runtime.run(ptr_args);
+                    else
+                    {
+                        MLIRCPURuntime& mlir_runtime = it->second;
+                        mlir_runtime.run(ptr_args);    
+                    }
                 };
 
                 functors.emplace_back(functor);
