@@ -40,7 +40,7 @@ namespace ngraph
                             Shape output_shape,
                             int64_t axis)
                 {
-                    axis = axis < 0 ? axis + Rank : axis;
+                    // axis = axis < 0 ? axis + int64_t(Rank) : axis;
                     Eigen::array<Eigen::Index, Rank> out_dims;
                     for (int i = 0; i < Rank; i++)
                     {

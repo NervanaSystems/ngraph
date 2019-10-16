@@ -36,6 +36,10 @@ namespace ngraph
             {
                 // We will copy the inputs to the output one at a time. As we go, we will move out
                 // along the concatenation axis, starting at 0.
+
+                concatenation_axis = concatenation_axis < 0
+                                         ? concatenation_axis + int64_t(in_shapes.size())
+                                         : concatenation_axis;
                 size_t concatenation_pos = 0;
                 for (size_t i = 0; i < args.size(); i++)
                 {

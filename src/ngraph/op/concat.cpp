@@ -44,6 +44,7 @@ void op::Concat::validate_and_infer_types()
     element::Type inputs_et{element::dynamic};
     Dimension concatenation_axis_output_dim{0};
 
+    auto concat_axis = m_axis;
     for (uint64_t i = 0; i < get_input_size(); i++)
     {
         NODE_VALIDATION_CHECK(this,
@@ -53,11 +54,11 @@ void op::Concat::validate_and_infer_types()
         Dimension this_input_rank = this_input_shape.rank();
         if (this_input_rank.is_static())
         {
-            m_axis = m_axis < 0 ? m_axis + int64_t(this_input_rank) : m_axis;
+            concat_axis = concat_axis < 0 ? concat_axis + int64_t(this_input_rank) : concat_axis;
             NODE_VALIDATION_CHECK(this,
-                                  m_axis < int64_t(this_input_rank),
+                                  concat_axis < int64_t(this_input_rank),
                                   "Concatenation axis (",
-                                  m_axis,
+                                  concat_axis,
                                   ") is out of bounds for ",
                                   "argument ",
                                   i,
@@ -65,16 +66,21 @@ void op::Concat::validate_and_infer_types()
                                   this_input_shape,
                                   ".");
 
-            concatenation_axis_output_dim += this_input_shape[m_axis];
-            this_input_shape[m_axis] = Dimension::dynamic();
+            concatenation_axis_output_dim += this_input_shape[concat_axis];
+            this_input_shape[concat_axis] = Dimension::dynamic();
 
             NODE_VALIDATION_CHECK(
                 this,
                 PartialShape::merge_into(inputs_shape_scheme, this_input_shape),
                 "Argument shapes are inconsistent; they must have the same rank, and must have ",
                 "equal dimension everywhere except on the concatenation axis (axis ",
-                m_axis,
+                concat_axis,
                 ").");
+
+            NODE_VALIDATION_CHECK(
+                this,
+                element::Type::merge(inputs_et, inputs_et, get_input_element_type(i)),
+                "Argument element types are inconsistent.");
         }
         else
         {
@@ -85,7 +91,7 @@ void op::Concat::validate_and_infer_types()
 
     if (concatenated_shape.rank().is_static())
     {
-        concatenated_shape[m_axis] = concatenation_axis_output_dim;
+        concatenated_shape[concat_axis] = concatenation_axis_output_dim;
         set_output_type(0, inputs_et, concatenated_shape);
     }
     else
@@ -119,7 +125,6 @@ void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVecto
         auto slice_width = arg_shape[m_axis];
 
         size_t next_pos = pos + slice_width;
-
         arg_delta_slice_lower[m_axis] = pos;
         arg_delta_slice_upper[m_axis] = next_pos;
 
