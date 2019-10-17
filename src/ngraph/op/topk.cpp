@@ -32,13 +32,13 @@ op::v0::TopK::TopK(const Output<Node>& arg,
                    size_t k,
                    bool compute_max,
                    SortType sort)
-    : Op({arg,
-          op::Constant::create(element::i64, Shape{1}, {k})->output(0),
-          op::Constant::create(element::i64, Shape{1}, {top_k_axis})->output(0)})
+    : Op({arg})
     , m_index_element_type(index_element_type)
     , m_compute_max(compute_max)
     , m_sort(sort)
 {
+    set_argument(1, op::Constant::create(element::i64, Shape{1}, {k})->output(0));
+    set_argument(2, op::Constant::create(element::i64, Shape{1}, {top_k_axis})->output(0));
     add_provenance_group_member(input_value(1).get_node_shared_ptr());
     add_provenance_group_member(input_value(2).get_node_shared_ptr());
     constructor_validate_and_infer_types();
@@ -50,11 +50,12 @@ op::v0::TopK::TopK(const Output<Node>& arg,
                    const element::Type& index_element_type,
                    bool compute_max,
                    SortType sort)
-    : Op({arg, k, op::Constant::create(element::i64, Shape{1}, {top_k_axis})->output(0)})
+    : Op({arg, k})
     , m_index_element_type(index_element_type)
     , m_compute_max(compute_max)
     , m_sort(sort)
 {
+    set_argument(2, op::Constant::create(element::i64, Shape{1}, {top_k_axis})->output(0));
     add_provenance_group_member(input_value(2).get_node_shared_ptr());
     constructor_validate_and_infer_types();
 }
@@ -223,6 +224,7 @@ void op::v0::TopK::generate_adjoints(autodiff::Adjoints& /* adjoints */,
     throw ngraph_error("Forward-propagation-only operation");
 }
 
+// v1 version starts
 constexpr NodeTypeInfo op::v1::TopK::type_info;
 
 op::v1::TopK::TopK(const Output<Node>& data,

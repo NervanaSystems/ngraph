@@ -117,6 +117,7 @@ namespace ngraph
                                                const NodeVector& deltas) override;
             };
         } // namespace v0
+
         namespace v1
         {
             /// \brief Computes indices and values of the k maximum/minimum values
