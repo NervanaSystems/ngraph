@@ -348,6 +348,7 @@ namespace ngraph
             REGISTER_OPERATOR("ThresholdedRelu", 1, thresholded_relu);
             REGISTER_OPERATOR("TopK", 1, topk);
             REGISTER_OPERATOR("TopK", 10, topk);
+            REGISTER_OPERATOR("TopK", 11, topk);
             REGISTER_OPERATOR("Transpose", 1, transpose);
             REGISTER_OPERATOR("Unsqueeze", 1, unsqueeze);
             REGISTER_OPERATOR("Where", 1, where);
