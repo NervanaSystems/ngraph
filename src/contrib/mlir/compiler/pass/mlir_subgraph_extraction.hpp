@@ -106,6 +106,7 @@ namespace ngraph
         private:
             void build_subgraphs(std::shared_ptr<Function> func);
             NodeVector build_ck_nodes(std::shared_ptr<Function> func);
+            void process_supported_op(std::shared_ptr<ngraph::Node> node, int current_subgraph_id);
 
             void sanity_check(std::shared_ptr<Function> func, NodeVector& ck_nodes);
             void clean_up();

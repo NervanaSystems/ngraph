@@ -45,6 +45,10 @@ using namespace ngraph::op;
 using namespace ngraph::pass;
 
 #define TI(x) std::type_index(typeid(x))
+#define ERASE_NODE                                                                                 \
+    auto old_it = it;                                                                              \
+    it++;                                                                                          \
+    nodes_ready.erase(old_it);
 
 int MLIRSubgraphExtractionPass::MLIRSubgraph::m_curr_graph_id = 0;
 
@@ -157,6 +161,27 @@ static void
     }
 }
 
+void MLIRSubgraphExtractionPass::process_supported_op(std::shared_ptr<ngraph::Node> node,
+                                                      int current_subgraph_id)
+{
+    NodeVector inputs;
+    for (auto pred : node->get_arguments())
+    {
+        int pred_subgraph_id = get_subgraph_id(pred);
+        if (pred_subgraph_id != current_subgraph_id)
+        {
+            // predecessor doesn't belong to current sub-graph, it is an
+            // input
+            inputs.push_back(pred);
+        }
+    }
+    // add inputs and op to current sub-graph
+    MLIRSubgraph& current_subgraph = get_subgraph(current_subgraph_id);
+    current_subgraph.add_node(node);
+    current_subgraph.add_inputs(inputs);
+    NGRAPH_DEBUG << "[CK Extract] Node Processed " << *node;
+}
+
 void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
 {
     NGRAPH_DEBUG << "[CK Extract] Construct sub-graphs";
@@ -179,48 +204,31 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
     bool change_mode = false;
     while (!nodes_ready.empty())
     {
-        for (auto it = nodes_ready.begin(); it != nodes_ready.end(); it++)
+        for (auto it = nodes_ready.begin(); it != nodes_ready.end();)
         {
             auto node = *it;
             if (TI(Result) == TI(*node))
             {
-                nodes_ready.erase(it);
-                break;
+                ERASE_NODE
             }
             else if (TI(Parameter) == TI(*node))
             {
                 process_successors(node, node_to_size_map, nodes_ready);
-                nodes_ready.erase(it);
-                break;
+                ERASE_NODE
             }
             else if (is_supported_mlir_op(node))
             {
                 if (last_op_is_supported)
                 {
-                    NodeVector inputs;
-                    for (auto pred : node->get_arguments())
-                    {
-                        int pred_subgraph_id = get_subgraph_id(pred);
-                        if (pred_subgraph_id != current_subgraph_id)
-                        {
-                            // predecessor doesn't belong to current sub-graph, it is an
-                            // input
-                            inputs.push_back(pred);
-                        }
-                    }
-                    // add inputs and op to current sub-graph
-                    MLIRSubgraph& current_subgraph = get_subgraph(current_subgraph_id);
-                    current_subgraph.add_node(node);
-                    current_subgraph.add_inputs(inputs);
-                    NGRAPH_DEBUG << "[CK Extract] Node Processed " << *node;
+                    process_supported_op(node, current_subgraph_id);
                     process_successors(node, node_to_size_map, nodes_ready);
-                    nodes_ready.erase(it);
+                    ERASE_NODE
                     change_mode = false;
-                    break;
                 }
                 else
                 {
                     change_mode = true;
+                    it++;
                 }
             }
             else
@@ -228,13 +236,13 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
                 if (last_op_is_supported)
                 {
                     change_mode = true;
+                    it++;
                 }
                 else
                 {
                     process_successors(node, node_to_size_map, nodes_ready);
-                    nodes_ready.erase(it);
+                    ERASE_NODE
                     change_mode = false;
-                    break;
                 }
             }
         }
@@ -243,16 +251,23 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
         {
             if (last_op_is_supported)
             {
-                for (auto it = nodes_ready.begin(); it != nodes_ready.end(); it++)
+                for (auto it = nodes_ready.begin(); it != nodes_ready.end();)
                 {
                     auto node = *it;
-                    if (!is_supported_mlir_op(node))
+                    if (TI(Result) == TI(*node))
+                    {
+                        ERASE_NODE
+                    }
+                    else if (!is_supported_mlir_op(node))
                     {
                         process_successors(node, node_to_size_map, nodes_ready);
-                        nodes_ready.erase(it);
+                        ERASE_NODE
                         change_mode = false;
                         last_op_is_supported = false;
-                        break;
+                    }
+                    else
+                    {
+                        it++;
                     }
                 }
             }
@@ -261,34 +276,28 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
                 // create a new sub-graph
                 MLIRSubgraph sg = MLIRSubgraph::create(this);
                 NGRAPH_DEBUG << "   [CK Extract] Start new sub-graph " << sg.get_id();
+                add_subgraph(sg);
                 current_subgraph_id = sg.get_id();
-                for (auto it = nodes_ready.begin(); it != nodes_ready.end(); it++)
+                for (auto it = nodes_ready.begin(); it != nodes_ready.end();)
                 {
                     auto node = *it;
-                    if (is_supported_mlir_op(node))
+                    if (TI(Result) == TI(*node))
                     {
-                        NodeVector inputs;
-                        for (auto pred : node->get_arguments())
-                        {
-                            int pred_subgraph_id = get_subgraph_id(pred);
-                            if (pred_subgraph_id != current_subgraph_id)
-                            {
-                                // predecessor doesn't belong to current sub-graph, it is an
-                                // input
-                                inputs.push_back(pred);
-                            }
-                        }
-                        sg.add_node(node);
-                        sg.add_inputs(inputs);
-                        NGRAPH_DEBUG << "[CK Extract] Node Processed " << *node;
+                        ERASE_NODE
+                    }
+                    else if (is_supported_mlir_op(node))
+                    {
+                        process_supported_op(node, current_subgraph_id);
                         process_successors(node, node_to_size_map, nodes_ready);
-                        nodes_ready.erase(it);
+                        ERASE_NODE
                         change_mode = false;
                         last_op_is_supported = true;
-                        break;
+                    }
+                    else
+                    {
+                        it++;
                     }
                 }
-                add_subgraph(sg);
             }
         }
     }
