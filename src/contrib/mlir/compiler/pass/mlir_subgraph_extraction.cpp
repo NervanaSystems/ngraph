@@ -106,23 +106,18 @@ MLIRSubgraphExtractionPass::MLIRSubgraphExtractionPass()
 }
 
 // The sub-graph construction algorithm is as follows
-// For each node, check if its predecessors and dependencies are all processed.
-// if yes, do the following
-// - if this node is supported
-// -- if the last node processed is supported, add this node to the current sub-graph and done set,
-// -- its predecessors outside current sub-graphs are marked as input to the sub-graph,
-// -- otherwise, add this node to ready supported set.
-// - if this node is unsupported
-// -- if the last node processed is supported, add this node to ready unsupported set.
-// -- otherwise, add this node to done set.
+// Construct a map of node to number of its input not being processes
+// Put the node with value 0 into a ready list
+// Go through the nodes in the ready list until the list is empty:
+// - if the last node processed is supported, try to find a supported node and add that node to the
+// current sub-graph.
+// - if none is available, process an unsupported node.
+// - if the last node processed is unsupported, try to find an unsupported node.
+// - if none is available, start a new sub-graph, find a supported node and add that node to the new
+// sub-graph.
+// - Erase processed node form the ready list, update the value of its successors in the map, and
+// add its successor to ready list if value is 0.
 //
-// if not, add its predecessors and dependencies to the stack and
-// process one of the ready set depending on whether the last node processed is supported.
-// - for ready supported set
-// -- start a new sub-graph and add nodes in the set to that sub-graph and done set.
-// -- their predecessors outside current sub-graphs are marked as input to the sub-graph.
-// - for ready unsupported set
-// -- add nodes in the set to done set.
 // Sub-graph may contain multiple disjoint clusters.
 //
 // For each sub-graph found build a CompiledKernel(CK) node around it as follows
@@ -143,161 +138,158 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
     return true;
 }
 
+static void
+    process_successors(std::shared_ptr<ngraph::Node> node,
+                       std::unordered_map<std::shared_ptr<ngraph::Node>, size_t>& node_to_size_map,
+                       std::list<std::shared_ptr<ngraph::Node>>& nodes_ready)
+{
+    for (auto output : node->outputs())
+    {
+        for (auto input : output.get_target_inputs())
+        {
+            auto user = input.get_node()->shared_from_this();
+            node_to_size_map[user]--;
+            if (node_to_size_map[user] == 0)
+            {
+                nodes_ready.push_back(user);
+            }
+        }
+    }
+}
+
 void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
 {
     NGRAPH_DEBUG << "[CK Extract] Construct sub-graphs";
     int current_subgraph_id = 0;
 
-    std::stack<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>> nodes_to_do;
-    std::unordered_set<std::shared_ptr<Node>> nodes_done;
-    std::unordered_set<std::shared_ptr<Node>> nodes_ready_supported;
-    std::unordered_set<std::shared_ptr<Node>> nodes_ready_unsupported;
-
-    for (auto& r : func->get_results())
-    {
-        nodes_to_do.push(r);
-    }
-    for (auto& param : func->get_parameters())
-    {
-        nodes_to_do.push(param);
-    }
-
+    std::unordered_map<std::shared_ptr<Node>, size_t> node_to_size_map;
+    std::list<std::shared_ptr<Node>> nodes_ready;
     bool last_op_is_supported = false;
-    while (nodes_to_do.size() > 0)
+
+    for (auto op : func->get_ops())
     {
-        auto node = nodes_to_do.top();
-        if (nodes_done.count(node) == 0)
+        size_t arg_count = op->get_input_size();
+        node_to_size_map[op] = arg_count;
+        if (arg_count == 0)
         {
-            bool can_add = true;
-            size_t arg_count = node->get_input_size();
-            for (size_t i = 0; i < arg_count; ++i)
-            {
-                auto dep = node->input(arg_count - i - 1)
-                               .get_source_output()
-                               .get_node()
-                               ->shared_from_this();
-                if (nodes_done.count(dep) == 0)
-                {
-                    can_add = false;
-                    nodes_to_do.push(dep);
-                }
-            }
-            for (auto& depptr : node->get_control_dependencies())
-            {
-                if (nodes_done.count(depptr) == 0)
-                {
-                    can_add = false;
-                    nodes_to_do.push(depptr);
-                }
-            }
+            nodes_ready.push_back(op);
+        }
+    }
 
-            // Add supported op to the ready set or add it to sub-graph and done set
-            // Add unsupported op to the ready set or done set
-            if (can_add)
+    bool change_mode = false;
+    while (!nodes_ready.empty())
+    {
+        for (auto it = nodes_ready.begin(); it != nodes_ready.end(); it++)
+        {
+            auto node = *it;
+            if (TI(Result) == TI(*node))
             {
-                if (TI(Parameter) == TI(*node) || TI(Result) == TI(*node))
+                nodes_ready.erase(it);
+                break;
+            }
+            else if (TI(Parameter) == TI(*node))
+            {
+                process_successors(node, node_to_size_map, nodes_ready);
+                nodes_ready.erase(it);
+                break;
+            }
+            else if (is_supported_mlir_op(node))
+            {
+                if (last_op_is_supported)
                 {
-                    nodes_to_do.pop();
-                    nodes_done.insert(node);
-                    continue;
-                }
-
-                nodes_to_do.pop();
-                // supported op
-                if (is_supported_mlir_op(node))
-                {
-                    if (last_op_is_supported)
+                    NodeVector inputs;
+                    for (auto pred : node->get_arguments())
                     {
-                        // add to the same sub-graph containing last supported op
+                        int pred_subgraph_id = get_subgraph_id(pred);
+                        if (pred_subgraph_id != current_subgraph_id)
+                        {
+                            // predecessor doesn't belong to current sub-graph, it is an
+                            // input
+                            inputs.push_back(pred);
+                        }
+                    }
+                    // add inputs and op to current sub-graph
+                    MLIRSubgraph& current_subgraph = get_subgraph(current_subgraph_id);
+                    current_subgraph.add_node(node);
+                    current_subgraph.add_inputs(inputs);
+                    NGRAPH_DEBUG << "[CK Extract] Node Processed " << *node;
+                    process_successors(node, node_to_size_map, nodes_ready);
+                    nodes_ready.erase(it);
+                    change_mode = false;
+                    break;
+                }
+                else
+                {
+                    change_mode = true;
+                }
+            }
+            else
+            {
+                if (last_op_is_supported)
+                {
+                    change_mode = true;
+                }
+                else
+                {
+                    process_successors(node, node_to_size_map, nodes_ready);
+                    nodes_ready.erase(it);
+                    change_mode = false;
+                    break;
+                }
+            }
+        }
+
+        if (change_mode)
+        {
+            if (last_op_is_supported)
+            {
+                for (auto it = nodes_ready.begin(); it != nodes_ready.end(); it++)
+                {
+                    auto node = *it;
+                    if (!is_supported_mlir_op(node))
+                    {
+                        process_successors(node, node_to_size_map, nodes_ready);
+                        nodes_ready.erase(it);
+                        change_mode = false;
+                        last_op_is_supported = false;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                // create a new sub-graph
+                MLIRSubgraph sg = MLIRSubgraph::create(this);
+                NGRAPH_DEBUG << "   [CK Extract] Start new sub-graph " << sg.get_id();
+                current_subgraph_id = sg.get_id();
+                for (auto it = nodes_ready.begin(); it != nodes_ready.end(); it++)
+                {
+                    auto node = *it;
+                    if (is_supported_mlir_op(node))
+                    {
                         NodeVector inputs;
                         for (auto pred : node->get_arguments())
                         {
                             int pred_subgraph_id = get_subgraph_id(pred);
                             if (pred_subgraph_id != current_subgraph_id)
                             {
-                                // predecessor doesn't belong to current sub-graph, it is an input
+                                // predecessor doesn't belong to current sub-graph, it is an
+                                // input
                                 inputs.push_back(pred);
                             }
                         }
-
-                        // add inputs and op to current sub-graph
-                        MLIRSubgraph& current_subgraph = get_subgraph(current_subgraph_id);
-                        current_subgraph.add_node(node);
-                        current_subgraph.add_inputs(inputs);
-
+                        sg.add_node(node);
+                        sg.add_inputs(inputs);
                         NGRAPH_DEBUG << "[CK Extract] Node Processed " << *node;
-                        nodes_done.insert(node);
-                    }
-                    else
-                    {
-                        nodes_ready_supported.insert(node);
-                    }
-                }
-                // unsupported op
-                else
-                {
-                    if (last_op_is_supported)
-                    {
-                        nodes_ready_unsupported.insert(node);
-                    }
-                    else
-                    {
-                        nodes_done.insert(node);
-                    }
-                }
-            }
-            else
-            {
-                // process ready sets.
-                if (last_op_is_supported)
-                {
-                    // all supported nodes must have been processed
-                    // process unsupported nodes in ready set
-                    for (auto n : nodes_ready_unsupported)
-                    {
-                        nodes_done.insert(n);
-                    }
-                    nodes_ready_unsupported.clear();
-                    last_op_is_supported = false;
-                }
-                else
-                {
-                    // all unsupported nodes must have have processed
-                    // process supported nodes in ready set
-                    if (nodes_ready_supported.size() != 0)
-                    {
-                        // create a new sub-graph
-                        MLIRSubgraph sg = MLIRSubgraph::create(this);
-                        NGRAPH_DEBUG << "   [CK Extract] Start new sub-graph " << sg.get_id();
-                        current_subgraph_id = sg.get_id();
-                        for (auto n : nodes_ready_supported)
-                        {
-                            NodeVector inputs;
-                            for (auto pred : n->get_arguments())
-                            {
-                                int pred_subgraph_id = get_subgraph_id(pred);
-                                if (pred_subgraph_id != current_subgraph_id)
-                                {
-                                    // predecessor doesn't belong to current sub-graph, it is an
-                                    // input
-                                    inputs.push_back(pred);
-                                }
-                            }
-                            sg.add_node(n);
-                            sg.add_inputs(inputs);
-                            NGRAPH_DEBUG << "[CK Extract] Node Processed " << *n;
-                            nodes_done.insert(n);
-                        }
-                        add_subgraph(sg);
+                        process_successors(node, node_to_size_map, nodes_ready);
+                        nodes_ready.erase(it);
+                        change_mode = false;
                         last_op_is_supported = true;
-                        nodes_ready_supported.clear();
+                        break;
                     }
                 }
+                add_subgraph(sg);
             }
-        }
-        else
-        {
-            nodes_to_do.pop();
         }
     }
 
