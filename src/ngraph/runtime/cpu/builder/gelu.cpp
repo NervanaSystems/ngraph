@@ -37,7 +37,6 @@ namespace ngraph
 
                 auto input_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
-                size_t count = out[0].get_size();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -84,7 +83,6 @@ namespace ngraph
                 auto arg_fwd_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto delta_buffer_index = external_function->get_buffer_index(args[1].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
-                size_t count = out[0].get_size();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
