@@ -772,7 +772,6 @@ namespace ngraph
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        std::cout << " Setting mkldnn to true\n";
                         op_annotations->set_mkldnn_op(true);
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                         if (get_user_count(node->get_argument(0).get()) == 1)

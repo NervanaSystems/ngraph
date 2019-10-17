@@ -2129,12 +2129,11 @@ namespace ngraph
                     mkldnn_emitter.reserve_descriptor_space(descs.size());
                     serialize_memory_descs(desc_file, descs, deps[0]);
 
-                    // writer << "const float alpha = " << alpha << ";\n";
                     writer << "auto gelu_desc = "
                               "mkldnn::eltwise_forward::desc(mkldnn::prop_kind::forward, "
                               "mkldnn::algorithm::eltwise_gelu, "
                               "*cg_ctx->mkldnn_descriptors["
-                           << desc_index << "], 0.0f, 0.0f);\n";
+                           << desc_index << "], 1.0f, 0.0f);\n";
 
                     writer << "mkldnn::primitive_attr attr;\n";
                     writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";

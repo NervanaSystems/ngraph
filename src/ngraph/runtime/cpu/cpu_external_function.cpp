@@ -452,7 +452,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Tile), &runtime::cpu::CPU_Emitter::emit<op::Tile>},
     {TI(ngraph::op::Gelu), &runtime::cpu::CPU_Emitter::emit<op::Gelu>},
     {TI(ngraph::op::GeluBackprop), &runtime::cpu::CPU_Emitter::emit<op::GeluBackprop>},
-    {TI(ngraph::op::GeluBackpropFactor), &runtime::cpu::CPU_Emitter::emit<op::GeluBackpropFactor>},
+    //{TI(ngraph::op::GeluBackpropFactor),
+    //&runtime::cpu::CPU_Emitter::emit<op::GeluBackpropFactor>},
 };
 
 static void
@@ -1202,15 +1203,15 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         {
 #if MKLDNN_VERSION_MAJOR < 1
             // TODO: will be supported in mkldnn v1.1
-            if (node.input(0).get_element_type() == element::f32)
-            {
-                // return true only if cpu_fusion construct_gelubackprop() is enabled
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return ((node.input(0).get_element_type() == element::f32) ? true : false);
+/*{
+    // return true only if cpu_fusion construct_gelubackprop() is enabled
+    return true;
+}
+else
+{
+    return false;
+}*/
 #else
             return false;
 #endif
@@ -1219,14 +1220,14 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         {
 #if MKLDNN_VERSION_MAJOR < 1
             // TODO: will be supported in mkldnn v1.1
-            if (node.input(0).get_element_type() == element::f32)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return ((node.input(0).get_element_type() == element::f32) ? true : false);
+/*{
+    return true;
+}
+else
+{
+    return false;
+}*/
 #else
             return false;
 #endif
