@@ -60,7 +60,12 @@ namespace ngraph
             /// \brief Backprop for SoftmaxCrossEntropy
             /// \param delta Node that produces the delta during bprop
             /// \param softmax Node that produces softmax from fprop
-            /// \param onehot Node that produces OneHot Labels from fprop
+            /// \param labels Node that produces ground truth labels for input
+            /// \param reduction_axes axes on which to reduce the summation operation
+            /// \param soft_label flag indicating whether to interpretate the given labels as soft
+            /// labels
+            /// \param ignore_index Specifies a target value that is ignored and does not contribute
+            /// to the input gradient Only valid if soft_label is set to False
             SoftmaxCrossEntropyBackprop(const Output<Node>& delta,
                                         const Output<Node>& softmax,
                                         const Output<Node>& labels,

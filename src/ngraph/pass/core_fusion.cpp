@@ -132,9 +132,6 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_v1()
             NGRAPH_DEBUG << "In a callback for construct_softmax_cross_entropy_bprop against "
                          << m.get_match_root()->get_name();
 
-            // TODO(pthoreho): Add Fused Sofmax+Crossentropy bprop op and replace it with the
-            // matched
-            // root node in the call back funtion
             auto pattern_map = m.get_pattern_map();
             auto input = pattern_map[input_x];
             auto labels = pattern_map[labels_y];
