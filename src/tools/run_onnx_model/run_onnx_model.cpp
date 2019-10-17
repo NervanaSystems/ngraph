@@ -68,7 +68,6 @@ int random_inputs(vector<shared_ptr<runtime::Tensor>> inputs)
         auto tensor_size = shape_size(inputs.at(i)->get_shape());
         std::uniform_int_distribution<int> distribution(0, 255);
         vector<float> data(tensor_size, 0);
-        double r = 0;
         for (int i = 0; i < tensor_size; i++)
         {
             data[i] = distribution(random_generator);
@@ -121,7 +120,6 @@ int main(int argc, char** argv)
         {
             auto tensor =
                 backend->create_tensor(params.at(i)->get_element_type(), params.at(i)->get_shape());
-            auto tensor_size = params.at(i)->get_shape().size();
             inputs.push_back(tensor);
         }
 
