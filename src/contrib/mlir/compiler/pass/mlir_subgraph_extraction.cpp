@@ -45,10 +45,6 @@ using namespace ngraph::op;
 using namespace ngraph::pass;
 
 #define TI(x) std::type_index(typeid(x))
-#define ERASE_NODE                                                                                 \
-    auto old_it = it;                                                                              \
-    it++;                                                                                          \
-    nodes_ready.erase(old_it);
 
 int MLIRSubgraphExtractionPass::MLIRSubgraph::m_curr_graph_id = 0;
 
@@ -114,13 +110,13 @@ MLIRSubgraphExtractionPass::MLIRSubgraphExtractionPass()
 // Put the node with value 0 into a ready list
 // Go through the nodes in the ready list until the list is empty:
 // - if the last node processed is supported, try to find a supported node and add that node to the
-// current sub-graph.
+//   current sub-graph.
 // - if none is available, process an unsupported node.
 // - if the last node processed is unsupported, try to find an unsupported node.
 // - if none is available, start a new sub-graph, find a supported node and add that node to the new
-// sub-graph.
+//   sub-graph.
 // - Erase processed node form the ready list, update the value of its successors in the map, and
-// add its successor to ready list if value is 0.
+//   add its successor to ready list if value is 0.
 //
 // Sub-graph may contain multiple disjoint clusters.
 //
@@ -182,6 +178,14 @@ void MLIRSubgraphExtractionPass::process_supported_op(std::shared_ptr<ngraph::No
     NGRAPH_DEBUG << "[CK Extract] Node Processed " << *node;
 }
 
+static void erase_node(std::list<std::shared_ptr<ngraph::Node>>::iterator& it,
+                       std::list<std::shared_ptr<ngraph::Node>>& nodes_ready)
+{
+    auto old_it = it;
+    it++;
+    nodes_ready.erase(old_it);
+}
+
 void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
 {
     NGRAPH_DEBUG << "[CK Extract] Construct sub-graphs";
@@ -209,12 +213,12 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
             auto node = *it;
             if (TI(Result) == TI(*node))
             {
-                ERASE_NODE
+                erase_node(it, nodes_ready);
             }
             else if (TI(Parameter) == TI(*node))
             {
                 process_successors(node, node_to_size_map, nodes_ready);
-                ERASE_NODE
+                erase_node(it, nodes_ready);
             }
             else if (is_supported_mlir_op(node))
             {
@@ -222,7 +226,7 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
                 {
                     process_supported_op(node, current_subgraph_id);
                     process_successors(node, node_to_size_map, nodes_ready);
-                    ERASE_NODE
+                    erase_node(it, nodes_ready);
                     change_mode = false;
                 }
                 else
@@ -241,7 +245,7 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
                 else
                 {
                     process_successors(node, node_to_size_map, nodes_ready);
-                    ERASE_NODE
+                    erase_node(it, nodes_ready);
                     change_mode = false;
                 }
             }
@@ -256,12 +260,12 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
                     auto node = *it;
                     if (TI(Result) == TI(*node))
                     {
-                        ERASE_NODE
+                        erase_node(it, nodes_ready);
                     }
                     else if (!is_supported_mlir_op(node))
                     {
                         process_successors(node, node_to_size_map, nodes_ready);
-                        ERASE_NODE
+                        erase_node(it, nodes_ready);
                         change_mode = false;
                         last_op_is_supported = false;
                     }
@@ -283,13 +287,13 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
                     auto node = *it;
                     if (TI(Result) == TI(*node))
                     {
-                        ERASE_NODE
+                        erase_node(it, nodes_ready);
                     }
                     else if (is_supported_mlir_op(node))
                     {
                         process_supported_op(node, current_subgraph_id);
                         process_successors(node, node_to_size_map, nodes_ready);
-                        ERASE_NODE
+                        erase_node(it, nodes_ready);
                         change_mode = false;
                         last_op_is_supported = true;
                     }
