@@ -96,7 +96,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_fprop()
     this->add_matcher(m, callback);
 }
 
-void pass::CoreFusion::construct_softmax_cross_entropy_bprop_v1()
+void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_soft_labels()
 {
     // Softmax bprop
     auto input_x = std::make_shared<pattern::op::Label>(element::f32, Shape{41, 37});
@@ -107,8 +107,10 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_v1()
     auto subtract_input_x = std::make_shared<ngraph::op::Subtract>(input_x, broadcast_max_x);
     auto constant_2 = ngraph::op::Constant::create(element::f32, Shape{41, 37}, {1});
     auto maximum = std::make_shared<ngraph::op::Maximum>(constant_2, subtract_input_x);
-    auto softmax = std::make_shared<ngraph::op::Softmax>(maximum, AxisSet{1});
-    auto softmax_label = std::make_shared<pattern::op::Label>(softmax);
+    auto softmax_axes = ngraph::op::Constant::create(element::i64, Shape{1}, {1});
+    auto softmax = std::make_shared<ngraph::op::Softmax>(maximum, softmax_axes);
+    auto softmax_label =
+        std::make_shared<pattern::op::Label>(softmax, nullptr, NodeVector{softmax});
 
     // Cross Entropy Bprop
     auto delta_label = std::make_shared<pattern::op::Label>(element::f32, Shape{41, 37});
@@ -141,8 +143,6 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_v1()
             auto axis_constant_op =
                 std::static_pointer_cast<ngraph::op::Constant>(pattern_map[reduction_axes_label]);
             auto axis_to_sum = *(static_cast<size_t const*>(axis_constant_op->get_data_ptr()));
-            auto one_hot_y =
-                std::make_shared<ngraph::op::OneHot>(labels, input->get_shape(), size_t(1));
             auto sm_ce_bprop = std::make_shared<ngraph::op::SoftmaxCrossEntropyBackprop>(
                 delta, softmax, labels, AxisSet{axis_to_sum}, true);
             ngraph::replace_node(m.get_match_root(), sm_ce_bprop);

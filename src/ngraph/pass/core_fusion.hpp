@@ -46,7 +46,7 @@ public:
             construct_zero_padded_conv();
             construct_zero_padded_conv_backprop_filters();
             construct_softmax_cross_entropy_fprop();
-            construct_softmax_cross_entropy_bprop_v1();
+            construct_softmax_cross_entropy_bprop_with_soft_labels();
         }
         // Patterns under FOP_FUSIONS create ops (FusedOps) that might not
         // be all supported by certain backends. In such a case, backends
@@ -72,5 +72,5 @@ public:
     void construct_conv_bias();
     void construct_conv_bias_add();
     void construct_softmax_cross_entropy_fprop();
-    void construct_softmax_cross_entropy_bprop_v1();
+    void construct_softmax_cross_entropy_bprop_with_soft_labels();
 };
