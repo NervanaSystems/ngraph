@@ -42,14 +42,14 @@ public:
     /// \param inputs vector of runtime::Tensor used as inputs
     /// \returns true if iteration is successful, false otherwise
     virtual bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                      const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) = 0;
+                      const paranoid_vector<std::shared_ptr<runtime::Tensor>>& inputs) = 0;
 
     /// \brief Executes a single iteration of a Function.
     /// \param outputs vector of runtime::Tensor used as outputs
     /// \param inputs vector of runtime::Tensor used as inputs
     /// \returns true if iteration is successful, false otherwise
     bool call_with_validate(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                            const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+                            const paranoid_vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
     /// \brief Collect performance information gathered on a Function.
     /// \returns Vector of PerformanceCounter information.
@@ -59,7 +59,7 @@ public:
     /// \param outputs vector of runtime::Tensor used as outputs
     /// \param inputs vector of runtime::Tensor used as inputs
     void validate(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                  const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+                  const paranoid_vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
     /// \brief Query the input Parameters
     /// \returns an ngraph::op::ParameterVector of all input parameters

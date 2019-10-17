@@ -33,14 +33,14 @@ runtime::Executable::~Executable()
 }
 
 bool runtime::Executable::call_with_validate(const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                             const vector<shared_ptr<runtime::Tensor>>& inputs)
+                                             const paranoid_vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     validate(outputs, inputs);
     return call(outputs, inputs);
 }
 
 void runtime::Executable::validate(const vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                                   const vector<std::shared_ptr<runtime::Tensor>>& inputs)
+                                   const paranoid_vector<std::shared_ptr<runtime::Tensor>>& inputs)
 {
     const ParameterVector& parameters = get_parameters();
     const ResultVector& results = get_results();
