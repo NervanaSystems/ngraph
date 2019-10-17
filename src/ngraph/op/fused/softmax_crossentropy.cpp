@@ -17,11 +17,14 @@
 
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/convert.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
+#include "ngraph/op/not_equal.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
@@ -124,11 +127,25 @@ NodeVector op::SoftmaxCrossEntropyBackprop::decompose_op() const
         auto delta_mul_labels = std::make_shared<ngraph::op::Multiply>(delta, labels);
         auto summation_delta_mul_labels =
             std::make_shared<ngraph::op::Sum>(delta_mul_labels, m_reduction_axes);
-        auto subtract = summation_delta_mul_labels - delta_mul_labels;
-        return {softmax * subtract};
+        auto multiply_sm = summation_delta_mul_labels * softmax;
+        return {multiply_sm - delta_mul_labels};
     }
     else
     {
-        return {nullptr};
+        auto mask_constant =
+            ngraph::op::Constant::create(element::f32, labels.get_shape(), {m_ignore_index});
+        auto not_equal = std::make_shared<ngraph::op::NotEqual>(labels, mask_constant);
+        auto convert = std::make_shared<ngraph::op::Convert>(not_equal, element::f64);
+        auto reshape = std::make_shared<ngraph::op::Reshape>(
+            convert, AxisVector{0, 1}, Shape{convert->get_shape().at(0)});
+        auto broadcast =
+            std::make_shared<ngraph::op::Broadcast>(reshape, delta.get_shape(), AxisSet{0, 1});
+
+        auto delta_mul_labels = std::make_shared<ngraph::op::Multiply>(delta, labels);
+        auto summation_delta_mul_labels =
+            std::make_shared<ngraph::op::Sum>(delta_mul_labels, m_reduction_axes);
+        auto multiply_sm = summation_delta_mul_labels * softmax;
+        auto subtract = multiply_sm - delta_mul_labels;
+        return {broadcast * subtract};
     }
 }
