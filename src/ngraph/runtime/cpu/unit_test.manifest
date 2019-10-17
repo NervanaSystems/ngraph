@@ -22,14 +22,9 @@ lrn_across_nw
 lrn_across_empty
 lrn_6D_across_2_axes
 
-# RandomUniform not supported in CPU backend
-random_uniform_all_static_seed_unused
-random_uniform_all_static_seed_used
-random_uniform_seed_use_dynamic
-random_uniform_all_static_range_dynamic
-random_uniform_dynamic_shapes
-
 # Gelu tests not supported in CPU backend, we use mkldnn gelubackprop (and not factor)
 gelu_backprop_factor_f32
 backwards_gelu_f32
 
+# ONNX TopK with dynamic K
+top_k_opset_10

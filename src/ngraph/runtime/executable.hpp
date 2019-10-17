@@ -69,6 +69,10 @@ public:
     /// \returns an ngraph::ResultVector of all input parameters
     const ngraph::ResultVector& get_results() const;
 
+    /// \brief Get the preferred pipeline_depth for this executable
+    /// \returns  preferred pipeline_depth
+    virtual size_t get_preferred_pipeline_depth() const;
+
     /// \brief Save this compiled Executable to an output stream.
     ///    Saved stream may be read with Backend::load
     virtual void save(std::ostream& output_stream);
