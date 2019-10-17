@@ -167,6 +167,20 @@ TEST(build_graph, multi_output_split)
     EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 91, 131}));
 }
 
+TEST(build_graph, multi_output_split_dynamic)
+{
+    const auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    const auto split = make_shared<op::Split>(data, 1, 2);
+    auto abs = make_shared<op::Abs>(split->output(1));
+    EXPECT_TRUE(abs->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+
+    auto f = make_shared<Function>(abs, ParameterVector{data});
+    auto new_parameter = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    split->input(0).replace_source_output(new_parameter->output(0));
+    f->validate_nodes_and_infer_types();
+    EXPECT_EQ(abs->get_shape(), (Shape{2, 2}));
+}
+
 TEST(build_graph, function_revalidate_and_infer)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});

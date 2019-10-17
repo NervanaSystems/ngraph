@@ -20,9 +20,8 @@ import numpy as np
 input = np.arange(1, 25, 1).reshape(1, 2, 3, 4).astype(np.float32)
 eps = np.array([1e-6]).astype(np.float32)
 # across chw axes
-norm = np.sqrt(np.maximum(np.sum(np.power(input, 2), axis=(1, 2, 3)), eps))
+norm = np.sqrt(np.sum(np.power(input, 2), axis=(1), keepdims=True) + eps)
 result = input/norm
 
 for elem in np.nditer(result):
     print(str(round(elem, 8)) + 'f, ')
-

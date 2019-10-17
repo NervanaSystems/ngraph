@@ -69,6 +69,7 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
+    opset_pass/broadcast_opset_pass.cpp
     opset_pass/convolution_opset_pass.cpp
     opset_pass/gather_opset_pass.cpp
     opset_pass/pad_opset_pass.cpp
@@ -202,10 +203,6 @@ if (NGRAPH_CPU_ENABLE)
         list(APPEND SRC halide.cpp)
     endif()
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
-endif()
-
-if (NGRAPH_INTELGPU_ENABLE)
-    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTELGPU)
 endif()
 
 if (NGRAPH_GPUH_ENABLE)

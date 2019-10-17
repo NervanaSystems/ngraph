@@ -25,7 +25,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(serialize, opset1_gather_pass)
+TEST(opset_transform, opset1_gather_upgrade_pass)
 {
     auto params = make_shared<op::Parameter>(element::f32, Shape{5, 6});
     auto indices = make_shared<op::Parameter>(element::i64, Shape{4});
