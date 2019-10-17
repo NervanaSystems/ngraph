@@ -40,10 +40,11 @@ DESCRIPTION
     Run an ONNX model
 
 SYNOPSIS
-        run_onnx_model [-m|--model <model file>] [-i|--input <input file>] [-m|--model <model file>] [-b|--backend <backend name>]
+        run_onnx_model -m|--model <model file> [-i|--input <input file>]  [-b|--backend <backend name>]
 
 OPTIONS
-        -i or --input  input binary file
+        -m or --model    model file
+        -i or --input    input binary file
         -b or --backend  backend name
 
 )###";
