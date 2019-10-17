@@ -70,6 +70,7 @@ namespace ngraph
                     write_values(values);
                 }
                 constructor_validate_and_infer_types();
+                m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
             }
 
             /// \brief Constructs a tensor constant
@@ -128,6 +129,7 @@ namespace ngraph
                     }
                 }
                 constructor_validate_and_infer_types();
+                m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
             }
 
             /// \brief Constructs a tensor constant with the same initialization value copied across
@@ -146,6 +148,7 @@ namespace ngraph
                                                         host_alignment()));
                 std::memcpy(m_data->get_ptr(), data, size);
                 constructor_validate_and_infer_types();
+                m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
             }
 
             virtual ~Constant() override;
@@ -246,6 +249,10 @@ namespace ngraph
 
             bool is_constant() const override { return true; }
             bool are_all_data_elements_bitwise_identical() const;
+            bool get_all_data_elements_bitwise_identical() const
+            {
+                return m_all_elements_bitwise_identical;
+            }
             std::string convert_value_to_string(size_t index) const;
 
         protected:
@@ -343,6 +350,7 @@ namespace ngraph
             element::Type m_element_type;
             Shape m_shape{};
             std::unique_ptr<runtime::AlignedBuffer> m_data;
+            bool m_all_elements_bitwise_identical;
             Constant(const Constant&) = delete;
             Constant operator=(const Constant&) = delete;
         };
