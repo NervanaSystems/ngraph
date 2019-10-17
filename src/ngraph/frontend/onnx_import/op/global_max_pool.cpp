@@ -29,7 +29,7 @@ namespace ngraph
                 NodeVector global_max_pool(const Node& node)
                 {
                     return pooling::GlobalPoolingFactory(node)
-                        .make_pooling_op<ngraph::op::MaxPool>();
+                        .make_pooling_op<ngraph::op::v1::MaxPool>();
                 }
 
             } // namespace set_1

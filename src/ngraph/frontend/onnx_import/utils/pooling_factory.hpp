@@ -21,6 +21,7 @@
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/shape.hpp"
@@ -80,9 +81,12 @@ namespace ngraph
                 ngraph::op::PadType m_auto_pad;
             };
 
-            // AvgPool accepts some additional parameters thus we have specialization for it.
+            // AvgPool:v1 and MaxPool:v1 accepts some additional parameters thus we have specialization for it.
             template <>
-            NodeVector PoolingFactory::make_pooling_op<ngraph::op::AvgPool>() const;
+            NodeVector PoolingFactory::make_pooling_op<ngraph::op::v1::AvgPool>() const;
+
+            template <>
+            NodeVector PoolingFactory::make_pooling_op<ngraph::op::v1::MaxPool>() const;
 
             ///
             /// \brief      Factory class which generates sub-graphs for ONNX 'global' pooling

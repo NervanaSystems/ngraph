@@ -30,7 +30,7 @@ namespace ngraph
                 NodeVector max_pool(const Node& node)
                 {
                     auto max_pool =
-                        pooling::PoolingFactory(node).make_pooling_op<ngraph::op::MaxPool>();
+                        pooling::PoolingFactory(node).make_pooling_op<ngraph::op::v1::MaxPool>();
                     max_pool.emplace_back(std::make_shared<NullNode>()); // Indices (optional)
                     return max_pool;
                 }

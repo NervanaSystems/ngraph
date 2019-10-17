@@ -29,7 +29,7 @@ namespace ngraph
                 NodeVector global_average_pool(const Node& node)
                 {
                     return pooling::GlobalPoolingFactory(node)
-                        .make_pooling_op<ngraph::op::AvgPool>();
+                        .make_pooling_op<ngraph::op::v1::AvgPool>();
                 }
 
             } // namespace set_1
