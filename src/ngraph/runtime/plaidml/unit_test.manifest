@@ -50,6 +50,7 @@ topk_2d_max_one_with_equal_values       # No plans to implement TopK
 model_top_k                             # No plans to implement TopK
 top_k_opset_10                          # No plans to implement TopK
 top_k_opset_10_const_k                  # No plans to implement TopK
+top_k_opset_11_const_k_smallest         # No plans to implement TopK
 
 # unsupported op: `Erf`
 erf

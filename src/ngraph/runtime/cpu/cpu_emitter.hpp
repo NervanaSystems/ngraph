@@ -22,6 +22,7 @@
 #include "ngraph/code_writer.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/gather.hpp"
@@ -80,7 +81,6 @@ namespace ngraph
         class NotEqual;
         class Select;
         class Subtract;
-        class Broadcast;
         class Convert;
         class Constant;
         class Reshape;
