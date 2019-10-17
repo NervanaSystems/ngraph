@@ -29,6 +29,11 @@ op::Split::Split(const Output<Node>& data, const int axis, const size_t num_spli
     , m_axis{axis}
     , m_num_split{num_split}
 {
+    // Create dynamic-typed outputs. Actual shape/type will be computed during shape inference
+    for (size_t i = 0; i < num_split; i++)
+    {
+        set_output_type(i, element::dynamic, PartialShape::dynamic());
+    }
     constructor_validate_and_infer_types();
 }
 
@@ -38,6 +43,11 @@ op::Split::Split(const Output<Node>& data, const int axis, const std::vector<siz
     , m_axis{axis}
     , m_splits{splits}
 {
+    // Create dynamic-typed outputs. Actual shape/type will be computed during shape inference
+    for (size_t i = 0; i < splits.size(); i++)
+    {
+        set_output_type(i, element::dynamic, PartialShape::dynamic());
+    }
     constructor_validate_and_infer_types();
 }
 
