@@ -29,7 +29,6 @@ using namespace std;
 
 TEST(event_tracing, event_file)
 {
-    // Set the environment variable to ensure logging
     ngraph::Event::enable_event_tracing();
     std::vector<std::thread> threads;
     for (auto i = 0; i < 10; i++)
@@ -39,15 +38,13 @@ TEST(event_tracing, event_file)
             std::ostringstream oss;
             oss << "Event: " << id;
             ngraph::Event event(oss.str(), "Dummy", "none");
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
             event.Stop();
             ngraph::Event::write_trace(event);
         });
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
         threads.push_back(std::move(next_thread));
     }
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
     for (auto& next : threads)
     {
@@ -61,4 +58,56 @@ TEST(event_tracing, event_file)
     // Validate the JSON objects - there should be 10 of them
     // TODO
     ngraph::Event::disable_event_tracing();
+}
+
+TEST(event_tracing, event_writer_callback)
+{
+    // Create the event writer
+    vector<ngraph::Event> event_list;
+    auto event_writer = [&](const ngraph::Event& event) { event_list.push_back(event); };
+
+    map<string, unique_ptr<ngraph::Event>> expected_event_table;
+    mutex expected_event_table_mtx;
+
+    ngraph::Event::enable_event_tracing();
+    ngraph::Event::register_event_writer(event_writer);
+
+    auto worker = [&](int worker_id) {
+        std::ostringstream oss;
+        oss << "Event: " << worker_id;
+        unique_ptr<ngraph::Event> event(new ngraph::Event(oss.str(), "Dummy", "none"));
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        event->Stop();
+        ngraph::Event::write_trace(*event);
+
+        lock_guard<mutex> lock(expected_event_table_mtx);
+        expected_event_table[event->get_name()] = move(event);
+    };
+
+    std::vector<std::thread> threads;
+
+    for (int i = 0; i < 10; i++)
+    {
+        std::thread thread_next(worker, i);
+        threads.push_back(move(thread_next));
+    }
+
+    for (auto& next : threads)
+    {
+        next.join();
+    }
+    ngraph::Event::disable_event_tracing();
+
+    // Now validate the events
+    ASSERT_EQ(10, event_list.size());
+    ASSERT_EQ(10, expected_event_table.size());
+
+    for (const auto& next_event : event_list)
+    {
+        const auto& expected_event_key = expected_event_table.find(next_event.get_name());
+        EXPECT_TRUE(expected_event_key != expected_event_table.end());
+        EXPECT_EQ(expected_event_key->second->get_name(), next_event.get_name());
+        EXPECT_EQ(expected_event_key->second->get_start(), next_event.get_start());
+        EXPECT_EQ(expected_event_key->second->get_stop(), next_event.get_stop());
+    }
 }
