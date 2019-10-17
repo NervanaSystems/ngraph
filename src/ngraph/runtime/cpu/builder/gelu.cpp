@@ -77,6 +77,17 @@ namespace ngraph
             }
 
             template <>
+            void Builder::BUILDER_DECL(ngraph::op::GeluBackpropFactor)
+            {
+                auto& functors = external_function->get_functors();
+                auto functor = [&](CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
+                    std::cout << "GeluBackpropFunctor currently nothing to do\n";
+                    // throw ngraph_error("GeluBackpropFactor is NOT supported in cpu backend.");
+                };
+                functors.emplace_back(functor);
+            }
+
+            template <>
             void Builder::BUILDER_DECL(ngraph::op::GeluBackprop)
             {
                 auto& functors = external_function->get_functors();
@@ -115,6 +126,7 @@ namespace ngraph
                                                                 deps,
                                                                 gelu_b_index);
                         }
+                        std::cout << "GeluBackprop functor called\n";
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg_fwd_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
@@ -137,6 +149,7 @@ namespace ngraph
             {
                 REGISTER_OP_BUILDER(Gelu);
                 REGISTER_OP_BUILDER(GeluBackprop);
+                REGISTER_OP_BUILDER(GeluBackpropFactor);
             }
         }
     }

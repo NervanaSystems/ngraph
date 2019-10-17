@@ -1191,13 +1191,20 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_gelubackprop()
     Shape shape{2, 2, 1, 1};
     auto input = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto gbpfactor = std::make_shared<ngraph::op::GeluBackpropFactor>(input);
+    auto gbpfactor_label =
+        std::make_shared<pattern::op::Label>(gbpfactor, nullptr, NodeVector{gbpfactor});
 
     auto delta = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto mult = std::make_shared<ngraph::op::Multiply>(gbpfactor, delta);
+    auto mult_label = std::make_shared<pattern::op::Label>(mult, nullptr, NodeVector{mult});
 
-    auto callback = [](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In a callback for construct_dropout against "
+    auto callback = [input, delta, gbpfactor_label, mult_label](pattern::Matcher& m) {
+
+        NGRAPH_DEBUG << "In callback for construct_gelubackprop against "
                      << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
         if (m.get_match_root()->get_element_type() != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
@@ -1205,7 +1212,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_gelubackprop()
             return false;
         }
 
-        auto pattern_map = m.get_pattern_map();
         auto m_mult = std::static_pointer_cast<ngraph::op::Multiply>(m.get_match_root());
 
         auto m_gbpfactor = std::static_pointer_cast<ngraph::op::GeluBackpropFactor>(
@@ -1216,16 +1222,31 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_gelubackprop()
             return false;
         }
 
-        // we wont fuse if the alpha and the Relu output element type are not same
-        if (m_gbpfactor->get_element_type() != m_mult->get_argument(1)->get_element_type())
+        const PartialShape& mult1_shape = m_mult->get_input_partial_shape(0);
+        const PartialShape& mult2_shape = m_mult->get_input_partial_shape(1);
+        if (mult1_shape.rank().is_dynamic() || mult2_shape.rank().is_dynamic())
         {
+            NGRAPH_DEBUG << "In construct_gelubackprop: some shapes are dynamic.";
             return false;
         }
 
-        // ConvolutionBiasAdd created only if it can run with MKLDNN.
+        if (pattern_map[input]->get_element_type() != pattern_map[delta]->get_element_type())
+        {
+            NGRAPH_DEBUG << "In construct_gelubackprop: types mismatch\n";
+            return false;
+        }
+
+        if (m_mult->get_argument(0)->get_shape() != m_mult->get_argument(1)->get_shape())
+        {
+            NGRAPH_DEBUG << "Input shapes for mult are different. shape1: "
+                         << m_mult->get_argument(1)->get_shape()
+                         << ", shape2: " << m_mult->get_argument(1)->get_shape() << "\n";
+            return false;
+        }
+
         // No further checks needed.
-        auto gbp_n = std::make_shared<ngraph::op::GeluBackprop>(m_gbpfactor->get_argument(0),
-                                                                m_mult->get_argument(1));
+        auto gbp_n =
+            std::make_shared<ngraph::op::GeluBackprop>(pattern_map[input], pattern_map[delta]);
         ngraph::replace_node(m.get_match_root(), gbp_n);
         return true;
     };
