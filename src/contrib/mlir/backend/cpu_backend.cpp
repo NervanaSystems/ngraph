@@ -23,13 +23,10 @@
 #include "contrib/mlir/utils.hpp"
 #include "ngraph/check.hpp"
 
-// TODO: Clean up unneeded files
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
 #include <llvm/IR/Module.h>
-#include <llvm/Support/ErrorOr.h>
-#include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Target/TargetMachine.h>
@@ -37,9 +34,6 @@
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
 #include <mlir/Dialect/LLVMIR/LLVMDialect.h>
-#include <mlir/ExecutionEngine/ExecutionEngine.h>
-#include <mlir/ExecutionEngine/MemRefUtils.h>
-#include <mlir/ExecutionEngine/OptUtils.h>
 #include <mlir/Pass/PassManager.h>
 #include <mlir/Target/LLVMIR.h>
 #include <mlir/Transforms/DialectConversion.h>
@@ -138,7 +132,7 @@ static unsigned getCacheLevelSize(llvm::TargetTransformInfo& targetInfo,
 
 void MLIRCPUBackend::init()
 {
-    // Mutex to safely initialize MLIR.
+    // Mutex to safely initialize CPU backend
     static std::mutex mlirInitMutex;
 
     std::unique_lock<std::mutex> lock(mlirInitMutex);

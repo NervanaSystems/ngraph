@@ -49,7 +49,6 @@ namespace ngraph
                 mlir::OwningModuleRef& get_module() { return m_module; }
             protected:
                 mlir::OwningModuleRef m_module;
-                // REMOVE and unifty under a wrapper class
                 mlir::MLIRContext& m_context;
             };
         }

@@ -52,8 +52,8 @@ namespace ngraph
         namespace ngmlir
         {
             /// MLIR Compiler. Given an nGraph sub-graph, represented as CompiledKernel node, it
-            /// translates
-            /// the graph down to nGraph dialect. It also applies any general core optimizations
+            /// translates the graph down to nGraph dialect and applies core optimizations.
+            ///
             /// The compiler owns the MLIR module until compilation is done. After that,
             /// the module can be grabbed and plugged into MLIR backends.
             class MLIRCompiler
@@ -87,7 +87,7 @@ namespace ngraph
                 };
 
             private:
-                // Convers an nGraph sub-graph to MLIR nGraph dialect.
+                // Converts an nGraph sub-graph to MLIR nGraph dialect.
                 void buildNgDialectModule();
                 void buildNgDialect();
                 // Applies any nGraph dialect optimizations
