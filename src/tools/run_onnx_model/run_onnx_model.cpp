@@ -14,8 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-// tool to import and run an ONNX model
-
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -26,6 +24,7 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/serializer.hpp"
+#include "ngraph/shape.hpp"
 #include "ngraph/util.hpp"
 
 static std::mt19937_64 random_generator;
@@ -33,6 +32,7 @@ static std::mt19937_64 random_generator;
 using namespace std;
 using namespace ngraph;
 
+// tool to import and run an ONNX model
 void help()
 {
     cout << R"###(
@@ -40,20 +40,53 @@ DESCRIPTION
     Run an ONNX model
 
 SYNOPSIS
-        run_onnx [-i|--input <input file>] [-o|--output <output file>]
+        run_onnx_model [-m|--model <model file>] [-i|--input <input file>] [-m|--model <model file>] [-b|--backend <backend name>]
 
 OPTIONS
-        -i or --input  input ONNX file
+        -i or --input  input binary file
+        -b or --backend  backend name
 
 )###";
 }
 
+int load_inputs(vector<string> input_paths, vector<shared_ptr<runtime::Tensor>> inputs)
+{
+    for (int i = 0; i < input_paths.size(); i++)
+    {
+        const string input_path = input_paths.at(i);
+        std::vector<float> data = read_binary_file<float>(input_path);
+        copy_data(inputs.at(i), data);
+    }
+
+    return 0;
+}
+
+int random_inputs(vector<shared_ptr<runtime::Tensor>> inputs)
+{
+    for (int i = 0; i < inputs.size(); i++)
+    {
+        auto tensor_size = shape_size(inputs.at(i)->get_shape());
+        std::uniform_int_distribution<int> distribution(0, 255);
+        vector<float> data(tensor_size, 0);
+        double r = 0;
+        for (int i = 0; i < tensor_size; i++)
+        {
+            data[i] = distribution(random_generator);
+        }
+        copy_data(inputs.at(i), data);
+    }
+    return 0;
+}
+
 int main(int argc, char** argv)
 {
-    string input;
+    vector<string> input_paths{};
     string model;
-    string output;
-    string backend;
+    string backend_type = "CPU";
+    vector<shared_ptr<runtime::Tensor>> inputs;
+    vector<shared_ptr<runtime::Tensor>> outputs;
+    std::shared_ptr<ngraph::Function> function;
+
     for (int i = 1; i < argc; i++)
     {
         string arg = argv[i];
@@ -63,11 +96,11 @@ int main(int argc, char** argv)
         }
         else if (arg == "-b" || arg == "--backend")
         {
-            backend = argv[++i];
+            backend_type = argv[++i];
         }
         else if (arg == "-i" || arg == "--input")
         {
-            input = argv[++i];
+            input_paths.push_back(argv[++i]);
         }
         else if (arg == "-h" || arg == "--help")
         {
@@ -76,36 +109,22 @@ int main(int argc, char** argv)
         }
     }
 
+    auto backend = ngraph::runtime::Backend::create(backend_type);
     ifstream f(model);
     if (f)
     {
-        std::shared_ptr<ngraph::Function> function = ngraph::onnx_import::import_onnx_model(model);
-        auto backend = ngraph::runtime::Backend::create("CPU");
-
-        std::uniform_int_distribution<int> distribution(1, 6);
+        function = ngraph::onnx_import::import_onnx_model(model);
 
         // Creating inputs
-        vector<shared_ptr<runtime::Tensor>> inputs;
         auto params = function->get_parameters();
         for (int i = 0; i < params.size(); i++)
         {
             auto tensor =
                 backend->create_tensor(params.at(i)->get_element_type(), params.at(i)->get_shape());
             auto tensor_size = params.at(i)->get_shape().size();
-            std::uniform_int_distribution<int> distribution(0, 255);
-            vector<float> v_a(tensor_size, 0);
-            double r = 0;
-            for (int i = 0; i < tensor_size; i++)
-            {
-                v_a[i] = distribution(random_generator);
-                r += static_cast<double>(v_a[i]);
-            }
-            copy_data(tensor, v_a);
             inputs.push_back(tensor);
         }
 
-        // Creating outputs
-        vector<shared_ptr<runtime::Tensor>> outputs;
         auto outputs_size = function->get_results().size();
         for (int i = 0; i < outputs_size; i++)
         {
@@ -113,7 +132,31 @@ int main(int argc, char** argv)
                                                  function->get_output_shape(i));
             outputs.push_back(tensor);
         }
+    }
+    else
+    {
+        cout << "Failed to open '" << model << "' for model\n";
+        return 1;
+    }
+
+    if (input_paths.size() == inputs.size())
+    {
+        load_inputs(input_paths, inputs);
+    }
+    else if (input_paths.size() == 0)
+    {
+        random_inputs(inputs);
+    }
+    else
+    {
+        cout << "Inappropriate number of input files." << endl;
+        return 2;
+    }
+
+    if (function)
+    {
         auto handle = backend->compile(function);
+
         if (handle->call_with_validate(outputs, inputs))
         {
             cout << "PASSED" << endl;
@@ -122,22 +165,6 @@ int main(int argc, char** argv)
         {
             cout << "FAILED" << endl;
         }
-    }
-    else
-    {
-        cout << "Failed to open '" << model << "' for model\n";
-        return 2;
-    }
-    ifstream d(input);
-    if (d)
-    {
-        const string s = input;
-        // auto data = read_binary_file(s);
-    }
-    else
-    {
-        cout << "Failed to open '" << input << "' for data\n";
-        return 2;
     }
 
     return 0;
