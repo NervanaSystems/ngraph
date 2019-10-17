@@ -54,9 +54,15 @@ void op::Concat::validate_and_infer_types()
         Dimension this_input_rank = this_input_shape.rank();
         if (this_input_rank.is_static())
         {
-            concat_axis = concat_axis < 0 ? concat_axis + int64_t(this_input_rank) : concat_axis;
+            if (get_concatenation_axis() < 0)
+            {
+                set_concatenation_axis(get_axis() < 0
+                                           ? get_axis() + static_cast<int64_t>(this_input_rank)
+                                           : get_axis());
+            }
+            auto concat_axis = get_concatenation_axis();
             NODE_VALIDATION_CHECK(this,
-                                  concat_axis < int64_t(this_input_rank),
+                                  concat_axis < static_cast<int64_t>(this_input_rank),
                                   "Concatenation axis (",
                                   concat_axis,
                                   ") is out of bounds for ",
@@ -76,11 +82,6 @@ void op::Concat::validate_and_infer_types()
                 "equal dimension everywhere except on the concatenation axis (axis ",
                 concat_axis,
                 ").");
-
-            NODE_VALIDATION_CHECK(
-                this,
-                element::Type::merge(inputs_et, inputs_et, get_input_element_type(i)),
-                "Argument element types are inconsistent.");
         }
         else
         {
@@ -91,7 +92,7 @@ void op::Concat::validate_and_infer_types()
 
     if (concatenated_shape.rank().is_static())
     {
-        concatenated_shape[concat_axis] = concatenation_axis_output_dim;
+        concatenated_shape[get_concatenation_axis()] = concatenation_axis_output_dim;
         set_output_type(0, inputs_et, concatenated_shape);
     }
     else
