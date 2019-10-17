@@ -42,9 +42,10 @@ namespace ngraph
             {
             public:
                 /// Executes a pre-compiled subgraph
-                void run(std::vector<void*>& externalTensors) override;
+                void run(void* args) override;
 
             private:
+                void run_internal(std::vector<void*>& externalTensors);
                 // Bind external tensors to MLIR module entry point
                 void bindArguments(std::vector<void*>& externalTensors);
                 // Invokes an MLIR module entry point with bound arguments

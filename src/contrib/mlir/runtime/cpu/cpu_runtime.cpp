@@ -53,7 +53,12 @@ static llvm::cl::opt<std::string>
     clObjectFilename("ngraph-mlir-object-filename",
                      llvm::cl::desc("Dump MLIR JITted-compiled object to file jitted_mlir.o"));
 
-void MLIRCPURuntime::run(std::vector<void*>& externalTensors)
+void MLIRCPURuntime::run(void* args)
+{
+    run_internal(*reinterpret_cast<std::vector<void*>*>(args));
+}
+
+void MLIRCPURuntime::run_internal(std::vector<void*>& externalTensors)
 {
     // Create an MLIR execution engine. We use a null MLIR pass manager for now to make sure we
     // don't run MLIR passes that were already run. We also pass a default transformer created with
