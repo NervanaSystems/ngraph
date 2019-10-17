@@ -96,7 +96,7 @@ shared_ptr<runtime::Executable>
     if (std::getenv("NGRAPH_MLIR") != nullptr)
     {
         // Initialize MLIR compiler
-        ngmlir::MLIRCompiler::init_mlir();
+        ngmlir::MLIRCompiler::init();
         // Initialize MLIR backend
         ngmlir::MLIRCPUBackend::init();
     }

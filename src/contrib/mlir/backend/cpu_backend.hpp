@@ -22,6 +22,7 @@
 #include <memory>
 #include "backend.hpp"
 #include "llvm/Support/CodeGen.h"
+#include "ngraph/check.hpp"
 
 namespace llvm
 {
@@ -37,26 +38,31 @@ namespace ngraph
             class MLIRCPUBackend : public MLIRBackend
             {
             public:
+                /// Global Initialization for all CPU backends
                 static void init();
 
                 MLIRCPUBackend(mlir::OwningModuleRef& module, mlir::MLIRContext& context)
                     : MLIRBackend(module, context)
                 {
-                    m_kind = MLIRBackend::CPU;
+                    NGRAPH_CHECK(initialized,
+                                 "Cannot instantiate CPU MLIR backend without initialization");
                 }
 
                 MLIRCPUBackend(mlir::ModuleOp& moduleOp, mlir::MLIRContext& context)
                     : MLIRBackend(moduleOp, context)
                 {
-                    m_kind = MLIRBackend::CPU;
+                    NGRAPH_CHECK(initialized,
+                                 "Cannot instantiate CPU MLIR backend without initialization");
                 }
+                // codegen LLVM dialect from nGraph dialect applying CPU backend optimization passes
+                void codegen() override;
 
-                virtual void codegen();
-
-                static bool kindof(unsigned kind) { return kind == MLIRBackend::CPU; }
             private:
+                // Apply CPU specific optimizations at nGraph dialect level
                 void optimizeNgDialect();
+                // Lowers nGraph dialect all the way to LLVM module.
                 void lowerNgDialect();
+                // Apply affine dialect optimizations
                 void optimizeAffineDialect();
 
             public:
@@ -72,6 +78,8 @@ namespace ngraph
                 // TODO: Move target machine to external nGraph backend when multiple backends start
                 // to use MLIR.
                 static std::unique_ptr<llvm::TargetMachine> targetMachine;
+                // Global initialization done for CPU backend
+                static bool initialized;
             };
         }
     }

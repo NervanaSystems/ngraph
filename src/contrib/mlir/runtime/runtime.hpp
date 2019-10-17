@@ -19,8 +19,14 @@
 
 #pragma once
 
+#include "contrib/mlir/backend/backend.hpp"
+
 #include <memory>
+#include <mlir/ExecutionEngine/ExecutionEngine.h>
+#include <mlir/ExecutionEngine/MemRefUtils.h>
+#include <mlir/IR/Builders.h>
 #include <mlir/IR/Module.h>
+#include <mlir/IR/Types.h>
 
 namespace ngraph
 {
@@ -28,29 +34,24 @@ namespace ngraph
     {
         namespace ngmlir
         {
-            class MLIRBackend
+            /// Base class for an MLIR runtime. An MLIR runtime owns the MLIR Context and owns
+            /// the final compiled module. It supports invoking the module with specific arguments
+            class MLIRRuntime
             {
             public:
-                MLIRBackend(mlir::OwningModuleRef& module, mlir::MLIRContext& context)
-                    : m_module(std::move(module))
-                    , m_context(context)
-                {
-                }
+                /// Sets the MLIR module that this runtime will own
+                void set_module(mlir::OwningModuleRef& module) { m_module = std::move(module); }
+                /// Overload with module op
+                void set_module(mlir::ModuleOp& module) { m_module = module; }
+                /// Executes a pre-compiled subgraph
+                virtual void run(std::vector<void*>& externalTensors) = 0;
 
-                MLIRBackend(mlir::ModuleOp& moduleOp, mlir::MLIRContext& context)
-                    : m_module(moduleOp)
-                    , m_context(context)
-                {
-                }
-
-                /// Generate code for the module
-                virtual void codegen() = 0;
-
+                /// Get the MLIR module that this runtime owns
                 mlir::OwningModuleRef& get_module() { return m_module; }
+                mlir::MLIRContext& get_context() { return m_context; }
             protected:
                 mlir::OwningModuleRef m_module;
-                // REMOVE and unifty under a wrapper class
-                mlir::MLIRContext& m_context;
+                mlir::MLIRContext m_context;
             };
         }
     }

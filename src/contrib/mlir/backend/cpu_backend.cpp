@@ -84,6 +84,8 @@ llvm::CodeGenOpt::Level MLIRCPUBackend::mlirOptLevel = llvm::CodeGenOpt::Level::
 
 std::unique_ptr<llvm::TargetMachine> MLIRCPUBackend::targetMachine;
 
+bool MLIRCPUBackend::initialized = false;
+
 /// Creates target machine for current host.
 static llvm::Expected<std::unique_ptr<llvm::TargetMachine>>
     createDefaultTargetMachine(unsigned optLevel)
@@ -134,12 +136,10 @@ static unsigned getCacheLevelSize(llvm::TargetTransformInfo& targetInfo,
     return optCacheLevelSize.getValue();
 }
 
-// Global Initialization for all CPU backends
 void MLIRCPUBackend::init()
 {
     // Mutex to safely initialize MLIR.
     static std::mutex mlirInitMutex;
-    static bool initialized = false;
 
     std::unique_lock<std::mutex> lock(mlirInitMutex);
 
@@ -170,7 +170,6 @@ void MLIRCPUBackend::codegen()
     lowerNgDialect();
 }
 
-// Lowers nGraph dialect all the way to LLVM module.
 void MLIRCPUBackend::lowerNgDialect()
 {
     // Lower NG dialect to Affine

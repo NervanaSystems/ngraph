@@ -51,14 +51,16 @@ namespace ngraph
     {
         namespace ngmlir
         {
-            /// This class is the entry point to MLIR from nGraph. It drives the conversion of
-            /// nGraph sub-graphs, represented with CompiledKernel nodes, to MLIR nGraph dialect
-            /// and its lowering, optimization and execution using LLVM-based MLIR execution engine.
+            /// MLIR Compiler. Given an nGraph sub-graph, represented as CompiledKernel node, it
+            /// translates
+            /// the graph down to nGraph dialect. It also applies any general core optimizations
+            /// The compiler owns the MLIR module until compilation is done. After that,
+            /// the module can be grabbed and plugged into MLIR backends.
             class MLIRCompiler
             {
             public:
-                /// Initializes MLIR environment. It must be called only once per execution.
-                static void init_mlir();
+                /// Initializes MLIR environment. It must be called only once.
+                static void init();
 
             public:
                 using TensorList = std::vector<descriptor::Tensor*>;
@@ -69,10 +71,13 @@ namespace ngraph
                     : m_compiledKernel(compiled_kernel)
                     , m_context(context)
                 {
+                    NGRAPH_CHECK(initialized,
+                                 "Cannot instantiate a compiler without initializing MLIR");
                 }
 
                 /// Compiles a subgraph with MLIR
                 void compile();
+
                 mlir::OwningModuleRef& get_module() { return m_module; }
             private:
                 struct TensorInfo
@@ -82,8 +87,11 @@ namespace ngraph
                 };
 
             private:
+                // Convers an nGraph sub-graph to MLIR nGraph dialect.
                 void buildNgDialectModule();
-                void optimizeNgDialect();
+                void buildNgDialect();
+                // Applies any nGraph dialect optimizations
+                void optimizeNgDialect() { /*TODO: Add Core NG dialect optimizations */}
 
                 mlir::Type getMlirType(const descriptor::Tensor* tensor);
                 mlir::Type getMlirType(const element::Type& type);
@@ -91,8 +99,6 @@ namespace ngraph
 
                 TensorInfo getTensorValue(descriptor::Tensor* tensor);
                 void updateTensorValue(descriptor::Tensor* tensor, mlir::Value* value);
-
-                void buildNgDialect();
 
                 template <typename Op>
                 static mlir::Operation* createOp(MLIRCompiler& compiler, const ngraph::Node* ngNode)
@@ -140,6 +146,8 @@ namespace ngraph
                 // use for MLIR dialect gen
                 TensorToInfoMap m_tensorToValueMap;
                 static const MLIRCompOpMap opDispatcher;
+                // Global initialization for MLIR compiler
+                static bool initialized;
             };
         }
     }

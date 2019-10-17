@@ -18,7 +18,7 @@
 
 #include "contrib/mlir/backend/cpu_backend.hpp"
 #include "contrib/mlir/core/compiler.hpp"
-#include "contrib/mlir/runtime/cpu/runtime.hpp"
+#include "contrib/mlir/runtime/cpu/cpu_runtime.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 
@@ -79,24 +79,29 @@ namespace ngraph
                         // We must create an MLIRContext that out lives the compilation/execution
                         // The runtime contains the context and gets store in the CK cache
 
+                        // Runtime contains context and must be constructed in-place.
+                        // MLIR contexts cannot be copied over
                         ctx->mlir_runtimes.emplace(std::piecewise_construct,
                                                    std::make_tuple(compiled_kernel),
                                                    std::make_tuple());
                         MLIRCPURuntime& mlir_runtime =
                             ctx->mlir_runtimes.find(compiled_kernel)->second;
-
+                        // Grab the context and initialize a core compiler
                         mlir::MLIRContext& context = mlir_runtime.get_context();
-
                         MLIRCompiler mlir_compiler(compiled_kernel, context);
+                        // Compile to NG dialect
                         mlir_compiler.compile();
+                        // Grab a context and initialize a CPU backend using same context
                         MLIRCPUBackend mlir_backend(mlir_compiler.get_module(), context);
+                        // Codegen to LLVM dialect
                         mlir_backend.codegen();
-
+                        // Store module into runtime, and invoke.
                         mlir_runtime.set_module(mlir_backend.get_module());
                         mlir_runtime.run(ptr_args);
                     }
                     else
                     {
+                        // We have found a cached runtime, just invoke.
                         MLIRCPURuntime& mlir_runtime = it->second;
                         mlir_runtime.run(ptr_args);
                     }

@@ -17,7 +17,10 @@
 // NOTE: This file follows nGraph format style.
 // Follows nGraph naming convention for public APIs only, else MLIR naming convention.
 
-#include "runtime.hpp"
+#include "cpu_runtime.hpp"
+#include "contrib/mlir/backend/cpu_backend.hpp"
+#include "ngraph/check.hpp"
+
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
@@ -31,8 +34,6 @@
 #include <mlir/ExecutionEngine/MemRefUtils.h>
 #include <mlir/ExecutionEngine/OptUtils.h>
 #include <mlir/IR/Function.h>
-#include "contrib/mlir/backend/cpu_backend.hpp"
-#include "ngraph/check.hpp"
 
 using llvm::SmallVector;
 using llvm::StringRef;

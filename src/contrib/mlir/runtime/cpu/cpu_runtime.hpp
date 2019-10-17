@@ -19,14 +19,14 @@
 
 #pragma once
 
-#include "contrib/mlir/backend/backend.hpp"
-
 #include <memory>
 #include <mlir/ExecutionEngine/ExecutionEngine.h>
 #include <mlir/ExecutionEngine/MemRefUtils.h>
 #include <mlir/IR/Builders.h>
 #include <mlir/IR/Module.h>
 #include <mlir/IR/Types.h>
+#include "contrib/mlir/backend/backend.hpp"
+#include "contrib/mlir/runtime/runtime.hpp"
 
 namespace ngraph
 {
@@ -36,23 +36,20 @@ namespace ngraph
         {
             /// A CPU Runtime is an MLIR runtime that owns an MLIR context and a module
             /// The module should be in LLVM dialect and ready to be lowered via an MLIR
-            /// ExecutionEngine
-            class MLIRCPURuntime
+            /// ExecutionEngine. The runtime owns the context and must out-live any MLIR
+            /// code Compilation and execution.
+            class MLIRCPURuntime : public MLIRRuntime
             {
             public:
-                /// Sets the MLIR module that this runtime will own
-                void set_module(mlir::OwningModuleRef& module) { m_module = std::move(module); }
-                /// Overload with module op
-                void set_module(mlir::ModuleOp& module) { m_module = module; }
                 /// Executes a pre-compiled subgraph
-                void run(std::vector<void*>& externalTensors);
+                void run(std::vector<void*>& externalTensors) override;
 
-                /// Get the MLIR module that this runtime owns
-                mlir::OwningModuleRef& get_module() { return m_module; }
-                mlir::MLIRContext& get_context() { return m_context; }
             private:
+                // Bind external tensors to MLIR module entry point
                 void bindArguments(std::vector<void*>& externalTensors);
+                // Invokes an MLIR module entry point with bound arguments
                 void execute();
+                // Cleans up allocated args
                 void cleanup();
 
                 /// Helper to create memref arguments for MLIR function signature
@@ -66,9 +63,7 @@ namespace ngraph
                 std::vector<void*>* m_externalTensors;
                 // Arguments for the MLIR function generated for the nGraph sub-graph.
                 llvm::SmallVector<void*, 8> m_invokeArgs;
-                mlir::OwningModuleRef m_module;
                 std::unique_ptr<mlir::ExecutionEngine> m_engine;
-                mlir::MLIRContext m_context;
             };
         }
     }
