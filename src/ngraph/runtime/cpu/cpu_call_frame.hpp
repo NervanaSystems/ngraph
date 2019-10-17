@@ -68,7 +68,7 @@ namespace ngraph
                 ///
                 /// Tuples will be expanded into their tensor views to build the call frame.
                 void call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                          const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+                          const paranoid_vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
                 void propagate_layouts(const std::vector<std::shared_ptr<runtime::Tensor>>& tvs,
                                        const LayoutDescriptorPtrs& layouts) const;
@@ -83,7 +83,7 @@ namespace ngraph
                 CPU_CallFrame& operator=(const CPU_CallFrame&) = delete;
 
                 void inner_call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                                const std::vector<std::shared_ptr<runtime::Tensor>>& inputs,
+                                const paranoid_vector<std::shared_ptr<runtime::Tensor>>& inputs,
                                 const size_t id,
                                 const bool disable_caching = true);
 

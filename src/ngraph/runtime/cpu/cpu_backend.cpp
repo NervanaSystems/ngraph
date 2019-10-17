@@ -178,7 +178,7 @@ std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Executabl
 }
 
 bool runtime::cpu::CPU_Executable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                        const vector<shared_ptr<runtime::Tensor>>& inputs)
+                                        const paranoid_vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     bool rc = true;
 

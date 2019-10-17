@@ -88,7 +88,7 @@ namespace ngraph
                                Allocator* allocator,
                                bool performance_counters_enabled);
                 bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                          const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
+                          const paranoid_vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
 
                 std::shared_ptr<CPU_CallFrame> get_call_frame();
 

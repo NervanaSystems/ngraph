@@ -195,7 +195,7 @@ namespace ngraph
         protected:
             std::shared_ptr<Function> m_function;
             std::shared_ptr<runtime::Backend> m_backend;
-            std::vector<std::shared_ptr<ngraph::runtime::Tensor>> m_input_tensors;
+            paranoid_vector<std::shared_ptr<ngraph::runtime::Tensor>> m_input_tensors;
             std::vector<std::shared_ptr<ngraph::runtime::Tensor>> m_result_tensors;
             std::vector<std::shared_ptr<ngraph::op::Constant>> m_expected_outputs;
             int m_input_index = 0;

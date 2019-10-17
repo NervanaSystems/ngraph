@@ -47,7 +47,7 @@ namespace ngraph
         std::vector<std::shared_ptr<runtime::Tensor>>
             get_autodiff(runtime::Backend* backend,
                          std::shared_ptr<Function>& df,
-                         const std::vector<std::shared_ptr<runtime::Tensor>>& df_input_args,
+                         const paranoid_vector<std::shared_ptr<runtime::Tensor>>& df_input_args,
                          const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
         {
             // df/dX* = f'(c, ...)
@@ -128,7 +128,7 @@ namespace ngraph
         std::vector<std::shared_ptr<runtime::Tensor>>
             backprop_derivative(runtime::Backend* backend,
                                 const std::shared_ptr<Function>& f,
-                                const std::vector<std::shared_ptr<runtime::Tensor>>& f_input_args,
+                                const paranoid_vector<std::shared_ptr<runtime::Tensor>>& f_input_args,
                                 const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
         {
             // y = f(X)
@@ -165,7 +165,9 @@ namespace ngraph
             auto df = s_df_map[f];
 
             // (c, X) arguments
-            std::vector<std::shared_ptr<runtime::Tensor>> df_input_args = f_input_args;
+            paranoid_vector<std::shared_ptr<runtime::Tensor>> df_input_args = f_input_args;
+            //std::vector<std::shared_ptr<runtime::Tensor>> df_input_args = f_input_args;
+            //std::vector<std::shared_ptr<runtime::Tensor>> df_input_args.(f_input_args.begin(), f_input_args.end());
             df_input_args.insert(df_input_args.begin(), c_arg);
 
             // call f'(c,X) to get df/dX*
@@ -181,7 +183,7 @@ namespace ngraph
             mod_f_output_args.push_back(backend->create_tensor<T>(y_shape));
 
             // (c, cached) arguments
-            std::vector<std::shared_ptr<runtime::Tensor>> mod_df_input_args = df_input_args;
+            paranoid_vector<std::shared_ptr<runtime::Tensor>> mod_df_input_args = df_input_args;
 
             // add cached nodes to both modified f output and modified f' input arguments
             for (auto node : fprop_cache.fprop_output_nodes)

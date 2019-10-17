@@ -68,7 +68,7 @@ runtime::cpu::CPU_CallFrame::~CPU_CallFrame()
 
 void runtime::cpu::CPU_CallFrame::inner_call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
-    const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs,
+    const paranoid_vector<std::shared_ptr<runtime::Tensor>>& input_tvs,
     const size_t id,
     const bool disable_caching)
 {
@@ -117,7 +117,7 @@ void runtime::cpu::CPU_CallFrame::inner_call(
 
 void runtime::cpu::CPU_CallFrame::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
-    const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
+    const paranoid_vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
 {
     auto id = 0;
     auto disable_caching = false;

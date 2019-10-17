@@ -29,7 +29,7 @@ template <typename T>
     autodiff_numeric_compare(ngraph::runtime::Backend* backend,
                              std::shared_ptr<ngraph::Function> f,
                              std::shared_ptr<ngraph::Function> g,
-                             const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& args,
+                             const paranoid_vector<std::shared_ptr<ngraph::runtime::Tensor>>& args,
                              T rtol,
                              T atol)
 {
@@ -38,7 +38,7 @@ template <typename T>
     // Use INTERPRETER to compute numerical derivatives
     auto interpreter_backend = ngraph::runtime::Backend::create("INTERPRETER");
 
-    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> interpreter_args;
+    paranoid_vector<std::shared_ptr<ngraph::runtime::Tensor>> interpreter_args;
     for (auto arg : args)
     {
         auto interpreter_arg =
@@ -79,7 +79,7 @@ template <typename T>
 ::testing::AssertionResult
     autodiff_numeric_compare(ngraph::runtime::Backend* backend,
                              std::function<std::shared_ptr<ngraph::Function>()> make_graph,
-                             const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& args,
+                             const paranoid_vector<std::shared_ptr<ngraph::runtime::Tensor>>& args,
                              T rtol,
                              T atol)
 {
@@ -91,7 +91,7 @@ template <typename T>
     ngraph::runtime::Backend* backend,
     std::shared_ptr<ngraph::Function> f,
     std::shared_ptr<ngraph::Function> g,
-    const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& args,
+    const paranoid_vector<std::shared_ptr<ngraph::runtime::Tensor>>& args,
     T rtol,
     T atol,
     const std::vector<bool>& indep_param_mask)
@@ -112,7 +112,7 @@ template <typename T>
 
     auto interpreter_backend = ngraph::runtime::Backend::create("INTERPRETER");
 
-    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> interpreter_args;
+    paranoid_vector<std::shared_ptr<ngraph::runtime::Tensor>> interpreter_args;
     for (auto arg : args)
     {
         auto interpreter_arg =

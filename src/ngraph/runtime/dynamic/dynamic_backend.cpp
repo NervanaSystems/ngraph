@@ -100,7 +100,7 @@ static size_t count_dyn_nodes(const shared_ptr<ngraph::Function>& f)
 
 bool runtime::dynamic::DynamicExecutable::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-    const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
+    const paranoid_vector<std::shared_ptr<runtime::Tensor>>& inputs)
 {
     // TODO: Get cached executable out if it exists.
     // We will cache on:
@@ -109,7 +109,7 @@ bool runtime::dynamic::DynamicExecutable::call(
 
     NGRAPH_CHECK(m_wrapped_function->get_parameters().size() == inputs.size());
 
-    std::vector<std::shared_ptr<runtime::Tensor>> wrapped_inputs;
+    paranoid_vector<std::shared_ptr<runtime::Tensor>> wrapped_inputs;
     std::vector<element::Type> arg_element_types;
     std::vector<PartialShape> arg_shapes;
 

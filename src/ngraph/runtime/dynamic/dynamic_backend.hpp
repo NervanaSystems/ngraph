@@ -95,7 +95,7 @@ public:
                       std::shared_ptr<ngraph::runtime::Backend> wrapped_backend,
                       bool enable_performance_collection = false);
     virtual bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                      const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
+                      const paranoid_vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
 
 private:
     std::shared_ptr<ngraph::Function> m_wrapped_function;

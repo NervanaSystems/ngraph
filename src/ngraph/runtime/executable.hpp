@@ -23,6 +23,8 @@
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 
+#include "paranoid_vector.h"
+
 namespace ngraph
 {
     namespace runtime

@@ -42,7 +42,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     cout << "compile time: " << timer.get_milliseconds() << "ms" << endl;
 
     vector<shared_ptr<runtime::HostTensor>> arg_data;
-    vector<shared_ptr<runtime::Tensor>> args;
+    paranoid_vector<shared_ptr<runtime::Tensor>> args;
     vector<bool> args_cacheable;
     for (shared_ptr<op::Parameter> param : f->get_parameters())
     {

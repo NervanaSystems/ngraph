@@ -54,7 +54,11 @@ static void
     thread_entry(runtime::Executable* exec, const TensorCollection& tensors, size_t pipeline_stage)
 {
     bool data_written = false;
-    const vector<shared_ptr<runtime::Tensor>>& args = tensors.input_tensors;
+    //const vector<shared_ptr<runtime::Tensor>>& args = tensors.input_tensors;
+    paranoid_vector<shared_ptr<runtime::Tensor>> args_nonconst;
+    args_nonconst.assign(tensors.input_tensors.begin(), tensors.input_tensors.end());
+    const paranoid_vector<shared_ptr<runtime::Tensor>> & args = args_nonconst;
+
     const vector<shared_ptr<runtime::Tensor>>& results = tensors.output_tensors;
     while (current_iteration < s_iterations + s_warmup_iterations)
     {

@@ -71,7 +71,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_stri
 }
 
 bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                               const vector<shared_ptr<runtime::Tensor>>& inputs)
+                                               const paranoid_vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     runtime::event::Duration d1("call", "Interpreter");
 

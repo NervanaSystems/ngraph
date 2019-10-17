@@ -195,7 +195,7 @@ public:
                   bool enable_performance_collection = false);
 
     bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,
-              const std::vector<std::shared_ptr<Tensor>>& intputs) override;
+              const paranoid_vector<std::shared_ptr<Tensor>>& intputs) override;
 
     virtual void save(std::ostream& output_stream) override;
 

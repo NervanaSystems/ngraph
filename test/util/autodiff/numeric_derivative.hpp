@@ -36,7 +36,7 @@ namespace ngraph
         std::vector<std::shared_ptr<runtime::Tensor>>
             numeric_derivative(runtime::Backend* backend,
                                const std::shared_ptr<Function>& f,
-                               const std::vector<std::shared_ptr<runtime::Tensor>>& args,
+                               const paranoid_vector<std::shared_ptr<runtime::Tensor>>& args,
                                T delta,
                                const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
         {

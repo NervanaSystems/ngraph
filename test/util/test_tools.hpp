@@ -60,6 +60,13 @@ void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>
 }
 
 template <typename T>
+void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const paranoid_vector<T>& data)
+{
+    size_t data_size = data.size() * sizeof(T);
+    tv->write(data.data(), data_size);
+}
+
+template <typename T>
 std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
 {
     if (ngraph::element::from<T>() != tv->get_element_type())
@@ -155,7 +162,7 @@ std::vector<std::shared_ptr<ngraph::runtime::Tensor>>
         throw ngraph::ngraph_error("number of parameters and arguments don't match");
     }
 
-    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> arg_tensors(t1args.size() +
+    paranoid_vector<std::shared_ptr<ngraph::runtime::Tensor>> arg_tensors(t1args.size() +
                                                                       t2args.size());
 
     size_t total_arg_count = 0;

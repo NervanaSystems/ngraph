@@ -78,7 +78,7 @@ void runtime::cpu::CPU_Debugger::resume()
 }
 
 void runtime::cpu::CPU_Debugger::call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                                      const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
+                                      const paranoid_vector<std::shared_ptr<runtime::Tensor>>& inputs)
 {
     m_outputs.assign(outputs.begin(), outputs.end());
     m_inputs.assign(inputs.begin(), inputs.end());

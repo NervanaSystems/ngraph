@@ -79,7 +79,7 @@ runtime::nop::NOPExecutable::NOPExecutable(shared_ptr<Function> function,
 }
 
 bool runtime::nop::NOPExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                       const vector<shared_ptr<runtime::Tensor>>& inputs)
+                                       const paranoid_vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     return true;
 }

@@ -68,7 +68,7 @@ namespace ngraph
                 ///
                 /// Tuples will be expanded into their tensor views to build the call frame.
                 void call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                          const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+                          const paranoid_vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
                 /// \brief Execute a single operation
                 bool step();
@@ -98,7 +98,7 @@ namespace ngraph
                 CPU_Debugger& operator=(const CPU_Debugger&) = delete;
                 std::map<size_t, CPUKernelFunctor> replaced_functors;
                 CPU_CallFrame& m_callframe;
-                std::vector<std::shared_ptr<runtime::Tensor>> m_inputs;
+                paranoid_vector<std::shared_ptr<runtime::Tensor>> m_inputs;
                 std::vector<std::shared_ptr<runtime::Tensor>> m_outputs;
             };
         }
