@@ -342,10 +342,9 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     list(APPEND MULTI_TEST_SRC
             onnx/onnx_import.in.cpp
             onnx/onnx_import_convpool.in.cpp
-            onnx/onnx_import_quant.in.cpp
             onnx/onnx_import_reshape.in.cpp
             onnx/onnx_import_rnn.in.cpp
-            onnx/onnx_import_utils_reshape.in.cpp)
+            onnx/onnx_import_quant.in.cpp)
     if (NGRAPH_ONNXIFI_ENABLE)
         list(APPEND SRC onnx/onnxifi.cpp onnx/onnxifi_span.cpp)
     endif()
