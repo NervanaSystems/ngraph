@@ -98,7 +98,6 @@ namespace ngraph
         class Atan;
         class ArgMin;
         class ArgMax;
-        class TopK;
         class GatherND;
         class ScatterAdd;
         class ScatterNDAdd;
