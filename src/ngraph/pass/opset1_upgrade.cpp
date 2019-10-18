@@ -425,6 +425,12 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
     case OP_TYPEID::TopK:
     {
         const auto topk_v0 = dynamic_cast<const op::TopK*>(node.get());
+
+        NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant(),
+                     "parameter k is expected to be a static constant");
+        NGRAPH_CHECK(node->input_value(2).get_node_shared_ptr()->is_constant(),
+                     "parameter top_k_axis is expected to be a static constant");
+
         const auto k = topk_v0->get_k();
         const auto axis = topk_v0->get_top_k_axis();
 
