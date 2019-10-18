@@ -21,6 +21,8 @@
 #include <random>
 #include <vector>
 
+#include "ngraph/op/pad.hpp"
+
 // CBLAS types and wrappers
 
 namespace cblas
@@ -146,6 +148,7 @@ namespace ngraph
                                     const Shape& output_shape,
                                     const CoordinateDiff& padding_below,
                                     const CoordinateDiff& padding_above,
+                                    const ngraph::op::PadMode pad_mode,
                                     int arena);
 
                 void reduce_sum_all_1d_float32(float* input,

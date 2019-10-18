@@ -16,6 +16,7 @@
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
@@ -35,6 +36,7 @@
 #include "ngraph/op/topk.hpp"
 
 #include <limits>
+#include <numeric>
 
 using namespace std;
 using namespace ngraph;
@@ -135,6 +137,31 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
                                                  pads_end,
                                                  kernel,
                                                  exclude_pad);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Broadcast:
+    {
+        auto tmp = dynamic_cast<const op::v0::Broadcast*>(node.get());
+        auto result_shape = tmp->get_broadcast_shape();
+        auto result_shape_node =
+            op::Constant::create(element::i64, Shape{result_shape.size()}, result_shape);
+        auto broadcast_axes = tmp->get_broadcast_axes();
+
+        // Flip broadcast_axes to get axes_mapping
+        std::vector<size_t> axes_mapping(result_shape.size());
+        std::iota(axes_mapping.begin(), axes_mapping.end(), 0);
+        for (auto i = broadcast_axes.rbegin(); i != broadcast_axes.rend(); i++)
+        {
+            axes_mapping.erase(axes_mapping.begin() + *i);
+        }
+        auto axes_mapping_node =
+            op::Constant::create(element::i64, Shape{axes_mapping.size()}, axes_mapping);
+
+        auto replacement_node = make_shared<op::v1::Broadcast>(node->input(0).get_source_output(),
+                                                               result_shape_node->output(0),
+                                                               axes_mapping_node->output(0));
         replace_node(node, replacement_node);
         modified = true;
         break;
@@ -369,6 +396,10 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
     case OP_TYPEID::Softmax:
     {
         auto tmp = dynamic_cast<const op::v0::Softmax*>(node.get());
+
+        NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant(),
+                     "axes parameter is expected to be a static constant");
+
         AxisSet axes = tmp->get_axes();
 
         NGRAPH_CHECK(
