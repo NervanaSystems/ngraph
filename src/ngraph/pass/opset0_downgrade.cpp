@@ -225,13 +225,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         {
         case op::v1::TopK::Mode::MAX: comnpute_max = true; break;
         case op::v1::TopK::Mode::MIN: comnpute_max = false; break;
-        default:
-            NGRAPH_CHECK(true,
-                         "Mode ",
-                         static_cast<int>(tmp->get_mode()),
-                         " is not supported during TopK:1 to TopK:0 conversion. Node: ",
-                         *node);
-            break;
+        default: break;
         }
 
         const auto arg_node = node->input_value(0);
