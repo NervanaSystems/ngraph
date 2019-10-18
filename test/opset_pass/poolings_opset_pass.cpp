@@ -171,8 +171,6 @@ TEST(opset_transform, opset1_avgpool_backprop_downgrade_pass)
     Strides window_movement_strides{1, 1};
     Shape window_shape{3, 3};
     bool exclude_pad = false;
-    auto rounding_type = op::RoundingType::FLOOR;
-    op::PadType auto_pad = op::PadType::EXPLICIT;
 
     auto avgpool_backprop_v1 = make_shared<op::v1::AvgPoolBackprop>(forward_arg_shape,
                                                                     delta,
