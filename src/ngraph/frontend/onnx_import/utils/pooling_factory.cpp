@@ -41,8 +41,7 @@ namespace ngraph
                 m_padding_above = Shape{std::begin(padding_above), std::end(padding_above)};
             }
 
-            template <>
-            NodeVector PoolingFactory::make_pooling_op<ngraph::op::v1::AvgPool>() const
+            NodeVector PoolingFactory::make_avg_pool() const
             {
                 bool count_include_pad =
                     m_onnx_node.get_attribute_value<std::int64_t>("count_include_pad", 0);
@@ -56,8 +55,7 @@ namespace ngraph
                                                                   m_auto_pad)};
             }
 
-            template <>
-            NodeVector PoolingFactory::make_pooling_op<ngraph::op::v1::MaxPool>() const
+            NodeVector PoolingFactory::make_max_pool() const
             {
                 return {std::make_shared<ngraph::op::v1::MaxPool>(m_inputs.at(0),
                                                                   m_strides,
