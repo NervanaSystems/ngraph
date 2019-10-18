@@ -18,6 +18,7 @@
 #include <memory>
 
 #include "ngraph/node.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/shape.hpp"
@@ -68,11 +69,12 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
                     std::int64_t k{node.get_attribute_value<std::int64_t>("k")};
+                    auto k_node = ngraph::op::Constant::create(element::i64, Shape{}, {k});
                     auto axis = get_axis(node);
 
                     std::shared_ptr<ngraph::Node> top_k = std::make_shared<ngraph::op::v1::TopK>(
                         data,
-                        k,
+                        k_node,
                         axis,
                         ngraph::op::v1::TopK::Mode::MAX,
                         ngraph::op::v1::TopK::SortType::SORT_VALUES,
@@ -119,9 +121,6 @@ namespace ngraph
                     const auto compute_max = static_cast<bool>(largest);
                     const auto sort_type = sorted ? ngraph::op::v1::TopK::SortType::SORT_VALUES
                                                   : ngraph::op::v1::TopK::SortType::NONE;
-
-                    std::shared_ptr<ngraph::Node> top_k = std::make_shared<ngraph::op::TopK>(
-                        data, k, axis, element::i64, compute_max, sort_type);
 
                     std::shared_ptr<ngraph::Node> top_k = std::make_shared<ngraph::op::v1::TopK>(
                         data,
