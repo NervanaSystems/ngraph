@@ -13,18 +13,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-
 #include <fstream>
 #include <iostream>
+#include <random>
 #include <string>
 
-#include "../../../test/util/test_tools.hpp"
 #include "gtest/gtest.h"
+#include "ngraph/file_util.hpp"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/util.hpp"
 #include "ngraph/util.hpp"
 
 static std::mt19937_64 random_generator;
@@ -55,8 +56,9 @@ int load_inputs(vector<string> input_paths, vector<shared_ptr<runtime::Tensor>> 
     for (int i = 0; i < input_paths.size(); i++)
     {
         const string input_path = input_paths.at(i);
-        std::vector<float> data = read_binary_file<float>(input_path);
-        copy_data(inputs.at(i), data);
+        std::vector<float> data = ngraph::file_util::read_binary_file<float>(input_path);
+        size_t data_size = data.size() * sizeof(inputs.at(i)->get_element_type());
+        inputs.at(i)->write(data.data(), data_size);
     }
 
     return 0;
@@ -73,7 +75,8 @@ int random_inputs(vector<shared_ptr<runtime::Tensor>> inputs)
         {
             data[i] = distribution(random_generator);
         }
-        copy_data(inputs.at(i), data);
+        size_t data_size = data.size() * sizeof(inputs.at(i)->get_element_type());
+        inputs.at(i)->write(data.data(), data_size);
     }
     return 0;
 }
