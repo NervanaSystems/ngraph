@@ -750,7 +750,29 @@ TEST(core_fusion, softmax_crossentropy_fprop_2)
 
 TEST(core_fusion, softmax_crossentropy_bprop_with_soft_labels)
 {
-    const std::string file_name("paddlepaddle/ngraph-paddlepaddle-bprop.json");
+    const std::string file_name("paddlepaddle/ngraph-paddlepaddle-bprop0.json");
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
+    test::Uniform<double> rng(-1.0, 1.0);
+    vector<vector<double>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<double> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
+}
+
+TEST(core_fusion, softmax_crossentropy_bprop_with_ignore_mask)
+{
+    const std::string file_name("paddlepaddle/ngraph-paddlepaddle-bprop1.json");
     auto cpu_f = make_function_from_file(file_name);
     auto int_f = make_function_from_file(file_name);
     test::Uniform<double> rng(-1.0, 1.0);
