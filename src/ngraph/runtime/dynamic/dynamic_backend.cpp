@@ -177,7 +177,6 @@ bool runtime::dynamic::DynamicExecutable::call(
     }
 
     pass::Manager passes;
-    passes.register_pass<pass::Opset0Downgrade>();
     passes.register_pass<pass::ConstantFolding>();
     passes.register_pass<pass::DynElimination>();
     passes.register_pass<pass::Opset0Downgrade>(); // Converts dynamic v1 variants to v0 ops
