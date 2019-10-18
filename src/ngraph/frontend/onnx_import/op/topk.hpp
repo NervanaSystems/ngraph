@@ -44,6 +44,14 @@ namespace ngraph
                 NodeVector topk(const Node& node);
             }
 
+            /// \brief Performs TopK operation from ONNX version 1.6
+            ///
+            /// \details ONNX op set 11 added support for `largest` and `sorted` attributes.
+            namespace set_11
+            {
+                NodeVector topk(const Node& node);
+            }
+
         } // namespace op
 
     } // namespace onnx_import
