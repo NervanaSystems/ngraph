@@ -60,7 +60,7 @@ namespace ngraph
                                   const Output<Node>& B,
                                   const Output<Node>& P,
                                   const std::int64_t hidden_size,
-                                  const direction direction,
+                                  const direction lstm_direction,
                                   const std::vector<float> activations_alpha = {},
                                   const std::vector<float> activations_beta = {},
                                   const std::vector<std::string> activations = {"sigmoid",
@@ -74,7 +74,7 @@ namespace ngraph
                 , m_activations_beta(activations_beta)
                 , m_activations(activations)
                 , m_clip_threshold(clip_threshold)
-                , m_direction(direction)
+                , m_direction(lstm_direction)
                 , m_hidden_size(hidden_size)
                 , m_input_forget(input_forget)
             {
@@ -89,7 +89,7 @@ namespace ngraph
                                   const Output<Node>& R,
                                   const Output<Node>& B,
                                   const std::int64_t hidden_size,
-                                  const direction xdirection,
+                                  const direction lstm_direction,
                                   const std::vector<float> activations_alpha = {},
                                   const std::vector<float> activations_beta = {},
                                   const std::vector<std::string> activations = {"sigmoid",
@@ -97,25 +97,25 @@ namespace ngraph
                                                                                 "tanh"},
                                   const float clip_threshold = 0,
                                   const bool input_forget = false)
-                : LSTMSequence(
-                      X,
-                      initial_hidden_state,
-                      initial_cell_state,
-                      sequence_lengths,
-                      W,
-                      R,
-                      B,
-                      Constant::create(
-                          element::f32,
-                          Shape{(xdirection == direction::BIDIRECTIONAL ? 2 : 1), 3 * hidden_size},
-                          std::vector<float>{0.f}),
-                      hidden_size,
-                      xdirection,
-                      activations_alpha,
-                      activations_beta,
-                      activations,
-                      clip_threshold,
-                      input_forget)
+                : LSTMSequence(X,
+                               initial_hidden_state,
+                               initial_cell_state,
+                               sequence_lengths,
+                               W,
+                               R,
+                               B,
+                               Constant::create(
+                                   element::f32,
+                                   Shape{(lstm_direction == direction::BIDIRECTIONAL ? 2UL : 1UL),
+                                         3UL * static_cast<size_t>(hidden_size)},
+                                   std::vector<float>{0.f}),
+                               hidden_size,
+                               lstm_direction,
+                               activations_alpha,
+                               activations_beta,
+                               activations,
+                               clip_threshold,
+                               input_forget)
             {
             }
 
