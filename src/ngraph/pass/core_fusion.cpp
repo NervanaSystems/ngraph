@@ -114,7 +114,10 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_soft_labels()
 
     // Cross Entropy Bprop
     auto delta_label = std::make_shared<pattern::op::Label>(element::f32, Shape{41, 37});
-    auto labels_y = std::make_shared<pattern::op::Label>(element::f32, Shape{41, 37});
+    // if soft_label = true, we will not have one hot encoding on the labels,
+    // instead we will get labels has 2d floating point tensor
+    auto labels_y = std::make_shared<pattern::op::Label>(
+        element::f32, Shape{41, 37}, pattern::has_class<op::Parameter>());
     auto negative_y = std::make_shared<ngraph::op::Negative>(labels_y);
     auto multiply_ce = std::make_shared<ngraph::op::Multiply>(negative_y, delta_label);
 
