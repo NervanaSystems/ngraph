@@ -204,7 +204,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_ignore_mask()
     auto broadcast_summation =
         std::make_shared<ngraph::op::Broadcast>(summation, Shape{41, 37}, AxisSet{1});
 
-    auto subtract = std::make_shared<ngraph::op::Subtract>(divide_sm_ce, broadcast_summation);
+    auto subtract = std::make_shared<ngraph::op::Subtract>(multiply_mask, broadcast_summation);
     auto multiply = std::make_shared<ngraph::op::Multiply>(softmax_label, subtract);
 
     auto callback = [input_x,

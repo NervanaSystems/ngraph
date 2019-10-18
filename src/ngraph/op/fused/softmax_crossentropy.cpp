@@ -144,7 +144,7 @@ NodeVector op::SoftmaxCrossEntropyBackprop::decompose_op() const
         auto reshape = std::make_shared<ngraph::op::Reshape>(
             convert, AxisVector{0, 1}, Shape{convert->get_shape().at(0)});
         auto broadcast_mask =
-            std::make_shared<ngraph::op::Broadcast>(reshape, delta.get_shape(), AxisSet{0, 1});
+            std::make_shared<ngraph::op::Broadcast>(reshape, delta.get_shape(), AxisSet{1});
 
         // one hot encoding of labels
         auto reshape_labels =
@@ -162,7 +162,9 @@ NodeVector op::SoftmaxCrossEntropyBackprop::decompose_op() const
         auto summation_delta_mul_labels =
             std::make_shared<ngraph::op::Sum>(multiply_mask, m_reduction_axes);
 
-        auto multiply_sm_with_summation = summation_delta_mul_labels * softmax;
+        auto broadcast_sum = std::make_shared<ngraph::op::Broadcast>(
+            summation_delta_mul_labels, delta.get_shape(), AxisSet{1});
+        auto multiply_sm_with_summation = broadcast_sum * softmax;
         return {multiply_sm_with_summation - multiply_mask};
     }
 }
