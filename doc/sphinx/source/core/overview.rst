@@ -1,10 +1,10 @@
 .. core/overview.rst:
 
 
-Overview
-========
+Basic concepts
+==============
 
-.. figure:: ../graphics/whole-stack.png
+.. figure:: ../graphics/nGraphCompilerstack.png
    :alt: The whole stack
 
    The whole nGraph Compiler stack  
@@ -13,7 +13,7 @@ The nGraph Compiler stack consists of bridges, core, and backends. We'll examine
 each of these briefly to get started. 
 
 A framework bridge interfaces with the "frontend" Core API. A framework bridge 
-is a component that sits between a framework like TensorFlow or MXNet, and the
+is a component that sits between a framework like TensorFlow or PaddlePaddle, and the
 nGraph Core frontend API. A framework bridge does two things: first, it 
 translates a framework's operations into graphs in nGraph’s in-memory 
 :abbr:`Intermediary Representation (IR)`. Second, it executes the nGraph IR 
@@ -24,8 +24,9 @@ are some common patterns: a fairly typical example for a graph-based framework
 is illustrated here, and consists of basically two phases: a **clustering** 
 phase and a **translation** phase.
 
-.. figure:: ../graphics/translation-flow-to-ng-fofx.png
-   :alt: The whole stack
+.. figure:: ../graphics/overview-translation-flow.svg
+   :width: 725px
+   :alt: Translation flow to an nGraph function graph
 
    Translation flow to an nGraph function 
 

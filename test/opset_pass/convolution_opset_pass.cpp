@@ -10,7 +10,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(upgrade_pass, opset1_convolution_pass)
+TEST(opset_transform, opset1_convolution_upgrade_pass)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6, 9});
     auto filters = make_shared<op::Parameter>(element::f32, Shape{1, 3, 3, 3});

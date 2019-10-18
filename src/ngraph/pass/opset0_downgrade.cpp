@@ -15,8 +15,17 @@
 //*****************************************************************************
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/pad.hpp"
+#include "ngraph/op/product.hpp"
+#include "ngraph/op/reduce_prod.hpp"
+#include "ngraph/op/reduce_sum.hpp"
+#include "ngraph/op/reshape.hpp"
+#include "ngraph/op/reverse.hpp"
+#include "ngraph/op/sum.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -75,9 +84,25 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 #endif
     switch (get_typeid(node))
     {
+    case OP_TYPEID::Broadcast:
+    {
+        auto tmp = dynamic_cast<const op::v1::Broadcast*>(node.get());
+        const auto arg = node->input(0).get_source_output();
+        NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
+        auto target_shape =
+            static_pointer_cast<op::Constant>(node->input_value(1).get_node_shared_ptr())
+                ->get_shape_val();
+        NGRAPH_CHECK(tmp->get_broadcast_axes().first);
+        auto replacement_node =
+            make_shared<op::v0::Broadcast>(arg, target_shape, tmp->get_broadcast_axes().second);
+
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::Pad:
     {
-        auto tmp = dynamic_cast<const op::v1::Pad*>(node.get());
+        auto tmp = as_type_ptr<op::v1::Pad>(node);
         const auto pad_arg = node->input(0).get_source_output();
         const auto pad_value = node->input(3).get_source_output();
         auto replacement_node = make_shared<op::v0::Pad>(
@@ -87,11 +112,110 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
+    case OP_TYPEID::Product:
+    {
+        auto tmp = as_type_ptr<op::v1::ReduceProd>(node);
+        auto replacement_node = make_shared<op::v0::Product>(node->input(0).get_source_output(),
+                                                             node->input(1).get_source_output());
+        if (tmp->get_keep_dims())
+        {
+            NGRAPH_CHECK(tmp->reduction_axes_constant(),
+                         "Unable to convert ReduceProd:v1 to Product:v0 "
+                         "if reduction axes are not constant (for keep_dims=true). Node: ",
+                         *node);
+            auto output_pshape = replacement_node->get_output_partial_shape(0);
+            NGRAPH_CHECK(output_pshape.is_static(),
+                         "Unable to convert ReduceProd:v1 to Product:v0 "
+                         "if output shape is dynamic (for keep_dims=true). Node: ",
+                         *node);
+            const auto output_shape = output_pshape.to_shape();
+            auto reshaped_output_shape = output_shape;
+            for (const auto& axis : tmp->get_reduction_axes())
+            {
+                reshaped_output_shape.insert(reshaped_output_shape.begin() + axis, 1);
+            }
+            auto reshaped_product = make_shared<op::Reshape>(replacement_node->output(0),
+                                                             get_default_order(output_shape),
+                                                             reshaped_output_shape);
+            replace_node(node, reshaped_product);
+        }
+        else
+        {
+            replace_node(node, replacement_node);
+        }
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Reverse:
+    {
+        auto tmp = as_type_ptr<op::v1::Reverse>(node);
+        auto axes_node = tmp->input_value(1).get_node_shared_ptr();
+        NGRAPH_CHECK(axes_node->is_constant(),
+                     "Unable to convert Reverse:v1 to Reverse:v0 "
+                     "if reduction axes are not constant. Node: ",
+                     *node);
+        const auto axes_node_const = as_type_ptr<op::Constant>(axes_node);
+        AxisSet axes{};
+        if (tmp->get_mode() == op::v1::Reverse::Mode::INDEX)
+        {
+            axes = axes_node_const->get_axis_vector_val();
+        }
+        else // Mode::MASK
+        {
+            auto axes_mask = axes_node_const->get_vector<bool>();
+            for (size_t i = 0; i < axes_mask.size(); ++i)
+            {
+                if (axes_mask[i])
+                {
+                    axes.emplace(i);
+                }
+            }
+        }
+        auto replacement_node =
+            make_shared<op::v0::Reverse>(node->input(0).get_source_output(), axes);
+
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Sum:
+    {
+        auto tmp = as_type_ptr<op::v1::ReduceSum>(node);
+        auto replacement_node = make_shared<op::v0::Sum>(node->input(0).get_source_output(),
+                                                         node->input(1).get_source_output());
+        if (tmp->get_keep_dims())
+        {
+            NGRAPH_CHECK(tmp->reduction_axes_constant(),
+                         "Unable to convert ReduceSum:v1 to Sum:v0 "
+                         "if reduction axes are not constant (for keep_dims=true). Node: ",
+                         *node);
+            auto output_pshape = replacement_node->get_output_partial_shape(0);
+            NGRAPH_CHECK(output_pshape.is_static(),
+                         "Unable to convert ReduceSum:v1 to Sum:v0 "
+                         "if output shape is dynamic (for keep_dims=true). Node: ",
+                         *node);
+            const auto output_shape = output_pshape.to_shape();
+            auto reshaped_output_shape = output_shape;
+            for (const auto& axis : tmp->get_reduction_axes())
+            {
+                reshaped_output_shape.insert(reshaped_output_shape.begin() + axis, 1);
+            }
+            auto reshaped_product = make_shared<op::Reshape>(replacement_node->output(0),
+                                                             get_default_order(output_shape),
+                                                             reshaped_output_shape);
+            replace_node(node, reshaped_product);
+        }
+        else
+        {
+            replace_node(node, replacement_node);
+        }
+        modified = true;
+        break;
+    }
     default: break;
     }
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif
-
     return modified;
 }

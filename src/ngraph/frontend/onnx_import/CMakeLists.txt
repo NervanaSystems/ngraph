@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-set(ONNX_OPSET_VERSION 10 CACHE INTERNAL "Supported version of ONNX operator set")
+set(ONNX_OPSET_VERSION 11 CACHE INTERNAL "Supported version of ONNX operator set")
 
 add_library(onnx_import_interface OBJECT
         core/node.cpp
@@ -86,6 +86,8 @@ add_library(onnx_import STATIC
         op/equal.hpp
         op/erf.hpp
         op/exp.hpp
+        op/expand.hpp
+        op/expand.cpp
         op/eye_like.cpp
         op/eye_like.hpp
         op/flatten.cpp
