@@ -1,0 +1,57 @@
+# ******************************************************************************
+# Copyright 2017-2019 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ******************************************************************************
+#
+#
+# FindNGraph
+# ------
+#
+#   You can specify the path to nGraph files in NGRAPH_ROOT_DIR
+#
+# This will define the following variables:
+#
+#   NGRAPH_FOUND        - True if the system has the nGraph library
+#   NGRAPH_INCLUDE_DIR  - nGraph include directories
+#   NGRAPH_LIBRARIES    - nGraph libraries
+#
+#
+
+@PACKAGE_INIT@
+
+if(NOT NGRAPH_ROOT_DIR AND (DEFINED ENV{ngraph_DIR} OR ngraph_DIR))
+    if (EXISTS "${ngraph_DIR}")
+        # ngraph_DIR manually set via command line params
+        set(NGRAPH_ROOT_DIR "${ngraph_DIR}/..")
+    elseif (EXISTS "$ENV{ngraph_DIR}")
+        # ngraph_DIR manually set via env
+        set(NGRAPH_ROOT_DIR "$ENV{ngraph_DIR}/..")
+    endif()
+endif()
+if(NOT NGRAPH_ROOT_DIR)
+    ext_message(FATAL_ERROR "ngraph root directory is not found")
+endif()
+
+if (NOT NGRAPH_INCLUDE_DIR)
+    set_and_check(NGRAPH_INCLUDE_DIR "${NGRAPH_ROOT_DIR}/include")
+endif()
+
+if(NOT TARGET ngraph AND NOT ngraph_BINARY_DIR)
+    include("${CMAKE_CURRENT_LIST_DIR}/ngraphTargets.cmake")
+    set(NGRAPH_LIBRARIES ngraph::ngraph)
+else()
+    set(NGRAPH_LIBRARIES ngraph)
+endif()
+
+check_required_components(ngraph)

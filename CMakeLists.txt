@@ -629,8 +629,32 @@ if (NGRAPH_PYTHON_BUILD_ENABLE)
     add_subdirectory(python)
 endif()
 
+include(CMakePackageConfigHelpers)
+
+export(TARGETS ngraph NAMESPACE ngraph::
+       APPEND FILE "${CMAKE_CURRENT_BINARY_DIR}/ngraphTargets.cmake")
+
+install(EXPORT ngraphTargets
+    FILE ngraphTargets.cmake
+    NAMESPACE ngraph::
+    DESTINATION ${NGRAPH_INSTALL_LIB}/ngraph/cmake)
+
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/share/ngraphConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfig.cmake
+    INSTALL_DESTINATION ${NGRAPH_INSTALL_LIB}/ngraph/cmake
+    PATH_VARS NGRAPH_INSTALL_INCLUDE)
+
+write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/ngraphConfigVersion.cmake
+    VERSION ${NGRAPH_VERSION}
+    COMPATIBILITY SameMajorVersion)
+
 install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/licenses
     DESTINATION "${CMAKE_INSTALL_PREFIX}"
 )
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/VERSION DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfigVersion.cmake
+    DESTINATION ${NGRAPH_INSTALL_LIB}/ngraph/cmake )

@@ -638,7 +638,7 @@ elseif(APPLE)
 endif()
 
 # Defines macro in C++ to load backend plugin
-target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
+target_include_directories(ngraph PUBLIC $<BUILD_INTERFACE:${NGRAPH_INCLUDE_PATH}>)
 if (NOT WIN32)
     find_package(Threads REQUIRED)
     target_link_libraries(ngraph PUBLIC dl Threads::Threads)
@@ -663,8 +663,7 @@ endif()
 #-----------------------------------------------------------------------------------------------
 
 # nGraph
-install(FILES ${CMAKE_BINARY_DIR}/VERSION DESTINATION ${CMAKE_INSTALL_PREFIX})
-install(TARGETS ngraph DESTINATION ${NGRAPH_INSTALL_LIB})  # libngraph.so
+install(TARGETS ngraph DESTINATION ${NGRAPH_INSTALL_LIB} EXPORT ngraphTargets)  # libngraph.so
 install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/
     DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph"
@@ -672,7 +671,7 @@ install(DIRECTORY
         PATTERN "*.hpp"
         PATTERN "*.h"
 )
-install(FILES ${CMAKE_BINARY_DIR}/src/ngraph/version.hpp
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/version.hpp
     DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph")
 
 set(CPACK_GENERATOR "DEB")
