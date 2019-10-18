@@ -83,19 +83,25 @@ TEST(opset_transform, opset1_maxpool_upgrade_pass)
 
 TEST(opset_transform, opset1_avgpool_downgrade_pass)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{ 1, 3, 6, 9 });
-    Shape padding_below{ 1, 0 };
-    Shape padding_above{ 0, 1 };
-    Strides window_movement_strides{ 1, 1 };
-    Shape window_shape{ 3, 3 };
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6, 9});
+    Shape padding_below{1, 0};
+    Shape padding_above{0, 1};
+    Strides window_movement_strides{1, 1};
+    Shape window_shape{3, 3};
     bool exclude_pad = false;
     auto rounding_type = op::RoundingType::FLOOR;
     op::PadType auto_pad = op::PadType::EXPLICIT;
 
-    auto avgpool_v1 = make_shared<op::v1::AvgPool>(
-        arg, window_movement_strides, padding_below, padding_above, window_shape, exclude_pad, rounding_type, auto_pad);
+    auto avgpool_v1 = make_shared<op::v1::AvgPool>(arg,
+                                                   window_movement_strides,
+                                                   padding_below,
+                                                   padding_above,
+                                                   window_shape,
+                                                   exclude_pad,
+                                                   rounding_type,
+                                                   auto_pad);
     auto result = make_shared<op::Result>(avgpool_v1);
-    auto f = make_shared<Function>(ResultVector{ result }, ParameterVector{ arg });
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<pass::Opset0Downgrade>();
@@ -119,19 +125,23 @@ TEST(opset_transform, opset1_avgpool_downgrade_pass)
 
 TEST(opset_transform, opset1_maxpool_downgrade_pass)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{ 1, 3, 6, 9 });
-    Shape padding_below{ 1, 0 };
-    Shape padding_above{ 0, 1 };
-    Strides window_movement_strides{ 1, 1 };
-    Shape window_shape{ 3, 3 };
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6, 9});
+    Shape padding_below{1, 0};
+    Shape padding_above{0, 1};
+    Strides window_movement_strides{1, 1};
+    Shape window_shape{3, 3};
     auto rounding_type = op::RoundingType::FLOOR;
     op::PadType pad_type = op::PadType::EXPLICIT;
 
-    auto maxpool_v1 = make_shared<op::v1::MaxPool>(
-        arg, window_movement_strides, padding_below,
-        padding_above, window_shape, rounding_type, pad_type);
+    auto maxpool_v1 = make_shared<op::v1::MaxPool>(arg,
+                                                   window_movement_strides,
+                                                   padding_below,
+                                                   padding_above,
+                                                   window_shape,
+                                                   rounding_type,
+                                                   pad_type);
     auto result = make_shared<op::Result>(maxpool_v1);
-    auto f = make_shared<Function>(ResultVector{ result }, ParameterVector{ arg });
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<pass::Opset0Downgrade>();
@@ -154,21 +164,25 @@ TEST(opset_transform, opset1_maxpool_downgrade_pass)
 
 TEST(opset_transform, opset1_avgpool_backprop_downgrade_pass)
 {
-    auto delta = make_shared<op::Parameter>(element::f32, Shape{ 1, 3, 6, 9 });
-    Shape forward_arg_shape{ 1, 3, 7, 10 };
-    Shape padding_below{ 1, 0 };
-    Shape padding_above{ 0, 1 };
-    Strides window_movement_strides{ 1, 1 };
-    Shape window_shape{ 3, 3 };
+    auto delta = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6, 9});
+    Shape forward_arg_shape{1, 3, 7, 10};
+    Shape padding_below{1, 0};
+    Shape padding_above{0, 1};
+    Strides window_movement_strides{1, 1};
+    Shape window_shape{3, 3};
     bool exclude_pad = false;
     auto rounding_type = op::RoundingType::FLOOR;
     op::PadType auto_pad = op::PadType::EXPLICIT;
 
-    auto avgpool_backprop_v1 = make_shared<op::v1::AvgPoolBackprop>(
-        forward_arg_shape, delta, window_movement_strides,
-        padding_below, padding_above, window_shape, exclude_pad);
+    auto avgpool_backprop_v1 = make_shared<op::v1::AvgPoolBackprop>(forward_arg_shape,
+                                                                    delta,
+                                                                    window_movement_strides,
+                                                                    padding_below,
+                                                                    padding_above,
+                                                                    window_shape,
+                                                                    exclude_pad);
     auto result = make_shared<op::Result>(avgpool_backprop_v1);
-    auto f = make_shared<Function>(ResultVector{ result }, ParameterVector{ delta });
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{delta});
 
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<pass::Opset0Downgrade>();
@@ -191,19 +205,24 @@ TEST(opset_transform, opset1_avgpool_backprop_downgrade_pass)
 
 TEST(opset_transform, opset1_maxpool_backprop_downgrade_pass)
 {
-    auto arg_forward = make_shared<op::Parameter>(element::f32, Shape{ 1, 3, 7, 10 });
-    auto delta = make_shared<op::Parameter>(element::f32, Shape{ 1, 3, 6, 9 });
-    auto result_forward = make_shared<op::Parameter>(element::f32, Shape{ 1, 3, 6, 9 });
-    Shape padding_below{ 1, 0 };
-    Shape padding_above{ 0, 1 };
-    Strides window_movement_strides{ 1, 1 };
-    Shape window_shape{ 3, 3 };
+    auto arg_forward = make_shared<op::Parameter>(element::f32, Shape{1, 3, 7, 10});
+    auto delta = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6, 9});
+    auto result_forward = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6, 9});
+    Shape padding_below{1, 0};
+    Shape padding_above{0, 1};
+    Strides window_movement_strides{1, 1};
+    Shape window_shape{3, 3};
 
-    auto max_pool_backprop_v1 = make_shared<op::v1::MaxPoolBackprop>(
-        arg_forward, delta, result_forward, window_movement_strides,
-        padding_below, padding_above, window_shape);
+    auto max_pool_backprop_v1 = make_shared<op::v1::MaxPoolBackprop>(arg_forward,
+                                                                     delta,
+                                                                     result_forward,
+                                                                     window_movement_strides,
+                                                                     padding_below,
+                                                                     padding_above,
+                                                                     window_shape);
     auto result = make_shared<op::Result>(max_pool_backprop_v1);
-    auto f = make_shared<Function>(ResultVector{ result }, ParameterVector{ arg_forward, delta, result_forward });
+    auto f = make_shared<Function>(ResultVector{result},
+                                   ParameterVector{arg_forward, delta, result_forward});
 
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<pass::Opset0Downgrade>();

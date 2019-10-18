@@ -46,26 +46,26 @@ namespace ngraph
             {
                 bool count_include_pad =
                     m_onnx_node.get_attribute_value<std::int64_t>("count_include_pad", 0);
-                return { std::make_shared<ngraph::op::v1::AvgPool>(m_inputs.at(0),
+                return {std::make_shared<ngraph::op::v1::AvgPool>(m_inputs.at(0),
                                                                   m_strides,
                                                                   m_padding_below,
                                                                   m_padding_above,
                                                                   m_kernel_shape,
                                                                   !count_include_pad,
                                                                   op::RoundingType::FLOOR,
-                                                                  m_auto_pad) };
+                                                                  m_auto_pad)};
             }
 
             template <>
             NodeVector PoolingFactory::make_pooling_op<ngraph::op::v1::MaxPool>() const
             {
-                return { std::make_shared<ngraph::op::v1::MaxPool>(m_inputs.at(0),
-                                                                   m_strides,
-                                                                   m_padding_below,
-                                                                   m_padding_above,
-                                                                   m_kernel_shape,
-                                                                   op::RoundingType::FLOOR,
-                                                                   m_auto_pad) };
+                return {std::make_shared<ngraph::op::v1::MaxPool>(m_inputs.at(0),
+                                                                  m_strides,
+                                                                  m_padding_below,
+                                                                  m_padding_above,
+                                                                  m_kernel_shape,
+                                                                  op::RoundingType::FLOOR,
+                                                                  m_auto_pad)};
             }
 
             GlobalPoolingFactory::GlobalPoolingFactory(const Node& node)

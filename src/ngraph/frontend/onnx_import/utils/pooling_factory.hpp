@@ -81,7 +81,8 @@ namespace ngraph
                 ngraph::op::PadType m_auto_pad;
             };
 
-            // AvgPool:v1 and MaxPool:v1 accepts some additional parameters thus we have specialization for it.
+            // AvgPool:v1 and MaxPool:v1 accepts some additional parameters
+            // thus we have specialization for it.
             template <>
             NodeVector PoolingFactory::make_pooling_op<ngraph::op::v1::AvgPool>() const;
 

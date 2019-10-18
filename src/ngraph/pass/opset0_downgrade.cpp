@@ -99,13 +99,13 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         const auto window_shape = tmp->get_kernel();
 
         auto replacement_node = make_shared<op::v0::AvgPool>(input_arg,
-            window_shape,
-            window_movement_strides,
-            padding_below,
-            padding_above,
-            include_padding_in_avg_computation,
-            pad_type,
-            ceil_mode);
+                                                             window_shape,
+                                                             window_movement_strides,
+                                                             padding_below,
+                                                             padding_above,
+                                                             include_padding_in_avg_computation,
+                                                             pad_type,
+                                                             ceil_mode);
         replace_node(node, replacement_node);
         modified = true;
         break;
@@ -124,12 +124,12 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 
         auto replacement_node =
             make_shared<op::v0::AvgPoolBackprop>(forward_arg_shape,
-                delta,
-                window_shape,
-                window_movement_strides,
-                padding_below,
-                padding_above,
-                include_padding_in_avg_computation);
+                                                 delta,
+                                                 window_shape,
+                                                 window_movement_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 include_padding_in_avg_computation);
         replace_node(node, replacement_node);
         modified = true;
         break;
@@ -147,12 +147,12 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         auto window_shape = tmp->get_kernel();
 
         auto replacement_node = make_shared<op::v0::MaxPool>(input_arg,
-            window_shape,
-            window_movement_strides,
-            padding_below,
-            padding_above,
-            pad_type,
-            ceil_mode);
+                                                             window_shape,
+                                                             window_movement_strides,
+                                                             padding_below,
+                                                             padding_above,
+                                                             pad_type,
+                                                             ceil_mode);
         replace_node(node, replacement_node);
         modified = true;
         break;
@@ -173,24 +173,22 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         if (node->get_inputs().size() == 3)
         {
             const auto result_forward = node->input(2).get_source_output();
-            replacement_node =
-                make_shared<op::v0::MaxPoolBackprop>(arg_forward,
-                    delta,
-                    result_forward,
-                    window_shape,
-                    window_movement_strides,
-                    padding_below,
-                    padding_above);
+            replacement_node = make_shared<op::v0::MaxPoolBackprop>(arg_forward,
+                                                                    delta,
+                                                                    result_forward,
+                                                                    window_shape,
+                                                                    window_movement_strides,
+                                                                    padding_below,
+                                                                    padding_above);
         }
         else
         {
-            replacement_node =
-                make_shared<op::v0::MaxPoolBackprop>(arg_forward,
-                    delta,
-                    window_movement_strides,
-                    window_shape,
-                    padding_below,
-                    padding_above);
+            replacement_node = make_shared<op::v0::MaxPoolBackprop>(arg_forward,
+                                                                    delta,
+                                                                    window_movement_strides,
+                                                                    window_shape,
+                                                                    padding_below,
+                                                                    padding_above);
         }
         replace_node(node, replacement_node);
         modified = true;
