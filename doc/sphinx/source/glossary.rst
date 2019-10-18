@@ -20,7 +20,8 @@ Glossary
    builder
 
        A builder is a function that creates a sub-graph and returns 
-       a root node to the bridge.  See also: :doc:`provenance/overview`.
+       a root node to the bridge. Fused ops are preferred over 
+       builders See also: :doc:`provenance/overview`.
 
    data-flow graph
 

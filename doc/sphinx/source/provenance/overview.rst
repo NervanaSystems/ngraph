@@ -10,9 +10,8 @@ source files and line numbers. Provenance is *extensible* in that it
 may also include the chain of passes that lead from the framework graph 
 to the executing code. 
 
-In the context of a framework with *potential* subgraphs, it can associate 
-device code with specific tags added by a framework bridge which correspond 
-to the framework ops that create the nGraph nodes. This works only for 
+It can associate device code with specific tags added by a framework bridge which 
+correspond to the framework ops that create the nGraph nodes. This works only for 
 those transformations that take place in nGraph: the information stored 
 in the nodes can include additional details about how the device code was 
 chosen. For example, whenever a graph transformation is performed with one 
