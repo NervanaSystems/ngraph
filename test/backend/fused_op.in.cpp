@@ -1700,13 +1700,62 @@ NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_with_clip_across_channels)
     Shape data_shape{1, 2, 5, 5};
     size_t levels = 5;
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto input_low = make_shared<op::Parameter>(element::f32, Shape{2, 1, 1});
+    auto input_high = make_shared<op::Parameter>(element::f32, Shape{2, 1, 1});
+    auto output_low = make_shared<op::Parameter>(element::f32, Shape{2, 1, 1});
+    auto output_high = make_shared<op::Parameter>(element::f32, Shape{2, 1, 1});
+
+    auto quantize =
+        make_shared<op::FakeQuantize>(data, input_low, input_high, output_low, output_high, levels);
+    auto function = make_shared<Function>(
+        NodeVector{quantize},
+        ParameterVector{data, input_low, input_high, output_low, output_high});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    size_t n_elements = shape_size(data_shape);
+    vector<float> input_data(n_elements);
+    iota(begin(input_data), end(input_data), 0);
+
+    test_case.add_input<float>(input_data);
+    // input_low
+    test_case.add_input<float>(vector<float>{5.f, 30.f});
+    // input_high
+    test_case.add_input<float>(vector<float>{10.f, 40.f});
+    // output_low
+    test_case.add_input<float>(vector<float>{0.f, 50.f});
+    // output_high
+    test_case.add_input<float>(vector<float>{20.f, 70.f});
+
+    // expected result
+    test_case.add_expected_output<float>(
+        data_shape,
+        vector<float>{0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  5.0f,  10.0f, 10.0f, 15.0f,
+                      20.0f, 20.0f, 20.0f, 20.0f, 20.0f, 20.0f, 20.0f, 20.0f, 20.0f, 20.0f,
+                      20.0f, 20.0f, 20.0f, 20.0f, 20.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f,
+                      50.0f, 50.0f, 55.0f, 55.0f, 60.0f, 60.0f, 60.0f, 65.0f, 65.0f, 70.0f,
+                      70.0f, 70.0f, 70.0f, 70.0f, 70.0f, 70.0f, 70.0f, 70.0f, 70.0f, 70.0f});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_pdpd)
+{
+    Shape data_shape{1, 2, 5, 5};
+    size_t levels = 5;
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
     auto input_low = make_shared<op::Parameter>(element::f32, Shape{2});
     auto input_high = make_shared<op::Parameter>(element::f32, Shape{2});
     auto output_low = make_shared<op::Parameter>(element::f32, Shape{2});
     auto output_high = make_shared<op::Parameter>(element::f32, Shape{2});
 
     auto quantize =
-        make_shared<op::FakeQuantize>(data, input_low, input_high, output_low, output_high, levels);
+        make_shared<op::FakeQuantize>(data,
+                                      input_low,
+                                      input_high,
+                                      output_low,
+                                      output_high,
+                                      levels,
+                                      op::AutoBroadcastSpec(op::AutoBroadcastType::PDPD, 1));
     auto function = make_shared<Function>(
         NodeVector{quantize},
         ParameterVector{data, input_low, input_high, output_low, output_high});
