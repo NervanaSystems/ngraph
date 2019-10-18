@@ -55,7 +55,7 @@ TEST(opset_transform, opset1_topk_upgrade_pass)
 
 TEST(opset_transform, opset1_topk_downgrade_pass)
 {
-    const auto data = make_shared<op::Parameter>(element::i32, Shape{ 5, 10, 15 });
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{5, 10, 15});
     const int32_t k = 10;
     const auto k_node = op::Constant::create(element::i64, Shape{}, {k});
     const size_t axis = 2;
@@ -65,7 +65,7 @@ TEST(opset_transform, opset1_topk_downgrade_pass)
 
     const auto topk_v1 = make_shared<op::v1::TopK>(data, k_node, axis, mode, sort, elem_type);
     const auto result = make_shared<op::Result>(topk_v1);
-    auto f = make_shared<Function>(ResultVector{ result }, ParameterVector{ data });
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<pass::Opset0Downgrade>();

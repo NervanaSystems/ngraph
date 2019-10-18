@@ -36,7 +36,7 @@ namespace ngraph
                 using SortType = TopKSortType;
 
                 NGRAPH_API
-                    static constexpr NodeTypeInfo type_info{ "TopK", 0 };
+                static constexpr NodeTypeInfo type_info{"TopK", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a TopK operation
                 TopK() = default;
@@ -50,11 +50,11 @@ namespace ngraph
                 /// \param compute_max Compute top k max or top k min?
                 /// \param sort SortType for sorting results, default - SORT_VALUES
                 TopK(const Output<Node>& arg,
-                    size_t top_k_axis,
-                    const element::Type& index_element_type,
-                    size_t k = 0,
-                    bool compute_max = true,
-                    SortType sort = SortType::SORT_VALUES);
+                     size_t top_k_axis,
+                     const element::Type& index_element_type,
+                     size_t k = 0,
+                     bool compute_max = true,
+                     SortType sort = SortType::SORT_VALUES);
                 /// \brief Constructs a TopK operation.
                 ///
                 /// \param arg The input tensor
@@ -65,11 +65,11 @@ namespace ngraph
                 /// \param compute_max Compute top k max or top k min?
                 /// \param sort SortType for sorting results, default - SORT_VALUES
                 TopK(const Output<Node>& arg,
-                    const Output<Node>& k,
-                    size_t top_k_axis,
-                    const element::Type& index_element_type,
-                    bool compute_max = true,
-                    SortType sort = SortType::SORT_VALUES);
+                     const Output<Node>& k,
+                     size_t top_k_axis,
+                     const element::Type& index_element_type,
+                     bool compute_max = true,
+                     SortType sort = SortType::SORT_VALUES);
 
                 void validate_and_infer_types() override;
 
@@ -84,12 +84,12 @@ namespace ngraph
                 bool get_compute_max() const { return m_compute_max; }
                 SortType get_sort() const { return m_sort; }
             protected:
-                size_t m_top_k_axis{ 0 };
+                size_t m_top_k_axis{0};
                 element::Type m_index_element_type;
-                bool m_compute_max{ false };
-                SortType m_sort{ SortType::NONE };
+                bool m_compute_max{false};
+                SortType m_sort{SortType::NONE};
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                    const NodeVector& deltas) override;
+                                               const NodeVector& deltas) override;
             };
         }
         namespace v1

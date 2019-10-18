@@ -27,11 +27,11 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::v0::TopK::type_info;
 
 op::v0::TopK::TopK(const Output<Node>& arg,
-               size_t top_k_axis,
-               const element::Type& index_element_type,
-               size_t k,
-               bool compute_max,
-               SortType sort)
+                   size_t top_k_axis,
+                   const element::Type& index_element_type,
+                   size_t k,
+                   bool compute_max,
+                   SortType sort)
     : Op({arg, op::Constant::create(element::i64, Shape{1}, {k})->output(0)})
     , m_top_k_axis(top_k_axis)
     , m_index_element_type(index_element_type)
@@ -43,11 +43,11 @@ op::v0::TopK::TopK(const Output<Node>& arg,
 }
 
 op::v0::TopK::TopK(const Output<Node>& arg,
-               const Output<Node>& k,
-               size_t top_k_axis,
-               const element::Type& index_element_type,
-               bool compute_max,
-               SortType sort)
+                   const Output<Node>& k,
+                   size_t top_k_axis,
+                   const element::Type& index_element_type,
+                   bool compute_max,
+                   SortType sort)
     : Op({arg, k})
     , m_top_k_axis(top_k_axis)
     , m_index_element_type(index_element_type)
@@ -136,7 +136,8 @@ shared_ptr<Node> op::v0::TopK::copy_with_new_args(const NodeVector& new_args) co
         new_args.at(0), new_args.at(1), m_top_k_axis, m_index_element_type, m_compute_max, m_sort);
 }
 
-void op::v0::TopK::generate_adjoints(autodiff::Adjoints& /* adjoints */, const NodeVector& /* deltas */)
+void op::v0::TopK::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                     const NodeVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }
