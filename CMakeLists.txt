@@ -16,6 +16,9 @@
 
 cmake_minimum_required (VERSION 3.4)
 
+include_directories(/home/cconvey/r/cconvey/paranoid-vector/install/include/paranoia)
+link_directories(/home/cconvey/r/cconvey/paranoid-vector/install/lib)
+
 # set directory where the custom finders live
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
