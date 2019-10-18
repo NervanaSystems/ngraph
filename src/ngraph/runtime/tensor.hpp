@@ -115,35 +115,7 @@ namespace ngraph
 }
 
 #include "paranoid_vector.h"
-namespace std {
-    template<>
-        class vector<shared_ptr<ngraph::runtime::Tensor>, allocator<shared_ptr<ngraph::runtime::Tensor> > >
-        : public paranoid_vector<shared_ptr<ngraph::runtime::Tensor>> {
-            public:
-                using base_class = paranoid_vector<shared_ptr<ngraph::runtime::Tensor>>;
-                using value_type = base_class::value_type;
-
-                using allocator_type         = base_class::allocator_type;
-                using size_type              = base_class::size_type;
-                using difference_type        = base_class::difference_type;
-                using reference              = base_class::reference;
-                using const_reference        = base_class::const_reference;
-                using pointer                = base_class::pointer;
-                using const_pointer          = base_class::const_pointer;
-                using iterator               = base_class::iterator;
-                using const_iterator         = base_class::const_iterator;
-                using reverse_iterator       = base_class::reverse_iterator;
-                using const_reverse_iterator = base_class::const_reverse_iterator;
-
-                vector(size_t pool_preferred_max_size_bytes)                                           : base_class(pool_preferred_max_size_bytes) {}
-                vector(std::shared_ptr<allocator_type> allocator = std::make_shared<allocator_type>()) : base_class(allocator) {}
-                vector(const vector<value_type>& other)                                            : base_class(other) {}
-                vector(std::initializer_list<value_type> l)                                            : base_class(l) {}
-                vector& operator=( const vector& other ) { base_class::operator=(other); return *this; }
-
-                int foozle;
-        };
-}
+DEFINE_PARANOID_VECTOR_SPECIALIZATION(shared_ptr<ngraph::runtime::Tensor>)
 
 namespace ngraph {
     namespace runtime {
