@@ -37,16 +37,16 @@ namespace ngraph
             /// \param reduction_axes axes on which to reduce the summation operation
             SoftmaxCrossEntropy(const Output<Node>& arg1,
                                 const Output<Node>& arg2,
-                                const AxisSet& reduction_axes);
+                                int64_t reduction_axes);
 
             virtual NodeVector decompose_op() const override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            const AxisSet& get_reduction_axes() const { return m_reduction_axes; }
+            const int64_t get_reduction_axes() const { return m_reduction_axes; }
         private:
-            AxisSet m_reduction_axes;
+            int64_t m_reduction_axes;
         };
 
         class SoftmaxCrossEntropyBackprop : public util::FusedOp
@@ -69,9 +69,9 @@ namespace ngraph
             SoftmaxCrossEntropyBackprop(const Output<Node>& delta,
                                         const Output<Node>& softmax,
                                         const Output<Node>& labels,
-                                        const AxisSet& reduction_axes,
+                                        int64_t reduction_axes,
                                         bool soft_label = false,
-                                        int ignore_index = -100);
+                                        int64_t ignore_index = -100);
 
             virtual NodeVector decompose_op() const override;
 
@@ -79,13 +79,13 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
-            const AxisSet& get_reduction_axes() const { return m_reduction_axes; }
+            const int64_t get_reduction_axes() const { return m_reduction_axes; }
             const bool get_soft_label() const { return m_soft_label; }
-            const int get_ignore_index() const { return m_ignore_index; }
+            const int64_t get_ignore_index() const { return m_ignore_index; }
         private:
-            AxisSet m_reduction_axes;
+            int64_t m_reduction_axes;
             bool m_soft_label;
-            int m_ignore_index;
+            int64_t m_ignore_index;
         };
     } // namespace op
 } // namespace ngraph

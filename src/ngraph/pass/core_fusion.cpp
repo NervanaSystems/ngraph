@@ -89,7 +89,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_fprop()
             std::static_pointer_cast<ngraph::op::Constant>(pattern_map[reduction_axes_label]);
         auto axis_to_sum = *(static_cast<size_t const*>(axis_constant_op->get_data_ptr()));
         auto softmax_crossentropy = std::make_shared<ngraph::op::SoftmaxCrossEntropy>(
-            input_to_normalize, one_hot_labels, AxisSet{axis_to_sum});
+            input_to_normalize, one_hot_labels, axis_to_sum);
         ngraph::replace_node(m.get_match_root(), softmax_crossentropy);
 
         return true;
@@ -149,7 +149,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_soft_labels()
                 std::static_pointer_cast<ngraph::op::Constant>(pattern_map[reduction_axes_label]);
             auto axis_to_sum = *(static_cast<size_t const*>(axis_constant_op->get_data_ptr()));
             auto sm_ce_bprop = std::make_shared<ngraph::op::SoftmaxCrossEntropyBackprop>(
-                delta, softmax, labels, AxisSet{axis_to_sum}, true);
+                delta, softmax, labels, axis_to_sum, true);
             ngraph::replace_node(m.get_match_root(), sm_ce_bprop);
             return true;
         };
@@ -230,7 +230,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_ignore_mask()
             std::static_pointer_cast<ngraph::op::Constant>(pattern_map[mask_label]);
         auto ignore_index = *(static_cast<size_t const*>(mask_constant_op->get_data_ptr()));
         auto sm_ce_bprop = std::make_shared<ngraph::op::SoftmaxCrossEntropyBackprop>(
-            delta, softmax, labels, AxisSet{axis_to_sum}, false, ignore_index);
+            delta, softmax, labels, axis_to_sum, false, ignore_index);
         ngraph::replace_node(m.get_match_root(), sm_ce_bprop);
         return true;
     };
