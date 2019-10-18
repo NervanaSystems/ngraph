@@ -115,3 +115,10 @@ namespace ngraph
         using TensorViewPtrs = std::vector<std::shared_ptr<Tensor>>;
     }
 }
+
+#include "paranoid_vector.h"
+namespace std {
+    template<> class vector<shared_ptr<::ngraph::runtime::Tensor>, allocator<::ngraph::runtime::Tensor>> : public paranoid_vector<shared_ptr<::ngraph::runtime::Tensor>> {};
+    //template<> class vector<shared_ptr<X>, allocator<X>> : public paranoid_vector<shared_ptr<X>> {};
+}
+
