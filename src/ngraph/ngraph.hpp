@@ -82,6 +82,7 @@ namespace ngraph
 #include "ngraph/except.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/node_visitor.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"

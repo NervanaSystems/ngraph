@@ -52,25 +52,7 @@ namespace ngraph
 
     class PartialShape;
     class Shape;
-
-    /// \brief Visits the attributes of a node.
-    ///
-    /// Attributes are the values set when building a graph which are not
-    /// computed as the graph executes. Values computed from the graph topology and attributes
-    /// during compilation are not attributes.
-    class AttributeVisitor
-    {
-    public:
-        virtual ~AttributeVisitor() {}
-        virtual void on(const std::string& name, std::string& value) = 0;
-        virtual void on(const std::string& name, element::Type& value) = 0;
-        virtual void on(const std::string& name, PartialShape& value) = 0;
-        virtual void on(const std::string& name, Shape& value) = 0;
-        virtual void on(const std::string& name, bool& value) = 0;
-        virtual void on(const std::string& name, int64_t& value) = 0;
-        virtual void on(const std::string& name, uint64_t& value) = 0;
-    };
-
+    class NodeVisitor;
     class Variant;
     class Node;
     using NodeVector = std::vector<std::shared_ptr<Node>>;
@@ -126,13 +108,14 @@ namespace ngraph
         template <typename NodeType>
         friend class Output;
 
-    protected:
+    public:
         /// Throws if the node is invalid.
         virtual void validate_and_infer_types();
 
         // Called in constructors during transition
         void constructor_validate_and_infer_types();
 
+    protected:
         std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args(
             const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec());
         void validate_and_infer_elementwise_arithmetic(
@@ -173,7 +156,7 @@ namespace ngraph
 
         virtual ~Node();
 
-        virtual bool visit_attributes(AttributeVisitor& visitor) { return false; }
+        virtual bool visit_attributes(NodeVisitor& visitor) { return false; }
         virtual bool is_unary_elementwise_arithmetic() const { return false; }
         virtual bool is_binary_elementwise_arithmetic() const { return false; }
         virtual bool is_binary_elementwise_comparison() const { return false; }

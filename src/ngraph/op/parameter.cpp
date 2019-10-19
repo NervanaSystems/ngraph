@@ -16,6 +16,7 @@
 
 #include <sstream>
 
+#include "ngraph/node_visitor.hpp"
 #include "ngraph/op/parameter.hpp"
 
 using namespace std;
@@ -34,11 +35,11 @@ op::Parameter::Parameter(const element::Type& element_type,
     constructor_validate_and_infer_types();
 }
 
-bool op::Parameter::visit_attributes(AttributeVisitor& visitor)
+bool op::Parameter::visit_attributes(NodeVisitor& visitor)
 {
-    visitor.on("cacheable", m_cacheable);
-    visitor.on("shape", m_partial_shape);
-    visitor.on("element_type", m_element_type);
+    visitor.on_attribute("cacheable", m_cacheable);
+    visitor.on_attribute("shape", m_partial_shape);
+    visitor.on_attribute("element_type", m_element_type);
     return true;
 }
 

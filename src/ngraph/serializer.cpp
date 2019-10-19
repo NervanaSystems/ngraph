@@ -22,6 +22,7 @@
 #include "ngraph/cpio.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/node_visitor.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
@@ -218,7 +219,35 @@ T get_or_default(json j, const std::string& key, const T& default_value)
     return has_key(j, key) ? j.at(key).get<T>() : default_value;
 }
 
-class JSONSerializer : public AttributeVisitor
+class JSONNodeSerializer : public NodeVisitor
+{
+public:
+    JSONNodeSerializer(json& j)
+        : m_json(j)
+    {
+    }
+
+    void on_attribute(const std::string& name, std::string& value) override
+    {
+        m_json[name] = value;
+    }
+    void on_attribute(const std::string& name, element::Type& value) override
+    {
+        m_json[name] = write_element_type(value);
+    }
+    void on_attribute(const std::string& name, PartialShape& value) override
+    {
+        m_json[name] = write_partial_shape(value);
+    }
+    void on_attribute(const std::string& name, Shape& value) override { m_json[name] = value; }
+    void on_attribute(const std::string& name, bool& value) override { m_json[name] = value; }
+    void on_attribute(const std::string& name, int64_t& value) override { m_json[name] = value; }
+    void on_attribute(const std::string& name, uint64_t& value) override { m_json[name] = value; }
+protected:
+    json& m_json;
+};
+
+class JSONSerializer
 {
 public:
     void set_indent(size_t indent) { m_indent = indent; }
@@ -240,19 +269,6 @@ public:
     json serialize_node(const Node& node);
     json serialize_axis_set(const AxisSet& axis_set);
 
-    void on(const std::string& name, std::string& value) override { m_json[name] = value; }
-    void on(const std::string& name, element::Type& value) override
-    {
-        m_json[name] = write_element_type(value);
-    }
-    void on(const std::string& name, PartialShape& value) override
-    {
-        m_json[name] = write_partial_shape(value);
-    }
-    void on(const std::string& name, Shape& value) override { m_json[name] = value; }
-    void on(const std::string& name, bool& value) override { m_json[name] = value; }
-    void on(const std::string& name, int64_t& value) override { m_json[name] = value; }
-    void on(const std::string& name, uint64_t& value) override { m_json[name] = value; }
 protected:
     size_t m_indent{0};
     bool m_serialize_output_shapes{false};
@@ -260,10 +276,36 @@ protected:
     json m_json_nodes;
     set<const Node*> m_nodes_serialized;
     queue<const Node*> m_nodes_to_serialize;
-    json m_json;
 };
 
-class JSONDeserializer : public AttributeVisitor
+class JSONNodeDeserializer : public NodeVisitor
+{
+public:
+    JSONNodeDeserializer(json& j)
+        : m_json(j)
+    {
+    }
+    void on_attribute(const std::string& name, std::string& value) override
+    {
+        value = m_json[name];
+    }
+    void on_attribute(const std::string& name, element::Type& value) override
+    {
+        value = read_element_type(m_json[name]);
+    }
+    void on_attribute(const std::string& name, PartialShape& value) override
+    {
+        value = read_partial_shape(m_json[name]);
+    }
+    void on_attribute(const std::string& name, Shape& value) override { value = m_json[name]; }
+    void on_attribute(const std::string& name, bool& value) override { value = m_json[name]; }
+    void on_attribute(const std::string& name, int64_t& value) override { value = m_json[name]; }
+    void on_attribute(const std::string& name, uint64_t& value) override { value = m_json[name]; }
+protected:
+    json& m_json;
+};
+
+class JSONDeserializer
 {
 public:
     void set_const_data_callback(function<const_data_callback_t> const_data_callback)
@@ -279,24 +321,12 @@ public:
     shared_ptr<Node> deserialize_node(json j);
     AxisSet deserialize_axis_set(json j);
 
-    void on(const std::string& name, std::string& value) override { value = m_json[name]; }
-    void on(const std::string& name, element::Type& value) override
-    {
-        value = read_element_type(m_json[name]);
-    }
-    void on(const std::string& name, PartialShape& value) override
-    {
-        value = read_partial_shape(m_json[name]);
-    }
-    void on(const std::string& name, Shape& value) override { value = m_json[name]; }
-    void on(const std::string& name, bool& value) override { value = m_json[name]; }
-    void on(const std::string& name, int64_t& value) override { value = m_json[name]; }
-    void on(const std::string& name, uint64_t& value) override { value = m_json[name]; }
 protected:
     unordered_map<string, shared_ptr<Node>> m_node_map;
     unordered_map<string, shared_ptr<Function>> m_function_map;
     function<const_data_callback_t> m_const_data_callback;
-    json m_json;
+    stack<json> json_stack;
+    json node;
 };
 
 static string
@@ -310,7 +340,7 @@ static json write_dimension(Dimension d)
     }
     else
     {
-        return static_cast<size_t>(d);
+        return static_cast<int64_t>(d);
     }
 }
 
@@ -322,7 +352,7 @@ static Dimension read_dimension(json j)
     }
     else
     {
-        return Dimension(static_cast<size_t>(j));
+        return Dimension(static_cast<int64_t>(j));
     }
 }
 
@@ -758,6 +788,7 @@ struct OutputVectorHelper
 shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 {
     shared_ptr<Node> node;
+    bool validate = false;
     try
     {
         string node_name = node_js.at("name").get<string>();
@@ -1819,12 +1850,10 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             else
             {
-                auto old_json = m_json;
-                m_json = node_js;
+                JSONNodeDeserializer visitor(node_js);
                 node = make_shared<op::Parameter>();
-                node->visit_attributes(*this);
-                node->delayed_validate_and_infer_types();
-                m_json = old_json;
+                node->visit_attributes(visitor);
+                validate = true;
             }
             break;
         }
@@ -2296,6 +2325,10 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 node->add_provenance_tag(prov_tag);
             }
         }
+        if (validate)
+        {
+            node->constructor_validate_and_infer_types();
+        }
         m_node_map[node_name] = node;
     }
     catch (...)
@@ -2437,14 +2470,11 @@ json JSONSerializer::serialize_node(const Node& n)
 #pragma GCC diagnostic error "-Wswitch-enum"
 // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
 #endif
-    json old_json = m_json;
-    m_json = node;
-    if (const_cast<Node*>(&n)->visit_attributes(*this))
+    JSONNodeSerializer visitor(node);
+    if (const_cast<Node*>(&n)->visit_attributes(visitor))
     {
-        m_json = old_json;
         return node;
     }
-    m_json = old_json;
     switch (get_typeid(node_op))
     {
     case OP_TYPEID::Abs: { break;
