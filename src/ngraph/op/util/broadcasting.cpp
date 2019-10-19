@@ -222,7 +222,7 @@ static std::shared_ptr<ngraph::Node> broadcast_value_pdpd_style(
 
     auto value_bcast = std::make_shared<ngraph::op::Broadcast>(trimmed_value, output_shape, axes);
 
-    return value_bcast;
+    return std::move(value_bcast);
 }
 
 namespace ngraph
@@ -480,6 +480,22 @@ namespace ngraph
             {
                 broadcasted_inputs.push_back(
                     broadcast_value_pdpd_style(inputs[i], inputs[0]->get_shape(), axis));
+            }
+            return broadcasted_inputs;
+        }
+
+        OutputVector pdpd_style_broadcast(const OutputVector& inputs, int64_t axis)
+        {
+            if (inputs.size() <= 1)
+            {
+                return inputs;
+            }
+
+            OutputVector broadcasted_inputs{inputs[0]};
+            for (std::size_t i = 1; i < inputs.size(); ++i)
+            {
+                broadcasted_inputs.push_back(
+                    broadcast_value_pdpd_style(inputs[i], inputs[0].get_shape(), axis));
             }
             return broadcasted_inputs;
         }

@@ -136,15 +136,24 @@ namespace ngraph
 // TODO(amprocte): refactor NGRAPH_CHECK_HELPER so we don't have to introduce a locally-scoped
 // variable (ss___) and risk shadowing.
 //
-#define NGRAPH_CHECK_HELPER(exc_class, ctx, check, ...)                                            \
+#define NGRAPH_CHECK_HELPER2(exc_class, ctx, check, ...)                                           \
     do                                                                                             \
     {                                                                                              \
         if (!(check))                                                                              \
         {                                                                                          \
             ::std::stringstream ss___;                                                             \
-            ::ngraph::write_all_to_stream(ss___, ##__VA_ARGS__);                                   \
+            ::ngraph::write_all_to_stream(ss___, __VA_ARGS__);                                     \
             throw exc_class(                                                                       \
                 (::ngraph::CheckLocInfo{__FILE__, __LINE__, #check}), (ctx), ss___.str());         \
+        }                                                                                          \
+    } while (0)
+
+#define NGRAPH_CHECK_HELPER1(exc_class, ctx, check)                                                \
+    do                                                                                             \
+    {                                                                                              \
+        if (!(check))                                                                              \
+        {                                                                                          \
+            throw exc_class((::ngraph::CheckLocInfo{__FILE__, __LINE__, #check}), (ctx), "");      \
         }                                                                                          \
     } while (0)
 
@@ -154,11 +163,79 @@ namespace ngraph
 ///            stream-insertion operator. Note that the expressions here will be evaluated lazily,
 ///            i.e., only if the `cond` evalutes to `false`.
 /// \throws ::ngraph::CheckFailure if `cond` is false.
-#define NGRAPH_CHECK(cond, ...)                                                                    \
-    NGRAPH_CHECK_HELPER(::ngraph::CheckFailure, "", (cond), ##__VA_ARGS__)
+#define NGRAPH_CHECK(...) NGRAPH_CHECK_HELPER(::ngraph::CheckFailure, "", __VA_ARGS__)
 
 /// \brief Macro to signal a code path that is unreachable in a successful execution. It's
 /// implemented with NGRAPH_CHECK macro.
 /// \param ... Additional error message that should describe why that execution path is unreachable.
 /// \throws ::ngraph::CheckFailure if the macro is executed.
-#define NGRAPH_UNREACHABLE(...) NGRAPH_CHECK(false, "Unreachable: ", ##__VA_ARGS__)
+#define NGRAPH_UNREACHABLE(...) NGRAPH_CHECK(false, "Unreachable: ", __VA_ARGS__)
+#define NGRAPH_CHECK_HELPER(exc_class, ctx, ...)                                                   \
+    CALL_OVERLOAD(NGRAPH_CHECK_HELPER, exc_class, ctx, __VA_ARGS__)
+
+#define GLUE(x, y) x y
+
+#define RETURN_ARG_COUNT(_1_,                                                                      \
+                         _2_,                                                                      \
+                         _3_,                                                                      \
+                         _4_,                                                                      \
+                         _5_,                                                                      \
+                         _6,                                                                       \
+                         _7,                                                                       \
+                         _8,                                                                       \
+                         _9,                                                                       \
+                         _10,                                                                      \
+                         _11,                                                                      \
+                         _12,                                                                      \
+                         _13,                                                                      \
+                         _14,                                                                      \
+                         _15,                                                                      \
+                         _16,                                                                      \
+                         _17,                                                                      \
+                         _18,                                                                      \
+                         _19,                                                                      \
+                         _20,                                                                      \
+                         _21,                                                                      \
+                         _22,                                                                      \
+                         _23,                                                                      \
+                         _24,                                                                      \
+                         _25,                                                                      \
+                         count,                                                                    \
+                         ...)                                                                      \
+    count
+#define EXPAND_ARGS(args) RETURN_ARG_COUNT args
+#define COUNT_ARGS_MAXN(...)                                                                       \
+    EXPAND_ARGS((__VA_ARGS__,                                                                      \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 2,                                                                                \
+                 1,                                                                                \
+                 0))
+
+#define OVERLOAD_MACRO2(name, count) name##count
+#define OVERLOAD_MACRO1(name, count) OVERLOAD_MACRO2(name, count)
+#define OVERLOAD_MACRO(name, count) OVERLOAD_MACRO1(name, count)
+
+#define CALL_OVERLOAD(name, exc_class, ctx, ...)                                                   \
+    GLUE(OVERLOAD_MACRO(name, COUNT_ARGS_MAXN(__VA_ARGS__)), (exc_class, ctx, __VA_ARGS__))
