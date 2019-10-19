@@ -84,12 +84,12 @@ void pass::CoreFusion::construct_softmax_cross_entropy_fprop()
 
         auto pattern_map = m.get_pattern_map();
         auto input_to_normalize = pattern_map[param_1];
-        auto one_hot_labels = pattern_map[param_2];
+        auto labels = pattern_map[param_2];
         auto axis_constant_op =
             std::static_pointer_cast<ngraph::op::Constant>(pattern_map[reduction_axes_label]);
         auto axis_to_sum = *(static_cast<size_t const*>(axis_constant_op->get_data_ptr()));
         auto softmax_crossentropy = std::make_shared<ngraph::op::SoftmaxCrossEntropy>(
-            input_to_normalize, one_hot_labels, axis_to_sum);
+            input_to_normalize, labels, axis_to_sum);
         ngraph::replace_node(m.get_match_root(), softmax_crossentropy);
 
         return true;

@@ -37,8 +37,12 @@ constexpr NodeTypeInfo op::SoftmaxCrossEntropy::type_info;
 
 op::SoftmaxCrossEntropy::SoftmaxCrossEntropy(const Output<Node>& arg1,
                                              const Output<Node>& arg2,
-                                             int64_t reduction_axes)
+                                             int64_t reduction_axes,
+                                             bool soft_label,
+                                             int64_t ignore_index)
     : FusedOp({arg1, arg2})
+    , m_soft_label(soft_label)
+    , m_ignore_index(ignore_index)
 {
     if (reduction_axes < 0)
     {
@@ -55,7 +59,7 @@ op::SoftmaxCrossEntropy::SoftmaxCrossEntropy(const Output<Node>& arg1,
 NodeVector op::SoftmaxCrossEntropy::decompose_op() const
 {
     auto input_to_normalize = input_value(0);
-    auto one_hot_labels = input_value(1);
+    auto labels = input_value(1);
 
     auto max_xj =
         std::make_shared<ngraph::op::Max>(input_to_normalize, AxisSet{size_t(m_reduction_axes)});
@@ -74,7 +78,7 @@ NodeVector op::SoftmaxCrossEntropy::decompose_op() const
     auto subtract_max_xj_from_input_from_log_sum_over_j =
         std::make_shared<ngraph::op::Subtract>(subtract_max_xj_from_input, broadcast_log);
     auto multiply = std::make_shared<ngraph::op::Multiply>(
-        one_hot_labels, subtract_max_xj_from_input_from_log_sum_over_j);
+        labels, subtract_max_xj_from_input_from_log_sum_over_j);
     auto sum_over_k =
         std::make_shared<ngraph::op::Sum>(multiply, AxisSet{size_t(m_reduction_axes)});
     auto negate_summation = std::make_shared<ngraph::op::Negative>(sum_over_k);
@@ -85,7 +89,12 @@ NodeVector op::SoftmaxCrossEntropy::decompose_op() const
 shared_ptr<Node> op::SoftmaxCrossEntropy::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<SoftmaxCrossEntropy>(new_args.at(0), new_args.at(1), m_reduction_axes);
+    return make_shared<SoftmaxCrossEntropyBackprop>(new_args.at(0),
+                                                    new_args.at(1),
+                                                    new_args.at(2),
+                                                    m_reduction_axes,
+                                                    m_soft_label,
+                                                    m_ignore_index);
 }
 
 constexpr NodeTypeInfo op::SoftmaxCrossEntropyBackprop::type_info;

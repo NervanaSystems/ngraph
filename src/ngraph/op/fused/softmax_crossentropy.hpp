@@ -33,11 +33,17 @@ namespace ngraph
             SoftmaxCrossEntropy() = default;
             /// \brief Softamax + CrossEntropy for numerical stabilization
             /// \param arg1 Node that produces the tensor to normalize
-            /// \param arg2 Node that produces OneHot Lables
+            /// \param arg2 Node that produces ground truth lables for the input
             /// \param reduction_axes axes on which to reduce the summation operation
+            /// \param soft_label flag indicating whether to interpretate the given labels as soft
+            /// labels
+            /// \param ignore_index Specifies a target value that is ignored and does not contribute
+            /// to the input gradient Only valid if soft_label is set to False
             SoftmaxCrossEntropy(const Output<Node>& arg1,
                                 const Output<Node>& arg2,
-                                int64_t reduction_axes);
+                                int64_t reduction_axes,
+                                bool soft_label = false,
+                                int64_t ignore_index = -100);
 
             virtual NodeVector decompose_op() const override;
 
@@ -45,8 +51,12 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
             const int64_t get_reduction_axes() const { return m_reduction_axes; }
+            const bool get_soft_label() const { return m_soft_label; }
+            const int64_t get_ignore_index() const { return m_ignore_index; }
         private:
             int64_t m_reduction_axes;
+            bool m_soft_label;
+            int64_t m_ignore_index;
         };
 
         class SoftmaxCrossEntropyBackprop : public util::FusedOp
