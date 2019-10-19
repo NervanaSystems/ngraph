@@ -287,20 +287,54 @@ public:
     }
     void on_attribute(const std::string& name, std::string& value) override
     {
-        value = m_json[name];
+        if (has_key(m_json, name))
+        {
+            value = m_json[name];
+        }
     }
     void on_attribute(const std::string& name, element::Type& value) override
     {
-        value = read_element_type(m_json[name]);
+        if (has_key(m_json, name))
+        {
+            value = read_element_type(m_json[name]);
+        }
     }
     void on_attribute(const std::string& name, PartialShape& value) override
     {
-        value = read_partial_shape(m_json[name]);
+        if (has_key(m_json, name))
+        {
+            value = read_partial_shape(m_json[name]);
+        }
     }
-    void on_attribute(const std::string& name, Shape& value) override { value = m_json[name]; }
-    void on_attribute(const std::string& name, bool& value) override { value = m_json[name]; }
-    void on_attribute(const std::string& name, int64_t& value) override { value = m_json[name]; }
-    void on_attribute(const std::string& name, uint64_t& value) override { value = m_json[name]; }
+    void on_attribute(const std::string& name, Shape& value) override
+    {
+        if (has_key(m_json, name))
+        {
+            value = m_json[name];
+        }
+    }
+    void on_attribute(const std::string& name, bool& value) override
+    {
+        if (has_key(m_json, name))
+        {
+            value = m_json[name];
+        }
+    }
+    void on_attribute(const std::string& name, int64_t& value) override
+    {
+        if (has_key(m_json, name))
+        {
+            value = m_json[name];
+        }
+    }
+    void on_attribute(const std::string& name, uint64_t& value) override
+    {
+        if (has_key(m_json, name))
+        {
+            value = m_json[name];
+        }
+    }
+
 protected:
     json& m_json;
 };
