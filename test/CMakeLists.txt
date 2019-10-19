@@ -292,6 +292,7 @@ set(MULTI_TEST_SRC
     backend/one_hot.in.cpp
     backend/pad.in.cpp
     backend/parameter_as_output.in.cpp
+    backend/partial_slice.in.cpp
     backend/pool.in.cpp
     backend/power.in.cpp
     backend/product.in.cpp
