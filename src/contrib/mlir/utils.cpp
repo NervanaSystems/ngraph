@@ -19,7 +19,7 @@
 
 #include "utils.hpp"
 
-#include "contrib/mlir/core/dialect/dialect.hpp"
+#include "contrib/mlir/core/ngraph_dialect/dialect.hpp"
 
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/Debug.h>

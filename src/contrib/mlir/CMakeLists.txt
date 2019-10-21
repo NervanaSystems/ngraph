@@ -23,13 +23,13 @@ include_directories(
 add_subdirectory(tools/ngraph-opt)
 
 set(SRC
-    backend/cpu_backend.cpp
+    backend/cpu/cpu_backend.cpp
     backend/pass/affine_lowerer.cpp
     backend/pass/memory_optimization.cpp
     core/compiler.cpp
-    core/dialect/dialect.cpp
-    core/dialect/type.cpp
-    core/dialect/ops.cpp
+    core/ngraph_dialect/dialect.cpp
+    core/ngraph_dialect/type.cpp
+    core/ngraph_dialect/ops.cpp
     core/pass/mlir_subgraph_extraction.cpp
     core/pass/mlir_subgraph_extraction.hpp
     runtime/cpu/memory_manager.cpp
@@ -98,7 +98,7 @@ function(ngraph_tablegen ofn)
 endfunction()
 
 set(MLIR_TABLEGEN_EXE mlir-tblgen)
-set(LLVM_TARGET_DEFINITIONS core/dialect/ops.td)
+set(LLVM_TARGET_DEFINITIONS core/ngraph_dialect/ops.td)
 
 ngraph_tablegen(ops.h.inc -gen-op-decls)
 ngraph_tablegen(ops.cpp.inc -gen-op-defs)

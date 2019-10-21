@@ -18,8 +18,8 @@
 // not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
 
 #include "contrib/mlir/core/compiler.hpp"
-#include "contrib/mlir/core/dialect/ops.hpp"
-#include "contrib/mlir/core/dialect/type.hpp"
+#include "contrib/mlir/core/ngraph_dialect/ops.hpp"
+#include "contrib/mlir/core/ngraph_dialect/type.hpp"
 
 #include "ngraph/assertion.hpp"
 

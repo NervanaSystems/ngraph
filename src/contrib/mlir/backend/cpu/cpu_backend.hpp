@@ -20,7 +20,7 @@
 #pragma once
 
 #include <memory>
-#include "backend.hpp"
+#include "contrib/mlir/backend/backend.hpp"
 #include "llvm/Support/CodeGen.h"
 #include "ngraph/check.hpp"
 

@@ -19,9 +19,9 @@
 
 #include "compiler.hpp"
 
-#include "dialect/dialect.hpp"
-#include "dialect/ops.hpp"
-#include "dialect/type.hpp"
+#include "ngraph_dialect/dialect.hpp"
+#include "ngraph_dialect/ops.hpp"
+#include "ngraph_dialect/type.hpp"
 
 #include "ngraph/check.hpp"
 #include "ngraph/descriptor/tensor.hpp"
