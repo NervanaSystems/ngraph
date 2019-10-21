@@ -2177,11 +2177,11 @@ namespace ngraph
 
                     writer << "auto fwd_desc = "
                               "mkldnn::eltwise_forward::desc(mkldnn::prop_kind::forward, "
-                              "mkldnn::algorithm::eltwise_logistic, "
+                              "mkldnn::algorithm::eltwise_gelu, "
                               "*cg_ctx->mkldnn_descriptors["
                            << desc_index << "], 0, 0);\n";
                     writer << "auto bwd_desc = "
-                              "mkldnn::eltwise_backward::desc(mkldnn::algorithm::eltwise_logistic, "
+                              "mkldnn::eltwise_backward::desc(mkldnn::algorithm::eltwise_gelu, "
                               "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 1 << "], "
                                                 "*cg_ctx->mkldnn_descriptors["

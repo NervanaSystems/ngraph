@@ -74,7 +74,6 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
     case OpType::BOUNDEDRELU:
     case OpType::CONVERTLAYOUT:
     case OpType::GELU:
-    case OpType::GELUBACKPROP:
     case OpType::LEAKYRELU:
     case OpType::LRN:
     case OpType::MAXPOOL:
@@ -196,6 +195,7 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
                      {MKLDNN_ARG_DIFF_SRC, *ctx->mkldnn_memories[deps[2]]}};
         break;
     case OpType::RELUBACKPROP:
+    case OpType::GELUBACKPROP:
     case OpType::SIGMOIDBACKPROP:
         exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
                      {MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[1]]},
