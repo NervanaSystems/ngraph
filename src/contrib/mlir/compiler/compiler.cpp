@@ -58,7 +58,7 @@
 #include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Target/TargetMachine.h>
-#include <mlir/Conversion/ControlFlowToCFG/ConvertControlFlowToCFG.h>
+#include <mlir/Conversion/LoopToStandard/ConvertLoopToStandard.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
 #include <mlir/Dialect/LLVMIR/LLVMDialect.h>
@@ -137,7 +137,7 @@ static llvm::cl::opt<std::string>
     createOp<op_name>(MLIRCompiler & compiler, const ngraph::Node* ngNode)
 
 // Default optimization level.
-unsigned MLIRCompiler::mlirOptLevel = 2;
+llvm::CodeGenOpt::Level MLIRCompiler::mlirOptLevel = llvm::CodeGenOpt::Level::Aggressive;
 
 // Target machine will be properly initialized by `init_mlir`.
 std::unique_ptr<llvm::TargetMachine> MLIRCompiler::targetMachine;
@@ -184,8 +184,9 @@ void MLIRCompiler::init_mlir()
         // Override default optimization level with macro value.
         if (char* optLevelStr = std::getenv("NGRAPH_MLIR_OPT_LEVEL"))
         {
-            mlirOptLevel = std::stoi(optLevelStr);
-            NGRAPH_CHECK(mlirOptLevel >= 0 && mlirOptLevel <= 3, "Invalid optimization level");
+            unsigned clOptLevel = std::stoi(optLevelStr);
+            NGRAPH_CHECK(clOptLevel >= 0 && clOptLevel <= 3, "Invalid optimization level");
+            mlirOptLevel = (llvm::CodeGenOpt::Level)clOptLevel;
         }
 
         // Initialize LLVM targets and target machine for current host.
@@ -359,7 +360,10 @@ void MLIRCompiler::lowerNgDialect()
     // Apply any generic pass manager command line options.
     mlir::applyPassManagerCLOptions(pm);
 
-    pm.run(m_module.get());
+    if (failed(pm.run(m_module.get())))
+    {
+        NGRAPH_CHECK(false, "MLIR pass manager failed");
+    }
 
     if (failed(m_module->verify()))
     {
@@ -391,7 +395,7 @@ void MLIRCompiler::lowerNgDialect()
     // the default or user-provided optimization level.
     auto llvmTransformer =
         mlir::makeOptimizingTransformer(mlirOptLevel, /*sizeLevel=*/0, targetMachine.get());
-    auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvmTransformer);
+    auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvmTransformer, mlirOptLevel);
     NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
     m_engine = std::move(maybeEngine.get());
 }
@@ -708,7 +712,11 @@ void MLIRCompiler::optimizeNgDialect()
     {
         pm.addPass(mlir::createMemoryOptimizationPass());
     }
-    pm.run(m_module.get());
+
+    if (failed(pm.run(m_module.get())))
+    {
+        NGRAPH_CHECK(false, "MLIR pass manager failed");
+    }
 }
 
 // Binds MLIR function arguments to the proper values. This includes externally allocated tensors
@@ -728,11 +736,10 @@ void MLIRCompiler::bindArguments(std::vector<void*>& externalTensors)
     m_externalTensors = &externalTensors;
 
     // Create list with a type-erased double pointer for each invocation arguments.
-    // We currently use 'allocateMemrefArgs', which creates a
-    // SmallVector<StaticFloatMemref*>. StaticFloatMemref is just a struct with the
-    // actual pointer to the data.
+    // We currently use 'allocateMemrefArgs', which creates the arguments list per call ABI (see
+    // comment below).
+    // StaticFloatMemref is just a struct with the actual pointer to the data.
 
-    // create MemRef args
     auto expectedArguments = allocateMemrefArgs();
     NGRAPH_CHECK(expectedArguments.size(), "Arguments can't be created");
     m_invokeArgs = std::move(expectedArguments);
@@ -743,7 +750,8 @@ void MLIRCompiler::bindArguments(std::vector<void*>& externalTensors)
     // Assign external tensor pointers to invocation arguments.
     for (size_t i = 0, numArgs = m_invokeArgs.size(); i < numArgs; ++i)
     {
-        ((mlir::StaticFloatMemRef*)m_invokeArgs[i])->data = (float*)(*m_externalTensors)[i];
+        auto* memRefArg = *(reinterpret_cast<mlir::StaticFloatMemRef**>(m_invokeArgs[i]));
+        memRefArg->data = reinterpret_cast<float*>((*m_externalTensors)[i]);
     }
 }
 
@@ -769,6 +777,8 @@ void MLIRCompiler::cleanup()
     // Free void double pointer arguments without freeing external tensor data.
     for (auto* arg : m_invokeArgs)
     {
+        auto* memRefArg = *(reinterpret_cast<mlir::StaticFloatMemRef**>(arg));
+        free(memRefArg);
         free(arg);
     }
 
@@ -779,13 +789,23 @@ void MLIRCompiler::cleanup()
     }
 }
 
+// The current call ABI takes a single arg pointer (argPtr) pointing to a list of args.
+// Each arg is a  pointer to a StaticFloatMemRef which contains a data pointer
+//
+// The args are laid out as follows
+// argPtr-> arg[0]-> StaticFloatMemRef -> <data>
+//          arg[1]-> StaticFloatMemRef -> <data>
+//          ...
 SmallVector<void*, 8> MLIRCompiler::allocateMemrefArgs()
 {
     SmallVector<void*, 8> args;
     for (auto i = 0; i < m_externalTensors->size(); i++)
     {
         auto descriptor = allocateMemrefDescriptor();
-        args.push_back(descriptor);
+        mlir::StaticFloatMemRef** arg =
+            reinterpret_cast<mlir::StaticFloatMemRef**>(malloc(sizeof(mlir::StaticFloatMemRef*)));
+        *arg = descriptor;
+        args.push_back(arg);
     }
     return args;
 }

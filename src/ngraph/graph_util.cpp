@@ -282,6 +282,8 @@ std::list<std::shared_ptr<ngraph::Node>>
             {
                 cloned_node->add_provenance_tag(tag);
             }
+            cloned_node->set_op_annotations(node->get_op_annotations());
+
             node_map[node.get()] = cloned_node;
         }
     }
@@ -333,17 +335,8 @@ bool ngraph::is_equal_to_const_value(std::string const_value, const Output<Node>
 {
     if (auto rc = as_type_ptr<ngraph::op::Constant>(reduce_constant.get_node_shared_ptr()))
     {
-        auto cshape = rc->get_shape();
-        size_t n = shape_size(cshape);
-        // way to construct a constant of a given type, shape, value
-        std::vector<std::string> vector_zero{n, const_value};
-        auto constant_val_op =
-            std::make_shared<ngraph::op::Constant>(rc->get_element_type(), cshape, vector_zero);
-
-        // way to compare elements to const_value
-        size_t n_bytes = n * rc->get_element_type().size();
-        NGRAPH_DEBUG << "Comparing " << n_bytes << " bytes";
-        return !memcmp(constant_val_op->get_data_ptr(), rc->get_data_ptr(), n_bytes);
+        return (rc->get_all_data_elements_bitwise_identical() &&
+                rc->convert_value_to_string(0) == const_value);
     }
     else
     {
@@ -778,4 +771,10 @@ bool ngraph::check_for_cycles(const ngraph::Function* func,
     }
     // no cycles
     return false;
+}
+
+void ngraph::traverse_functions(std::shared_ptr<Function> p,
+                                std::function<void(std::shared_ptr<Function>)> f)
+{
+    f(p);
 }

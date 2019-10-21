@@ -24,16 +24,16 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Reverse::type_info;
+constexpr NodeTypeInfo op::v0::Reverse::type_info;
 
-op::Reverse::Reverse(const Output<Node>& arg, const AxisSet& reversed_axes)
+op::v0::Reverse::Reverse(const Output<Node>& arg, const AxisSet& reversed_axes)
     : Op({arg})
     , m_reversed_axes(reversed_axes)
 {
     constructor_validate_and_infer_types();
 }
 
-void op::Reverse::validate_and_infer_types()
+void op::v0::Reverse::validate_and_infer_types()
 {
     const auto input_shape = get_input_partial_shape(0);
     const Dimension input_rank = input_shape.rank();
@@ -56,13 +56,13 @@ void op::Reverse::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), input_shape);
 }
 
-shared_ptr<Node> op::Reverse::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Reverse::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Reverse>(new_args.at(0), m_reversed_axes);
+    return make_shared<v0::Reverse>(new_args.at(0), m_reversed_axes);
 }
 
-void op::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -137,7 +137,7 @@ void op::v1::Reverse::validate_and_infer_types()
 
         if (rev_axes_node->is_constant())
         {
-            const auto rev_axes_constant = dynamic_pointer_cast<op::Constant>(rev_axes_node);
+            const auto rev_axes_constant = as_type_ptr<op::Constant>(rev_axes_node);
 
             if (m_mode == Mode::INDEX)
             {

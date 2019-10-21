@@ -15,6 +15,8 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
+:orphan:
+
 Contributing to documentation
 =============================
 
