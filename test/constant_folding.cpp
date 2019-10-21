@@ -24,6 +24,60 @@
 using namespace ngraph;
 using namespace std;
 
+TEST(constant_folding, constant_squeeze)
+{
+    Shape shape_in{2, 4, 1};
+    Shape shape_out{2, 4};
+    Shape axes_shape{1};
+
+    vector<float> values_in{0, 1, 2, 3, 4, 5, 6, 7};
+    auto constant = make_shared<op::Constant>(element::f32, shape_in, values_in);
+    vector<int64_t> values_axes{2};
+    auto constant_axes = op::Constant::create(element::i64, axes_shape, values_axes);
+    auto squeeze = make_shared<op::Squeeze>(constant, constant_axes);
+    auto f = make_shared<Function>(squeeze, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Squeeze>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<float>();
+
+    ASSERT_TRUE(test::all_close_f(values_in, values_out, MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(constant_folding, constant_unsqueeze)
+{
+    Shape shape_in{2, 4};
+    Shape shape_out{2, 4, 1, 1};
+    Shape axes_shape{2};
+
+    vector<float> values_in{0, 1, 2, 3, 4, 5, 6, 7};
+    auto constant = make_shared<op::Constant>(element::f32, shape_in, values_in);
+    vector<int64_t> values_axes{2, 3};
+    auto constant_axes = op::Constant::create(element::i64, axes_shape, values_axes);
+    auto unsqueeze = make_shared<op::Unsqueeze>(constant, constant_axes);
+    auto f = make_shared<Function>(unsqueeze, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Unsqueeze>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<float>();
+
+    ASSERT_TRUE(test::all_close_f(values_in, values_out, MIN_FLOAT_TOLERANCE_BITS));
+}
+
 TEST(constant_folding, constant_reshape)
 {
     Shape shape_in{2, 4};

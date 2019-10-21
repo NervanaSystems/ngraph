@@ -420,6 +420,8 @@ set (SRC
     pass/constant_folding_reshape.cpp
     pass/constant_folding_reverse.cpp
     pass/constant_folding_select.cpp
+    pass/constant_folding_squeeze.cpp
+    pass/constant_folding_unsqueeze.cpp
     pass/constant_folding_shape_of.cpp
     pass/constant_folding_slice.cpp
     pass/constant_folding_transpose.cpp
