@@ -17,6 +17,7 @@
 #include <iostream>
 #include <random>
 #include <string>
+#include <tuple>
 
 #include "gtest/gtest.h"
 #include "ngraph/file_util.hpp"
@@ -25,7 +26,6 @@
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/shape.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/util.hpp"
 
 static std::mt19937_64 random_generator;
@@ -57,7 +57,7 @@ int load_inputs(vector<string> input_paths, vector<shared_ptr<runtime::Tensor>> 
     {
         const string input_path = input_paths.at(i);
         std::vector<float> data = ngraph::file_util::read_binary_file<float>(input_path);
-        size_t data_size = data.size() * sizeof(inputs.at(i)->get_element_type());
+        size_t data_size = data.size() * sizeof(float);
         inputs.at(i)->write(data.data(), data_size);
     }
 
@@ -75,10 +75,23 @@ int random_inputs(vector<shared_ptr<runtime::Tensor>> inputs)
         {
             data[i] = distribution(random_generator);
         }
-        size_t data_size = data.size() * sizeof(inputs.at(i)->get_element_type());
+        size_t data_size = data.size() * sizeof(float);
         inputs.at(i)->write(data.data(), data_size);
     }
     return 0;
+}
+
+std::tuple<string, string> validate_argument(string arg, string arg2)
+{
+    size_t index = arg.find_first_of('=');
+    string option = arg;
+    string value = arg2;
+    if (index < string::npos)
+    {
+        option = arg.substr(0, index);
+        value = arg.substr(index + 1, arg.size() - 1);
+    }
+    return std::make_tuple(option, value);
 }
 
 int main(int argc, char** argv)
@@ -93,17 +106,25 @@ int main(int argc, char** argv)
     for (int i = 1; i < argc; i++)
     {
         string arg = argv[i];
+        string arg2 = "";
+        tie(arg, arg2) = validate_argument(arg, arg2);
+
+        if (arg2 == "")
+        {
+            arg2 = argv[++i];
+        }
+
         if (arg == "-m" || arg == "--model")
         {
-            model = argv[++i];
+            model = arg2;
         }
         else if (arg == "-b" || arg == "--backend")
         {
-            backend_type = argv[++i];
+            backend_type = arg2;
         }
         else if (arg == "-i" || arg == "--input")
         {
-            input_paths.push_back(argv[++i]);
+            input_paths.push_back(arg2);
         }
         else if (arg == "-h" || arg == "--help")
         {
@@ -117,8 +138,6 @@ int main(int argc, char** argv)
     if (f)
     {
         function = ngraph::onnx_import::import_onnx_model(model);
-
-        // Creating inputs
         auto params = function->get_parameters();
         for (int i = 0; i < params.size(); i++)
         {
