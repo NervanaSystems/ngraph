@@ -42,12 +42,14 @@ using namespace ngraph;
 #define NGRAPH_OP(a, b) a,
 enum class OP_TYPEID
 {
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
 };
 #undef NGRAPH_OP
 
 #define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
 static unordered_map<string, OP_TYPEID> typeid_map{
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
 };
 #undef NGRAPH_OP
@@ -423,6 +425,12 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
     case OP_TYPEID::TopK:
     {
         const auto topk_v0 = dynamic_cast<const op::TopK*>(node.get());
+
+        NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant(),
+                     "parameter k is expected to be a static constant");
+        NGRAPH_CHECK(node->input_value(2).get_node_shared_ptr()->is_constant(),
+                     "parameter top_k_axis is expected to be a static constant");
+
         const auto k = topk_v0->get_k();
         const auto axis = topk_v0->get_top_k_axis();
 
