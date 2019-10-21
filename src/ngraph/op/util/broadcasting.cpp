@@ -484,6 +484,22 @@ namespace ngraph
             return broadcasted_inputs;
         }
 
+        OutputVector pdpd_style_broadcast(const OutputVector& inputs, int64_t axis)
+        {
+            if (inputs.size() <= 1)
+            {
+                return inputs;
+            }
+
+            OutputVector broadcasted_inputs{inputs[0]};
+            for (std::size_t i = 1; i < inputs.size(); ++i)
+            {
+                broadcasted_inputs.push_back(
+                    broadcast_value_pdpd_style(inputs[i], inputs[0].get_shape(), axis));
+            }
+            return broadcasted_inputs;
+        }
+
         AxisSet calculate_broadcast_axes(const Shape& output_shape,
                                          const Shape& input_shape,
                                          std::size_t start_match_axis)
