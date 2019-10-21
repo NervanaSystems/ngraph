@@ -16,6 +16,7 @@
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -33,12 +34,14 @@ using namespace ngraph;
 #define NGRAPH_OP(a, b) a,
 enum class OP_TYPEID
 {
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
 };
 #undef NGRAPH_OP
 
 #define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
 static unordered_map<string, OP_TYPEID> typeid_map{
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
 };
 #undef NGRAPH_OP
@@ -84,6 +87,22 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 #endif
     switch (get_typeid(node))
     {
+    case OP_TYPEID::Broadcast:
+    {
+        auto tmp = dynamic_cast<const op::v1::Broadcast*>(node.get());
+        const auto arg = node->input(0).get_source_output();
+        NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
+        auto target_shape =
+            static_pointer_cast<op::Constant>(node->input_value(1).get_node_shared_ptr())
+                ->get_shape_val();
+        NGRAPH_CHECK(tmp->get_broadcast_axes().first);
+        auto replacement_node =
+            make_shared<op::v0::Broadcast>(arg, target_shape, tmp->get_broadcast_axes().second);
+
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::Convolution:
     {
         auto tmp = as_type_ptr<op::v1::Convolution>(node);
