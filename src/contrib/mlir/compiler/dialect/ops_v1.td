@@ -18,20 +18,4 @@
 // All Operations in this file implement OpVersion1 interface.
 //===----------------------------------------------------------------------===//
 
-// Gather
-def NGGatherV1Op : 
-    NG_OneResult_Op<"gather.v1", [NoSideEffect, OpVersion1]>,
-    Arguments<(ins NG_TensorType:$params, NG_TensorType:$indices, NG_TensorType:$axis)>
-{
-  let summary = "Gather slices from params along the specified axis according to indices";
-  let description = [{
-    Gather slices from axis of params according to indices
-    params The tensor from which slices are gathered
-    indices Index tensor. Data type must be `element::i32` or `element::i64`
-    axis Axis in params to gather
-  }];
-
-  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-
-  let verifier = [{ return verifyOp(this); }];
-}
+// TODO: Add Version1 Ops definitions here
