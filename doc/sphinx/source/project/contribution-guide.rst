@@ -4,7 +4,7 @@
 .. _contribution_guide:
 
 ##################
-Contribution guide
+Contribution Guide
 ##################
 
 

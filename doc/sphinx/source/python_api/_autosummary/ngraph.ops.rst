@@ -46,6 +46,7 @@ ngraph.ops
       greater
       greater_eq
       grn
+      group_convolution
       hard_sigmoid
       less
       less_eq
@@ -76,6 +77,7 @@ ngraph.ops
       replace_slice
       reshape
       reverse
+      rnn_cell
       scale_shift
       select
       shuffle_channels

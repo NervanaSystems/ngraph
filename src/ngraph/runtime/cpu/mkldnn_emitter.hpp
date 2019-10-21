@@ -80,8 +80,7 @@ namespace ngraph
             {
                 auto qc = static_cast<const OP*>(node);
                 std::vector<float> scale_val = {1.0f};
-                auto scale_const_op =
-                    std::dynamic_pointer_cast<ngraph::op::Constant>(qc->get_arguments()[index]);
+                auto scale_const_op = as_type_ptr<ngraph::op::Constant>(qc->get_arguments()[index]);
                 if (scale_const_op != nullptr)
                 {
                     scale_val = scale_const_op->template get_vector<float>();
@@ -543,8 +542,8 @@ namespace ngraph
                 {
                     auto index = get_scale_index<OP>();
                     std::vector<T> scale_val = {0};
-                    auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
-                        node->get_arguments()[index]);
+                    auto scale_const_op =
+                        as_type_ptr<ngraph::op::Constant>(node->get_arguments()[index]);
                     if (scale_const_op != nullptr)
                     {
                         scale_val = scale_const_op->template get_vector<T>();

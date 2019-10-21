@@ -25,7 +25,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(serialize, opset1_topk_pass)
+TEST(opset_transform, opset1_topk_upgrade_pass)
 {
     const size_t axis = 2;
     const size_t k = 10;
