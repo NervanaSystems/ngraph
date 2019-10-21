@@ -31,7 +31,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, abc)
+NGRAPH_TEST(${BACKEND_NAME}, abc_opv1)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -65,7 +65,7 @@ NGRAPH_TEST(${BACKEND_NAME}, abc)
                                   (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector()));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, abc_int64)
+NGRAPH_TEST(${BACKEND_NAME}, abc_int64_opv1)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i64, shape);

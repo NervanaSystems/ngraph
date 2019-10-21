@@ -42,7 +42,7 @@ struct RangeTest
 
 // TODO(amprocte): We should test this with more than just int32, but there is a bug in the
 // handling of element type-changing that is currently blocking doing that easily.
-NGRAPH_TEST(${BACKEND_NAME}, range)
+NGRAPH_TEST(${BACKEND_NAME}, range_opv1)
 {
     // Create a graph for f(start,stop,step) = Range(start,stop,step).
     auto start = make_shared<op::Parameter>(element::i32, Shape{});

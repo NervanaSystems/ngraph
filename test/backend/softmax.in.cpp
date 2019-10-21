@@ -68,7 +68,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_dynamic_axes)
     EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, softmax_all)
+NGRAPH_TEST(${BACKEND_NAME}, softmax_al)
 {
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);

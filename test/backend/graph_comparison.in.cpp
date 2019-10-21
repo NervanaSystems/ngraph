@@ -302,7 +302,7 @@ protected:
     string file_name;
 };
 
-NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_graphs)
+NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_graphs_opv1)
 {
     // Compare against CPU for speed. Running large graphs against the
     // interpreter is too slow.

@@ -49,7 +49,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, add)
+NGRAPH_TEST(${BACKEND_NAME}, add_opv1)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -72,7 +72,7 @@ NGRAPH_TEST(${BACKEND_NAME}, add)
                                   (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector()));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, add_overload)
+NGRAPH_TEST(${BACKEND_NAME}, add_overload_opv1)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -95,7 +95,7 @@ NGRAPH_TEST(${BACKEND_NAME}, add_overload)
                                   (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector()));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, add_in_place)
+NGRAPH_TEST(${BACKEND_NAME}, add_in_place_opv1)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);

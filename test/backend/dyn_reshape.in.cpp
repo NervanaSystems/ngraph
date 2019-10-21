@@ -30,7 +30,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, dyn_reshape)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_reshape_opv1)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
 

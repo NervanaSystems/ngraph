@@ -56,7 +56,7 @@ namespace
     constexpr NodeTypeInfo UnhandledOp::type_info;
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, unhandled_op)
+NGRAPH_TEST(${BACKEND_NAME}, unhandled_op_opv1)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);

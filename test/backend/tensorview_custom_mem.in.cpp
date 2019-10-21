@@ -33,7 +33,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, tensorview_custom_mem)
+NGRAPH_TEST(${BACKEND_NAME}, tensorview_custom_mem_opv1)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

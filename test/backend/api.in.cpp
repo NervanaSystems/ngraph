@@ -33,7 +33,7 @@ using namespace ngraph;
 static string s_manifest = "${MANIFEST}";
 
 // This tests a backend's implementation of the two parameter version of create_tensor
-NGRAPH_TEST(${BACKEND_NAME}, create_tensor_1)
+NGRAPH_TEST(${BACKEND_NAME}, create_tensor_1_opv1)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -60,7 +60,7 @@ NGRAPH_TEST(${BACKEND_NAME}, create_tensor_1)
 
 // This tests a backend's implementation of the three parameter version of create_tensor
 // Testing using this tensor as a Function input
-NGRAPH_TEST(${BACKEND_NAME}, create_tensor_2_input)
+NGRAPH_TEST(${BACKEND_NAME}, create_tensor_2_input_opv1)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -84,7 +84,7 @@ NGRAPH_TEST(${BACKEND_NAME}, create_tensor_2_input)
 
 // This tests a backend's implementation of the three parameter version of create_tensor
 // Testing using this tensor as a Function output
-NGRAPH_TEST(${BACKEND_NAME}, create_tensor_2_output)
+NGRAPH_TEST(${BACKEND_NAME}, create_tensor_2_output_opv1)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -129,7 +129,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_copy_from)
     EXPECT_TRUE(test::all_close_f(bv, read_vector<float>(a), MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, get_parameters_and_results)
+NGRAPH_TEST(${BACKEND_NAME}, get_parameters_and_results_opv1)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);

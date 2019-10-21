@@ -44,7 +44,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, lrn_across_channel)
+NGRAPH_TEST(${BACKEND_NAME}, lrn_across_channel_opv1)
 {
     Shape shape{2, 3, 2, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -81,7 +81,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lrn_across_channel)
     EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, lrn_across_h)
+NGRAPH_TEST(${BACKEND_NAME}, lrn_across_h_opv1)
 {
     Shape shape{2, 3, 2, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -118,7 +118,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lrn_across_h)
     EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, lrn_across_hw)
+NGRAPH_TEST(${BACKEND_NAME}, lrn_across_hw_opv1)
 {
     Shape shape{2, 3, 2, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -155,7 +155,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lrn_across_hw)
     EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, lrn_across_all_dims)
+NGRAPH_TEST(${BACKEND_NAME}, lrn_across_all_dims_opv1)
 {
     Shape shape{2, 3, 2, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -193,7 +193,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lrn_across_all_dims)
         test::all_close_f(expected, read_vector<float>(result), DEFAULT_FLOAT_TOLERANCE_BITS + 1));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, lrn_across_nw)
+NGRAPH_TEST(${BACKEND_NAME}, lrn_across_nw_opv1)
 {
     Shape shape{2, 3, 2, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -230,7 +230,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lrn_across_nw)
     EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, lrn_across_empty)
+NGRAPH_TEST(${BACKEND_NAME}, lrn_across_empty_opv1)
 {
     Shape shape{2, 3, 2, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -269,7 +269,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lrn_across_empty)
     EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, lrn_6D_across_2_axes)
+NGRAPH_TEST(${BACKEND_NAME}, lrn_6D_across_2_axes_opv1)
 {
     Shape shape{2, 3, 2, 2, 1, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);

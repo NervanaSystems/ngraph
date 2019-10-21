@@ -32,7 +32,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_colwise)
+NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_colwise_opv1)
 {
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -63,7 +63,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_colwise)
                           MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_rowwise)
+NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_rowwise_opv1)
 {
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -94,7 +94,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_rowwise)
                           MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_int64)
+NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_int64_opv1)
 {
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::i64, shape_a);
@@ -131,7 +131,7 @@ protected:
     uint32_t num_inputs;
 };
 
-NGRAPH_TEST_P(${BACKEND_NAME}, concat_vector_params, concat_vector_large)
+NGRAPH_TEST_P(${BACKEND_NAME}, concat_vector_params, concat_vector_large_opv1)
 {
     Shape shape_a{1};
     NodeVector inputs;
@@ -174,7 +174,7 @@ NGRAPH_INSTANTIATE_TEST_CASE_P(${BACKEND_NAME},
                                concat_vector_params,
                                testing::Values(100, 128, 999));
 
-NGRAPH_TEST(${BACKEND_NAME}, concat_vector)
+NGRAPH_TEST(${BACKEND_NAME}, concat_vector_opv1)
 {
     Shape shape_a{4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -204,7 +204,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_vector)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, concat_4d_tensor)
+NGRAPH_TEST(${BACKEND_NAME}, concat_4d_tensor_opv1)
 {
     Shape shape{1, 1, 1, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -231,7 +231,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_4d_tensor)
         (vector<float>{1, 2, 3}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, concat_2d_tensor)
+NGRAPH_TEST(${BACKEND_NAME}, concat_2d_tensor_opv1)
 {
     Shape shape{1, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -370,7 +370,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_propagate_2d_tensor)
 //   1097.  1098.  1099.  1100.  1101.  1102.  1103.  1104.  1105.  1106.
 //   1107.  1108.  2061.  2062.  2063.  2064.  2065.  2066.  2067.  2068.
 //   2069.  2070.  2071.  2072.]
-NGRAPH_TEST(${BACKEND_NAME}, concat_5d)
+NGRAPH_TEST(${BACKEND_NAME}, concat_5d_opv1)
 {
     vector<float> a_data(2 * 3 * 4 * 3 * 2);
     for (int i = 0; i < 2 * 3 * 4 * 3 * 2; i++)
@@ -448,7 +448,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_5d)
         MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_last)
+NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_last_opv1)
 {
     Shape shape_a{4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -478,7 +478,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_last)
         (vector<float>{1, 2, 3, 4}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_middle)
+NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_middle_opv1)
 {
     Shape shape_a{4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -514,7 +514,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_middle)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, concat_zero_zero)
+NGRAPH_TEST(${BACKEND_NAME}, concat_zero_zero_opv1)
 {
     Shape shape{0};
     auto constant_1 = op::Constant::create(element::f32, shape, {1});
@@ -532,7 +532,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_zero_zero)
         test::all_close_f(vector<float>{}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_4d_middle)
+NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_4d_middle_opv1)
 {
     Shape shape_a{2, 2, 1, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);

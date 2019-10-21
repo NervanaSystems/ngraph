@@ -55,7 +55,7 @@ struct FlattenTest : ::testing::TestWithParam<FlattenTestParams>
 {
 };
 
-NGRAPH_TEST_P(${BACKEND_NAME}, FlattenTest, flatten)
+NGRAPH_TEST_P(${BACKEND_NAME}, FlattenTest, flatten_opv1)
 {
     FlattenTestParams p = GetParam();
 

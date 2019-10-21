@@ -49,7 +49,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, divide)
+NGRAPH_TEST(${BACKEND_NAME}, divide_opv1)
 {
     Shape shape{2, 2};
 
@@ -71,7 +71,7 @@ NGRAPH_TEST(${BACKEND_NAME}, divide)
     EXPECT_TRUE(test::all_close_f((vector<float>{2, 2, 2, 2}), read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, divide_int32)
+NGRAPH_TEST(${BACKEND_NAME}, divide_int32_opv1)
 {
     Shape shape{2, 2};
 
@@ -93,7 +93,7 @@ NGRAPH_TEST(${BACKEND_NAME}, divide_int32)
     EXPECT_EQ((vector<int32_t>{536871072, 214748365, 2, 2}), read_vector<int32_t>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, divide_cpp_rounding_int32)
+NGRAPH_TEST(${BACKEND_NAME}, divide_cpp_rounding_int32_opv1)
 {
     Shape shape{2, 2};
 
@@ -115,7 +115,7 @@ NGRAPH_TEST(${BACKEND_NAME}, divide_cpp_rounding_int32)
     EXPECT_EQ((vector<int32_t>{3, -3, -3, 3}), read_vector<int32_t>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, divide_python_rounding_int32)
+NGRAPH_TEST(${BACKEND_NAME}, divide_python_rounding_int32_opv1)
 {
     Shape shape{2, 2};
 
@@ -137,7 +137,7 @@ NGRAPH_TEST(${BACKEND_NAME}, divide_python_rounding_int32)
     EXPECT_EQ((vector<int32_t>{3, -4, -4, 3}), read_vector<int32_t>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, divide_overload)
+NGRAPH_TEST(${BACKEND_NAME}, divide_overload_opv1)
 {
     Shape shape{2, 2};
 
@@ -159,7 +159,7 @@ NGRAPH_TEST(${BACKEND_NAME}, divide_overload)
     EXPECT_TRUE(test::all_close_f((vector<float>{2, 2, 2, 2}), read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, divide_adjoint_stability)
+NGRAPH_TEST(${BACKEND_NAME}, divide_adjoint_stability_opv1)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -208,7 +208,7 @@ NGRAPH_TEST(${BACKEND_NAME}, divide_adjoint_stability)
         test::all_close_f((vector<float>{-0.0, -0.0, -0.25, -0.25}), read_vector<float>(resultb)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, divide_by_zero_float32)
+NGRAPH_TEST(${BACKEND_NAME}, divide_by_zero_float32_opv1)
 {
     Shape shape{2, 2};
 

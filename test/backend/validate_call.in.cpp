@@ -33,7 +33,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_count)
+NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_count_opv1)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -50,7 +50,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_count)
     EXPECT_ANY_THROW(auto handle = backend->compile(f); handle->call_with_validate({c}, {a}));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_type)
+NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_type_opv1)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -67,7 +67,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_type)
     EXPECT_ANY_THROW(auto handle = backend->compile(f); handle->call_with_validate({c}, {a, b}));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_shape)
+NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_shape_opv1)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -84,7 +84,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_shape)
     EXPECT_ANY_THROW(auto handle = backend->compile(f); handle->call_with_validate({c}, {a, b}));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_count)
+NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_count_opv1)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -102,7 +102,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_count)
     EXPECT_ANY_THROW(auto handle = backend->compile(f); handle->call_with_validate({c, d}, {a, b}));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_type)
+NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_type_opv1)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -119,7 +119,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_type)
     EXPECT_ANY_THROW(auto handle = backend->compile(f); handle->call_with_validate({a}, {b, c}));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_shape)
+NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_shape_opv1)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

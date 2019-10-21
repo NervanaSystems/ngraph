@@ -283,7 +283,7 @@ class SliceTestWriter:
             data_out = data_in.__getitem__(slices)
         except Exception:
             self._stream.write('// failure is expected\n'
-                               'NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_%d)\n'
+                               'NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_%d_opv1)\n'
                                '{\n'
                                '    check_failure<%s>\n'
                                '                 (%s,\n'
@@ -311,7 +311,7 @@ class SliceTestWriter:
                                      print_ellipsis_mask_axes(slices)))
         else:
             self._stream.write('// expected output shape is %s\n'
-                               'NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_%d)\n'
+                               'NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_%d_opv1)\n'
                                '{\n'
                                '    check_success<%s>\n'
                                '                 (%s,\n'
