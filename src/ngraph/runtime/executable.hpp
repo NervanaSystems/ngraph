@@ -112,6 +112,12 @@ protected:
     ///        and get_results
     /// \param func The function with Results fully resolved.
     void set_parameters_and_results(const Function& func);
+    /// \brief Called for AOT(Ahead of time compliation) runtime only operation to set the values to
+    /// be returned by get_parameters
+    ///     and get_results
+    /// \param params The parameters
+    /// \param results The results
+    void set_parameters_and_results(const ParameterVector& param, const ResultVector& results);
 
 private:
     ngraph::ParameterVector m_parameters;

@@ -119,6 +119,13 @@ void runtime::Executable::set_parameters_and_results(const Function& func)
     m_results = func.get_results();
 }
 
+void runtime::Executable::set_parameters_and_results(const ParameterVector& params,
+                                                     const ResultVector& results)
+{
+    m_parameters = params;
+    m_results = results;
+}
+
 vector<runtime::PerformanceCounter> runtime::Executable::get_performance_data() const
 {
     return vector<PerformanceCounter>();
