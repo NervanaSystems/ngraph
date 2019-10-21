@@ -637,11 +637,11 @@ export(TARGETS ngraph NAMESPACE ngraph::
 install(EXPORT ngraphTargets
     FILE ngraphTargets.cmake
     NAMESPACE ngraph::
-    DESTINATION ${NGRAPH_INSTALL_LIB}/ngraph/cmake)
+    DESTINATION cmake)
 
 configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/share/ngraphConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfig.cmake
-    INSTALL_DESTINATION ${NGRAPH_INSTALL_LIB}/ngraph/cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/cmake
     PATH_VARS NGRAPH_INSTALL_INCLUDE)
 
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/ngraphConfigVersion.cmake
@@ -657,4 +657,4 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/VERSION DESTINATION ${CMAKE_INSTALL_PR
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfig.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfigVersion.cmake
-    DESTINATION ${NGRAPH_INSTALL_LIB}/ngraph/cmake )
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/cmake )

@@ -663,7 +663,7 @@ endif()
 #-----------------------------------------------------------------------------------------------
 
 # nGraph
-install(TARGETS ngraph DESTINATION ${NGRAPH_INSTALL_LIB} EXPORT ngraphTargets)  # libngraph.so
+install(TARGETS ngraph DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT ngraphTargets)  # libngraph.so
 install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/
     DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph"
