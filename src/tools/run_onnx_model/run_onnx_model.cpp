@@ -51,25 +51,31 @@ OPTIONS
 )###";
 }
 
-int load_inputs(vector<string> input_paths, vector<shared_ptr<runtime::Tensor>> inputs)
+vector<shared_ptr<runtime::Tensor>> load_inputs(vector<string> input_paths,
+                                                vector<shared_ptr<runtime::Tensor>> inputs)
 {
+    vector<shared_ptr<runtime::Tensor>> inputs_with_values{};
+
     for (int i = 0; i < input_paths.size(); i++)
     {
         const string input_path = input_paths.at(i);
         std::vector<float> data = ngraph::file_util::read_binary_file<float>(input_path);
         size_t data_size = data.size() * sizeof(float);
         inputs.at(i)->write(data.data(), data_size);
+        inputs_with_values.push_back(inputs.at(i));
     }
 
-    return 0;
+    return inputs_with_values;
 }
 
-int random_inputs(vector<shared_ptr<runtime::Tensor>> inputs)
+vector<shared_ptr<runtime::Tensor>> random_inputs(vector<shared_ptr<runtime::Tensor>> inputs)
 {
+    vector<shared_ptr<runtime::Tensor>> inputs_with_values{};
+    std::uniform_int_distribution<int> distribution(0, 255);
+
     for (int i = 0; i < inputs.size(); i++)
     {
         auto tensor_size = shape_size(inputs.at(i)->get_shape());
-        std::uniform_int_distribution<int> distribution(0, 255);
         vector<float> data(tensor_size, 0);
         for (int i = 0; i < tensor_size; i++)
         {
@@ -77,8 +83,9 @@ int random_inputs(vector<shared_ptr<runtime::Tensor>> inputs)
         }
         size_t data_size = data.size() * sizeof(float);
         inputs.at(i)->write(data.data(), data_size);
+        inputs_with_values.push_back(inputs.at(i));
     }
-    return 0;
+    return inputs_with_values;
 }
 
 std::tuple<string, string> validate_argument(string arg, string arg2)
@@ -162,11 +169,11 @@ int main(int argc, char** argv)
 
     if (input_paths.size() == inputs.size())
     {
-        load_inputs(input_paths, inputs);
+        inputs = load_inputs(input_paths, inputs);
     }
     else if (input_paths.size() == 0)
     {
-        random_inputs(inputs);
+        inputs = random_inputs(inputs);
     }
     else
     {
