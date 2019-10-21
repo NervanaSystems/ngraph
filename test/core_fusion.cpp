@@ -724,6 +724,11 @@ TEST(core_fusion, softmax_crossentropy_fprop_1)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
     }
+    // during this optimization for numeric stability we will reduce softmax operation to
+    // - summation (labels (input - max(input) - log (summation(exp ^ (input - max(input)))
+    // count_of(softmax) should be equal to zero if fusion is successful
+    size_t softmax = count_ops_of_type<op::Softmax>(cpu_f);
+    ASSERT_EQ(softmax, 0);
 }
 
 TEST(core_fusion, softmax_crossentropy_fprop_2)
@@ -746,6 +751,11 @@ TEST(core_fusion, softmax_crossentropy_fprop_2)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
     }
+    // during this optimization for numeric stability we will reduce softmax operation to
+    // - summation (labels (input - max(input) - log (summation(exp ^ (input - max(input)))
+    // count_of(softmax) should be equal to zero if fusion is successful
+    size_t softmax = count_ops_of_type<op::Softmax>(cpu_f);
+    ASSERT_EQ(softmax, 0);
 }
 
 TEST(core_fusion, softmax_crossentropy_bprop_with_soft_labels)
@@ -764,10 +774,16 @@ TEST(core_fusion, softmax_crossentropy_bprop_with_soft_labels)
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
     auto cpu_results = execute(cpu_f, args, "CPU");
+
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
     }
+
+    // during this optimization for numeric stability we will eliminate (softmax / softmax)
+    // the number of div operator for cpu_f should be zero if the fusion is valid
+    size_t divide = count_ops_of_type<op::Divide>(cpu_f);
+    ASSERT_EQ(divide, 0);
 }
 
 TEST(core_fusion, softmax_crossentropy_bprop_with_ignore_mask)
@@ -790,5 +806,10 @@ TEST(core_fusion, softmax_crossentropy_bprop_with_ignore_mask)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
     }
+
+    // during this optimization for numeric stability we will eliminate (softmax / softmax)
+    // the number of div operator for cpu_f should be zero if the fusion is valid
+    size_t divide = count_ops_of_type<op::Divide>(cpu_f);
+    ASSERT_EQ(divide, 0);
 }
 #endif
