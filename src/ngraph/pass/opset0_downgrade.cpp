@@ -89,7 +89,14 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         auto tmp = as_type_ptr<op::v1::Convolution>(node);
         const auto data_arg = node->input(0).get_source_output();
         const auto filters_arg = node->input(1).get_source_output();
-        const size_t num_spatial_dims = data_arg.get_shape().size() - 2;
+        const PartialShape& data_arg_pshape = node->get_input_partial_shape(0);
+        NGRAPH_CHECK(data_arg_pshape.is_static(),
+                     "Unable to convert Convolution:v1 to Convolution:v0 if data argument "
+                     "shape is dynamic. Node: ",
+                     *node);
+        const Shape& data_arg_shape = data_arg_pshape.to_shape();
+        const size_t num_spatial_dims = data_arg_shape.size() - 2;
+
         auto replacement_node = make_shared<op::v0::Convolution>(data_arg,
                                                                  filters_arg,
                                                                  tmp->get_strides(),
@@ -107,7 +114,13 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         auto tmp = as_type_ptr<op::v1::ConvolutionBackpropData>(node);
         const auto filters_arg = node->input(0).get_source_output();
         const auto delta_arg = node->input(1).get_source_output();
-        const size_t num_spatial_dims = delta_arg.get_shape().size() - 2;
+        const PartialShape& delta_arg_pshape = node->get_input_partial_shape(1);
+        NGRAPH_CHECK(delta_arg_pshape.is_static(),
+                     "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
+                     "if delta argument shape is dynamic. Node: ",
+                     *node);
+        const Shape& delta_arg_shape = delta_arg_pshape.to_shape();
+        const size_t num_spatial_dims = delta_arg_shape.size() - 2;
         auto replacement_node =
             make_shared<op::v0::ConvolutionBackpropData>(tmp->get_data_batch_shape(),
                                                          filters_arg,
@@ -126,7 +139,13 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         auto tmp = as_type_ptr<op::v1::ConvolutionBackpropFilters>(node);
         const auto data_arg = node->input(0).get_source_output();
         const auto delta_arg = node->input(1).get_source_output();
-        const size_t num_spatial_dims = data_arg.get_shape().size() - 2;
+        const PartialShape& data_arg_pshape = node->get_input_partial_shape(0);
+        NGRAPH_CHECK(data_arg_pshape.is_static(),
+                     "Unable to convert ConvolutionBackpropFilters:v1 to "
+                     "ConvolutionBackpropFilters:v0 if data argument shape is dynamic. Node: ",
+                     *node);
+        const Shape& data_arg_shape = data_arg_pshape.to_shape();
+        const size_t num_spatial_dims = data_arg_shape.size() - 2;
         auto replacement_node =
             make_shared<op::v0::ConvolutionBackpropFilters>(data_arg,
                                                             tmp->get_filters_shape(),
