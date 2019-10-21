@@ -29,8 +29,13 @@ namespace ngraph
     ///    most compact representation. If non-zero then the json string is formatted with the
     ///    indent level specified.
     std::string serialize(std::shared_ptr<ngraph::Function> func, size_t indent = 0);
+
+    /// \brief Serialize a shape/type attributes of given vector of nodes to a string
+    /// \param nodes The vector of nodes to serialize the attributes
     template <typename T>
     std::string serialize_attrs(const std::vector<std::shared_ptr<T>>& nodes);
+    /// \brief Deerialize a string into vector of shapes/types
+    /// \param str The serialized string to deseriailze
     std::vector<std::pair<PartialShape, element::Type>> deserialize_attrs(const std::string& str);
 
     /// \brief Serialize a Function to a json file
