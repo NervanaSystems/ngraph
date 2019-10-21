@@ -104,16 +104,26 @@ TEST(serialize, main_attrs)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C}, "f");
-    auto results = serialize_attrs(f->get_results());
-    for (auto& attrs : deserialize_attrs(results))
+
+    std::vector<std::pair<PartialShape, element::Type>> types;
+
+    auto results = f->get_results();
+    for (auto& n : results)
+        types.emplace_back(n->get_output_partial_shape(0), n->output(0).get_element_type());
+    auto s_types = serialize_types(types);
+    for (auto& attrs : deserialize_types(s_types))
     {
         EXPECT_EQ(size_t(attrs.first.rank()), shape.size());
         EXPECT_EQ(size_t(attrs.first[0]), 2);
         EXPECT_EQ(size_t(attrs.first[1]), 2);
         EXPECT_EQ(element::f32, attrs.second);
     }
-    auto params = serialize_attrs(f->get_parameters());
-    for (auto& attrs : deserialize_attrs(params))
+    auto params = f->get_parameters();
+    types.clear();
+    for (auto& n : params)
+        types.emplace_back(n->get_output_partial_shape(0), n->output(0).get_element_type());
+    s_types = serialize_types(types);
+    for (auto& attrs : deserialize_types(s_types))
     {
         EXPECT_EQ(size_t(attrs.first.rank()), shape.size());
         EXPECT_EQ(size_t(attrs.first[0]), 2);

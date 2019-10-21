@@ -458,26 +458,22 @@ std::string ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t ind
     return ::serialize(func, indent, false);
 }
 
-template <typename T>
-std::string ngraph::serialize_attrs(const std::vector<std::shared_ptr<T>>& nodes)
+std::string
+    ngraph::serialize_types(const std::vector<std::pair<PartialShape, element::Type>>& types)
 {
     json attrs = json::array();
-    for (const auto& n : nodes)
+    for (const auto& n : types)
     {
         json j;
-        j["type"] = write_element_type(n->output(0).get_element_type());
-        j["shape"] = write_partial_shape(n->get_output_partial_shape(0));
+        j["shape"] = write_partial_shape(n.first);
+        j["type"] = write_element_type(n.second);
         attrs.push_back(j);
     }
     return attrs.dump();
 }
-template std::string ngraph::serialize_attrs<ngraph::op::Result>(
-    const std::vector<std::shared_ptr<ngraph::op::Result>>& nodes);
-template std::string ngraph::serialize_attrs<ngraph::op::Parameter>(
-    const std::vector<std::shared_ptr<ngraph::op::Parameter>>& nodes);
 
 std::vector<std::pair<PartialShape, element::Type>>
-    ngraph::deserialize_attrs(const std::string& str)
+    ngraph::deserialize_types(const std::string& str)
 {
     std::vector<std::pair<PartialShape, element::Type>> outs;
     json js = json::parse(str);
