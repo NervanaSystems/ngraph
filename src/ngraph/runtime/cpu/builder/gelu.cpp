@@ -135,7 +135,6 @@ namespace ngraph
             {
                 REGISTER_OP_BUILDER(Gelu);
                 REGISTER_OP_BUILDER(GeluBackprop);
-                // REGISTER_OP_BUILDER(GeluBackpropFactor);
             }
         }
     }
