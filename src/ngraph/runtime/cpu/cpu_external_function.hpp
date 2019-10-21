@@ -137,13 +137,14 @@ namespace ngraph
                     return m_mkldnn_emitter;
                 }
 
-                // Return the tuple including the string to create mkldnn primitive, the deps and
-                // the index in CODEGEN
-                const std::tuple<std::string, std::vector<size_t>, size_t>&
+                // Return the tuple including the string to create mkldnn primitive, the deps, the
+                // index and
+                // the scratchpad size in CODEGEN
+                const std::tuple<std::string, std::vector<size_t>, size_t, size_t>&
                     get_primitive_build_tuple(const Node* node) const
                 {
-                    auto it = m_node_primitive_string_deps_index_map.find(node);
-                    NGRAPH_CHECK(it != m_node_primitive_string_deps_index_map.end(),
+                    auto it = m_node_primitive_string_deps_index_size_map.find(node);
+                    NGRAPH_CHECK(it != m_node_primitive_string_deps_index_size_map.end(),
                                  "Primitive build tuple not found for node ",
                                  node->description());
 
@@ -351,9 +352,9 @@ namespace ngraph
 #endif
 
                 /// Map each node with mkldnn implementation to its mkldnn primitive creating
-                /// string, deps, and mkldnn primitive index.
-                std::map<const Node*, std::tuple<std::string, std::vector<size_t>, size_t>>
-                    m_node_primitive_string_deps_index_map;
+                /// string, deps, mkldnn primitive index, and mkldnn scratchpad size.
+                std::map<const Node*, std::tuple<std::string, std::vector<size_t>, size_t, size_t>>
+                    m_node_primitive_string_deps_index_size_map;
                 /// Name of the file to store descriptors for mkldnn_primitives
                 const std::string m_desc_filename = "desc_file";
             };
