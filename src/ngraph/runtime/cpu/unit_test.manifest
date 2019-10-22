@@ -24,7 +24,3 @@ lrn_6D_across_2_axes
 
 # ONNX TopK with dynamic K
 top_k_opset_10
-
-# Tile op case that the number of elements in "repeats" and shape of "data" are different
-tile_3d_small_data_rank
-tile_3d_few_repeats
