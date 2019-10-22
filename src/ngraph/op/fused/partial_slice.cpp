@@ -58,6 +58,7 @@ NodeVector op::PartialSlice::decompose_op() const
     auto axes = get_axes();
     auto starts = get_lower_bounds();
     auto ends = get_upper_bounds();
+    auto decrease_axes = get_decrease_axes();
 
     Coordinate ng_start, ng_end;
     int axis, start, end;
@@ -82,7 +83,40 @@ NodeVector op::PartialSlice::decompose_op() const
     }
 
     auto sliced = std::make_shared<op::Slice>(data, ng_start, ng_end);
-    return {sliced};
+    auto out_shape = sliced->get_shape();
+    Shape out_reshape_shape{};
+
+    if (decrease_axes.size() > 0)
+    {
+        auto new_out_shape = out_shape;
+        for (size_t i = 0; i < decrease_axes.size(); ++i)
+        {
+            int idx = decrease_axes[i];
+            NGRAPH_CHECK(out_shape[idx] == 1, "Decrease dim should be 1");
+            new_out_shape[idx] = 0;
+        }
+
+        for (size_t i = 0; i < out_shape.size(); ++i)
+        {
+            if (new_out_shape[i] != 0)
+            {
+                out_reshape_shape.push_back(out_shape[i]);
+            }
+        }
+
+        if (out_reshape_shape.size() == 0)
+        {
+            out_reshape_shape.push_back(1);
+        }
+    }
+    else
+    {
+        out_reshape_shape = out_shape;
+    }
+
+    auto out =
+        std::make_shared<op::Reshape>(sliced, get_default_order(out_shape), out_reshape_shape);
+    return {out};
 }
 
 shared_ptr<Node> op::PartialSlice::copy_with_new_args(const NodeVector& new_args) const
