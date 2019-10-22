@@ -84,7 +84,8 @@ namespace ngraph
                 extern "C" void mkldnn_invoke_primitive(CPURuntimeContext* ctx,
                                                         size_t primitive_index,
                                                         std::vector<size_t>& deps,
-                                                        OpType type);
+                                                        OpType type,
+                                                        size_t scratchpad_size = 0);
             }
         }
     }

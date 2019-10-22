@@ -7,6 +7,7 @@ model_matmul_integer_no_zero_point
 model_matmul_integer_4d_no_zero_point
 
 fake_quantize
+fake_quantize_pdpd
 fake_quantize_with_clip
 fake_quantize_with_clip_across_channels
 
@@ -16,3 +17,4 @@ convert_bf16_float32
 
 # ONNX TopK with dynamic K
 top_k_opset_10
+top_k_opset_11_const_k_smallest

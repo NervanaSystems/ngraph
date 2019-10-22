@@ -32,6 +32,7 @@
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/topk.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
@@ -98,7 +99,6 @@ namespace ngraph
         class Atan;
         class ArgMin;
         class ArgMax;
-        class TopK;
         class GatherND;
         class ScatterAdd;
         class ScatterNDAdd;
