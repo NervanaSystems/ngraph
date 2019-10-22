@@ -268,12 +268,12 @@ set(MULTI_TEST_SRC
     backend/concat.in.cpp
     backend/constant.in.cpp
     backend/convert.in.cpp
-    backend/convolution.in.cpp
     backend/convolution_reference.in.cpp
+    backend/convolution.in.cpp
     backend/cos.in.cpp
     backend/cosh.in.cpp
-    backend/dot.in.cpp
     backend/divide.in.cpp
+    backend/dot.in.cpp
     backend/dyn_broadcast.in.cpp
     backend/dyn_replace_slice_reference.in.cpp
     backend/dyn_reshape.in.cpp
