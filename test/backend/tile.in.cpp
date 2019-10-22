@@ -34,8 +34,6 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-
-
 NGRAPH_TEST(${BACKEND_NAME}, tile_3d_small_data_rank)
 {
     Shape shape_a{3};
