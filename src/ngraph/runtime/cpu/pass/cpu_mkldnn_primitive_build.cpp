@@ -2240,7 +2240,7 @@ namespace ngraph
 
                     // query scratchpad size
                     auto gelu_desc = mkldnn_emitter.get_gelu_forward_desc(node);
-                    mkldnn_emitter.query_scratchpad_eltwise_forward(gelu_desc);
+                    scratchpad_size = mkldnn_emitter.query_scratchpad_eltwise_forward(gelu_desc);
 
                     // Gelu needs 3 primitives: input, result, and eltwise_forward.
                     index = mkldnn_emitter.reserve_primitive_space(3);
@@ -2286,7 +2286,8 @@ namespace ngraph
                     // query scratchpad size
                     auto fwd_desc = mkldnn_emitter.get_gelu_forward_desc(node);
                     auto bwd_desc = mkldnn_emitter.get_gelu_backward_desc(node);
-                    mkldnn_emitter.query_scratchpad_eltwise_backward(fwd_desc, bwd_desc);
+                    scratchpad_size =
+                        mkldnn_emitter.query_scratchpad_eltwise_backward(fwd_desc, bwd_desc);
 
                     // GeluBackprop needs 4 primitives: input, delta, result, and
                     // eltwise_backward.

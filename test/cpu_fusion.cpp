@@ -1107,9 +1107,7 @@ TEST(cpu_fusion, fuse_gelu_backprop_f32)
     // Test fusion
     {
         pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("gelu_backprop_before.svg");
         pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-        pass_manager.register_pass<pass::VisualizeTree>("gelu_backprop_after.svg");
         pass_manager.run_passes(fuse_func);
         ASSERT_EQ(count_ops_of_type<op::GeluBackprop>(fuse_func), 1);
     }

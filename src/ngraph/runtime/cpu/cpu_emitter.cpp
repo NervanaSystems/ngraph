@@ -3666,7 +3666,9 @@ namespace ngraph
                 {
                     size_t gelu_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, gelu_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, gelu_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -3675,7 +3677,7 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(gelu_index)
-                           << ", deps, OpType::GELU);\n";
+                           << ", deps, OpType::GELU, " << to_string(scratchpad_size) << ");\n";
                 }
                 else
                 {
@@ -3690,7 +3692,9 @@ namespace ngraph
                 {
                     size_t gelu_bprop_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, gelu_bprop_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, gelu_bprop_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -3701,7 +3705,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(gelu_bprop_index)
-                           << ", deps, OpType::GELUBACKPROP);\n";
+                           << ", deps, OpType::GELUBACKPROP, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
                 else
                 {
