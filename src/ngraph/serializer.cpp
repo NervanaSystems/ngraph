@@ -82,6 +82,7 @@
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/layer_norm.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/fused/lstm_sequence.hpp"
 #include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize_l2.hpp"
@@ -872,14 +873,13 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             if (op_version == 1)
             {
-                auto forward_arg_shape = node_js.at("forward_arg_shape").get<vector<size_t>>();
                 auto kernel = node_js.at("kernel").get<vector<size_t>>();
                 auto strides = node_js.at("strides").get<vector<size_t>>();
                 auto pads_begin = node_js.at("pads_begin").get<vector<size_t>>();
                 auto pads_end = node_js.at("pads_end").get<vector<size_t>>();
                 auto exclude_pad = get_or_default<bool>(node_js, "exclude_pad", true);
                 node = make_shared<op::v1::AvgPoolBackprop>(
-                    forward_arg_shape, args[0], strides, pads_begin, pads_end, kernel, exclude_pad);
+                    args[0], args[1], strides, pads_begin, pads_end, kernel, exclude_pad);
             }
             break;
         }
@@ -1556,6 +1556,52 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                              activation_beta,
                                              clip,
                                              input_forget);
+            break;
+        }
+        case OP_TYPEID::LSTMSequence:
+        {
+            auto hidden_size = node_js.at("hidden_size").get<size_t>();
+            auto clip = node_js.at("clip").get<float>();
+            auto activations = node_js.at("activations").get<vector<string>>();
+            auto activations_alpha = node_js.at("activations_alpha").get<vector<float>>();
+            auto activations_beta = node_js.at("activations_beta").get<vector<float>>();
+            auto input_forget = node_js.at("input_forget").get<bool>();
+            auto direction = node_js.at("direction").get<op::LSTMSequence::direction>();
+            if (args.size() == 8)
+            {
+                node = make_shared<op::LSTMSequence>(args[0],
+                                                     args[1],
+                                                     args[2],
+                                                     args[3],
+                                                     args[4],
+                                                     args[5],
+                                                     args[6],
+                                                     args[7],
+                                                     hidden_size,
+                                                     direction,
+                                                     activations_alpha,
+                                                     activations_beta,
+                                                     activations,
+                                                     clip,
+                                                     input_forget);
+            }
+            else
+            {
+                node = make_shared<op::LSTMSequence>(args[0],
+                                                     args[1],
+                                                     args[2],
+                                                     args[3],
+                                                     args[4],
+                                                     args[5],
+                                                     args[6],
+                                                     hidden_size,
+                                                     direction,
+                                                     activations_alpha,
+                                                     activations_beta,
+                                                     activations,
+                                                     clip,
+                                                     input_forget);
+            }
             break;
         }
         case OP_TYPEID::MatMul:
@@ -2971,6 +3017,18 @@ json JSONSerializer::serialize_node(const Node& n)
         node["activations"] = tmp->get_activations();
         node["activation_alpha"] = tmp->get_activation_alpha();
         node["activation_beta"] = tmp->get_activation_beta();
+        node["input_forget"] = tmp->get_input_forget();
+        break;
+    }
+    case OP_TYPEID::LSTMSequence:
+    {
+        auto tmp = dynamic_cast<const op::LSTMSequence*>(&n);
+        node["direction"] = tmp->get_direction();
+        node["hidden_size"] = tmp->get_hidden_size();
+        node["clip_threshold"] = tmp->get_clip_threshold();
+        node["activations"] = tmp->get_activations();
+        node["activations_alpha"] = tmp->get_activations_alpha();
+        node["activations_beta"] = tmp->get_activations_beta();
         node["input_forget"] = tmp->get_input_forget();
         break;
     }

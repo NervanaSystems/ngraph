@@ -454,13 +454,6 @@ void Node::merge_provenance_tags_from(const std::shared_ptr<const Node>& source)
 
 std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
-    for (auto& i : m_inputs)
-    {
-        NGRAPH_CHECK(i.get_output().get_node()->get_output_size() == 1,
-                     "child ",
-                     i.get_output().get_node()->get_name(),
-                     " has multiple outputs");
-    }
     NGRAPH_CHECK(
         index < m_inputs.size(), "index '", index, "' out of range in get_argument(size_t index)");
     return m_inputs[index].get_output().get_node();

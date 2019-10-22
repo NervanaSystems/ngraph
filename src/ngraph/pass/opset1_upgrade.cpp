@@ -42,12 +42,14 @@ using namespace ngraph;
 #define NGRAPH_OP(a, b) a,
 enum class OP_TYPEID
 {
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
 };
 #undef NGRAPH_OP
 
 #define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
 static unordered_map<string, OP_TYPEID> typeid_map{
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
 };
 #undef NGRAPH_OP
@@ -128,8 +130,8 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         auto kernel = tmp->get_window_shape();
 
         auto replacement_node =
-            make_shared<op::v1::AvgPoolBackprop>(tmp->get_forward_arg_shape(),
-                                                 node->input(0).get_source_output(),
+            make_shared<op::v1::AvgPoolBackprop>(node->input(0).get_source_output(),
+                                                 node->input(1).get_source_output(),
                                                  strides,
                                                  pads_begin,
                                                  pads_end,
