@@ -48,8 +48,8 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            const bool get_soft_label() const { return m_soft_label; }
-            const int64_t get_ignore_index() const { return m_ignore_index; }
+            bool get_soft_label() const { return m_soft_label; }
+            int64_t get_ignore_index() const { return m_ignore_index; }
         private:
             bool m_soft_label;
             int64_t m_ignore_index;
@@ -83,8 +83,8 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
-            const bool get_soft_label() const { return m_soft_label; }
-            const int64_t get_ignore_index() const { return m_ignore_index; }
+            bool get_soft_label() const { return m_soft_label; }
+            int64_t get_ignore_index() const { return m_ignore_index; }
         private:
             bool m_soft_label;
             int64_t m_ignore_index;
