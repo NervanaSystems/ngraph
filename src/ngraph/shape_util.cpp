@@ -31,12 +31,13 @@ PartialShape ngraph::project(const PartialShape& shape, const AxisSet& axes)
     {
         std::vector<Dimension> result_dims;
 
-        for (size_t i = 0; i < size_t(shape.rank()); i++)
+        for (size_t const& axe : axes)
         {
-            if (axes.find(i) != axes.end())
+            if (axe >= size_t(shape.rank()))
             {
-                result_dims.push_back(shape[i]);
+                break;
             }
+            result_dims.push_back(shape[axe]);
         }
 
         return PartialShape(result_dims);
@@ -54,11 +55,33 @@ PartialShape ngraph::reduce(const PartialShape& shape, const AxisSet& deleted_ax
     {
         AxisSet axes;
 
-        for (size_t i = 0; i < size_t(shape.rank()); i++)
+        if (deleted_axes.empty())
         {
-            if (deleted_axes.find(i) == deleted_axes.end())
+            for (size_t i = 0; i < size_t(shape.rank()); i++)
             {
                 axes.insert(i);
+            }
+        }
+        else
+        {
+            auto deleted_axes_it = deleted_axes.cbegin();
+            for (size_t i = 0; i < size_t(shape.rank()); ++i)
+            {
+                if (*deleted_axes_it == i)
+                {
+                    if (++deleted_axes_it == deleted_axes.cend())
+                    {
+                        for (i = i + 1; i < size_t(shape.rank()); ++i)
+                        {
+                            axes.insert(i);
+                        }
+                        break;
+                    }
+                }
+                else
+                {
+                    axes.insert(i);
+                }
             }
         }
 

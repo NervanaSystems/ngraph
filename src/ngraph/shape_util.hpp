@@ -25,12 +25,13 @@ namespace ngraph
     {
         AXIS_VALUES result;
 
-        for (size_t i = 0; i < axis_values.size(); i++)
+        for (size_t const axe : axes)
         {
-            if (axes.find(i) != axes.end())
+            if (axe >= axis_values.size())
             {
-                result.push_back(axis_values[i]);
+                break;
             }
+            result.push_back(axis_values[axe]);
         }
 
         return result;
@@ -45,11 +46,33 @@ namespace ngraph
     {
         AxisSet axes;
 
-        for (size_t i = 0; i < axis_values.size(); i++)
+        if (deleted_axes.empty())
         {
-            if (deleted_axes.find(i) == deleted_axes.end())
+            for (size_t i = 0; i < axis_values.size(); ++i)
             {
                 axes.insert(i);
+            }
+        }
+        else
+        {
+            auto deleted_axes_it = deleted_axes.cbegin();
+            for (size_t i = 0; i < axis_values.size(); ++i)
+            {
+                if (*deleted_axes_it == i)
+                {
+                    if (++deleted_axes_it == deleted_axes.cend())
+                    {
+                        for (i = i + 1; i < axis_values.size(); ++i)
+                        {
+                            axes.insert(i);
+                        }
+                        break;
+                    }
+                }
+                else
+                {
+                    axes.insert(i);
+                }
             }
         }
 
