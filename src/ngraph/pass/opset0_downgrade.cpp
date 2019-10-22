@@ -19,7 +19,6 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
-#include "ngraph/op/experimental/strided_slice.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
@@ -27,6 +26,7 @@
 #include "ngraph/op/reduce_sum.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/strided_slice.hpp"
 #include "ngraph/op/sum.hpp"
 
 #include <algorithm>
