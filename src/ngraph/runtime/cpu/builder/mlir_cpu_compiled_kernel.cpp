@@ -16,7 +16,7 @@
 
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 
-#include "contrib/mlir/backend/cpu_backend.hpp"
+#include "contrib/mlir/backend/cpu/cpu_backend.hpp"
 #include "contrib/mlir/core/compiler.hpp"
 #include "contrib/mlir/runtime/cpu/cpu_runtime.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"

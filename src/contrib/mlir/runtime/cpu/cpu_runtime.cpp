@@ -18,7 +18,7 @@
 // Follows nGraph naming convention for public APIs only, else MLIR naming convention.
 
 #include "cpu_runtime.hpp"
-#include "contrib/mlir/backend/cpu_backend.hpp"
+#include "contrib/mlir/backend/cpu/cpu_backend.hpp"
 #include "ngraph/check.hpp"
 
 #include <llvm/ADT/STLExtras.h>
