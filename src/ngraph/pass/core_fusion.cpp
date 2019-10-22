@@ -85,11 +85,8 @@ void pass::CoreFusion::construct_softmax_cross_entropy_fprop()
         auto pattern_map = m.get_pattern_map();
         auto input_to_normalize = pattern_map[param_1];
         auto labels = pattern_map[param_2];
-        auto axis_constant_op =
-            std::static_pointer_cast<ngraph::op::Constant>(pattern_map[reduction_axes_label]);
-        auto axis_to_sum = *(static_cast<size_t const*>(axis_constant_op->get_data_ptr()));
-        auto softmax_crossentropy = std::make_shared<ngraph::op::SoftmaxCrossEntropy>(
-            input_to_normalize, labels, axis_to_sum);
+        auto softmax_crossentropy =
+            std::make_shared<ngraph::op::SoftmaxCrossEntropy>(input_to_normalize, labels);
         ngraph::replace_node(m.get_match_root(), softmax_crossentropy);
 
         return true;
@@ -134,25 +131,22 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_soft_labels()
     auto subtract = std::make_shared<ngraph::op::Subtract>(divide_sm_ce, broadcast_summation);
     auto multiply = std::make_shared<ngraph::op::Multiply>(softmax_label, subtract);
 
-    auto callback =
-        [input_x, delta_label, labels_y, reduction_axes_label, softmax_label](pattern::Matcher& m) {
-            NGRAPH_DEBUG << "In a callback for construct_softmax_cross_entropy_bprop against "
-                         << m.get_match_root()->get_name();
+    auto callback = [input_x, delta_label, labels_y, reduction_axes_label, softmax_label](
+        pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_softmax_cross_entropy_bprop against "
+                     << m.get_match_root()->get_name();
 
-            auto pattern_map = m.get_pattern_map();
-            auto input = pattern_map[input_x];
-            auto labels = pattern_map[labels_y];
-            auto delta = pattern_map[delta_label];
-            auto softmax = pattern_map[softmax_label];
+        auto pattern_map = m.get_pattern_map();
+        auto input = pattern_map[input_x];
+        auto labels = pattern_map[labels_y];
+        auto delta = pattern_map[delta_label];
+        auto softmax = pattern_map[softmax_label];
 
-            auto axis_constant_op =
-                std::static_pointer_cast<ngraph::op::Constant>(pattern_map[reduction_axes_label]);
-            auto axis_to_sum = *(static_cast<size_t const*>(axis_constant_op->get_data_ptr()));
-            auto sm_ce_bprop = std::make_shared<ngraph::op::SoftmaxCrossEntropyBackprop>(
-                delta, softmax, labels, axis_to_sum, true);
-            ngraph::replace_node(m.get_match_root(), sm_ce_bprop);
-            return true;
-        };
+        auto sm_ce_bprop =
+            std::make_shared<ngraph::op::SoftmaxCrossEntropyBackprop>(delta, softmax, labels, true);
+        ngraph::replace_node(m.get_match_root(), sm_ce_bprop);
+        return true;
+    };
     auto m = std::make_shared<pattern::Matcher>(multiply, "CoreFusion.SoftmaxCrossEntropyBprop");
     this->add_matcher(m, callback);
 }
@@ -223,14 +217,11 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_ignore_mask()
         auto delta = pattern_map[delta_label];
         auto softmax = pattern_map[softmax_label];
 
-        auto axis_constant_op =
-            std::static_pointer_cast<ngraph::op::Constant>(pattern_map[reduction_axes_label]);
-        auto axis_to_sum = *(static_cast<size_t const*>(axis_constant_op->get_data_ptr()));
         auto mask_constant_op =
             std::static_pointer_cast<ngraph::op::Constant>(pattern_map[mask_label]);
         auto ignore_index = *(static_cast<size_t const*>(mask_constant_op->get_data_ptr()));
         auto sm_ce_bprop = std::make_shared<ngraph::op::SoftmaxCrossEntropyBackprop>(
-            delta, softmax, labels, axis_to_sum, false, ignore_index);
+            delta, softmax, labels, false, ignore_index);
         ngraph::replace_node(m.get_match_root(), sm_ce_bprop);
         return true;
     };
