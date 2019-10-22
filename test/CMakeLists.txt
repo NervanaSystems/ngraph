@@ -260,8 +260,8 @@ set(MULTI_TEST_SRC
     backend/autodiff.in.cpp
     backend/batch_mat_mul.in.cpp
     backend/batch_norm.in.cpp
-    backend/builder_flatten.in.cpp
     backend/broadcast.in.cpp
+    backend/builder_flatten.in.cpp
     backend/ceiling.in.cpp
     backend/comparison.in.cpp
     backend/computation_reuse.in.cpp
