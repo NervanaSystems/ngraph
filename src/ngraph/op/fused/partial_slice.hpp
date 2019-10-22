@@ -68,7 +68,7 @@ namespace ngraph
             AxisVector m_decrease_axes;
         };
 
-        /// \brief Layer Normalization Backprop
+        /// \brief pdpd slice backprop
         ///
         class PartialSliceBackprop : public ngraph::op::util::FusedOp
         {
