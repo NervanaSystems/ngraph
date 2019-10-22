@@ -1383,7 +1383,7 @@ void MKLDNNEmitter::build_bounded_relu(std::vector<mkldnn::memory*>& mkldnn_memo
 
     mkldnn_primitives[bounded_relu_index] = new mkldnn::eltwise_forward(bounded_relu_pd);
 }
-// GD: TODO
+
 void MKLDNNEmitter::build_gelu(std::vector<mkldnn::memory*>& mkldnn_memories,
                                std::vector<mkldnn::primitive*>& mkldnn_primitives,
                                std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
