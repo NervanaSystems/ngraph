@@ -48,10 +48,10 @@
 
 #define SET_ROUND_MODE attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
 
-#define QUERY_SCRATCHPAD(op_name, x)
-#define QUERY_SCRATCHPAD_2ARGS(op_name, x, y)
-#define QUERY_SCRATCHPAD_3ARGS(op_name, x, y, z)
-#define QUERY_SCRATCHPAD_4ARGS(op_name, x, y, z, u)
+#define QUERY_SCRATCHPAD(op_name, x) 0
+#define QUERY_SCRATCHPAD_2ARGS(op_name, x, y) 0
+#define QUERY_SCRATCHPAD_3ARGS(op_name, x, y, z) 0
+#define QUERY_SCRATCHPAD_4ARGS(op_name, x, y, z, u) 0
 
 #define MKLDNN_ERROR_MESSAGE e.message
 
@@ -85,7 +85,8 @@
 #define GET_SIZE                                                                                   \
     mkldnn::memory::desc scratchpad_md = pd.scratchpad_desc();                                     \
     size_t size = scratchpad_md.get_size();                                                        \
-    m_max_scratchpad_size = size > m_max_scratchpad_size ? size : m_max_scratchpad_size;
+    m_max_scratchpad_size = size > m_max_scratchpad_size ? size : m_max_scratchpad_size;           \
+    return size;
 
 #define MKLDNN_ERROR_MESSAGE std::string(e.message)
 
