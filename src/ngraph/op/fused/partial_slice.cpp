@@ -201,10 +201,10 @@ NodeVector op::PartialSliceBackprop::decompose_op() const
     auto dout_reshape =
         std::make_shared<op::Reshape>(dout, get_default_order(dout.get_shape()), reshape);
 
-    std::shared_ptr<ngraph::Node> input0 =
+    std::shared_ptr<ngraph::Node> mask =
         op::Constant::create(dout.get_element_type(), data_shape, {0});
 
-    auto din = std::make_shared<op::ReplaceSlice>(input0, dout_reshape, ng_start, ng_end);
+    auto din = std::make_shared<op::ReplaceSlice>(mask, dout_reshape, ng_start, ng_end);
     return {din};
 }
 
