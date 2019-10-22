@@ -145,6 +145,9 @@ class NG_Terminator_Op<string mnemonic, list<OpTrait> traits = []> :
 // Terminator Ops
 def NGReturnOp : NG_Terminator_Op<"return">;
 
+// ops attributes
+include "dialect/attributes.td"
+
 // Version 0 Ops
 include "dialect/ops_v0.td"
 

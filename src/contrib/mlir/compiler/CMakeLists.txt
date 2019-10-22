@@ -101,7 +101,13 @@ ngraph_tablegen(ops_interfaces.h.inc -gen-op-interface-decls)
 ngraph_tablegen(ops_interfaces.cpp.inc -gen-op-interface-defs)
 add_public_tablegen_target(ngraph_ops_interfaces_gen)
 
-add_dependencies(mlir_backend ngraph_ops_gen ngraph_ops_interfaces_gen)
+# tabel-gen ops attributes.td
+set(LLVM_TARGET_DEFINITIONS dialect/ops_attributes.td)
+ngraph_tablegen(ops_attributes.h.inc -gen-enum-decls)
+ngraph_tablegen(ops_attributes.cpp.inc -gen-enum-defs)
+add_public_tablegen_target(ngraph_ops_attributes_gen)
+
+add_dependencies(mlir_backend ngraph_ops_gen ngraph_ops_interfaces_gen ngraph_ops_attributes_gen)
 target_include_directories(mlir_backend PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 install(TARGETS mlir_backend DESTINATION ${NGRAPH_INSTALL_LIB})

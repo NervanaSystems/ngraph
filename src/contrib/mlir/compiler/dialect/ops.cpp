@@ -22,6 +22,7 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Regex.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/ADT/StringSwitch.h"
 #include "type.hpp"
 
 using llvm::ArrayRef;
@@ -31,6 +32,8 @@ using llvm::SmallVector;
 using llvm::StringRef;
 using llvm::Twine;
 using namespace mlir;
+
+#include "ops_attributes.cpp.inc"
 // TODO:
 // - Move verifiers and other OP helpers (e.g. getSomeAttribute()) to separate files
 //
