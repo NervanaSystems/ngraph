@@ -474,7 +474,7 @@ TEST(serialize, opset1_strided_slice)
     auto g_strided_slice_v1 = g_result->input(0).get_source_output().get_node_shared_ptr();
     auto strided_slice_out = as_type_ptr<op::v1::StridedSlice>(g_strided_slice_v1);
 
-    EXPECT_EQ(strided_slice_out->description(), "DynSlice");
+    EXPECT_EQ(strided_slice_out->description(), "Slice");
     EXPECT_EQ(strided_slice_out->get_version(), 1);
     EXPECT_EQ(strided_slice_out->get_begin_mask(), begin_mask);
     EXPECT_EQ(strided_slice_out->get_end_mask(), end_mask);
