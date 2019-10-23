@@ -166,6 +166,18 @@ namespace ngraph
 
             bool get_input_forget() const { return m_input_forget; }
             LSTMWeightsFormat get_weights_format() const { return m_weights_format; }
+
+            ///
+            /// \brief      Change data format of provided node into IFCO.
+            ///
+            /// \node       The IFCO format was chosen because it's default DNNL format.
+            ///
+            /// \param[in]  node  The input node to be permuted.
+            ///
+            /// \return     Node representing reshaped tensor according to IFCO weights format.
+            ///
+            std::shared_ptr<Node> convert_node_format(const Output<Node>& node) const;
+
         private:
             ///
             /// \brief      Creates the default bias input initialized with zeros.
@@ -180,17 +192,6 @@ namespace ngraph
             /// \return     The object of Output class.
             ///
             Output<Node> get_default_peepholes_input() const;
-
-            /// \brief      Change data format of provided node into IFCO.
-            ///
-            /// \node       The IFCO format was chosen because it's default DNNL format.
-            ///
-            /// \param[in]  node        The input node to be permuted.
-            ///
-            /// \return     Node representing reshaped tensor according to IFCO weights format.
-            ///
-            std::shared_ptr<Node> convert_node_format(const Output<Node>& node) const;
-
             ///
             /// \brief The Activation function f.
             ///
