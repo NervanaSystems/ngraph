@@ -839,7 +839,6 @@ struct OutputVectorHelper
 shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 {
     shared_ptr<Node> node;
-    bool validate = false;
     try
     {
         string node_name = node_js.at("name").get<string>();
@@ -882,10 +881,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                         node->add_provenance_tag(prov_tag);
                     }
                 }
-                if (validate)
-                {
-                    node->constructor_validate_and_infer_types();
-                }
+                node->constructor_validate_and_infer_types();
                 m_node_map[node_name] = node;
                 return node;
             }
@@ -1974,37 +1970,14 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             break;
         }
-        /*
-         case OP_TYPEID::Parameter:
-         {
-             auto type_node_js =
-                 has_key(node_js, "element_type") ? node_js : node_js.at("value_type");
-             auto element_type = read_element_type(type_node_js.at("element_type"));
-             auto shape = type_node_js.at("shape");
-             auto cacheable = get_or_default<bool>(node_js, "cacheable", false);
-             node = make_shared<op::Parameter>(element_type, read_partial_shape(shape), cacheable);
-             break;
-         }
-        */
         case OP_TYPEID::Parameter:
         {
-            if (has_key(node_js, "value_type"))
-            {
-                auto type_node_js = node_js.at("value_type");
-                auto element_type = read_element_type(type_node_js.at("element_type"));
-                auto shape = type_node_js.at("shape");
-                auto cacheable = get_or_default<bool>(node_js, "cacheable", false);
-                node =
-                    make_shared<op::Parameter>(element_type, read_partial_shape(shape), cacheable);
-            }
-            else
-            {
-                JSONNodeDeserializer visitor(node_js);
-                // node = make_shared<op::Parameter>();
-                node = shared_ptr<Node>(FactoryRegistry<Node>::get()->create({"Parameter", 0}));
-                node->visit_attributes(visitor);
-                validate = true;
-            }
+            auto type_node_js =
+                has_key(node_js, "element_type") ? node_js : node_js.at("value_type");
+            auto element_type = read_element_type(type_node_js.at("element_type"));
+            auto shape = type_node_js.at("shape");
+            auto cacheable = get_or_default<bool>(node_js, "cacheable", false);
+            node = make_shared<op::Parameter>(element_type, read_partial_shape(shape), cacheable);
             break;
         }
         case OP_TYPEID::Passthrough:
@@ -2474,10 +2447,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             {
                 node->add_provenance_tag(prov_tag);
             }
-        }
-        if (validate)
-        {
-            node->constructor_validate_and_infer_types();
         }
         m_node_map[node_name] = node;
     }
