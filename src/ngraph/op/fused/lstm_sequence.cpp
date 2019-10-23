@@ -76,7 +76,6 @@ shared_ptr<Node> op::LSTMSequence::copy_with_new_args(const NodeVector& new_args
                                          m_activations,
                                          m_clip_threshold,
                                          m_input_forget);
-
     }
     else if (new_args.size() == 7)
     {
@@ -95,7 +94,6 @@ shared_ptr<Node> op::LSTMSequence::copy_with_new_args(const NodeVector& new_args
                                          m_activations,
                                          m_clip_threshold,
                                          m_input_forget);
-
     }
     else
     {

@@ -166,7 +166,6 @@ namespace ngraph
 
             bool get_input_forget() const { return m_input_forget; }
             LSTMWeightsFormat get_weights_format() const { return m_weights_format; }
-
             ///
             /// \brief      Change data format of provided node into IFCO.
             ///
