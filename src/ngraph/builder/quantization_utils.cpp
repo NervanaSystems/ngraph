@@ -73,8 +73,12 @@ namespace ngraph
                 auto max_abs_range = max_abs(min_range, max_range);
                 auto target_range = make_constant(type, shape, range);
 
-                return (max_abs_range / target_range)
-                    ->add_provenance_group_members_above({input_min_range, input_max_range});
+                auto ng_out_node = (max_abs_range / target_range);
+                if (bump_by_eps){
+                    ng_out_node->add_provenance_group_member(min_range.get_node_shared_ptr());
+                    ng_out_node->add_provenance_group_member(max_range.get_node_shared_ptr());
+                }
+                return ng_out_node->add_provenance_group_members_above({input_min_range, input_max_range});
             }
 
             std::shared_ptr<Node> get_bias_scale(Output<Node> min_input,

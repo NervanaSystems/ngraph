@@ -67,8 +67,11 @@ namespace ngraph
             {
                 base.push_back(node);
             };
-            return make_shared<op::Concat>(rescaled_args, concatenation_axis)
-                ->add_provenance_group_members_above(base);
+
+            auto ng_out_node = make_shared<op::Concat>(rescaled_args, concatenation_axis);
+            ng_out_node->add_provenance_group_member(min);
+            ng_out_node->add_provenance_group_member(max);
+            return ng_out_node->add_provenance_group_members_above(base);
         }
     }
 }

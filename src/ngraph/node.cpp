@@ -378,6 +378,11 @@ shared_ptr<Node> Node::add_provenance_group_members_above(const OutputVector& ba
     {
         todo.push_back(value.get_node());
     }
+    for (auto n : get_provenance_group_members()){
+        for (auto value : n->input_values()) {
+            todo.push_back(value.get_node());
+        }
+    }
     while (!todo.empty())
     {
         Node* node = todo.back();
@@ -393,6 +398,7 @@ shared_ptr<Node> Node::add_provenance_group_members_above(const OutputVector& ba
             {
                 todo.push_back(value.get_node());
             }
+
         }
         base_set.insert(node);
     }
