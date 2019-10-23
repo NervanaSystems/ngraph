@@ -26,6 +26,7 @@
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/softmax.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
@@ -50,33 +51,75 @@ NodeVector op::SoftmaxCrossEntropy::decompose_op() const
 {
     auto input_to_normalize = input_value(0);
     auto labels = input_value(1);
-
-    // always reduces the sum on the last axis
     auto reduction_axis = input_to_normalize.get_shape().size() - 1;
-    auto max_xj = std::make_shared<ngraph::op::Max>(input_to_normalize,
-                                                    AxisSet{static_cast<size_t>(reduction_axis)});
-    auto broadcast_max_xj =
-        std::make_shared<ngraph::op::Broadcast>(max_xj, input_to_normalize.get_shape(), AxisSet{1});
-    auto subtract = std::make_shared<ngraph::op::Subtract>(input_to_normalize, broadcast_max_xj);
-    auto exp = std::make_shared<ngraph::op::Exp>(subtract);
 
-    auto sum_over_j =
-        std::make_shared<ngraph::op::Sum>(exp, AxisSet{static_cast<size_t>(reduction_axis)});
-    auto log_sum_over_j = std::make_shared<ngraph::op::Log>(sum_over_j);
+    auto create_mask = [&]() -> std::shared_ptr<ngraph::Node> {
+        // ignore mask
+        auto mask_constant = ngraph::op::Constant::create(
+            labels.get_element_type(), labels.get_shape(), {m_ignore_index});
+        auto not_equal = std::make_shared<ngraph::op::NotEqual>(labels, mask_constant);
+        auto convert =
+            std::make_shared<ngraph::op::Convert>(not_equal, input_to_normalize.get_element_type());
+        return convert;
+    };
 
-    auto subtract_max_xj_from_input =
-        std::make_shared<ngraph::op::Subtract>(input_to_normalize, broadcast_max_xj);
-    auto broadcast_log = std::make_shared<ngraph::op::Broadcast>(
-        log_sum_over_j, subtract_max_xj_from_input->get_shape(), AxisSet{1});
-    auto subtract_max_xj_from_input_from_log_sum_over_j =
-        std::make_shared<ngraph::op::Subtract>(subtract_max_xj_from_input, broadcast_log);
-    auto multiply = std::make_shared<ngraph::op::Multiply>(
-        labels, subtract_max_xj_from_input_from_log_sum_over_j);
-    auto sum_over_k =
-        std::make_shared<ngraph::op::Sum>(multiply, AxisSet{static_cast<size_t>(reduction_axis)});
-    auto negate_summation = std::make_shared<ngraph::op::Negative>(sum_over_k);
+    auto create_xe = [&](std::shared_ptr<ngraph::Node> one_hot,
+                         std::shared_ptr<ngraph::Node> input_softmax) {
+        auto node_log = std::make_shared<ngraph::op::Log>(input_softmax);
+        auto node_mul = one_hot * node_log;
+        auto node_sum = std::make_shared<ngraph::op::Sum>(
+            node_mul, AxisSet{static_cast<size_t>(reduction_axis)});
+        auto neg_sum = -node_sum;
+        auto reshape = std::make_shared<ngraph::op::Reshape>(
+            neg_sum, AxisVector{0}, Shape{node_sum->get_shape().at(0), 1});
+        return reshape;
+    };
 
-    return {negate_summation};
+    if (!m_soft_label)
+    {
+        // always reduces the sum on the last axis
+        auto max_xj = std::make_shared<ngraph::op::Max>(
+            input_to_normalize, AxisSet{static_cast<size_t>(reduction_axis)});
+        auto broadcast_max_xj = std::make_shared<ngraph::op::Broadcast>(
+            max_xj, input_to_normalize.get_shape(), AxisSet{1});
+        auto subtract =
+            std::make_shared<ngraph::op::Subtract>(input_to_normalize, broadcast_max_xj);
+        auto exp = std::make_shared<ngraph::op::Exp>(subtract);
+
+        auto sum_over_j =
+            std::make_shared<ngraph::op::Sum>(exp, AxisSet{static_cast<size_t>(reduction_axis)});
+        auto log_sum_over_j = std::make_shared<ngraph::op::Log>(sum_over_j);
+
+        auto subtract_max_xj_from_input =
+            std::make_shared<ngraph::op::Subtract>(input_to_normalize, broadcast_max_xj);
+        auto broadcast_log = std::make_shared<ngraph::op::Broadcast>(
+            log_sum_over_j, subtract_max_xj_from_input->get_shape(), AxisSet{1});
+        auto subtract_max_xj_from_input_from_log_sum_over_j =
+            std::make_shared<ngraph::op::Subtract>(subtract_max_xj_from_input, broadcast_log);
+        auto multiply = std::make_shared<ngraph::op::Multiply>(
+            labels, subtract_max_xj_from_input_from_log_sum_over_j);
+        auto sum_over_k = std::make_shared<ngraph::op::Sum>(
+            multiply, AxisSet{static_cast<size_t>(reduction_axis)});
+        auto negate_summation = std::make_shared<ngraph::op::Negative>(sum_over_k);
+
+        return {negate_summation};
+    }
+    else
+    {
+        // we will have one_hot encoding on labels if softmax_lables = false
+        size_t one_hot_axis = input_to_normalize.get_shape().size() - 1;
+        size_t softmax_axis = input_to_normalize.get_shape().size() - 1;
+        auto reshape_labels =
+            make_shared<op::Reshape>(labels, AxisVector{0, 1}, Shape{labels.get_shape().at(0)});
+        auto one_hot_labels = std::make_shared<ngraph::op::OneHot>(
+            reshape_labels, input_to_normalize.get_shape(), one_hot_axis);
+        auto mask = create_mask();
+        // softmax will be applied on the input to cross_entropy
+        auto softmax =
+            std::make_shared<ngraph::op::Softmax>(input_to_normalize, AxisSet{softmax_axis});
+        auto xe = create_xe(one_hot_labels, softmax);
+        return {xe * mask};
+    }
 }
 
 shared_ptr<Node> op::SoftmaxCrossEntropy::copy_with_new_args(const NodeVector& new_args) const
