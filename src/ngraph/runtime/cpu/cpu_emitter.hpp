@@ -31,6 +31,7 @@
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
@@ -85,7 +86,6 @@ namespace ngraph
         class Constant;
         class Reshape;
         class Sign;
-        class Slice;
         class Exp;
         class EmbeddingLookup;
         class Sin;
