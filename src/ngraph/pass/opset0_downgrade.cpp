@@ -133,6 +133,10 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
     case OP_TYPEID::ConvolutionBackpropData:
     {
         auto tmp = as_type_ptr<op::v1::ConvolutionBackpropData>(node);
+        NGRAPH_CHECK(node->input_value(2).get_node_shared_ptr()->is_constant());
+        auto data_batch_shape =
+            static_pointer_cast<op::Constant>(node->input_value(2).get_node_shared_ptr())
+                ->get_shape_val();
         const auto filters_arg = node->input(0).get_source_output();
         const auto delta_arg = node->input(1).get_source_output();
         const PartialShape& delta_arg_pshape = node->get_input_partial_shape(1);
@@ -142,7 +146,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
                      *node);
         const size_t num_spatial_dims = static_cast<size_t>(delta_arg_pshape.rank()) - 2;
         auto replacement_node =
-            make_shared<op::v0::ConvolutionBackpropData>(tmp->get_data_batch_shape(),
+            make_shared<op::v0::ConvolutionBackpropData>(data_batch_shape,
                                                          filters_arg,
                                                          delta_arg,
                                                          tmp->get_strides(),
@@ -157,6 +161,10 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
     case OP_TYPEID::ConvolutionBackpropFilters:
     {
         auto tmp = as_type_ptr<op::v1::ConvolutionBackpropFilters>(node);
+        NGRAPH_CHECK(node->input_value(2).get_node_shared_ptr()->is_constant());
+        auto filters_shape =
+            static_pointer_cast<op::Constant>(node->input_value(2).get_node_shared_ptr())
+                ->get_shape_val();
         const auto data_arg = node->input(0).get_source_output();
         const auto delta_arg = node->input(1).get_source_output();
         const PartialShape& data_arg_pshape = node->get_input_partial_shape(0);
@@ -167,7 +175,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         const size_t num_spatial_dims = static_cast<size_t>(data_arg_pshape.rank()) - 2;
         auto replacement_node =
             make_shared<op::v0::ConvolutionBackpropFilters>(data_arg,
-                                                            tmp->get_filters_shape(),
+                                                            filters_shape,
                                                             delta_arg,
                                                             tmp->get_strides(),
                                                             tmp->get_dilations(),
