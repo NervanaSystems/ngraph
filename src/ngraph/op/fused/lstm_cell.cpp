@@ -269,21 +269,18 @@ NodeVector op::LSTMCell::decompose_op() const
 
 Output<Node> op::LSTMCell::get_default_bias_input() const
 {
-    return Output<Node>{
-        op::Constant::create(input(0).get_element_type(),
-                             Shape{s_gates_count * get_hidden_size()},
-                             vector<float>(s_gates_count * get_hidden_size(), 0.f))};
+    return Output<Node>{op::Constant::create(
+        input(0).get_element_type(), Shape{s_gates_count * get_hidden_size()}, vector<float>{0.f})};
 }
 
 Output<Node> op::LSTMCell::get_default_peepholes_input() const
 {
-    return Output<Node>{
-        op::Constant::create(input(0).get_element_type(),
-                             Shape{s_peepholes_count * get_hidden_size()},
-                             vector<float>(s_peepholes_count * get_hidden_size(), 0.f))};
+    return Output<Node>{op::Constant::create(input(0).get_element_type(),
+                                             Shape{s_peepholes_count * get_hidden_size()},
+                                             vector<float>{0.f})};
 }
 
-shared_ptr<Node> ngraph::op::LSTMCell::convert_node_format(const Output<Node>& node) const
+shared_ptr<Node> op::LSTMCell::convert_node_format(const Output<Node>& node) const
 {
     static const std::map<op::LSTMWeightsFormat, std::vector<size_t>> gate_order_conversion_map{
         {op::LSTMWeightsFormat::FICO, {1, 0, 2, 3}},
