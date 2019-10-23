@@ -61,7 +61,7 @@ NodeVector op::PartialSlice::decompose_op() const
     auto decrease_axes = get_decrease_axes();
 
     Coordinate ng_start, ng_end;
-    int axis, start, end;
+    int axis_length, start, end;
     for (size_t i = 0; i < data_shape.size(); ++i)
     {
         ng_start.push_back(0);
@@ -70,13 +70,13 @@ NodeVector op::PartialSlice::decompose_op() const
 
     for (size_t i = 0; i < axes.size(); ++i)
     {
-        axis = data_shape[axes[i]];
-        start = starts[i] < 0 ? (starts[i] + axis) : starts[i];
-        end = ends[i] < 0 ? (ends[i] + axis) : ends[i];
+        axis_length = data_shape[axes[i]];
+        start = starts[i] < 0 ? (starts[i] + axis_length) : starts[i];
+        end = ends[i] < 0 ? (ends[i] + axis_length) : ends[i];
         start = max(start, 0);
         end = max(end, 0);
-        start = min(start, axis);
-        end = min(end, axis);
+        start = min(start, axis_length);
+        end = min(end, axis_length);
         start = min(start, end);
         ng_start[axes[i]] = start;
         ng_end[axes[i]] = end;
@@ -175,7 +175,7 @@ NodeVector op::PartialSliceBackprop::decompose_op() const
     auto ends = get_upper_bounds();
 
     Coordinate ng_start, ng_end;
-    int axis, start, end;
+    int axis_length, start, end;
 
     auto reshape = data_shape;
     for (size_t i = 0; i < data_shape.size(); ++i)
@@ -185,13 +185,13 @@ NodeVector op::PartialSliceBackprop::decompose_op() const
     }
     for (size_t i = 0; i < axes.size(); ++i)
     {
-        axis = data_shape[axes[i]];
-        start = starts[i] < 0 ? (starts[i] + axis) : starts[i];
-        end = ends[i] < 0 ? (ends[i] + axis) : ends[i];
+        axis_length = data_shape[axes[i]];
+        start = starts[i] < 0 ? (starts[i] + axis_length) : starts[i];
+        end = ends[i] < 0 ? (ends[i] + axis_length) : ends[i];
         start = max(start, 0);
         end = max(end, 0);
-        start = min(start, axis);
-        end = min(end, axis);
+        start = min(start, axis_length);
+        end = min(end, axis_length);
         start = min(start, end);
         ng_start[axes[i]] = start;
         ng_end[axes[i]] = end;
