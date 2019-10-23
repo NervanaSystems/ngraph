@@ -25,12 +25,13 @@ namespace ngraph
     {
         AXIS_VALUES result;
 
-        for (size_t i = 0; i < axis_values.size(); i++)
+        for (const auto axis : axes)
         {
-            if (axes.find(i) != axes.end())
+            if (axis >= axis_values.size())
             {
-                result.push_back(axis_values[i]);
+                break;
             }
+            result.push_back(axis_values[axis]);
         }
 
         return result;
@@ -112,4 +113,4 @@ namespace ngraph
                             std::vector<std::pair<size_t, AXIS_VALUE>>{
                                 std::pair<size_t, AXIS_VALUE>(new_axis_pos, new_axis_val)});
     }
-}
+} // namespace ngraph
