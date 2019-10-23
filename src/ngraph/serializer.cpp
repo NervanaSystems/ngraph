@@ -887,7 +887,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                     node->constructor_validate_and_infer_types();
                 }
                 m_node_map[node_name] = node;
-                return;
+                return node;
             }
         }
 
