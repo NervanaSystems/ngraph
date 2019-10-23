@@ -46,7 +46,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tile_3d_small_data_rank)
 
     auto f = make_shared<Function>(tile, ParameterVector{A});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
@@ -73,7 +73,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tile_3d_few_repeats)
 
     auto f = make_shared<Function>(tile, ParameterVector{A});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
