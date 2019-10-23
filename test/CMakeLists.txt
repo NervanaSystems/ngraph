@@ -131,6 +131,7 @@ set(SRC
     type_prop/layer_norm.cpp
     type_prop/lrn.cpp
     type_prop/lstm_cell.cpp
+    type_prop/lstm_sequence.cpp
     type_prop/matmul.cpp
     type_prop/max_pool.cpp
     type_prop/mvn.cpp
