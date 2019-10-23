@@ -23,29 +23,20 @@
 
 namespace ngraph
 {
-    class StringConverter
-    {
-    public:
-        virtual void operator=(const std::string& s) const = 0;
-        virtual operator std::string() const = 0;
-    };
-
     /// \brief Visits the attributes of a node.
     ///
     /// Attributes are the values set when building a graph which are not
     /// computed as the graph executes. Values computed from the graph topology and attributes
     /// during compilation are not attributes.
-    class NodeVisitor
+    class AttributeVisitor
     {
     public:
-        virtual ~NodeVisitor() {}
+        virtual ~AttributeVisitor() {}
         virtual void on_attribute(const std::string& name, std::string& value) = 0;
         virtual void on_attribute(const std::string& name, element::Type& value) = 0;
         virtual void on_attribute(const std::string& name, PartialShape& value) = 0;
-        virtual void on_attribute(const std::string& name, Shape& value) = 0;
         virtual void on_attribute(const std::string& name, bool& value) = 0;
         virtual void on_attribute(const std::string& name, int64_t& value) = 0;
         virtual void on_attribute(const std::string& name, uint64_t& value) = 0;
-        virtual void on_attribute(const std::string& name, const StringConverter& value) = 0;
     };
 }

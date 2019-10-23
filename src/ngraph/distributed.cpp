@@ -22,33 +22,10 @@
 
 using namespace ngraph;
 
-void reduction::ReductionStringConverter::operator=(const std::string& s) const
+template <>
+std::string ngraph::as_type<std::string>(reduction::Type value)
 {
-    if (s == "SUM")
-    {
-        m_value = reduction::Type::SUM;
-    }
-    else if (s == "PROD")
-    {
-        m_value = reduction::Type::PROD;
-    }
-    else if (s == "MIN")
-    {
-        m_value = reduction::Type::MIN;
-    }
-    else if (s == "MAX")
-    {
-        m_value = reduction::Type::MAX;
-    }
-    else
-    {
-        NGRAPH_DEBUG << "Invalid reduction type: " << s;
-    }
-}
-
-reduction::ReductionStringConverter::operator std::string() const
-{
-    switch (m_value)
+    switch (value)
     {
     case reduction::Type::SUM: return "SUM";
     case reduction::Type::PROD: return "PROD";
@@ -57,25 +34,37 @@ reduction::ReductionStringConverter::operator std::string() const
     }
 }
 
+template <>
+reduction::Type ngraph::as_type<reduction::Type>(const std::string& value)
+{
+    reduction::Type result = reduction::Type::SUM;
+    if (value == "SUM")
+    {
+        result = reduction::Type::SUM;
+    }
+    else if (value == "PROD")
+    {
+        result = reduction::Type::PROD;
+    }
+    else if (value == "MIN")
+    {
+        result = reduction::Type::MIN;
+    }
+    else if (value == "MAX")
+    {
+        result = reduction::Type::MAX;
+    }
+    else
+    {
+        NGRAPH_DEBUG << "Invalid reduction type: " << value;
+    }
+    return result;
+}
+
 std::ostream& reduction::operator<<(std::ostream& out, const reduction::Type& obj)
 {
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic error "-Wswitch"
-#pragma GCC diagnostic error "-Wswitch-enum"
-#endif
-    switch (obj)
-    {
-    case reduction::Type::SUM: out << "SUM"; break;
-    case reduction::Type::PROD: out << "PROD"; break;
-    case reduction::Type::MIN: out << "MIN"; break;
-    case reduction::Type::MAX: out << "MAX"; break;
-    }
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
-#pragma GCC diagnostic pop
-#endif
-    return out;
-};
+    return out << as_type<std::string>(obj);
+}
 
 static std::unique_ptr<DistributedInterface> s_distributed_interface;
 

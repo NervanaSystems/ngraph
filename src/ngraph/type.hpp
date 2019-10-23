@@ -78,4 +78,29 @@ namespace ngraph
         return is_type<Type>(value) ? std::static_pointer_cast<Type>(value)
                                     : std::shared_ptr<Type>();
     }
+
+    template <typename Type, typename Value>
+    typename std::enable_if<std::is_convertible<Value, std::string>::value, Type>::type
+        as_type(const Value& value);
+
+    template <typename Type, typename Value>
+    typename std::enable_if<std::is_convertible<Type, std::string>::value, Type>::type
+        as_type(Value value);
+
+    /// Adapts references to a value to a reference to a string
+    template <typename Type>
+    class StringAdapter
+    {
+    public:
+        StringAdapter(Type& value)
+            : m_string(as_type<std::string>(value))
+            , m_value(value)
+        {
+        }
+        ~StringAdapter() { m_value = as_type<Type>(m_string); }
+        operator std::string&() { return m_string; }
+    private:
+        std::string m_string;
+        Type& m_value;
+    };
 }

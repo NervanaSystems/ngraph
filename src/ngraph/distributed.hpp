@@ -20,7 +20,8 @@
 #include <memory>
 #include <string>
 
-#include "ngraph/node_visitor.hpp"
+#include "ngraph/attribute_visitor.hpp"
+#include "ngraph/type.hpp"
 #include "ngraph/type/element_type.hpp"
 
 namespace ngraph
@@ -36,21 +37,13 @@ namespace ngraph
         };
 
         std::ostream& operator<<(std::ostream& out, const Type& obj);
-
-        class ReductionStringConverter : public StringConverter
-        {
-        public:
-            ReductionStringConverter(Type& value)
-                : m_value(value)
-            {
-            }
-            operator std::string() const override;
-            void operator=(const std::string& s) const override;
-
-        private:
-            Type& m_value;
-        };
     }
+
+    template <>
+    std::string as_type<std::string>(reduction::Type value);
+
+    template <>
+    reduction::Type as_type<reduction::Type>(const std::string& value);
 
     class DistributedInterface
     {

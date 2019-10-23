@@ -50,7 +50,7 @@ namespace ngraph
                 const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
-            bool visit_attributes(NodeVisitor& visitor) override { return true; }
+            bool visit_attributes(AttributeVisitor& visitor) override { return true; }
             virtual bool is_commutative() const override { return true; }
         };
     }

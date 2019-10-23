@@ -16,6 +16,7 @@
 
 set (SRC
     assertion.hpp
+    attribute_visitor.hpp
     autodiff/adjoints.cpp
     autodiff/adjoints.hpp
     axis_set.cpp
@@ -92,7 +93,6 @@ set (SRC
     ngraph_visibility.hpp
     node.cpp
     node.hpp
-    node_visitor.hpp
     op/abs.cpp
     op/abs.hpp
     op/acos.cpp

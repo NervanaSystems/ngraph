@@ -61,6 +61,7 @@ namespace ngraph
 /// \brief Convenience functions that create addional graph nodes to implement commonly-used
 ///        recipes, for example auto-broadcast.
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/dequantize_builder.hpp"
 #include "ngraph/builder/numpy_transpose.hpp"
@@ -80,9 +81,9 @@ namespace ngraph
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/dimension.hpp"
 #include "ngraph/except.hpp"
+#include "ngraph/factory.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/node_visitor.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
@@ -213,4 +214,5 @@ namespace ngraph
 #include "ngraph/shape.hpp"
 #include "ngraph/shape_util.hpp"
 #include "ngraph/specialize_function.hpp"
+#include "ngraph/type.hpp"
 #include "ngraph/type/element_type.hpp"

@@ -50,7 +50,7 @@ namespace ngraph
     template <typename NodeType>
     class Output;
 
-    class NodeVisitor;
+    class AttributeVisitor;
     class Variant;
     class Node;
     using NodeVector = std::vector<std::shared_ptr<Node>>;
@@ -154,7 +154,7 @@ namespace ngraph
 
         virtual ~Node();
 
-        virtual bool visit_attributes(NodeVisitor& visitor) { return false; }
+        virtual bool visit_attributes(AttributeVisitor& visitor) { return false; }
         virtual bool is_unary_elementwise_arithmetic() const { return false; }
         virtual bool is_binary_elementwise_arithmetic() const { return false; }
         virtual bool is_binary_elementwise_comparison() const { return false; }
