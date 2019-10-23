@@ -29,38 +29,34 @@ Blob::Ptr fill_blob(SizeVector shape, std::vector<float> data);
 
 class Handle;
 
-namespace runtime2 {
+namespace runtime2
+{
     class Backend;
-    class Tensor {
+    class Tensor
+    {
     public:
         std::vector<float> data;
         PartialShape shape;
         ngraph::element::Type type;
 
-        Shape get_shape(){
-            return shape.to_shape();
-        }
-
-        PartialShape get_partial_shape(){
-            return shape;
-        }
-
-        explicit Tensor(ngraph::element::Type type, PartialShape ps): type(type), shape(ps) {}
-        explicit Tensor(ngraph::element::Type type, Shape ps): type(type), shape(ps) {}
-
-        const element::Type& get_element_type() const
+        Shape get_shape() { return shape.to_shape(); }
+        PartialShape get_partial_shape() { return shape; }
+        explicit Tensor(ngraph::element::Type type, PartialShape ps)
+            : type(type)
+            , shape(ps)
         {
-            return type;
         }
-
-        size_t get_element_count()
+        explicit Tensor(ngraph::element::Type type, Shape ps)
+            : type(type)
+            , shape(ps)
         {
-            return shape_size(get_shape());
         }
 
-        void set_stale(bool flag){}
-
-        void copy_from(runtime2::Tensor t){
+        const element::Type& get_element_type() const { return type; }
+        size_t get_element_count() { return shape_size(get_shape()); }
+        void set_stale(bool flag) {}
+        void copy_from(runtime2::Tensor t)
+        {
             data = t.data;
             shape = t.shape;
             type = t.type;
@@ -68,18 +64,22 @@ namespace runtime2 {
     };
 }
 
-class Executable {
+class Executable
+{
 private:
     CNNNetwork network;
     std::string device;
+
 public:
-    Executable(std::shared_ptr<Function> func, std::string _device) {
+    Executable(std::shared_ptr<Function> func, std::string _device)
+    {
         network = CNNNetwork(func);
         device = _device;
     }
 
     bool call_with_validate(const vector<shared_ptr<runtime2::Tensor>>& outputs,
-                            const vector<shared_ptr<runtime2::Tensor>>& inputs) {
+                            const vector<shared_ptr<runtime2::Tensor>>& inputs)
+    {
         Core ie;
 
         //  Loading model to the plugin (BACKEND_NAME)
@@ -89,13 +89,16 @@ public:
         //  Prepare input and output blobs
         InputsDataMap inputInfo = network.getInputsInfo();
 
-        if (inputInfo.size() != inputs.size()) {
+        if (inputInfo.size() != inputs.size())
+        {
             THROW_IE_EXCEPTION << "Function inputs number differ from number of given inputs";
         }
 
         size_t i = 0;
-        for (auto & it : inputInfo) {
-            inferRequest.SetBlob(it.first, fill_blob(it.second->getTensorDesc().getDims(), inputs[i++]->data));
+        for (auto& it : inputInfo)
+        {
+            inferRequest.SetBlob(
+                it.first, fill_blob(it.second->getTensorDesc().getDims(), inputs[i++]->data));
         }
 
         //  Prepare output blobs
@@ -104,10 +107,11 @@ public:
         inferRequest.Infer();
         Blob::Ptr output = inferRequest.GetBlob(output_name);
 
-        float * output_ptr = output->buffer().as<float *>();
+        float* output_ptr = output->buffer().as<float*>();
         // TODO: how to get size without explicit calculation?
         size_t size = 1;
-        for ( const auto & dim : output->getTensorDesc().getDims()) {
+        for (const auto& dim : output->getTensorDesc().getDims())
+        {
             size *= dim;
         }
         //  Vector initialization from pointer
@@ -120,25 +124,36 @@ public:
 template <class T>
 void copy_data(std::shared_ptr<runtime2::Tensor> t, const std::vector<T>& data);
 
-class runtime2::Backend {
+class runtime2::Backend
+{
 private:
     string device;
+
 public:
-    static std::shared_ptr<runtime2::Backend> create(std::string device, bool must_support_dynamic=false) {
-        return std::shared_ptr<Backend> (new Backend(device));
+    static std::shared_ptr<runtime2::Backend> create(std::string device,
+                                                     bool must_support_dynamic = false)
+    {
+        return std::shared_ptr<Backend>(new Backend(device));
     }
 
-    Backend(std::string _device): device(_device){}
+    Backend(std::string _device)
+        : device(_device)
+    {
+    }
 
-    std::shared_ptr<runtime2::Tensor> create_tensor(ngraph::element::Type type, ngraph::Shape shape) {
-        return std::shared_ptr<runtime2::Tensor> (new runtime2::Tensor(type, shape));
+    std::shared_ptr<runtime2::Tensor> create_tensor(ngraph::element::Type type, ngraph::Shape shape)
+    {
+        return std::shared_ptr<runtime2::Tensor>(new runtime2::Tensor(type, shape));
     }
 
     template <typename T>
-    std::shared_ptr<runtime2::Tensor> create_tensor(ngraph::element::Type type, ngraph::Shape shape, T* data) {
-        auto tensor = std::shared_ptr<runtime2::Tensor> (new runtime2::Tensor(type, shape));
+    std::shared_ptr<runtime2::Tensor>
+        create_tensor(ngraph::element::Type type, ngraph::Shape shape, T* data)
+    {
+        auto tensor = std::shared_ptr<runtime2::Tensor>(new runtime2::Tensor(type, shape));
         size_t size = 1;
-        for (auto x: shape){
+        for (auto x : shape)
+        {
             size *= x;
         }
         vector<T> v(data, data + size);
@@ -147,35 +162,42 @@ public:
     }
 
     template <class T>
-    std::shared_ptr<runtime2::Tensor> create_tensor(ngraph::Shape shape) {
-        return std::shared_ptr<runtime2::Tensor> (new runtime2::Tensor(ngraph::element::from<T>(), shape));
+    std::shared_ptr<runtime2::Tensor> create_tensor(ngraph::Shape shape)
+    {
+        return std::shared_ptr<runtime2::Tensor>(
+            new runtime2::Tensor(ngraph::element::from<T>(), shape));
     }
 
-    std::shared_ptr<runtime2::Tensor> create_dynamic_tensor(ngraph::element::Type type, ngraph::PartialShape shape) {
-        return std::shared_ptr<runtime2::Tensor> (new runtime2::Tensor(type, shape));
+    std::shared_ptr<runtime2::Tensor> create_dynamic_tensor(ngraph::element::Type type,
+                                                            ngraph::PartialShape shape)
+    {
+        return std::shared_ptr<runtime2::Tensor>(new runtime2::Tensor(type, shape));
     }
 
     bool supports_dynamic_tensors() { return true; }
-
-    std::shared_ptr<Executable> compile(std::shared_ptr<Function> func){
-        return std::shared_ptr<Executable> (new Executable(func, device));
+    std::shared_ptr<Executable> compile(std::shared_ptr<Function> func)
+    {
+        return std::shared_ptr<Executable>(new Executable(func, device));
     }
 };
 
-
 template <class T>
-std::vector<T> read_vector(std::shared_ptr<runtime2::Tensor> tv) {
+std::vector<T> read_vector(std::shared_ptr<runtime2::Tensor> tv)
+{
     std::vector<T> v(tv->data.size());
-    for (size_t i = 0; i < v.size(); ++i) {
+    for (size_t i = 0; i < v.size(); ++i)
+    {
         v[i] = tv->data[i];
     }
     return v;
 }
 
 template <class T>
-void copy_data(std::shared_ptr<runtime2::Tensor> t, const std::vector<T>& data) {
+void copy_data(std::shared_ptr<runtime2::Tensor> t, const std::vector<T>& data)
+{
     t->data.resize(data.size());
-    for (size_t i = 0; i < data.size(); ++i) {
+    for (size_t i = 0; i < data.size(); ++i)
+    {
         t->data[i] = data[i];
     }
 }

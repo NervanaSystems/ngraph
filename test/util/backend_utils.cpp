@@ -15,31 +15,33 @@
 //*****************************************************************************
 
 #ifdef NGRAPH_UNIT_TEST_OPENVINO_ENABLE
+#include "backend_utils.hpp"
 #include <ie_core.hpp>
 #include "ngraph/ngraph.hpp"
-#include "backend_utils.hpp"
 
 using namespace std;
 using namespace ngraph;
 using namespace InferenceEngine;
 
-Blob::Ptr fill_blob(SizeVector shape, std::vector<float> data) {
+Blob::Ptr fill_blob(SizeVector shape, std::vector<float> data)
+{
     Layout layout;
-    switch (shape.size()) {
-        case 1: layout = Layout::C; break;
-        case 2: layout = Layout::NC; break;
-        case 3: layout = Layout::CHW; break;
-        case 4: layout = Layout::NCHW; break;
-        case 5: layout = Layout::NCDHW; break;
-        default:
-            THROW_IE_EXCEPTION << "Can't convert dims " << shape.size() << " to Layout!";
+    switch (shape.size())
+    {
+    case 1: layout = Layout::C; break;
+    case 2: layout = Layout::NC; break;
+    case 3: layout = Layout::CHW; break;
+    case 4: layout = Layout::NCHW; break;
+    case 5: layout = Layout::NCDHW; break;
+    default: THROW_IE_EXCEPTION << "Can't convert dims " << shape.size() << " to Layout!";
     }
     Blob::Ptr blob(new TBlob<float>({Precision::FP32, shape, layout}));
     blob->allocate();
-    float *blob_ptr = (float*)(void*)blob->buffer();
-    for (int i=0; i < data.size(); i++){
+    float* blob_ptr = (float*)(void*)blob->buffer();
+    for (int i = 0; i < data.size(); i++)
+    {
         blob_ptr[i] = data[i];
     }
-    return  blob;
+    return blob;
 }
 #endif
