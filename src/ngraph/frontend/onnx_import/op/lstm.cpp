@@ -22,7 +22,9 @@
 #include <vector>
 
 #include "exceptions.hpp"
+#include "ngraph/builder/split.hpp"
 #include "ngraph/frontend/onnx_import/op/lstm.hpp"
+#include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/lstm_sequence.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -226,6 +228,7 @@ namespace ngraph
                         input_map.at(LSTMInput::LSTM_INPUT_P),
                         attributes.m_hidden_size,
                         attributes.m_direction,
+                        ngraph::op::LSTMWeightsFormat::IOFC,
                         attributes.m_activation_alpha,
                         attributes.m_activation_beta,
                         attributes.m_activations,

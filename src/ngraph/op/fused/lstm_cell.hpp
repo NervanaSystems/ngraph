@@ -212,7 +212,7 @@ namespace ngraph
             ///
             /// \brief The order of gates in weights tensors.
             ///
-            LSTMWeightsFormat m_weights_format{LSTMWeightsFormat::IFCO};
+            LSTMWeightsFormat m_weights_format;
 
             static constexpr std::size_t s_gates_count{4};
             static constexpr std::size_t s_peepholes_count{3};

@@ -1550,20 +1550,38 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto activations_alpha = node_js.at("activations_alpha").get<vector<float>>();
             auto activations_beta = node_js.at("activations_beta").get<vector<float>>();
             auto input_forget = node_js.at("input_forget").get<bool>();
-            node = make_shared<op::LSTMCell>(args[0],
-                                             args[1],
-                                             args[2],
-                                             args[3],
-                                             args[4],
-                                             args[5],
-                                             args[6],
-                                             hidden_size,
-                                             weights_format,
-                                             activations,
-                                             activations_alpha,
-                                             activations_beta,
-                                             clip,
-                                             input_forget);
+            if (args.size() == 7)
+            {
+                node = make_shared<op::LSTMCell>(args[0],
+                                                 args[1],
+                                                 args[2],
+                                                 args[3],
+                                                 args[4],
+                                                 args[5],
+                                                 args[6],
+                                                 hidden_size,
+                                                 weights_format,
+                                                 activations,
+                                                 activations_alpha,
+                                                 activations_beta,
+                                                 clip,
+                                                 input_forget);
+            }
+            else
+            {
+                node = make_shared<op::LSTMCell>(args[0],
+                                                 args[1],
+                                                 args[2],
+                                                 args[3],
+                                                 args[4],
+                                                 hidden_size,
+                                                 weights_format,
+                                                 activations,
+                                                 activations_alpha,
+                                                 activations_beta,
+                                                 clip,
+                                                 input_forget);
+            }
             break;
         }
         case OP_TYPEID::LSTMSequence:
@@ -1575,6 +1593,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto activations_beta = node_js.at("activations_beta").get<vector<float>>();
             auto input_forget = node_js.at("input_forget").get<bool>();
             auto direction = node_js.at("direction").get<op::LSTMSequence::direction>();
+            auto weights_format = read_lstm_weights_format(node_js);
             if (args.size() == 8)
             {
                 node = make_shared<op::LSTMSequence>(args[0],
@@ -1587,6 +1606,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                      args[7],
                                                      hidden_size,
                                                      direction,
+                                                     weights_format,
                                                      activations_alpha,
                                                      activations_beta,
                                                      activations,
@@ -1604,6 +1624,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                      args[6],
                                                      hidden_size,
                                                      direction,
+                                                     weights_format,
                                                      activations_alpha,
                                                      activations_beta,
                                                      activations,
@@ -3015,6 +3036,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::LSTMSequence*>(&n);
         node["direction"] = tmp->get_direction();
         node["hidden_size"] = tmp->get_hidden_size();
+        node["weights_format"] = tmp->get_weights_format();
         node["clip_threshold"] = tmp->get_clip_threshold();
         node["activations"] = tmp->get_activations();
         node["activations_alpha"] = tmp->get_activations_alpha();
