@@ -93,7 +93,8 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    QUERY_SCRATCHPAD_4ARGS(slice, input_desc, result_desc, lower_bounds, out_shape);
+                    size_t scratchpad_size = QUERY_SCRATCHPAD_4ARGS(
+                        slice, input_desc, result_desc, lower_bounds, out_shape);
 
                     // Slice needs 3 primitives: input, result, and reorder.
                     auto slice_index = mkldnn_emitter->reserve_primitive_space(3);
@@ -105,6 +106,7 @@ namespace ngraph
                                     lower_bounds,
                                     out_shape,
                                     slice_index,
+                                    scratchpad_size,
                                     arg_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
                                                       CPUExecutionContext* /* ectx */) {
@@ -125,8 +127,11 @@ namespace ngraph
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, slice_index, deps, cpu::mkldnn_utils::OpType::SLICE);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx,
+                                                                   slice_index,
+                                                                   deps,
+                                                                   cpu::mkldnn_utils::OpType::SLICE,
+                                                                   scratchpad_size);
                     };
 
                     functors.emplace_back(functor);

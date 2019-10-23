@@ -1458,24 +1458,10 @@ TEST(cpu_fusion, max_pool_with_indices)
     auto f = std::make_shared<Function>(NodeVector{max_pool}, ParameterVector{input});
 
     {
-        pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_before.png");
-        pass_manager.run_passes(f);
-    }
-
-    {
         NodeVector nv_cwi;
         pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before.png");
         pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after.png");
         pass_manager.run_passes(df);
-    }
-
-    {
-        pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_after.png");
-        pass_manager.run_passes(f);
     }
 
     auto maxpool_goe_output =
