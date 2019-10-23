@@ -102,7 +102,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
         auto forward_arg_shape =
             static_pointer_cast<op::Constant>(node->input_value(1).get_node_shared_ptr())
-            ->get_shape_val();
+                ->get_shape_val();
         auto exclude_pad = tmp->get_exclude_pad();
         auto pads_begin = tmp->get_pads_begin();
         auto pads_end = tmp->get_pads_end();
@@ -111,12 +111,12 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 
         auto replacement_node =
             make_shared<op::v0::AvgPoolBackprop>(forward_arg_shape,
-                node->input(0).get_source_output(),
-                kernel,
-                strides,
-                pads_begin,
-                pads_end,
-                exclude_pad);
+                                                 node->input(0).get_source_output(),
+                                                 kernel,
+                                                 strides,
+                                                 pads_begin,
+                                                 pads_end,
+                                                 exclude_pad);
         replace_node(node, replacement_node);
         modified = true;
         break;
