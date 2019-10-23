@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/strided_slice.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/validation_util.hpp"
 
 #include <algorithm>

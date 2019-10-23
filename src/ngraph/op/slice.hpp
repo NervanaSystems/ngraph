@@ -32,7 +32,7 @@ namespace ngraph
             {
             public:
                 NGRAPH_API
-                    static constexpr NodeTypeInfo type_info{ "Slice", 0 };
+                static constexpr NodeTypeInfo type_info{"Slice", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a tensor slice operation
                 Slice() = default;
@@ -41,21 +41,23 @@ namespace ngraph
                 /// \param arg The tensor to be sliced.
                 /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).
                 /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
-                /// \param strides The slicing strides; for example, strides of `{n,m}` means to take
+                /// \param strides The slicing strides; for example, strides of `{n,m}` means to
+                /// take
                 ///                every nth row and every mth column of the input matrix.
                 Slice(const Output<Node>& arg,
-                    const Coordinate& lower_bounds,
-                    const Coordinate& upper_bounds,
-                    const Strides& strides);
-                /// \brief Constructs a tensor slice operation with unit strides; i.e., every element
+                      const Coordinate& lower_bounds,
+                      const Coordinate& upper_bounds,
+                      const Strides& strides);
+                /// \brief Constructs a tensor slice operation with unit strides; i.e., every
+                /// element
                 ///        inside the bounding box will be copied to the output slice.
                 ///
                 /// \param arg The tensor to be sliced.
                 /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).
                 /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
                 Slice(const Output<Node>& arg,
-                    const Coordinate& lower_bounds,
-                    const Coordinate& upper_bounds);
+                      const Coordinate& lower_bounds,
+                      const Coordinate& upper_bounds);
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
@@ -69,7 +71,7 @@ namespace ngraph
                 const Strides& get_strides() const { return m_strides; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                    const NodeVector& deltas) override;
+                                               const NodeVector& deltas) override;
 
                 Coordinate m_lower_bounds;
                 Coordinate m_upper_bounds;

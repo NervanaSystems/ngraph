@@ -415,28 +415,23 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
     }
     case OP_TYPEID::Slice:
     {
-
         const auto tmp = as_type_ptr<op::v0::Slice>(node);
 
         const auto data = node->input(0).get_source_output();
-        const auto begin = op::Constant::create(element::i64,
-            Shape{ tmp->get_lower_bounds().size() },
-            tmp->get_lower_bounds());
-        const auto end = op::Constant::create(element::i64,
-            Shape{ tmp->get_upper_bounds().size() },
-            tmp->get_upper_bounds());
-        const auto strides = op::Constant::create(element::i64,
-            Shape{ tmp->get_strides().size() },
-            tmp->get_strides());
+        const auto begin = op::Constant::create(
+            element::i64, Shape{tmp->get_lower_bounds().size()}, tmp->get_lower_bounds());
+        const auto end = op::Constant::create(
+            element::i64, Shape{tmp->get_upper_bounds().size()}, tmp->get_upper_bounds());
+        const auto strides = op::Constant::create(
+            element::i64, Shape{tmp->get_strides().size()}, tmp->get_strides());
         int64_t input_size = tmp->get_lower_bounds().size();
 
-        auto replacement_node =
-            make_shared<op::v1::StridedSlice>(data,
-                begin,
-                end,
-                strides,
-                vector<int64_t>(input_size, 0),
-                vector<int64_t>(input_size, 0));
+        auto replacement_node = make_shared<op::v1::StridedSlice>(data,
+                                                                  begin,
+                                                                  end,
+                                                                  strides,
+                                                                  vector<int64_t>(input_size, 0),
+                                                                  vector<int64_t>(input_size, 0));
 
         replace_node(node, replacement_node);
         modified = true;
