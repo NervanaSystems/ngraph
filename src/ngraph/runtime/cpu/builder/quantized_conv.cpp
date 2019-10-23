@@ -66,7 +66,8 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::QuantizedConvolution>(node);
-                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
                     size_t conv_index = mkldnn_emitter->convolution_forward_init();
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
@@ -76,6 +77,7 @@ namespace ngraph
                                     conv_attr,
                                     deps,
                                     conv_index,
+                                    scratchpad_size,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     arg2_buffer_index,
@@ -113,7 +115,11 @@ namespace ngraph
                             ctx, deps[2], ctx->buffer_data[out0_buffer_index]);
 
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTION);
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTION,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -345,7 +351,8 @@ namespace ngraph
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionRelu>(
                                 node);
-                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
                     size_t conv_index = mkldnn_emitter->convolution_forward_init();
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
@@ -356,6 +363,7 @@ namespace ngraph
                                     conv_attr,
                                     deps,
                                     conv_index,
+                                    scratchpad_size,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     arg2_buffer_index,
@@ -392,7 +400,8 @@ namespace ngraph
                             ctx,
                             conv_index,
                             deps,
-                            cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONRELU);
+                            cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONRELU,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -430,7 +439,8 @@ namespace ngraph
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionBias>(
                                 node);
-                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
@@ -441,6 +451,7 @@ namespace ngraph
                                     conv_attr,
                                     deps,
                                     conv_index,
+                                    scratchpad_size,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     arg2_buffer_index,
@@ -480,7 +491,8 @@ namespace ngraph
                             ctx,
                             conv_index,
                             deps,
-                            cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONBIAS);
+                            cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONBIAS,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -525,7 +537,8 @@ namespace ngraph
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionBiasAdd>(
                                 node);
-                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
@@ -537,6 +550,7 @@ namespace ngraph
                                     conv_attr,
                                     deps,
                                     conv_index,
+                                    scratchpad_size,
                                     arg3_size,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
@@ -609,7 +623,8 @@ namespace ngraph
                             ctx,
                             conv_index,
                             deps,
-                            cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONBIASADD);
+                            cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONBIASADD,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -650,7 +665,8 @@ namespace ngraph
                         ngraph::op::QuantizedConvolutionBiasSignedAdd>(node);
                     auto conv_attr = mkldnn_emitter->get_convolution_forward_attr<
                         ngraph::op::QuantizedConvolutionBiasSignedAdd>(node);
-                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
@@ -662,6 +678,7 @@ namespace ngraph
                                     conv_attr,
                                     deps,
                                     conv_index,
+                                    scratchpad_size,
                                     arg3_size,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
@@ -734,7 +751,8 @@ namespace ngraph
                             ctx,
                             conv_index,
                             deps,
-                            cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONBIASSIGNEDADD);
+                            cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONBIASSIGNEDADD,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }

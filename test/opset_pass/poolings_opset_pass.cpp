@@ -165,15 +165,16 @@ TEST(opset_transform, opset1_maxpool_downgrade_pass)
 TEST(opset_transform, opset1_avgpool_backprop_downgrade_pass)
 {
     auto delta = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6, 9});
-    Shape forward_arg_shape{1, 3, 7, 10};
+    auto forward_arg_shape =
+        op::Constant::create(element::i64, Shape{4}, vector<int64_t>{1, 3, 7, 10});
     Shape padding_below{1, 0};
     Shape padding_above{0, 1};
     Strides window_movement_strides{1, 1};
     Shape window_shape{3, 3};
     bool exclude_pad = false;
 
-    auto avgpool_backprop_v1 = make_shared<op::v1::AvgPoolBackprop>(forward_arg_shape,
-                                                                    delta,
+    auto avgpool_backprop_v1 = make_shared<op::v1::AvgPoolBackprop>(delta,
+                                                                    forward_arg_shape,
                                                                     window_movement_strides,
                                                                     padding_below,
                                                                     padding_above,
@@ -197,7 +198,7 @@ TEST(opset_transform, opset1_avgpool_backprop_downgrade_pass)
     EXPECT_EQ(avg_pool_backprop_v0_node->get_padding_above(), padding_above);
     EXPECT_EQ(avg_pool_backprop_v0_node->get_window_movement_strides(), window_movement_strides);
     EXPECT_EQ(avg_pool_backprop_v0_node->get_window_shape(), window_shape);
-    EXPECT_EQ(avg_pool_backprop_v0_node->get_forward_arg_shape(), forward_arg_shape);
+    EXPECT_EQ(avg_pool_backprop_v0_node->get_forward_arg_shape(), Shape({1, 3, 7, 10}));
     EXPECT_EQ(avg_pool_backprop_v0_node->get_include_padding_in_avg_computation(), !exclude_pad);
 }
 
