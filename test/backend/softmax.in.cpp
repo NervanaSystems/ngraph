@@ -38,6 +38,31 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
+NGRAPH_TEST(${BACKEND_NAME}, softmax_dynamic_axes)
+{
+    Shape shape_A{2, 3};
+    Shape shape_B{2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_A);
+    auto B = make_shared<op::Parameter>(element::i64, shape_B);
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, B), ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+
+    auto a = backend->create_tensor(element::f32, shape_A);
+    auto b = backend->create_tensor(element::i64, shape_B);
+    copy_data(a, vector<float>{-3, -2, -1, 0, 1, 2});
+    copy_data(b, vector<int64_t>{0, 1});
+    auto result = backend->create_tensor(element::f32, shape_A);
+
+    auto d = expf(-3) + expf(-2) + expf(-1) + expf(0) + expf(1) + expf(2);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    vector<float> expected{
+        expf(-3) / d, expf(-2) / d, expf(-1) / d, expf(0) / d, expf(1) / d, expf(2) / d};
+    EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, softmax_all)
 {
     Shape shape{2, 3};

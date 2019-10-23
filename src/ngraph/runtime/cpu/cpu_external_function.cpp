@@ -80,6 +80,7 @@
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
+#include "ngraph/op/experimental/random_uniform.hpp"
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
@@ -150,6 +151,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/pass/propagate_cacheability.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/reshape_sinking.hpp"
@@ -490,7 +492,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 
     // Build mkldnn primitives for codegen.
     pass_manager.register_pass<runtime::cpu::pass::MKLDNNPrimitiveBuildPass>(
-        m_desc_filename, *m_mkldnn_emitter, m_node_primitive_string_deps_index_map);
+        m_desc_filename, *m_mkldnn_emitter, m_node_primitive_string_deps_index_size_map);
 
     unordered_map<Node*, Node*> node_function_map;
     string common_function_string;
@@ -692,8 +694,15 @@ using namespace ngraph::runtime;
     writer << "mkldnn_scratchpad_mds = std::vector<mkldnn::memory::desc*>("
            << to_string(m_mkldnn_emitter->get_mkldnn_scratchpad_mds().size()) << ");\n";
     writer << "size_t scratchpad_size = " << m_mkldnn_emitter->get_max_scratchpad_size() << ";\n";
+    writer << "if (scratchpad_size > 0)\n";
+    writer.block_begin();
     writer << "size_t alignment = 4096;\n";
     writer << "scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment);\n";
+    writer.block_end();
+    writer << "else\n";
+    writer.block_begin();
+    writer << "scratchpad_buffer = nullptr;\n";
+    writer.block_end();
     writer.block_end();
     writer << "\n";
 
@@ -1217,6 +1226,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 
     REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass)
     REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported)
+    REGISTER_KNOBBED_PASS(Opset0Downgrade, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(ImplicitBroadcastElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass)

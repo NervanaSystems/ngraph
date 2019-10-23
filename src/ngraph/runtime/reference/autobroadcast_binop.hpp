@@ -84,60 +84,140 @@ namespace ngraph
                     //                 Output shape
                     //                 ------------
                     //                 [ 3, 2, 6]
-                    Shape arg0_padded_shape = arg0_shape;
-                    Shape arg1_padded_shape = arg1_shape;
-
-                    while (arg0_padded_shape.size() < arg1_padded_shape.size())
                     {
-                        arg0_padded_shape.insert(arg0_padded_shape.begin(), 1);
+                        Shape arg0_padded_shape = arg0_shape;
+                        Shape arg1_padded_shape = arg1_shape;
+
+                        while (arg0_padded_shape.size() < arg1_padded_shape.size())
+                        {
+                            arg0_padded_shape.insert(arg0_padded_shape.begin(), 1);
+                        }
+
+                        while (arg1_padded_shape.size() < arg0_padded_shape.size())
+                        {
+                            arg1_padded_shape.insert(arg1_padded_shape.begin(), 1);
+                        }
+
+                        Shape arg0_squeezed_shape;
+                        Shape arg1_squeezed_shape;
+                        AxisSet arg0_squeezed_axes;
+                        AxisSet arg1_squeezed_axes;
+                        Shape output_shape;
+
+                        for (size_t i = 0; i < arg0_padded_shape.size(); i++)
+                        {
+                            if (arg0_padded_shape[i] == 1)
+                            {
+                                arg0_squeezed_axes.insert(i);
+                            }
+                            else
+                            {
+                                arg0_squeezed_shape.push_back(arg0_padded_shape[i]);
+                            }
+
+                            if (arg1_padded_shape[i] == 1)
+                            {
+                                arg1_squeezed_axes.insert(i);
+                            }
+                            else
+                            {
+                                arg1_squeezed_shape.push_back(arg1_padded_shape[i]);
+                            }
+
+                            output_shape.push_back(arg0_padded_shape[i] == 1
+                                                       ? arg1_padded_shape[i]
+                                                       : arg0_padded_shape[i]);
+                        }
+
+                        CoordinateTransform arg0_transform(arg0_squeezed_shape);
+                        CoordinateTransform arg1_transform(arg1_squeezed_shape);
+                        CoordinateTransform output_transform(output_shape);
+
+                        for (const Coordinate& output_coord : output_transform)
+                        {
+                            Coordinate arg0_coord = reduce(output_coord, arg0_squeezed_axes);
+                            Coordinate arg1_coord = reduce(output_coord, arg1_squeezed_axes);
+                            out[output_transform.index(output_coord)] =
+                                elementwise_functor(arg0[arg0_transform.index(arg0_coord)],
+                                                    arg1[arg1_transform.index(arg1_coord)]);
+                        }
                     }
-
-                    while (arg1_padded_shape.size() < arg0_padded_shape.size())
+                    break;
+                case op::AutoBroadcastType::PDPD:
+                    // We'll be using CoordinateTransform to handle the broadcasting. No need to
+                    // process arg0 and output shape will be the same as arg0. We need to process
+                    // arg1 and the general procedure is as follows:
+                    //
+                    // (1) Trim trailing ones from arg1 shape.
+                    // (2) Left and right pad arg1 to match arg0 shape. Axis is the index start
+                    //     to align between arg0 and arg1.
+                    // (3) Squeeze (remove ones from) arg1 shape, and record the squeezed axis
+                    //     indices.
+                    // (3) Using CoordinateTransform, broadcast arg1 to the final output
+                    //     shape. The "broadcasted axes" will be those that were squeezed in step
+                    //     23.
+                    //
+                    // Example:
+                    //
+                    //    Input shape->   Padded shape->   Squeezed Shape/Squeezed Axes
+                    //    -----------  ------------  ----------------------------
+                    // a: [ 3, 4, 5, 6]   [ 3, 4, 5, 6]    [ 3, 4, 5, 6]
+                    // b: [    4, 5,  ]   [ 1, 4, 5, 1]    [    4, 5   ]     {0,3}
+                    //                      |  |  |
+                    //                      v  v  v
+                    //                     Output shape
+                    //                     ------------
+                    //                    [ 3, 4, 5, 6]
                     {
-                        arg1_padded_shape.insert(arg1_padded_shape.begin(), 1);
-                    }
-
-                    Shape arg0_squeezed_shape;
-                    Shape arg1_squeezed_shape;
-                    AxisSet arg0_squeezed_axes;
-                    AxisSet arg1_squeezed_axes;
-                    Shape output_shape;
-
-                    for (size_t i = 0; i < arg0_padded_shape.size(); i++)
-                    {
-                        if (arg0_padded_shape[i] == 1)
+                        int64_t axis = broadcast_spec.m_axis;
+                        if (axis == -1)
                         {
-                            arg0_squeezed_axes.insert(i);
-                        }
-                        else
-                        {
-                            arg0_squeezed_shape.push_back(arg0_padded_shape[i]);
+                            axis = arg0_shape.size() - arg1_shape.size();
                         }
 
-                        if (arg1_padded_shape[i] == 1)
+                        Shape arg1_padded_shape = arg1_shape;
+                        // Trim trailing ones
+                        while (arg1_padded_shape.size() > 0 && arg1_padded_shape.back() == 1)
                         {
-                            arg1_squeezed_axes.insert(i);
-                        }
-                        else
-                        {
-                            arg1_squeezed_shape.push_back(arg1_padded_shape[i]);
+                            arg1_padded_shape.pop_back();
                         }
 
-                        output_shape.push_back(arg0_padded_shape[i] == 1 ? arg1_padded_shape[i]
-                                                                         : arg0_padded_shape[i]);
-                    }
+                        for (int64_t i = 0; i < axis; ++i)
+                        {
+                            arg1_padded_shape.insert(arg1_padded_shape.begin(), 1);
+                        }
 
-                    CoordinateTransform arg0_transform(arg0_squeezed_shape);
-                    CoordinateTransform arg1_transform(arg1_squeezed_shape);
-                    CoordinateTransform output_transform(output_shape);
+                        while (arg1_padded_shape.size() < arg0_shape.size())
+                        {
+                            arg1_padded_shape.insert(arg1_padded_shape.end(), 1);
+                        }
 
-                    for (const Coordinate& output_coord : output_transform)
-                    {
-                        Coordinate arg0_coord = reduce(output_coord, arg0_squeezed_axes);
-                        Coordinate arg1_coord = reduce(output_coord, arg1_squeezed_axes);
-                        out[output_transform.index(output_coord)] =
-                            elementwise_functor(arg0[arg0_transform.index(arg0_coord)],
-                                                arg1[arg1_transform.index(arg1_coord)]);
+                        Shape arg1_squeezed_shape;
+                        AxisSet arg1_squeezed_axes;
+
+                        for (size_t i = 0; i < arg0_shape.size(); i++)
+                        {
+                            if (arg1_padded_shape[i] == 1)
+                            {
+                                arg1_squeezed_axes.insert(i);
+                            }
+                            else
+                            {
+                                arg1_squeezed_shape.push_back(arg1_padded_shape[i]);
+                            }
+                        }
+
+                        CoordinateTransform arg0_transform(arg0_shape);
+                        CoordinateTransform arg1_transform(arg1_squeezed_shape);
+                        CoordinateTransform output_transform(arg0_shape);
+
+                        for (const Coordinate& output_coord : output_transform)
+                        {
+                            Coordinate arg1_coord = reduce(output_coord, arg1_squeezed_axes);
+                            out[output_transform.index(output_coord)] =
+                                elementwise_functor(arg0[arg0_transform.index(output_coord)],
+                                                    arg1[arg1_transform.index(arg1_coord)]);
+                        }
                     }
                 }
             }

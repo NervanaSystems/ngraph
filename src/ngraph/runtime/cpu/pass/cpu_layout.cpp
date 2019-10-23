@@ -1896,12 +1896,7 @@ namespace ngraph
                         if (input_shape[axis_order[i]] != output_shape[i])
                             return false;
                     }
-#if MKLDNN_VERSION_MAJOR >= 1
-                    if (mkldnn_utils::is_mkldnn_desc_blocked_data_format(md))
-                    {
-                        return false;
-                    }
-#endif
+
                     return true;
                 }
 
@@ -2326,7 +2321,7 @@ namespace ngraph
                     }
                     else
                     {
-                        throw ngraph_error("Batchnorm Backprop only supported in MKLDNN for now");
+                        set_native_layouts(external_function, node);
                     }
                 }
 

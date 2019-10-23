@@ -69,12 +69,17 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
-    opset_pass/sum_opset_pass.cpp
-    opset_pass/product_opset_pass.cpp
-    opset_pass/softmax_opset_pass.cpp
-    opset_pass/softmax_opset_pass.cpp
+    opset_pass/broadcast_opset_pass.cpp
+    opset_pass/convolution_opset_pass.cpp
     opset_pass/gather_opset_pass.cpp
     opset_pass/pad_opset_pass.cpp
+    opset_pass/poolings_opset_pass.cpp
+    opset_pass/product_opset_pass.cpp
+    opset_pass/reverse_opset_pass.cpp
+    opset_pass/softmax_opset_pass.cpp
+    opset_pass/sum_opset_pass.cpp
+    opset_pass/topk_opset_pass.cpp
+    opset_pass/avg_pool_opset_pass.cpp
     partial_shape.cpp
     pass.cpp
     pass_liveness.cpp
@@ -123,8 +128,10 @@ set(SRC
     type_prop/gru_cell.cpp
     type_prop/hard_sigmoid.cpp
     type_prop/index_reduction.cpp
+    type_prop/layer_norm.cpp
     type_prop/lrn.cpp
     type_prop/lstm_cell.cpp
+    type_prop/lstm_sequence.cpp
     type_prop/matmul.cpp
     type_prop/max_pool.cpp
     type_prop/mvn.cpp
@@ -200,10 +207,6 @@ if (NGRAPH_CPU_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
 endif()
 
-if (NGRAPH_INTELGPU_ENABLE)
-    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTELGPU)
-endif()
-
 if (NGRAPH_GPUH_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPUH)
 endif()
@@ -271,6 +274,7 @@ set(MULTI_TEST_SRC
     backend/gather.in.cpp
     backend/gelu.in.cpp
     backend/generate_mask.in.cpp
+    backend/layer_norm.in.cpp
     backend/log.in.cpp
     backend/logical_and.in.cpp
     backend/logical_or.in.cpp
