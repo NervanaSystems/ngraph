@@ -141,6 +141,7 @@ namespace ngraph
         ///
         /// \return pdpd-style broadcasted list of nodes.
         NodeVector pdpd_style_broadcast(const NodeVector& inputs, int64_t axis);
+        OutputVector pdpd_style_broadcast(const OutputVector& inputs, int64_t axis);
 
         /// \brief Generate a list of broadcast axes.
         ///

@@ -103,29 +103,10 @@ namespace ngraph
             }
             /// Stores a sub-graph in the map
             void add_subgraph(MLIRSubgraph& sg) { m_id_to_graph.emplace(sg.get_id(), sg); }
-            /// Checks if adding a node to an extracted sub-graph will cause a DAG cycle
-            /// inputs: the list of input nodes outside sub-graphs to the node we want to add.
-            /// subgraph_ids: the sub-graphs the predecessor nodes belong to.
-            /// It traverses backwards from all input nodes and checks if we left the to-be-merged
-            /// sub-graphs and entered again. If so, we have a cycle.
-            ///
-            /// Example:
-            /// A(1)
-            /// |   \
-            /// B(1) C
-            /// |  /
-            /// D
-            /// we want to add D to sub-graph 1. C is an input to D. sugraph_ids are 1
-            /// we traverse backwards C->A(1) and find 1, then we cannot add D since we will form a
-            /// cycle
-            bool check_cycles(std::shared_ptr<Node> node,
-                              std::unordered_set<int>& subgraph_ids,
-                              bool inside_subgraphs = true,
-                              unsigned depth = 0);
-
         private:
             void build_subgraphs(std::shared_ptr<Function> func);
             NodeVector build_ck_nodes(std::shared_ptr<Function> func);
+            void process_supported_op(std::shared_ptr<ngraph::Node> node, int current_subgraph_id);
 
             void sanity_check(std::shared_ptr<Function> func, NodeVector& ck_nodes);
             void clean_up();

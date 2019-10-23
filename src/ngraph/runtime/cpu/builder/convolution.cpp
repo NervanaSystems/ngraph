@@ -55,7 +55,8 @@ namespace ngraph
                         mkldnn_emitter->get_convolution_forward_desc<ngraph::op::Convolution>(node);
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::Convolution>(node);
-                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
                     size_t conv_index = mkldnn_emitter->convolution_forward_init();
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
@@ -64,6 +65,7 @@ namespace ngraph
                                     conv_desc,
                                     conv_attr,
                                     conv_index,
+                                    scratchpad_size,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
@@ -88,7 +90,11 @@ namespace ngraph
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
 
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::CONVOLUTION);
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONVOLUTION,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -160,7 +166,8 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::ConvolutionRelu>(
                             node);
-                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
                     size_t conv_index = mkldnn_emitter->convolution_forward_init();
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
@@ -169,6 +176,7 @@ namespace ngraph
                                     conv_desc,
                                     conv_attr,
                                     conv_index,
+                                    scratchpad_size,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
@@ -193,7 +201,11 @@ namespace ngraph
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
 
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::CONVOLUTIONRELU);
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONVOLUTIONRELU,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -222,7 +234,8 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::ConvolutionBias>(
                             node);
-                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
@@ -231,6 +244,7 @@ namespace ngraph
                                     conv_desc,
                                     conv_attr,
                                     conv_index,
+                                    scratchpad_size,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     arg2_buffer_index,
@@ -258,7 +272,11 @@ namespace ngraph
                             ctx, deps[3], ctx->buffer_data[out_buffer_index]);
 
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::CONVOLUTIONBIAS);
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONVOLUTIONBIAS,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -289,7 +307,8 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::ConvolutionBiasAdd>(node);
-                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
@@ -298,6 +317,7 @@ namespace ngraph
                                     conv_desc,
                                     conv_attr,
                                     conv_index,
+                                    scratchpad_size,
                                     arg3_size,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
@@ -334,7 +354,11 @@ namespace ngraph
                             ctx, deps[3], ctx->buffer_data[out_buffer_index]);
 
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::CONVOLUTIONBIASADD);
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONVOLUTIONBIASADD,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -364,7 +388,8 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::ConvolutionAdd>(
                             node);
-                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(false);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
@@ -373,6 +398,7 @@ namespace ngraph
                                     conv_desc,
                                     conv_attr,
                                     conv_index,
+                                    scratchpad_size,
                                     arg2_size,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
@@ -406,7 +432,11 @@ namespace ngraph
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
 
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::CONVOLUTIONADD);
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONVOLUTIONADD,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -437,7 +467,8 @@ namespace ngraph
                         ngraph::op::ConvolutionBackpropData>(node);
                     auto fwd_desc = mkldnn_emitter->get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBackpropData>(node);
-                    QUERY_SCRATCHPAD_2ARGS(convolution_backward_data, fwd_desc, bwd_desc);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_backward_data, fwd_desc, bwd_desc);
 
                     // ConvolutionBackpropData needs 4 primitives: weights, diff_dst, diff_src,
                     // and convolution_backward_data.
@@ -448,6 +479,7 @@ namespace ngraph
                                     bwd_desc,
                                     fwd_desc,
                                     conv_index,
+                                    scratchpad_size,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
@@ -474,7 +506,8 @@ namespace ngraph
                             ctx,
                             conv_index,
                             deps,
-                            cpu::mkldnn_utils::OpType::CONVOLUTIONBACKPROPDATA);
+                            cpu::mkldnn_utils::OpType::CONVOLUTIONBACKPROPDATA,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -550,7 +583,8 @@ namespace ngraph
                         ngraph::op::ConvolutionBackpropFilters>(node);
                     auto fwd_desc = mkldnn_emitter->get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBackpropFilters>(node);
-                    QUERY_SCRATCHPAD_2ARGS(convolution_backward_weights, fwd_desc, bwd_desc);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_backward_weights, fwd_desc, bwd_desc);
 
                     // ConvolutionBackpropFilter needs 4 primitives: src, diff_dst, diff_weights,
                     // and convolution_backward_weights.
@@ -561,6 +595,7 @@ namespace ngraph
                                     bwd_desc,
                                     fwd_desc,
                                     conv_index,
+                                    scratchpad_size,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
@@ -587,7 +622,8 @@ namespace ngraph
                             ctx,
                             conv_index,
                             deps,
-                            cpu::mkldnn_utils::OpType::CONVOLUTIONBACKPROPWEIGHTS);
+                            cpu::mkldnn_utils::OpType::CONVOLUTIONBACKPROPWEIGHTS,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -659,7 +695,8 @@ namespace ngraph
                         ngraph::op::ConvolutionBiasBackpropFiltersBias>(node);
                     auto fwd_desc = mkldnn_emitter->get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBiasBackpropFiltersBias>(node);
-                    QUERY_SCRATCHPAD_2ARGS(convolution_backward_weights, fwd_desc, bwd_desc);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_backward_weights, fwd_desc, bwd_desc);
 
                     // ConvolutionBackpropFiltersBias needs 5 primitives: src, diff_dst,
                     // diff_weights, diff_bias, and convolution_backward_weights.
@@ -670,6 +707,7 @@ namespace ngraph
                                     bwd_desc,
                                     fwd_desc,
                                     conv_index,
+                                    scratchpad_size,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out0_buffer_index,
@@ -699,7 +737,8 @@ namespace ngraph
                             ctx,
                             conv_index,
                             deps,
-                            cpu::mkldnn_utils::OpType::CONVOLUTIONBACKPROPWEIGHTSBIAS);
+                            cpu::mkldnn_utils::OpType::CONVOLUTIONBACKPROPWEIGHTSBIAS,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -728,7 +767,8 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::GroupConvolution>(
                             node);
-                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
                     size_t conv_index = mkldnn_emitter->convolution_forward_init();
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
@@ -737,6 +777,7 @@ namespace ngraph
                                     conv_desc,
                                     conv_attr,
                                     conv_index,
+                                    scratchpad_size,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
@@ -763,7 +804,11 @@ namespace ngraph
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
 
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::GROUPCONVOLUTION);
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::GROUPCONVOLUTION,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -792,7 +837,8 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::GroupConvolutionBias>(node);
-                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
@@ -801,6 +847,7 @@ namespace ngraph
                                     conv_desc,
                                     conv_attr,
                                     conv_index,
+                                    scratchpad_size,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     arg2_buffer_index,
@@ -828,7 +875,11 @@ namespace ngraph
                             ctx, deps[3], ctx->buffer_data[out_buffer_index]);
 
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::GROUPCONVOLUTIONBIAS);
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::GROUPCONVOLUTIONBIAS,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -861,7 +912,8 @@ namespace ngraph
                             ->get_deconvolutionbias_forward_data<ngraph::op::DeconvolutionBias>(
                                 node);
                     auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    QUERY_SCRATCHPAD(deconvolution_forward, deconvbias_desc);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD(deconvolution_forward, deconvbias_desc);
 
                     // DeconvolutionBias needs 5 primitives: weights, delta, bias, result,
                     // and deconvolutionbias.
@@ -871,6 +923,7 @@ namespace ngraph
                     auto functor = [&,
                                     deconvbias_desc,
                                     conv_index,
+                                    scratchpad_size,
                                     weights_desc,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
@@ -898,7 +951,11 @@ namespace ngraph
                             ctx, deps[3], ctx->buffer_data[out_buffer_index]);
 
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::DECONVOLUTIONBIAS);
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::DECONVOLUTIONBIAS,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }

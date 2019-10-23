@@ -82,6 +82,7 @@
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/layer_norm.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/fused/lstm_sequence.hpp"
 #include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize_l2.hpp"
@@ -871,14 +872,13 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             if (op_version == 1)
             {
-                auto forward_arg_shape = node_js.at("forward_arg_shape").get<vector<size_t>>();
                 auto kernel = node_js.at("kernel").get<vector<size_t>>();
                 auto strides = node_js.at("strides").get<vector<size_t>>();
                 auto pads_begin = node_js.at("pads_begin").get<vector<size_t>>();
                 auto pads_end = node_js.at("pads_end").get<vector<size_t>>();
                 auto exclude_pad = get_or_default<bool>(node_js, "exclude_pad", true);
                 node = make_shared<op::v1::AvgPoolBackprop>(
-                    forward_arg_shape, args[0], strides, pads_begin, pads_end, kernel, exclude_pad);
+                    args[0], args[1], strides, pads_begin, pads_end, kernel, exclude_pad);
             }
             break;
         }
@@ -913,9 +913,17 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Broadcast:
         {
-            auto shape = node_js.at("shape").get<vector<size_t>>();
-            auto axes = deserialize_axis_set(node_js.at("axes"));
-            node = make_shared<op::Broadcast>(args[0], shape, axes);
+            if (op_version == 0)
+            {
+                auto shape = node_js.at("shape").get<vector<size_t>>();
+                auto axes = deserialize_axis_set(node_js.at("axes"));
+                node = make_shared<op::v0::Broadcast>(args[0], shape, axes);
+            }
+            if (op_version == 1)
+            {
+                node = make_shared<op::v1::Broadcast>(
+                    args[0], args[1], args[2], read_auto_broadcast(node_js, "auto_broadcast"));
+            }
             break;
         }
         case OP_TYPEID::BroadcastDistributed:
@@ -1548,6 +1556,52 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                              input_forget);
             break;
         }
+        case OP_TYPEID::LSTMSequence:
+        {
+            auto hidden_size = node_js.at("hidden_size").get<size_t>();
+            auto clip = node_js.at("clip").get<float>();
+            auto activations = node_js.at("activations").get<vector<string>>();
+            auto activations_alpha = node_js.at("activations_alpha").get<vector<float>>();
+            auto activations_beta = node_js.at("activations_beta").get<vector<float>>();
+            auto input_forget = node_js.at("input_forget").get<bool>();
+            auto direction = node_js.at("direction").get<op::LSTMSequence::direction>();
+            if (args.size() == 8)
+            {
+                node = make_shared<op::LSTMSequence>(args[0],
+                                                     args[1],
+                                                     args[2],
+                                                     args[3],
+                                                     args[4],
+                                                     args[5],
+                                                     args[6],
+                                                     args[7],
+                                                     hidden_size,
+                                                     direction,
+                                                     activations_alpha,
+                                                     activations_beta,
+                                                     activations,
+                                                     clip,
+                                                     input_forget);
+            }
+            else
+            {
+                node = make_shared<op::LSTMSequence>(args[0],
+                                                     args[1],
+                                                     args[2],
+                                                     args[3],
+                                                     args[4],
+                                                     args[5],
+                                                     args[6],
+                                                     hidden_size,
+                                                     direction,
+                                                     activations_alpha,
+                                                     activations_beta,
+                                                     activations,
+                                                     clip,
+                                                     input_forget);
+            }
+            break;
+        }
         case OP_TYPEID::MatMul:
         {
             bool transpose_a = node_js.at("transpose_a").get<bool>();
@@ -2154,11 +2208,28 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             if (op_version == 0)
             {
-                auto top_k_axis = node_js.at("top_k_axis").get<size_t>();
-                auto k = node_js.at("k").get<size_t>();
                 auto compute_max = node_js.at("compute_max").get<bool>();
                 auto target_type = read_element_type(node_js.at("index_element_type"));
-                node = make_shared<op::TopK>(args[0], top_k_axis, target_type, k, compute_max);
+                if (has_key(node_js, "top_k_axis"))
+                {
+                    auto top_k_axis = node_js.at("top_k_axis").get<size_t>();
+                    if (has_key(node_js, "k"))
+                    {
+                        auto k = node_js.at("k").get<size_t>();
+                        node =
+                            make_shared<op::TopK>(args[0], top_k_axis, target_type, k, compute_max);
+                    }
+                    else
+                    {
+                        node = make_shared<op::TopK>(
+                            args[0], args[1], top_k_axis, target_type, compute_max);
+                    }
+                }
+                else
+                {
+                    node =
+                        make_shared<op::TopK>(args[0], args[1], args[2], target_type, compute_max);
+                }
             }
             else if (op_version == 1)
             {
@@ -2499,9 +2570,20 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Broadcast:
     {
-        auto tmp = static_cast<const op::Broadcast*>(&n);
-        node["axes"] = serialize_axis_set(tmp->get_broadcast_axes());
-        node["shape"] = tmp->get_broadcast_shape();
+        if (op_version == 0)
+        {
+            auto tmp = dynamic_cast<const op::v0::Broadcast*>(&n);
+            node["axes"] = serialize_axis_set(tmp->get_broadcast_axes());
+            node["shape"] = tmp->get_broadcast_shape();
+        }
+        if (op_version == 1)
+        {
+            auto tmp = dynamic_cast<const op::v1::Broadcast*>(&n);
+            if (tmp->get_broadcast_spec().m_type != op::AutoBroadcastType::NONE)
+            {
+                node["auto_broadcast"] = write_auto_broadcast(tmp->get_broadcast_spec());
+            }
+        }
         break;
     }
     case OP_TYPEID::BroadcastDistributed: { break;
@@ -2914,6 +2996,18 @@ json JSONSerializer::serialize_node(const Node& n)
         node["activations"] = tmp->get_activations();
         node["activation_alpha"] = tmp->get_activation_alpha();
         node["activation_beta"] = tmp->get_activation_beta();
+        node["input_forget"] = tmp->get_input_forget();
+        break;
+    }
+    case OP_TYPEID::LSTMSequence:
+    {
+        auto tmp = dynamic_cast<const op::LSTMSequence*>(&n);
+        node["direction"] = tmp->get_direction();
+        node["hidden_size"] = tmp->get_hidden_size();
+        node["clip_threshold"] = tmp->get_clip_threshold();
+        node["activations"] = tmp->get_activations();
+        node["activations_alpha"] = tmp->get_activations_alpha();
+        node["activations_beta"] = tmp->get_activations_beta();
         node["input_forget"] = tmp->get_input_forget();
         break;
     }
@@ -3346,9 +3440,7 @@ json JSONSerializer::serialize_node(const Node& n)
         if (op_version == 0)
         {
             const auto tmp = static_cast<const op::TopK*>(&n);
-            node["top_k_axis"] = tmp->get_top_k_axis();
             node["index_element_type"] = write_element_type(tmp->get_index_element_type());
-            node["k"] = tmp->get_k();
             node["compute_max"] = tmp->get_compute_max();
         }
         else if (op_version == 1)
@@ -3359,7 +3451,6 @@ json JSONSerializer::serialize_node(const Node& n)
             node["sort_type"] = tmp->get_sort_type();
             node["index_element_type"] = write_element_type(tmp->get_index_element_type());
         }
-
         break;
     }
     case OP_TYPEID::Transpose: { break;

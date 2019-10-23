@@ -235,15 +235,15 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
 
     if (input_value(2).get_node_shared_ptr()->is_constant())
     {
-        forward_result_shape =
-            infer_convolution_forward(this,
-                                      data_batch_shape,
-                                      Strides(static_cast<size_t>(get_data_batch_shape().size()) - 2, 1),
-                                      m_pads_begin,
-                                      m_pads_end,
-                                      filters_shape,
-                                      m_strides,
-                                      m_dilations);
+        forward_result_shape = infer_convolution_forward(
+            this,
+            data_batch_shape,
+            Strides(static_cast<size_t>(get_data_batch_shape().size()) - 2, 1),
+            m_pads_begin,
+            m_pads_end,
+            filters_shape,
+            m_strides,
+            m_dilations);
 
         NODE_VALIDATION_CHECK(this,
                               forward_result_shape.compatible(delta_shape),
