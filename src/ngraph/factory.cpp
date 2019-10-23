@@ -29,25 +29,26 @@
 
 using namespace std;
 
-using namespace ngraph;
-
-template <>
-FactoryRegistry<Node>* FactoryRegistry<Node>::get()
+namespace ngraph
 {
-    static FactoryRegistry<Node>* registry = nullptr;
-    if (registry == nullptr)
+    template <>
+    FactoryRegistry<Node>* FactoryRegistry<Node>::get()
     {
-        registry = new FactoryRegistry<Node>();
-        registry->register_factory<op::Abs>();
-        registry->register_factory<op::Acos>();
-        registry->register_factory<op::Add>();
-        registry->register_factory<op::All>();
-        registry->register_factory<op::AllReduce>();
-        registry->register_factory<op::And>();
-        registry->register_factory<op::Any>();
-        registry->register_factory<op::ArgMax>();
-        registry->register_factory<op::ArgMin>();
-        registry->register_factory<op::Parameter>();
+        static FactoryRegistry<Node>* registry = nullptr;
+        if (registry == nullptr)
+        {
+            registry = new FactoryRegistry<Node>();
+            registry->register_factory<op::Abs>();
+            registry->register_factory<op::Acos>();
+            registry->register_factory<op::Add>();
+            registry->register_factory<op::All>();
+            registry->register_factory<op::AllReduce>();
+            registry->register_factory<op::And>();
+            registry->register_factory<op::Any>();
+            registry->register_factory<op::ArgMax>();
+            registry->register_factory<op::ArgMin>();
+            registry->register_factory<op::Parameter>();
+        }
+        return registry;
     }
-    return registry;
 }
