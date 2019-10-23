@@ -13,12 +13,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "ngraph/pass/opset0_downgrade.hpp"
+
+#include <cstdint>
+
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
@@ -27,6 +30,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -99,6 +103,77 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         auto replacement_node =
             make_shared<op::v0::Broadcast>(arg, target_shape, tmp->get_broadcast_axes().second);
 
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Convolution:
+    {
+        auto tmp = as_type_ptr<op::v1::Convolution>(node);
+        const auto data_arg = node->input(0).get_source_output();
+        const auto filters_arg = node->input(1).get_source_output();
+        const PartialShape& data_arg_pshape = node->get_input_partial_shape(0);
+        NGRAPH_CHECK(data_arg_pshape.rank().is_static(),
+                     "Unable to convert Convolution:v1 to Convolution:v0 if data argument "
+                     "rank is dynamic. Node: ",
+                     *node);
+        const size_t num_spatial_dims = static_cast<size_t>(data_arg_pshape.rank()) - 2;
+        auto replacement_node = make_shared<op::v0::Convolution>(data_arg,
+                                                                 filters_arg,
+                                                                 tmp->get_strides(),
+                                                                 tmp->get_dilations(),
+                                                                 tmp->get_pads_begin(),
+                                                                 tmp->get_pads_end(),
+                                                                 Strides(num_spatial_dims, 1),
+                                                                 tmp->get_auto_pad());
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::ConvolutionBackpropData:
+    {
+        auto tmp = as_type_ptr<op::v1::ConvolutionBackpropData>(node);
+        const auto filters_arg = node->input(0).get_source_output();
+        const auto delta_arg = node->input(1).get_source_output();
+        const PartialShape& delta_arg_pshape = node->get_input_partial_shape(1);
+        NGRAPH_CHECK(delta_arg_pshape.rank().is_static(),
+                     "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
+                     "if delta argument rank is dynamic. Node: ",
+                     *node);
+        const size_t num_spatial_dims = static_cast<size_t>(delta_arg_pshape.rank()) - 2;
+        auto replacement_node =
+            make_shared<op::v0::ConvolutionBackpropData>(tmp->get_data_batch_shape(),
+                                                         filters_arg,
+                                                         delta_arg,
+                                                         tmp->get_strides(),
+                                                         tmp->get_dilations(),
+                                                         tmp->get_pads_begin(),
+                                                         tmp->get_pads_end(),
+                                                         Strides(num_spatial_dims, 1));
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::ConvolutionBackpropFilters:
+    {
+        auto tmp = as_type_ptr<op::v1::ConvolutionBackpropFilters>(node);
+        const auto data_arg = node->input(0).get_source_output();
+        const auto delta_arg = node->input(1).get_source_output();
+        const PartialShape& data_arg_pshape = node->get_input_partial_shape(0);
+        NGRAPH_CHECK(data_arg_pshape.rank().is_static(),
+                     "Unable to convert ConvolutionBackpropFilters:v1 to "
+                     "ConvolutionBackpropFilters:v0 if data argument rank is dynamic. Node: ",
+                     *node);
+        const size_t num_spatial_dims = static_cast<size_t>(data_arg_pshape.rank()) - 2;
+        auto replacement_node =
+            make_shared<op::v0::ConvolutionBackpropFilters>(data_arg,
+                                                            tmp->get_filters_shape(),
+                                                            delta_arg,
+                                                            tmp->get_strides(),
+                                                            tmp->get_dilations(),
+                                                            tmp->get_pads_begin(),
+                                                            tmp->get_pads_end(),
+                                                            Strides(num_spatial_dims, 1));
         replace_node(node, replacement_node);
         modified = true;
         break;
