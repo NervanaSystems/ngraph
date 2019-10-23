@@ -139,6 +139,7 @@ namespace ngraph
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/layer_norm.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/fused/lstm_sequence.hpp"
 #include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize_l2.hpp"

@@ -173,6 +173,7 @@ void op::v1::Gather::validate_and_infer_types()
     {
         result_shape = PartialShape::dynamic();
     }
+
     set_output_type(0, result_et, result_shape);
 }
 
