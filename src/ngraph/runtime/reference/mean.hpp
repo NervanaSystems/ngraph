@@ -48,7 +48,6 @@ namespace ngraph
 
                 CoordinateTransform input_transform(in_shape);
                 std::map<size_t, int> index_to_count_map;
-                ;
 
                 for (const Coordinate& input_coord : input_transform)
                 {
