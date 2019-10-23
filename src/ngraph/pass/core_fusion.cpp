@@ -69,7 +69,6 @@ void pass::CoreFusion::construct_softmax_cross_entropy_fprop()
 
     // parameter with one-hot encoded values
     auto param_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{41, 37});
-    auto softmax_result = std::make_shared<ngraph::op::Result>(softmax);
     auto log = std::make_shared<ngraph::op::Log>(softmax);
     auto multiply = std::make_shared<ngraph::op::Multiply>(param_2, log);
 
@@ -86,7 +85,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_fprop()
         auto input_to_normalize = pattern_map[param_1];
         auto labels = pattern_map[param_2];
         auto softmax_crossentropy =
-            std::make_shared<ngraph::op::SoftmaxCrossEntropy>(input_to_normalize, labels);
+            std::make_shared<ngraph::op::SoftmaxCrossEntropy>(input_to_normalize, labels, true);
         ngraph::replace_node(m.get_match_root(), softmax_crossentropy);
 
         return true;

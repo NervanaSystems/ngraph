@@ -60,7 +60,9 @@ NodeVector op::SoftmaxCrossEntropy::decompose_op() const
         auto not_equal = std::make_shared<ngraph::op::NotEqual>(labels, mask_constant);
         auto convert =
             std::make_shared<ngraph::op::Convert>(not_equal, input_to_normalize.get_element_type());
-        return convert;
+        auto reshape = std::make_shared<ngraph::op::Reshape>(
+            convert, AxisVector{0, 1}, Shape{convert->get_shape().at(0), 1});
+        return reshape;
     };
 
     auto create_xe = [&](std::shared_ptr<ngraph::Node> one_hot,
@@ -69,13 +71,10 @@ NodeVector op::SoftmaxCrossEntropy::decompose_op() const
         auto node_mul = one_hot * node_log;
         auto node_sum = std::make_shared<ngraph::op::Sum>(
             node_mul, AxisSet{static_cast<size_t>(reduction_axis)});
-        auto neg_sum = -node_sum;
-        auto reshape = std::make_shared<ngraph::op::Reshape>(
-            neg_sum, AxisVector{0}, Shape{node_sum->get_shape().at(0), 1});
-        return reshape;
+        return -node_sum;
     };
 
-    if (!m_soft_label)
+    if (m_soft_label)
     {
         // always reduces the sum on the last axis
         auto max_xj = std::make_shared<ngraph::op::Max>(
@@ -113,20 +112,24 @@ NodeVector op::SoftmaxCrossEntropy::decompose_op() const
             make_shared<op::Reshape>(labels, AxisVector{0, 1}, Shape{labels.get_shape().at(0)});
         auto one_hot_labels = std::make_shared<ngraph::op::OneHot>(
             reshape_labels, input_to_normalize.get_shape(), one_hot_axis);
+        auto convert_one_hot = std::make_shared<ngraph::op::Convert>(
+            one_hot_labels, input_to_normalize.get_element_type());
         auto mask = create_mask();
         // softmax will be applied on the input to cross_entropy
         auto softmax =
             std::make_shared<ngraph::op::Softmax>(input_to_normalize, AxisSet{softmax_axis});
-        auto xe = create_xe(one_hot_labels, softmax);
-        return {xe * mask};
+        auto xe = create_xe(convert_one_hot, softmax);
+        auto reshape_xe = std::make_shared<ngraph::op::Reshape>(
+            xe, AxisVector{0}, Shape{xe->get_shape().at(0), 1});
+        return {reshape_xe * mask};
     }
 }
 
 shared_ptr<Node> op::SoftmaxCrossEntropy::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<SoftmaxCrossEntropyBackprop>(
-        new_args.at(0), new_args.at(1), new_args.at(2), m_soft_label, m_ignore_index);
+    return make_shared<SoftmaxCrossEntropy>(
+        new_args.at(0), new_args.at(1), m_soft_label, m_ignore_index);
 }
 
 constexpr NodeTypeInfo op::SoftmaxCrossEntropyBackprop::type_info;
