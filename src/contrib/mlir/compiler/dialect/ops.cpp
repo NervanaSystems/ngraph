@@ -19,10 +19,10 @@
 
 #include "ops.hpp"
 #include "assertion.hpp"
+#include "llvm/ADT/StringSwitch.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Regex.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/ADT/StringSwitch.h"
 #include "type.hpp"
 
 using llvm::ArrayRef;

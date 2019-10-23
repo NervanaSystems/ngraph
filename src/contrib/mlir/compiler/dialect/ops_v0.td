@@ -187,12 +187,12 @@ def NGAvgPoolOp :
                I64ArrayAttr     :$windowMovementStrides,
                I64ArrayAttr     :$padBelow,
                I64ArrayAttr     :$padAbove,
-               BoolAttr         :$includePadding,
-               PadTypeEnumAttr  :$padType,
-               BoolAttr         :$ceilMode
+               DefaultValuedAttr<BoolAttr, "false">:$includePadding,
+               DefaultValuedAttr<PadTypeEnumAttr, "static_cast<int64_t>(MLIRPadType::EXPLICIT)"> :$padType,
+               DefaultValuedAttr<BoolAttr, "false"> :$ceilMode
                )>
 {
-    let summary = "Batched average pooling operation, with optional padding and window stride."
+    let summary = "Batched average pooling operation, with optional padding and window stride.";
     let description = [{
       Constructs a batched average pooling operation.
       
@@ -204,19 +204,18 @@ def NGAvgPoolOp :
       
       includePadding        If true then averages include padding elements, 
                             each treated as the number zero.  If false, padding elements are
-                            entirely ignored when computing averages
-      padType               Padding type to use for additional padded dimensions 
-      ceilMode              Whether to use ceiling while computing output shape
-    }]
+                            entirely ignored when computing averages. Default is false. 
+      padType               Padding type to use for additional padded dimensions. Default is EXPLICT
+      ceilMode              Whether to use ceiling while computing output shape. Default is false
+    }];
     
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
     let verifier = [{ return verifyOp(this); }];
     let builders = [
       OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res, Value *arg, 
-       ArrayAttr windowShape, ArrayAttr windowMovementStrides, 
-       ArrayAttr padBelow, ArrayAttr padAbove, BoolAttr includPadding, IntegerAttr padType",
-      [{
+      "Builder *builder, OperationState &tblgen_state, Type res, Value *arg," 
+       "ArrayAttr windowShape, ArrayAttr windowMovementStrides,"
+       "ArrayAttr padBelow, ArrayAttr padAbove, BoolAttr includPadding, IntegerAttr padType", [{
         tblgen_state.addOperands(arg);
         tblgen_state.addAttribute("windowShape", windowShape);
         tblgen_state.addAttribute("windowMovementStrides", windowMovementStrides);
@@ -224,23 +223,19 @@ def NGAvgPoolOp :
         tblgen_state.addAttribute("padAbove", padAbove);
         tblgen_state.addAttribute("includPadding", includPadding);
         tblgen_state.addAttribute("padType", padType);
-        tblgen_state.addAttribute("ceilMode", false);
         tblgen_state.addTypes(res);
       }]>,
 
       OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res, Value *arg, 
-       ArrayAttr windowShape, ArrayAttr windowMovementStrides, 
-       ArrayAttr padBelow, ArrayAttr padAbove, BoolAttr includPadding",
-      [{
+      "Builder *builder, OperationState &tblgen_state, Type res, Value *arg," 
+       "ArrayAttr windowShape, ArrayAttr windowMovementStrides,"
+       "ArrayAttr padBelow, ArrayAttr padAbove, BoolAttr includPadding", [{
         tblgen_state.addOperands(arg);
         tblgen_state.addAttribute("windowShape", windowShape);
         tblgen_state.addAttribute("windowMovementStrides", windowMovementStrides);
         tblgen_state.addAttribute("padBelow", padBelow);
         tblgen_state.addAttribute("padAbove", padAbove);
         tblgen_state.addAttribute("includPadding", includPadding);
-        tblgen_state.addAttribute("padType", mlir::PadType::EXPLICIT);
-        tblgen_state.addAttribute("ceilMode", false);
         tblgen_state.addTypes(res);
       }]>
     ];
@@ -268,10 +263,10 @@ def NGAvgPoolBackPropOp :
                BoolAttr         :$includePadding
                )>
 {
-    let summary = "Batched backprop average pooling operation, with optional padding and window stride."
+    let summary = "Batched backprop average pooling operation, with optional padding and window stride.";
     let description = [{
       // TBD
-    }]
+    }];
     
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
     let verifier = [{ return verifyOp(this); }];
@@ -295,16 +290,16 @@ def NGBacthNormTrainingOp :
                F64Attr           :$epsilon
                )>
 {
-    let summary = "BatchNorm for training."
+    let summary = "BatchNorm for training.";
     let description = [{
       // TBD
-    }]
+    }];
     
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
     let verifier = [{ return verifyOp(this); }];
 
     let extraClassDeclaration = [{
-      void setEpsilon(const Attr& attr)  { this->setAttr("epsilon", attr);  }
+      void setEpsilon(const Attribute& attr)  { this->setAttr("epsilon", attr);  }
     }];
 }
 
@@ -319,15 +314,15 @@ def NGBacthNormInferenceOp :
                F64Attr           :$epsilon
                )>
 {
-    let summary = "BatchNorm for training."
+    let summary = "BatchNorm for training.";
     let description = [{
       // TBD
-    }]
+    }];
     
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
     let verifier = [{ return verifyOp(this); }];
     let extraClassDeclaration = [{
-      void setEpsilon(const Attr& attr)  { this->setAttr("epsilon", attr);  }
+      void setEpsilon(const Attribute& attr)  { this->setAttr("epsilon", attr);  }
     }];
 }
 
@@ -344,15 +339,15 @@ def NGBacthNormTrainingBackPropOp :
                F64Attr           :$epsilon
                )>
 {
-    let summary = "BatchNorm for training."
+    let summary = "BatchNorm for training.";
     let description = [{
       // TBD
-    }]
+    }];
     
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
     let verifier = [{ return verifyOp(this); }];
     let extraClassDeclaration = [{
-      void setEpsilon(const Attr& attr)  { this->setAttr("epsilon", attr);  }
+      void setEpsilon(const Attribute& attr)  { this->setAttr("epsilon", attr);  }
     }];
 }
 
@@ -361,14 +356,14 @@ def NGBroadcastOp :
     NG_OneResult_Op<"broadcast", [NoSideEffect, OpVersion0]>,
     Arguments<(ins NG_TensorType :$arg, 
                I64ArrayAttr      :$shape,
-               I64ArrayAttr      :%axisSet
+               I64ArrayAttr      :$axisSet
                )>
 {
-    let summary = "Operation which "adds" axes to an input tensor, replicating elements from the
-                   input as needed along the new axes."
+    let summary = "Operation which adds axes to an input tensor, replicating elements from the"
+                  "input as needed along the new axes.";
     let description = [{
       // TBD
-    }]
+    }];
     
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
     let verifier = [{ return verifyOp(this); }];
@@ -378,27 +373,319 @@ def NGBroadcastOp :
     }];
 }
 
-// Broadcast distributed
-def NGBroadcastOp :
-    NG_OneResult_Op<"broadcast", [NoSideEffect, OpVersion0]>,
-    Arguments<(ins NG_TensorType :$arg, 
+def NGConstantOp : 
+  NG_OneResult_Op<"consant", [NoSideEffect, OpVersion0]>,
+  Arguments<(ins I64ArrayAttr  : $shape,
+            TypeArrayAttr      : $data)>
+{
+  let summary = "Operation that defins a constant tensor";
+  let description = [{
+    Constructs a tensor constant.
+    shape The shape of the tensor constant.
+    data  A vector of literals for initializing the tensor constant. The size
+           of values must match the size of the shape.
+  }];
+
+  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+  let verifier = [{ return verifyOp(this); }];
+  let extraClassDeclaration = [{
+
+  }];
+  
+}
+
+// MaxPool
+def NGMaxPoolOp :
+    NG_OneResult_Op<"maxPool", [NoSideEffect, OpVersion0]>,
+    Arguments<(ins NG_TensorType:$arg, 
+               I64ArrayAttr     :$windowShape,
+               I64ArrayAttr     :$windowMovementStrides,
+               I64ArrayAttr     :$padBelow,
+               I64ArrayAttr     :$padAbove,
+               DefaultValuedAttr<PadTypeEnumAttr, "static_cast<int64_t>(MLIRPadType::EXPLICIT)"> :$padType,
+               DefaultValuedAttr<BoolAttr, "false"> :$ceilMode
+               )>
+{
+    let summary = "Batched max pooling operation, with optional padding and window stride.";
+    let description = [{
+      Constructs a batched max pooling operation.
+      
+      arg                   The output producing the input data batch tensor
+      windowShape           The window shape
+      windowMovementStrides The window movement strides
+      paddingBelow          The below-padding shape
+      paddingAbove          The above-padding shape
+      padType              Padding type to use for additional padded dimensions. Default is EXPLICT
+      ceilMode              Whether to use ceiling while computing output shape. Default is false
+    }];
+    
+    let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+    let verifier = [{ return verifyOp(this); }];
+    let builders = [
+      OpBuilder<
+      "Builder *builder, OperationState &tblgen_state, Type res, Value *arg," 
+       "ArrayAttr windowShape, ArrayAttr windowMovementStrides,"
+       "ArrayAttr padBelow, ArrayAttr padAbove, IntegerAttr padType", [{
+        tblgen_state.addOperands(arg);
+        tblgen_state.addAttribute("windowShape", windowShape);
+        tblgen_state.addAttribute("windowMovementStrides", windowMovementStrides);
+        tblgen_state.addAttribute("padBelow", padBelow);
+        tblgen_state.addAttribute("padAbove", padAbove);
+        tblgen_state.addAttribute("padType", padType);
+        tblgen_state.addTypes(res);
+      }]>,
+
+      OpBuilder<
+      "Builder *builder, OperationState &tblgen_state, Type res, Value *arg," 
+       "ArrayAttr windowShape, ArrayAttr windowMovementStrides,"
+       "ArrayAttr padBelow, ArrayAttr padAbove", [{
+        tblgen_state.addOperands(arg);
+        tblgen_state.addAttribute("windowShape", windowShape);
+        tblgen_state.addAttribute("windowMovementStrides", windowMovementStrides);
+        tblgen_state.addAttribute("padBelow", padBelow);
+        tblgen_state.addAttribute("padAbove", padAbove);
+        tblgen_state.addTypes(res);
+      }]>
+    ];
+
+    let extraClassDeclaration = [{
+      void setWindowShape(const ArrayAttr& arrayAttr)           { this->setAttr("windowShape", arrayAttr);          }
+      void setWindowMovementStrides(const ArrayAttr& arrayAttr) { this->setAttr("windowMovementStrides", arrayAttr);}
+      void setPadBelow(const ArrayAttr& arrayAttr)      { this->setAttr("padBelow", arrayAttr); }
+      void setPadAbove(const ArrayAttr& arrayAttr)      { this->setAttr("padAbove", arrayAttr); }    
+      void setPadType(const IntegerAttr& intAttr)       { this->setAttr("padType", intAttr);         }
+      void setCeilMode(const BoolAttr& boolAttr)        { this->setAttr("ceilMode", boolAttr);       }
+    }];
+}
+
+// MaxPool for back prop
+def NGMaxPoolBackPropOp :
+    NG_OneResult_Op<"maxPoolBackProp", [NoSideEffect, OpVersion0]>,
+    Arguments<(ins NG_TensorType :$argForward,
+               NG_TensorType     :$delta, 
+               NG_TensorType     :$resultForward,
+               I64ArrayAttr      :$windowShape,
+               I64ArrayAttr      :$windowMovementStrides,
+               I64ArrayAttr      :$padBelow,
+               I64ArrayAttr      :$padAbove
+               )>
+{
+    let summary = "Batched backprop max pooling operation, with optional padding and window stride.";
+    let description = [{
+      TBD
+    }];
+    
+    let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+    let verifier = [{ return verifyOp(this); }];
+    let builders = [
+      // Builder without resultForward
+      OpBuilder<
+      "Builder *builder, OperationState &tblgen_state, Type res, " 
+       "Value *argForward, Value *delta, "
+       "ArrayAttr windowShape, ArrayAttr windowMovementStrides, "
+       "ArrayAttr padBelow, ArrayAttr padAbove", [{
+        tblgen_state.addOperands(argForward);
+        tblgen_state.addOperands(delta);
+        tblgen_state.addOperands(nullptr);
+        tblgen_state.addAttribute("windowShape", windowShape);
+        tblgen_state.addAttribute("windowMovementStrides", windowMovementStrides);
+        tblgen_state.addAttribute("padBelow", padBelow);
+        tblgen_state.addAttribute("padAbove", padAbove);
+        tblgen_state.addTypes(res);
+      }]>
+    ];
+
+    let extraClassDeclaration = [{
+      void setWindowShape(const ArrayAttr& arrayAttr)     { this->setAttr("windowShape", arrayAttr);     }
+      void setWindowMovementStrides(const ArrayAttr& arrayAttr) { this->setAttr("windowMovementStrides", arrayAttr);}
+      void setPadBelow(const ArrayAttr& arrayAttr)      { this->setAttr("padBelow", arrayAttr); }
+      void setPadAbove(const ArrayAttr& arrayAttr)      { this->setAttr("padAbove", arrayAttr); }    
+    }];
+}
+
+// OneHot
+def NGOneHOtOp :
+    NG_OneResult_Op<"oneHot", [NoSideEffect, OpVersion0]>,
+    Arguments<(ins NG_TensorType :$arg,
                I64ArrayAttr      :$shape,
-               I64ArrayAttr      :%axisSet
-               )>
+               I64Attr           :$axis )>
 {
-    let summary = "Operation which "adds" axes to an input tensor, replicating elements from the
-                   input as needed along the new axes."
+    let summary = " One-hot operator.";
     let description = [{
-      // TBD
-    }]
-    
-    let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-    let verifier = [{ return verifyOp(this); }];
+      arg     A tensor of any shape and any non-floating point element type.
+      shape   The desired output shape, including the new one-hot axis.
+      axis    The index within the output shape of the new one-hot axis.
+    }];
+
     let extraClassDeclaration = [{
-      void setAxisSet(const ArrayAttr& attr)  { this->setAttr("axisSet", attr); }
-      void setShape(const ArrayAttr& attr)    { this->setAttr("shape", attr);   }
+      void setAxis(const Attribute& attr)  { this->setAttr("axis", attr); }
     }];
 }
 
+// Pad
+def NGPadOp : 
+    NG_OneResult_Op<"pad", [NoSideEffect, OpVersion0]>,
+    Arguments<(ins NG_TensorType:$arg,
+               NG_TensorType    :$padValue,
+               I64ArrayAttr     :$padBelow,
+               I64ArrayAttr     :$padAbove,
+               DefaultValuedAttr<PadModeEnumAttr, "static_cast<int64_t>(MLIRPadMode::CONSTANT)"> :$padMode)>
+{
+    let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+    let verifier = [{ return verifyOp(this); }];
+    let builders = [
+      // Builder without padMode
+      OpBuilder<
+      "Builder *builder, OperationState &tblgen_state, Type res, " 
+       "Value *arg, Value *padValue, "
+       "ArrayAttr padBelow, ArrayAttr padAbove", [{
+        tblgen_state.addOperands(arg);
+        tblgen_state.addOperands(padValue);
+        tblgen_state.addAttribute("padBelow", padBelow);
+        tblgen_state.addAttribute("padAbove", padAbove);
+        tblgen_state.addTypes(res);
+      }]>
+    ];
 
+    let extraClassDeclaration = [{
+      void setPadBelow(const ArrayAttr& arrayAttr) { this->setAttr("padBelow", arrayAttr); }
+      void setPadAbove(const ArrayAttr& arrayAttr) { this->setAttr("padAbove", arrayAttr); }
+      void setPadMode(const Attribute& attr)       { this->setAttr("padMode", attr);       }
+    }];
+  
+}
+    
+// ReplaceSlice
+def NGReplaceSlice : 
+    NG_OneResult_Op<"replaceSlice", [NoSideEffect, OpVersion0]>,
+    Arguments<(ins NG_TensorType:$arg0,
+               NG_TensorType    :$arg1,
+               I64ArrayAttr     :$lowerBounds,
+               I64ArrayAttr     :$upperBounds,
+               I64ArrayAttr     :$strides)>
+{
+    let summary = "Takes two input tensors of identical rank, with the second tensor no larger than"
+                  "the first in any dimension, and returns a copy of the first input tensor with"
+                  "the specified slice overwritten by the second input tensor.";
 
+    let description =[{
+      arg0         The tensor to overwrite into.
+      arg1         The tensor to write into arg0.
+      lowerBounds  The axiswise lower bounds of the slice (inclusive).
+      upperBounds  The axiswise upper bounds of the slice (exclusive).
+      strides      The slicing strides; for example, strides of {n,m} means to take
+                   every nth row and every mth column of arg0 as part of the
+                   slice to be replaced.
+    }];
+    let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+    let verifier = [{ return verifyOp(this); }];
+    let extraClassDeclaration = [{
+      void setLowerBounds(const ArrayAttr& arrayAttr) { this->setAttr("lowerBounds", arrayAttr); }
+      void setUpperBounds(const ArrayAttr& arrayAttr) { this->setAttr("upperBounds", arrayAttr); }
+      void setStrides(const ArrayAttr& arrayAttr)     { this->setAttr("strides", arrayAttr); }
+    }];
+}
+
+// slice
+def NGSlice : 
+    NG_OneResult_Op<"slice", [NoSideEffect, OpVersion0]>,
+    Arguments<(ins NG_TensorType:$arg,
+               I64ArrayAttr     :$lowerBounds,
+               I64ArrayAttr     :$upperBounds,
+               I64ArrayAttr     :$strides)>
+{
+    let summary = "Takes a slice of an input tensor, i.e., the sub-tensor that resides within a"
+                  "bounding box, optionally with stride.";
+                  
+
+    let description =[{
+      arg          The tensor to overwrite into.
+      lowerBounds  The axiswise lower bounds of the slice (inclusive).
+      upperBounds  The axiswise upper bounds of the slice (exclusive).
+      strides      The slicing strides; for example, strides of {n,m} means to take
+                   every nth row and every mth column of arg0 as part of the
+                   slice to be replaced.
+    }];
+    let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+    let verifier = [{ return verifyOp(this); }];
+    let extraClassDeclaration = [{
+      void setLowerBounds(const ArrayAttr& arrayAttr) { this->setAttr("lowerBounds", arrayAttr); }
+      void setUpperBounds(const ArrayAttr& arrayAttr) { this->setAttr("upperBounds", arrayAttr); }
+      void setStrides(const ArrayAttr& arrayAttr)     { this->setAttr("strides", arrayAttr); }
+    }];
+}
+
+// reshape
+def NGReshape : 
+    NG_OneResult_Op<"reshape", [NoSideEffect, OpVersion0]>,
+    Arguments<(ins NG_TensorType:$arg,
+               I64ArrayAttr     :$axisOrder,
+               I64ArrayAttr     :$shape)>
+{
+    let summary = "Converts an input tensor into a new shape with the same number of elements";
+
+    let description =[{
+      arg         The tensor to be reshaped.
+      inputOrder  The order in which to iterate over input axes. This must be a
+                  permutation of the sequence 0 ..  n-1 where n is the rank of the input tensor.
+      shape       The output shape. If the input shape is a_0 .. a_(k-1) then
+                  the output shape must be of the form b_0 .. b_(j-1) where
+                  Pi(a_i) = Pi(b_i)
+    }];
+    let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+    let verifier = [{ return verifyOp(this); }];
+    let extraClassDeclaration = [{
+      void setAxisOrder(const ArrayAttr& arrayAttr) { this->setAttr("axisOrder", arrayAttr); }
+      void setShape(const ArrayAttr& arrayAttr)     { this->setAttr("shape", arrayAttr); }
+    }];
+}
+
+// softmax
+def NGSoftMax : 
+    NG_OneResult_Op<"softmax", [NoSideEffect, OpVersion0]>,
+    Arguments<(ins NG_TensorType :$arg,
+               I64ArrayAttr  :$axes)>
+{  
+    let summary = "Softmax operation.";
+    let description = [{
+        arg   Node that produces the first input tensor.
+        axes  The axis positions (0-based) on which to calculate the softmax.
+    }];
+
+    let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+    let verifier = [{ return verifyOp(this); }];
+    let extraClassDeclaration = [{
+      void setAxes(const ArrayAttr& arrayAttr) { this->setAttr("axes", arrayAttr); }
+    }];
+}
+
+// topk
+def NGTopK : 
+    NG_OneResult_Op<"topk", [NoSideEffect, OpVersion0]>,
+    Arguments<(ins NG_TensorType :$arg,
+               NG_TensorType :$k,
+               I64Attr       :$axis,
+               TypeAttr      :$indexType,
+               DefaultValuedAttr<BoolAttr, "true"> :$computeMax,
+               DefaultValuedAttr<SortTypeEnumAttr, "static_cast<int64_t>(MLIRSortType::VALUES)"> :$sortType)>
+{  
+    let summary = "Softmax operation.";
+    let description = [{
+        arg             The input tensor
+        k               Number of top indices to compute. Compute all indices if k = 0
+        axis            The axis along which to compute top k indices
+        indexType       Indices type. Currently, only int64 or int32 are supported
+        computeMax      Compute top k max or top k min?
+        sortType        SortType for sorting results, default - SORT_VALUES
+    }];
+
+    let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+    let verifier = [{ return verifyOp(this); }];
+    let extraClassDeclaration = [{
+      void setK(const Attribute& attr)          { this->setAttr("k", attr); }
+      void setAxis(const Attribute& attr)       { this->setAttr("axis", attr); }
+      void setIndexType(const Attribute& attr)  { this->setAttr("indexType", attr); }
+      void setComputeMax(const Attribute& attr) { this->setAttr("computeMax", attr); }
+      void setSortType(const Attribute& attr)   { this->setAttr("sortType", attr); }
+    }];
+}

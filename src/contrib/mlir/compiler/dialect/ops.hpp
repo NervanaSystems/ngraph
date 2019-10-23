@@ -26,7 +26,6 @@
 #include "mlir/IR/StandardTypes.h"
 #include "mlir/Support/STLExtras.h"
 
-
 // attributes
 // Currently table-gen dictates that enum attributes are in global namespace
 #include "ops_attributes.h.inc"
@@ -40,7 +39,6 @@ namespace mlir
 #define GET_OP_CLASSES
 #include "ops.h.inc"
 #undef GET_OP_CLASSES
-
 }
 
 void setBufferId(mlir::Operation* op, mlir::IntegerAttr attr);
