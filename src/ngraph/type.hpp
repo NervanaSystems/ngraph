@@ -17,6 +17,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 #include <utility>
 
 namespace ngraph
@@ -34,6 +35,12 @@ namespace ngraph
         uint64_t version;
 
         bool is_castable(const DiscreteTypeInfo& target_type) const { return this == &target_type; }
+        bool operator<(const DiscreteTypeInfo& b) const
+        {
+            std::string sa(name);
+            std::string sb(b.name);
+            return sa < sb || (sa == sb && version < b.version);
+        }
     };
 
     /// \brief Tests if value is a pointer/shared_ptr that can be statically cast to a

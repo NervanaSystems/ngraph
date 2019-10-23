@@ -50,8 +50,6 @@ namespace ngraph
     template <typename NodeType>
     class Output;
 
-    class PartialShape;
-    class Shape;
     class NodeVisitor;
     class Variant;
     class Node;

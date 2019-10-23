@@ -78,6 +78,8 @@ set (SRC
     distributed.cpp
     distributed.hpp
     except.hpp
+    factory.cpp
+    factory.hpp
     file_util.cpp
     file_util.hpp
     function.cpp

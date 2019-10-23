@@ -37,6 +37,7 @@ namespace ngraph
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
             reduction::Type get_reduce_type() const;
             void set_reduce_type(reduction::Type reduce_type);
+            bool visit_attributes(NodeVisitor& visitor) override;
 
         private:
             reduction::Type m_reduce_type{reduction::Type::SUM};

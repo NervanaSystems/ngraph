@@ -209,8 +209,8 @@ TEST(benchmark, serialize)
     timer.stop();
     cout << "deserialize took " << timer.get_milliseconds() << "ms\n";
 
-    ngraph::set_serialize_output_shapes(true);
     ofstream out("test.json");
+    WithSerializeOutputShapesEnabled serialize_outputs(true);
     out << serialize(f, 4);
 }
 

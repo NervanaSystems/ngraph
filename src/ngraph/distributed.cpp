@@ -22,6 +22,41 @@
 
 using namespace ngraph;
 
+void reduction::ReductionStringConverter::operator=(const std::string& s) const
+{
+    if (s == "SUM")
+    {
+        m_value = reduction::Type::SUM;
+    }
+    else if (s == "PROD")
+    {
+        m_value = reduction::Type::PROD;
+    }
+    else if (s == "MIN")
+    {
+        m_value = reduction::Type::MIN;
+    }
+    else if (s == "MAX")
+    {
+        m_value = reduction::Type::MAX;
+    }
+    else
+    {
+        NGRAPH_DEBUG << "Invalid reduction type: " << s;
+    }
+}
+
+reduction::ReductionStringConverter::operator std::string() const
+{
+    switch (m_value)
+    {
+    case reduction::Type::SUM: return "SUM";
+    case reduction::Type::PROD: return "PROD";
+    case reduction::Type::MIN: return "MIN";
+    case reduction::Type::MAX: return "MAX";
+    }
+}
+
 std::ostream& reduction::operator<<(std::ostream& out, const reduction::Type& obj)
 {
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
