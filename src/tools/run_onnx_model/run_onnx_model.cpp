@@ -51,6 +51,20 @@ OPTIONS
 )###";
 }
 
+char* load_data_frome_file(string file_name)
+{
+     
+    ifstream file(file_name);  
+    file.seekg( 0, ios::end );  
+    size_t len = file.tellg();  
+    char *data = new char[len];  
+    file.seekg(0, ios::beg);   
+    file.read(data, len);  
+    file.close();  
+    return data;
+
+}
+
 vector<shared_ptr<runtime::Tensor>> load_inputs(vector<string> input_paths,
                                                 vector<shared_ptr<runtime::Tensor>> inputs)
 {
@@ -59,10 +73,11 @@ vector<shared_ptr<runtime::Tensor>> load_inputs(vector<string> input_paths,
     for (int i = 0; i < input_paths.size(); i++)
     {
         const string input_path = input_paths.at(i);
-        std::vector<float> data = ngraph::file_util::read_binary_file<float>(input_path);
-        size_t data_size = data.size() * sizeof(float);
-        inputs.at(i)->write(data.data(), data_size);
+        size_t data_size =shape_size(inputs.at(i)->get_shape())* inputs.at(i)->get_element_type().size();
+        char* data = load_data_frome_file(input_paths.at(i));
+        inputs.at(i)->write(data, data_size);
         inputs_with_values.push_back(inputs.at(i));
+        delete data;
     }
 
     return inputs_with_values;
@@ -75,15 +90,15 @@ vector<shared_ptr<runtime::Tensor>> random_inputs(vector<shared_ptr<runtime::Ten
 
     for (int i = 0; i < inputs.size(); i++)
     {
-        auto tensor_size = shape_size(inputs.at(i)->get_shape());
-        vector<float> data(tensor_size, 0);
-        for (int i = 0; i < tensor_size; i++)
+        size_t data_size =shape_size(inputs.at(i)->get_shape())* inputs.at(i)->get_element_type().size();
+        char* data = new char[data_size];
+        for (int i = 0; i < data_size; i++)
         {
             data[i] = distribution(random_generator);
         }
-        size_t data_size = data.size() * sizeof(float);
-        inputs.at(i)->write(data.data(), data_size);
+        inputs.at(i)->write(data, data_size);
         inputs_with_values.push_back(inputs.at(i));
+        delete data;
     }
     return inputs_with_values;
 }
