@@ -327,8 +327,8 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"AvgPoolBackprop", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 AvgPoolBackprop() = default;
-                AvgPoolBackprop(const Shape& forward_arg_shape,
-                                const Output<Node>& delta,
+                AvgPoolBackprop(const Output<Node>& delta,
+                                const Output<Node>& forward_arg_shape,
                                 const Strides& strides,
                                 const Shape& pads_begin,
                                 const Shape& pads_end,
@@ -341,8 +341,7 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
-                const Shape& get_forward_arg_shape() const;
-                void set_forward_arg_shape(const Shape& forward_arg_shape);
+                const Shape get_forward_arg_shape() const;
                 const Shape& get_kernel() const;
                 void set_kernel(const Shape& kernel);
                 const Strides& get_strides() const;
@@ -355,7 +354,6 @@ namespace ngraph
                 void set_exclude_pad(bool exclude_pad);
 
             protected:
-                Shape m_forward_arg_shape;
                 Shape m_kernel;
                 Strides m_strides;
                 Shape m_pads_begin;
