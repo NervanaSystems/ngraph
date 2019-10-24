@@ -71,6 +71,7 @@ set(SRC
     op.cpp
     opset_pass/broadcast_opset_pass.cpp
     opset_pass/convolution_opset_pass.cpp
+    opset_pass/generate_mask_opset_pass.cpp
     opset_pass/gather_opset_pass.cpp
     opset_pass/pad_opset_pass.cpp
     opset_pass/poolings_opset_pass.cpp
@@ -79,7 +80,6 @@ set(SRC
     opset_pass/softmax_opset_pass.cpp
     opset_pass/sum_opset_pass.cpp
     opset_pass/topk_opset_pass.cpp
-    opset_pass/avg_pool_opset_pass.cpp
     partial_shape.cpp
     pass.cpp
     pass_liveness.cpp
@@ -131,6 +131,7 @@ set(SRC
     type_prop/layer_norm.cpp
     type_prop/lrn.cpp
     type_prop/lstm_cell.cpp
+    type_prop/lstm_sequence.cpp
     type_prop/matmul.cpp
     type_prop/max_pool.cpp
     type_prop/mvn.cpp
