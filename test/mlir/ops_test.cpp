@@ -22,8 +22,8 @@
 #include "contrib/mlir/compiler/dialect/ops.hpp"
 #include "contrib/mlir/compiler/dialect/type.hpp"
 #include "contrib/mlir/compiler/tools.hpp"
-#include "mlir/IR/Module.h"
 #include "mlir/IR/Builders.h"
+#include "mlir/IR/Module.h"
 #include "mlir/IR/OperationSupport.h"
 #include "mlir/IR/StandardTypes.h"
 
@@ -41,7 +41,7 @@ void initNgDialect()
 
 OpBuilder createBuilder(MLIRContext* context)
 {
-    auto module =   ModuleOp::create(UnknownLoc::get(context));
+    auto module = ModuleOp::create(UnknownLoc::get(context));
     auto funcType = FunctionType::get({}, {}, context);
     auto function = FuncOp::create(UnknownLoc::get(context), "main", funcType);
     function.addEntryBlock();
@@ -107,40 +107,45 @@ TEST(MLIR, ops_with_enums)
     initNgDialect();
     MLIRContext context;
 
-    
-    auto resultType = mlir::NGTensorType::get(&context, mlir::NGFloatType::getF16(&context), {2, 2});
+    auto resultType =
+        mlir::NGTensorType::get(&context, mlir::NGFloatType::getF16(&context), {2, 2});
     auto builder = createBuilder(&context);
 
-    auto def = builder.create<NGConstantOp>(UnknownLoc::get(&context), resultType, builder.getI64ArrayAttr({2, 3, 4}), builder.getF32ArrayAttr({1.0, 2.3, 5.6}));
-    auto operation = builder.create<NGAvgPoolOp>(
-                        UnknownLoc::get(&context),
-                        resultType,
-                        def.getResult(), //arg  
-                        builder.getI64ArrayAttr({2, 3, 4}), // windowShape
-                        builder.getI64ArrayAttr({2, 3, 4}), // windowMovementStrides
-                        builder.getI64ArrayAttr({0, 0, 0}), // padBelow
-                        builder.getI64ArrayAttr({0, 0, 0}), // padAbove
-                        builder.getBoolAttr(false),         // ceilMode
-                        builder.getI64IntegerAttr(static_cast<int64_t>(MLIRPadType::SAME_LOWER))
-                        ).getOperation();
+    auto def = builder.create<NGConstantOp>(UnknownLoc::get(&context),
+                                            resultType,
+                                            builder.getI64ArrayAttr({2, 3, 4}),
+                                            builder.getF32ArrayAttr({1.0, 2.3, 5.6}));
+    auto operation =
+        builder
+            .create<NGAvgPoolOp>(
+                UnknownLoc::get(&context),
+                resultType,
+                def.getResult(),                    // arg
+                builder.getI64ArrayAttr({2, 3, 4}), // windowShape
+                builder.getI64ArrayAttr({2, 3, 4}), // windowMovementStrides
+                builder.getI64ArrayAttr({0, 0, 0}), // padBelow
+                builder.getI64ArrayAttr({0, 0, 0}), // padAbove
+                builder.getBoolAttr(false),         // ceilMode
+                builder.getI64IntegerAttr(static_cast<int64_t>(MLIRPadType::SAME_LOWER)))
+            .getOperation();
 
     auto avgPool = cast<NGAvgPoolOp>(operation);
     auto padType = static_cast<MLIRPadType>(avgPool.padType().getSExtValue());
     EXPECT_TRUE(padType == MLIRPadType::SAME_LOWER);
 
-    operation = builder.create<NGAvgPoolOp>(
-                    UnknownLoc::get(&context),
-                    resultType,
-                    def.getResult(), //arg  
-                    builder.getI64ArrayAttr({2, 3, 4}), // windowShape
-                    builder.getI64ArrayAttr({2, 3, 4}), // windowMovementStrides
-                    builder.getI64ArrayAttr({0, 0, 0}), // padBelow
-                    builder.getI64ArrayAttr({0, 0, 0}), // padAbove
-                    builder.getBoolAttr(false)
-                    ).getOperation();
+    operation =
+        builder
+            .create<NGAvgPoolOp>(UnknownLoc::get(&context),
+                                 resultType,
+                                 def.getResult(),                    // arg
+                                 builder.getI64ArrayAttr({2, 3, 4}), // windowShape
+                                 builder.getI64ArrayAttr({2, 3, 4}), // windowMovementStrides
+                                 builder.getI64ArrayAttr({0, 0, 0}), // padBelow
+                                 builder.getI64ArrayAttr({0, 0, 0}), // padAbove
+                                 builder.getBoolAttr(false))
+            .getOperation();
 
     avgPool = cast<NGAvgPoolOp>(operation);
     padType = static_cast<MLIRPadType>(avgPool.padType().getSExtValue());
     EXPECT_TRUE(padType == MLIRPadType::EXPLICIT);
-
 }
