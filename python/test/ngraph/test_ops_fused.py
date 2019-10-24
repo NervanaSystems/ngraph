@@ -457,9 +457,9 @@ def test_rnn_cell_operator():
     B_shape = [2 * hidden_size]
 
     parameter_X = ng.parameter(X_shape, name='X', dtype=np.float32)
+    parameter_H_t = ng.parameter(H_t_shape, name='H_t', dtype=np.float32)
     parameter_W = ng.parameter(W_shape, name='W', dtype=np.float32)
     parameter_R = ng.parameter(R_shape, name='R', dtype=np.float32)
-    parameter_H_t = ng.parameter(H_t_shape, name='H_t', dtype=np.float32)
     parameter_B = ng.parameter(B_shape, name='B', dtype=np.float32)
 
     X_value = np.array([0.3432185, 0.612268, 0.20272376,
@@ -485,23 +485,23 @@ def test_rnn_cell_operator():
     clip = 2.88
 
     model = ng.rnn_cell(parameter_X,
+                        parameter_H_t,
                         parameter_W,
                         parameter_R,
-                        parameter_H_t,
-                        hidden_size,
                         parameter_B,
+                        hidden_size,
                         activations,
                         activation_alpha,
                         activation_beta,
                         clip)
     computation = runtime.computation(model,
                                       parameter_X,
+                                      parameter_H_t,
                                       parameter_W,
                                       parameter_R,
-                                      parameter_H_t,
                                       parameter_B)
 
-    result = computation(X_value, W_value, R_value, H_t_value, B_value)
+    result = computation(X_value, H_t_value, W_value, R_value, B_value)
     expected = np.array([0.94126844, 0.9036043, 0.841243,
                          0.9468489, 0.934215, 0.873708],
                         dtype=np.float32).reshape(batch_size, hidden_size)
