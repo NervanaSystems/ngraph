@@ -40,6 +40,13 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
+// Some PlaidML devices aren't so precise, so we increase allowable tolerance
+#ifdef PlaidML_FLOAT_TOLERANCE_BITS
+#define TOLERANCE_BITS PlaidML_FLOAT_TOLERANCE_BITS
+#else
+#define TOLERANCE_BITS DEFAULT_FLOAT_TOLERANCE_BITS
+#endif
+
 NGRAPH_TEST(${BACKEND_NAME}, elu)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{3, 2});
@@ -1406,7 +1413,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_zero_bias_peepholes)
     ct_test_case.add_expected_output<float>(
         Shape{batch_size, hidden_size},
         {1.4444952f, 0.9635685f, 1.2875274f, 0.8053419f, 0.7184521f, 0.95803297f});
-    ct_test_case.run();
+    ct_test_case.run(TOLERANCE_BITS);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_zero_bias_peepholes_constant)
@@ -1473,7 +1480,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_zero_bias_peepholes_constant)
     ct_test_case.add_expected_output<float>(
         Shape{batch_size, hidden_size},
         {1.4444952f, 0.9635685f, 1.2875274f, 0.8053419f, 0.7184521f, 0.95803297f});
-    ct_test_case.run();
+    ct_test_case.run(TOLERANCE_BITS);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_fixed_no_bias_no_peepholes)
@@ -1522,7 +1529,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_fixed_no_bias_no_peepholes)
     ct_test_case.add_expected_output<float>(
         Shape{batch_size, hidden_size},
         {1.0664454f, 1.0664454f, 1.0664454f, 1.0664454f, 1.0664454f, 1.0664454f});
-    ct_test_case.run();
+    ct_test_case.run(TOLERANCE_BITS);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_bias_peepholes)
