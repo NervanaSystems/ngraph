@@ -44,7 +44,6 @@ void op::Concat::validate_and_infer_types()
     element::Type inputs_et{element::dynamic};
     Dimension concatenation_axis_output_dim{0};
 
-    auto concat_axis = m_axis;
     for (uint64_t i = 0; i < get_input_size(); i++)
     {
         NODE_VALIDATION_CHECK(this,

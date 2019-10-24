@@ -62,7 +62,9 @@ namespace ngraph
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
+            /// \ brief m_axis stores default value for all iterations
             int64_t m_axis;
+            /// \brief m_concat_axis stores m_axis plus the number of rank for each iteration
             int64_t m_concat_axis = -1;
         };
     }
