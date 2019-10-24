@@ -82,14 +82,13 @@ namespace ngraph
                                     filters, filters_lower_bounds, filters_upper_bounds);
 
                                 convolution_nodes.push_back(
-                                    std::make_shared<ngraph::op::Convolution>(sliced_data,
-                                                                              sliced_filters,
-                                                                              strides,
-                                                                              dilations,
-                                                                              padding_below,
-                                                                              padding_above,
-                                                                              Strides{},
-                                                                              auto_pad));
+                                    std::make_shared<ngraph::op::v1::Convolution>(sliced_data,
+                                                                                  sliced_filters,
+                                                                                  strides,
+                                                                                  padding_below,
+                                                                                  padding_above,
+                                                                                  dilations,
+                                                                                  auto_pad));
                             }
                             std::size_t concatenation_axis = 1;
                             return std::make_shared<ngraph::op::Concat>(convolution_nodes,
@@ -97,14 +96,13 @@ namespace ngraph
                         }
                         else
                         {
-                            return std::make_shared<ngraph::op::Convolution>(data,
-                                                                             filters,
-                                                                             strides,
-                                                                             dilations,
-                                                                             padding_below,
-                                                                             padding_above,
-                                                                             Strides{},
-                                                                             auto_pad);
+                            return std::make_shared<ngraph::op::v1::Convolution>(data,
+                                                                                 filters,
+                                                                                 strides,
+                                                                                 padding_below,
+                                                                                 padding_above,
+                                                                                 dilations,
+                                                                                 auto_pad);
                         }
                     }
 

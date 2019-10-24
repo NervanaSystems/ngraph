@@ -94,12 +94,15 @@ model_lstm_mixed_seq_reverse
 model_reverse_sequence_0_batch_1
 model_reverse_sequence_1_batch_0
 
+# unsupported broadcast mode (pdpd)
+fake_quantize_pdpd
+auto_bcast_binary_elementwise_pdpd
+auto_bcast_binary_elementwise_pdpd_dynamic
+
 # result mismatch
 model_dequantize_linear_scalar_zero_scale_int8
 model_softmax
 avg_pool_3d_uneven_strided_padded
-auto_bcast_binary_elementwise_pdpd
-auto_bcast_binary_elementwise_pdpd_dynamic
 rnn_cell_activation_function
 gru_cell_bias_clip
 gru_cell_linear_before_reset
