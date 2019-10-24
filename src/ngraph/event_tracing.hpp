@@ -30,6 +30,8 @@
 #else
 #include <unistd.h>
 #endif
+#include <functional>
+#include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
 {
@@ -90,14 +92,30 @@ namespace ngraph
             m_stop = std::chrono::high_resolution_clock::now();
         }
 
+        const std::string& get_name() const { return m_name; }
+        const std::string& get_category() const { return m_category; }
+        const std::string& get_agrs() const { return m_args; }
+        const std::chrono::time_point<std::chrono::high_resolution_clock>& get_start() const
+        {
+            return m_start;
+        }
+        const std::chrono::time_point<std::chrono::high_resolution_clock>& get_stop() const
+        {
+            return m_stop;
+        }
+
+        static void register_event_writer(std::function<void(const Event& event)> callback)
+        {
+            std::lock_guard<std::mutex> lock(s_file_mutex);
+
+            s_event_writer_registered = true;
+            s_event_writer = callback;
+        }
         static void write_trace(const Event& event);
         static bool is_tracing_enabled() { return s_tracing_enabled; }
         static void enable_event_tracing();
         static void disable_event_tracing();
         std::string to_json() const;
-
-        Event(const Event&) = delete;
-        Event& operator=(Event const&) = delete;
 
     private:
         int m_pid;
@@ -108,9 +126,11 @@ namespace ngraph
         std::string m_category;
         std::string m_args;
 
-        static std::mutex s_file_mutex;
-        static std::ofstream s_event_log;
-        static bool s_tracing_enabled;
+        NGRAPH_API static std::mutex s_file_mutex;
+        NGRAPH_API static std::ofstream s_event_log;
+        NGRAPH_API static bool s_tracing_enabled;
+        NGRAPH_API static std::function<void(const Event& event)> s_event_writer;
+        NGRAPH_API static bool s_event_writer_registered;
     };
 
 } // namespace ngraph

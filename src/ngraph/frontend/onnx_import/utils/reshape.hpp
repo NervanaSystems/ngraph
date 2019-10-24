@@ -23,7 +23,6 @@
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
@@ -33,7 +32,7 @@ namespace ngraph
         {
             /// \brief      Infer `output_shape` dimension values.
             ///
-            /// \par Inferention rules
+            /// \par Inference rules
             ///     \li         The input_shape may consist at most on -1 value. In this case the
             ///                 value is inferred from the size of the tensor and the remaining
             ///                 dimensions.
@@ -44,7 +43,7 @@ namespace ngraph
             /// \param[in]  input_shape   The input node shape.
             /// \param[in]  output_shape  The requested output shape for the input node data.
             ///
-            /// \return     A vector containig new, valid node shape.
+            /// \return     A vector containing new, valid node shape.
             ///
             std::vector<std::size_t> infer_dimensions(const std::string& node_name,
                                                       const std::vector<std::size_t>& input_shape,
