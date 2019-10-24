@@ -440,3 +440,103 @@ TEST(serialize, opset1_pad)
     EXPECT_EQ(g_pad->get_version(), 1);
     EXPECT_EQ(dynamic_cast<const op::v1::Pad*>(g_pad.get())->get_pad_mode(), pad_mode);
 }
+
+enum class TuringModel
+{
+    XL400,
+    XL1200
+};
+
+template <>
+std::string ngraph::as_type<std::string>(TuringModel value)
+{
+    switch (value)
+    {
+    case TuringModel::XL400: return "XL400";
+    case TuringModel::XL1200: return "XL1200";
+    }
+}
+
+template <>
+TuringModel ngraph::as_type<TuringModel>(const std::string& value)
+{
+    TuringModel result = TuringModel::XL400;
+    if (value == "XL400")
+    {
+        result = TuringModel::XL400;
+    }
+    else if (value == "XL1200")
+    {
+        result = TuringModel::XL1200;
+    }
+    else
+    {
+        NGRAPH_DEBUG << "Invalid TuringModel: " << value;
+    }
+    return result;
+}
+
+// Given a Turing machine program and data, return scalar 1 if the program would
+// complete, 1 if it would not.
+class Oracle : public op::Op
+{
+public:
+    Oracle(const Output<Node>& program,
+           const Output<Node>& data,
+           TuringModel turing_model,
+           uint64_t model_version,
+           const std::string& serial_number)
+        : Op({program, data})
+        , m_turing_model(turing_model)
+        , m_model_version(model_version)
+        , m_serial_number(serial_number)
+    {
+    }
+
+    static constexpr NodeTypeInfo type_info{"Oracle", 0};
+    const NodeTypeInfo& get_type_info() const override { return type_info; }
+    Oracle() = default;
+
+    TuringModel get_turing_model() const { return m_turing_model; }
+    uint64_t get_model_version() const { return m_model_version; }
+    const std::string& get_serial_number() const { return m_serial_number; }
+    std::shared_ptr<Node> copy_with_new_args(const NodeVector& args) const override
+    {
+        return std::make_shared<Oracle>(
+            args[0], args[1], m_turing_model, m_model_version, m_serial_number);
+    }
+
+    void validate_and_infer_types() override { set_output_type(0, element::i64, {}); }
+    bool visit_attributes(AttributeVisitor& visitor) override
+    {
+        visitor.on_attribute("turing_model", StringAdapter<TuringModel>(m_turing_model));
+        visitor.on_attribute("model_version", m_model_version);
+        visitor.on_attribute("serial_number", m_serial_number);
+        return true;
+    }
+
+protected:
+    TuringModel m_turing_model;
+    uint64_t m_model_version;
+    std::string m_serial_number;
+};
+
+constexpr NodeTypeInfo Oracle::type_info;
+
+TEST(serialize, user_op)
+{
+    FactoryRegistry<Node>::get()->register_factory<Oracle>();
+    auto program = make_shared<op::Parameter>(element::i32, Shape{200});
+    auto data = make_shared<op::Parameter>(element::i32, Shape{200});
+    auto oracle = make_shared<Oracle>(program, data, TuringModel::XL1200, 2, "12AU7");
+    auto result = make_shared<op::Result>(oracle);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{program, data});
+    string s = serialize(f);
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_oracle = as_type_ptr<Oracle>(g_result->input_value(0).get_node_shared_ptr());
+
+    EXPECT_EQ(g_oracle->get_turing_model(), oracle->get_turing_model());
+    EXPECT_EQ(g_oracle->get_model_version(), oracle->get_model_version());
+    EXPECT_EQ(g_oracle->get_serial_number(), oracle->get_serial_number());
+}
