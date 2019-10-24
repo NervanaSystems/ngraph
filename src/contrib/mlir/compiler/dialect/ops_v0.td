@@ -388,10 +388,6 @@ def NGConstantOp :
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
   let verifier = [{ return verifyOp(this); }];
-  let extraClassDeclaration = [{
-
-  }];
-  
 }
 
 // MaxPool
@@ -415,7 +411,7 @@ def NGMaxPoolOp :
       windowMovementStrides The window movement strides
       paddingBelow          The below-padding shape
       paddingAbove          The above-padding shape
-      padType              Padding type to use for additional padded dimensions. Default is EXPLICT
+      padType               Padding type to use for additional padded dimensions. Default is EXPLICT
       ceilMode              Whether to use ceiling while computing output shape. Default is false
     }];
     
@@ -597,7 +593,6 @@ def NGSlice :
     let summary = "Takes a slice of an input tensor, i.e., the sub-tensor that resides within a"
                   "bounding box, optionally with stride.";
                   
-
     let description =[{
       arg          The tensor to overwrite into.
       lowerBounds  The axiswise lower bounds of the slice (inclusive).

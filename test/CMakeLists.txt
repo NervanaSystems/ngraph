@@ -169,7 +169,6 @@ set(SRC
     type_prop/unsqueeze.cpp
     type_prop_benchmark.cpp
     type_prop_layers.cpp
-    mlir/ops_test.cpp
     util.cpp
     zero_dim_tensor_elimination.cpp
 )
@@ -329,6 +328,7 @@ set(MULTI_TEST_SRC
 
 if (NGRAPH_MLIR_ENABLE)
     list(APPEND MULTI_TEST_SRC backend/mlir.in.cpp)
+    list(APPEND SRC mlir/ops_test.cpp)
 endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)

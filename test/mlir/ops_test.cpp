@@ -59,18 +59,6 @@ TEST(MLIR, op_version_interface)
 
     EXPECT_TRUE(llvm::dyn_cast<OpVersion0>(operation) != nullptr);
     EXPECT_TRUE(llvm::dyn_cast<OpVersion1>(operation) == nullptr);
-
-    operation = Operation::create(mlir::UnknownLoc::get(&context),
-                                  OperationName("ng.gather.v1", &context),
-                                  resultTypes,
-                                  llvm::None,
-                                  llvm::None,
-                                  llvm::None,
-                                  0,
-                                  false);
-
-    EXPECT_TRUE(llvm::dyn_cast<OpVersion1>(operation) != nullptr);
-    EXPECT_TRUE(llvm::dyn_cast<OpVersion0>(operation) == nullptr);
 }
 
 TEST(MLIR, fused_ops_interface)
