@@ -52,7 +52,7 @@ def PadTypeEnumAttr : I32EnumAttr<"MLIRPadType", "Padding Type used for Convolut
 
 // Modes for the `Pad` operator
 def PadModeConstant : I32EnumAttrCase<"CONSTANT",  0> ;
-def PadModeEdge      I32EnumAttrCase<"EDGE",       1> ;
+def PadModeEdge     : I32EnumAttrCase<"EDGE",      1> ;
 def PadModeReflect  : I32EnumAttrCase<"REFLECT",   2> ;
 def PadModeSymmetric: I32EnumAttrCase<"SYMMETRIC", 3> ;
 
