@@ -131,7 +131,7 @@ private:
 
 public:
     static std::shared_ptr<ov_runtime::Backend> create(std::string device,
-                                                     bool must_support_dynamic = false)
+                                                       bool must_support_dynamic = false)
     {
         return std::shared_ptr<Backend>(new Backend(device));
     }
@@ -141,7 +141,8 @@ public:
     {
     }
 
-    std::shared_ptr<ov_runtime::Tensor> create_tensor(ngraph::element::Type type, ngraph::Shape shape)
+    std::shared_ptr<ov_runtime::Tensor> create_tensor(ngraph::element::Type type,
+                                                      ngraph::Shape shape)
     {
         return std::shared_ptr<ov_runtime::Tensor>(new ov_runtime::Tensor(type, shape));
     }
@@ -169,7 +170,7 @@ public:
     }
 
     std::shared_ptr<ov_runtime::Tensor> create_dynamic_tensor(ngraph::element::Type type,
-                                                            ngraph::PartialShape shape)
+                                                              ngraph::PartialShape shape)
     {
         return std::shared_ptr<ov_runtime::Tensor>(new ov_runtime::Tensor(type, shape));
     }
