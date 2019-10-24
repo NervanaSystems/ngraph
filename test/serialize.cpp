@@ -447,33 +447,15 @@ enum class TuringModel
     XL1200
 };
 
-template <>
-std::string ngraph::as_type<std::string>(TuringModel value)
+namespace ngraph
 {
-    switch (value)
+    template <>
+    EnumNames<TuringModel>* EnumNames<TuringModel>::get()
     {
-    case TuringModel::XL400: return "XL400";
-    case TuringModel::XL1200: return "XL1200";
+        static auto enum_names = new EnumNames<TuringModel>(
+            "TuringModel", {{"XL400", TuringModel::XL400}, {"XL1200", TuringModel::XL1200}});
+        return enum_names;
     }
-}
-
-template <>
-TuringModel ngraph::as_type<TuringModel>(const std::string& value)
-{
-    TuringModel result = TuringModel::XL400;
-    if (value == "XL400")
-    {
-        result = TuringModel::XL400;
-    }
-    else if (value == "XL1200")
-    {
-        result = TuringModel::XL1200;
-    }
-    else
-    {
-        NGRAPH_DEBUG << "Invalid TuringModel: " << value;
-    }
-    return result;
 }
 
 // Given a Turing machine program and data, return scalar 1 if the program would

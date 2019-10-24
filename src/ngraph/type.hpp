@@ -20,6 +20,8 @@
 #include <string>
 #include <utility>
 
+#include "ngraph/check.hpp"
+
 namespace ngraph
 {
     /// Supports three functions, is_type<Type>, as_type<Type>, and as_type_ptr<Type> for type-safe
@@ -79,13 +81,60 @@ namespace ngraph
                                     : std::shared_ptr<Type>();
     }
 
+    template <typename EnumType>
+    class EnumNames
+    {
+    public:
+        static EnumType as_type(const std::string& name)
+        {
+            for (auto p : get()->m_string_enums)
+            {
+                if (p.first == name)
+                {
+                    return p.second;
+                }
+            }
+            NGRAPH_CHECK(false, "\"", name, "\"", " is not a member of enum ", get()->m_enum_name);
+        }
+
+        static std::string as_type(EnumType e)
+        {
+            for (auto p : get()->m_string_enums)
+            {
+                if (p.second == e)
+                {
+                    return p.first;
+                }
+            }
+            NGRAPH_CHECK(false, " invalid member of enum ", get()->m_enum_name);
+        }
+
+    private:
+        EnumNames(const std::string& enum_name,
+                  const std::vector<std::pair<std::string, EnumType>> string_enums)
+            : m_enum_name(enum_name)
+            , m_string_enums(string_enums)
+        {
+        }
+        static EnumNames<EnumType>* get();
+
+        const std::string m_enum_name;
+        std::vector<std::pair<std::string, EnumType>> m_string_enums;
+    };
+
     template <typename Type, typename Value>
     typename std::enable_if<std::is_convertible<Value, std::string>::value, Type>::type
-        as_type(const Value& value);
+        as_type(const Value& value)
+    {
+        return EnumNames<Type>::as_type(value);
+    }
 
     template <typename Type, typename Value>
     typename std::enable_if<std::is_convertible<Type, std::string>::value, Type>::type
-        as_type(Value value);
+        as_type(Value value)
+    {
+        return EnumNames<Value>::as_type(value);
+    }
 
     /// Adapts references to a value to a reference to a string
     template <typename Type>

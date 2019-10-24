@@ -22,43 +22,18 @@
 
 using namespace ngraph;
 
-template <>
-std::string ngraph::as_type<std::string>(reduction::Type value)
+namespace ngraph
 {
-    switch (value)
+    template <>
+    EnumNames<reduction::Type>* EnumNames<reduction::Type>::get()
     {
-    case reduction::Type::SUM: return "SUM";
-    case reduction::Type::PROD: return "PROD";
-    case reduction::Type::MIN: return "MIN";
-    case reduction::Type::MAX: return "MAX";
+        static auto enum_names = new EnumNames<reduction::Type>("reduction::Type",
+                                                                {{"SUM", reduction::Type::SUM},
+                                                                 {"PROD", reduction::Type::PROD},
+                                                                 {"MIN", reduction::Type::MIN},
+                                                                 {"MAX", reduction::Type::MAX}});
+        return enum_names;
     }
-}
-
-template <>
-reduction::Type ngraph::as_type<reduction::Type>(const std::string& value)
-{
-    reduction::Type result = reduction::Type::SUM;
-    if (value == "SUM")
-    {
-        result = reduction::Type::SUM;
-    }
-    else if (value == "PROD")
-    {
-        result = reduction::Type::PROD;
-    }
-    else if (value == "MIN")
-    {
-        result = reduction::Type::MIN;
-    }
-    else if (value == "MAX")
-    {
-        result = reduction::Type::MAX;
-    }
-    else
-    {
-        NGRAPH_DEBUG << "Invalid reduction type: " << value;
-    }
-    return result;
 }
 
 std::ostream& reduction::operator<<(std::ostream& out, const reduction::Type& obj)
