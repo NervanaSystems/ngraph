@@ -51,56 +51,77 @@ OPTIONS
 )###";
 }
 
-char* load_data_frome_file(string file_name)
+unique_ptr<char[]> load_data_frome_file(string file_name)
 {
-     
-    ifstream file(file_name);  
-    file.seekg( 0, ios::end );  
-    size_t len = file.tellg();  
-    char *data = new char[len];  
-    file.seekg(0, ios::beg);   
-    file.read(data, len);  
-    file.close();  
-    return data;
+    ifstream file(file_name);
+    file.seekg(0, ios::end);
+    size_t len = file.tellg();
+    unique_ptr<char[]> data(new char[len]());
+    file.seekg(0, ios::beg);
+    file.read(data.get(), len);
+    file.close();
 
+    return data;
 }
 
-vector<shared_ptr<runtime::Tensor>> load_inputs(vector<string> input_paths,
-                                                vector<shared_ptr<runtime::Tensor>> inputs)
+vector<shared_ptr<runtime::Tensor>> load_inputs(std::shared_ptr<runtime::Backend> backend,
+                                                std::shared_ptr<ngraph::Function> function,
+                                                vector<string> input_paths)
 {
-    vector<shared_ptr<runtime::Tensor>> inputs_with_values{};
+    vector<shared_ptr<runtime::Tensor>> inputs{};
+    auto params = function->get_parameters();
 
     for (int i = 0; i < input_paths.size(); i++)
     {
+        auto tensor =
+            backend->create_tensor(params.at(i)->get_element_type(), params.at(i)->get_shape());
         const string input_path = input_paths.at(i);
-        size_t data_size =shape_size(inputs.at(i)->get_shape())* inputs.at(i)->get_element_type().size();
-        char* data = load_data_frome_file(input_paths.at(i));
-        inputs.at(i)->write(data, data_size);
-        inputs_with_values.push_back(inputs.at(i));
-        delete data;
+        const size_t data_size =
+            shape_size(tensor->get_shape()) * tensor->get_element_type().size();
+        unique_ptr<char[]> data = load_data_frome_file(input_paths.at(i));
+        tensor->write(data.get(), data_size);
+        inputs.push_back(tensor);
     }
 
-    return inputs_with_values;
+    return inputs;
 }
 
-vector<shared_ptr<runtime::Tensor>> random_inputs(vector<shared_ptr<runtime::Tensor>> inputs)
+vector<shared_ptr<runtime::Tensor>> random_inputs(std::shared_ptr<runtime::Backend> backend,
+                                                  std::shared_ptr<ngraph::Function> function)
 {
-    vector<shared_ptr<runtime::Tensor>> inputs_with_values{};
+    vector<shared_ptr<runtime::Tensor>> inputs{};
     std::uniform_int_distribution<int> distribution(0, 255);
+    auto params = function->get_parameters();
 
-    for (int i = 0; i < inputs.size(); i++)
+    for (int i = 0; i < params.size(); i++)
     {
-        size_t data_size =shape_size(inputs.at(i)->get_shape())* inputs.at(i)->get_element_type().size();
-        char* data = new char[data_size];
+        auto tensor =
+            backend->create_tensor(params.at(i)->get_element_type(), params.at(i)->get_shape());
+        const size_t data_size =
+            shape_size(tensor->get_shape()) * tensor->get_element_type().size();
+        unique_ptr<char[]> data(new char[data_size]());
         for (int i = 0; i < data_size; i++)
         {
             data[i] = distribution(random_generator);
         }
-        inputs.at(i)->write(data, data_size);
-        inputs_with_values.push_back(inputs.at(i));
-        delete data;
+        tensor->write(data.get(), data_size);
+        inputs.push_back(tensor);
     }
-    return inputs_with_values;
+    return inputs;
+}
+
+vector<shared_ptr<runtime::Tensor>> make_outputs(std::shared_ptr<runtime::Backend> backend,
+                                                 std::shared_ptr<ngraph::Function> function)
+{
+    vector<shared_ptr<runtime::Tensor>> outputs{};
+    const size_t outputs_size = function->get_results().size();
+    for (int i = 0; i < outputs_size; i++)
+    {
+        auto tensor = backend->create_tensor(function->get_output_element_type(i),
+                                             function->get_output_shape(i));
+        outputs.push_back(tensor);
+    }
+    return outputs;
 }
 
 std::tuple<string, string> validate_argument(string arg, string arg2)
@@ -160,21 +181,6 @@ int main(int argc, char** argv)
     if (f)
     {
         function = ngraph::onnx_import::import_onnx_model(model);
-        auto params = function->get_parameters();
-        for (int i = 0; i < params.size(); i++)
-        {
-            auto tensor =
-                backend->create_tensor(params.at(i)->get_element_type(), params.at(i)->get_shape());
-            inputs.push_back(tensor);
-        }
-
-        auto outputs_size = function->get_results().size();
-        for (int i = 0; i < outputs_size; i++)
-        {
-            auto tensor = backend->create_tensor(function->get_output_element_type(i),
-                                                 function->get_output_shape(i));
-            outputs.push_back(tensor);
-        }
     }
     else
     {
@@ -182,19 +188,22 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (input_paths.size() == inputs.size())
+    const size_t inputs_size = function->get_parameters().size();
+    if (input_paths.size() == inputs_size)
     {
-        inputs = load_inputs(input_paths, inputs);
+        inputs = load_inputs(backend, function, input_paths);
     }
     else if (input_paths.size() == 0)
     {
-        inputs = random_inputs(inputs);
+        inputs = random_inputs(backend, function);
     }
     else
     {
         cout << "Inappropriate number of input files." << endl;
         return 2;
     }
+
+    outputs = make_outputs(backend, function);
 
     if (function)
     {
