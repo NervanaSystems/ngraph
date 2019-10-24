@@ -38,13 +38,7 @@ namespace ngraph
 
         std::ostream& operator<<(std::ostream& out, const Type& obj);
     }
-#if 0
-    template <>
-    std::string as_type<std::string>(reduction::Type value);
 
-    template <>
-    reduction::Type as_type<reduction::Type>(const std::string& value);
-#endif
     class DistributedInterface
     {
     public:
