@@ -20,7 +20,7 @@
 
 #ifdef NGRAPH_UNIT_TEST_OPENVINO_ENABLE
 #include "util/backend_utils.hpp"
-#define runtime runtime2
+#define runtime ov_runtime
 #endif
 
 // Copied from gtest

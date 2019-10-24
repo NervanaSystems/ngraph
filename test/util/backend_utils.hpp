@@ -29,7 +29,7 @@ Blob::Ptr fill_blob(SizeVector shape, std::vector<float> data);
 
 class Handle;
 
-namespace runtime2
+namespace ov_runtime
 {
     class Backend;
     class Tensor
@@ -55,7 +55,7 @@ namespace runtime2
         const element::Type& get_element_type() const { return type; }
         size_t get_element_count() { return shape_size(get_shape()); }
         void set_stale(bool flag) {}
-        void copy_from(runtime2::Tensor t)
+        void copy_from(ov_runtime::Tensor t)
         {
             data = t.data;
             shape = t.shape;
@@ -77,8 +77,8 @@ public:
         device = _device;
     }
 
-    bool call_with_validate(const vector<shared_ptr<runtime2::Tensor>>& outputs,
-                            const vector<shared_ptr<runtime2::Tensor>>& inputs)
+    bool call_with_validate(const vector<shared_ptr<ov_runtime::Tensor>>& outputs,
+                            const vector<shared_ptr<ov_runtime::Tensor>>& inputs)
     {
         Core ie;
 
@@ -122,15 +122,15 @@ public:
 };
 
 template <class T>
-void copy_data(std::shared_ptr<runtime2::Tensor> t, const std::vector<T>& data);
+void copy_data(std::shared_ptr<ov_runtime::Tensor> t, const std::vector<T>& data);
 
-class runtime2::Backend
+class ov_runtime::Backend
 {
 private:
     string device;
 
 public:
-    static std::shared_ptr<runtime2::Backend> create(std::string device,
+    static std::shared_ptr<ov_runtime::Backend> create(std::string device,
                                                      bool must_support_dynamic = false)
     {
         return std::shared_ptr<Backend>(new Backend(device));
@@ -141,16 +141,16 @@ public:
     {
     }
 
-    std::shared_ptr<runtime2::Tensor> create_tensor(ngraph::element::Type type, ngraph::Shape shape)
+    std::shared_ptr<ov_runtime::Tensor> create_tensor(ngraph::element::Type type, ngraph::Shape shape)
     {
-        return std::shared_ptr<runtime2::Tensor>(new runtime2::Tensor(type, shape));
+        return std::shared_ptr<ov_runtime::Tensor>(new ov_runtime::Tensor(type, shape));
     }
 
     template <typename T>
-    std::shared_ptr<runtime2::Tensor>
+    std::shared_ptr<ov_runtime::Tensor>
         create_tensor(ngraph::element::Type type, ngraph::Shape shape, T* data)
     {
-        auto tensor = std::shared_ptr<runtime2::Tensor>(new runtime2::Tensor(type, shape));
+        auto tensor = std::shared_ptr<ov_runtime::Tensor>(new ov_runtime::Tensor(type, shape));
         size_t size = 1;
         for (auto x : shape)
         {
@@ -162,16 +162,16 @@ public:
     }
 
     template <class T>
-    std::shared_ptr<runtime2::Tensor> create_tensor(ngraph::Shape shape)
+    std::shared_ptr<ov_runtime::Tensor> create_tensor(ngraph::Shape shape)
     {
-        return std::shared_ptr<runtime2::Tensor>(
-            new runtime2::Tensor(ngraph::element::from<T>(), shape));
+        return std::shared_ptr<ov_runtime::Tensor>(
+            new ov_runtime::Tensor(ngraph::element::from<T>(), shape));
     }
 
-    std::shared_ptr<runtime2::Tensor> create_dynamic_tensor(ngraph::element::Type type,
+    std::shared_ptr<ov_runtime::Tensor> create_dynamic_tensor(ngraph::element::Type type,
                                                             ngraph::PartialShape shape)
     {
-        return std::shared_ptr<runtime2::Tensor>(new runtime2::Tensor(type, shape));
+        return std::shared_ptr<ov_runtime::Tensor>(new ov_runtime::Tensor(type, shape));
     }
 
     bool supports_dynamic_tensors() { return true; }
@@ -182,7 +182,7 @@ public:
 };
 
 template <class T>
-std::vector<T> read_vector(std::shared_ptr<runtime2::Tensor> tv)
+std::vector<T> read_vector(std::shared_ptr<ov_runtime::Tensor> tv)
 {
     std::vector<T> v(tv->data.size());
     for (size_t i = 0; i < v.size(); ++i)
@@ -193,7 +193,7 @@ std::vector<T> read_vector(std::shared_ptr<runtime2::Tensor> tv)
 }
 
 template <class T>
-void copy_data(std::shared_ptr<runtime2::Tensor> t, const std::vector<T>& data)
+void copy_data(std::shared_ptr<ov_runtime::Tensor> t, const std::vector<T>& data)
 {
     t->data.resize(data.size());
     for (size_t i = 0; i < data.size(); ++i)
