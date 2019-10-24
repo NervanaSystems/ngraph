@@ -101,7 +101,7 @@ TEST(MLIR, fused_ops_interface)
     }
 }
 
-TEST(MLIR, ops_with_enums)
+TEST(MLIR, ops_attributes)
 {
     // Initialize before any context declarations
     initNgDialect();
@@ -125,8 +125,9 @@ TEST(MLIR, ops_with_enums)
                 builder.getI64ArrayAttr({2, 3, 4}), // windowMovementStrides
                 builder.getI64ArrayAttr({0, 0, 0}), // padBelow
                 builder.getI64ArrayAttr({0, 0, 0}), // padAbove
-                builder.getBoolAttr(false),         // ceilMode
-                builder.getI64IntegerAttr(static_cast<int64_t>(MLIRPadType::SAME_LOWER)))
+                builder.getBoolAttr(false),         // includePadding
+                builder.getI64IntegerAttr(static_cast<int64_t>(MLIRPadType::SAME_LOWER)), // padType
+                builder.getBoolAttr(false)) // ceilMode
             .getOperation();
 
     auto avgPool = cast<NGAvgPoolOp>(operation);
@@ -142,10 +143,13 @@ TEST(MLIR, ops_with_enums)
                                  builder.getI64ArrayAttr({2, 3, 4}), // windowMovementStrides
                                  builder.getI64ArrayAttr({0, 0, 0}), // padBelow
                                  builder.getI64ArrayAttr({0, 0, 0}), // padAbove
-                                 builder.getBoolAttr(false))
+                                 builder.getBoolAttr(false))         // includePadding
             .getOperation();
 
     avgPool = cast<NGAvgPoolOp>(operation);
     padType = static_cast<MLIRPadType>(avgPool.padType().getSExtValue());
     EXPECT_TRUE(padType == MLIRPadType::EXPLICIT);
+
+    auto ceilMode = avgPool.ceilMode();
+    EXPECT_TRUE(ceilMode == false);
 }
