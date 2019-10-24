@@ -4,7 +4,7 @@ set -e
 echo "--TRAVIS VARIABLES--"
 echo "TRAVIS_OS_NAME:" ${TRAVIS_OS_NAME}
 echo "TRAVIS_BUILD_DIR:" ${TRAVIS_BUILD_DIR}
-
+ 
 echo "--CUSTOM VARIABLES--"
 echo "TASK:" ${TASK}
 echo "OS:" ${OS}
