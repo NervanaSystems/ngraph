@@ -88,7 +88,7 @@ void op::v1::StridedSlice::validate_and_infer_types()
             std::all_of(
                 m_shrink_axis_mask.begin(), m_shrink_axis_mask.end(), are_mask_elem_in_range) &&
             std::all_of(m_ellipsis_mask.begin(), m_ellipsis_mask.end(), are_mask_elem_in_range),
-        "All maks elements of StridedSlice must have be 0 or 1");
+        "All masks of StridedSlice must have be 0 or 1");
 
     const vector<size_t> attr_sizes = {m_begin_mask.size(),
                                        m_end_mask.size(),
@@ -100,7 +100,7 @@ void op::v1::StridedSlice::validate_and_infer_types()
             return (s == 0) || (attr_sizes[0] == s);
         });
     NODE_VALIDATION_CHECK(
-        this, are_attr_sizes_eq, "All maks of StridedSlice must have the same size");
+        this, are_attr_sizes_eq, "All masks of StridedSlice must have the same size");
 
     const auto mask_size = m_begin_mask.size();
     const auto& data_rank = get_input_partial_shape(0).rank();

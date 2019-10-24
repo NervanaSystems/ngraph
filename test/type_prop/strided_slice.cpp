@@ -86,7 +86,7 @@ TEST(type_prop, strided_slice_incompatible_size_of_masks_attr)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("All maks of StridedSlice must have the same size"));
+                             std::string("All masks of StridedSlice must have the same size"));
     }
     catch (...)
     {
@@ -109,7 +109,7 @@ TEST(type_prop, strided_slice_mask_incorrect_value)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("All maks elements of StridedSlice must have be 0 or 1"));
+                             std::string("All masks of StridedSlice must have be 0 or 1"));
     }
     catch (...)
     {
