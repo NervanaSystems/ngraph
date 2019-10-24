@@ -8,7 +8,7 @@ echo "TRAVIS_BUILD_DIR:" ${TRAVIS_BUILD_DIR}
 echo "--CUSTOM VARIABLES--"
 echo "TASK:" ${TASK}
 echo "OS:" ${OS}
-
+ 
 # LINUX TASKS
 if [ ${TRAVIS_OS_NAME} == "linux" ]; then
 
