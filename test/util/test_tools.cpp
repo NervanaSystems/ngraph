@@ -195,7 +195,7 @@ void init_int_tv<char>(ngraph::runtime::Tensor* tv,
     {
         element = static_cast<char>(dist(engine));
     }
-    tv->write(vec.data(), 0, vec.size() * sizeof(char));
+    tv->write(vec.data(), vec.size() * sizeof(char));
 }
 
 template <>
@@ -211,7 +211,7 @@ void init_int_tv<int8_t>(ngraph::runtime::Tensor* tv,
     {
         element = static_cast<int8_t>(dist(engine));
     }
-    tv->write(vec.data(), 0, vec.size() * sizeof(int8_t));
+    tv->write(vec.data(), vec.size() * sizeof(int8_t));
 }
 
 template <>
@@ -227,7 +227,7 @@ void init_int_tv<uint8_t>(ngraph::runtime::Tensor* tv,
     {
         element = static_cast<uint8_t>(dist(engine));
     }
-    tv->write(vec.data(), 0, vec.size() * sizeof(uint8_t));
+    tv->write(vec.data(), vec.size() * sizeof(uint8_t));
 }
 
 void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine)
@@ -243,7 +243,7 @@ void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine
     }
     else if (et == element::f64)
     {
-        init_real_tv<double>(tv, engine, numeric_limits<float>::min(), 1.0f);
+        init_real_tv<double>(tv, engine, numeric_limits<double>::min(), 1.0);
     }
     else if (et == element::i8)
     {
@@ -284,24 +284,26 @@ void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine
 }
 
 template <>
-string
-    get_results_str(std::vector<char>& ref_data, std::vector<char>& actual_data, size_t max_results)
+string get_results_str(const std::vector<char>& ref_data,
+                       const std::vector<char>& actual_data,
+                       size_t max_results)
 {
     stringstream ss;
     size_t num_results = std::min(static_cast<size_t>(max_results), ref_data.size());
     ss << "First " << num_results << " results";
     for (size_t i = 0; i < num_results; ++i)
     {
-        ss << "\n"
+        ss << std::endl
            << std::setw(4) << i << " ref: " << std::setw(16) << std::left
            << static_cast<int>(ref_data[i]) << "  actual: " << std::setw(16) << std::left
            << static_cast<int>(actual_data[i]);
     }
-    ss << "\n";
+    ss << std::endl;
 
     return ss.str();
 }
 
+#ifndef NGRAPH_JSON_DISABLE
 std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
 {
     const string json_path = file_util::path_join(SERIALIZED_ZOO, file_name);
@@ -309,4 +311,46 @@ std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     return func;
+}
+#endif
+
+::testing::AssertionResult test_ordered_ops(shared_ptr<Function> f, const NodeVector& required_ops)
+{
+    unordered_set<Node*> seen;
+    for (auto& node_ptr : f->get_ordered_ops())
+    {
+        Node* node = node_ptr.get();
+        if (seen.count(node) > 0)
+        {
+            return ::testing::AssertionFailure() << "Duplication in ordered ops";
+        }
+        size_t arg_count = node->get_input_size();
+        for (size_t i = 0; i < arg_count; ++i)
+        {
+            Node* dep = node->input(i).get_source_output().get_node();
+            if (seen.count(dep) == 0)
+            {
+                return ::testing::AssertionFailure() << "Argument " << *dep
+                                                     << " does not occur before op" << *node;
+            }
+        }
+        for (auto& dep_ptr : node->get_control_dependencies())
+        {
+            if (seen.count(dep_ptr.get()) == 0)
+            {
+                return ::testing::AssertionFailure() << "Control dependency " << *dep_ptr
+                                                     << " does not occur before op" << *node;
+            }
+        }
+        seen.insert(node);
+    }
+    for (auto& node_ptr : required_ops)
+    {
+        if (seen.count(node_ptr.get()) == 0)
+        {
+            return ::testing::AssertionFailure() << "Required op " << *node_ptr
+                                                 << "does not occur in ordered ops";
+        }
+    }
+    return ::testing::AssertionSuccess();
 }

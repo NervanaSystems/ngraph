@@ -16,29 +16,28 @@
 
 #include <functional>
 #include <memory>
-#include <utility>
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/dot.hpp"
-#include "ngraph/op/multiply.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/op/sum.hpp"
 #include "ngraph/shape.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::Dot::Dot(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
+constexpr NodeTypeInfo op::Dot::type_info;
+
+op::Dot::Dot(const Output<Node>& arg0, const Output<Node>& arg1)
     : Dot(arg0, arg1, 0, false)
 {
 }
 
-op::Dot::Dot(const shared_ptr<Node>& arg0,
-             const shared_ptr<Node>& arg1,
+op::Dot::Dot(const Output<Node>& arg0,
+             const Output<Node>& arg1,
              size_t reduction_axes_count,
              bool has_reduction_axes_count)
-    : Op("Dot", check_single_output_args({arg0, arg1}))
+    : Op({arg0, arg1})
     , m_reduction_axes_count(reduction_axes_count)
     , m_has_reduction_axes_count(has_reduction_axes_count)
 {
@@ -154,7 +153,7 @@ void op::Dot::validate_and_infer_types()
     set_output_type(0, result_et, result_shape);
 }
 
-shared_ptr<op::Reshape> make_reshape_axes_to_front(const shared_ptr<Node>& n,
+shared_ptr<op::Reshape> make_reshape_axes_to_front(const Output<Node>& n,
                                                    const Shape& front_shape,
                                                    const Shape& back_shape)
 {
@@ -180,11 +179,11 @@ void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
-    auto y = get_argument(1);
+    auto x = input_value(0);
+    auto y = input_value(1);
 
-    auto x_shape = x->get_shape();         // shape IJ
-    auto y_shape = y->get_shape();         // shape JK
+    auto x_shape = x.get_shape();          // shape IJ
+    auto y_shape = y.get_shape();          // shape JK
     auto delta_shape = delta->get_shape(); // shape IK
 
     Shape I_shape;

@@ -20,8 +20,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Exp::Exp(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Exp", arg)
+constexpr NodeTypeInfo op::Exp::type_info;
+
+op::Exp::Exp(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }
@@ -36,7 +38,7 @@ void op::Exp::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = input_value(0);
 
     adjoints.add_delta(x, delta * shared_from_this());
 }

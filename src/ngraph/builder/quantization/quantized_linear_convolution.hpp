@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,52 +25,18 @@ namespace ngraph
     {
         namespace quantization
         {
-            std::shared_ptr<Node> QuantizedLinearConvolution(std::shared_ptr<Node> input,
-                                                             std::shared_ptr<Node> filter,
-                                                             const Strides& window_movement_strides,
-                                                             const Strides& window_dilation_strides,
-                                                             const CoordinateDiff& padding_below,
-                                                             const CoordinateDiff& padding_above,
-                                                             const Strides& data_dilation_strides,
-                                                             std::shared_ptr<Node> input_scale,
-                                                             std::shared_ptr<Node> filter_scale,
-                                                             std::shared_ptr<Node> output_scale);
-
             std::shared_ptr<Node>
-                QuantizedLinearConvolution(std::shared_ptr<Node> input,
-                                           std::shared_ptr<Node> filter,
-                                           const Strides& window_movement_strides,
-                                           const Strides& window_dilation_strides,
-                                           const CoordinateDiff& padding_below,
-                                           const CoordinateDiff& padding_above,
-                                           const Strides& data_dilation_strides,
-                                           std::shared_ptr<Node> input_scale,
-                                           std::shared_ptr<Node> input_zero_point,
-                                           std::shared_ptr<Node> filter_scale,
-                                           std::shared_ptr<Node> filter_zero_point,
-                                           std::shared_ptr<Node> output_scale,
-                                           std::shared_ptr<Node> output_zero_point);
-
-            std::shared_ptr<Node>
-                QuantizedLinearConvolutionBias(std::shared_ptr<Node> input,
-                                               std::shared_ptr<Node> filter,
-                                               std::shared_ptr<Node> bias,
+                QuantizedLinearConvolutionBias(const Output<Node>& input,
+                                               const Output<Node>& filter,
+                                               const Output<Node>& bias,
                                                const Strides& window_movement_strides,
                                                const Strides& window_dilation_strides,
                                                const CoordinateDiff& padding_below,
                                                const CoordinateDiff& padding_above,
                                                const Strides& data_dilation_strides,
-                                               std::shared_ptr<Node> input_scale,
-                                               std::shared_ptr<Node> filter_scale,
-                                               std::shared_ptr<Node> output_scale);
-
-            std::shared_ptr<Node> QuantizedConvInteger(std::shared_ptr<Node> input,
-                                                       std::shared_ptr<Node> filter,
-                                                       const Strides& window_movement_strides,
-                                                       const Strides& window_dilation_strides,
-                                                       const CoordinateDiff& padding_below,
-                                                       const CoordinateDiff& padding_above,
-                                                       const Strides& data_dilation_strides);
+                                               const Output<Node>& input_scale,
+                                               const Output<Node>& filter_scale,
+                                               const Output<Node>& output_scale);
         }
     }
 }

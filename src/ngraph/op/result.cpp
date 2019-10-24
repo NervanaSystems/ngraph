@@ -24,10 +24,15 @@
 using namespace std;
 using namespace ngraph;
 
-op::Result::Result(const shared_ptr<Node>& arg)
-    : Op("Result", check_single_output_args({arg}))
+constexpr NodeTypeInfo op::Result::type_info;
+
+op::Result::Result(const Output<Node>& arg, bool needs_default_layout)
+    : Op({arg})
+    , m_needs_default_layout(needs_default_layout)
 {
     constructor_validate_and_infer_types();
+    // always borrow the placement conf even the default one
+    set_placement_index(input_value(0).get_node()->get_placement_index());
 }
 
 void op::Result::validate_and_infer_types()
@@ -35,8 +40,6 @@ void op::Result::validate_and_infer_types()
     NODE_VALIDATION_CHECK(
         this, get_input_size() == 1, "Argument has ", get_input_size(), " outputs (1 expected).");
 
-    // always borrow the placement conf even the default one
-    set_placement_index(get_argument(0)->get_placement_index());
     set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
@@ -44,17 +47,13 @@ shared_ptr<Node> op::Result::copy_with_new_args(const NodeVector& new_args) cons
 {
     check_new_args_count(this, new_args);
 
-    auto res = make_shared<Result>(new_args.at(0));
-    if (res)
-    {
-        res->set_needs_default_layout(m_needs_default_layout);
-    }
-    return res;
+    auto res = make_shared<Result>(new_args.at(0), m_needs_default_layout);
+    return std::move(res);
 }
 
 void op::Result::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    adjoints.add_delta(get_argument(0), delta);
+    adjoints.add_delta(input_value(0), delta);
 }

@@ -16,7 +16,6 @@
 
 #include <memory>
 
-#include "core/node.hpp"
 #include "lrn.hpp"
 #include "ngraph/op/lrn.hpp"
 
@@ -41,7 +40,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

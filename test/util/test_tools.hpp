@@ -25,12 +25,20 @@
 #include <random>
 #include <vector>
 
+#include "gtest/gtest.h"
+
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/serializer.hpp"
+
+#ifdef NGRAPH_MLIR_ENABLE
+#define MLIR_DISABLE_TEST(name) DISABLED_##name
+#else
+#define MLIR_DISABLE_TEST(name) name
+#endif
 
 namespace ngraph
 {
@@ -40,26 +48,28 @@ namespace ngraph
 
 bool validate_list(const std::list<std::shared_ptr<ngraph::Node>>& nodes);
 std::shared_ptr<ngraph::Function> make_test_graph();
+#ifndef NGRAPH_JSON_DISABLE
 std::shared_ptr<ngraph::Function> make_function_from_file(const std::string& file_name);
+#endif
 
 template <typename T>
 void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>& data)
 {
     size_t data_size = data.size() * sizeof(T);
-    tv->write(data.data(), 0, data_size);
+    tv->write(data.data(), data_size);
 }
 
 template <typename T>
 std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
 {
-    if (ngraph::element::from<T>() != tv->get_tensor_layout()->get_element_type())
+    if (ngraph::element::from<T>() != tv->get_element_type())
     {
         throw std::invalid_argument("read_vector type must match Tensor type");
     }
     size_t element_count = ngraph::shape_size(tv->get_shape());
     size_t size = element_count * sizeof(T);
     std::vector<T> rc(element_count);
-    tv->read(rc.data(), 0, size);
+    tv->read(rc.data(), size);
     return rc;
 }
 
@@ -68,7 +78,7 @@ std::vector<float> read_float_vector(std::shared_ptr<ngraph::runtime::Tensor> tv
 template <typename T>
 void write_vector(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>& values)
 {
-    tv->write(values.data(), 0, values.size() * sizeof(T));
+    tv->write(values.data(), values.size() * sizeof(T));
 }
 
 template <typename T>
@@ -77,7 +87,7 @@ std::vector<std::shared_ptr<T>> get_ops_of_type(std::shared_ptr<ngraph::Function
     std::vector<std::shared_ptr<T>> ops;
     for (auto op : f->get_ops())
     {
-        if (auto cop = std::dynamic_pointer_cast<T>(op))
+        if (auto cop = ngraph::as_type_ptr<T>(op))
         {
             ops.push_back(cop);
         }
@@ -92,7 +102,7 @@ size_t count_ops_of_type(std::shared_ptr<ngraph::Function> f)
     size_t count = 0;
     for (auto op : f->get_ops())
     {
-        if (std::dynamic_pointer_cast<T>(op))
+        if (ngraph::as_type_ptr<T>(op))
         {
             count++;
         }
@@ -111,7 +121,7 @@ void init_int_tv(ngraph::runtime::Tensor* tv, std::default_random_engine& engine
     {
         element = dist(engine);
     }
-    tv->write(vec.data(), 0, vec.size() * sizeof(T));
+    tv->write(vec.data(), vec.size() * sizeof(T));
 }
 
 template <typename T>
@@ -124,7 +134,7 @@ void init_real_tv(ngraph::runtime::Tensor* tv, std::default_random_engine& engin
     {
         element = dist(engine);
     }
-    tv->write(vec.data(), 0, vec.size() * sizeof(T));
+    tv->write(vec.data(), vec.size() * sizeof(T));
 }
 
 void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine);
@@ -220,26 +230,28 @@ std::vector<std::vector<TOUT>> execute(const std::shared_ptr<ngraph::Function>& 
 }
 
 template <typename T>
-std::string
-    get_results_str(std::vector<T>& ref_data, std::vector<T>& actual_data, size_t max_results = 16)
+std::string get_results_str(const std::vector<T>& ref_data,
+                            const std::vector<T>& actual_data,
+                            size_t max_results = 16)
 {
     std::stringstream ss;
     size_t num_results = std::min(static_cast<size_t>(max_results), ref_data.size());
     ss << "First " << num_results << " results";
     for (size_t i = 0; i < num_results; ++i)
     {
-        ss << "\n"
-           << std::setw(4) << i << " ref: " << std::setw(16) << std::left << ref_data[i]
-           << "  actual: " << std::setw(16) << std::left << actual_data[i];
+        ss << std::endl
+           // use unary + operator to force integral values to be displayed as numbers
+           << std::setw(4) << i << " ref: " << std::setw(16) << std::left << +ref_data[i]
+           << "  actual: " << std::setw(16) << std::left << +actual_data[i];
     }
-    ss << "\n";
+    ss << std::endl;
 
     return ss.str();
 }
 
 template <>
-std::string get_results_str(std::vector<char>& ref_data,
-                            std::vector<char>& actual_data,
+std::string get_results_str(const std::vector<char>& ref_data,
+                            const std::vector<char>& actual_data,
                             size_t max_results);
 
 /// \brief      Reads a binary file to a vector.
@@ -273,3 +285,6 @@ std::vector<T> read_binary_file(const std::string& path)
     inputs_fs.read(reinterpret_cast<char*>(file_content.data()), size);
     return file_content;
 }
+
+testing::AssertionResult test_ordered_ops(std::shared_ptr<ngraph::Function> f,
+                                          const ngraph::NodeVector& required_ops);

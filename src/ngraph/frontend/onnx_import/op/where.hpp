@@ -19,7 +19,7 @@
 #include <memory>
 
 #include "core/node.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 
@@ -40,7 +40,7 @@ namespace ngraph
                 }
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

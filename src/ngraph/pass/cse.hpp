@@ -32,6 +32,7 @@ public:
     CommonSubexpressionElimination()
         : FunctionPass()
     {
+        set_property(PassProperty::REQUIRE_STATIC_SHAPE, true);
     }
 
     CommonSubexpressionElimination(
@@ -41,6 +42,7 @@ public:
         : FunctionPass()
         , m_backend_cse_handlers(backend_cse_handlers)
     {
+        set_property(PassProperty::REQUIRE_STATIC_SHAPE, true);
     }
 
     std::unordered_map<std::type_index,

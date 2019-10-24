@@ -23,16 +23,15 @@ using namespace std;
 using namespace ngraph;
 
 // TODO: Add file-based configuration support
-pass::PassConfig::PassConfig(pass::CompilationMode mode)
-    : m_compilation_mode(mode)
+pass::PassConfig::PassConfig()
 {
-    /**
-    * Parses the semi-colon separated environment string passed through NGRAPH_PASS_ENABLES
-    * and returns the pass names and whether they should be enabled or disabled in the
-    * provided unordered_map. Implementation of pass selection is up to the backend
-    * E.g., NGRAPH_PASS_ENABLES="CoreFusion:0;LikeReplacement:1;CPUCollapseDims" would
-    *       set disables on CoreFusion and enables on LikeReplacement and CPUCollapseDims
-    **/
+    //
+    // Parses the semi-colon separated environment string passed through NGRAPH_PASS_ENABLES
+    // and returns the pass names and whether they should be enabled or disabled in the
+    // provided unordered_map. Implementation of pass selection is up to the backend
+    // E.g., NGRAPH_PASS_ENABLES="CoreFusion:0;LikeReplacement:1;CPUCollapseDims" would
+    //       set disables on CoreFusion and enables on LikeReplacement and CPUCollapseDims
+    //
     const char* env_str = getenv("NGRAPH_PASS_ENABLES");
     if (env_str)
     {
@@ -51,14 +50,16 @@ pass::PassConfig::PassConfig(pass::CompilationMode mode)
             }
         }
     }
-    /**
-    * Parses the semi-colon separated environment string passed through NGRAPH_PASS_ATTRIBUTES
-    * and returns the pass attributes and whether they should be enabled or disabled in the
-    * provided unordered_map. Naming of pass attributes is up to the backends
-    * E.g., NGRAPH_PASS_ATTRIBUTES="OptimizeForMemory=0;MemoryAssignment::ReuseMemory=1;UseDefaultLayouts"
-    * would set false on "OptimizeForMemory", true on "MemoryAssignment::ReuseMemory" and true on
-    * "UseDefaultLayouts"
-    **/
+    //
+    //  Parses the semi-colon separated environment string passed through NGRAPH_PASS_ATTRIBUTES
+    //  and returns the pass attributes and whether they should be enabled or disabled in the
+    //  provided unordered_map. Naming of pass attributes is up to the backends.
+    //
+    //  For example:
+    //  NGRAPH_PASS_ATTRIBUTES="OptimizeForMemory=0;MemoryAssignment::ReuseMemory=1;UseDefaultLayouts"
+    //  would set false on "OptimizeForMemory", true on "MemoryAssignment::ReuseMemory" and true on
+    //  "UseDefaultLayouts"
+    //
     env_str = getenv("NGRAPH_PASS_ATTRIBUTES");
     if (env_str)
     {
@@ -81,30 +82,32 @@ pass::PassConfig::PassConfig(pass::CompilationMode mode)
     }
 }
 
-void pass::PassConfig::set_pass_enable(string name, bool enable)
+void pass::PassConfig::set_pass_enable(const string& name, bool enable)
 {
     m_pass_enables[name] = enable;
 }
 
-bool pass::PassConfig::get_pass_enable(string name)
+bool pass::PassConfig::get_pass_enable(const string& name) const
 {
-    if (m_pass_enables.find(name) == m_pass_enables.end())
+    auto it = m_pass_enables.find(name);
+    if (it != m_pass_enables.end())
     {
-        return false;
+        return it->second;
     }
-    return m_pass_enables[name];
+    return false;
 }
 
-void pass::PassConfig::set_pass_attribute(string name, bool enable)
+void pass::PassConfig::set_pass_attribute(const string& name, bool enable)
 {
     m_pass_attributes[name] = enable;
 }
 
-bool pass::PassConfig::get_pass_attribute(string name)
+bool pass::PassConfig::get_pass_attribute(const string& name) const
 {
-    if (m_pass_attributes.find(name) == m_pass_attributes.end())
+    auto it = m_pass_attributes.find(name);
+    if (it != m_pass_attributes.end())
     {
-        return false;
+        return it->second;
     }
-    return m_pass_attributes[name];
+    return false;
 }

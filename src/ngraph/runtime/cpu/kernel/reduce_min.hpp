@@ -35,13 +35,13 @@ namespace ngraph
                 void reduce_min_all(void* input,
                                     void* output,
                                     const Shape& input_shape,
-                                    const Shape& output_shape,
+                                    const Shape& /* output_shape */,
                                     int arena)
                 {
                     Eigen::array<Eigen::Index, Rank> in_dims;
                     Eigen::array<Eigen::Index, 0> out_dims;
 
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         in_dims[i] = input_shape[i];
                     }
@@ -65,12 +65,12 @@ namespace ngraph
                     Eigen::array<Eigen::Index, Rank - 1> out_dims;
                     Eigen::IndexList<Eigen::type2index<Rank - 1>> reduction_dim;
 
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         in_dims[i] = input_shape[i];
                     }
 
-                    for (int i = 0; i < Rank - 1; i++)
+                    for (size_t i = 0; i < Rank - 1; i++)
                     {
                         out_dims[i] = output_shape[i];
                     }
@@ -95,17 +95,17 @@ namespace ngraph
                     Eigen::array<Eigen::Index, Rank - ReductionDims> out_dims;
                     Eigen::array<Eigen::Index, ReductionDims> reduction_dims;
 
-                    for (int i = 0; i < Rank; i++)
+                    for (size_t i = 0; i < Rank; i++)
                     {
                         in_dims[i] = input_shape[i];
                     }
 
-                    for (int i = 0; i < Rank - ReductionDims; i++)
+                    for (size_t i = 0; i < Rank - ReductionDims; i++)
                     {
                         out_dims[i] = output_shape[i];
                     }
 
-                    int i = 0;
+                    size_t i = 0;
                     for (auto axis : reduction_axes)
                     {
                         reduction_dims[i++] = axis;
@@ -174,7 +174,7 @@ namespace ngraph
                          const Shape& in_shape,
                          const Shape& out_shape,
                          const AxisSet& reduction_axes,
-                         int arena)
+                         int /* arena */)
                 {
                     reference::min(static_cast<ElementType*>(arg),
                                    static_cast<ElementType*>(out),

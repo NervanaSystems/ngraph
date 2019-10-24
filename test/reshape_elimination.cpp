@@ -36,7 +36,6 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "ngraph/util.hpp"
-#include "nlohmann/json.hpp"
 #include "util/all_close.hpp"
 #include "util/matcher.hpp"
 #include "util/random.hpp"
@@ -45,6 +44,7 @@
 using namespace ngraph;
 using namespace std;
 
+#ifndef NGRAPH_JSON_DISABLE
 TEST(reshape_elimination, remove_reshape)
 {
     pass::Manager pass_manager;
@@ -86,6 +86,51 @@ TEST(reshape_elimination, bn_bprop_rewrite)
     size_t count_after = count_ops_of_type<op::Reshape>(func);
     ASSERT_TRUE(count_after < count_before);
 }
+#endif
+
+TEST(reshape_elimination, transpose_reshape_pattern_fuse)
+{
+    auto generate_func = []() {
+        auto input = make_shared<op::Parameter>(element::f32, Shape{8, 2, 4, 6});
+        auto transpose = make_shared<op::Reshape>(input, AxisVector{0, 2, 1, 3}, Shape{8, 2, 4, 6});
+        auto reshape =
+            make_shared<op::Reshape>(transpose, AxisVector{0, 1, 2, 3}, Shape{8, 4, 2, 6});
+        return make_shared<Function>(reshape, ParameterVector{input});
+    };
+
+    auto fuse_func = generate_func();
+    auto nofuse_func = generate_func();
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ReshapeElimination>();
+    pass_manager.run_passes(fuse_func);
+    ASSERT_TRUE(count_ops_of_type<op::Reshape>(fuse_func) == 1);
+    ASSERT_TRUE(count_ops_of_type<op::Reshape>(nofuse_func) == 2);
+
+    test::Uniform<float> rng(0.0f, 100.0f);
+    vector<vector<float>> args;
+    vector<float> tensor_val(shape_size(Shape{8, 2, 4, 6}));
+    rng.initialize(tensor_val);
+    args.push_back(tensor_val);
+
+    auto baseline_results = execute(fuse_func, args, "INTERPRETER");
+    auto optimized_results = execute(nofuse_func, args, "INTERPRETER");
+
+    EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+}
+
+TEST(reshape_elimination, transpose_reshape_pattern_nofuse)
+{
+    auto input = make_shared<op::Parameter>(element::f32, Shape{8, 2, 4, 6});
+    auto transpose = make_shared<op::Reshape>(input, AxisVector{0, 2, 1, 3}, Shape{8, 2, 4, 6});
+    auto reshape = make_shared<op::Reshape>(transpose, AxisVector{2, 1, 0, 3}, Shape{8, 4, 2, 6});
+    auto f = make_shared<Function>(reshape, ParameterVector{input});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ReshapeElimination>();
+    pass_manager.run_passes(f);
+    ASSERT_TRUE(count_ops_of_type<op::Reshape>(f) == 2);
+}
 
 TEST(reshape_elimination, dot_transpose_to_dot_w_transpose_args)
 {
@@ -103,9 +148,9 @@ TEST(reshape_elimination, dot_transpose_to_dot_w_transpose_args)
     auto func = make_shared<Function>(graph, ParameterVector{W, x});
     pass_manager.run_passes(func);
     auto gdot = graph->get_argument(0);
-    ASSERT_TRUE(std::dynamic_pointer_cast<op::Dot>(gdot));
-    ASSERT_TRUE(std::dynamic_pointer_cast<op::Reshape>(gdot->get_argument(0)));
-    ASSERT_TRUE(std::dynamic_pointer_cast<op::Reshape>(gdot->get_argument(1)));
+    ASSERT_TRUE(as_type_ptr<op::Dot>(gdot));
+    ASSERT_TRUE(as_type_ptr<op::Reshape>(gdot->get_argument(0)));
+    ASSERT_TRUE(as_type_ptr<op::Reshape>(gdot->get_argument(1)));
     ASSERT_EQ(gdot->get_argument(0)->get_argument(0), x);
     ASSERT_EQ(gdot->get_argument(1)->get_argument(0), W);
     ASSERT_EQ(gdot->get_shape(), (Shape{1, 2}));
@@ -431,4 +476,18 @@ TEST(reshape_elimination, recurrent_reshapes_multiple_branches)
 
     size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
     ASSERT_EQ(num_reshapes_optimized, 2);
+}
+
+TEST(reshape_elimination, pass_property)
+{
+    {
+        auto pass = std::make_shared<ngraph::pass::ReshapeElimination>();
+        ASSERT_EQ(false, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+        ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+    }
+    {
+        auto pass = std::make_shared<ngraph::pass::RecurrentReshapeElimination>();
+        ASSERT_EQ(false, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+        ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+    }
 }

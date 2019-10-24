@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,17 +26,22 @@ namespace ngraph
         class GatherND : public Op
         {
         public:
-            // \param params The tensor from which slices are gathered
-            // \param indices Index tensor: Data type must be `element::i32` or `element::i64`
-            GatherND(const std::shared_ptr<Node>& params, const std::shared_ptr<Node>& indices)
-                : Op("GatherND", check_single_output_args({params, indices}))
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"GatherND", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            GatherND() = default;
+            /// \param params The tensor from which slices are gathered
+            /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
+            GatherND(const Output<Node>& params, const Output<Node>& indices)
+                : Op({params, indices})
             {
                 constructor_validate_and_infer_types();
             }
 
             void validate_and_infer_types() override;
 
-            void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override
+            void generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                   const NodeVector& /* deltas */) override
             {
                 throw ngraph_error("Not yet implemented");
             }

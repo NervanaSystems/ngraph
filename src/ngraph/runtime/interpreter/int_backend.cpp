@@ -14,24 +14,26 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/interpreter/int_backend.hpp"
+#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
+
+#include "ngraph/component_manager.hpp"
+#include "ngraph/cpio.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/runtime/interpreter/int_executable.hpp"
+#include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-extern "C" const char* get_ngraph_version_string()
+extern "C" INTERPRETER_BACKEND_API void ngraph_register_interpreter_backend()
 {
-    return NGRAPH_VERSION;
-}
-
-extern "C" runtime::Backend* new_backend(const char* configuration_string)
-{
-    return new runtime::interpreter::INTBackend();
+    runtime::BackendManager::register_backend("INTERPRETER", [](const std::string& /* config */) {
+        return std::make_shared<runtime::interpreter::INTBackend>();
+    });
 }
 
 runtime::interpreter::INTBackend::INTBackend()
@@ -46,13 +48,13 @@ runtime::interpreter::INTBackend::INTBackend(const vector<string>& unsupported_o
 shared_ptr<runtime::Tensor>
     runtime::interpreter::INTBackend::create_tensor(const element::Type& type, const Shape& shape)
 {
-    return make_shared<runtime::HostTensor>(type, shape, this);
+    return make_shared<runtime::HostTensor>(type, shape);
 }
 
 shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor(
     const element::Type& type, const Shape& shape, void* memory_pointer)
 {
-    return make_shared<runtime::HostTensor>(type, shape, memory_pointer, this);
+    return make_shared<runtime::HostTensor>(type, shape, memory_pointer);
 }
 
 shared_ptr<runtime::Executable>
@@ -65,4 +67,48 @@ shared_ptr<runtime::Executable>
 bool runtime::interpreter::INTBackend::is_supported(const Node& node) const
 {
     return m_unsupported_op_name_list.find(node.description()) == m_unsupported_op_name_list.end();
+}
+
+std::shared_ptr<runtime::Executable> runtime::interpreter::INTBackend::load(istream& in)
+{
+    shared_ptr<Executable> exec;
+    cpio::Reader reader(in);
+    auto file_info = reader.get_file_info();
+    string save_info;
+    for (const cpio::FileInfo& info : file_info)
+    {
+        if (info.get_name() == "save_info")
+        {
+            vector<char> buffer = reader.read(info);
+            save_info = string(buffer.data(), buffer.size());
+            break;
+        }
+    }
+    if (save_info == "INTERPRETER Save File 1.0")
+    {
+        for (const cpio::FileInfo& info : file_info)
+        {
+            if (info.get_name() == "model")
+            {
+                vector<char> buffer = reader.read(info);
+                string model_string = string(buffer.data(), buffer.size());
+                exec = shared_ptr<INTExecutable>(new INTExecutable(model_string));
+                break;
+            }
+        }
+    }
+    return exec;
+}
+
+bool runtime::interpreter::INTBackend::set_config(const map<string, string>& config, string& error)
+{
+    bool rc = false;
+    auto it = config.find("test_echo");
+    error = "";
+    if (it != config.end())
+    {
+        error = it->second;
+        rc = true;
+    }
+    return rc;
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ ngraph::runtime::plaidml::pass::ReplicateCombination::ReplicateCombination()
         },
         NodeVector{upper_replicate_op});
 
-    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    auto callback = [](pattern::Matcher& m) {
         auto nodes = m.get_matched_nodes();
         auto lower = std::static_pointer_cast<plaidml::op::Replicate>(nodes.at(0));
         auto upper = std::static_pointer_cast<plaidml::op::Replicate>(nodes.at(1));
@@ -47,12 +47,12 @@ ngraph::runtime::plaidml::pass::ReplicateCombination::ReplicateCombination()
             *ait *= *uit;
         }
 
-        replace_node(lower,
-                     std::make_shared<plaidml::op::Replicate>(upper->get_arguments().at(0),
-                                                              std::move(axes)));
+        replace_node(
+            lower,
+            std::make_shared<plaidml::op::Replicate>(upper->get_argument(0), std::move(axes)));
 
         return true;
     };
 
-    add_matcher(std::make_shared<pattern::Matcher>(lower_replicate_op, callback));
+    add_matcher(std::make_shared<pattern::Matcher>(lower_replicate_op), callback);
 }

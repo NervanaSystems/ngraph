@@ -26,10 +26,14 @@ namespace ngraph
         class Sinh : public util::UnaryElementwiseArithmetic
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"Sinh", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a hyperbolic sine operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Sinh(const std::shared_ptr<Node>& arg);
+            Sinh(const Output<Node>& arg);
+            Sinh() = default;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

@@ -25,11 +25,13 @@
 using namespace std;
 using namespace ngraph;
 
-op::BatchMatMulTranspose::BatchMatMulTranspose(const shared_ptr<Node>& arg0,
-                                               const shared_ptr<Node>& arg1,
+constexpr NodeTypeInfo op::BatchMatMulTranspose::type_info;
+
+op::BatchMatMulTranspose::BatchMatMulTranspose(const Output<Node>& arg0,
+                                               const Output<Node>& arg1,
                                                bool transpose_arg0,
                                                bool transpose_arg1)
-    : Op("BatchMatMulTranspose", check_single_output_args({arg0, arg1}))
+    : Op({arg0, arg1})
     , m_transpose_arg0(transpose_arg0)
     , m_transpose_arg1(transpose_arg1)
 {
@@ -94,8 +96,8 @@ void op::BatchMatMulTranspose::generate_adjoints(autodiff::Adjoints& adjoints,
 {
     auto delta = deltas.at(0); // NxIxK
 
-    auto arg0 = get_inputs().at(0).get_output().get_node(); // NxIxJ (maybe transposed)
-    auto arg1 = get_inputs().at(1).get_output().get_node(); // NxJxK (maybe transposed)
+    auto arg0 = input(0).get_source_output().get_node_shared_ptr(); // NxIxJ (maybe transposed)
+    auto arg1 = input(1).get_source_output().get_node_shared_ptr(); // NxJxK (maybe transposed)
 
     // If arg1 is already transposed, it does not need to be transposed again
     auto delta_dot_arg1 =

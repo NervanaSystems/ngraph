@@ -44,6 +44,8 @@ namespace ngraph
 
         std::string bfloat16_to_bits(bfloat16 f);
 
+        std::string float16_to_bits(float16 f);
+
         std::string float_to_bits(float f);
 
         std::string double_to_bits(double d);
@@ -53,5 +55,7 @@ namespace ngraph
         float bits_to_float(const std::string& s);
 
         double bits_to_double(const std::string& s);
+
+        float16 bits_to_float16(const std::string& s);
     }
 }

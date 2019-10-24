@@ -26,17 +26,19 @@
 using namespace std;
 using namespace ngraph;
 
+constexpr NodeTypeInfo op::DeconvolutionBias::type_info;
+
 op::DeconvolutionBias::DeconvolutionBias(const Shape& data_batch_shape,
-                                         const shared_ptr<Node>& filters,
-                                         const shared_ptr<Node>& output_delta,
-                                         const shared_ptr<Node>& bias,
+                                         const Output<Node>& filters,
+                                         const Output<Node>& output_delta,
+                                         const Output<Node>& bias,
                                          const Strides& window_movement_strides_forward,
                                          const Strides& window_dilation_strides_forward,
                                          const CoordinateDiff& padding_below_forward,
                                          const CoordinateDiff& padding_above_forward,
                                          const Strides& data_dilation_strides_forward,
                                          const bool with_relu)
-    : Op("DeconvolutionBias", check_single_output_args({filters, output_delta, bias}))
+    : Op({filters, output_delta, bias})
     , m_data_batch_shape(data_batch_shape)
     , m_window_movement_strides_forward(window_movement_strides_forward)
     , m_window_dilation_strides_forward(window_dilation_strides_forward)
@@ -46,8 +48,8 @@ op::DeconvolutionBias::DeconvolutionBias(const Shape& data_batch_shape,
     , m_with_relu(with_relu)
 {
     NGRAPH_DEBUG << "DeconvolutionBias ctor" << endl;
-    NGRAPH_DEBUG << "data: " << data_batch_shape << ", filters: " << filters->get_shape()
-                 << ", output_delta: " << output_delta->get_shape();
+    NGRAPH_DEBUG << "data: " << data_batch_shape << ", filters: " << filters.get_shape()
+                 << ", output_delta: " << output_delta.get_shape();
     constructor_validate_and_infer_types();
 }
 
@@ -71,7 +73,8 @@ void op::DeconvolutionBias::validate_and_infer_types()
     // Window movement strides  q_x       p_x
     // Window dilation strides  p_f       p_f
     // Padding below            a_x       (S_f - 1)p_f - a_x
-    // Padding above            b_x       (S_f - 1)p_f + ((a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f) % q_x) - b_x
+    // Padding above            b_x       (S_f - 1)p_f + ((a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f)
+    //                                    % q_x) - b_x
     // Data dilation strides    p_x       q_x
     // Output shape             S_o       S_x
     //
@@ -96,17 +99,24 @@ void op::DeconvolutionBias::validate_and_infer_types()
 
     const PartialShape& fwd_filters_shape{
         filters_shape[1], filters_shape[0], filters_shape[2], filters_shape[3]};
-    std::tie(forward_result_et, forward_result_shape) =
-        infer_convolution_forward(this,
-                                  delta_et,
-                                  filters_et,
-                                  m_data_batch_shape,
-                                  m_data_dilation_strides_forward,
-                                  m_padding_below_forward,
-                                  m_padding_above_forward,
-                                  fwd_filters_shape,
-                                  m_window_movement_strides_forward,
-                                  m_window_dilation_strides_forward);
+
+    NODE_VALIDATION_CHECK(
+        this,
+        element::Type::merge(forward_result_et, delta_et, filters_et),
+        "Element types for data batch and filters do not match (data batch element type: ",
+        delta_et,
+        ", filters element type: ",
+        filters_et,
+        ").");
+
+    forward_result_shape = infer_convolution_forward(this,
+                                                     m_data_batch_shape,
+                                                     m_data_dilation_strides_forward,
+                                                     m_padding_below_forward,
+                                                     m_padding_above_forward,
+                                                     fwd_filters_shape,
+                                                     m_window_movement_strides_forward,
+                                                     m_window_dilation_strides_forward);
     NGRAPH_DEBUG << "\tpartial filter_shape: " << filters_shape << "delta_shape: " << delta_shape
                  << ", inferred_res_shape: " << forward_result_shape << endl;
 
@@ -146,8 +156,8 @@ void op::DeconvolutionBias::validate_and_infer_types()
     set_output_type(0, forward_result_et, m_data_batch_shape);
 }
 
-void op::DeconvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
-                                              const NodeVector& deltas)
+void op::DeconvolutionBias::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                              const NodeVector& /* deltas */)
 {
     throw ngraph_error("DeconvolutionBias generate_adjoints not supported implemented");
 }

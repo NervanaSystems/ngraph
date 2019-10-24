@@ -14,11 +14,16 @@
 # limitations under the License.
 # ******************************************************************************
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIN_NGRAPH_LIBRARY")
+add_definitions(-DIN_NGRAPH_LIBRARY)
 
 include_directories(ngraph)
 
 add_subdirectory(resource)
+
+# This must be added before any backend that uses MLIR
+if (NGRAPH_MLIR_ENABLE)
+    add_subdirectory(${NGRAPH_MLIR_SOURCE_DIR})
+endif()
 
 add_subdirectory(ngraph)
 

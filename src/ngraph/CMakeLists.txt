@@ -24,21 +24,37 @@ set (SRC
     axis_vector.hpp
     builder/autobroadcast.cpp
     builder/autobroadcast.hpp
+    builder/dequantize_builder.cpp
+    builder/dequantize_builder.hpp
     builder/make_constant.hpp
+    builder/matmul_factory.cpp
+    builder/matmul_factory.hpp
+    builder/norm.cpp
+    builder/norm.hpp
     builder/numpy_transpose.cpp
     builder/numpy_transpose.hpp
-    builder/quantization.cpp
-    builder/quantization.hpp
+    builder/quantize_builder.cpp
+    builder/quantize_builder.hpp
+    builder/quantized_concat_builder.cpp
+    builder/quantized_concat_builder.hpp
+    builder/quantized_conv_builder.cpp
+    builder/quantized_conv_builder.hpp
+    builder/quantized_dot_builder.cpp
+    builder/quantized_dot_builder.hpp
     builder/quantization/quantized_linear_convolution.cpp
     builder/quantization/quantized_linear_convolution.hpp
-    builder/quantization/quantized_linear_dot.cpp
-    builder/quantization/quantized_linear_dot.hpp
-    builder/quantization_util.hpp
+    builder/quantization_utils.hpp
+    builder/quantization_utils.cpp
     builder/reduce_ops.cpp
     builder/reduce_ops.hpp
+    builder/reshape.cpp
+    builder/reshape.hpp
+    builder/split.cpp
+    builder/split.hpp
     builder/tensor_mask.hpp
     check.hpp
     code_writer.hpp
+    component_manager.hpp
     coordinate.cpp
     coordinate.hpp
     coordinate_diff.cpp
@@ -59,9 +75,9 @@ set (SRC
     descriptor/tensor.hpp
     dimension.cpp
     dimension.hpp
+    distributed.cpp
+    distributed.hpp
     except.hpp
-    event_tracing.hpp
-    event_tracing.cpp
     file_util.cpp
     file_util.hpp
     function.cpp
@@ -74,7 +90,6 @@ set (SRC
     ngraph_visibility.hpp
     node.cpp
     node.hpp
-    node_vector.hpp
     op/abs.cpp
     op/abs.hpp
     op/acos.cpp
@@ -137,32 +152,52 @@ set (SRC
     op/experimental/dyn_broadcast.hpp
     op/experimental/dyn_pad.cpp
     op/experimental/dyn_pad.hpp
+    op/experimental/dyn_replace_slice.cpp
+    op/experimental/dyn_replace_slice.hpp
     op/experimental/dyn_reshape.cpp
     op/experimental/dyn_reshape.hpp
     op/experimental/dyn_slice.cpp
     op/experimental/dyn_slice.hpp
     op/experimental/generate_mask.cpp
     op/experimental/generate_mask.hpp
-    op/experimental/quantized_avg_pool.cpp
-    op/experimental/quantized_avg_pool.hpp
-    op/experimental/quantized_concat.cpp
-    op/experimental/quantized_concat.hpp
-    op/experimental/quantized_conv.cpp
-    op/experimental/quantized_conv.hpp
     op/experimental/quantized_conv_bias.cpp
     op/experimental/quantized_conv_bias.hpp
     op/experimental/quantized_conv_relu.cpp
     op/experimental/quantized_conv_relu.hpp
-    op/experimental/quantized_max_pool.cpp
-    op/experimental/quantized_max_pool.hpp
+    op/experimental/range.cpp
+    op/experimental/range.hpp
     op/experimental/shape_of.cpp
     op/experimental/shape_of.hpp
-    op/experimental/quantized_dot.cpp
-    op/experimental/quantized_dot.hpp
+    op/experimental/tile.cpp
+    op/experimental/tile.hpp
     op/experimental/quantized_dot_bias.cpp
     op/experimental/quantized_dot_bias.hpp
+    op/experimental/compiled_kernel.cpp
+    op/experimental/compiled_kernel.hpp
     op/experimental/transpose.cpp
     op/experimental/transpose.hpp
+    op/experimental/layers/ctc_greedy_decoder.cpp
+    op/experimental/layers/ctc_greedy_decoder.hpp
+    op/experimental/layers/detection_output.cpp
+    op/experimental/layers/detection_output.hpp
+    op/experimental/layers/interpolate.cpp
+    op/experimental/layers/interpolate.hpp
+    op/experimental/layers/prior_box.cpp
+    op/experimental/layers/prior_box.hpp
+    op/experimental/layers/prior_box_clustered.cpp
+    op/experimental/layers/prior_box_clustered.hpp
+    op/experimental/layers/proposal.hpp
+    op/experimental/layers/proposal.cpp
+    op/experimental/layers/psroi_pooling.hpp
+    op/experimental/layers/psroi_pooling.cpp
+    op/experimental/layers/region_yolo.hpp
+    op/experimental/layers/region_yolo.cpp
+    op/experimental/layers/reorg_yolo.hpp
+    op/experimental/layers/reorg_yolo.cpp
+    op/experimental/layers/roi_pooling.hpp
+    op/experimental/layers/roi_pooling.cpp
+    op/experimental/random_uniform.hpp
+    op/experimental/random_uniform.cpp
     op/floor.cpp
     op/floor.hpp
     op/gather.cpp
@@ -217,8 +252,20 @@ set (SRC
     op/power.hpp
     op/product.cpp
     op/product.hpp
+    op/reduce_prod.cpp
+    op/reduce_prod.hpp
+    op/reduce_mean.cpp
+    op/reduce_mean.hpp
+    op/reduce_sum.cpp
+    op/reduce_sum.hpp
     op/quantize.cpp
     op/quantize.hpp
+    op/quantized_convolution.cpp
+    op/quantized_convolution.hpp
+    op/quantized_dot.cpp
+    op/quantized_dot.hpp
+    op/recv.cpp
+    op/recv.hpp
     op/relu.cpp
     op/relu.hpp
     op/replace_slice.cpp
@@ -231,8 +278,14 @@ set (SRC
     op/reverse.hpp
     op/reverse_sequence.cpp
     op/reverse_sequence.hpp
+    op/scatter_add.cpp
+    op/scatter_add.hpp
+    op/scatter_nd_add.cpp
+    op/scatter_nd_add.hpp
     op/select.cpp
     op/select.hpp
+    op/send.cpp
+    op/send.hpp
     op/sigmoid.cpp
     op/sigmoid.hpp
     op/sign.cpp
@@ -259,12 +312,70 @@ set (SRC
     op/tanh.hpp
     op/topk.cpp
     op/topk.hpp
+    op/xor.cpp
+    op/xor.hpp
+    op/fused/clamp.cpp
+    op/fused/clamp.hpp
     op/fused/conv_fused.cpp
     op/fused/conv_fused.hpp
+    op/fused/hard_sigmoid.cpp
+    op/fused/hard_sigmoid.hpp
+    op/fused/depth_to_space.cpp
+    op/fused/depth_to_space.hpp
+    op/fused/elu.cpp
+    op/fused/elu.hpp
+    op/fused/fake_quantize.cpp
+    op/fused/fake_quantize.hpp
+    op/fused/gelu.cpp
+    op/fused/gelu.hpp
+    op/fused/gemm.cpp
+    op/fused/gemm.hpp
+    op/fused/grn.cpp
+    op/fused/grn.hpp
+    op/fused/group_conv.hpp
+    op/fused/group_conv.cpp
+    op/fused/group_conv_transpose.hpp
+    op/fused/group_conv_transpose.cpp
+    op/fused/gru_cell.cpp
+    op/fused/gru_cell.hpp
+    op/fused/layer_norm.cpp
+    op/fused/layer_norm.hpp
+    op/fused/lstm_cell.cpp
+    op/fused/lstm_cell.hpp
+    op/fused/lstm_sequence.cpp
+    op/fused/lstm_sequence.hpp
+    op/fused/matmul.cpp
+    op/fused/matmul.hpp
+    op/fused/mvn.cpp
+    op/fused/mvn.hpp
+    op/fused/normalize_l2.cpp
+    op/fused/normalize_l2.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
+    op/fused/rnn_cell.cpp
+    op/fused/rnn_cell.hpp
+    op/fused/scale_shift.cpp
+    op/fused/scale_shift.hpp
+    op/fused/shuffle_channels.cpp
+    op/fused/shuffle_channels.hpp
+    op/fused/space_to_depth.cpp
+    op/fused/space_to_depth.hpp
+    op/fused/split.cpp
+    op/fused/split.hpp
+    op/fused/squared_difference.cpp
+    op/fused/squared_difference.hpp
+    op/fused/squeeze.cpp
+    op/fused/squeeze.hpp
+    op/fused/unsqueeze.cpp
+    op/fused/unsqueeze.hpp
+    op/util/attr_types.cpp
+    op/util/attr_types.hpp
+    op/util/activation_functions.cpp
+    op/util/activation_functions.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
+    op/util/arithmetic_reductions_keep_dims.hpp
+    op/util/arithmetic_reductions_keep_dims.cpp
     op/util/binary_elementwise_arithmetic.cpp
     op/util/binary_elementwise_arithmetic.hpp
     op/util/binary_elementwise_comparison.cpp
@@ -279,16 +390,42 @@ set (SRC
     op/util/index_reduction.hpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
+    op/util/rnn_cell_base.cpp
+    op/util/rnn_cell_base.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
-    parameter_vector.hpp
     partial_shape.cpp
     partial_shape.hpp
     pass/algebraic_simplification.cpp
     pass/algebraic_simplification.hpp
     pass/assign_layout.hpp
+    pass/implicit_broadcast_elimination.hpp
+    pass/implicit_broadcast_elimination.cpp
+    pass/batch_fusion.hpp
+    pass/batch_fusion.cpp
     pass/common_function_collection.cpp
     pass/common_function_collection.hpp
+    pass/constant_folding_arithmetic_reduction.cpp
+    pass/constant_folding_binary.cpp
+    pass/constant_folding_broadcast.cpp
+    pass/constant_folding_concat.cpp
+    pass/constant_folding_convert.cpp
+    pass/constant_folding_dequantize.cpp
+    pass/constant_folding_dyn_broadcast.cpp
+    pass/constant_folding_dyn_reshape.cpp
+    pass/constant_folding_dyn_slice.cpp
+    pass/constant_folding_gather.cpp
+    pass/constant_folding_logical_reduction.cpp
+    pass/constant_folding_pad.cpp
+    pass/constant_folding_quantize.cpp
+    pass/constant_folding_range.cpp
+    pass/constant_folding_reshape.cpp
+    pass/constant_folding_reverse.cpp
+    pass/constant_folding_select.cpp
+    pass/constant_folding_shape_of.cpp
+    pass/constant_folding_slice.cpp
+    pass/constant_folding_transpose.cpp
+    pass/constant_folding_unary.cpp
     pass/constant_folding.cpp
     pass/constant_folding.hpp
     pass/constant_to_broadcast.cpp
@@ -298,6 +435,8 @@ set (SRC
     pass/cse.hpp
     pass/dump_sorted.cpp
     pass/dump_sorted.hpp
+    pass/dyn_elimination.cpp
+    pass/dyn_elimination.hpp
     pass/fused_op_decomposition.cpp
     pass/fused_op_decomposition.hpp
     pass/get_output_element_elimination.cpp
@@ -310,7 +449,6 @@ set (SRC
     pass/liveness.hpp
     pass/manager.cpp
     pass/manager.hpp
-    pass/manager_state.cpp
     pass/manager_state.hpp
     pass/memory_layout.cpp
     pass/memory_layout.hpp
@@ -320,10 +458,12 @@ set (SRC
     pass/nop_elimination.hpp
     pass/pass.cpp
     pass/pass.hpp
+    pass/opset0_downgrade.cpp
+    pass/opset0_downgrade.hpp
+    pass/opset1_upgrade.cpp
+    pass/opset1_upgrade.hpp
     pass/pass_config.cpp
     pass/pass_config.hpp
-    pass/prefix_reshape_elimination.cpp
-    pass/prefix_reshape_elimination.hpp
     pass/propagate_cacheability.cpp
     pass/propagate_cacheability.hpp
     pass/reshape_elimination.cpp
@@ -332,10 +472,12 @@ set (SRC
     pass/reshape_sinking.hpp
     pass/serialize.cpp
     pass/serialize.hpp
-    pass/shape_specialization.cpp
-    pass/shape_specialization.hpp
+    pass/shape_relevance.cpp
+    pass/shape_relevance.hpp
     pass/validate_graph.cpp
     pass/validate_graph.hpp
+    pass/validate.cpp
+    pass/validate.hpp
     pass/visualize_tree.cpp
     pass/visualize_tree.hpp
     pass/zero_dim_tensor_elimination.cpp
@@ -358,13 +500,16 @@ set (SRC
     provenance.cpp
     provenance.hpp
     rank.hpp
-    result_vector.hpp
     runtime/aligned_buffer.cpp
     runtime/aligned_buffer.hpp
+    runtime/allocator.cpp
+    runtime/allocator.hpp
     runtime/backend.cpp
     runtime/backend.hpp
     runtime/backend_manager.cpp
     runtime/backend_manager.hpp
+    runtime/chrome_trace.cpp
+    runtime/chrome_trace.hpp
     runtime/executable.cpp
     runtime/executable.hpp
     runtime/host_tensor.cpp
@@ -372,57 +517,65 @@ set (SRC
     runtime/performance_counter.hpp
     runtime/tensor.cpp
     runtime/tensor.hpp
-    serializer.cpp
-    serializer.hpp
     shape.cpp
     shape.hpp
     shape_util.cpp
     shape_util.hpp
-    specialize_shapes.cpp
-    specialize_shapes.hpp
-    state/rng_state.cpp
+    slice_plan.cpp
+    slice_plan.hpp
+    specialize_function.cpp
+    specialize_function.hpp
+    state/bernoulli_rng_state.cpp
+    state/bernoulli_rng_state.hpp
+    state/uniform_rng_state.cpp
+    state/uniform_rng_state.hpp
     strides.cpp
     strides.hpp
     type/bfloat16.cpp
+    type/bfloat16.hpp
+    type/float16.cpp
+    type/float16.hpp
     type/element_type.cpp
     util.cpp
     util.hpp
     validation_util.cpp
     validation_util.hpp
+    variant.cpp
+    variant.hpp
     )
 
 set(SRC ${SRC}
-    runtime/hybrid/hybrid_backend.cpp
-    runtime/hybrid/hybrid_backend.hpp
-    runtime/hybrid/hybrid_executable.cpp
-    runtime/hybrid/hybrid_executable.hpp
-    runtime/hybrid/hybrid_util.cpp
-    runtime/hybrid/hybrid_util.hpp
-    runtime/hybrid/op/function_call.cpp
-    runtime/hybrid/op/function_call.hpp
-    runtime/hybrid/pass/default_placement.cpp
-    runtime/hybrid/pass/default_placement.hpp
-    runtime/hybrid/pass/dump.cpp
-    runtime/hybrid/pass/dump.hpp
-    runtime/hybrid/pass/fix_get_output_element.cpp
-    runtime/hybrid/pass/fix_get_output_element.hpp
-    runtime/hybrid/pass/liveness.cpp
-    runtime/hybrid/pass/liveness.hpp
-    runtime/hybrid/pass/memory_layout.cpp
-    runtime/hybrid/pass/memory_layout.hpp
+    runtime/dynamic/dynamic_backend.cpp
+    runtime/dynamic/dynamic_backend.hpp
     )
 
-
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    list(APPEND SRC distributed.cpp distributed.hpp)
+if(NGRAPH_JSON_ENABLE)
+    list(APPEND SRC serializer.cpp serializer.hpp event_tracing.cpp event_tracing.hpp)
+else()
+    list(APPEND SRC serializer_stub.cpp)
 endif()
 
 configure_file(version.in.hpp version.hpp)
 
-add_library(ngraph SHARED ${SRC})
+if (NGRAPH_STATIC_LIB_ENABLE)
+    add_library(ngraph STATIC ${SRC})
+else()
+    add_library(ngraph SHARED ${SRC})
+endif()
+
+if(NOT NGRAPH_JSON_ENABLE)
+    target_compile_definitions(ngraph PUBLIC NGRAPH_JSON_DISABLE)
+endif()
+
+if(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
+    target_compile_definitions(ngraph PUBLIC NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
+endif()
+
+if(NGRAPH_CPU_STATIC_LIB_ENABLE)
+    target_compile_definitions(ngraph PUBLIC NGRAPH_CPU_STATIC_LIB_ENABLE)
+endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    target_sources(ngraph PRIVATE distributed.cpp)
     if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
         target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
         target_link_libraries(ngraph PRIVATE libmlsl)
@@ -444,7 +597,7 @@ endif()
 
 if(NGRAPH_ADDRESS_SANITIZER)
     message(STATUS "Enable Address Sanitizer")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
+    add_compile_options(-g -fsanitize=address -fno-omit-frame-pointer)
 endif()
 
 add_subdirectory(codegen)
@@ -461,7 +614,9 @@ if(NGRAPH_LIB_VERSIONING_ENABLE)
         VERSION ${NGRAPH_VERSION}
         SOVERSION ${NGRAPH_API_VERSION})
 endif()
-target_link_libraries(ngraph PRIVATE libjson)
+if(NGRAPH_JSON_ENABLE)
+    target_link_libraries(ngraph PRIVATE libjson)
+endif()
 target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
 
 if (LINUX)
@@ -487,7 +642,8 @@ endif()
 # Defines macro in C++ to load backend plugin
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 if (NOT WIN32)
-    target_link_libraries(ngraph PUBLIC dl pthread)
+    find_package(Threads REQUIRED)
+    target_link_libraries(ngraph PUBLIC dl Threads::Threads)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)

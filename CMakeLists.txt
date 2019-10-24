@@ -23,10 +23,6 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "In-source builds are not allowed.")
 endif()
 
-if("${CMAKE_GENERATOR}" STREQUAL "Ninja")
-    message(FATAL_ERROR "Ninja generator not supported.")
-endif()
-
 if (CMAKE_BUILD_TYPE)
     set(RELEASE_TYPES Debug Release RelWithDebInfo MinSizeRel)
     list(FIND RELEASE_TYPES ${CMAKE_BUILD_TYPE} INDEX_FOUND)
@@ -40,8 +36,9 @@ include(var_functions)
 
 NGRAPH_GET_VERSION_LABEL()
 
-string(REGEX MATCH "([0-9?]+)\\.([0-9?]+)\\.([0-9?]+)(-rc\\.[0-9?]+)?" NGRAPH_VERSION_SHORT "${NGRAPH_VERSION_LABEL}")
+string(REGEX MATCH "([0-9?]+)\\.([0-9?]+)\\.([0-9?]+)(-(rc|dev)\\.[0-9?]+)?" NGRAPH_VERSION_SHORT "${NGRAPH_VERSION_LABEL}")
 string(REGEX REPLACE "-rc." "rc" NGRAPH_WHEEL_VERSION "${NGRAPH_VERSION_SHORT}")
+string(REGEX REPLACE "-dev." "dev" NGRAPH_WHEEL_VERSION "${NGRAPH_WHEEL_VERSION}")
 string(REGEX MATCH "([0-9?]+)\\.([0-9?]+)" NGRAPH_API_VERSION "${NGRAPH_VERSION_LABEL}")
 string(REGEX MATCH "[^v](.*)" NGRAPH_VERSION "${NGRAPH_VERSION_LABEL}")
 string(REPLACE "." ";" NGRAPH_VERSION_PARTS "${NGRAPH_VERSION_SHORT}")
@@ -76,6 +73,10 @@ if ("${CMAKE_GENERATOR}" MATCHES "^Visual Studio.*$")
     set(MSVS TRUE)
 endif()
 
+if (CMAKE_CXX_COMPILER_ID MATCHES MSVC)
+    add_definitions(/bigobj)
+endif()
+
 # APPLE: Set CMAKE_OSX_SYSROOT if not set already.
 if (APPLE)
     execute_process(COMMAND sw_vers -productVersion
@@ -106,7 +107,10 @@ if (APPLE)
             set(XCODE_ISYSROOT ${APPLE_DEV_DIR}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${OSX_SHORT_VERSION}.sdk)
             message(STATUS "Trying Xcode sdk at ${XCODE_ISYSROOT}.")
             if(NOT EXISTS ${XCODE_ISYSROOT})
-                message(FATAL_ERROR "Cannot find macos sdk.")
+                set(XCODE_ISYSROOT ${APPLE_DEV_DIR}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk)
+                if(NOT EXISTS ${XCODE_ISYSROOT})
+                    message(FATAL_ERROR "Cannot find macos sdk.")
+                endif()
             endif()
         endif()
         message(STATUS "Setting CMAKE_OSX_SYSROOT for macos ${OSX_SHORT_VERSION} to ${XCODE_ISYSROOT}")
@@ -114,18 +118,37 @@ if (APPLE)
     endif()
 endif()
 
+if (NGRAPH_MLIR_ENABLE)
+    #MLIR uses the latest version of LLVM which requires C++14.
+    set(NGRAPH_CXX_STANDARD 14)
+else()
+    set(NGRAPH_CXX_STANDARD 11)
+endif()
+set(CMAKE_CXX_STANDARD ${NGRAPH_CXX_STANDARD})
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Create compilation database compile_commands.json
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # Setup CMAKE_ARGS to be forwarded to External Projects
+set(NGRAPH_FORWARD_CMAKE_ARGS
+    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    -DCMAKE_CXX_STANDARD:STRING=${CMAKE_CXX_STANDARD}
+    -DCMAKE_CXX_STANDARD_REQUIRED:BOOL=${CMAKE_CXX_STANDARD_REQUIRED}
+    -DCMAKE_CXX_EXTENSIONS:BOOL=${CMAKE_CXX_EXTENSIONS}
+    -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=${CMAKE_EXPORT_COMPILE_COMMANDS}
+    -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=${CMAKE_POSITION_INDEPENDENT_CODE}
+    )
+
 if (CMAKE_OSX_SYSROOT)
     set(NGRAPH_FORWARD_CMAKE_ARGS
-        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-        -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
-        )
-else()
-    set(NGRAPH_FORWARD_CMAKE_ARGS
-        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-        )
+            ${NGRAPH_FORWARD_CMAKE_ARGS}
+            -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
+            )
 endif()
 
 if (NOT MSVS)
@@ -145,34 +168,48 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEIGEN_MPL2_ONLY -DTBB_USE_THREADING_TO
 
 ngraph_var(NGRAPH_USE_PREBUILT_LLVM DEFAULT "FALSE")
 
-# Create compilation database compile_commands.json
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 option(NGRAPH_UNIT_TEST_ENABLE "Control the building of unit tests" TRUE)
+option(NGRAPH_DOC_BUILD_ENABLE "Control the building of documentation" FALSE)
 option(NGRAPH_TOOLS_ENABLE "Control the building of tool" TRUE)
 option(NGRAPH_CPU_ENABLE "Control the building of the CPU backend" TRUE)
-option(NGRAPH_INTELGPU_ENABLE "Control the building of the Intel GPU backend with clDNN" FALSE)
-option(NGRAPH_GPU_ENABLE "Control the building of the GPU backend" FALSE)
+option(NGRAPH_USE_LEGACY_MKLDNN "Use legacy MKLDNN" TRUE)
+option(NGRAPH_MLIR_ENABLE "Control the building of MLIR backend" FALSE)
 option(NGRAPH_INTERPRETER_ENABLE "Control the building of the INTERPRETER backend" TRUE)
 option(NGRAPH_NOP_ENABLE "Control the building of the NOP backend" TRUE)
-option(NGRAPH_GPUH_ENABLE "Control the building of the Hybrid GPU backend" FALSE)
 option(NGRAPH_GENERIC_CPU_ENABLE "Enable build nGraph for generic CPU backend" FALSE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_DEPRECATED_ENABLE "Enable compiler deprecation pragmas for deprecated APIs (recommended only for development use)" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
 option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
+option(NGRAPH_ENABLE_CPU_CONV_AUTO "Enable mkldnn convolution_auto for CPU" TRUE)
 option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
 option(NGRAPH_LIB_VERSIONING_ENABLE "Enable shared library versioning" FALSE)
 option(NGRAPH_PYTHON_BUILD_ENABLE "Enable build nGraph python package wheel" FALSE)
 option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" ${PLAIDML_FOUND})
 option(NGRAPH_DISTRIBUTED_ENABLE "Enable distributed training using MLSL/OpenMPI" OFF)
+option(NGRAPH_FAST_MATH_ENABLE "Enable fast math" ON)
+option(NGRAPH_JSON_ENABLE "Enable JSON based serialization and tracing features" TRUE)
+option(NGRAPH_STATIC_LIB_ENABLE "Enable build nGraph as a static library" FALSE)
+option(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE "Enable build INTERPRETER backend as a static library" FALSE)
+option(NGRAPH_CPU_STATIC_LIB_ENABLE "Enable build CPU backend as a static library" FALSE)
+option(NGRAPH_PLAIDML_STATIC_LIB_ENABLE "Enable build PlaidML backend as a static library" FALSE)
+option(NGRAPH_DYNAMIC_COMPONENTS_ENABLE "Enable dynamic loading of components" TRUE)
+option(NGRAPH_NATIVE_ARCH_ENABLE "Enable build for native archtecture" TRUE)
+if (NGRAPH_CPU_ENABLE)
+    option(NGRAPH_TBB_ENABLE "Control usage of TBB for CPU backend" TRUE)
+endif()
 
 if (NGRAPH_CPU_ENABLE
         AND
-    ((NOT NGRAPH_GPU_ENABLE) AND (NOT NGRAPH_GPUH_ENABLE)
-        AND (NOT NGRAPH_GENERIC_CPU_ENABLE) AND (NOT NGRAPH_INTELGPU_ENABLE))
+    (NOT NGRAPH_GENERIC_CPU_ENABLE)
    )
     set(NGRAPH_INTEL_CPU_ONLY_ENABLE ON)
+endif()
+
+if (NGRAPH_MLIR_ENABLE AND (NOT NGRAPH_DEX_ONLY))
+    #disable code-gen due to sym collision with LLVM
+    message(FATAL_ERROR "Cannot build with both MLIR and code-gen ON.\n"
+                        "Use -DNGRAPH_DEX_ONLY=ON and try again. \n")
 endif()
 
 if (NGRAPH_DISTRIBUTED_ENABLE)
@@ -193,13 +230,13 @@ if (NGRAPH_DISTRIBUTED_ENABLE)
     endif()
 endif()
 
-if (NGRAPH_GPUH_ENABLE)
-    set(NGRAPH_GPU_ENABLE TRUE)
-endif()
-
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_USE_SYSTEM_PROTOBUF "Use system provided Protobuf shared object" FALSE)
     option(NGRAPH_ONNXIFI_ENABLE "Enable ONNX Interface for Framework Integration" TRUE)
+endif()
+
+if (NOT NGRAPH_JSON_ENABLE)
+    set(NGRAPH_TOOLS_ENABLE FALSE)
 endif()
 
 macro (NORMALIZE_BOOL VAL)
@@ -211,43 +248,74 @@ macro (NORMALIZE_BOOL VAL)
 endmacro()
 
 NORMALIZE_BOOL(NGRAPH_UNIT_TEST_ENABLE)
+NORMALIZE_BOOL(NGRAPH_DOC_BUILD_ENABLE)
 NORMALIZE_BOOL(NGRAPH_TOOLS_ENABLE)
 NORMALIZE_BOOL(NGRAPH_CPU_ENABLE)
-NORMALIZE_BOOL(NGRAPH_INTELGPU_ENABLE)
-NORMALIZE_BOOL(NGRAPH_GPU_ENABLE)
+NORMALIZE_BOOL(NGRAPH_USE_LEGACY_MKLDNN)
+NORMALIZE_BOOL(NGRAPH_MLIR_ENABLE)
 NORMALIZE_BOOL(NGRAPH_INTERPRETER_ENABLE)
 NORMALIZE_BOOL(NGRAPH_NOP_ENABLE)
-NORMALIZE_BOOL(NGRAPH_GPUH_ENABLE)
 NORMALIZE_BOOL(NGRAPH_GENERIC_CPU_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DEBUG_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DEPRECATED_ENABLE)
 NORMALIZE_BOOL(NGRAPH_ONNX_IMPORT_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DEX_ONLY)
+NORMALIZE_BOOL(NGRAPH_ENABLE_CPU_CONV_AUTO)
 NORMALIZE_BOOL(NGRAPH_CODE_COVERAGE_ENABLE)
 NORMALIZE_BOOL(NGRAPH_LIB_VERSIONING_ENABLE)
 NORMALIZE_BOOL(NGRAPH_PYTHON_BUILD_ENABLE)
 NORMALIZE_BOOL(NGRAPH_USE_PREBUILT_LLVM)
 NORMALIZE_BOOL(NGRAPH_PLAIDML_ENABLE)
+NORMALIZE_BOOL(NGRAPH_JSON_ENABLE)
 
-message(STATUS "NGRAPH_UNIT_TEST_ENABLE:        ${NGRAPH_UNIT_TEST_ENABLE}")
-message(STATUS "NGRAPH_TOOLS_ENABLE:            ${NGRAPH_TOOLS_ENABLE}")
-message(STATUS "NGRAPH_CPU_ENABLE:              ${NGRAPH_CPU_ENABLE}")
-message(STATUS "NGRAPH_INTELGPU_ENABLE:         ${NGRAPH_INTELGPU_ENABLE}")
-message(STATUS "NGRAPH_GPU_ENABLE:              ${NGRAPH_GPU_ENABLE}")
-message(STATUS "NGRAPH_INTERPRETER_ENABLE:      ${NGRAPH_INTERPRETER_ENABLE}")
-message(STATUS "NGRAPH_NOP_ENABLE:              ${NGRAPH_NOP_ENABLE}")
-message(STATUS "NGRAPH_GPUH_ENABLE:             ${NGRAPH_GPUH_ENABLE}")
-message(STATUS "NGRAPH_GENERIC_CPU_ENABLE:      ${NGRAPH_GENERIC_CPU_ENABLE}")
-message(STATUS "NGRAPH_DEBUG_ENABLE:            ${NGRAPH_DEBUG_ENABLE}")
-message(STATUS "NGRAPH_DEPRECATED_ENABLE:       ${NGRAPH_DEPRECATED_ENABLE}")
-message(STATUS "NGRAPH_ONNX_IMPORT_ENABLE:      ${NGRAPH_ONNX_IMPORT_ENABLE}")
-message(STATUS "NGRAPH_DEX_ONLY:                ${NGRAPH_DEX_ONLY}")
-message(STATUS "NGRAPH_CODE_COVERAGE_ENABLE:    ${NGRAPH_CODE_COVERAGE_ENABLE}")
-message(STATUS "NGRAPH_LIB_VERSIONING_ENABLE:   ${NGRAPH_LIB_VERSIONING_ENABLE}")
-message(STATUS "NGRAPH_PYTHON_BUILD_ENABLE:     ${NGRAPH_PYTHON_BUILD_ENABLE}")
-message(STATUS "NGRAPH_USE_PREBUILT_LLVM:       ${NGRAPH_USE_PREBUILT_LLVM}")
-message(STATUS "NGRAPH_PLAIDML_ENABLE:          ${NGRAPH_PLAIDML_ENABLE}")
-message(STATUS "NGRAPH_DISTRIBUTED_ENABLE:      ${NGRAPH_DISTRIBUTED_ENABLE}")
+NORMALIZE_BOOL(NGRAPH_NATIVE_ARCH_ENABLE)
+NORMALIZE_BOOL(NGRAPH_STATIC_LIB_ENABLE)
+NORMALIZE_BOOL(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
+NORMALIZE_BOOL(NGRAPH_CPU_STATIC_LIB_ENABLE)
+NORMALIZE_BOOL(NGRAPH_DYNAMIC_COMPONENTS_ENABLE)
+if (NGRAPH_CPU_ENABLE)
+    NORMALIZE_BOOL(NGRAPH_TBB_ENABLE)
+endif()
+
+message(STATUS "NGRAPH_CXX_STANDARD:                  ${NGRAPH_CXX_STANDARD}")
+message(STATUS "NGRAPH_UNIT_TEST_ENABLE:              ${NGRAPH_UNIT_TEST_ENABLE}")
+message(STATUS "NGRAPH_DOC_BUILD_ENABLE:              ${NGRAPH_DOC_BUILD_ENABLE}")
+message(STATUS "NGRAPH_TOOLS_ENABLE:                  ${NGRAPH_TOOLS_ENABLE}")
+message(STATUS "NGRAPH_CPU_ENABLE:                    ${NGRAPH_CPU_ENABLE}")
+message(STATUS "NGRAPH_USE_LEGACY_MKLDNN:             ${NGRAPH_USE_LEGACY_MKLDNN}")
+message(STATUS "NGRAPH_MLIR_ENABLE:                   ${NGRAPH_MLIR_ENABLE}")
+message(STATUS "NGRAPH_INTERPRETER_ENABLE:            ${NGRAPH_INTERPRETER_ENABLE}")
+message(STATUS "NGRAPH_NOP_ENABLE:                    ${NGRAPH_NOP_ENABLE}")
+message(STATUS "NGRAPH_GENERIC_CPU_ENABLE:            ${NGRAPH_GENERIC_CPU_ENABLE}")
+message(STATUS "NGRAPH_DEBUG_ENABLE:                  ${NGRAPH_DEBUG_ENABLE}")
+message(STATUS "NGRAPH_DEPRECATED_ENABLE:             ${NGRAPH_DEPRECATED_ENABLE}")
+message(STATUS "NGRAPH_ONNX_IMPORT_ENABLE:            ${NGRAPH_ONNX_IMPORT_ENABLE}")
+message(STATUS "NGRAPH_DEX_ONLY:                      ${NGRAPH_DEX_ONLY}")
+message(STATUS "NGRAPH_ENABLE_CPU_CONV_AUTO:          ${NGRAPH_ENABLE_CPU_CONV_AUTO}")
+message(STATUS "NGRAPH_CODE_COVERAGE_ENABLE:          ${NGRAPH_CODE_COVERAGE_ENABLE}")
+message(STATUS "NGRAPH_LIB_VERSIONING_ENABLE:         ${NGRAPH_LIB_VERSIONING_ENABLE}")
+message(STATUS "NGRAPH_PYTHON_BUILD_ENABLE:           ${NGRAPH_PYTHON_BUILD_ENABLE}")
+message(STATUS "NGRAPH_USE_PREBUILT_LLVM:             ${NGRAPH_USE_PREBUILT_LLVM}")
+message(STATUS "NGRAPH_PLAIDML_ENABLE:                ${NGRAPH_PLAIDML_ENABLE}")
+message(STATUS "NGRAPH_DISTRIBUTED_ENABLE:            ${NGRAPH_DISTRIBUTED_ENABLE}")
+message(STATUS "NGRAPH_JSON_ENABLE:                   ${NGRAPH_JSON_ENABLE}")
+message(STATUS "NGRAPH_STATIC_LIB_ENABLE:             ${NGRAPH_STATIC_LIB_ENABLE}")
+message(STATUS "NGRAPH_INTERPRETER_STATIC_LIB_ENABLE: ${NGRAPH_INTERPRETER_STATIC_LIB_ENABLE}")
+message(STATUS "NGRAPH_CPU_STATIC_LIB_ENABLE:         ${NGRAPH_CPU_STATIC_LIB_ENABLE}")
+message(STATUS "NGRAPH_PLAIDML_STATIC_LIB_ENABLE:     ${NGRAPH_PLAIDML_STATIC_LIB_ENABLE}")
+message(STATUS "NGRAPH_DYNAMIC_COMPONENTS_ENABLE:     ${NGRAPH_DYNAMIC_COMPONENTS_ENABLE}")
+message(STATUS "NGRAPH_NATIVE_ARCH_ENABLE:            ${NGRAPH_NATIVE_ARCH_ENABLE}")
+if (NGRAPH_CPU_ENABLE)
+    message(STATUS "NGRAPH_TBB_ENABLE:                    ${NGRAPH_TBB_ENABLE}")
+endif()
+
+if("${CMAKE_GENERATOR}" STREQUAL "Ninja" AND (NGRAPH_TOOLS_ENABLE OR NGRAPH_CPU_ENABLE OR NGRAPH_MLIR_ENABLE OR
+        NGRAPH_INTELGPU_ENABLE OR NGRAPH_GPU_ENABLE OR NGRAPH_INTERPRETER_ENABLE OR NGRAPH_NOP_ENABLE OR
+        NGRAPH_GPUH_ENABLE OR NGRAPH_GENERIC_CPU_ENABLE OR NGRAPH_ONNX_IMPORT_ENABLE OR NGRAPH_PLAIDML_ENABLE OR
+        NGRAPH_JSON_ENABLE))
+    message(FATAL_ERROR "Ninja generator not supported.")
+endif()
+
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
@@ -274,11 +342,12 @@ set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DOCDIR}")
 set(NGRAPH_INSTALL_BIN "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}")
 if (LINUX)
     if (DEFINED NGRAPH_RPATH)
+        set(CMAKE_BUILD_RPATH "$ORIGIN:${NGRAPH_RPATH}")
         set(CMAKE_INSTALL_RPATH "$ORIGIN:${NGRAPH_RPATH}")
     else()
+        set(CMAKE_BUILD_RPATH "$ORIGIN")
         set(CMAKE_INSTALL_RPATH "$ORIGIN")
     endif()
-    set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 endif()
 
 #-----------------------------------------------------------------------------------------------
@@ -286,16 +355,14 @@ endif()
 #-----------------------------------------------------------------------------------------------
 
 # Compiler-specific logic...
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$" AND NOT NGRAPH_BUILD_DIR)
     message( STATUS "Setting clang flags...")
     include( cmake/clang_4_0_flags.cmake )
 endif()
 
 if (WIN32)
-    set (CMAKE_CXX_STANDARD 11)
     set(CMAKE_CXX_FLAGS "/W0 /EHsc /MP")
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
     set(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
     # These can be uncommented once we have visibility fully in place
@@ -312,6 +379,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     endif()
 endif()
 
+set(CMAKE_ORIGINAL_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+
 ngraph_var(NGRAPH_WARNINGS_AS_ERRORS DEFAULT "OFF")
 if (${NGRAPH_WARNINGS_AS_ERRORS})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
@@ -323,7 +392,7 @@ if (NGRAPH_CODE_COVERAGE_ENABLE)
 endif()
 
 # Enable build target CPU features
-if(NOT WIN32)
+if(NOT WIN32 AND NGRAPH_NATIVE_ARCH_ENABLE)
     set(NGRAPH_TARGET_ARCH native CACHE
         STRING "Target CPU architecture to build for. Defaults to the native CPU architecture")
 
@@ -353,6 +422,23 @@ if (NGRAPH_CPU_ENABLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")
 endif()
 
+if (NGRAPH_USE_LEGACY_MKLDNN)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_USE_LEGACY_MKLDNN")
+endif()
+
+if (NGRAPH_MLIR_ENABLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_MLIR_ENABLE")
+    set(NGRAPH_MLIR_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/contrib/mlir)
+endif()
+
+if (NGRAPH_STATIC_LIB_ENABLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_STATIC_LIB_ENABLE")
+endif()
+
+if (NGRAPH_DYNAMIC_COMPONENTS_ENABLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_DYNAMIC_COMPONENTS_ENABLE")
+endif()
+
 if (NGRAPH_PLAIDML_ENABLE)
     find_package(PlaidML CONFIG)
     if (NOT PLAIDML_FOUND)
@@ -375,17 +461,31 @@ if (NOT DEFINED NGRAPH_TBB_ENABLE)
     set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
 endif()
 
-add_custom_target(style-check
-    COMMAND ${CMAKE_COMMAND}
-    -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-    -P ${CMAKE_MODULE_PATH}style_check.cmake
-)
+# Since UNIX and APPLE support Bash we can use a Bash script to do the clang-format functions
+# This is much faster than the cmake method
+if (UNIX OR APPLE)
+    add_custom_target(style-check COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/check-code-format.sh)
+    add_custom_target(style-apply COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/apply-code-format.sh)
+    add_custom_target(style COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/apply-code-format.sh)
+else()
+    add_custom_target(style-check
+        COMMAND ${CMAKE_COMMAND}
+        -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+        -P ${CMAKE_MODULE_PATH}style_check.cmake
+    )
 
-add_custom_target(style-apply
-    COMMAND ${CMAKE_COMMAND}
-    -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-    -P ${CMAKE_MODULE_PATH}style_apply.cmake
-)
+    add_custom_target(style-apply
+        COMMAND ${CMAKE_COMMAND}
+        -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+        -P ${CMAKE_MODULE_PATH}style_apply.cmake
+    )
+
+    add_custom_target(style
+        COMMAND ${CMAKE_COMMAND}
+        -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+        -P ${CMAKE_MODULE_PATH}style_apply.cmake
+    )
+endif()
 
 add_custom_target(fix-mode
     COMMAND ${CMAKE_COMMAND}
@@ -407,23 +507,35 @@ if(NGRAPH_DEPRECATED_ENABLE)
     add_definitions(-DNGRAPH_DEPRECATED_ENABLE)
 endif()
 
+add_definitions(-DPROJECT_ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
+#-----------------------------------------------------------------------------------------------
+# Print Global Options
+#-----------------------------------------------------------------------------------------------
+message(STATUS "Compile Flags: ${CMAKE_CXX_FLAGS}")
+message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")
+message(STATUS "CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE}")
+message(STATUS "CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}")
+
 #-----------------------------------------------------------------------------------------------
 # External projects install directory
 #-----------------------------------------------------------------------------------------------
 
-set(NGRAPH_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/src/ngraph)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-if(WIN32)
-    set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR}/${CMAKE_CFG_INTDIR})
-    set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR}/\${CMAKE_INSTALL_CONFIG_NAME})
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-    set(NGRAPH_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR}/${CMAKE_CFG_INTDIR})
-    set(NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR}/\${CMAKE_INSTALL_CONFIG_NAME})
-    set(CMAKE_PDB_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-else()
-    set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-    set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR})
+if (NOT NGRAPH_BUILD_DIR)
+    set(NGRAPH_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/src/ngraph)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    if(WIN32)
+        set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR})
+        set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR}/\${CMAKE_INSTALL_CONFIG_NAME})
+        set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+        set(NGRAPH_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR}/${CMAKE_CFG_INTDIR})
+        set(NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR}/\${CMAKE_INSTALL_CONFIG_NAME})
+        set(CMAKE_PDB_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    else()
+        set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+        set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR})
+    endif()
 endif()
 
 set(EXTERNAL_INSTALL_DIR ${CMAKE_BINARY_DIR}/external)
@@ -452,18 +564,25 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
 endif()
 
 include(cmake/external_gtest.cmake)
-include(cmake/external_json.cmake)
+if(NGRAPH_JSON_ENABLE)
+    include(cmake/external_json.cmake)
+endif()
 if(NGRAPH_CPU_ENABLE OR NGRAPH_GENERIC_CPU_ENABLE)
     include(cmake/external_eigen.cmake)
 endif()
 if(NGRAPH_CPU_ENABLE)
-    include(cmake/external_mkldnn.cmake)
+    if(NGRAPH_USE_LEGACY_MKLDNN)
+        include(cmake/external_mkldnn.cmake)
+        set(NGRAPH_DEX_ONLY TRUE)
+    else()
+        include(cmake/external_mkldnn_v1.cmake)
+    endif()
 endif()
-if(NGRAPH_INTELGPU_ENABLE)
-    include(cmake/external_cldnn.cmake)
+if (NGRAPH_MLIR_ENABLE)
+    include(cmake/external_mlir.cmake)
 endif()
 
-if ((NGRAPH_GPU_ENABLE OR NGRAPH_CPU_ENABLE) AND NOT NGRAPH_DEX_ONLY)
+if (NGRAPH_CPU_ENABLE AND NOT NGRAPH_DEX_ONLY)
     set(NGRAPH_CODEGEN_ENABLE TRUE)
 else()
     set(NGRAPH_CODEGEN_ENABLE FALSE)
@@ -475,7 +594,7 @@ if(NGRAPH_CODEGEN_ENABLE)
     elseif (NOT MSVS)
         include(cmake/external_llvm.cmake)
     else()
-        message(FATAL_ERROR "CODEGEN not support on Windows!")
+        message(FATAL_ERROR "CODEGEN is not supported on Windows!")
     endif()
 endif()
 
@@ -498,22 +617,9 @@ if (NGRAPH_HALIDE)
     include(cmake/external_halide.cmake)
 endif()
 
-add_definitions(-DPROJECT_ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
-
-message(STATUS "Compile Flags: ${CMAKE_CXX_FLAGS}")
-message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")
-message(STATUS "CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE}")
-message(STATUS "CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}")
 add_subdirectory(src)
 
-if (NGRAPH_UNIT_TEST_ENABLE)
-    add_subdirectory(test)
-    message(STATUS "unit tests enabled")
-else()
-    add_subdirectory(test/models)
-    add_subdirectory(test/util)
-    message(STATUS "unit tests disabled")
-endif()
+add_subdirectory(test)
 
 if (NGRAPH_DOC_BUILD_ENABLE)
     add_subdirectory(doc)

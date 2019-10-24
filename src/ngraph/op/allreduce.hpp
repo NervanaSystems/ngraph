@@ -26,12 +26,20 @@ namespace ngraph
         class AllReduce : public Op
         {
         public:
-            AllReduce(const std::shared_ptr<Node>& arg);
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"AllReduce", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            AllReduce() = default;
+            AllReduce(const Output<Node>& arg, reduction::Type reduce_type = reduction::Type::SUM);
 
             void validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+            std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+            reduction::Type get_reduce_type() const;
+            void set_reduce_type(reduction::Type reduce_type);
+
+        private:
+            reduction::Type m_reduce_type{reduction::Type::SUM};
         };
     }
 }

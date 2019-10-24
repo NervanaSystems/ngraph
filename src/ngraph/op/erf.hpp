@@ -16,9 +16,7 @@
 
 #pragma once
 
-#include "ngraph/op/op.hpp"
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
-#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -27,7 +25,11 @@ namespace ngraph
         class Erf : public util::UnaryElementwiseArithmetic
         {
         public:
-            Erf(std::shared_ptr<Node> arg);
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"Erf", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            Erf() = default;
+            Erf(const Output<Node>& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

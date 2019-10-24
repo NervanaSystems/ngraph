@@ -30,7 +30,7 @@ namespace ngraph
                     []() -> std::shared_ptr<ngraph::op::util::OpAnnotations> {
                     auto op_annotations =
                         std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                    return op_annotations;
+                    return std::move(op_annotations);
                 };
                 return func;
             }

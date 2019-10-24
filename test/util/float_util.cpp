@@ -55,6 +55,29 @@ std::string ngraph::test::bfloat16_to_bits(bfloat16 f)
     return formatted;
 }
 
+std::string ngraph::test::float16_to_bits(float16 f)
+{
+    std::stringstream ss;
+    ss << std::bitset<16>(f.to_bits());
+    std::string unformatted = ss.str();
+    std::string formatted;
+    formatted.reserve(41);
+    // Sign
+    formatted.push_back(unformatted[0]);
+    formatted.append("  ");
+    // Exponent
+    formatted.append(unformatted, 1, 5);
+    formatted.append("  ");
+    // Mantissa
+    formatted.append(unformatted, 6, 2);
+    for (int i = 8; i < 16; i += 4)
+    {
+        formatted.push_back(' ');
+        formatted.append(unformatted, i, 4);
+    }
+    return formatted;
+}
+
 std::string ngraph::test::float_to_bits(float f)
 {
     FloatUnion fu{f};
@@ -114,6 +137,20 @@ ngraph::bfloat16 ngraph::test::bits_to_bfloat16(const std::string& s)
     }
     std::bitset<16> bs(unformatted);
     return bfloat16::from_bits(static_cast<uint16_t>(bs.to_ulong()));
+}
+
+ngraph::float16 ngraph::test::bits_to_float16(const std::string& s)
+{
+    std::string unformatted = s;
+    unformatted.erase(remove_if(unformatted.begin(), unformatted.end(), ::isspace),
+                      unformatted.end());
+
+    if (unformatted.size() != 16)
+    {
+        throw ngraph_error("Input length must be 16");
+    }
+    std::bitset<16> bs(unformatted);
+    return float16::from_bits(static_cast<uint16_t>(bs.to_ulong()));
 }
 
 float ngraph::test::bits_to_float(const std::string& s)

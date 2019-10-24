@@ -19,8 +19,12 @@
 using namespace std;
 using namespace ngraph;
 
-op::GreaterEq::GreaterEq(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-    : BinaryElementwiseComparison("GreaterEq", arg0, arg1)
+constexpr NodeTypeInfo op::GreaterEq::type_info;
+
+op::GreaterEq::GreaterEq(const Output<Node>& arg0,
+                         const Output<Node>& arg1,
+                         const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseComparison(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }
@@ -28,5 +32,5 @@ op::GreaterEq::GreaterEq(const shared_ptr<Node>& arg0, const shared_ptr<Node>& a
 shared_ptr<Node> op::GreaterEq::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<GreaterEq>(new_args.at(0), new_args.at(1));
+    return make_shared<GreaterEq>(new_args.at(0), new_args.at(1), this->get_autob());
 }

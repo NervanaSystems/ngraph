@@ -24,23 +24,31 @@ namespace ngraph
     {
         namespace util
         {
-            /// \brief Abstract base class for fused ops, i.e ops that can be broken down into core ngraph ops
+            /// \brief Abstract base class for fused ops, i.e ops that can be broken down into core
+            ///        ngraph ops
             ///
             class FusedOp : public Op
             {
             public:
-                /// \brief Decomposes the FusedOp into a sub-graph consisting of core ngraph ops
-                ///
-                /// \return A vector of nodes comprising the sub-graph. The order of output
-                ///         tensors must match the match output tensors of the FusedOp
-                virtual NodeVector decompose_op() const = 0;
-
+                bool supports_decompose() const override { return true; }
                 void validate_and_infer_types() override;
 
+                /// Pre and post validation hooks for op-specific actions
+                virtual void pre_validate_and_infer_types() {}
+                virtual void post_validate_and_infer_types() {}
                 void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const NodeVector& deltas) override;
 
             protected:
+                FusedOp();
+
+                /// \brief Constructs a FusedOp
+                ///
+                /// \param args Nodes that produce the input tensors for the fused op
+                FusedOp(const NodeVector& args);
+
+                FusedOp(const OutputVector& args);
+
                 /// \brief Constructs a FusedOp
                 ///
                 /// \param args Nodes that produce the input tensors for the fused op

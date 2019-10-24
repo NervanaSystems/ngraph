@@ -29,14 +29,19 @@ namespace ngraph
         class Asin : public util::UnaryElementwiseArithmetic
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"Asin", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            /// \brief Constructs an arcsin operation.
+            Asin() = default;
             /// \brief Constructs an arcsin operation.
             ///
-            /// \param arg Node that produces the input tensor.<br>
+            /// \param arg Output that produces the input tensor.<br>
             /// `[d1, ...]`
             ///
             /// Output `[d1, ...]`
             ///
-            Asin(const std::shared_ptr<Node>& arg);
+            Asin(const Output<Node>& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

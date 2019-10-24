@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/op.hpp"
 
 namespace ngraph
@@ -27,15 +26,16 @@ namespace ngraph
         class ShapeOf : public Op
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"ShapeOf", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            ShapeOf() = default;
             /// \brief Constructs a shape-of operation.
-            ShapeOf(const std::shared_ptr<Node>& arg);
+            ShapeOf(const Output<Node>& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            virtual std::vector<std::shared_ptr<op::Constant>> as_constants() const override;
-
-        protected:
             void validate_and_infer_types() override;
         };
     }

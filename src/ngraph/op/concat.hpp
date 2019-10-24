@@ -28,25 +28,38 @@ namespace ngraph
         class Concat : public Op
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"Concat", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            /// \brief Constructs a concatenation operation.
+            Concat() = default;
+            /// \brief Constructs a concatenation operation.
+            ///
+            /// \param args               The outputs producing the input tensors.
+            /// \param axis The axis along which to concatenate the input tensors.
+            Concat(const OutputVector& args, size_t axis);
+
             /// \brief Constructs a concatenation operation.
             ///
             /// \param args               The nodes producing the input tensors.
-            /// \param concatenation_axis The axis along which to concatenate the input tensors.
-            Concat(const NodeVector& args, size_t concatenation_axis);
+            /// \param axis The axis along which to concatenate the input tensors.
+            Concat(const NodeVector& args, size_t axis);
 
             void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            virtual std::vector<std::shared_ptr<op::Constant>> as_constants() const override;
-
             /// \return The concatenation axis.
-            size_t get_concatenation_axis() const { return m_concatenation_axis; }
+            size_t get_concatenation_axis() const { return get_axis(); }
+            void set_concatenation_axis(size_t concatenation_axis) { set_axis(concatenation_axis); }
+            /// \return The concatenation axis.
+            size_t get_axis() const { return m_axis; }
+            void set_axis(size_t axis) { m_axis = axis; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-            const size_t m_concatenation_axis;
+            size_t m_axis;
         };
     }
 }

@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018-2019 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -133,11 +133,11 @@ class Computation(object):
             tensor_view.element_type, tensor_view.element_count)
 
         nparray = np.ascontiguousarray(value)
-        tensor_view.write(util.numpy_to_c(nparray), 0, buffer_size)
+        tensor_view.write(util.numpy_to_c(nparray), buffer_size)
 
     @staticmethod
     def _read_tensor_view_to_ndarray(tensor_view, output):
         # type: (Tensor, np.ndarray) -> None
         buffer_size = Computation._get_buffer_size(
             tensor_view.element_type, tensor_view.element_count)
-        tensor_view.read(util.numpy_to_c(output), 0, buffer_size)
+        tensor_view.read(util.numpy_to_c(output), buffer_size)

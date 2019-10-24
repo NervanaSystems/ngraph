@@ -334,3 +334,10 @@ TEST(CSE, one_hot)
         ASSERT_EQ(f->get_results().at(0)->get_argument(0), f->get_results().at(1)->get_argument(0));
     }
 }
+
+TEST(CSE, pass_property)
+{
+    auto pass = std::make_shared<ngraph::pass::CommonSubexpressionElimination>();
+    ASSERT_EQ(true, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+    ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+}

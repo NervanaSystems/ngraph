@@ -28,12 +28,12 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
-#include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -48,7 +48,7 @@ struct Type
     };
 };
 
-//constructs (x*W + bias)
+// constructs (x*W + bias)
 static std::shared_ptr<pattern::Matcher>
     construct_rnn_input_linear_transformation(std::shared_ptr<pattern::op::Label> labels[])
 {
@@ -217,7 +217,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             auto weights = it.first.first;
             auto bias = it.first.second;
 
-            //if there's just one data node skip the optimization
+            // if there's just one data node skip the optimization
             if (it.second.size() < 2)
             {
                 return;
@@ -298,7 +298,8 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
     auto callback_matcher_v1 = [&]() -> void {
 
         // Expecting input data shape D=[x, y, z], weights W=[u, v], bias B = [w]
-        // where y is the time step. We are computing R=dot(D,W)=[x,y,v]. We can reshape D to D'=[x*y, z], then we have dot(D',W), result
+        // where y is the time step. We are computing R=dot(D,W)=[x,y,v]. We can reshape D to
+        // D'=[x*y, z], then we have dot(D',W), result
         // in R=[x*y, v], then add(R,B). We need to slice the result by strided by time steps.
         // iterate each unique set of parameters, replace original operations
         for (auto& p : param_list)
@@ -344,7 +345,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
             auto old_weights_reshape_node = op_seg_map.at(op_nodes.at(0)).at(Type::WEIGHTS);
             auto weights_reshape_node =
-                old_weights_reshape_node->copy_with_new_args({weights_node});
+                old_weights_reshape_node->copy_with_new_inputs({weights_node});
             auto dot_node = std::make_shared<op::Dot>(data_reshape_node, weights_reshape_node);
             const auto& dot_shape = dot_node->get_shape();
 
@@ -360,7 +361,8 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             for (size_t i = 0, start_index = 0; i < op_nodes.size(); i++, start_index += batch_size)
             {
                 // calculate the lower and upper bounds for the slice of the new fused node
-                // ((<x0 | x1..|xt>*W)+b), which will used to replace the nodes matched in the pattern
+                // ((<x0 | x1..|xt>*W)+b), which will used to replace the nodes matched in the
+                // pattern
                 const Coordinate lower_bounds{start_index, 0};
                 const Coordinate upper_bounds{start_index + batch_size, feature_size};
 
@@ -382,129 +384,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
 #define TI(x) std::type_index(typeid(x))
 
-std::shared_ptr<Node> set_or_check_if_same(std::shared_ptr<Node> oldn, std::shared_ptr<Node> newn)
-{
-    if (!oldn)
-    {
-        return newn;
-    }
-    else
-    {
-        if (oldn != newn)
-        {
-            NGRAPH_DEBUG << " different data nodes";
-            return nullptr;
-        }
-        return oldn;
-    }
-}
-
-static bool is_trivial_convolution(std::shared_ptr<op::Convolution> conv)
-{
-    Strides stride_1{1, 1};
-    CoordinateDiff pad_0{0, 0};
-    return conv->get_window_dilation_strides() == stride_1 ||
-           conv->get_data_dilation_strides() == stride_1 || conv->get_padding_above() == pad_0 ||
-           conv->get_padding_below() == pad_0;
-}
-
-std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
-{
-    Shape win_size_1{1, 1, 1, 1};
-    auto data_label = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 4, 9});
-    auto weights_label = std::make_shared<pattern::op::Label>(element::f32, Shape{4, 2, 3});
-
-    auto slice_data = std::make_shared<op::Slice>(
-        data_label, Coordinate{0, 0, 0}, Coordinate{1, 2, 9}, Strides{1, 1, 1});
-    auto slice_weights = std::make_shared<op::Slice>(
-        weights_label, Coordinate{0, 0, 0}, Coordinate{2, 2, 3}, Strides{1, 1, 1});
-
-    auto slice_weights_label =
-        std::make_shared<pattern::op::Label>(slice_weights, nullptr, NodeVector{slice_weights});
-    auto conv = std::make_shared<op::Convolution>(slice_data, slice_weights_label);
-    auto matcher = std::make_shared<pattern::Matcher>(conv, nullptr);
-
-    NGRAPH_DEBUG << "In simplify_concat (group convolution) for " << n->get_name();
-
-    std::shared_ptr<Node> data;
-    std::shared_ptr<Node> weights;
-
-    auto concat = std::static_pointer_cast<op::Concat>(n);
-    std::shared_ptr<op::Convolution> sconv;
-
-    NodeVector slices;
-
-    const size_t CHANNEL = 1;
-    if (concat->get_concatenation_axis() != CHANNEL)
-    {
-        NGRAPH_DEBUG << "concatenating on an axis different from channel";
-        return {nullptr};
-    }
-
-    for (auto arg : n->get_arguments())
-    {
-        if (!matcher->match(arg))
-        {
-            NGRAPH_DEBUG << arg->get_name() << " doesn't match";
-            return {nullptr};
-        }
-
-        sconv = std::static_pointer_cast<op::Convolution>(arg);
-
-        if (arg->get_input_shape(0).size() != 4)
-        {
-            NGRAPH_DEBUG << "convolution data's rank isn't equal to 4";
-            return {nullptr};
-        }
-        if (!is_trivial_convolution(sconv))
-        {
-            NGRAPH_DEBUG << arg->get_name() << " isn't trivial convolution";
-            return {nullptr};
-        }
-
-        auto pattern_map = matcher->get_pattern_map();
-        data = set_or_check_if_same(data, pattern_map[data_label]);
-        weights = set_or_check_if_same(weights, pattern_map[weights_label]);
-
-        if (!data || !weights)
-        {
-            NGRAPH_DEBUG << "data or weights nodes are different among slices";
-            return {nullptr};
-        }
-
-        const size_t IC = 1;
-        auto slice = pattern_map[slice_weights_label];
-        if (weights->get_shape().at(IC) != slice->get_shape().at(IC))
-        {
-            slices.push_back(slice);
-        }
-    }
-
-    // TF-flavoured group convolution needs channels re-arranged
-    // MKLDNN requires group slicing to be done on OC
-    // MKLDNN [4,2,-]
-    // ordering w00 w01 w10 w11 w20 w21 w30 w31 produces g00 g01 g10 g11
-    // whereas
-    // TF    [2,4,-]
-    // ordering w00 w01 w02 w03 w10 w11 w12 w13 produces g00 g10 g01 g11
-    const size_t CONCAT_AXIS_OC = 0;
-    if (!slices.empty())
-    {
-        weights = std::make_shared<op::Concat>(slices, CONCAT_AXIS_OC);
-    }
-
-    auto new_conv = std::make_shared<op::GroupConvolution>(data,
-                                                           weights,
-                                                           sconv->get_window_movement_strides(),
-                                                           sconv->get_window_dilation_strides(),
-                                                           sconv->get_padding_below(),
-                                                           sconv->get_padding_above(),
-                                                           sconv->get_data_dilation_strides(),
-                                                           n->get_arguments().size(),
-                                                           n->get_shape());
-
-    return new_conv;
-}
+// Moved set_or_check_if_same and fuse_group_convolution to core pass batch_fusion
 
 std::shared_ptr<Node> fuse_batch_mat_mul_transpose(const std::shared_ptr<Node>& n)
 {
@@ -543,7 +423,7 @@ std::shared_ptr<Node> fuse_batch_mat_mul_transpose(const std::shared_ptr<Node>& 
                 auto& input_node = pattern_map[input[i]];
                 do
                 {
-                    if (std::dynamic_pointer_cast<op::Reshape>(iter) != nullptr)
+                    if (is_type<op::Reshape>(iter))
                     {
                         ++reshape_count[i];
                         if (reshape_count[i] == num_expected_reshape_with_trans)
@@ -590,7 +470,7 @@ bool runtime::cpu::pass::CPUBatchFusion::run_on_function(std::shared_ptr<Functio
         const Node& node = *n;
         if (TI(node) == TI(op::Concat))
         {
-            if (m_fusion_type & ngraph::pass::DIFFERENTIABLE_FUSIONS)
+            if (m_fusion_type.is_set(FusionType::DIFFERENTIABLE_FUSIONS))
             {
                 if (auto fused_node = fuse_batch_mat_mul_transpose(n))
                 {
@@ -598,13 +478,13 @@ bool runtime::cpu::pass::CPUBatchFusion::run_on_function(std::shared_ptr<Functio
                     modified = true;
                 }
             }
-            if (m_fusion_type & ngraph::pass::REGULAR_FUSIONS)
+            if (m_fusion_type.is_set(FusionType::REGULAR_FUSIONS))
             {
-                if (auto fused_conv = fuse_group_convolution(n))
-                {
-                    func->replace_node(n, fused_conv);
-                    modified = true;
-                }
+                // if (auto fused_conv = fuse_group_convolution(n))
+                // {
+                //     func->replace_node(n, fused_conv);
+                //     modified = true;
+                // }
             }
         }
     }

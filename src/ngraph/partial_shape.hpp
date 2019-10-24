@@ -19,6 +19,7 @@
 #include <stddef.h>
 
 #include "ngraph/dimension.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/rank.hpp"
 #include "ngraph/shape.hpp"
 
@@ -33,7 +34,7 @@ namespace ngraph
     /// \li Dynamic rank. (Informal notation: `?`)
     /// \li Static rank, but dynamic dimensions on some or all axes.
     ///     (Informal notation examples: `{1,2,?,4}`, `{?,?,?}`)
-    /// \li Static rank, and dynamic dimensions on all axes.
+    /// \li Static rank, and static dimensions on all axes.
     ///     (Informal notation examples: `{1,2,3,4}`, `{6}`, `{}`)
     class PartialShape
     {
@@ -163,6 +164,10 @@ namespace ngraph
         /// \throws std::invalid_argument If this PartialShape is dynamic.
         Shape to_shape() const;
 
+        /// \brief Returns `true` if all static dimensions of the tensor are non-negative, else
+        ///        `false`.
+        bool all_non_negative() const;
+
         /// \brief Index operator for PartialShape.
         /// \param i The index of the dimension being selected.
         /// \return A reference to the `i`th Dimension of this shape.
@@ -203,6 +208,11 @@ namespace ngraph
         /// successful; if merging is unsuccessful, the function returns `false` and may make
         /// unspecified changes to `dst`.
         static bool merge_into(PartialShape& dst, const PartialShape& src);
+
+        /// \brief Try to merge one shape into another along with implicit broadcasting
+        static bool broadcast_merge_into(PartialShape& dst,
+                                         const PartialShape& src,
+                                         const op::AutoBroadcastSpec& autob);
 
     private:
         // Private constructor for PartialShape::dynamic().

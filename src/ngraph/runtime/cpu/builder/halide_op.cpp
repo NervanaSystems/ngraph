@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2018-2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ namespace ngraph
                 auto& halide_functions = external_function->get_halide_functions();
                 auto& subgraph_params = external_function->get_subgraph_params();
                 auto& subgraph_param_sizes = external_function->get_subgraph_param_sizes();
-                auto& subgraph_param_ptrs = external_function->get_subgraph_param_ptrs();
+                auto& subgraph_param_indices = external_function->get_subgraph_param_indices();
 
                 for (const auto& op : hs->get_ops())
                 {
@@ -73,8 +73,8 @@ namespace ngraph
                             subgraph_params[tensor_name] = Halide::ImageParam(Halide::Float(32), 1);
                             subgraph_param_sizes[tensor_name] =
                                 shape_size(input.get_output().get_tensor_ptr()->get_shape());
-                            subgraph_param_ptrs.emplace(
-                                tensor_name, external_function->get_tensor_data(tensor_name));
+                            subgraph_param_indices.emplace(
+                                tensor_name, external_function->get_buffer_index(tensor_name));
                             inputs.emplace_back(subgraph_params[tensor_name]);
                         }
                     }
@@ -84,19 +84,22 @@ namespace ngraph
 
                 auto out_tensor_name = hs->get_ops().back()->get_output_tensor_ptr()->get_name();
                 auto& functors = external_function->get_functors();
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
                 auto& terminal_func = halide_functions[out_tensor_name];
                 auto out_size = out[0].get_size();
 
-                auto functor = [&, out_size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                auto functor = [&, out_size, out_buffer_index](CPURuntimeContext* ctx,
+                                                               CPUExecutionContext* ectx) {
                     for (auto& param : subgraph_params)
                     {
                         Halide::Buffer<float> param_buffer(
-                            static_cast<float*>(subgraph_param_ptrs.at(param.first).get()),
+                            static_cast<float*>(
+                                ctx->buffer_data[subgraph_param_indices.at(param.first)]),
                             subgraph_param_sizes.at(param.first));
                         param.second.set(param_buffer);
                     }
-                    Halide::Buffer<float> out_buffer(static_cast<float*>(out_tensor), out_size);
+                    Halide::Buffer<float> out_buffer(
+                        static_cast<float*>(ctx->buffer_data[out_buffer_index]), out_size);
                     terminal_func.realize(out_buffer);
                 };
                 functors.emplace_back(functor);

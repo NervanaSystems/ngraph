@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -111,9 +111,13 @@ ngraph::runtime::plaidml::pass::Winograd::Winograd()
                     filters_shape.at(1) == 3 && filters_shape.at(2) > 4 && filters_shape.at(3) > 4);
         });
 
-    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    auto callback = [](pattern::Matcher& m) {
         auto conv = std::static_pointer_cast<plaidml::op::Convolution>(m.get_match_root());
-        NodeVector args = conv->get_arguments();
+        OutputVector args;
+        for (auto input : conv->inputs())
+        {
+            args.push_back(input.get_source_output());
+        }
         std::shared_ptr<ngraph::op::Constant> a;
         std::shared_ptr<ngraph::op::Constant> b;
         std::shared_ptr<ngraph::op::Constant> g;
@@ -126,5 +130,5 @@ ngraph::runtime::plaidml::pass::Winograd::Winograd()
         return true;
     };
 
-    add_matcher(std::make_shared<pattern::Matcher>(convolution_op, callback));
+    add_matcher(std::make_shared<pattern::Matcher>(convolution_op), callback);
 }

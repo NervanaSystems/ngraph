@@ -18,10 +18,12 @@ include(ExternalProject)
 
 # Includes blas 3.8.0 in mkldnn
 set(NGRAPH_MKLDNN_SHORT_VERSION 0)
-set(NGRAPH_MKLDNN_FULL_VERSION 0.18.0.0)
-set(NGRAPH_MKLDNN_VERSION "v0.18")
-set(NGRAPH_MKLDNN_SUB_VERSION "2019.0.3.20190220")
-set(NGRAPH_MKLDNN_GIT_TAG "v0.18")
+set(NGRAPH_MKLDNN_FULL_VERSION 0.21)
+set(NGRAPH_MKLDNN_ASSET_VERSION "v0.21")
+set(NGRAPH_MKLDNN_VERSION "v0.21")
+set(NGRAPH_MKLDNN_MKLML_VERSION "2019.0.5.20190502")
+set(NGRAPH_MKLDNN_MKLML_WIN32_VERSION "2020.0.20190813") 
+set(NGRAPH_MKLDNN_GIT_TAG "v0.21")
 
 #------------------------------------------------------------------------------
 # Fetch and install MKL-DNN
@@ -64,6 +66,9 @@ if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
         set_property(TARGET libmkl PROPERTY IMPORTED_LOCATION ${MKLML_LIB_DIR}/${MKLML_LIB})
         set_target_properties(libmkl PROPERTIES
             IMPORTED_LINK_INTERFACE_LIBRARIES ${MKLML_LIB_DIR}/${OMP_LIB})
+        if(LINUX)
+            set_property(TARGET libmkl PROPERTY IMPORTED_NO_SONAME 1)
+        endif()
     endif()
 
     if(WIN32)
@@ -85,17 +90,18 @@ endif()
 
 # This section sets up MKL as an external project to be used later by MKLDNN
 
-set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/${NGRAPH_MKLDNN_VERSION}/")
-set(MKLVERSION ${NGRAPH_MKLDNN_SUB_VERSION})
+set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/${NGRAPH_MKLDNN_ASSET_VERSION}/")
+set(MKLVERSION ${NGRAPH_MKLDNN_MKLML_VERSION})
+set(MKLWIN32VERSION ${NGRAPH_MKLDNN_MKLML_WIN32_VERSION})
 if (LINUX)
     set(MKLPACKAGE "mklml_lnx_${MKLVERSION}.tgz")
-    set(MKL_SHA1_HASH b536cd3929ab9ff26a9adc903c92d006d142107b)
+    set(MKL_SHA1_HASH 6ab490f0b358124338d04ee9383c3cbc536969d8)
 elseif (APPLE)
     set(MKLPACKAGE "mklml_mac_${MKLVERSION}.tgz")
-    set(MKL_SHA1_HASH cb7ccbf73275d5bee19b4d5691c834bf894d1761)
+    set(MKL_SHA1_HASH a1c42af04f990b0e515a1c31946424b2e68fccc9)
 elseif (WIN32)
-    set(MKLPACKAGE "mklml_win_${MKLVERSION}.zip")
-    set(MKL_SHA1_HASH 2f8ae6ef07452c3229bfb7c2aafbae71933d04e3)
+    set(MKLPACKAGE "mklml_win_${MKLWIN32VERSION}.zip")
+    set(MKL_SHA1_HASH cc117093e658d50a8e4e3d1cf192c300b6bac0fc)
 endif()
 set(MKL_LIBS ${MKLML_LIB} ${OMP_LIB})
 set(MKLURL ${MKLURLROOT}${MKLPACKAGE})

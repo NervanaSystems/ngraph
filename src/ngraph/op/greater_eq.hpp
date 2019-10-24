@@ -26,11 +26,19 @@ namespace ngraph
         class GreaterEq : public util::BinaryElementwiseComparison
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"GreaterEq", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            /// \brief Constructs a greater-than-or-equal operation.
+            GreaterEq() = default;
             /// \brief Constructs a greater-than-or-equal operation.
             ///
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
-            GreaterEq(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+            /// \param auto_broadcast Auto broadcast specification
+            GreaterEq(const Output<Node>& arg0,
+                      const Output<Node>& arg1,
+                      const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

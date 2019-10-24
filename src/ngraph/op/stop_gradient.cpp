@@ -16,13 +16,14 @@
 
 #include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/broadcast.hpp"
-#include "ngraph/op/constant.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::StopGradient::StopGradient(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("StopGradient", arg)
+constexpr NodeTypeInfo op::StopGradient::type_info;
+
+op::StopGradient::StopGradient(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }

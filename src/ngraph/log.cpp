@@ -105,20 +105,18 @@ void ngraph::LogPrintf(const char* fmt, ...)
     va_start(args1, fmt);
     va_list args2;
     va_copy(args2, args1);
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
     std::vector<char> buf(1 + std::vsnprintf(nullptr, 0, fmt, args1));
     va_end(args1);
     std::vsnprintf(buf.data(), buf.size(), fmt, args2);
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
-    va_end(args2);
-
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-    ngraph::Distributed dist;
-    std::printf("%s [RANK: %d]: %s\n", get_timestamp().c_str(), dist.get_rank(), buf.data());
-#else
-    std::printf("%s %s\n", get_timestamp().c_str(), buf.data());
 #endif
+    va_end(args2);
+    get_distributed_interface()->log_print(get_timestamp(), buf);
 }
 
 // This function will be executed only once during startup (loading of the DSO)

@@ -22,11 +22,8 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/runtime/tensor.hpp"
-
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/runtime/reference/allreduce.hpp"
-#endif
+#include "ngraph/runtime/tensor.hpp"
 
 namespace ngraph
 {

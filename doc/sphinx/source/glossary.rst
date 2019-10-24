@@ -129,8 +129,8 @@ Glossary
       Tensors are maps from *coordinates* to scalar values, all of the
       same type, called the *element type* of the tensor.
 
-      .. figure:: graphics/descriptor-of-tensor.png
-         :width: 559px
+      .. figure:: graphics/classngraph_tensor_descriptor.png
+         :width: 90%
 
    
    Tensorview 

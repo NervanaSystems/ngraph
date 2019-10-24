@@ -21,8 +21,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Sinh::Sinh(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Sinh", arg)
+constexpr NodeTypeInfo op::Sinh::type_info;
+
+op::Sinh::Sinh(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }
@@ -37,7 +39,7 @@ void op::Sinh::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector&
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = input_value(0);
 
     adjoints.add_delta(x, delta * (make_shared<op::Cosh>(x)));
 }

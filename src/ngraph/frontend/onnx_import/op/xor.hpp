@@ -17,11 +17,9 @@
 #pragma once
 
 #include "core/node.hpp"
-#include "ngraph/node_vector.hpp"
-#include "ngraph/op/and.hpp"
-#include "ngraph/op/not.hpp"
-#include "ngraph/op/or.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/op/xor.hpp"
 
 namespace ngraph
 {
@@ -33,19 +31,15 @@ namespace ngraph
             {
                 inline NodeVector logical_xor(const Node& node)
                 {
-                    NodeVector ng_inputs{ngraph::op::numpy_style_broadcast(node.get_ng_inputs())};
-                    auto left = ng_inputs.at(0);
-                    auto not_left = std::make_shared<ngraph::op::Not>(left);
-                    auto right = ng_inputs.at(1);
-                    auto not_right = std::make_shared<ngraph::op::Not>(right);
-                    return {std::make_shared<ngraph::op::Or>(
-                        std::make_shared<ngraph::op::And>(left, not_right),
-                        std::make_shared<ngraph::op::And>(not_left, right))};
+                    return {std::make_shared<ngraph::op::Xor>(
+                        node.get_ng_inputs().at(0),
+                        node.get_ng_inputs().at(1),
+                        ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY))};
                 }
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

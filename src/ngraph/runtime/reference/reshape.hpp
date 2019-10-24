@@ -35,7 +35,8 @@ namespace ngraph
                          const AxisVector& in_axis_order,
                          const Shape& out_shape)
             {
-                // Unfortunately we don't yet have a constructor for CoordinateTransform that lets us pass only source_space_shape
+                // Unfortunately we don't yet have a constructor for CoordinateTransform that lets
+                // us pass only source_space_shape
                 // and source_axis_order so we have to construct the defaults here.
                 Shape in_start_corner(in_shape.size(), 0); // (0,...0)
                 Strides in_strides(in_shape.size(), 1);    // (1,...,1)

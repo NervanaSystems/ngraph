@@ -17,7 +17,7 @@
 #pragma once
 
 #include "core/node.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "utils/variadic.hpp"
 
@@ -45,7 +45,7 @@ namespace ngraph
 
             } // namespace set_8
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

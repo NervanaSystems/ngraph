@@ -1,7 +1,24 @@
 # API Changes
 
+## Op Definition
+* Every Op class must declare a `static constexpr NodeTypeInfo type_info{name, version}` in the class definition and define it in the .cpp file. See any op definition for an example.
+* The boolean function `is_type<T>` is for testing if a node is the op `T`.
+* `T as_type_ptr<T>()` and `T as_type<T>()` will upcast `Node` to an explicit op class if it is of class `T`, or `nullptr` if it is not.
+
+## Backend library interface
+* Each backend `BACKEND` needs to define the macro `${BACKEND}_API` appropriately to import symbols
+  referenced from outside the library and to export them from within the library. See any
+  of the `${backend}_backend_visibility.hpp` files for an example. 
+* The `CMakeLists.txt` file for a backend defines `${BACKEND}_BACKEND_DLL_EXPORTS`.
+  `target_compile_definitions(${backend}_backend PRIVATE ${BACKEND}_BACKEND_DLL_EXPORTS)`
+* Each backend must define a function `ngraph_register_${backend}_backend` that registers a
+  backend constructor function and ensures that initializations are performed.
+  `ngraph/src/runtime/cpu/cpu_backend.cpp` has an example that includes initializations.
+  Remove the old backend constructor code.
+
 ## Passes
 * `LikeReplacement` pass must be run by all transformers.
+* `ngraph::pass::FusionType` is now an enum class. Constant values defined by `FusionType` are created for backward compatibility and will be removed in future releases.
 
 ## Nodes, Parameters
 
@@ -9,6 +26,7 @@
 * `Parameters` is now `ParameterVector`
 * `NodeVector`, `ParameterVector`, `AxisVector`, `AxisSet`, `Shape`, `Stride`, `Coordinate`, and `CoordinateDiff` are now classes, not type aliases.
 * `PrimaryTensorView` is now `TensorView` (and will merge into `Tensor`)
+* `copy_with_new_args` is protected; use `copy_with_new_inputs` which takes an `OutputVector` as an argument and preserves control dependencies.
 
 ## Changes to ops
 
@@ -50,7 +68,21 @@ arguments now take type `CoordinateDiff` instead of `Shape`. `CoordinateDiff` is
 `std::vector<std::ptrdiff_t>`, which "is like `size_t` but is allowed to be negative". Callers may
 need to be adapted.
 
+## Changes to Concat op	
+
+* `get_concatenation_axis` was renamed to `get_axis`. In order to provide backward compatibility `get_concatenation_axis` is now alis of `get_axis` method	
+* `set_concatenation_axis` was renamed to `set_axis`. In order to provide backward compatibility `set_concatenation_axis` is now alis of `set_axis` method
+
 ## `Parameter` and `Function` no longer take a type argument.
+
+## Changes to Tensor read and write methods
+
+The `read` and `write` methods on ngraph::runtime::Tensor which take a `tensor_offset` as the
+second of three arguments have been deprecated. The replacement `read` and `write` methods take
+two arguments, the buffer pointer and the size. For any references to the deprecated methods
+remove the second argument, the tensor offset, to update to the new API. These old read/write
+methods have been decorated with deprecated warnings which may be enabled by setting
+`-DNGRAPH_DEPRECATED_ENABLE=ON`.
 
 To update, remove the passed argument. For example,
 ```C++
@@ -67,3 +99,14 @@ make_shared<Function>(results, parameters);
 
 The runtime::Tensor methods to get_tensor<> and write<T>(std::vector&) have been removed
 to the unit test directory under utils/test_tool.hpp read_vector and write_vector.
+
+## Changes to reshape op utils
+
+Utility functions from `src/ngraph/op/util/reshape.hpp`, placed at namespace `ngraph::op::util`:
+
+  - `reshape`
+  - `reorder_axes`
+  - `transpose`
+  - `flatten`
+
+Are moved to new location: `src/ngraph/builder/reshape.hpp` to namespace `ngraph::builder`.

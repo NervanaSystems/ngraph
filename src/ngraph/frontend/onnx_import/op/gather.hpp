@@ -17,8 +17,9 @@
 #pragma once
 
 #include "core/node.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/gather.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -34,13 +35,14 @@ namespace ngraph
                     auto data = ng_inputs.at(0);
                     auto indices = ng_inputs.at(1);
                     auto axis = node.get_attribute_value<int64_t>("axis", 0);
+                    auto valid_axis = common::validate_axis(node, axis, data->get_shape().size());
 
-                    return {std::make_shared<ngraph::op::Gather>(data, indices, axis)};
+                    return {std::make_shared<ngraph::op::Gather>(data, indices, valid_axis)};
                 }
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

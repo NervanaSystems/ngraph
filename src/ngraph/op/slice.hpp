@@ -24,10 +24,16 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Takes a slice of an input tensor, i.e., the sub-tensor that resides within a bounding box, optionally with stride.
+        /// \brief Takes a slice of an input tensor, i.e., the sub-tensor that resides within a
+        ///        bounding box, optionally with stride.
         class Slice : public Op
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"Slice", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            /// \brief Constructs a tensor slice operation
+            Slice() = default;
             /// \brief Constructs a tensor slice operation.
             ///
             /// \param arg The tensor to be sliced.
@@ -35,22 +41,23 @@ namespace ngraph
             /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
             /// \param strides The slicing strides; for example, strides of `{n,m}` means to take
             ///                every nth row and every mth column of the input matrix.
-            Slice(const std::shared_ptr<Node>& arg,
+            Slice(const Output<Node>& arg,
                   const Coordinate& lower_bounds,
                   const Coordinate& upper_bounds,
                   const Strides& strides);
-
-            /// \brief Constructs a tensor slice operation with unit strides; i.e., every element inside the bounding box will be copied to the output slice.
+            /// \brief Constructs a tensor slice operation with unit strides; i.e., every element
+            ///        inside the bounding box will be copied to the output slice.
             ///
             /// \param arg The tensor to be sliced.
             /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).
             /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
-            Slice(const std::shared_ptr<Node>& arg,
+            Slice(const Output<Node>& arg,
                   const Coordinate& lower_bounds,
                   const Coordinate& upper_bounds);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+            void validate_and_infer_types() override;
 
             /// \return The inclusive lower-bound coordinates.
             const Coordinate& get_lower_bounds() const { return m_lower_bounds; }
@@ -61,7 +68,6 @@ namespace ngraph
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-            void validate_and_infer_types() override;
 
             Coordinate m_lower_bounds;
             Coordinate m_upper_bounds;

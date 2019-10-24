@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-//this is for more nuanced testing
+// this is for more nuanced testing
 class TestMatcher : public ngraph::pattern::Matcher
 {
     using ngraph::pattern::Matcher::Matcher;
@@ -22,7 +22,7 @@ class TestMatcher : public ngraph::pattern::Matcher
                             const std::shared_ptr<ngraph::Node>& graph_node,
                             PatternMap& pattern_map) override
     {
-        if (std::dynamic_pointer_cast<::ngraph::op::Parameter>(pattern_node))
+        if (ngraph::as_type_ptr<::ngraph::op::Parameter>(pattern_node))
         {
             bool result =
                 pattern_node.get() == dynamic_cast<::ngraph::op::Parameter*>(graph_node.get());
@@ -40,9 +40,8 @@ public:
     bool match(const std::shared_ptr<ngraph::Node>& pattern_node,
                const std::shared_ptr<ngraph::Node>& graph_node)
     {
-        NGRAPH_CHECK(
-            pattern_node &&
-            graph_node); // the same condition throws an exception in the non-test version of `match`
+        NGRAPH_CHECK(pattern_node && graph_node); // the same condition throws an exception in the
+                                                  // non-test version of `match`
         NGRAPH_DEBUG << "Starting match pattern = " << pattern_node->get_name()
                      << " , graph_node = " << graph_node->get_name();
 

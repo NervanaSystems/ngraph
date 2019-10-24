@@ -28,6 +28,11 @@ const Shape& runtime::Tensor::get_shape() const
     return m_descriptor->get_shape();
 }
 
+const PartialShape& runtime::Tensor::get_partial_shape() const
+{
+    return m_descriptor->get_partial_shape();
+}
+
 Strides runtime::Tensor::get_strides() const
 {
     return m_descriptor->get_tensor_layout()->get_strides();
@@ -87,6 +92,6 @@ void runtime::Tensor::copy_from(const ngraph::runtime::Tensor& source)
     // This is be replaced with more optimial implementations in later PRs
     auto size = get_size_in_bytes();
     AlignedBuffer buffer{size, 64};
-    source.read(buffer.get_ptr(), 0, size);
-    write(buffer.get_ptr(), 0, size);
+    source.read(buffer.get_ptr(), size);
+    write(buffer.get_ptr(), size);
 }

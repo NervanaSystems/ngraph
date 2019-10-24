@@ -16,9 +16,6 @@
 
 #pragma once
 
-#include "ngraph/axis_set.hpp"
-#include "ngraph/graph_util.hpp"
-#include "ngraph/op/op.hpp"
 #include "ngraph/op/util/logical_reduction.hpp"
 
 namespace ngraph
@@ -29,20 +26,26 @@ namespace ngraph
         class All : public util::LogicalReduction
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"All", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            /// \brief Constructs an "all" reduction operation.
+            All() = default;
             /// \brief Constructs an "all" reduction operation.
             ///
             /// \param arg The tensor to be reduced.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            All(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
+            All(const Output<Node>& arg, const AxisSet& reduction_axes);
+            /// \brief Constructs an "all" reduction operation.
+            ///
+            /// \param arg The tensor to be reduced.
+            /// \param reduction_axes The axis positions (0-based) to be eliminated.
+            All(const Output<Node>& arg, const Output<Node>& reduction_axes);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+            std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
             /// \return The default value for All.
-            virtual std::shared_ptr<Node> get_default_value() const override
-            {
-                return ngraph::make_constant_from_string("1", get_element_type(), get_shape());
-            }
+            virtual std::shared_ptr<Node> get_default_value() const override;
         };
     }
 }

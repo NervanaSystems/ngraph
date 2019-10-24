@@ -28,6 +28,11 @@ namespace ngraph
 {
     namespace pattern
     {
+        constexpr NodeTypeInfo op::AnyOf::type_info;
+        constexpr NodeTypeInfo op::Any::type_info;
+        constexpr NodeTypeInfo op::Label::type_info;
+        constexpr NodeTypeInfo op::Skip::type_info;
+
         std::shared_ptr<Node> Matcher::get_match_root() { return m_match_root; }
         bool Matcher::match_pattern(const std::shared_ptr<op::Label>& label,
                                     const std::shared_ptr<Node>& graph_node,
@@ -50,7 +55,8 @@ namespace ngraph
                 is_match = !predicate || predicate(graph_node);
             }
 
-            if (is_match) // in case label was already bound this rebinds it to the same node (harmless; and the logic seems cleaner)
+            if (is_match) // in case label was already bound this rebinds it to the same node
+                          // (harmless; and the logic seems cleaner)
             {
                 auto args = label->get_arguments();
                 if (args.size() > 0)
@@ -194,7 +200,7 @@ namespace ngraph
             // when their individual GOE are matched
             // this also gives a bit more flexibility since we don't have to worry
             // about *all* outputs of a pattern node but only the ones we want to match.
-            if (m_strict_mode && graph_node->get_output_size() == 1)
+            if (m_strict_mode && graph_node->get_outputs().size() == 1)
             {
                 bool shape_match = pattern_node->get_output_partial_shape(0).compatible(
                     graph_node->get_output_partial_shape(0));
@@ -208,8 +214,8 @@ namespace ngraph
             }
 
             // This env var allows one to specify node name patterns to abort pattern matching
-            // at particular nodes. The upshot is that one can quickly zero in on an offending fusion by
-            // disabling individual fusions or optimizations that use Matcher.
+            // at particular nodes. The upshot is that one can quickly zero in on an offending
+            // fusion by disabling individual fusions or optimizations that use Matcher.
             static const char* node_skip_cregex = std::getenv("NGRAPH_FAIL_MATCH_AT");
             if (node_skip_cregex)
             {
@@ -226,23 +232,23 @@ namespace ngraph
                          << "pattern = " << pattern_node->get_name() << " matched "
                          << graph_node->get_name();
 
-            if (auto label_node = std::dynamic_pointer_cast<op::Label>(pattern_node))
+            if (auto label_node = as_type_ptr<op::Label>(pattern_node))
             {
                 return abort_match(watermark, match_pattern(label_node, graph_node, pattern_map));
             }
 
-            if (auto skip_node = std::dynamic_pointer_cast<op::Skip>(
-                    pattern_node)) // matches PatternSkipOp semantics
+            if (auto skip_node =
+                    as_type_ptr<op::Skip>(pattern_node)) // matches PatternSkipOp semantics
             {
                 return abort_match(watermark, match_skip(skip_node, graph_node, pattern_map));
             }
 
-            if (auto any_node = std::dynamic_pointer_cast<op::Any>(pattern_node))
+            if (auto any_node = as_type_ptr<op::Any>(pattern_node))
             {
                 return abort_match(watermark, match_any(any_node, graph_node, pattern_map));
             }
 
-            if (auto any_of_node = std::dynamic_pointer_cast<op::AnyOf>(pattern_node))
+            if (auto any_of_node = as_type_ptr<op::AnyOf>(pattern_node))
             {
                 return abort_match(watermark, match_any_of(any_of_node, graph_node, pattern_map));
             }
@@ -298,9 +304,15 @@ namespace ngraph
 
             if (graph_node->is_commutative())
             {
-                std::sort(
-                    begin(pattern_args),
-                    end(pattern_args)); // TODO: [nikolayk] we don't really have to use lexicographically-based perms, heap's algo should be faster
+                // TODO: [nikolayk] we don't really have to use lexicographically-based perms,
+                // heap's algo should be faster
+                std::sort(begin(pattern_args),
+                          end(pattern_args),
+                          [](const std::shared_ptr<ngraph::Node>& n1,
+                             const std::shared_ptr<ngraph::Node>& n2) {
+                              return n1->get_instance_id() < n2->get_instance_id();
+
+                          });
                 do
                 {
                     NGRAPH_DEBUG << pad(2 * m_depth) << "Running a permutation for graph_node "
@@ -311,7 +323,13 @@ namespace ngraph
                         pattern_map.insert(begin(copy), end(copy));
                         return true;
                     }
-                } while (std::next_permutation(begin(pattern_args), end(pattern_args)));
+                } while (std::next_permutation(begin(pattern_args),
+                                               end(pattern_args),
+                                               [](const std::shared_ptr<ngraph::Node>& n1,
+                                                  const std::shared_ptr<ngraph::Node>& n2) {
+                                                   return n1->get_instance_id() <
+                                                          n2->get_instance_id();
+                                               }));
             }
             else
             {
@@ -326,26 +344,6 @@ namespace ngraph
             NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name() << " for pattern "
                          << pattern_node->get_name();
             return false;
-        }
-
-        bool Matcher::process_match(::ngraph::pattern::graph_rewrite_callback callback)
-        {
-            graph_rewrite_callback cb = m_callback;
-            if (callback)
-            {
-                cb = callback;
-            }
-            if (!cb)
-            {
-                throw ngraph_error("process_match invoked w/o a callback function");
-            }
-
-            if (!this->m_match_root)
-            {
-                throw ngraph_error("process_match invoked w/o a match");
-            }
-
-            return cb(*this);
         }
 
         bool Matcher::match(const std::shared_ptr<Node>& graph_node)
@@ -428,7 +426,8 @@ namespace ngraph
                 {
                     if (m.get_pattern_map().count(cor_pat) != 0)
                     {
-                        // assert that bound nodes from the previous and current matches are the same
+                        // assert that bound nodes from the previous and current matches are the
+                        // same
                         if (previous_matches.count(cor_pat) != 0)
                         {
                             if (previous_matches[cor_pat] != m.get_pattern_map()[cor_pat])
@@ -452,7 +451,5 @@ namespace ngraph
 
             return matched;
         }
-
-        bool RecurrentMatcher::process_match() { return m_callback(*this); }
     }
 }

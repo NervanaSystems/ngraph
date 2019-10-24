@@ -16,12 +16,12 @@
 
 #include "ngraph/runtime/cpu/kernel/convolution.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
-#include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 
 using namespace std;
@@ -44,9 +44,9 @@ namespace ngraph
                 auto arg1_shape = args[1].get_shape();
                 auto result_shape = out[0].get_shape();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -55,29 +55,56 @@ namespace ngraph
                         mkldnn_emitter->get_convolution_forward_desc<ngraph::op::Convolution>(node);
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::Convolution>(node);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+
                     size_t conv_index = mkldnn_emitter->convolution_forward_init();
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, conv_desc, conv_attr, conv_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    auto functor = [&,
+                                    conv_desc,
+                                    conv_attr,
+                                    conv_index,
+                                    scratchpad_size,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
-                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                ctx->mkldnn_memories,
+                                ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
+                                conv_desc,
+                                conv_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                conv_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[out_buffer_index]);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONVOLUTION,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
                 else
                 {
-                    std::function<decltype(runtime::cpu::kernel::convolution<float>)> kernel;
+                    std::function<decltype(runtime::cpu::kernel::convolution<float, float, float>)>
+                        kernel;
 
-                    SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::convolution);
+                    SELECT_KERNEL_3ARGS(
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::convolution)
 
                     auto window_movement_strides = convolution->get_window_movement_strides();
                     auto window_dilation_strides = convolution->get_window_dilation_strides();
@@ -94,11 +121,14 @@ namespace ngraph
                                     window_dilation_strides,
                                     padding_below,
                                     padding_above,
-                                    data_dilation_strides](CPURuntimeContext* ctx,
-                                                           CPUExecutionContext* ectx) {
-                        kernel(arg0_tensor,
-                               arg1_tensor,
-                               out_tensor,
+                                    data_dilation_strides,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
+                        kernel(ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[arg1_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
                                arg0_shape,
                                arg1_shape,
                                result_shape,
@@ -106,7 +136,13 @@ namespace ngraph
                                window_dilation_strides,
                                padding_below,
                                padding_above,
-                               data_dilation_strides);
+                               data_dilation_strides,
+                               nullptr,
+                               nullptr,
+                               nullptr,
+                               nullptr,
+                               nullptr,
+                               nullptr);
                     };
                     functors.emplace_back(functor);
                 }
@@ -117,9 +153,9 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -130,20 +166,46 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::ConvolutionRelu>(
                             node);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+
                     size_t conv_index = mkldnn_emitter->convolution_forward_init();
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, conv_desc, conv_attr, conv_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    auto functor = [&,
+                                    conv_desc,
+                                    conv_attr,
+                                    conv_index,
+                                    scratchpad_size,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
-                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                ctx->mkldnn_memories,
+                                ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
+                                conv_desc,
+                                conv_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                conv_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[out_buffer_index]);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONVOLUTIONRELU,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -158,10 +220,10 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto arg2_buffer_index = external_function->get_buffer_index(args[2].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -172,21 +234,49 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::ConvolutionBias>(
                             node);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, conv_desc, conv_attr, conv_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    auto functor = [&,
+                                    conv_desc,
+                                    conv_attr,
+                                    conv_index,
+                                    scratchpad_size,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    arg2_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<true>(
-                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                ctx->mkldnn_memories,
+                                ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
+                                conv_desc,
+                                conv_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                conv_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[arg2_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[3], ctx->buffer_data[out_buffer_index]);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONVOLUTIONBIAS,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -201,12 +291,12 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
-                auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
-                size_t arg3_size = node->get_inputs()[3].get_tensor().size();
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto arg2_buffer_index = external_function->get_buffer_index(args[2].get_name());
+                auto arg3_buffer_index = external_function->get_buffer_index(args[3].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
+                size_t arg3_size = node->input(3).get_tensor().size();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -217,27 +307,58 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::ConvolutionBiasAdd>(node);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, conv_desc, conv_attr, conv_index, arg3_size](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    auto functor = [&,
+                                    conv_desc,
+                                    conv_attr,
+                                    conv_index,
+                                    scratchpad_size,
+                                    arg3_size,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    arg2_buffer_index,
+                                    arg3_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<true>(
-                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                ctx->mkldnn_memories,
+                                ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
+                                conv_desc,
+                                conv_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                conv_index);
                         }
-                        if (out_tensor != arg3_tensor)
+                        if (ctx->buffer_data[out_buffer_index] !=
+                            ctx->buffer_data[arg3_buffer_index])
                         {
-                            memcpy(static_cast<char*>(out_tensor),
-                                   static_cast<char*>(arg3_tensor),
+                            memcpy(static_cast<char*>(ctx->buffer_data[out_buffer_index]),
+                                   static_cast<char*>(ctx->buffer_data[arg3_buffer_index]),
                                    arg3_size);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[arg2_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[3], ctx->buffer_data[out_buffer_index]);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONVOLUTIONBIASADD,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -252,11 +373,11 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
-                size_t arg2_size = node->get_inputs()[2].get_tensor().size();
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto arg2_buffer_index = external_function->get_buffer_index(args[2].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
+                size_t arg2_size = node->input(2).get_tensor().size();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -267,26 +388,55 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::ConvolutionAdd>(
                             node);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(false);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, conv_desc, conv_attr, conv_index, arg2_size](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    auto functor = [&,
+                                    conv_desc,
+                                    conv_attr,
+                                    conv_index,
+                                    scratchpad_size,
+                                    arg2_size,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    arg2_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
-                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                ctx->mkldnn_memories,
+                                ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
+                                conv_desc,
+                                conv_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                conv_index);
                         }
-                        if (out_tensor != arg2_tensor)
+                        if (ctx->buffer_data[out_buffer_index] !=
+                            ctx->buffer_data[arg2_buffer_index])
                         {
-                            memcpy(static_cast<char*>(out_tensor),
-                                   static_cast<char*>(arg2_tensor),
+                            memcpy(static_cast<char*>(ctx->buffer_data[out_buffer_index]),
+                                   static_cast<char*>(ctx->buffer_data[arg2_buffer_index]),
                                    arg2_size);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[out_buffer_index]);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONVOLUTIONADD,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -306,9 +456,9 @@ namespace ngraph
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -317,22 +467,47 @@ namespace ngraph
                         ngraph::op::ConvolutionBackpropData>(node);
                     auto fwd_desc = mkldnn_emitter->get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBackpropData>(node);
-                    // ConvolutionBackpropData needs 4 primitives: weights, delta, result,
-                    // and convolution_backward.
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_backward_data, fwd_desc, bwd_desc);
+
+                    // ConvolutionBackpropData needs 4 primitives: weights, diff_dst, diff_src,
+                    // and convolution_backward_data.
                     auto conv_index = mkldnn_emitter->reserve_primitive_space(4);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, bwd_desc, fwd_desc, conv_index](CPURuntimeContext* ctx,
-                                                                       CPUExecutionContext* ectx) {
+                    auto functor = [&,
+                                    bwd_desc,
+                                    fwd_desc,
+                                    conv_index,
+                                    scratchpad_size,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_backward_data(
-                                bwd_desc, fwd_desc, conv_index);
+                                ctx->mkldnn_memories,
+                                ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
+                                bwd_desc,
+                                fwd_desc,
+                                deps,
+                                conv_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[out_buffer_index]);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONVOLUTIONBACKPROPDATA,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -343,7 +518,7 @@ namespace ngraph
 
                     SELECT_KERNEL(kernel,
                                   out[0].get_element_type(),
-                                  runtime::cpu::kernel::convolution_backprop_in);
+                                  runtime::cpu::kernel::convolution_backprop_in)
                     auto& in_shape = convolution->get_data_batch_shape();
                     auto data_dilation_strides = convolution->get_data_dilation_strides_forward();
                     auto window_dilation_strides =
@@ -366,11 +541,14 @@ namespace ngraph
                                     window_dilation_strides,
                                     backward_delta_out_pad_below,
                                     backward_delta_out_pad_above,
-                                    window_movement_strides](CPURuntimeContext* ctx,
-                                                             CPUExecutionContext* ectx) {
-                        kernel(arg1_tensor,
-                               arg0_tensor,
-                               out_tensor,
+                                    window_movement_strides,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
+                        kernel(ctx->buffer_data[arg1_buffer_index],
+                               ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
                                arg1_shape,
                                arg0_shape,
                                in_shape,
@@ -394,9 +572,9 @@ namespace ngraph
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -405,22 +583,47 @@ namespace ngraph
                         ngraph::op::ConvolutionBackpropFilters>(node);
                     auto fwd_desc = mkldnn_emitter->get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBackpropFilters>(node);
-                    // ConvolutionBackpropFilter needs 4 primitives: input, delta, weights_delta,
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_backward_weights, fwd_desc, bwd_desc);
+
+                    // ConvolutionBackpropFilter needs 4 primitives: src, diff_dst, diff_weights,
                     // and convolution_backward_weights.
                     auto conv_index = mkldnn_emitter->reserve_primitive_space(4);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, bwd_desc, fwd_desc, conv_index](CPURuntimeContext* ctx,
-                                                                       CPUExecutionContext* ectx) {
+                    auto functor = [&,
+                                    bwd_desc,
+                                    fwd_desc,
+                                    conv_index,
+                                    scratchpad_size,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_backward_weights(
-                                bwd_desc, fwd_desc, conv_index);
+                                ctx->mkldnn_memories,
+                                ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
+                                bwd_desc,
+                                fwd_desc,
+                                deps,
+                                conv_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[out_buffer_index]);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONVOLUTIONBACKPROPWEIGHTS,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -432,7 +635,7 @@ namespace ngraph
 
                     SELECT_KERNEL(kernel,
                                   out[0].get_element_type(),
-                                  runtime::cpu::kernel::convolution_backprop_filter);
+                                  runtime::cpu::kernel::convolution_backprop_filter)
 
                     auto& filters_shape = convolution->get_filters_shape();
                     auto window_dilation_strides =
@@ -454,11 +657,14 @@ namespace ngraph
                                     window_movement_strides,
                                     padding_below,
                                     backward_in_pad_above,
-                                    data_dilation_strides](CPURuntimeContext* ctx,
-                                                           CPUExecutionContext* ectx) {
-                        kernel(arg0_tensor,
-                               arg1_tensor,
-                               out_tensor,
+                                    data_dilation_strides,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
+                        kernel(ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[arg1_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
                                arg0_shape,
                                arg1_shape,
                                filters_shape,
@@ -477,10 +683,10 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
-                auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
+                auto out1_buffer_index = external_function->get_buffer_index(out[1].get_name());
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -489,23 +695,50 @@ namespace ngraph
                         ngraph::op::ConvolutionBiasBackpropFiltersBias>(node);
                     auto fwd_desc = mkldnn_emitter->get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBiasBackpropFiltersBias>(node);
-                    // ConvolutionBiasBackpropFilter needs 5 primitives: input, delta, weights_delta,
-                    // bias_delta, and convolution_backward_weights.
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_backward_weights, fwd_desc, bwd_desc);
+
+                    // ConvolutionBackpropFiltersBias needs 5 primitives: src, diff_dst,
+                    // diff_weights, diff_bias, and convolution_backward_weights.
                     auto conv_index = mkldnn_emitter->reserve_primitive_space(5);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, bwd_desc, fwd_desc, conv_index](CPURuntimeContext* ctx,
-                                                                       CPUExecutionContext* ectx) {
+                    auto functor = [&,
+                                    bwd_desc,
+                                    fwd_desc,
+                                    conv_index,
+                                    scratchpad_size,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out0_buffer_index,
+                                    out1_buffer_index](CPURuntimeContext* ctx,
+                                                       CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_backward_weights_bias(
-                                bwd_desc, fwd_desc, conv_index);
+                                ctx->mkldnn_memories,
+                                ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
+                                bwd_desc,
+                                fwd_desc,
+                                deps,
+                                conv_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out1_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[out0_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[3], ctx->buffer_data[out1_buffer_index]);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONVOLUTIONBACKPROPWEIGHTSBIAS,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -521,9 +754,9 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -534,22 +767,48 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::GroupConvolution>(
                             node);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+
                     size_t conv_index = mkldnn_emitter->convolution_forward_init();
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, conv_desc, conv_attr, conv_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    auto functor = [&,
+                                    conv_desc,
+                                    conv_attr,
+                                    conv_index,
+                                    scratchpad_size,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
-                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                ctx->mkldnn_memories,
+                                ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
+                                conv_desc,
+                                conv_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                conv_index);
                         }
 
                         // group convolution
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[out_buffer_index]);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::GROUPCONVOLUTION,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -564,10 +823,10 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto arg2_buffer_index = external_function->get_buffer_index(args[2].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -578,21 +837,49 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::GroupConvolutionBias>(node);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
+
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, conv_desc, conv_attr, conv_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    auto functor = [&,
+                                    conv_desc,
+                                    conv_attr,
+                                    conv_index,
+                                    scratchpad_size,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    arg2_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<true>(
-                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                ctx->mkldnn_memories,
+                                ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
+                                conv_desc,
+                                conv_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                conv_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[arg2_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[3], ctx->buffer_data[out_buffer_index]);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::GROUPCONVOLUTIONBIAS,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -612,10 +899,10 @@ namespace ngraph
                 auto arg2_shape = args[2].get_shape();
                 auto result_shape = out[0].get_shape();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto arg2_buffer_index = external_function->get_buffer_index(args[2].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -625,24 +912,50 @@ namespace ngraph
                             ->get_deconvolutionbias_forward_data<ngraph::op::DeconvolutionBias>(
                                 node);
                     auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD(deconvolution_forward, deconvbias_desc);
 
                     // DeconvolutionBias needs 5 primitives: weights, delta, bias, result,
                     // and deconvolutionbias.
                     auto conv_index = mkldnn_emitter->reserve_primitive_space(5);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, deconvbias_desc, conv_index, weights_desc](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    auto functor = [&,
+                                    deconvbias_desc,
+                                    conv_index,
+                                    scratchpad_size,
+                                    weights_desc,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    arg2_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_deconvolutionbias_forward(
-                                deconvbias_desc, conv_index, weights_desc);
+                                ctx->mkldnn_memories,
+                                ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
+                                deconvbias_desc,
+                                deps,
+                                conv_index,
+                                weights_desc);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[arg2_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[3], ctx->buffer_data[out_buffer_index]);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::DECONVOLUTIONBIAS,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -652,17 +965,20 @@ namespace ngraph
                 }
             }
 
-            REGISTER_OP_BUILDER(Convolution);
-            REGISTER_OP_BUILDER(ConvolutionRelu);
-            REGISTER_OP_BUILDER(ConvolutionBias);
-            REGISTER_OP_BUILDER(ConvolutionBiasAdd);
-            REGISTER_OP_BUILDER(ConvolutionBackpropData);
-            REGISTER_OP_BUILDER(ConvolutionBackpropFilters);
-            REGISTER_OP_BUILDER(ConvolutionBiasBackpropFiltersBias);
-            REGISTER_OP_BUILDER(GroupConvolution);
-            REGISTER_OP_BUILDER(ConvolutionAdd);
-            REGISTER_OP_BUILDER(GroupConvolutionBias);
-            REGISTER_OP_BUILDER(DeconvolutionBias)
+            void register_builders_convolution_cpp()
+            {
+                REGISTER_OP_BUILDER(Convolution);
+                REGISTER_OP_BUILDER(ConvolutionRelu);
+                REGISTER_OP_BUILDER(ConvolutionBias);
+                REGISTER_OP_BUILDER(ConvolutionBiasAdd);
+                REGISTER_OP_BUILDER(ConvolutionBackpropData);
+                REGISTER_OP_BUILDER(ConvolutionBackpropFilters);
+                REGISTER_OP_BUILDER(ConvolutionBiasBackpropFiltersBias);
+                REGISTER_OP_BUILDER(GroupConvolution);
+                REGISTER_OP_BUILDER(ConvolutionAdd);
+                REGISTER_OP_BUILDER(GroupConvolutionBias);
+                REGISTER_OP_BUILDER(DeconvolutionBias);
+            }
         } // namespace cpu
     }     // namespace runtime
 } // namespace ngraph

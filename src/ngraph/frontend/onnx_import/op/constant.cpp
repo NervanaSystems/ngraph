@@ -17,7 +17,7 @@
 #include "ngraph/op/constant.hpp"
 #include "core/node.hpp"
 #include "core/tensor.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
@@ -48,7 +48,7 @@ namespace ngraph
                     inline std::shared_ptr<ngraph::op::Constant>
                         make_ng_constant<Tensor::Type::float16>(const Tensor& tensor)
                     {
-                        return __make_ng_constant<float>(element::f32, tensor);
+                        return __make_ng_constant<ngraph::float16>(element::f16, tensor);
                     }
 
                     template <>
@@ -151,7 +151,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

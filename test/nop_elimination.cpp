@@ -110,3 +110,10 @@ TEST(nop_elimination, eliminate_stop_gradient)
 
     ASSERT_EQ(count_ops_of_type<op::StopGradient>(f), 0);
 }
+
+TEST(nop_elimination, pass_property)
+{
+    auto pass = std::make_shared<ngraph::pass::NopElimination>();
+    ASSERT_EQ(true, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+    ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+}

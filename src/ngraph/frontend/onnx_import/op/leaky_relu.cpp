@@ -18,7 +18,7 @@
 
 #include "exceptions.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -54,7 +54,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

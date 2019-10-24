@@ -24,35 +24,52 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Generalized dot product operation, including scalar-tensor product, matrix-vector product, and matrix multiplication.
+        /// \brief Generalized dot product operation, including scalar-tensor product, matrix-vector
+        ///        product, and matrix multiplication.
         class Dot : public Op
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"Dot", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            /// \brief Constructs a dot product operation.
+            Dot() = default;
             /// \brief Constructs a dot product operation.
             ///
             /// \param arg0 The node producing the first argument.
             /// \param arg1 The node producing the second argument.
             /// \param reduction_axes_count The number of axes to dot.
-            Dot(const std::shared_ptr<Node>& arg0,
-                const std::shared_ptr<Node>& arg1,
+            Dot(const Output<Node>& arg0,
+                const Output<Node>& arg1,
                 size_t reduction_axes_count,
                 bool has_reduction_axes_count = true);
 
-            /// \brief Constructs a dot product operation with default dot-axis selection depending on the inputs.
+            /// \brief Constructs a dot product operation with default dot-axis selection depending
+            ///        on the inputs.
             ///
             /// If `arg0` or `arg1` is a scalar, there are no dot-axes. Else, there is one dot-axis.
             ///
-            /// (Note that in particular, this results in scalar-tensor products where one or the other argument is
-            /// a scalar, a matrix-vector products where `arg0` is a matrix and `arg1` is a vector, and a
-            /// matrix multiplication where `arg0` and `arg1` are both matrices.)
+            /// (Note that in particular, this results in scalar-tensor products where one or the
+            /// other argument is a scalar, a matrix-vector products where `arg0` is a matrix and
+            /// `arg1` is a vector, and a matrix multiplication where `arg0` and `arg1` are both
+            /// matrices.)
             ///
             /// \param arg0 The node producing the first argument.
             /// \param arg1 The node producing the second argument.
-            Dot(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+            Dot(const Output<Node>& arg0, const Output<Node>& arg1);
 
             void validate_and_infer_types() override;
 
             size_t get_reduction_axes_count() const { return m_reduction_axes_count; }
+            void set_reduction_axes_count(size_t reduction_axes_count)
+            {
+                m_reduction_axes_count = reduction_axes_count;
+            }
+            bool get_has_reduction_axes_count() const { return m_has_reduction_axes_count; }
+            void set_has_reduction_axes_count(bool has_reduction_axes_count)
+            {
+                m_has_reduction_axes_count = has_reduction_axes_count;
+            }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override
             {

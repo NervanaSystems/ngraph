@@ -29,14 +29,20 @@ namespace ngraph
         class Atan : public util::UnaryElementwiseArithmetic
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"Atan", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            /// \brief Constructs an arctan operation.
+            Atan() = default;
+
             /// \brief Constructs an arctan operation.
             ///
-            /// \param arg Node that produces the input tensor.<br>
+            /// \param arg Output that produces the input tensor.<br>
             /// `[d1, ...]`
             ///
             /// Output `[d1, ...]`
             ///
-            Atan(const std::shared_ptr<Node>& arg);
+            Atan(const Output<Node>& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

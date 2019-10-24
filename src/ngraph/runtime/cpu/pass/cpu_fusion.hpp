@@ -18,6 +18,7 @@
 
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/runtime/cpu/cpu_backend_visibility.h"
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 namespace ngraph
 {
@@ -27,6 +28,7 @@ namespace ngraph
         {
             namespace pass
             {
+                class CPUPreFusion;
                 class CPUFusion;
                 class CPUQuantFusion;
             }
@@ -34,26 +36,38 @@ namespace ngraph
     }
 }
 
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUPreFusion : public ngraph::pass::GraphRewrite
+{
+public:
+    CPUPreFusion()
+        : GraphRewrite()
+    {
+        construct_maxpool_relu_switch();
+    }
+
+private:
+    void construct_maxpool_relu_switch();
+};
+
 class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
 {
 public:
-    CPUFusion(ngraph::pass::FusionType fusions = ngraph::pass::ALL_FUSIONS)
+    typedef ngraph::pass::FusionType FusionType;
+    typedef ngraph::pass::FusionTypeMask FusionTypeMask;
+    CPUFusion(FusionTypeMask fusions = FusionType::ALL_FUSIONS)
         : GraphRewrite()
     {
-        if (fusions & ngraph::pass::DIFFERENTIABLE_FUSIONS)
+        if (fusions.is_set(FusionType::DIFFERENTIABLE_FUSIONS))
         {
             construct_conv_bias(); // DEPRECATED - Use CoreFusion
             construct_sigmoid_multiply();
         }
 
-        if (fusions & ngraph::pass::REGULAR_FUSIONS)
+        if (fusions.is_set(FusionType::REGULAR_FUSIONS))
         {
             construct_matmul();
             construct_matmulbias();
             construct_fprop_bn();
-            construct_zero_padded_reshaped_conv();
-            construct_zero_padded_conv();
-            construct_zero_padded_conv_backprop_filters();
             construct_conv_bias_bprop();
             construct_conv_bias_folded_batch_norm();
             construct_conv_bias_affine_folding();
@@ -71,13 +85,17 @@ public:
             construct_conv_add();
             construct_conv_add_relu();
             construct_update_slice();
+#if MKLDNN_VERSION_MAJOR < 1
             construct_fuse_lstm_recurrent_state();
+#endif
             if (std::getenv("NGRAPH_DECONV_FUSE") != nullptr)
             {
                 // Note: enable when the deconv perf is better than convbackpropdata
                 construct_deconvolution_affine_folding();
                 construct_deconvolution_affine_folding_relu();
             }
+            construct_dropout();
+            construct_batch_norm_infer_relu_with_multiply_add();
         }
     }
 
@@ -88,11 +106,9 @@ private:
     void construct_conv_bias_bprop();
     void construct_fprop_bn();
     void construct_sigmoid_multiply();
-    void construct_zero_padded_reshaped_conv();
-    void construct_zero_padded_conv();
-    void construct_zero_padded_conv_backprop_filters();
     void construct_batch_norm_relu();
     void construct_batch_norm_relu_global_stats();
+    void construct_batch_norm_infer_relu_with_multiply_add();
     void construct_conv_relu();
     void construct_conv_bias_relu();
     void construct_conv_bias_add();
@@ -106,9 +122,12 @@ private:
     void construct_groupconv_batchnorm_global_stats_folding();
     void construct_groupconv_batchnorm_global_stats_folding_relu();
     void construct_update_slice();
+#if MKLDNN_VERSION_MAJOR < 1
     void construct_fuse_lstm_recurrent_state();
+#endif
     void construct_deconvolution_affine_folding();
     void construct_deconvolution_affine_folding_relu();
+    void construct_dropout();
 };
 
 class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUQuantFusion : public ngraph::pass::GraphRewrite
@@ -124,6 +143,7 @@ public:
         construct_qconcat();
         construct_qconvb_add();
         construct_dq_q();
+        construct_quantized_matmul();
     }
 
 private:
@@ -133,4 +153,5 @@ private:
     void construct_qconcat();
     void construct_dq_q();
     void construct_qconvb_add();
+    void construct_quantized_matmul();
 };

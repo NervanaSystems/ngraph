@@ -20,6 +20,21 @@
 
 using namespace ngraph;
 
+op::util::FusedOp::FusedOp()
+    : Op()
+{
+}
+
+op::util::FusedOp::FusedOp(const NodeVector& args)
+    : Op(args)
+{
+}
+
+op::util::FusedOp::FusedOp(const OutputVector& args)
+    : Op(args)
+{
+}
+
 op::util::FusedOp::FusedOp(const std::string& node_type, const NodeVector& args)
     : Op(node_type, args)
 {
@@ -27,6 +42,25 @@ op::util::FusedOp::FusedOp(const std::string& node_type, const NodeVector& args)
 
 void op::util::FusedOp::validate_and_infer_types()
 {
+    // Bail out if any of the shapes are unknown since fused op decomposition
+    // typically requires fully-determined static types.
+    //
+    // In the absence of decomposition, we will not know how many outputs this
+    // fused op has, so we conservatively create and set a single output to
+    // facilitate downstream ops that would like to use this op as an argument.
+    // Multi-output fused ops (e.g., split) should create these outputs in their
+    // constructors instead.
+    for (size_t i = 0; i < get_input_size(); i++)
+    {
+        if (!get_input_partial_shape(i).is_static())
+        {
+            set_output_type(0, element::dynamic, PartialShape::dynamic());
+            return;
+        }
+    }
+
+    pre_validate_and_infer_types();
+
     auto subgraph_outputs = decompose_op();
     auto subgraph = extract_subgraph(subgraph_outputs, get_arguments());
     validate_nodes_and_infer_types(subgraph);
@@ -36,14 +70,20 @@ void op::util::FusedOp::validate_and_infer_types()
     {
         for (size_t j = 0; j < output_node->get_output_size(); j++, i++)
         {
-            set_output_size(i + 1);
+            if (i >= get_output_size())
+            {
+                set_output_size(i + 1);
+            }
             set_output_type(
                 i, output_node->get_output_element_type(j), output_node->get_output_shape(j));
         }
     }
+
+    post_validate_and_infer_types();
 }
 
-void op::util::FusedOp::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::util::FusedOp::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                          const NodeVector& /*deltas*/)
 {
     // TODO
     throw ngraph_error("Autodiff on fused ops not supported yet");

@@ -20,8 +20,12 @@
 using namespace std;
 using namespace ngraph;
 
-op::Subtract::Subtract(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-    : BinaryElementwiseArithmetic("Subtract", arg0, arg1)
+constexpr NodeTypeInfo op::Subtract::type_info;
+
+op::Subtract::Subtract(const Output<Node>& arg0,
+                       const Output<Node>& arg1,
+                       const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }
@@ -29,22 +33,26 @@ op::Subtract::Subtract(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg
 shared_ptr<Node> op::Subtract::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Subtract>(new_args.at(0), new_args.at(1));
+    return make_shared<Subtract>(new_args.at(0), new_args.at(1), this->get_autob());
 }
 
 void op::Subtract::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    if (get_autob().m_type != op::AutoBroadcastType::NONE)
+    {
+        throw ngraph_error("Autodiff not supported with auto broadcasting");
+    }
+
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
-    auto y = get_argument(1);
+    auto x = input_value(0);
+    auto y = input_value(1);
 
     adjoints.add_delta(x, delta);
     adjoints.add_delta(y, -delta);
 }
 
-shared_ptr<ngraph::Node> ngraph::operator-(const shared_ptr<ngraph::Node> arg0,
-                                           const shared_ptr<ngraph::Node> arg1)
+shared_ptr<ngraph::Node> ngraph::operator-(const Output<Node> arg0, const Output<Node> arg1)
 {
     return make_shared<ngraph::op::Subtract>(arg0, arg1);
 }

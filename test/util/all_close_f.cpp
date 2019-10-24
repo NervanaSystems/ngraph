@@ -39,8 +39,20 @@ constexpr uint64_t DOUBLE_MAX_DIFF = ULLONG_MAX - 1;
 
 uint32_t test::float_distance(float a, float b, float min_signal)
 {
-    if (!isfinite(a) || !isfinite(b))
+    if (std::isnan(a) && std::isnan(b))
     {
+        return 0;
+    }
+    else if (std::isinf(a) && std::isinf(b))
+    {
+        if (a > 0 && b > 0)
+        {
+            return 0;
+        }
+        else if (a < 0 && b < 0)
+        {
+            return 0;
+        }
         return FLOAT_MAX_DIFF;
     }
 
@@ -82,8 +94,20 @@ uint32_t test::float_distance(float a, float b, float min_signal)
 
 uint64_t test::float_distance(double a, double b, double min_signal)
 {
-    if (!isfinite(a) || !isfinite(b))
+    if (std::isnan(a) && std::isnan(b))
     {
+        return 0;
+    }
+    else if (std::isinf(a) && std::isinf(b))
+    {
+        if (a > 0 && b > 0)
+        {
+            return 0;
+        }
+        else if (a < 0 && b < 0)
+        {
+            return 0;
+        }
         return DOUBLE_MAX_DIFF;
     }
 
@@ -125,9 +149,20 @@ uint64_t test::float_distance(double a, double b, double min_signal)
 
 bool test::close_f(float a, float b, int tolerance_bits, float min_signal)
 {
-    // isfinite(a) => !isinf(a) && !isnan(a)
-    if (!isfinite(a) || !isfinite(b))
+    if (std::isnan(a) && std::isnan(b))
     {
+        return true;
+    }
+    else if (std::isinf(a) && std::isinf(b))
+    {
+        if (a > 0 && b > 0)
+        {
+            return true;
+        }
+        else if (a < 0 && b < 0)
+        {
+            return true;
+        }
         return false;
     }
 
@@ -144,9 +179,20 @@ bool test::close_f(float a, float b, int tolerance_bits, float min_signal)
 
 bool test::close_f(double a, double b, int tolerance_bits, double min_signal)
 {
-    // isfinite(a) => !isinf(a) && !isnan(a)
-    if (!isfinite(a) || !isfinite(b))
+    if (std::isnan(a) && std::isnan(b))
     {
+        return true;
+    }
+    else if (std::isinf(a) && std::isinf(b))
+    {
+        if (a > 0 && b > 0)
+        {
+            return true;
+        }
+        else if (a < 0 && b < 0)
+        {
+            return true;
+        }
         return false;
     }
 
@@ -216,6 +262,7 @@ uint32_t test::matching_mantissa_bits(uint32_t distance)
         ++tolerance_bit_shift;
     }
 
+    // clang-format off
     // all_close_f calculation of tolerance_bit_shift:
     // e.g. for float with 24 bit mantissa, 2 bit accuracy, and hard-coded 8 bit exponent_bits
     //  tolerance_bit_shift   =     32 -          (1 +  8 + (24 -                    1         ) - 2             )
@@ -225,6 +272,7 @@ uint32_t test::matching_mantissa_bits(uint32_t distance)
     //  tolerance_bit_shift   =     32 -          (1 +  8 + (matching_matissa_bits - 1         ) - 0             )
     //  tolerance_bit_shift   =     32 -          (1 +  8 + (matching_matissa_bits - 1         )                 )
     //  matching_matissa_bits =     32 -          (1 +  8 + (tolerance_bit_shift   - 1         )                 )
+    // clang-format on
     uint32_t matching_matissa_bits =
         tolerance_bit_shift < 24 ? (32 - (1 + 8 + (tolerance_bit_shift - 1))) : 0;
     return matching_matissa_bits;
@@ -253,6 +301,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
         ++tolerance_bit_shift;
     }
 
+    // clang-format off
     // all_close_f calculation of tolerance_bit_shift:
     // e.g. for double with 53 bit mantissa, 2 bit accuracy, and hard-coded 8 bit exponent_bits
     //  tolerance_bit_shift   =     64 -          (1 +  11 + (53 -                    1         ) - 2             )
@@ -262,6 +311,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
     //  tolerance_bit_shift   =     64 -          (1 +  11 + (matching_matissa_bits - 1         ) - 0             )
     //  tolerance_bit_shift   =     64 -          (1 +  11 + (matching_matissa_bits - 1         )                 )
     //  matching_matissa_bits =     64 -          (1 +  11 + (tolerance_bit_shift   - 1         )                 )
+    // clang-format on
     uint32_t matching_matissa_bits =
         tolerance_bit_shift < 53 ? (64 - (1 + 11 + (tolerance_bit_shift - 1))) : 0;
     return matching_matissa_bits;
@@ -329,7 +379,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
             if (diff_count < 5)
             {
                 msg << std::setprecision(std::numeric_limits<long double>::digits10 + 1) << a[i]
-                    << " is not close to " << b[i] << " at index " << i << "\n";
+                    << " is not close to " << b[i] << " at index " << i << std::endl;
             }
 
             rc = false;
@@ -338,7 +388,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
     }
     if (!rc)
     {
-        msg << "diff count: " << diff_count << " out of " << a.size() << "\n";
+        msg << "diff count: " << diff_count << " out of " << a.size() << std::endl;
     }
     // Find median value via partial sorting
     size_t middle = distances.size() / 2;
@@ -361,7 +411,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
                   << tolerance_bits << " tolerance). ";
         if (all_below_min_signal)
         {
-            std::cout << "All values below min_signal: " << min_signal << "\n";
+            std::cout << "All values below min_signal: " << min_signal << std::endl;
         }
         else
         {
@@ -376,11 +426,11 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
         << " tolerance bits)\n";
     if (all_below_min_signal)
     {
-        msg << "All values below min_signal: " << min_signal << "\n";
+        msg << "All values below min_signal: " << min_signal << std::endl;
     }
     else
     {
-        msg << below_min_count << " value(s) below min_signal: " << min_signal << "\n";
+        msg << below_min_count << " value(s) below min_signal: " << min_signal << std::endl;
         msg << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
             << "tightest match   - mismatch occurred @ mantissa bit: "
             << matching_mantissa_bits(min_distance) << " or next bit (" << a[min_distance_index]
@@ -460,7 +510,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
         {
             if (diff_count < 5)
             {
-                msg << a[i] << " is not close to " << b[i] << " at index " << i << "\n";
+                msg << a[i] << " is not close to " << b[i] << " at index " << i << std::endl;
             }
 
             rc = false;
@@ -469,7 +519,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
     }
     if (!rc)
     {
-        msg << "diff count: " << diff_count << " out of " << a.size() << "\n";
+        msg << "diff count: " << diff_count << " out of " << a.size() << std::endl;
     }
     // Find median value via partial sorting
     size_t middle = distances.size() / 2;
@@ -494,7 +544,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
                   << " tolerance). ";
         if (all_below_min_signal)
         {
-            std::cout << "All values below min_signal: " << min_signal << "\n";
+            std::cout << "All values below min_signal: " << min_signal << std::endl;
         }
         else
         {
@@ -509,11 +559,11 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
         << " tolerance bits)\n";
     if (all_below_min_signal)
     {
-        msg << "All values below min_signal: " << min_signal << "\n";
+        msg << "All values below min_signal: " << min_signal << std::endl;
     }
     else
     {
-        msg << below_min_count << " value(s) below min_signal: " << min_signal << "\n";
+        msg << below_min_count << " value(s) below min_signal: " << min_signal << std::endl;
         msg << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
             << "tightest match   - mismatch occurred @ mantissa bit: "
             << matching_mantissa_bits(min_distance) << " or next bit (" << a[min_distance_index]

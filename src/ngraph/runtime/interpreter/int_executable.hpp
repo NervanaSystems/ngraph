@@ -17,58 +17,85 @@
 #pragma once
 
 #include <initializer_list>
+#include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
 
+#include "ngraph/op/add.hpp"
 #include "ngraph/op/all.hpp"
+#include "ngraph/op/allreduce.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
+#include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
+#include "ngraph/op/equal.hpp"
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_pad.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
+#include "ngraph/op/experimental/random_uniform.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/greater.hpp"
+#include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/less.hpp"
+#include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/maximum.hpp"
 #include "ngraph/op/min.hpp"
+#include "ngraph/op/minimum.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/one_hot.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/passthrough.hpp"
+#include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/op/quantized_convolution.hpp"
+#include "ngraph/op/quantized_dot.hpp"
+#include "ngraph/op/recv.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
+#include "ngraph/op/send.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
+#include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
+#ifdef INTERPRETER_USE_HYBRID
 #include "ngraph/runtime/hybrid/op/function_call.hpp"
+#endif
 #include "ngraph/runtime/interpreter/node_wrapper.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
 #include "ngraph/runtime/reference/all.hpp"
+#include "ngraph/runtime/reference/allreduce.hpp"
 #include "ngraph/runtime/reference/and.hpp"
 #include "ngraph/runtime/reference/any.hpp"
 #include "ngraph/runtime/reference/argmax.hpp"
@@ -79,6 +106,7 @@
 #include "ngraph/runtime/reference/batch_mat_mul.hpp"
 #include "ngraph/runtime/reference/batch_norm.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
+#include "ngraph/runtime/reference/broadcast_distributed.hpp"
 #include "ngraph/runtime/reference/ceiling.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
 #include "ngraph/runtime/reference/constant.hpp"
@@ -119,13 +147,18 @@
 #include "ngraph/runtime/reference/power.hpp"
 #include "ngraph/runtime/reference/product.hpp"
 #include "ngraph/runtime/reference/quantize.hpp"
+#include "ngraph/runtime/reference/random_uniform.hpp"
+#include "ngraph/runtime/reference/recv.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
 #include "ngraph/runtime/reference/replace_slice.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/runtime/reference/result.hpp"
 #include "ngraph/runtime/reference/reverse.hpp"
 #include "ngraph/runtime/reference/reverse_sequence.hpp"
+#include "ngraph/runtime/reference/scatter_add.hpp"
+#include "ngraph/runtime/reference/scatter_nd_add.hpp"
 #include "ngraph/runtime/reference/select.hpp"
+#include "ngraph/runtime/reference/send.hpp"
 #include "ngraph/runtime/reference/shape_of.hpp"
 #include "ngraph/runtime/reference/sigmoid.hpp"
 #include "ngraph/runtime/reference/sign.hpp"
@@ -139,13 +172,10 @@
 #include "ngraph/runtime/reference/tan.hpp"
 #include "ngraph/runtime/reference/tanh.hpp"
 #include "ngraph/runtime/reference/topk.hpp"
+#include "ngraph/runtime/reference/xor.hpp"
 #include "ngraph/runtime/tensor.hpp"
-#include "ngraph/state/rng_state.hpp"
-
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-#include "ngraph/runtime/reference/allreduce.hpp"
-#include "ngraph/runtime/reference/broadcast_distributed.hpp"
-#endif
+#include "ngraph/state/bernoulli_rng_state.hpp"
+#include "ngraph/state/uniform_rng_state.hpp"
 
 namespace ngraph
 {
@@ -161,25 +191,44 @@ namespace ngraph
 
 class ngraph::runtime::interpreter::INTExecutable : public Executable
 {
+    friend class INTBackend;
+
 public:
     INTExecutable(const std::shared_ptr<Function>& function,
                   bool enable_performance_collection = false);
 
     bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,
-              const std::vector<std::shared_ptr<Tensor>>& intputs) override;
+              const std::vector<std::shared_ptr<Tensor>>& inputs) override;
+
+    virtual void save(std::ostream& output_stream) override;
 
     void set_nan_check(bool enable);
 
     std::vector<PerformanceCounter> get_performance_data() const override;
 
+    std::shared_ptr<runtime::Tensor> create_input_tensor(size_t input_index) override;
+
+    std::shared_ptr<runtime::Tensor> create_output_tensor(size_t output_index) override;
+
+    std::vector<std::shared_ptr<runtime::Tensor>>
+        create_input_tensor(size_t input_index, size_t pipeline_depth) override;
+
+    std::vector<std::shared_ptr<runtime::Tensor>>
+        create_output_tensor(size_t output_index, size_t pipeline_depth) override;
+
 private:
+    INTExecutable(const std::string& model_string);
+
+    std::shared_ptr<ngraph::op::Parameter> get_parameter(size_t index) const;
+    std::shared_ptr<ngraph::op::Result> get_result(size_t index) const;
     int get_alignment() const { return 64; }
     bool m_is_compiled = false;
     bool m_nan_check_enabled = false;
     bool m_performance_counters_enabled = false;
-    std::unordered_map<const Node*, stopwatch> m_timer_map;
+    std::shared_ptr<Function> m_function;
+    std::unordered_map<std::shared_ptr<const Node>, stopwatch> m_timer_map;
     std::vector<NodeWrapper> m_wrapped_nodes;
-    std::unordered_map<const Node*, std::shared_ptr<RNGState>> m_states;
+    std::unordered_map<const Node*, std::shared_ptr<State>> m_states;
     std::set<std::string> m_unsupported_op_name_list;
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
@@ -195,15 +244,27 @@ private:
                    const std::vector<std::shared_ptr<HostTensor>>& out,
                    const std::vector<std::shared_ptr<HostTensor>>& args)
     {
-        const Node& node = node_wrapper.get_node();
+        const Node& node = *node_wrapper.get_node();
+
+        size_t op_version = node.get_version();
+        bool is_op_version_supported = op_version == 0;
+        NGRAPH_CHECK(is_op_version_supported,
+                     "Unsupported operator version ",
+                     op_version,
+                     " in ",
+                     node,
+                     ".\n",
+                     "INTERPRETER backend currently only supports op in version 0.");
 
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-        // #pragma GCC diagnostic error "-Wcovered-switch-default"
+// #pragma GCC diagnostic error "-Wcovered-switch-default"
+#endif
         switch (node_wrapper.get_typeid())
         {
         case OP_TYPEID::Abs:
@@ -222,11 +283,13 @@ private:
         }
         case OP_TYPEID::Add:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            const op::Add* add = static_cast<const op::Add*>(&node);
             reference::add<T>(args[0]->get_data_ptr<const T>(),
                               args[1]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
-                              element_count);
+                              node.get_input_shape(0),
+                              node.get_input_shape(1),
+                              add->get_autob());
             break;
         }
         case OP_TYPEID::All:
@@ -239,22 +302,26 @@ private:
                            all->get_reduction_axes());
             break;
         }
-        case OP_TYPEID::AllReduce: {
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
+        case OP_TYPEID::AllReduce:
+        {
+            const ngraph::op::AllReduce* allreduce =
+                static_cast<const ngraph::op::AllReduce*>(&node);
             reference::allreduce<T>(args[0]->get_data_ptr<T>(),
                                     out[0]->get_data_ptr<T>(),
                                     node.get_input_element_type(0),
+                                    allreduce->get_reduce_type(),
                                     static_cast<int>(shape_size(node.get_input_shape(0))));
-#endif
             break;
         }
         case OP_TYPEID::And:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto logical_and = static_cast<const op::And*>(&node);
             reference::logical_and(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
-                                   element_count);
+                                   node.get_input_shape(0),
+                                   node.get_input_shape(1),
+                                   logical_and->get_autob());
             break;
         }
         case OP_TYPEID::Any:
@@ -350,27 +417,37 @@ private:
         }
         case OP_TYPEID::GenerateMask:
         {
+            bool use_seed = static_cast<bool>(args[2]->get_data_ptr<const int32_t>()[0]);
             if (m_states.count(&node) == 0)
             {
                 const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
-                m_states[&node] = std::unique_ptr<ngraph::RNGState>(
-                    ngraph::RNGState::create_rng_state(gm->get_seed(), gm->get_probability()));
+                auto seed = use_seed ? gm->get_seed() : 0;
+                m_states[&node] =
+                    std::unique_ptr<State>(new BernoulliRNGState(seed, gm->get_probability()));
             }
 
             bool training = static_cast<bool>(args[0]->get_data_ptr<const T>()[0]);
-            auto state = m_states.at(&node).get();
+            auto state = static_cast<BernoulliRNGState*>(m_states.at(&node).get());
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::generate_mask<T>(out[0]->get_data_ptr<T>(), element_count, state, training);
+            if (!use_seed)
+            {
+                reference::generate_mask<T>(
+                    out[0]->get_data_ptr<T>(), element_count, state, training);
+            }
+            else
+            {
+                uint64_t seed = static_cast<uint64_t>(args[3]->get_data_ptr<const T>()[0]);
+                double prob = static_cast<double>(args[4]->get_data_ptr<const T>()[0]);
+                reference::generate_mask_no_state<T>(
+                    out[0]->get_data_ptr<T>(), element_count, training, seed, prob);
+            }
             break;
         }
         case OP_TYPEID::GetOutputElement:
         {
-            const op::GetOutputElement* get_output_element =
-                static_cast<const op::GetOutputElement*>(&node);
-            size_t n = get_output_element->get_n();
             size_t element_count = shape_size(node.get_output_shape(0));
             size_t num_bytes = element_count * node.get_output_element_type(0).size();
-            std::memcpy(out[0]->get_data_ptr<T>(), args[n]->get_data_ptr<T>(), num_bytes);
+            std::memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), num_bytes);
             break;
         }
         case OP_TYPEID::BatchMatMul:
@@ -456,19 +533,21 @@ private:
                                     broadcast_axes);
             break;
         }
-        case OP_TYPEID::BroadcastDistributed: {
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-            Distributed dist;
-            int Rank_ID;
-            Rank_ID = dist.get_rank();
-            if (Rank_ID == 0)
+        case OP_TYPEID::BroadcastDistributed:
+        {
+            const ngraph::op::BroadcastDistributed* broadcast =
+                static_cast<const ngraph::op::BroadcastDistributed*>(&node);
+            int rank_ID;
+            rank_ID = get_distributed_interface()->get_rank();
+            int root_id = broadcast->get_root_id();
+            if (rank_ID == root_id)
             {
                 reference::broadcastdistributed<T>(
                     args[0]->get_data_ptr<T>(),
                     node.get_input_element_type(0),
-                    static_cast<int>(shape_size(node.get_input_shape(0))));
-                auto memSize = static_cast<int>(shape_size(node.get_input_shape(0))) *
-                               sizeof(node.get_input_element_type(0));
+                    static_cast<int>(shape_size(node.get_input_shape(0))),
+                    root_id);
+                auto memSize = static_cast<int>(shape_size(node.get_input_shape(0))) * sizeof(T);
                 memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
             }
             else
@@ -476,10 +555,9 @@ private:
                 reference::broadcastdistributed<T>(
                     out[0]->get_data_ptr<T>(),
                     node.get_input_element_type(0),
-                    static_cast<int>(shape_size(node.get_input_shape(0))));
+                    static_cast<int>(shape_size(node.get_input_shape(0))),
+                    root_id);
             }
-            break;
-#endif
             break;
         }
         case OP_TYPEID::BroadcastLike: break;
@@ -521,7 +599,7 @@ private:
             element::Type type = node.get_element_type();
             std::stringstream ss;
             size_t element_count = shape_size(node.get_output_shape(0));
-            switch (type.get_type_enum())
+            switch (type)
             {
             case element::Type_t::boolean:
                 reference::convert_to_bool<T>(
@@ -579,6 +657,7 @@ private:
             case element::Type_t::undefined:
             case element::Type_t::dynamic:
             case element::Type_t::bf16:
+            case element::Type_t::f16:
                 ss << "unsupported element type " << type << " op Convert";
                 throw std::runtime_error(ss.str());
             }
@@ -687,11 +766,14 @@ private:
         }
         case OP_TYPEID::Divide:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            const op::Divide* divop = static_cast<const op::Divide*>(&node);
             reference::divide<T>(args[0]->get_data_ptr<const T>(),
                                  args[1]->get_data_ptr<const T>(),
                                  out[0]->get_data_ptr<T>(),
-                                 element_count);
+                                 node.get_input_shape(0),
+                                 node.get_input_shape(1),
+                                 divop->get_autob(),
+                                 divop->is_pythondiv());
             break;
         }
         case OP_TYPEID::Dot:
@@ -741,11 +823,11 @@ private:
             }
             else if (type == element::i32)
             {
-                reference::embedding<T, int>(args[0]->get_data_ptr<const int>(),
-                                             args[1]->get_data_ptr<const T>(),
-                                             out[0]->get_data_ptr<T>(),
-                                             element_count,
-                                             embed->get_shape());
+                reference::embedding<T, int32_t>(args[0]->get_data_ptr<const int>(),
+                                                 args[1]->get_data_ptr<const T>(),
+                                                 out[0]->get_data_ptr<T>(),
+                                                 element_count,
+                                                 embed->get_shape());
             }
             else if (type == element::i64)
             {
@@ -764,11 +846,13 @@ private:
         }
         case OP_TYPEID::Equal:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto equal = static_cast<const op::Equal*>(&node);
             reference::equal<T>(args[0]->get_data_ptr<const T>(),
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<char>(),
-                                element_count);
+                                node.get_input_shape(0),
+                                node.get_input_shape(1),
+                                equal->get_autob());
             break;
         }
         case OP_TYPEID::Erf:
@@ -785,6 +869,7 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
+#ifdef INTERPRETER_USE_HYBRID
         case OP_TYPEID::FunctionCall:
         {
             auto f = static_cast<const runtime::hybrid::op::FunctionCall*>(&node);
@@ -808,6 +893,7 @@ private:
             executable->call(outputs, inputs);
             break;
         }
+#endif
         case OP_TYPEID::Floor:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -872,38 +958,46 @@ private:
         }
         case OP_TYPEID::Greater:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto greater = static_cast<const op::Greater*>(&node);
             reference::greater<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<char>(),
-                                  element_count);
+                                  node.get_input_shape(0),
+                                  node.get_input_shape(1),
+                                  greater->get_autob());
             break;
         }
         case OP_TYPEID::GreaterEq:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto greater_eq = static_cast<const op::GreaterEq*>(&node);
             reference::greater_eq<T>(args[0]->get_data_ptr<const T>(),
                                      args[1]->get_data_ptr<const T>(),
                                      out[0]->get_data_ptr<char>(),
-                                     element_count);
+                                     node.get_input_shape(0),
+                                     node.get_input_shape(1),
+                                     greater_eq->get_autob());
             break;
         }
         case OP_TYPEID::Less:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto less = static_cast<const op::Less*>(&node);
             reference::less<T>(args[0]->get_data_ptr<const T>(),
                                args[1]->get_data_ptr<const T>(),
                                out[0]->get_data_ptr<char>(),
-                               element_count);
+                               node.get_input_shape(0),
+                               node.get_input_shape(1),
+                               less->get_autob());
             break;
         }
         case OP_TYPEID::LessEq:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto less_eq = static_cast<const op::LessEq*>(&node);
             reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<char>(),
-                                  element_count);
+                                  node.get_input_shape(0),
+                                  node.get_input_shape(1),
+                                  less_eq->get_autob());
             break;
         }
         case OP_TYPEID::Log:
@@ -917,6 +1011,7 @@ private:
         {
             const op::LRN* lrn = static_cast<const op::LRN*>(&node);
             reference::lrn<T>(args[0]->get_data_ptr<const T>(),
+                              lrn->get_reduction_axes(),
                               out[0]->get_data_ptr<T>(),
                               node.get_input_shape(0),
                               lrn->get_alpha(),
@@ -937,11 +1032,13 @@ private:
         }
         case OP_TYPEID::Maximum:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto maximum = static_cast<const op::Maximum*>(&node);
             reference::maximum<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
-                                  element_count);
+                                  node.get_input_shape(0),
+                                  node.get_input_shape(1),
+                                  maximum->get_autob());
             break;
         }
         case OP_TYPEID::MaxPool:
@@ -986,20 +1083,24 @@ private:
         }
         case OP_TYPEID::Minimum:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto minimum = static_cast<const op::Minimum*>(&node);
             reference::minimum<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
-                                  element_count);
+                                  node.get_input_shape(0),
+                                  node.get_input_shape(1),
+                                  minimum->get_autob());
             break;
         }
         case OP_TYPEID::Multiply:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto multiply = static_cast<const op::Multiply*>(&node);
             reference::multiply<T>(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
-                                   element_count);
+                                   node.get_input_shape(0),
+                                   node.get_input_shape(1),
+                                   multiply->get_autob());
             break;
         }
         case OP_TYPEID::Negative:
@@ -1018,11 +1119,13 @@ private:
         }
         case OP_TYPEID::NotEqual:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto not_equal = static_cast<const op::NotEqual*>(&node);
             reference::not_equal<T>(args[0]->get_data_ptr<const T>(),
                                     args[1]->get_data_ptr<const T>(),
                                     out[0]->get_data_ptr<char>(),
-                                    element_count);
+                                    node.get_input_shape(0),
+                                    node.get_input_shape(1),
+                                    not_equal->get_autob());
             break;
         }
         case OP_TYPEID::OneHot:
@@ -1037,11 +1140,13 @@ private:
         }
         case OP_TYPEID::Or:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto logical_or = static_cast<const op::Or*>(&node);
             reference::logical_or(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
-                                  element_count);
+                                  node.get_input_shape(0),
+                                  node.get_input_shape(1),
+                                  logical_or->get_autob());
             break;
         }
         case OP_TYPEID::Parameter: break;
@@ -1066,11 +1171,13 @@ private:
         }
         case OP_TYPEID::Power:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto power = static_cast<const op::Power*>(&node);
             reference::power<T>(args[0]->get_data_ptr<const T>(),
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<T>(),
-                                element_count);
+                                node.get_input_shape(0),
+                                node.get_input_shape(1),
+                                power->get_autob());
             break;
         }
         case OP_TYPEID::Product:
@@ -1130,18 +1237,257 @@ private:
 
             break;
         }
-        case OP_TYPEID::QuantizedAvgPool:
+
+        case OP_TYPEID::QuantizedConvolution:
+        {
+            const op::QuantizedConvolution* qc =
+                static_cast<const op::QuantizedConvolution*>(&node);
+
+            auto input_element_type = qc->get_input_element_type(0);
+            auto filter_element_type = qc->get_input_element_type(1);
+            auto output_element_type = qc->get_output_element_type(0);
+
+            if (input_element_type == element::u8 && filter_element_type == element::i8 &&
+                output_element_type == element::i8)
+            {
+                reference::convolution<uint8_t, int8_t, int8_t, int32_t>(
+                    args[0]->get_data_ptr<const uint8_t>(),
+                    args[1]->get_data_ptr<const int8_t>(),
+                    out[0]->get_data_ptr<int8_t>(),
+                    node.get_input_shape(0),
+                    node.get_input_shape(1),
+                    node.get_output_shape(0),
+                    qc->get_window_movement_strides(),
+                    qc->get_window_dilation_strides(),
+                    qc->get_padding_below(),
+                    qc->get_padding_above(),
+                    qc->get_data_dilation_strides(),
+                    args[2]->get_data_ptr<const float>(),
+                    args[3]->get_data_ptr<const uint8_t>(),
+                    args[4]->get_data_ptr<const float>(),
+                    args[5]->get_data_ptr<const int8_t>(),
+                    args[6]->get_data_ptr<const float>(),
+                    args[7]->get_data_ptr<const int8_t>());
+            }
+            else if (input_element_type == element::u8 && filter_element_type == element::u8 &&
+                     output_element_type == element::u8)
+            {
+                reference::convolution<uint8_t, uint8_t, uint8_t, int32_t>(
+                    args[0]->get_data_ptr<const uint8_t>(),
+                    args[1]->get_data_ptr<const uint8_t>(),
+                    out[0]->get_data_ptr<uint8_t>(),
+                    node.get_input_shape(0),
+                    node.get_input_shape(1),
+                    node.get_output_shape(0),
+                    qc->get_window_movement_strides(),
+                    qc->get_window_dilation_strides(),
+                    qc->get_padding_below(),
+                    qc->get_padding_above(),
+                    qc->get_data_dilation_strides(),
+                    args[2]->get_data_ptr<const float>(),
+                    args[3]->get_data_ptr<const uint8_t>(),
+                    args[4]->get_data_ptr<const float>(),
+                    args[5]->get_data_ptr<const uint8_t>(),
+                    args[6]->get_data_ptr<const float>(),
+                    args[7]->get_data_ptr<const uint8_t>());
+            }
+            else if (input_element_type == element::u8 && filter_element_type == element::i8 &&
+                     output_element_type == element::i32)
+            {
+                reference::convolution<uint8_t, int8_t, int32_t, int32_t>(
+                    args[0]->get_data_ptr<const uint8_t>(),
+                    args[1]->get_data_ptr<const int8_t>(),
+                    out[0]->get_data_ptr<int32_t>(),
+                    node.get_input_shape(0),
+                    node.get_input_shape(1),
+                    node.get_output_shape(0),
+                    qc->get_window_movement_strides(),
+                    qc->get_window_dilation_strides(),
+                    qc->get_padding_below(),
+                    qc->get_padding_above(),
+                    qc->get_data_dilation_strides(),
+                    args[2]->get_data_ptr<const float>(),
+                    args[3]->get_data_ptr<const uint8_t>(),
+                    args[4]->get_data_ptr<const float>(),
+                    args[5]->get_data_ptr<const int8_t>(),
+                    args[6]->get_data_ptr<const float>(),
+                    args[7]->get_data_ptr<const int32_t>());
+            }
+            else if (input_element_type == element::u8 && filter_element_type == element::u8 &&
+                     output_element_type == element::i32)
+            {
+                reference::convolution<uint8_t, uint8_t, int32_t, int32_t>(
+                    args[0]->get_data_ptr<const uint8_t>(),
+                    args[1]->get_data_ptr<const uint8_t>(),
+                    out[0]->get_data_ptr<int32_t>(),
+                    node.get_input_shape(0),
+                    node.get_input_shape(1),
+                    node.get_output_shape(0),
+                    qc->get_window_movement_strides(),
+                    qc->get_window_dilation_strides(),
+                    qc->get_padding_below(),
+                    qc->get_padding_above(),
+                    qc->get_data_dilation_strides(),
+                    args[2]->get_data_ptr<const float>(),
+                    args[3]->get_data_ptr<const uint8_t>(),
+                    args[4]->get_data_ptr<const float>(),
+                    args[5]->get_data_ptr<const uint8_t>(),
+                    args[6]->get_data_ptr<const float>(),
+                    args[7]->get_data_ptr<const int32_t>());
+            }
+            else
+            {
+                std::stringstream ss;
+                ss << "unsupported element type";
+                throw std::runtime_error(ss.str());
+            }
+
+            break;
+        }
+
         case OP_TYPEID::QuantizedConvolutionBias:
         case OP_TYPEID::QuantizedConvolutionBiasAdd:
         case OP_TYPEID::QuantizedConvolutionBiasSignedAdd:
         case OP_TYPEID::QuantizedConvolutionRelu:
-        case OP_TYPEID::QuantizedConvolution:
-        case OP_TYPEID::QuantizedMaxPool:
         case OP_TYPEID::QuantizedDotBias:
         case OP_TYPEID::QuantizedDot:
         {
-            throw unsupported_op("Unsupported op '" + node.description() +
-                                 "' in Interpreter back end.");
+            const op::QuantizedDot* qd = static_cast<const op::QuantizedDot*>(&node);
+
+            auto input0_element_type = qd->get_input_element_type(0);
+            auto input1_element_type = qd->get_input_element_type(1);
+            auto output_element_type = qd->get_output_element_type(0);
+
+            if (input0_element_type == element::u8 && input1_element_type == element::i8 &&
+                output_element_type == element::i8)
+            {
+                reference::dot<uint8_t, int8_t, int8_t, int32_t>(
+                    args[0]->get_data_ptr<const uint8_t>(),
+                    args[1]->get_data_ptr<const int8_t>(),
+                    out[0]->get_data_ptr<int8_t>(),
+                    node.get_input_shape(0),
+                    node.get_input_shape(1),
+                    node.get_output_shape(0),
+                    1,
+                    args[2]->get_data_ptr<const float>(),
+                    args[3]->get_data_ptr<const uint8_t>(),
+                    args[4]->get_data_ptr<const float>(),
+                    args[5]->get_data_ptr<const int8_t>(),
+                    args[6]->get_data_ptr<const float>(),
+                    args[7]->get_data_ptr<const int8_t>());
+            }
+            else if (input0_element_type == element::u8 && input1_element_type == element::u8 &&
+                     output_element_type == element::u8)
+            {
+                reference::dot<uint8_t, uint8_t, uint8_t, int32_t>(
+                    args[0]->get_data_ptr<const uint8_t>(),
+                    args[1]->get_data_ptr<const uint8_t>(),
+                    out[0]->get_data_ptr<uint8_t>(),
+                    node.get_input_shape(0),
+                    node.get_input_shape(1),
+                    node.get_output_shape(0),
+                    1,
+                    args[2]->get_data_ptr<const float>(),
+                    args[3]->get_data_ptr<const uint8_t>(),
+                    args[4]->get_data_ptr<const float>(),
+                    args[5]->get_data_ptr<const uint8_t>(),
+                    args[6]->get_data_ptr<const float>(),
+                    args[7]->get_data_ptr<const uint8_t>());
+            }
+            else if (input0_element_type == element::u8 && input1_element_type == element::u8 &&
+                     output_element_type == element::i32)
+            {
+                reference::dot<uint8_t, uint8_t, int32_t, int32_t>(
+                    args[0]->get_data_ptr<const uint8_t>(),
+                    args[1]->get_data_ptr<const uint8_t>(),
+                    out[0]->get_data_ptr<int32_t>(),
+                    node.get_input_shape(0),
+                    node.get_input_shape(1),
+                    node.get_output_shape(0),
+                    1,
+                    args[2]->get_data_ptr<const float>(),
+                    args[3]->get_data_ptr<const uint8_t>(),
+                    args[4]->get_data_ptr<const float>(),
+                    args[5]->get_data_ptr<const uint8_t>(),
+                    args[6]->get_data_ptr<const float>(),
+                    args[7]->get_data_ptr<const int32_t>());
+            }
+            else if (input0_element_type == element::u8 && input1_element_type == element::i8 &&
+                     output_element_type == element::i32)
+            {
+                reference::dot<uint8_t, int8_t, int32_t, int32_t>(
+                    args[0]->get_data_ptr<const uint8_t>(),
+                    args[1]->get_data_ptr<const int8_t>(),
+                    out[0]->get_data_ptr<int32_t>(),
+                    node.get_input_shape(0),
+                    node.get_input_shape(1),
+                    node.get_output_shape(0),
+                    1,
+                    args[2]->get_data_ptr<const float>(),
+                    args[3]->get_data_ptr<const uint8_t>(),
+                    args[4]->get_data_ptr<const float>(),
+                    args[5]->get_data_ptr<const int8_t>(),
+                    args[6]->get_data_ptr<const float>(),
+                    args[7]->get_data_ptr<const int32_t>());
+            }
+            else
+            {
+                std::stringstream ss;
+                ss << "unsupported element type";
+                throw std::runtime_error(ss.str());
+            }
+
+            break;
+        }
+        case OP_TYPEID::Recv:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            size_t memSize = element_count * sizeof(T);
+            const auto* op = static_cast<const ngraph::op::Recv*>(&node);
+            int src_id = op->get_src_id();
+
+            reference::recv<T>(
+                args[0]->get_data_ptr<T>(), node.get_input_element_type(0), element_count, src_id);
+
+            memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
+            break;
+        }
+        case OP_TYPEID::RandomUniform:
+        {
+            const op::RandomUniform* ru = static_cast<const op::RandomUniform*>(&node);
+
+            T min_val = args[0]->get_data_ptr<const T>()[0];
+            T max_val = args[1]->get_data_ptr<const T>()[0];
+            // In INTERPRETER we can ignore arg 2 (output_shape) for now because we only work on
+            // static output shapes anyway.
+            bool use_fixed_seed = static_cast<bool>(args[3]->get_data_ptr<const char>()[0]);
+
+            if (m_states.count(&node) == 0)
+            {
+                m_states[&node] = std::unique_ptr<UniformRNGState>(new UniformRNGState());
+            }
+
+            auto state = static_cast<UniformRNGState*>(m_states.at(&node).get());
+            size_t element_count = shape_size(node.get_output_shape(0));
+            if (!use_fixed_seed)
+            {
+                reference::random_uniform<T>(
+                    out[0]->get_data_ptr<T>(), min_val, max_val, element_count, state);
+            }
+            else
+            {
+                reference::random_uniform_with_fixed_seed<T>(out[0]->get_data_ptr<T>(),
+                                                             min_val,
+                                                             max_val,
+                                                             element_count,
+                                                             ru->get_fixed_seed());
+            }
+            break;
+        }
+        case OP_TYPEID::Range:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            break;
         }
         case OP_TYPEID::Relu:
         {
@@ -1219,6 +1565,66 @@ private:
             }
             break;
         }
+        case OP_TYPEID::ScatterAdd:
+        {
+            if (node.get_input_element_type(1) == element::i64)
+            {
+                reference::scatter_add<T, int64_t>(args[0]->get_data_ptr<T>(),
+                                                   args[1]->get_data_ptr<int64_t>(),
+                                                   args[2]->get_data_ptr<T>(),
+                                                   out[0]->get_data_ptr<T>(),
+                                                   node.get_input_shape(0),
+                                                   node.get_input_shape(1),
+                                                   node.get_input_shape(2),
+                                                   node.get_output_shape(0));
+            }
+            else if (node.get_input_element_type(1) == element::i32)
+            {
+                reference::scatter_add<T, int32_t>(args[0]->get_data_ptr<T>(),
+                                                   args[1]->get_data_ptr<int32_t>(),
+                                                   args[2]->get_data_ptr<T>(),
+                                                   out[0]->get_data_ptr<T>(),
+                                                   node.get_input_shape(0),
+                                                   node.get_input_shape(1),
+                                                   node.get_input_shape(2),
+                                                   node.get_output_shape(0));
+            }
+            else
+            {
+                throw ngraph_error("Unexpected type");
+            }
+            break;
+        }
+        case OP_TYPEID::ScatterNDAdd:
+        {
+            if (node.get_input_element_type(1) == element::i64)
+            {
+                reference::scatter_nd_add<T, int64_t>(args[0]->get_data_ptr<T>(),
+                                                      args[1]->get_data_ptr<int64_t>(),
+                                                      args[2]->get_data_ptr<T>(),
+                                                      out[0]->get_data_ptr<T>(),
+                                                      node.get_input_shape(0),
+                                                      node.get_input_shape(1),
+                                                      node.get_input_shape(2),
+                                                      node.get_output_shape(0));
+            }
+            else if (node.get_input_element_type(1) == element::i32)
+            {
+                reference::scatter_nd_add<T, int32_t>(args[0]->get_data_ptr<T>(),
+                                                      args[1]->get_data_ptr<int32_t>(),
+                                                      args[2]->get_data_ptr<T>(),
+                                                      out[0]->get_data_ptr<T>(),
+                                                      node.get_input_shape(0),
+                                                      node.get_input_shape(1),
+                                                      node.get_input_shape(2),
+                                                      node.get_output_shape(0));
+            }
+            else
+            {
+                throw ngraph_error("Unexpected type");
+            }
+            break;
+        }
         case OP_TYPEID::Select:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1227,6 +1633,21 @@ private:
                                  args[2]->get_data_ptr<const T>(),
                                  out[0]->get_data_ptr<T>(),
                                  element_count);
+            break;
+        }
+        case OP_TYPEID::Send:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            size_t memSize = element_count * sizeof(T);
+            const auto* op = static_cast<const ngraph::op::Send*>(&node);
+            int dest_id = op->get_dest_id();
+
+            reference::send<T>(args[0]->get_data_ptr<const T>(),
+                               node.get_input_element_type(0),
+                               element_count,
+                               dest_id);
+
+            memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
             break;
         }
         case OP_TYPEID::ShapeOf:
@@ -1303,11 +1724,13 @@ private:
         }
         case OP_TYPEID::Subtract:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto subtract = static_cast<const op::Subtract*>(&node);
             reference::subtract<T>(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
-                                   element_count);
+                                   node.get_input_shape(0),
+                                   node.get_input_shape(1),
+                                   subtract->get_autob());
             break;
         }
         case OP_TYPEID::Sum:
@@ -1346,7 +1769,8 @@ private:
                                             node.get_output_shape(0),
                                             topk->get_top_k_axis(),
                                             topk->get_k(),
-                                            topk->get_compute_max());
+                                            topk->get_compute_max(),
+                                            topk->get_sort());
             }
             else if (node.get_output_element_type(0) == element::i32)
             {
@@ -1357,7 +1781,8 @@ private:
                                             node.get_output_shape(0),
                                             topk->get_top_k_axis(),
                                             topk->get_k(),
-                                            topk->get_compute_max());
+                                            topk->get_compute_max(),
+                                            topk->get_sort());
             }
             else
             {
@@ -1365,11 +1790,26 @@ private:
             }
             break;
         }
+        case OP_TYPEID::Xor:
+        {
+            auto logical_xor = static_cast<const op::Or*>(&node);
+            reference::logical_xor(args[0]->get_data_ptr<const T>(),
+                                   args[1]->get_data_ptr<const T>(),
+                                   out[0]->get_data_ptr<T>(),
+                                   node.get_input_shape(0),
+                                   node.get_input_shape(1),
+                                   logical_xor->get_autob());
+            break;
+        }
         case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::Transpose:
         case OP_TYPEID::DynPad:
-        default: throw unsupported_op("Unsupported op '" + node.description() + "'");
+        case OP_TYPEID::Tile:
+        case OP_TYPEID::DynReplaceSlice:
+            throw unsupported_op("Unsupported op '" + node.description() + "'");
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
+#endif
         }
     }
 };

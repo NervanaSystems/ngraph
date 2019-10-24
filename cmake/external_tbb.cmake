@@ -32,7 +32,7 @@ if(NGRAPH_TBB_ENABLE)
 
     include(${TBB_ROOT}/cmake/TBBBuild.cmake)
     tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
-                tbb_build_prefix=tbb CONFIG_DIR TBB_DIR)
+        tbb_build_prefix=tbb stdver=c++${NGRAPH_CXX_STANDARD} CONFIG_DIR TBB_DIR)
     find_package(TBB REQUIRED tbb)
     if (NOT TBB_FOUND)
         message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")

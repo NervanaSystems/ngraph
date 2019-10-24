@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,11 +39,11 @@ namespace ngraph
 class ngraph::runtime::plaidml::op::Replicate final : public ngraph::op::Op
 {
 public:
-    Replicate(std::shared_ptr<Node> arg,
-              std::size_t replication_axis,
-              std::size_t replication_count);
+    static constexpr NodeTypeInfo type_info{"plaidmlReplicate", 0};
+    const NodeTypeInfo& get_type_info() const override { return type_info; }
+    Replicate(const Output<Node>& arg, std::size_t replication_axis, std::size_t replication_count);
 
-    Replicate(std::shared_ptr<Node> arg, std::vector<std::size_t> replication_axes);
+    Replicate(const Output<Node>& arg, std::vector<std::size_t> replication_axes);
 
     void validate_and_infer_types() final;
 

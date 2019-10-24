@@ -190,6 +190,15 @@ void codegen::CompilerCore::initialize()
     // Prevent Eigen from using any LGPL3 code
     args.push_back("-DEIGEN_MPL2_ONLY");
 
+#if defined(NGRAPH_TBB_ENABLE)
+    // Enable TBB
+    args.push_back("-DNGRAPH_TBB_ENABLE");
+#endif
+
+#if defined(NGRAPH_USE_LEGACY_MKLDNN)
+    args.push_back("-DNGRAPH_USE_LEGACY_MKLDNN");
+#endif
+
     // Prepare DiagnosticEngine
     IntrusiveRefCntPtr<DiagnosticOptions> diag_options = new DiagnosticOptions();
     diag_options->ErrorLimit = 20;
@@ -216,7 +225,8 @@ void codegen::CompilerCore::initialize()
     {
         diag_consumer = new IgnoringDiagConsumer();
     }
-    // Create diagnostics after compiler invocation is created, otherwise report outputs do not get generated.
+    // Create diagnostics after compiler invocation is created, otherwise report outputs do not get
+    // generated.
     m_compiler->createDiagnostics(diag_consumer);
 
     configure_search_path();
@@ -227,6 +237,8 @@ void codegen::CompilerCore::initialize()
     auto LO = m_compiler->getInvocation().getLangOpts();
     LO->CPlusPlus = 1;
     LO->CPlusPlus11 = 1;
+    // Strange but need to manually disable c++14
+    LO->CPlusPlus14 = 0;
     LO->Bool = 1;
     LO->Exceptions = 1;
     LO->CXXExceptions = 1;
@@ -239,7 +251,7 @@ void codegen::CompilerCore::initialize()
     // CodeGen options
     auto& CGO = m_compiler->getInvocation().getCodeGenOpts();
     CGO.OptimizationLevel = 3;
-    CGO.RelocationModel = "static";
+    CGO.RelocationModel = llvm::Reloc::Model::Static;
     // CGO.CodeModel = "medium";
     CGO.ThreadModel = "posix";
     CGO.FloatABI = "hard";
@@ -341,7 +353,7 @@ std::unique_ptr<codegen::Module>
     preprocessor_options.RemappedFileBuffers.push_back({m_source_name, buffer.get()});
 
     // Create and execute action
-    m_compiler_action.reset(new EmitCodeGenOnlyAction());
+    m_compiler_action.reset(new EmitLLVMOnlyAction());
     std::unique_ptr<llvm::Module> rc;
     bool reinitialize = false;
     if (m_compiler->ExecuteAction(*m_compiler_action) == true)
@@ -555,16 +567,6 @@ void codegen::CompilerCore::configure_search_path()
 #ifdef CUDNN_HEADER_PATHS
     // Only needed for GPU backend
     add_header_search_path(CUDNN_HEADER_PATHS);
-#endif
-
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-    add_header_search_path(MLSL_HEADER_PATH);
-#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
-    add_header_search_path(MPI_HEADER_PATH);
-#else
-    throw ngraph_error("Distributed Library not supported/mentioned");
-#endif
 #endif
 }
 

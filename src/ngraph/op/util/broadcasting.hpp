@@ -27,14 +27,34 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Cast shape of all input nodes for an element-wise operation that requires shape-compatibility
+        /// \brief Cast shape of all input nodes for an element-wise operation that requires
+        ///        shape-compatibility
         ///
         /// \param inputs Original list of inputs
         ///
         /// \return Numpy-style broadcasted list of nodes.
-        NodeVector numpy_style_broadcast(const NodeVector& inputs);
+        NodeVector numpy_style_broadcast(const NodeVector& inputs)
+            NGRAPH_DEPRECATED("Replace with numpy_style_broadcast_values");
 
-        /// \brief Cast shape of two nodes to make them compatible for an element-wise binary operation.
+        /// \brief Cast shape of all input nodes for an element-wise operation that requires
+        ///        shape-compatibility
+        ///
+        /// \param values Original list of inputs
+        ///
+        /// \return Numpy-style broadcasted list of nodes.
+        OutputVector numpy_style_broadcast_values(const OutputVector& values);
+
+        /// \brief Cast shape of an output to the requested output shape using NumPy's broadcasting
+        ///        rules
+        ///
+        /// \param value original value
+        /// \param shape requested output shape
+        ///
+        /// \return Broadcast output.
+        std::shared_ptr<Node> numpy_style_broadcast(const Output<Node>& value, const Shape& shape);
+
+        /// \brief Cast shape of two outputs to make them compatible for an element-wise binary
+        ///        operation.
         ///
         /// If necessary the right-hand-side argument will be broadcast to match the shape
         /// of left-hand-side argument. The starting of the mutually equal shape is
@@ -49,26 +69,79 @@ namespace ngraph
         /// \param start_match_axis position in shape denoting start of the mutually equal shape
         ///
         /// \return Left and right node after broadcasting.
-        NodeVector
-            legacy_style_broadcast_for_binary_operation(const std::shared_ptr<ngraph::Node>& left,
-                                                        const std::shared_ptr<ngraph::Node>& right,
-                                                        std::size_t start_match_axis);
+        NodeVector legacy_style_broadcast_for_binary_operation(const std::shared_ptr<Node>& left,
+                                                               const std::shared_ptr<Node>& right,
+                                                               size_t start_match_axis)
+            NGRAPH_DEPRECATED("Replace with legacy_style_broadcast_values_for_binary_operation");
 
-        /// \brief      Broadcast shape of two nodes to make them compatible for a matrix multiplication.
+        /// \brief Cast shape of two outputs to make them compatible for an element-wise binary
+        ///        operation.
         ///
-        /// \note       This function is reflecting broadcasting behaviour of NumPys' `matmul` operation
-        ///             \link https://docs.scipy.org/doc/numpy/reference/generated/numpy.matmul.html
-        ///             This mean that only \"stack of matrices\" axes are bidirectionally broadcasted.
-        ///             The last two dimension are left untouched.
+        /// If necessary the right-hand-side argument will be broadcast to match the shape
+        /// of left-hand-side argument. The starting of the mutually equal shape is
+        /// specified by the argument "start_match_axis", and if it is not set,
+        /// suffix matching is assumed.
         ///
-        /// \param[in]  left   The Node providing data for the left-hand side of matrix multiplication.
-        /// \param[in]  right  The Node providing data for the right-hand side of matrix multiplication.
+        /// This style of broadcast was used in ONNX Op sets prior to version 7, where it was
+        /// replaced by numpy-style broadcasting.
+        ///
+        /// \param left Node which contain input of binary op.
+        /// \param right Node which contain input of binary op.
+        /// \param start_match_axis position in shape denoting start of the mutually equal shape
+        ///
+        /// \return Left and right node after broadcasting.
+        OutputVector legacy_style_broadcast_values_for_binary_operation(const Output<Node>& left,
+                                                                        const Output<Node>& right,
+                                                                        size_t start_match_axis);
+
+        /// \brief      Broadcast shape of two nodes to make them compatible for a matrix
+        ///             multiplication.
+        ///
+        /// \note       This function is reflecting broadcasting behaviour of NumPy's `matmul`
+        ///             operation.
+        ///             (https://docs.scipy.org/doc/numpy/reference/generated/numpy.matmul.html).
+        ///             This mean that only \"stack of matrices\" axes are bidirectionally
+        ///             broadcasted. The last two dimension are left untouched.
+        ///
+        /// \param[in]  left   The Node providing data for the left-hand side of matrix
+        ///                    multiplication.
+        /// \param[in]  right  The Node providing data for the right-hand side of matrix
+        ///                    multiplication.
         ///
         /// \return     The vector containing both nodes broadcasted.
         ///
-        NodeVector
-            numpy_style_broadcast_for_matmul_operation(const std::shared_ptr<ngraph::Node>& left,
-                                                       const std::shared_ptr<ngraph::Node>& right);
+        NodeVector numpy_style_broadcast_for_matmul_operation(const std::shared_ptr<Node>& left,
+                                                              const std::shared_ptr<Node>& right)
+            NGRAPH_DEPRECATED("Replace with numpy_style_broadcast_values_for_matmul_operation.");
+
+        /// \brief      Broadcast shape of two nodes to make them compatible for a matrix
+        ///             multiplication.
+        ///
+        /// \note       This function is reflecting broadcasting behaviour of NumPy's `matmul`
+        ///             operation.
+        ///             (https://docs.scipy.org/doc/numpy/reference/generated/numpy.matmul.html)
+        ///             This mean that only \"stack of matrices\" axes are bidirectionally
+        ///             broadcasted. The last two dimension are left untouched.
+        ///
+        /// \param[in]  left   The Node providing data for the left-hand side of matrix
+        ///                    multiplication.
+        /// \param[in]  right  The Node providing data for the right-hand side of matrix
+        ///                    multiplication.
+        ///
+        /// \return     The vector containing both outputs broadcasted.
+        ///
+        OutputVector numpy_style_broadcast_values_for_matmul_operation(const Output<Node>& left,
+                                                                       const Output<Node>& right);
+
+        /// \brief Cast shape of all input nodes for an element-wise operation that requires
+        ///        shape-compatibility
+        ///
+        /// \param inputs Original list of inputs
+        /// \param axis Index starting to align
+        ///
+        /// \return pdpd-style broadcasted list of nodes.
+        NodeVector pdpd_style_broadcast(const NodeVector& inputs, int64_t axis);
+        OutputVector pdpd_style_broadcast(const OutputVector& inputs, int64_t axis);
 
         /// \brief Generate a list of broadcast axes.
         ///
@@ -108,22 +181,21 @@ namespace ngraph
                 output_shape, input_shape, output_shape.size() - input_shape.size());
         }
 
-        inline std::shared_ptr<ngraph::Node>
-            make_broadcast_node(const std::shared_ptr<ngraph::Node>& node, ngraph::Shape new_shape)
+        inline std::shared_ptr<Node> make_broadcast_node(const Output<Node>& output,
+                                                         Shape new_shape)
         {
-            return std::make_shared<ngraph::op::Broadcast>(
-                node, new_shape, calculate_broadcast_axes(new_shape, node->get_shape()));
+            return std::make_shared<op::Broadcast>(
+                output, new_shape, calculate_broadcast_axes(new_shape, output.get_shape()));
         }
 
-        inline std::shared_ptr<ngraph::Node>
-            make_broadcast_node(const std::shared_ptr<ngraph::Node>& node,
-                                ngraph::Shape new_shape,
-                                std::size_t start_match_axis)
+        inline std::shared_ptr<Node> make_broadcast_node(const Output<Node>& value,
+                                                         const Shape& new_shape,
+                                                         std::size_t start_match_axis)
         {
-            return std::make_shared<ngraph::op::Broadcast>(
-                node,
+            return std::make_shared<op::Broadcast>(
+                value,
                 new_shape,
-                calculate_broadcast_axes(new_shape, node->get_shape(), start_match_axis));
+                calculate_broadcast_axes(new_shape, value.get_shape(), start_match_axis));
         }
     } // namespace  op
 } // namespace  ngraph

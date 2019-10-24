@@ -19,16 +19,38 @@
 using namespace std;
 using namespace ngraph;
 
+op::util::BinaryElementwiseComparison::BinaryElementwiseComparison()
+{
+}
+
+op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(const shared_ptr<Node>& arg0,
+                                                                   const shared_ptr<Node>& arg1,
+                                                                   const AutoBroadcastSpec& autob)
+    : Op(check_single_output_args({arg0, arg1}))
+    , m_autob(autob)
+{
+}
+
+op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(const Output<Node>& arg0,
+                                                                   const Output<Node>& arg1,
+                                                                   const AutoBroadcastSpec& autob)
+    : Op({arg0, arg1})
+    , m_autob(autob)
+{
+}
+
 op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(const string& node_type,
                                                                    const shared_ptr<Node>& arg0,
-                                                                   const shared_ptr<Node>& arg1)
+                                                                   const shared_ptr<Node>& arg1,
+                                                                   const AutoBroadcastSpec& autob)
     : Op(node_type, check_single_output_args({arg0, arg1}))
+    , m_autob(autob)
 {
 }
 
 void op::util::BinaryElementwiseComparison::validate_and_infer_types()
 {
-    auto args_et_pshape = validate_and_infer_elementwise_args();
+    auto args_et_pshape = validate_and_infer_elementwise_args(m_autob);
     PartialShape& args_pshape = std::get<1>(args_et_pshape);
 
     set_output_type(0, element::boolean, args_pshape);

@@ -25,6 +25,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/util/op_annotations.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/serializer.hpp"
@@ -216,7 +217,7 @@ public:
         auto cloneit = clone.begin();
         while (origit != orig.end() && cloneit != clone.end())
         {
-            if (*cloneit != nm.get_node_map().at(*origit))
+            if (*cloneit != nm.at((*origit).get()))
             {
                 return false;
             }
@@ -232,11 +233,11 @@ TEST_F(CloneTest, clone_nodes_full)
     auto cloned_nodes = clone_nodes(nodes, node_map);
     ASSERT_TRUE(CompareNodeVector(nodes, cloned_nodes, node_map));
 
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.get(A)));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.get(B)));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.get(C)));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Add>(node_map.get(AplusB)));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Multiply>(node_map.get(AplusBtimesC)));
+    ASSERT_NE(nullptr, as_type_ptr<op::Parameter>(node_map.at(A.get())));
+    ASSERT_NE(nullptr, as_type_ptr<op::Parameter>(node_map.at(B.get())));
+    ASSERT_NE(nullptr, as_type_ptr<op::Parameter>(node_map.at(C.get())));
+    ASSERT_NE(nullptr, as_type_ptr<op::Add>(node_map.at(AplusB.get())));
+    ASSERT_NE(nullptr, as_type_ptr<op::Multiply>(node_map.at(AplusBtimesC.get())));
 
     auto sorted_nodes = topological_sort(nodes);
     auto sorted_cloned_nodes = topological_sort(cloned_nodes);
@@ -247,13 +248,13 @@ TEST_F(CloneTest, clone_nodes_partial)
 {
     // map A -> A' prior to clone
     auto Aprime = make_shared<op::Parameter>(element::f32, shape);
-    node_map.add(A, Aprime);
+    node_map[A.get()] = Aprime;
 
     auto cloned_nodes = clone_nodes(nodes, node_map);
     ASSERT_TRUE(CompareNodeVector(nodes, cloned_nodes, node_map));
 
     // ensure A -> A' after clone
-    ASSERT_EQ(Aprime, node_map.get(A));
+    ASSERT_EQ(Aprime, node_map.at(A.get()));
 }
 
 TEST_F(CloneTest, clone_function_full)
@@ -536,4 +537,151 @@ TEST(util, enum_mask_operators)
     EXPECT_EQ(false, n.is_set(Type::d));
     EXPECT_EQ(false, n[Type::d]);
     EXPECT_EQ(true, n[Type::b]);
+}
+
+TEST(graph, huge)
+{
+    std::vector<std::weak_ptr<Node>> weak_nodes;
+    {
+        auto param = make_shared<op::Parameter>(element::f32, Shape{3, 3});
+        std::shared_ptr<Node> n = param;
+        for (size_t i = 0; i < 1000000; i++)
+        {
+            n = make_shared<op::Negative>(n);
+        }
+        auto f = make_shared<Function>(NodeVector{n}, ParameterVector{param});
+        f->map_unordered_ops(
+            [&weak_nodes](Node* node) { weak_nodes.push_back(node->shared_from_this()); });
+    }
+
+    for (auto& weak_node : weak_nodes)
+    {
+        EXPECT_TRUE(weak_node.expired());
+    }
+}
+
+TEST(util, apply_permutation)
+{
+    ASSERT_EQ(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{2, 1, 0, 3}), (Shape{2, 1, 0, 3}));
+}
+
+TEST(util, apply_permutation_too_short_fails)
+{
+    ASSERT_THROW(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{0, 1, 2}), CheckFailure);
+}
+
+TEST(util, apply_permutation_too_long_fails)
+{
+    ASSERT_THROW(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{0, 1, 2, 3, 3}), CheckFailure);
+}
+
+TEST(util, apply_permutation_oob_axis_fails)
+{
+    ASSERT_THROW(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{0, 1, 2, 4}), CheckFailure);
+}
+
+TEST(util, apply_permutation_repeated_axis_fails)
+{
+    ASSERT_THROW(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{0, 1, 2, 2}), CheckFailure);
+}
+
+TEST(util, apply_permutation_pshape)
+{
+    ASSERT_TRUE(
+        apply_permutation(PartialShape{0, Dimension::dynamic(), 2, 3}, AxisVector{2, 1, 0, 3})
+            .same_scheme(PartialShape{2, Dimension::dynamic(), 0, 3}));
+}
+
+TEST(util, apply_permutation_pshape_rank_dynamic)
+{
+    ASSERT_TRUE(apply_permutation(PartialShape::dynamic(), AxisVector{2, 1, 0, 3})
+                    .same_scheme(PartialShape::dynamic()));
+}
+
+TEST(util, apply_permutation_pshape_too_short_fails)
+{
+    ASSERT_THROW(
+        apply_permutation(PartialShape{0, Dimension::dynamic(), 2, 3}, AxisVector{0, 1, 2}),
+        CheckFailure);
+}
+
+TEST(util, apply_permutation_pshape_too_long_fails)
+{
+    ASSERT_THROW(
+        apply_permutation(PartialShape{0, Dimension::dynamic(), 2, 3}, AxisVector{0, 1, 2, 3, 3}),
+        CheckFailure);
+}
+
+TEST(util, apply_permutation_pshape_oob_axis_fails)
+{
+    ASSERT_THROW(
+        apply_permutation(PartialShape{0, Dimension::dynamic(), 2, 3}, AxisVector{0, 1, 2, 4}),
+        CheckFailure);
+}
+
+TEST(util, apply_permutation_pshape_repeated_axis_fails)
+{
+    ASSERT_THROW(
+        apply_permutation(PartialShape{0, Dimension::dynamic(), 2, 3}, AxisVector{0, 1, 2, 2}),
+        CheckFailure);
+}
+
+TEST(util, apply_permutation_pshape_rank_dynamic_inviable_permutation_fails)
+{
+    ASSERT_THROW(apply_permutation(PartialShape::dynamic(), AxisVector{0, 1, 2, 2}), CheckFailure);
+}
+
+TEST(util, clone_function_friendly_name)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
+
+    A->set_friendly_name("A");
+    B->set_friendly_name("B");
+
+    auto g = clone_function(*f);
+
+    bool found_A = false;
+    bool found_B = false;
+    for (auto parameter : g->get_parameters())
+    {
+        found_A |= parameter->get_friendly_name() == "A";
+        found_B |= parameter->get_friendly_name() == "B";
+    }
+    EXPECT_TRUE(found_A);
+    EXPECT_TRUE(found_B);
+}
+
+TEST(util, clone_function_op_annotations)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(A + B + C, ParameterVector{A, B, C});
+
+    auto cacheable_op_annotation = std::make_shared<op::util::OpAnnotations>();
+    cacheable_op_annotation->set_cacheable(true);
+    A->set_op_annotations(cacheable_op_annotation);
+
+    auto uncacheable_op_annotation = std::make_shared<op::util::OpAnnotations>();
+    uncacheable_op_annotation->set_cacheable(false);
+    B->set_op_annotations(uncacheable_op_annotation);
+
+    auto g = clone_function(*f);
+
+    bool found_A = false;
+    bool found_B = false;
+    for (auto parameter : g->get_parameters())
+    {
+        if (auto op_annotation = parameter->get_op_annotations())
+        {
+            found_A |= op_annotation->is_cacheable();
+            found_B |= !op_annotation->is_cacheable();
+        }
+    }
+    EXPECT_TRUE(found_A);
+    EXPECT_TRUE(found_B);
 }

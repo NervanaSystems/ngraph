@@ -19,11 +19,15 @@
 using namespace std;
 using namespace ngraph;
 
-op::DynPad::DynPad(const std::shared_ptr<Node>& arg,
-                   const std::shared_ptr<Node>& padding_below,
-                   const std::shared_ptr<Node>& padding_above,
-                   const std::shared_ptr<Node>& padding_value)
-    : Op("DynPad", check_single_output_args({arg, padding_below, padding_above, padding_value}))
+constexpr NodeTypeInfo op::DynPad::type_info;
+
+op::DynPad::DynPad(const Output<Node>& arg,
+                   const Output<Node>& padding_below,
+                   const Output<Node>& padding_above,
+                   const Output<Node>& padding_value,
+                   op::PadMode pad_mode)
+    : Op({arg, padding_below, padding_above, padding_value})
+    , m_pad_mode(pad_mode)
 {
     constructor_validate_and_infer_types();
 }
@@ -36,7 +40,7 @@ void op::DynPad::validate_and_infer_types()
         this, arg_t.compatible(padding_value_t), "Padding value and arg type mismatch");
 
     // shape node should have integer data type. For now we only allow i64
-    //TODO: potenially make the type more flexible to include other integer types
+    // TODO: potenially make the type more flexible to include other integer types
     auto padding_below_et = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
                           padding_below_et.compatible(element::Type_t::i64),
@@ -94,17 +98,21 @@ void op::DynPad::validate_and_infer_types()
 
     auto out_shape = PartialShape::dynamic(output_rank);
 
+    set_input_is_relevant_to_shape(1);
+    set_input_is_relevant_to_shape(2);
     set_output_type(0, arg_t, out_shape);
 }
 
 shared_ptr<Node> op::DynPad::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<DynPad>(new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
+    return make_shared<DynPad>(
+        new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), m_pad_mode);
 }
 
 // TODO: This function is not implemented!
-void op::DynPad::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::DynPad::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                   const NodeVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for DynPad");
 }

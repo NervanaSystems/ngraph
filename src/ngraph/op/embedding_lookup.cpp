@@ -19,6 +19,8 @@
 using namespace std;
 using namespace ngraph;
 
+constexpr NodeTypeInfo op::EmbeddingLookup::type_info;
+
 void op::EmbeddingLookup::validate_and_infer_types()
 {
     element::Type result_et = get_input_element_type(1);

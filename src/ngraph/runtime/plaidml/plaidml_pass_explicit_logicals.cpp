@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/passthrough.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/any_of.hpp"
@@ -46,7 +47,8 @@ void ngraph::runtime::plaidml::pass::ExplicitLogicals::construct_logical_to_data
                 std::type_index{typeid(ngraph::op::LessEq)},
                 std::type_index{typeid(ngraph::op::Not)},
                 std::type_index{typeid(ngraph::op::NotEqual)},
-                std::type_index{typeid(ngraph::op::Or)}};
+                std::type_index{typeid(ngraph::op::Or)},
+                std::type_index{typeid(ngraph::op::Xor)}};
 
             const ngraph::Node* node_ptr = node.get();
 
@@ -62,7 +64,8 @@ void ngraph::runtime::plaidml::pass::ExplicitLogicals::construct_logical_to_data
                 std::type_index{typeid(ngraph::op::Equal)},
                 std::type_index{typeid(ngraph::op::Not)},
                 std::type_index{typeid(ngraph::op::NotEqual)},
-                std::type_index{typeid(ngraph::op::Or)}};
+                std::type_index{typeid(ngraph::op::Or)},
+                std::type_index{typeid(ngraph::op::Xor)}};
 
             const ngraph::Node* node_ptr = node.get();
 
@@ -71,7 +74,7 @@ void ngraph::runtime::plaidml::pass::ExplicitLogicals::construct_logical_to_data
         },
         NodeVector{producer_op});
 
-    pattern::graph_rewrite_callback callback = [producer_op](pattern::Matcher& m) {
+    auto callback = [producer_op](pattern::Matcher& m) {
         auto consumer = m.get_match_root();
         auto producer = m.get_pattern_map()[producer_op];
         NGRAPH_DEBUG << "Adding conversion for " << producer->description() << " -> "
@@ -84,11 +87,11 @@ void ngraph::runtime::plaidml::pass::ExplicitLogicals::construct_logical_to_data
                 "Tile",
                 "function (I) -> (O) { O = as_int(I ? 1 : 0, 8);}",
                 NodeVector{producer},
-                std::vector<std::tuple<element::Type, PartialShape>>{
-                    {std::make_tuple(element::i8, PartialShape{producer->get_output_shape(0)})}}));
+                std::vector<std::tuple<element::Type, PartialShape>>{{std::make_tuple(
+                    element::boolean, PartialShape{producer->get_output_shape(0)})}}));
         return true;
     };
 
-    auto m = std::make_shared<pattern::Matcher>(data_consumer_op, callback);
-    add_matcher(m);
+    auto m = std::make_shared<pattern::Matcher>(data_consumer_op);
+    add_matcher(m, callback);
 }

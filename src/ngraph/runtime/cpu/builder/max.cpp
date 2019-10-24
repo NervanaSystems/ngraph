@@ -37,7 +37,7 @@ namespace ngraph
                 BUILD_REDUCTION_FUNCTOR(Max, max);
             }
 
-            REGISTER_OP_BUILDER(Max);
+            void register_builders_max_cpp() { REGISTER_OP_BUILDER(Max); }
         }
     }
 }

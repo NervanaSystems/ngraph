@@ -39,7 +39,7 @@ namespace ngraph
 class ngraph::runtime::plaidml::PlaidML_Backend final : public runtime::Backend
 {
 public:
-    PlaidML_Backend(const char* configuration_string);
+    PlaidML_Backend(const std::string& configuration_string);
     ~PlaidML_Backend() final {}
     std::shared_ptr<ngraph::runtime::Tensor>
         create_tensor(const ngraph::element::Type& element_type, const Shape& shape) final;
