@@ -95,6 +95,13 @@ NodeVector op::SoftmaxCrossEntropy::decompose_op() const
             log_sum_over_j, subtract_max_xj_from_input->get_shape(), AxisSet{1});
         auto subtract_max_xj_from_input_from_log_sum_over_j =
             std::make_shared<ngraph::op::Subtract>(subtract_max_xj_from_input, broadcast_log);
+
+        // insert dtype conversion if required
+        if (labels.get_element_type() != input_to_normalize.get_element_type())
+        {
+            labels = std::make_shared<ngraph::op::Convert>(labels,
+                                                           input_to_normalize.get_element_type());
+        }
         auto multiply = std::make_shared<ngraph::op::Multiply>(
             labels, subtract_max_xj_from_input_from_log_sum_over_j);
         auto sum_over_k = std::make_shared<ngraph::op::Sum>(
