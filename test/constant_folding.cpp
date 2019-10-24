@@ -510,6 +510,7 @@ TEST(constant_folding, const_product)
 TEST(constant_folding, const_reduceprod)
 {
     Shape input_shape{3, 3};
+    Shape output_shape{3};
 
     vector<int32_t> values_in{1, 2, 3, 4, 5, 6, 7, 8, 9};
     auto constant = op::Constant::create(element::i32, input_shape, values_in);
@@ -528,6 +529,8 @@ TEST(constant_folding, const_reduceprod)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
+    ASSERT_EQ(new_const->get_shape(), output_shape);
+
     auto values_out = new_const->get_vector<int32_t>();
 
     vector<int32_t> values_expected{6, 120, 504};
@@ -538,6 +541,7 @@ TEST(constant_folding, const_reduceprod)
 TEST(constant_folding, const_reduceprod_keepdims)
 {
     Shape input_shape{3, 3};
+    Shape output_shape{3, 1};
 
     vector<int32_t> values_in{1, 2, 3, 4, 5, 6, 7, 8, 9};
     auto constant = op::Constant::create(element::i32, input_shape, values_in);
@@ -556,6 +560,8 @@ TEST(constant_folding, const_reduceprod_keepdims)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
+    ASSERT_EQ(new_const->get_shape(), output_shape);
+
     auto values_out = new_const->get_vector<int32_t>();
 
     vector<int32_t> values_expected{6, 120, 504};
@@ -591,6 +597,7 @@ TEST(constant_folding, const_sum)
 TEST(constant_folding, const_reducesum)
 {
     Shape input_shape{3, 3};
+    Shape output_shape{3};
 
     vector<int32_t> values_in{1, 2, 3, 4, 5, 6, 7, 8, 9};
     auto constant = op::Constant::create(element::i32, input_shape, values_in);
@@ -609,6 +616,8 @@ TEST(constant_folding, const_reducesum)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
+    ASSERT_EQ(new_const->get_shape(), output_shape);
+
     auto values_out = new_const->get_vector<int32_t>();
 
     vector<int32_t> values_expected{6, 15, 24};
@@ -619,6 +628,7 @@ TEST(constant_folding, const_reducesum)
 TEST(constant_folding, const_reducesum_keepdims)
 {
     Shape input_shape{3, 3};
+    Shape output_shape{3, 1};
 
     vector<int32_t> values_in{1, 2, 3, 4, 5, 6, 7, 8, 9};
     auto constant = op::Constant::create(element::i32, input_shape, values_in);
@@ -637,6 +647,8 @@ TEST(constant_folding, const_reducesum_keepdims)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
+    ASSERT_EQ(new_const->get_shape(), output_shape);
+
     auto values_out = new_const->get_vector<int32_t>();
 
     vector<int32_t> values_expected{6, 15, 24};
@@ -672,6 +684,7 @@ TEST(constant_folding, const_max)
 TEST(constant_folding, const_reducemax)
 {
     Shape input_shape{3, 2};
+    Shape output_shape{3};
 
     vector<int32_t> values_in{1, 2, 3, 4, 5, 6};
     auto constant = op::Constant::create(element::i32, input_shape, values_in);
@@ -690,6 +703,8 @@ TEST(constant_folding, const_reducemax)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
+    ASSERT_EQ(new_const->get_shape(), output_shape);
+
     auto values_out = new_const->get_vector<int32_t>();
 
     vector<int32_t> values_expected{2, 4, 6};
@@ -700,6 +715,7 @@ TEST(constant_folding, const_reducemax)
 TEST(constant_folding, const_reducemax_keepdims)
 {
     Shape input_shape{3, 2};
+    Shape output_shape{3, 1};
 
     vector<int32_t> values_in{1, 2, 3, 4, 5, 6};
     auto constant = op::Constant::create(element::i32, input_shape, values_in);
@@ -718,6 +734,8 @@ TEST(constant_folding, const_reducemax_keepdims)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
+    ASSERT_EQ(new_const->get_shape(), output_shape);
+
     auto values_out = new_const->get_vector<int32_t>();
 
     vector<int32_t> values_expected{2, 4, 6};
@@ -753,6 +771,7 @@ TEST(constant_folding, const_min)
 TEST(constant_folding, const_reducemin)
 {
     Shape input_shape{3, 2};
+    Shape output_shape{3};
 
     vector<int32_t> values_in{1, 2, 3, 4, 5, 6};
     auto constant = op::Constant::create(element::i32, input_shape, values_in);
@@ -771,6 +790,8 @@ TEST(constant_folding, const_reducemin)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
+    ASSERT_EQ(new_const->get_shape(), output_shape);
+
     auto values_out = new_const->get_vector<int32_t>();
 
     vector<int32_t> values_expected{1, 3, 5};
@@ -781,6 +802,7 @@ TEST(constant_folding, const_reducemin)
 TEST(constant_folding, const_reducemin_keepdims)
 {
     Shape input_shape{3, 2};
+    Shape output_shape{3, 1};
 
     vector<int32_t> values_in{1, 2, 3, 4, 5, 6};
     auto constant = op::Constant::create(element::i32, input_shape, values_in);
@@ -799,6 +821,8 @@ TEST(constant_folding, const_reducemin_keepdims)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
+    ASSERT_EQ(new_const->get_shape(), output_shape);
+
     auto values_out = new_const->get_vector<int32_t>();
 
     vector<int32_t> values_expected{1, 3, 5};
@@ -809,6 +833,7 @@ TEST(constant_folding, const_reducemin_keepdims)
 TEST(constant_folding, const_reducemean)
 {
     Shape input_shape{3, 3};
+    Shape output_shape{3};
 
     vector<int32_t> values_in{1, 2, 3, 4, 5, 6, 7, 8, 9};
     auto constant = op::Constant::create(element::i32, input_shape, values_in);
@@ -827,6 +852,8 @@ TEST(constant_folding, const_reducemean)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
+    ASSERT_EQ(new_const->get_shape(), output_shape);
+
     auto values_out = new_const->get_vector<int32_t>();
 
     vector<int32_t> values_expected{2, 5, 8};
@@ -837,6 +864,7 @@ TEST(constant_folding, const_reducemean)
 TEST(constant_folding, const_reducemean_keepdims)
 {
     Shape input_shape{3, 3};
+    Shape output_shape{3, 1};
 
     vector<int32_t> values_in{1, 2, 3, 4, 5, 6, 7, 8, 9};
     auto constant = op::Constant::create(element::i32, input_shape, values_in);
@@ -855,6 +883,8 @@ TEST(constant_folding, const_reducemean_keepdims)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
+    ASSERT_EQ(new_const->get_shape(), output_shape);
+
     auto values_out = new_const->get_vector<int32_t>();
 
     vector<int32_t> values_expected{2, 5, 8};
