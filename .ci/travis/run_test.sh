@@ -9,7 +9,7 @@ echo "--CUSTOM VARIABLES--"
 echo "TASK:" ${TASK} 
 echo "OS:" ${OS}
    
-# LINUX TASKS
+# LINUX TASKS 
 if [ ${TRAVIS_OS_NAME} == "linux" ]; then
 
     if [ ${TASK} == "cpp_test" ]; then
