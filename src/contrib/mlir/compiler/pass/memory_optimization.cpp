@@ -43,6 +43,28 @@ namespace
     using namespace ngraph::runtime::ngmlir;
     using namespace mlir;
 
+    // A helper data-structure to track cannot alias relationship between tensor syms
+    // If NoAlias[T] contains S, then T and S cannot alias. 
+    // The relationship is transitive and we compute transitive closure on each update to the 
+    // the strucutre. 
+    class AliasMap {
+
+        public:
+        AliasMap();
+        /// Checks if values a and b can alias
+        bool canAlias(Value* a, Value* b);
+        bool insertNoAlias(Value* a, Value* b);
+
+        private: 
+        void computeClosure();
+        private:
+        using Row = SmallVector<int8_t,4>;
+        std::unordered_map<Value*, unsigned> m_valueToIdx;
+        SmallVector<Row, 4> m_reachability;
+        unsigned m_maxIdx;
+        bool m_needsTransitiveClosure;
+    };
+
     /// Memory Optimization pass
     /// - Tries to perform operations in place where applicable by assigning a virtual buffer ID
     ///    to values. Those are used later in affine lowering pass to create or re-use memrefs
@@ -149,7 +171,113 @@ namespace
         auto it = m_inplaceOps.find(op->getName().getStringRef().str());
         return it != m_inplaceOps.end() ? it->second : false;
     }
+
+
+    AliasMap::AliasMap()
+    {
+        for (auto i = 0; i < m_reachability.size(); i++)
+        {
+            auto& v = m_reachability[i];
+            std::fill(v.begin(), v.end(), 0);
+        }
+        m_maxIdx = 0;
+        m_needsTransitiveClosure = false;
+    }
+    bool AliasMap::canAlias(Value* a, Value* b)
+    {
+        NGRAPH_CHECK(m_needsTransitiveClosure == false, "Relationship needs transitive closure");
+        auto a_it = m_valueToIdx.find(a);
+        auto b_it = m_valueToIdx.find(b);
+        if (a_it == m_valueToIdx.end() || b_it == m_valueToIdx.end())
+        {
+            // at least one value doesn't exist in the cannot-alias relationship
+            return true;
+        }
+        auto a_idx = *a_it;
+        auto b_idx = *b_it;
+        return !m_reachability[a_idx][b_idx] && m_reachability[b_idx][a_idx]);
+    }
+    void AliasMap::insertNoAlias(Value* a, Value* b)
+    {
+        m_needsTransitiveClosure = true;
+        int rowsToAdd = 0;
+        auto it = m_valueToIdx.find(a);
+        if (it == m_valueToIdx.end())
+        {
+            rowsToAdd++;
+            m_valueToIdx[a] = m_maxIdx++;
+        }
+
+        it = m_valueToIdx.find(b);
+        if (it == m_valueToIdx.end())
+        {
+            rowsToAdd++;
+            m_valueToIdx[b] = m_maxIdx++;
+        }
+
+        if (rowsToAdd)
+        {
+            // expand existing rows with 1 or 2 additional columns
+            for (auto i = 0; i < m_maxIdx - rowsToAdd; i++)
+            {
+                m_reachability[i].push_back(0);
+                if (rowsToAdd > 1)
+                {
+                    m_reachability[i].push_back(0);
+                }
+            }
+            // add 1 or 2 additional rows
+            m_reachability.push_back(Row(m_maxIdx, 0));
+            if (rowsToAdd > 1)
+            {
+                m_reachability.push_back(Row(m_maxIdx, 0));
+            }
+        }
+
+#ifdef NGRAPH_DEBUG_ENABLE
+        checkInvariance();
+#endif
+        computeTransitiveClosure();
+    }
+
+    void AliasMap::computeTransitiveClosure()
+    {
+        for (unsigned k = 0; k < m_maxIdx; k++)
+        {
+            for (unsigned i = 0; i < m_maxIdx; i++)
+            {
+                for (unsigned j = 0; j < m_maxIdx; j++)
+                {
+                    if (m_reachability[i][k] && m_reachability[k][j])
+                    {
+                        m_reachability[i][j] = 1;
+                    }
+                }
+            }
+        }
+            
+    }
+
+    void AliasMap::checkInvariance() 
+    {
+        NGRAPH_CHECK(m_reachability.size() == m_maxIdx);
+        for (auto& v : m_reachability)
+        {
+            NGRAPH_CHECK(v.size() == m_maxIdx, "Non-square matrix");
+        }
+
+        for (unsigned i = 0; i < m_maxIdx; i++)
+        {
+            for (unsigned j = 0; j < m_maxIdx; j++)
+            {
+                NGRAPH_CHECK(m_reachability[i][j] == m_reachability[j][i], "Non-symmetric relationship");
+            }
+        }
+    }
 }
+
+
+
 
 namespace mlir
 {
