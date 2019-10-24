@@ -46,8 +46,9 @@ TEST(constant_folding, constant_squeeze)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
-    auto values_out = new_const->get_vector<float>();
+    ASSERT_EQ(new_const->get_shape(), shape_out);
 
+    auto values_out = new_const->get_vector<float>();
     ASSERT_TRUE(test::all_close_f(values_in, values_out, MIN_FLOAT_TOLERANCE_BITS));
 }
 
@@ -73,8 +74,9 @@ TEST(constant_folding, constant_unsqueeze)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
-    auto values_out = new_const->get_vector<float>();
+    ASSERT_EQ(new_const->get_shape(), shape_out);
 
+    auto values_out = new_const->get_vector<float>();
     ASSERT_TRUE(test::all_close_f(values_in, values_out, MIN_FLOAT_TOLERANCE_BITS));
 }
 
