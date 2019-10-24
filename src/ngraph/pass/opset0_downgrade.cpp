@@ -32,6 +32,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 
 using namespace std;
@@ -231,6 +232,33 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
+    case OP_TYPEID::GenerateMask:
+    {
+        auto tmp = dynamic_cast<const op::v1::GenerateMask*>(node.get());
+        NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
+        auto mask_shape =
+            static_pointer_cast<op::Constant>(node->input_value(1).get_node_shared_ptr())
+                ->get_shape_val();
+        auto seed = tmp->get_seed();
+        auto use_seed = tmp->get_use_seed();
+        auto probability = tmp->get_probability();
+        auto et = tmp->get_element_type();
+
+        auto replacement_node = make_shared<op::v0::GenerateMask>(
+            node->input(0).get_source_output(), mask_shape, et, seed, probability, use_seed);
+
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::LogicalXor:
+    {
+        auto replacement_node = make_shared<op::v0::Xor>(node->input(0).get_source_output(),
+                                                         node->input(1).get_source_output());
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::MaxPool:
     {
         auto tmp = as_type_ptr<op::v1::MaxPool>(node);
@@ -403,27 +431,6 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-
-    case OP_TYPEID::GenerateMask:
-    {
-        auto tmp = dynamic_cast<const op::v1::GenerateMask*>(node.get());
-        NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
-        auto mask_shape =
-            static_pointer_cast<op::Constant>(node->input_value(1).get_node_shared_ptr())
-                ->get_shape_val();
-        auto seed = tmp->get_seed();
-        auto use_seed = tmp->get_use_seed();
-        auto probability = tmp->get_probability();
-        auto et = tmp->get_element_type();
-
-        auto replacement_node = make_shared<op::v0::GenerateMask>(
-            node->input(0).get_source_output(), mask_shape, et, seed, probability, use_seed);
-
-        replace_node(node, replacement_node);
-        modified = true;
-        break;
-    }
-
     default: break;
     }
 #if defined(__clang__)

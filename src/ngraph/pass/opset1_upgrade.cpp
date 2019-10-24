@@ -32,6 +32,7 @@
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/xor.hpp"
 
 #include <limits>
 #include <numeric>
@@ -456,6 +457,14 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         auto replacement_node =
             make_shared<op::v1::TopK>(node->input_value(0), k_constant, axis, mode, sort);
 
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Xor:
+    {
+        auto replacement_node = make_shared<op::v1::LogicalXor>(node->input(0).get_source_output(),
+                                                                node->input(1).get_source_output());
         replace_node(node, replacement_node);
         modified = true;
         break;

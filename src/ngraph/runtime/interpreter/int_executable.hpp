@@ -1007,6 +1007,17 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
+        case OP_TYPEID::LogicalXor:
+        {
+            auto logical_xor = static_cast<const op::v1::LogicalXor*>(&node);
+            reference::logical_xor(args[0]->get_data_ptr<const T>(),
+                                   args[1]->get_data_ptr<const T>(),
+                                   out[0]->get_data_ptr<T>(),
+                                   node.get_input_shape(0),
+                                   node.get_input_shape(1),
+                                   logical_xor->get_autob());
+            break;
+        }
         case OP_TYPEID::LRN:
         {
             const op::LRN* lrn = static_cast<const op::LRN*>(&node);
