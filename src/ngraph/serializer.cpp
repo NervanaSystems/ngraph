@@ -1354,14 +1354,24 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::GenerateMask:
         {
-            auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
             auto type = read_element_type(node_js.at("type"));
             auto seed = node_js.at("seed").get<unsigned int>();
             auto probability = node_js.at("probability").get<double>();
             bool use_seed = get_or_default<bool>(node_js, "use_seed", false);
 
-            node = make_shared<op::GenerateMask>(
-                args[0], output_shape, type, seed, probability, use_seed);
+            if (op_version == 0)
+            {
+                auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
+
+                node = make_shared<op::v0::GenerateMask>(
+                    args[0], output_shape, type, seed, probability, use_seed);
+            }
+            if (op_version == 1)
+            {
+                node = make_shared<op::v1::GenerateMask>(
+                    args[0], args[1], type, seed, probability, use_seed);
+            }
+
             break;
         }
         case OP_TYPEID::GetOutputElement:
@@ -2868,11 +2878,15 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::GenerateMask:
     {
         auto tmp = static_cast<const op::GenerateMask*>(&n);
-        node["output_shape"] = tmp->get_mask_shape();
         node["type"] = write_element_type(tmp->get_element_type());
         node["use_seed"] = tmp->get_use_seed();
         node["seed"] = tmp->get_seed();
         node["probability"] = tmp->get_probability();
+        if (op_version == 0)
+        {
+            node["output_shape"] = tmp->get_mask_shape();
+        }
+
         break;
     }
     case OP_TYPEID::Greater:
