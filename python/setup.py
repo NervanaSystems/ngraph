@@ -416,5 +416,6 @@ setup(
     zip_safe=False,
     extras_require={
         'plaidml': ['plaidml>=0.6.3'],
+        'onnx': ['onnx']
     },
 )
