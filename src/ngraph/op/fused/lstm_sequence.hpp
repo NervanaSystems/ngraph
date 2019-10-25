@@ -156,13 +156,13 @@ namespace ngraph
             // Split(bi-directional) and squeeze input data to remove 'num_direction' dimension.
             std::shared_ptr<Node> prepare_input(Output<Node> node, bool is_reverse) const;
 
-            const std::vector<float> m_activations_alpha;
-            const std::vector<float> m_activations_beta;
-            const std::vector<std::string> m_activations;
-            const float m_clip_threshold;
-            const direction m_direction;
-            const std::int64_t m_hidden_size;
-            const bool m_input_forget;
+            std::vector<float> m_activations_alpha;
+            std::vector<float> m_activations_beta;
+            std::vector<std::string> m_activations;
+            float m_clip_threshold;
+            direction m_direction;
+            std::int64_t m_hidden_size;
+            bool m_input_forget;
         };
     } // namespace op
 } // namespace ngraph
