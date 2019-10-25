@@ -39,7 +39,7 @@ NGRAPH_TEST(${BACKEND_NAME}, create_dynamic_tensor)
     ASSERT_TRUE(t->get_partial_shape().same_scheme(PartialShape{2, Dimension::dynamic(), 3}));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, dynamic_abc)
+NGRAPH_TEST(${BACKEND_NAME}, dynamic_abc_opv1)
 {
     //
     // Create a graph for f(a,b,c) = (a+b)*c, where a, b, c all have shape {2,?,3}.
@@ -152,7 +152,7 @@ static void axpy_test(const PartialShape& input_pshape, const std::vector<Shape>
     }
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, dynamic_axpy)
+NGRAPH_TEST(${BACKEND_NAME}, dynamic_axpy_opv1)
 {
     // Test with shape {?, 3, 3}.
     axpy_test(PartialShape{Dimension::dynamic(), 3, 3}, {Shape{2, 3, 3}, Shape{5, 3, 3}});

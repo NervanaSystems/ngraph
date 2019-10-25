@@ -28,7 +28,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, shape_of_scalar)
+NGRAPH_TEST(${BACKEND_NAME}, shape_of_scalar_opv1)
 {
     Shape input_shape{};
     Shape output_shape{0};
@@ -48,7 +48,7 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_scalar)
     EXPECT_EQ(expected, read_vector<int64_t>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, shape_of_vector)
+NGRAPH_TEST(${BACKEND_NAME}, shape_of_vector_opv1)
 {
     Shape input_shape{2};
     Shape output_shape{1};
@@ -68,7 +68,7 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_vector)
     EXPECT_EQ(expected, read_vector<int64_t>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, shape_of_matrix)
+NGRAPH_TEST(${BACKEND_NAME}, shape_of_matrix_opv1)
 {
     Shape input_shape{2, 4};
     Shape output_shape{2};
@@ -88,7 +88,7 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_matrix)
     EXPECT_EQ(expected, read_vector<int64_t>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, shape_of_5d)
+NGRAPH_TEST(${BACKEND_NAME}, shape_of_5d_opv1)
 {
     Shape input_shape{2, 4, 8, 16, 32};
     Shape output_shape{5};

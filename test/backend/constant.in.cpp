@@ -27,7 +27,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, tensor_constant)
+NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_opv1)
 {
     Shape shape{2, 2, 2};
     auto A = op::Constant::create(element::f32, shape, {1, 2, 3, 4, 5, 6, 7, 8});
@@ -45,7 +45,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, tensor_2constant)
+NGRAPH_TEST(${BACKEND_NAME}, tensor_2constant_opv1)
 {
     Shape shape{2, 2, 2};
     auto A = op::Constant::create(element::f32, shape, {1, 2, 3, 4, 5, 6, 7, 8});
@@ -67,10 +67,11 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_2constant)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_with_op)
+NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_with_op_opv1)
 {
     Shape shape{2, 2, 2};
     auto A = op::Constant::create(element::f32, shape, {-1, 2, 3, -4, 5, -6, -7, 8});
+    auto f = make_shared<Function>(make_shared<op::Abs>(A), ParameterVector{});
     auto f = make_shared<Function>(make_shared<op::Abs>(A), ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -85,7 +86,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_with_op)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, constant_multi_use)
+NGRAPH_TEST(${BACKEND_NAME}, constant_multi_use_opv1)
 {
     auto A = make_shared<op::Constant>(element::i32, Shape{}, std::vector<std::string>{"388"});
     auto f = make_shared<Function>(A, ParameterVector{});
@@ -101,7 +102,7 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_multi_use)
     EXPECT_EQ(read_vector<int>(r2), std::vector<int>{388});
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_float32)
+NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_float32_opv1)
 {
     auto r = op::Constant::create(element::f32, Shape{}, {4.75});
     auto f = make_shared<Function>(r, ParameterVector{});
@@ -117,7 +118,7 @@ NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_float32)
         vector<float>{4.75f}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_int64)
+NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_int64_opv1)
 {
     auto r = op::Constant::create(element::i64, Shape{}, {0x4000000000000001});
     auto f = make_shared<Function>(r, ParameterVector{});
@@ -132,7 +133,7 @@ NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_int64)
     EXPECT_EQ(vector<int64_t>{0x4000000000000001}, read_vector<int64_t>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_float32)
+NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_float32_opv1)
 {
     Shape shape{2, 2};
     auto r = op::Constant::create(element::f32, shape, {4.75, 4.5, -5.25, 0.0});
@@ -150,7 +151,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_float32)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_int64)
+NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_int64_opv1)
 {
     Shape shape{2};
     auto r = op::Constant::create(element::i64, shape, {0x4000000000000001, 0x4000000000000002});

@@ -44,7 +44,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, maximum)
+NGRAPH_TEST(${BACKEND_NAME}, maximum_opv1)
 {
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -66,7 +66,7 @@ NGRAPH_TEST(${BACKEND_NAME}, maximum)
                                   read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, maximum_int32)
+NGRAPH_TEST(${BACKEND_NAME}, maximum_int32_opv1)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -87,7 +87,7 @@ NGRAPH_TEST(${BACKEND_NAME}, maximum_int32)
     EXPECT_EQ((vector<int32_t>{0x40000170, 0x40000001, 4, 17}), read_vector<int32_t>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, maximum_int64)
+NGRAPH_TEST(${BACKEND_NAME}, maximum_int64_opv1)
 {
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::i64, shape);

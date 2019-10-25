@@ -1142,7 +1142,7 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_single_output)
     EXPECT_EQ((vector<int32_t>{2, 0, 1, 2, 1, 0, 0, 1}), read_vector<int32_t>(result0));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, topk_v1_invalid_strings)
+NGRAPH_TEST(${BACKEND_NAME}, topk_v1_invalid_strings_opv1)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     const auto k = op::Constant::create(element::i64, Shape{}, {1});
@@ -1150,7 +1150,7 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_v1_invalid_strings)
     EXPECT_THROW(op::v1::TopK(data, k, 0, "index", "invalid_sort"), ngraph::NodeValidationFailure);
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, topk_v1_invalid_k)
+NGRAPH_TEST(${BACKEND_NAME}, topk_v1_invalid_k_opv1)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
 

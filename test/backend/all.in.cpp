@@ -275,7 +275,7 @@ NGRAPH_TEST(${BACKEND_NAME}, all_2x2x3_eliminate_dims_0_1_2)
     EXPECT_EQ((vector<char>{0}), read_vector<char>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, all_dynamic_axis)
+NGRAPH_TEST(${BACKEND_NAME}, all_dynamic_axis_opv1)
 {
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
@@ -294,7 +294,7 @@ NGRAPH_TEST(${BACKEND_NAME}, all_dynamic_axis)
     EXPECT_EQ((vector<char>{0, 1}), read_vector<char>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, all_change_axis)
+NGRAPH_TEST(${BACKEND_NAME}, all_change_axis_opv1)
 {
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::boolean, shape);

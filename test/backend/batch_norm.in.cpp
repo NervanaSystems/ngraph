@@ -463,7 +463,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_training_0eps_f32)
     EXPECT_TRUE(std::get<2>(result)) << "Gamma beta test variance";
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, batch_norm_inference_parameters_duplication)
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_inference_parameters_duplication_opv1)
 {
     auto input_shape = Shape{2, 2, 2, 1};
     auto input = make_shared<op::Parameter>(element::f32, input_shape);
@@ -778,7 +778,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_bprop_n4c3h2w2)
     ASSERT_TRUE(ngraph::test::all_close(read_vector<float>(_dbeta), expected_dbeta, 1e-4f, 1e-8f));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_inference_b2c2h2w1)
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_inference_b2c2h2w1_opv1)
 {
     auto input_shape = Shape{2, 2, 2, 1};
     auto input = make_shared<op::Parameter>(element::f32, input_shape);

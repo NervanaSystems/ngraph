@@ -28,7 +28,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, quantized_convolution)
+NGRAPH_TEST(${BACKEND_NAME}, quantized_convolution_opv1)
 {
     Shape shape_a{1, 1, 3, 4};
     Shape shape_b{1, 1, 3, 3};

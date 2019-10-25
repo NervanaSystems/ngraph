@@ -46,7 +46,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, elu)
+NGRAPH_TEST(${BACKEND_NAME}, elu_opv1)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{3, 2});
     auto elu = make_shared<op::Elu>(A, 0.5f);
@@ -59,7 +59,7 @@ NGRAPH_TEST(${BACKEND_NAME}, elu)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, elu_negative_alpha)
+NGRAPH_TEST(${BACKEND_NAME}, elu_negative_alpha_opv1)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{3, 2});
     auto elu = make_shared<op::Elu>(A, -1.f);
@@ -72,7 +72,7 @@ NGRAPH_TEST(${BACKEND_NAME}, elu_negative_alpha)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, prelu)
+NGRAPH_TEST(${BACKEND_NAME}, prelu_opv1)
 {
     Shape shape{3, 2};
     Shape rshape{3};
@@ -136,7 +136,7 @@ NGRAPH_TEST(${BACKEND_NAME}, hardsigmoid)
     EXPECT_TRUE(test::all_close_f(expected_output, read_vector<float>(result0)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, prelu_shared_slope)
+NGRAPH_TEST(${BACKEND_NAME}, prelu_shared_slope_opv1)
 {
     Shape shape{3, 2};
     Shape rshape{};
@@ -159,7 +159,7 @@ NGRAPH_TEST(${BACKEND_NAME}, prelu_shared_slope)
     EXPECT_EQ(expected, read_vector<float>(result0));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, prelu_negative_slope)
+NGRAPH_TEST(${BACKEND_NAME}, prelu_negative_slope_opv1)
 {
     Shape shape{3, 2};
     Shape rshape{};
@@ -319,7 +319,7 @@ NGRAPH_TEST(${BACKEND_NAME}, conv_bias_add_2d)
     EXPECT_EQ(expected, read_vector<float>(result0));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, group_conv)
+NGRAPH_TEST(${BACKEND_NAME}, group_conv_opv1)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{1, 4, 2, 2});
     auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 2, 1, 1});
@@ -347,7 +347,7 @@ NGRAPH_TEST(${BACKEND_NAME}, group_conv)
     EXPECT_EQ(expected, read_vector<float>(result0));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, group_conv_striding)
+NGRAPH_TEST(${BACKEND_NAME}, group_conv_striding_opv1)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{1, 4, 2, 2});
     auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 2, 1, 1});
@@ -375,7 +375,7 @@ NGRAPH_TEST(${BACKEND_NAME}, group_conv_striding)
     EXPECT_EQ(expected, read_vector<float>(result0));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, group_conv_window_dilation)
+NGRAPH_TEST(${BACKEND_NAME}, group_conv_window_dilation_opv1)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{1, 4, 2, 2});
     auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 2, 1, 1});
@@ -403,7 +403,7 @@ NGRAPH_TEST(${BACKEND_NAME}, group_conv_window_dilation)
     EXPECT_EQ(expected, read_vector<float>(result0));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, group_conv_data_dilation)
+NGRAPH_TEST(${BACKEND_NAME}, group_conv_data_dilation_opv1)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{1, 4, 2, 2});
     auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 2, 1, 1});
@@ -431,7 +431,7 @@ NGRAPH_TEST(${BACKEND_NAME}, group_conv_data_dilation)
     EXPECT_EQ(expected, read_vector<float>(result0));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, group_conv_padding)
+NGRAPH_TEST(${BACKEND_NAME}, group_conv_padding_opv1)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{1, 4, 2, 2});
     auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 2, 1, 1});
@@ -459,7 +459,7 @@ NGRAPH_TEST(${BACKEND_NAME}, group_conv_padding)
     EXPECT_EQ(expected, read_vector<float>(result0));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, group_conv_padding_and_window_dilation)
+NGRAPH_TEST(${BACKEND_NAME}, group_conv_padding_and_window_dilation_opv1)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{1, 4, 2, 2});
     auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 2, 1, 1});
@@ -487,7 +487,7 @@ NGRAPH_TEST(${BACKEND_NAME}, group_conv_padding_and_window_dilation)
     EXPECT_EQ(expected, read_vector<float>(result0));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, group_conv_input_shape_variation)
+NGRAPH_TEST(${BACKEND_NAME}, group_conv_input_shape_variation_opv1)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{1, 4, 4, 1});
     auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 2, 1, 1});
@@ -515,7 +515,7 @@ NGRAPH_TEST(${BACKEND_NAME}, group_conv_input_shape_variation)
     EXPECT_EQ(expected, read_vector<float>(result0));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, group_conv_input_data_variation)
+NGRAPH_TEST(${BACKEND_NAME}, group_conv_input_data_variation_opv1)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{1, 4, 3, 3});
     auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 2, 1, 1});
@@ -546,7 +546,7 @@ NGRAPH_TEST(${BACKEND_NAME}, group_conv_input_data_variation)
     EXPECT_EQ(expected, read_vector<float>(result0));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, group_conv_groups_included_in_shape)
+NGRAPH_TEST(${BACKEND_NAME}, group_conv_groups_included_in_shape_opv1)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{1, 4, 2, 2});
     auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 1, 2, 1, 1});
@@ -631,7 +631,7 @@ NGRAPH_TEST(${BACKEND_NAME}, depth_to_space_depth_first)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_4d)
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_4d_opv1)
 {
     Shape data_shape{1, 2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
@@ -658,7 +658,7 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_4d)
     test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, normalize_across_empty_axes_input)
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_empty_axes_input_opv1)
 {
     Shape data_shape{1, 2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
@@ -682,7 +682,7 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_empty_axes_input)
     test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, normalize_across_h_4d)
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_h_4d_opv1)
 {
     Shape data_shape{1, 2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
@@ -708,7 +708,7 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_h_4d)
     test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, normalize_across_1axis_5d)
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_1axis_5d_opv1)
 {
     Shape data_shape{1, 2, 2, 2, 3};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
@@ -734,7 +734,7 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_1axis_5d)
     test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, normalize_across_123axes_5d)
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_123axes_5d_opv1)
 {
     Shape data_shape{1, 2, 2, 2, 3};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
@@ -760,7 +760,7 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_123axes_5d)
     test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, normalize_across_c_2x2_shape)
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_c_2x2_shape_opv1)
 {
     Shape data_shape{2, 2};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
@@ -784,7 +784,7 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_c_2x2_shape)
     test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, normalize_across_c_2x4_shape)
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_c_2x4_shape_opv1)
 {
     Shape data_shape{2, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
@@ -815,7 +815,7 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_c_2x4_shape)
     test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_4d_max_bias)
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_4d_max_bias_opv1)
 {
     Shape data_shape{1, 2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
@@ -881,7 +881,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_input_C)
     test_case.add_expected_output<float>(Shape{3, 4}, vector<float>(12, 7));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, fused_clamp)
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_opv1)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{4, 4});
     auto tested_op = make_shared<op::Clamp>(data, 10.0, 20.0);
@@ -926,7 +926,7 @@ NGRAPH_TEST(${BACKEND_NAME}, fused_clamp)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization)
+NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization_opv1)
 {
     Shape data_shape{1, 2, 5};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
@@ -946,7 +946,7 @@ NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization_split_channels)
+NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization_split_channels_opv1)
 {
     Shape data_shape{1, 2, 5, 1};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
@@ -966,7 +966,7 @@ NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization_split_channels)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_variance_normalization)
+NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_variance_normalization_opv1)
 {
     Shape data_shape{1, 2, 5};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
@@ -995,7 +995,7 @@ NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_variance_normalization)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_variance_normalization_split_channels)
+NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_variance_normalization_split_channels_opv1)
 {
     Shape data_shape{1, 2, 5};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
@@ -1080,7 +1080,7 @@ NGRAPH_TEST(${BACKEND_NAME}, grn_2d_with_bias)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, unsqueeze)
+NGRAPH_TEST(${BACKEND_NAME}, unsqueeze_opv1)
 {
     auto data_node = make_shared<op::Parameter>(element::f32, Shape{4, 2});
     auto axes_node =
@@ -1197,7 +1197,7 @@ NGRAPH_TEST(${BACKEND_NAME}, shuffle_channels_float)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, squeeze)
+NGRAPH_TEST(${BACKEND_NAME}, squeeze_opv1)
 {
     const auto data_node = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 1, 2});
     const auto axes_node =
@@ -1213,7 +1213,7 @@ NGRAPH_TEST(${BACKEND_NAME}, squeeze)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, squeeze_default_axes)
+NGRAPH_TEST(${BACKEND_NAME}, squeeze_default_axes_opv1)
 {
     const auto data_node = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 1, 2});
     const auto axes_node =
@@ -1229,7 +1229,7 @@ NGRAPH_TEST(${BACKEND_NAME}, squeeze_default_axes)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, squeeze_dynamic)
+NGRAPH_TEST(${BACKEND_NAME}, squeeze_dynamic_opv1)
 {
     const auto data_param = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 1, 2});
     const auto axes_param = make_shared<op::Parameter>(element::i64, Shape{2});
@@ -1268,7 +1268,7 @@ NGRAPH_TEST(${BACKEND_NAME}, squared_difference_broadcast)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, split_3_equal_parts)
+NGRAPH_TEST(${BACKEND_NAME}, split_3_equal_parts_opv1)
 {
     const auto data = make_shared<op::Parameter>(element::i32, Shape{6});
 
@@ -1285,7 +1285,7 @@ NGRAPH_TEST(${BACKEND_NAME}, split_3_equal_parts)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, split_var_len_parts)
+NGRAPH_TEST(${BACKEND_NAME}, split_var_len_parts_opv1)
 {
     const auto data = make_shared<op::Parameter>(element::i32, Shape{2, 6});
 

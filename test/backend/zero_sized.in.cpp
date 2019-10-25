@@ -155,7 +155,7 @@ void make_binary_empty_test(const string& backend_name, bool is_comparison = fal
     }
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, zero_sized_abs)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_abs_opv1)
 {
     make_unary_empty_test<op::Abs>("${BACKEND_NAME}");
 }
@@ -170,7 +170,7 @@ NGRAPH_TEST(${BACKEND_NAME}, zero_sized_erf)
     make_unary_empty_test<op::Erf>("${BACKEND_NAME}");
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, zero_sized_exp)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_exp_opv1)
 {
     make_unary_empty_test<op::Exp>("${BACKEND_NAME}");
 }
@@ -180,7 +180,7 @@ NGRAPH_TEST(${BACKEND_NAME}, zero_sized_floor)
     make_unary_empty_test<op::Floor>("${BACKEND_NAME}");
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, zero_sized_log)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_log_opv1)
 {
     make_unary_empty_test<op::Log>("${BACKEND_NAME}");
 }
@@ -221,7 +221,7 @@ NGRAPH_TEST(${BACKEND_NAME}, zero_sized_sqrt)
     make_unary_empty_test<op::Sqrt>("${BACKEND_NAME}");
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, zero_sized_sin)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_sin_opv1)
 {
     make_unary_empty_test<op::Sin>("${BACKEND_NAME}");
 }
@@ -231,47 +231,47 @@ NGRAPH_TEST(${BACKEND_NAME}, zero_sized_sinh)
     make_unary_empty_test<op::Sinh>("${BACKEND_NAME}");
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, zero_sized_cos)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_cos_opv1)
 {
     make_unary_empty_test<op::Cos>("${BACKEND_NAME}");
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, zero_sized_cosh)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_cosh_opv1)
 {
     make_unary_empty_test<op::Cosh>("${BACKEND_NAME}");
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, zero_sized_tan)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_tan_opv1)
 {
     make_unary_empty_test<op::Tan>("${BACKEND_NAME}");
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, zero_sized_tanh)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_tanh_opv1)
 {
     make_unary_empty_test<op::Tanh>("${BACKEND_NAME}");
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, zero_sized_asin)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_asin_opv1)
 {
     make_unary_empty_test<op::Asin>("${BACKEND_NAME}");
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, zero_sized_acos)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_acos_opv1)
 {
     make_unary_empty_test<op::Acos>("${BACKEND_NAME}");
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, zero_sized_atan)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_atan_opv1)
 {
     make_unary_empty_test<op::Atan>("${BACKEND_NAME}");
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, zero_sized_add)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_add_v1)
 {
     make_binary_empty_test<op::Add>("${BACKEND_NAME}");
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, zero_sized_divide)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_divide_opv1)
 {
     make_binary_empty_test<op::Divide>("${BACKEND_NAME}");
 }
@@ -301,7 +301,7 @@ NGRAPH_TEST(${BACKEND_NAME}, zero_sized_lesseq)
     make_binary_empty_test<op::LessEq>("${BACKEND_NAME}", true);
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, zero_sized_maximum)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_maximum_opv1)
 {
     make_binary_empty_test<op::Maximum>("${BACKEND_NAME}");
 }
@@ -311,7 +311,7 @@ NGRAPH_TEST(${BACKEND_NAME}, zero_sized_minimum)
     make_binary_empty_test<op::Minimum>("${BACKEND_NAME}");
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, zero_sized_multiply)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_multiply_opv1)
 {
     make_binary_empty_test<op::Multiply>("${BACKEND_NAME}");
 }
@@ -321,7 +321,7 @@ NGRAPH_TEST(${BACKEND_NAME}, zero_sized_not_equal)
     make_binary_empty_test<op::NotEqual>("${BACKEND_NAME}", true);
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, zero_sized_power)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_power_opv1)
 {
     make_binary_empty_test<op::Power>("${BACKEND_NAME}");
 }
