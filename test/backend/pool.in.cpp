@@ -1374,7 +1374,7 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_bprop_2d_2channel_2image_dyn_shape)
                                                                padding_below,
                                                                padding_above,
                                                                window_shape,
-                                                               false);
+                                                               true);
 
     auto f = make_shared<Function>(NodeVector{avg_pool_bprop},
                                    ParameterVector{delta, forward_arg_shape});
