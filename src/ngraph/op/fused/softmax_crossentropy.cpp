@@ -186,7 +186,10 @@ NodeVector op::SoftmaxCrossEntropyBackprop::decompose_op() const
     {
         if (delta.get_shape() != labels.get_shape())
         {
-            delta = std::make_shared<ngraph::op::Broadcast>(delta, labels.get_shape(), AxisSet{1});
+            auto reshape = std::make_shared<ngraph::op::Reshape>(
+                delta, AxisVector{0, 1}, Shape{delta.get_shape().at(0)});
+            delta =
+                std::make_shared<ngraph::op::Broadcast>(reshape, labels.get_shape(), AxisSet{1});
         }
         auto delta_mul_labels = std::make_shared<ngraph::op::Multiply>(delta, labels);
         auto summation_delta_mul_labels = std::make_shared<ngraph::op::Sum>(
@@ -206,14 +209,22 @@ NodeVector op::SoftmaxCrossEntropyBackprop::decompose_op() const
         auto reshape = std::make_shared<ngraph::op::Reshape>(
             convert, AxisVector{0, 1}, Shape{convert->get_shape().at(0)});
         auto broadcast_mask =
-            std::make_shared<ngraph::op::Broadcast>(reshape, delta.get_shape(), AxisSet{1});
+            std::make_shared<ngraph::op::Broadcast>(reshape, softmax.get_shape(), AxisSet{1});
 
         // one hot encoding of labels
         auto reshape_labels =
             make_shared<op::Reshape>(labels, AxisVector{0, 1}, Shape{labels.get_shape().at(0)});
         auto one_hot =
-            std::make_shared<ngraph::op::OneHot>(reshape_labels, delta.get_shape(), one_hot_axis);
+            std::make_shared<ngraph::op::OneHot>(reshape_labels, softmax.get_shape(), one_hot_axis);
         auto convert_one_hot = std::make_shared<ngraph::op::Convert>(one_hot, element::f64);
+
+        if (delta.get_shape() != convert_one_hot->get_shape())
+        {
+            auto reshape = std::make_shared<ngraph::op::Reshape>(
+                delta, AxisVector{0, 1}, Shape{delta.get_shape().at(0)});
+            delta = std::make_shared<ngraph::op::Broadcast>(
+                reshape, convert_one_hot->get_shape(), AxisSet{1});
+        }
 
         // (cross_entr * delta * mask)
         auto delta_mul_labels = std::make_shared<ngraph::op::Multiply>(delta, convert_one_hot);
