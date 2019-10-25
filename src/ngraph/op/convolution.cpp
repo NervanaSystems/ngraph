@@ -263,7 +263,7 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
 void op::v1::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints,
                                                         const NodeVector& deltas)
 {
-    if (auto const_op = as_type<op::Constant>(input_value(2).get_node()))
+    if (input_value(2).get_node_shared_ptr()->is_constant())
     {
     }
     else
