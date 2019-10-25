@@ -529,7 +529,7 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ScatterAdd)
                 {
                     (void)external_function;
-                    auto update_slice = static_cast<ngraph::op::ScatterAdd*>(node);
+                    auto scatter_add = static_cast<ngraph::op::ScatterAdd*>(node);
 
                     auto op_annotations =
                         std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -538,7 +538,7 @@ namespace ngraph
                         // Safe to overwrite input
                         op_annotations->add_in_place_oi_pair({0, 0, true});
                     }
-                    update_slice->set_op_annotations(op_annotations);
+                    scatter_add->set_op_annotations(op_annotations);
                 }
 
                 template <>

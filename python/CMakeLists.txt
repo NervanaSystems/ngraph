@@ -24,24 +24,24 @@ ExternalProject_Add(
         pybind11
         GIT_REPOSITORY "https://github.com/pybind/pybind11.git"
         GIT_TAG "v2.2.4"
-        SOURCE_DIR "${CMAKE_BINARY_DIR}/pybind11"
+        SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/pybind11"
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
 )
 
-set(BUILD_SH_IN "${CMAKE_SOURCE_DIR}/python/build_wheel.sh.in")
-set(BUILD_SH    "${CMAKE_BINARY_DIR}/python/build_wheel.sh")
+set(BUILD_SH_IN "${CMAKE_CURRENT_SOURCE_DIR}/build_wheel.sh.in")
+set(BUILD_SH    "${CMAKE_CURRENT_BINARY_DIR}/build_wheel.sh")
 configure_file(${BUILD_SH_IN} ${BUILD_SH} @ONLY)
 
 add_custom_command(
-        OUTPUT ${CMAKE_BINARY_DIR}/python/dist/
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/dist/
         POST_BUILD
         WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
-        COMMAND $(MAKE) -C ../ DESTDIR=python/_install install && bash build_wheel.sh
+        COMMAND ${MAKE} -C ../ DESTDIR=python/_install install && bash build_wheel.sh
 )
 
-add_custom_target(python_wheel DEPENDS ngraph ${CMAKE_BINARY_DIR}/python/dist/)
+add_custom_target(python_wheel DEPENDS ngraph ${CMAKE_CURRENT_BINARY_DIR}/dist/)
 if (NGRAPH_CPU_ENABLE)
     add_dependencies(python_wheel libmkldnn)
 endif()

@@ -342,12 +342,16 @@ set (SRC
     op/fused/layer_norm.hpp
     op/fused/lstm_cell.cpp
     op/fused/lstm_cell.hpp
+    op/fused/lstm_sequence.cpp
+    op/fused/lstm_sequence.hpp
     op/fused/matmul.cpp
     op/fused/matmul.hpp
     op/fused/mvn.cpp
     op/fused/mvn.hpp
     op/fused/normalize_l2.cpp
     op/fused/normalize_l2.hpp
+    op/fused/partial_slice.cpp
+    op/fused/partial_slice.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
     op/fused/rnn_cell.cpp

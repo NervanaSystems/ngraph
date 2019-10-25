@@ -130,8 +130,8 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         auto kernel = tmp->get_window_shape();
 
         auto replacement_node =
-            make_shared<op::v1::AvgPoolBackprop>(tmp->get_forward_arg_shape(),
-                                                 node->input(0).get_source_output(),
+            make_shared<op::v1::AvgPoolBackprop>(node->input(0).get_source_output(),
+                                                 node->input(1).get_source_output(),
                                                  strides,
                                                  pads_begin,
                                                  pads_end,
