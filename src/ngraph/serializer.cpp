@@ -86,6 +86,7 @@
 #include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize_l2.hpp"
+#include "ngraph/op/fused/partial_slice.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
@@ -1353,14 +1354,24 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::GenerateMask:
         {
-            auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
             auto type = read_element_type(node_js.at("type"));
             auto seed = node_js.at("seed").get<unsigned int>();
             auto probability = node_js.at("probability").get<double>();
             bool use_seed = get_or_default<bool>(node_js, "use_seed", false);
 
-            node = make_shared<op::GenerateMask>(
-                args[0], output_shape, type, seed, probability, use_seed);
+            if (op_version == 0)
+            {
+                auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
+
+                node = make_shared<op::v0::GenerateMask>(
+                    args[0], output_shape, type, seed, probability, use_seed);
+            }
+            if (op_version == 1)
+            {
+                node = make_shared<op::v1::GenerateMask>(
+                    args[0], args[1], type, seed, probability, use_seed);
+            }
+
             break;
         }
         case OP_TYPEID::GetOutputElement:
@@ -1826,6 +1837,25 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto shape = type_node_js.at("shape");
             auto cacheable = get_or_default<bool>(node_js, "cacheable", false);
             node = make_shared<op::Parameter>(element_type, read_partial_shape(shape), cacheable);
+            break;
+        }
+        case OP_TYPEID::PartialSlice:
+        {
+            auto axes = node_js.at("axes").get<vector<size_t>>();
+            auto lower_bounds = node_js.at("lower_bounds").get<vector<int64_t>>();
+            auto upper_bounds = node_js.at("upper_bounds").get<vector<int64_t>>();
+            auto decrease_axes = node_js.at("decrease_axes").get<vector<size_t>>();
+            node = make_shared<op::PartialSlice>(
+                args[0], axes, lower_bounds, upper_bounds, decrease_axes);
+            break;
+        }
+        case OP_TYPEID::PartialSliceBackprop:
+        {
+            auto axes = node_js.at("axes").get<vector<size_t>>();
+            auto lower_bounds = node_js.at("lower_bounds").get<vector<int64_t>>();
+            auto upper_bounds = node_js.at("upper_bounds").get<vector<int64_t>>();
+            node = make_shared<op::PartialSliceBackprop>(
+                args[0], args[1], axes, lower_bounds, upper_bounds);
             break;
         }
         case OP_TYPEID::Passthrough:
@@ -2867,11 +2897,15 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::GenerateMask:
     {
         auto tmp = static_cast<const op::GenerateMask*>(&n);
-        node["output_shape"] = tmp->get_mask_shape();
         node["type"] = write_element_type(tmp->get_element_type());
         node["use_seed"] = tmp->get_use_seed();
         node["seed"] = tmp->get_seed();
         node["probability"] = tmp->get_probability();
+        if (op_version == 0)
+        {
+            node["output_shape"] = tmp->get_mask_shape();
+        }
+
         break;
     }
     case OP_TYPEID::Greater:
@@ -3166,6 +3200,23 @@ json JSONSerializer::serialize_node(const Node& n)
         node["shape"] = write_partial_shape(tmp->get_output_partial_shape(0));
         node["cacheable"] = tmp->get_cacheable();
         node["element_type"] = write_element_type(tmp->get_element_type());
+        break;
+    }
+    case OP_TYPEID::PartialSlice:
+    {
+        auto tmp = dynamic_cast<const op::PartialSlice*>(&n);
+        node["axes"] = tmp->get_axes();
+        node["lower_bounds"] = tmp->get_lower_bounds();
+        node["upper_bounds"] = tmp->get_upper_bounds();
+        node["decrease_axes"] = tmp->get_decrease_axes();
+        break;
+    }
+    case OP_TYPEID::PartialSliceBackprop:
+    {
+        auto tmp = dynamic_cast<const op::PartialSliceBackprop*>(&n);
+        node["axes"] = tmp->get_axes();
+        node["lower_bounds"] = tmp->get_lower_bounds();
+        node["upper_bounds"] = tmp->get_upper_bounds();
         break;
     }
     case OP_TYPEID::Passthrough:
