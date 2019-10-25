@@ -102,7 +102,7 @@ struct CPURuntimeContextCG
 	}
 
     void mkldnn_invoke_primitive(size_t primitive_index, std::vector<size_t>& deps,
-                                        OpType type)
+                                        OpType type, size_t scratchpad_size)
 	{
         std::unordered_map<int, mkldnn::memory> exec_args;
         size_t nargs;
@@ -257,10 +257,13 @@ struct CPURuntimeContextCG
             break;
         }
 
-        mkldnn::memory scratchpad(*mkldnn_scratchpad_mds[primitive_index],
-                                  global_cpu_engine,
-                                  scratchpad_buffer->get_ptr());
-        exec_args.insert({MKLDNN_ARG_SCRATCHPAD, scratchpad});
+        if (scratchpad_size)
+        {
+            mkldnn::memory scratchpad(*mkldnn_scratchpad_mds[primitive_index],
+                                      global_cpu_engine,
+                                      scratchpad_buffer->get_ptr());
+            exec_args.insert({MKLDNN_ARG_SCRATCHPAD, scratchpad});
+        }
 
         mkldnn::stream s(global_cpu_engine);
         try
@@ -270,7 +273,7 @@ struct CPURuntimeContextCG
         }
         catch (const mkldnn::error& e)
         {
-            throw std::runtime_error("Could not run mkdnn primitive " + *e.message);
+            throw std::runtime_error("Could not run mkdnn primitive " + std::string(e.message));
         }
     }
 
