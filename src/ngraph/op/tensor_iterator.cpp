@@ -187,21 +187,69 @@ NodeVector op::TensorIterator::decompose_op() const
     return NodeVector{};
 }
 
+static void revalidate_and_infer_types_for_body_op(std::shared_ptr<Node> end)
+{
+    NGRAPH_CHECK(as_type_ptr<op::TensorIterator>(end) == nullptr, "No nested TensorIterator");
+
+    std::stack<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>> nodes_to_do;
+    std::unordered_set<std::shared_ptr<Node>> nodes_done;
+
+    nodes_to_do.push(end);
+    while (nodes_to_do.size() > 0)
+    {
+        auto node = nodes_to_do.top();
+        if (nodes_done.count(node) == 0)
+        {
+            NGRAPH_CHECK(as_type_ptr<op::TensorIterator>(node) == nullptr,
+                         "No nested TensorIterator");
+            bool can_add = true;
+            size_t arg_count = node->get_input_size();
+            for (size_t i = 0; i < arg_count; ++i)
+            {
+                auto dep = node->input(arg_count - i - 1)
+                               .get_source_output()
+                               .get_node()
+                               ->shared_from_this();
+                if (nodes_done.count(dep) == 0)
+                {
+                    can_add = false;
+                    nodes_to_do.push(dep);
+                }
+            }
+            if (can_add)
+            {
+                nodes_done.insert(node);
+                node->revalidate_and_infer_types();
+                nodes_to_do.pop();
+            }
+        }
+        else
+        {
+            nodes_to_do.pop();
+        }
+    }
+}
+
 void op::TensorIterator::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this,
                           get_input_size() == m_input_descriptions.size(),
                           "Number of inputs must be the same as number of input descriptions");
 
-    size_t num_slice_input_desc = 0;
+    NODE_VALIDATION_CHECK(this,
+                          get_output_size() == m_output_descriptions.size(),
+                          "Number of outputs must be the same as number of output descriptions");
+
+    // Input
+    uint64_t index_it = 0;
     for (auto input_description : m_input_descriptions)
     {
+        auto index = input_description->m_input_index;
+        NODE_VALIDATION_CHECK(this, index == index_it, "Input_index not in order");
+        index_it++;
+
         if (auto slice_input_description = as_type_ptr<SliceInputDescription>(input_description))
         {
-            NODE_VALIDATION_CHECK(
-                this, num_slice_input_desc == 0, "Only one slice input description is allowed");
-            num_slice_input_desc++;
-            auto index = slice_input_description->m_input_index;
             auto body_param_partial_shape =
                 slice_input_description->m_body_parameter->get_partial_shape();
             auto input_partial_shape = inputs().at(index).get_source_output().get_partial_shape();
@@ -210,14 +258,22 @@ void op::TensorIterator::validate_and_infer_types()
             auto end = slice_input_description->m_end;
             if (end != -1)
             {
-                m_num_iterations = end - start;
+                if (m_num_iterations == -1)
+                {
+                    m_num_iterations = end - start;
+                }
+                else
+                {
+                    NODE_VALIDATION_CHECK(
+                        this, m_num_iterations == end - start, "Number of slices not the same");
+                }
             }
 
             if (input_partial_shape.is_static())
             {
                 auto input_shape = input_partial_shape.to_shape();
                 auto axis = slice_input_description->m_axis;
-                if (end == -1)
+                if (end == -1 && m_num_iterations == -1)
                 {
                     // for simple RNN case where stride is the same as part_size
                     // when end is -1, we assume that we slice the input from "start" to the very
@@ -227,6 +283,7 @@ void op::TensorIterator::validate_and_infer_types()
 
                 if (body_param_partial_shape.is_static())
                 {
+                    // validate
                     auto body_param_shape = body_param_partial_shape.to_shape();
                     for (auto i = 0; i < input_shape.size(); i++)
                     {
@@ -239,12 +296,21 @@ void op::TensorIterator::validate_and_infer_types()
                         }
                     }
                 }
+                else
+                {
+                    // infer type for m_body_parameter
+                    Shape out_shape{input_shape};
+                    input_shape[axis] = 1;
+                    slice_input_description->m_body_parameter->set_output_type(
+                        0,
+                        slice_input_description->m_body_parameter->get_element_type(),
+                        out_shape);
+                }
             }
         }
         else if (auto body_connection_input_description =
                      as_type_ptr<BodyConnectionInputDescription>(input_description))
         {
-            auto index = body_connection_input_description->m_input_index;
             auto body_value_partial_shape =
                 body_connection_input_description->m_body_value.get_partial_shape();
             auto body_param_partial_shape =
@@ -256,16 +322,44 @@ void op::TensorIterator::validate_and_infer_types()
             NODE_VALIDATION_CHECK(this,
                                   input_partial_shape.compatible(body_param_partial_shape),
                                   "Iterator initial value is not compatible with body param");
+
+            if (input_partial_shape.is_static())
+            {
+                auto input_shape = input_partial_shape.to_shape();
+                // infer type for m_body_parameter
+                if (body_param_partial_shape.is_dynamic())
+                {
+                    body_connection_input_description->m_body_parameter->set_output_type(
+                        0,
+                        body_connection_input_description->m_body_parameter->get_element_type(),
+                        input_shape);
+                }
+                // infer type for m_body_value
+                if (body_value_partial_shape.is_dynamic())
+                {
+                    body_connection_input_description->m_body_value.get_node()->set_output_type(
+                        0,
+                        body_connection_input_description->m_body_value.get_element_type(),
+                        input_shape);
+                }
+            }
         }
     }
 
+    // Output
+    index_it = 0;
     for (auto output_description : m_output_descriptions)
     {
+        auto index = output_description->m_output_index;
+        NODE_VALIDATION_CHECK(this, index == index_it, "Output_index not in order");
+        index_it++;
+
+        auto body_value = output_description->m_body_value;
+        revalidate_and_infer_types_for_body_op(body_value.get_node()->shared_from_this());
+
         if (auto concat_output_description =
                 as_type_ptr<ConcatOutputDescription>(output_description))
         {
-            auto index = concat_output_description->m_output_index;
-            auto body_value = concat_output_description->m_body_value;
             auto body_value_partial_shape = body_value.get_partial_shape();
             if (body_value_partial_shape.is_static())
             {
@@ -277,11 +371,17 @@ void op::TensorIterator::validate_and_infer_types()
                 Shape out_shape{body_value_shape};
                 if (end != -1)
                 {
-                    // for simple RNN case where stride is the same as part_size
-                    out_shape[axis] = (end - start) * part_size;
-                    set_output_type(index, body_value.get_element_type(), out_shape);
+                    if (m_num_iterations != -1)
+                    {
+                        NODE_VALIDATION_CHECK(
+                            this, m_num_iterations == end - start, "Number of slices not the same");
+                    }
+                    else
+                    {
+                        m_num_iterations = end - start;
+                    }
                 }
-                else if (m_num_iterations != -1)
+                if (m_num_iterations != -1)
                 {
                     // for simple RNN case where stride is the same as part_size
                     out_shape[axis] = m_num_iterations * part_size;
@@ -292,8 +392,6 @@ void op::TensorIterator::validate_and_infer_types()
         else if (auto body_output_description =
                      as_type_ptr<BodyOutputDescription>(output_description))
         {
-            auto index = body_output_description->m_output_index;
-            auto body_value = body_output_description->m_body_value;
             set_output_type(index, body_value.get_element_type(), body_value.get_partial_shape());
         }
     }
