@@ -93,7 +93,7 @@ bool is_dynamic_op(const std::shared_ptr<Node>& op)
            is_type<op::v1::Reshape>(op) || is_type<op::DynReshape>(op) || is_type<op::Range>(op) ||
            is_type<op::v1::ConvolutionBackpropData>(op) ||
            is_type<op::v1::ConvolutionBackpropFilters>(op) ||
-           is_type<op::v1::AvgPoolBackprop>(op) || is_type<op::v1::Broadcast>(op)
+           is_type<op::v1::AvgPoolBackprop>(op) || is_type<op::v1::Broadcast>(op) ||
            is_type<op::v1::GenerateMask>(op);
 }
 
