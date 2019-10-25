@@ -188,25 +188,42 @@ void MLIRCPUBackend::lowerNgDialect()
 
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
-    // Lower Standard dialect to LLVM dialect.
-    mlir::LLVMTypeConverter llvmConverter(&m_context);
-    mlir::OwningRewritePatternList patterns;
-    mlir::populateLoopToStdConversionPatterns(patterns, &m_context);
-    mlir::populateStdToLLVMConversionPatterns(llvmConverter, patterns);
+    lowerStandardDialect();
+}
 
-    mlir::ConversionTarget target(m_context);
-    target.addLegalDialect<mlir::LLVM::LLVMDialect>();
-    target.addLegalOp<mlir::ModuleOp, mlir::ModuleTerminatorOp>();
-    target.addDynamicallyLegalOp<mlir::FuncOp>(
-        [&](mlir::FuncOp op) { return llvmConverter.isSignatureLegal(op.getType()); });
+// Lower Standard dialect to LLVM dialect
+void MLIRCPUBackend::lowerStandardDialect()
+{
+    // lamda call backs to collect a set of patterns to convert from the Standard dialect to LLVM.
+    auto patternListFiller = [&](mlir::LLVMTypeConverter& converter,
+                                 mlir::OwningRewritePatternList& patterns) -> void {
+        mlir::populateStdToLLVMConversionPatterns(converter, patterns);
+    };
 
-    auto result =
-        mlir::applyFullConversion(m_module.get(), target, std::move(patterns), &llvmConverter);
-    NGRAPH_CHECK(succeeded(result), "Standard to LLVM dialect conversion failed");
+    // lamda callbacks to create an instance of LLVMTypeConverter in the given context.
+    auto typeConverterMaker =
+        [&](mlir::MLIRContext* context) -> std::unique_ptr<mlir::LLVMTypeConverter> {
+        return std::make_unique<mlir::LLVMTypeConverter>(context);
+    };
+
+    mlir::PassManager pm(&m_context);
+    pm.addPass(mlir::createLowerToLLVMPass(patternListFiller, typeConverterMaker));
+
+    // Apply any generic pass manager command line options.
+    mlir::applyPassManagerCLOptions(pm);
+
+    if (failed(pm.run(m_module.get())))
+    {
+        NGRAPH_CHECK(false, "MLIR pass manager failed");
+    }
+
+    if (failed(m_module->verify()))
+    {
+        NGRAPH_CHECK(false, "Incorrect module after dialect lowering");
+    }
 
     dumpMlirModule("LLVM-IR Dialect Conversion", m_module.get());
 }
-
 // Receives affine dialect as input and applies affine and standard dialect based optimizations.
 // Lowering from affine dialect to standard dialect happens along the way. Output consists of
 // standard dialect only ops.
