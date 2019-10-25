@@ -2452,7 +2452,7 @@ namespace ngraph
                                   vector<memory::desc>& o_mds)
                 {
                     auto concat = static_cast<const T*>(node.get());
-                    size_t concat_dim = concat->get_concatenation_axis();
+                    auto concat_dim = concat->get_concatenation_axis();
                     auto result_desc = mkldnn_utils::create_default_mkldnn_md(
                         node.get(), 0, true, memory::FORMAT::any);
 #if MKLDNN_VERSION_MAJOR < 1

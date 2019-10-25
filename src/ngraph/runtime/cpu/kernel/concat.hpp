@@ -38,7 +38,7 @@ namespace ngraph
                             std::vector<Shape> input_shapes,
                             void* output,
                             Shape output_shape,
-                            size_t axis)
+                            int64_t axis)
                 {
                     Eigen::array<Eigen::Index, Rank> out_dims;
                     for (int i = 0; i < Rank; i++)
@@ -50,7 +50,6 @@ namespace ngraph
 
                     Eigen::array<Eigen::Index, Rank> in_dims, concat_pos;
                     concat_pos.fill(static_cast<Eigen::Index>(0));
-
                     for (size_t i = 0; i < input_shapes.size(); i++)
                     {
                         for (int j = 0; j < Rank; j++)
