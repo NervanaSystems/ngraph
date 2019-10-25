@@ -29,16 +29,6 @@
 
 using namespace mlir;
 
-void initNgDialect()
-{
-    static bool init = false;
-    if (!init)
-    {
-        ngraph::runtime::ngmlir::initializeNGraphMLIR();
-        init = true;
-    }
-}
-
 OpBuilder createBuilder(MLIRContext* context)
 {
     auto module = ModuleOp::create(UnknownLoc::get(context));
@@ -52,8 +42,6 @@ OpBuilder createBuilder(MLIRContext* context)
 
 TEST(MLIR, op_version_interface)
 {
-    // Initialize before any context declarations
-    initNgDialect();
     MLIRContext context;
     llvm::SmallVector<mlir::Type, 1> resultTypes;
 
@@ -76,9 +64,8 @@ TEST(MLIR, op_version_interface)
 
 TEST(MLIR, fused_ops_interface)
 {
-    // Initialize before any context declarations
-    initNgDialect();
     MLIRContext context;
+    
     llvm::SmallVector<mlir::Type, 1> resultTypes;
 
     OpBuilder builder(&context);
@@ -103,10 +90,7 @@ TEST(MLIR, fused_ops_interface)
 
 TEST(MLIR, ops_attributes)
 {
-    // Initialize before any context declarations
-    initNgDialect();
     MLIRContext context;
-
     auto resultType =
         mlir::NGTensorType::get(&context, mlir::NGFloatType::getF16(&context), {2, 2});
     auto builder = createBuilder(&context);

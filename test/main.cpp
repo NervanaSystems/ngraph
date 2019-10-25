@@ -23,6 +23,7 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/interpreter/int_backend.hpp"
+#include "contrib/mlir/compiler/tools.hpp"
 
 using namespace std;
 
@@ -54,6 +55,12 @@ int main(int argc, char** argv)
 #ifdef NGRAPH_INTERPRETER_ENABLE
     ngraph_register_interpreter_backend();
 #endif
+
+#ifdef NGRAPH_MLIR_ENABLE
+    // Initialize MLIR 
+    ngraph::runtime::ngmlir::initializeNGraphMLIR();
+#endif
+
     auto start = std::chrono::system_clock::now();
     int rc = RUN_ALL_TESTS();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(

@@ -174,6 +174,7 @@ void MLIRCompiler::init_mlir()
 
     if (!initialized)
     {
+        // TODO: Remove this as it is not part of compiler init
         initializeNGraphMLIR();
 
         // Register MLIR command line options in the pool of supported flags and and process flags
