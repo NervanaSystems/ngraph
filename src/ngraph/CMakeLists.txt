@@ -360,6 +360,8 @@ set (SRC
     op/fused/scale_shift.hpp
     op/fused/shuffle_channels.cpp
     op/fused/shuffle_channels.hpp
+    op/fused/softmax_crossentropy.cpp
+    op/fused/softmax_crossentropy.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
     op/fused/split.cpp

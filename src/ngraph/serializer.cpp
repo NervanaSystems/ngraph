@@ -91,6 +91,7 @@
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/shuffle_channels.hpp"
+#include "ngraph/op/fused/softmax_crossentropy.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/fused/split.hpp"
 #include "ngraph/op/fused/squared_difference.hpp"
@@ -2169,6 +2170,21 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             break;
         }
+        case OP_TYPEID::SoftmaxCrossEntropy:
+        {
+            auto soft_label = node_js.at("soft_label");
+            auto ignore_index = node_js.at("ignore_index");
+            node = make_shared<op::SoftmaxCrossEntropy>(args[0], args[1], soft_label, ignore_index);
+            break;
+        }
+        case OP_TYPEID::SoftmaxCrossEntropyBackprop:
+        {
+            auto soft_label = node_js.at("soft_label");
+            auto ignore_index = node_js.at("ignore_index");
+            node = make_shared<op::SoftmaxCrossEntropyBackprop>(
+                args[0], args[1], args[2], soft_label, ignore_index);
+            break;
+        }
         case OP_TYPEID::SpaceToDepth:
         {
             auto block_size = node_js.at("block_size").get<size_t>();
@@ -3479,6 +3495,20 @@ json JSONSerializer::serialize_node(const Node& n)
             auto tmp = static_cast<const op::v1::Softmax*>(&n);
             node["softmax_axis"] = tmp->get_axis();
         }
+        break;
+    }
+    case OP_TYPEID::SoftmaxCrossEntropy:
+    {
+        auto tmp = static_cast<const op::SoftmaxCrossEntropy*>(&n);
+        node["soft_label"] = tmp->get_soft_label();
+        node["ignore_index"] = tmp->get_ignore_index();
+        break;
+    }
+    case OP_TYPEID::SoftmaxCrossEntropyBackprop:
+    {
+        auto tmp = static_cast<const op::SoftmaxCrossEntropyBackprop*>(&n);
+        node["soft_label"] = tmp->get_soft_label();
+        node["ignore_index"] = tmp->get_ignore_index();
         break;
     }
     case OP_TYPEID::Tan: { break;
