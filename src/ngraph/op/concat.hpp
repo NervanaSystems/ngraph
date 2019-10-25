@@ -37,13 +37,13 @@ namespace ngraph
             ///
             /// \param args               The outputs producing the input tensors.
             /// \param axis The axis along which to concatenate the input tensors.
-            Concat(const OutputVector& args, size_t axis);
+            Concat(const OutputVector& args, int64_t axis);
 
             /// \brief Constructs a concatenation operation.
             ///
             /// \param args               The nodes producing the input tensors.
             /// \param axis The axis along which to concatenate the input tensors.
-            Concat(const NodeVector& args, size_t axis);
+            Concat(const NodeVector& args, int64_t axis);
 
             void validate_and_infer_types() override;
 
@@ -51,15 +51,21 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
             /// \return The concatenation axis.
-            size_t get_concatenation_axis() const { return get_axis(); }
-            void set_concatenation_axis(size_t concatenation_axis) { set_axis(concatenation_axis); }
+            int64_t get_concatenation_axis() const { return m_concat_axis; }
+            void set_concatenation_axis(int64_t concatenation_axis)
+            {
+                m_concat_axis = concatenation_axis;
+            }
             /// \return The concatenation axis.
-            size_t get_axis() const { return m_axis; }
-            void set_axis(size_t axis) { m_axis = axis; }
+            int64_t get_axis() const { return m_axis; }
+            void set_axis(int64_t axis) { m_axis = axis; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-            size_t m_axis;
+            /// \ brief m_axis stores default value for all iterations
+            int64_t m_axis;
+            /// \brief m_concat_axis stores m_axis plus the number of rank for each iteration
+            int64_t m_concat_axis = -1;
         };
     }
 }
