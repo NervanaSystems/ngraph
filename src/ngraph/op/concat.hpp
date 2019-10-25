@@ -51,6 +51,7 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
             /// \return The concatenation axis.
+            NGRAPH_DEPRECATED("Use temporarily to handle negative axis")
             int64_t get_concatenation_axis() const { return m_concatenation_axis; }
             /// \return The concatenation axis.
             int64_t get_axis() const { return m_axis; }
@@ -59,6 +60,7 @@ namespace ngraph
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
             // get setter protected as it is for an internal state variable
+            NGRAPH_DEPRECATED("Use temporarily to handle negative axis")
             void set_concatenation_axis(int64_t concatenation_axis)
             {
                 m_concatenation_axis = concatenation_axis;
