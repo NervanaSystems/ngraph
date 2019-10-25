@@ -17,13 +17,13 @@
 #include <chrono>
 #include <iostream>
 
+#include "contrib/mlir/compiler/tools.hpp"
 #include "gtest/gtest.h"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/interpreter/int_backend.hpp"
-#include "contrib/mlir/compiler/tools.hpp"
 
 using namespace std;
 
@@ -57,7 +57,7 @@ int main(int argc, char** argv)
 #endif
 
 #ifdef NGRAPH_MLIR_ENABLE
-    // Initialize MLIR 
+    // Initialize MLIR
     ngraph::runtime::ngmlir::initializeNGraphMLIR();
 #endif
 

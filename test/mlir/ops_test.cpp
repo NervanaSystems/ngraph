@@ -65,7 +65,7 @@ TEST(MLIR, op_version_interface)
 TEST(MLIR, fused_ops_interface)
 {
     MLIRContext context;
-    
+
     llvm::SmallVector<mlir::Type, 1> resultTypes;
 
     OpBuilder builder(&context);

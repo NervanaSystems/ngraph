@@ -26,14 +26,13 @@
 
 void ngraph::runtime::ngmlir::initializeNGraphMLIR()
 {
-    // Initialize a dialect only once. 
+    // Initialize a dialect only once.
     // We currently have no way to query if a dialect is previously
-    // registered. So using a global flag instead. 
+    // registered. So using a global flag instead.
     static bool init = false;
     if (!init)
     {
         mlir::registerDialect<mlir::NGraphOpsDialect>();
         init = true;
     }
-    
 }
