@@ -76,6 +76,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_fprop()
     auto reduction_axes_label = std::make_shared<pattern::op::Label>(reduction_axes);
     auto sum = std::make_shared<ngraph::op::Sum>(multiply, reduction_axes_label);
     auto negative = std::make_shared<ngraph::op::Negative>(sum);
+    auto reshape = std::make_shared<ngraph::op::Reshape>(negative, AxisVector{0}, Shape{41, 1});
 
     auto callback = [reduction_axes_label, param_1, param_2](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_softmax_cross_entropy_fprop against "
@@ -90,7 +91,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_fprop()
 
         return true;
     };
-    auto m = std::make_shared<pattern::Matcher>(negative, "CoreFusion.SoftmaxCrossEntropy");
+    auto m = std::make_shared<pattern::Matcher>(reshape, "CoreFusion.SoftmaxCrossEntropy");
     this->add_matcher(m, callback);
 }
 
