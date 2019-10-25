@@ -242,12 +242,17 @@ namespace ngraph
                 return m_output_descriptions;
             }
 
+            virtual void validate_and_infer_types() override;
+
+            int64_t get_num_iterations() const { return m_num_iterations; }
         private:
             // Find an input corresponding to value, adding one if necessary.
             Input<Node> input_for_value(const Output<Node>& value);
 
             std::vector<std::shared_ptr<InputDescription>> m_input_descriptions;
             std::vector<std::shared_ptr<OutputDescription>> m_output_descriptions;
+
+            int64_t m_num_iterations = -1;
         };
     }
 }

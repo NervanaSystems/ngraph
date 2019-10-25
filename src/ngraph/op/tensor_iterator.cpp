@@ -187,106 +187,117 @@ NodeVector op::TensorIterator::decompose_op() const
     return NodeVector{};
 }
 
-#if 0
 void op::TensorIterator::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this,
-                          get_input_size() == m_body_parameters.size(),
-                          "Number of inputs must be the same as number of body parameters");
+                          get_input_size() == m_input_descriptions.size(),
+                          "Number of inputs must be the same as number of input descriptions");
 
-    // The number of iterations is determined by the shortest sequence input
-    size_t iteration_count{0};
-    // If true, iteration count is dynamic
-    bool iteration_count_dynamic{false};
-    // true when we know something about the count
-    bool iteration_count_valid{false};
-    for (auto input : inputs())
+    size_t num_slice_input_desc = 0;
+    for (auto input_description : m_input_descriptions)
     {
-        size_t input_index = input.get_index();
-        Output<Node> value = input.get_source_output();
-        PartialShape sequence_shape = value.get_partial_shape();
-        PartialShape iterator_shape = sequence_shape;
-        Rank sequence_rank = sequence_shape.rank();
+        if (auto slice_input_description = as_type_ptr<SliceInputDescription>(input_description))
+        {
+            NODE_VALIDATION_CHECK(
+                this, num_slice_input_desc == 0, "Only one slice input description is allowed");
+            num_slice_input_desc++;
+            auto index = slice_input_description->m_input_index;
+            auto body_param_partial_shape =
+                slice_input_description->m_body_parameter->get_partial_shape();
+            auto input_partial_shape = inputs().at(index).get_source_output().get_partial_shape();
+            auto start = slice_input_description->m_start;
+            auto part_size = slice_input_description->m_part_size;
+            auto end = slice_input_description->m_end;
+            if (end != -1)
+            {
+                m_num_iterations = end - start;
+            }
 
-        if (sequence_rank.is_dynamic())
-        {
-            // Can't determine the sequence length
-            iteration_count_dynamic = true;
+            if (input_partial_shape.is_static())
+            {
+                auto input_shape = input_partial_shape.to_shape();
+                auto axis = slice_input_description->m_axis;
+                if (end == -1)
+                {
+                    // for simple RNN case where stride is the same as part_size
+                    // when end is -1, we assume that we slice the input from "start" to the very
+                    // end.
+                    m_num_iterations = static_cast<size_t>(input_shape[axis]) / part_size - start;
+                }
+
+                if (body_param_partial_shape.is_static())
+                {
+                    auto body_param_shape = body_param_partial_shape.to_shape();
+                    for (auto i = 0; i < input_shape.size(); i++)
+                    {
+                        if (i != axis)
+                        {
+                            NODE_VALIDATION_CHECK(
+                                this,
+                                input_shape[i] == body_param_shape[i],
+                                "Iterator input is not compatible with body param");
+                        }
+                    }
+                }
+            }
         }
-        else
+        else if (auto body_connection_input_description =
+                     as_type_ptr<BodyConnectionInputDescription>(input_description))
         {
+            auto index = body_connection_input_description->m_input_index;
+            auto body_value_partial_shape =
+                body_connection_input_description->m_body_value.get_partial_shape();
+            auto body_param_partial_shape =
+                body_connection_input_description->m_body_parameter->get_partial_shape();
+            auto input_partial_shape = inputs().at(index).get_source_output().get_partial_shape();
             NODE_VALIDATION_CHECK(this,
-                                  static_cast<size_t>(sequence_shape.rank()) != 0,
-                                  "Input ",
-                                  input_index,
-                                  " is specified to be a sequence but is scalar.");
-            Dimension sequence_dim = sequence_shape[0];
-            vector<Dimension> dimensions = static_cast<vector<Dimension>>(sequence_shape);
-            dimensions.erase(dimensions.begin());
-            iterator_shape = PartialShape(dimensions);
+                                  body_value_partial_shape.compatible(body_param_partial_shape),
+                                  "Iterator successive value is not compatible with body param");
+            NODE_VALIDATION_CHECK(this,
+                                  input_partial_shape.compatible(body_param_partial_shape),
+                                  "Iterator initial value is not compatible with body param");
+        }
+    }
 
-            if (sequence_dim.is_dynamic())
+    for (auto output_description : m_output_descriptions)
+    {
+        if (auto concat_output_description =
+                as_type_ptr<ConcatOutputDescription>(output_description))
+        {
+            auto index = concat_output_description->m_output_index;
+            auto body_value = concat_output_description->m_body_value;
+            auto body_value_partial_shape = body_value.get_partial_shape();
+            if (body_value_partial_shape.is_static())
             {
-                // Can't determine the sequence length
-                iteration_count_dynamic = true;
-            }
-            else
-            {
-                size_t sequence_length = static_cast<size_t>(sequence_dim);
-                if (!iteration_count_valid || (sequence_length < iteration_count))
+                auto body_value_shape = body_value_partial_shape.to_shape();
+                auto start = concat_output_description->m_start;
+                auto part_size = concat_output_description->m_part_size;
+                auto end = concat_output_description->m_end;
+                auto axis = concat_output_description->m_axis;
+                Shape out_shape{body_value_shape};
+                if (end != -1)
                 {
-                    iteration_count = sequence_length;
-                    iteration_count_valid = true;
+                    // for simple RNN case where stride is the same as part_size
+                    out_shape[axis] = (end - start) * part_size;
+                    set_output_type(index, body_value.get_element_type(), out_shape);
+                }
+                else if (m_num_iterations != -1)
+                {
+                    // for simple RNN case where stride is the same as part_size
+                    out_shape[axis] = m_num_iterations * part_size;
+                    set_output_type(index, body_value.get_element_type(), out_shape);
                 }
             }
         }
-
-        NODE_VALIDATION_CHECK(
-            this,
-            iterator_shape.compatible(m_body_parameters.at(input_index)->get_partial_shape()),
-            "Iterator body param is not compatible with value");
-    }
-    // The body may depend on the body parameters as well as values from outside the body
-    // Body parameters depend on the loop initialization
-    NodeVector body_result_nodes;
-    for (auto& body_output : m_body_outputs)
-    {
-        body_result_nodes.push_back(body_output.get_node_shared_ptr());
-    }
-    std::list<std::shared_ptr<Node>> body_node_closure(topological_sort(body_result_nodes, true));
-    std::set<Node*> bound_nodes;
-    std::vector<Node*> free_nodes;
-    for (auto& parameter : m_body_parameters)
-    {
-        std::cerr << *this << " Bound: " << *parameter << std::endl;
-        bound_nodes.insert(parameter.get());
-    }
-    for (auto& node : body_node_closure)
-    {
-        if (bound_nodes.find(node.get()) == bound_nodes.end())
+        else if (auto body_output_description =
+                     as_type_ptr<BodyOutputDescription>(output_description))
         {
-            bool is_free = true;
-            for (auto input : node->inputs())
-            {
-                auto input_node = input.get_source_output().get_node();
-                if (bound_nodes.find(input_node) != bound_nodes.end())
-                {
-                    bound_nodes.insert(node.get());
-                    is_free = false;
-                    std::cerr << *this << " Bound: "
-                              << " : " << *node << std::endl;
-                    break;
-                }
-            }
-            if (is_free)
-            {
-                free_nodes.push_back(node.get());
-                std::cout << *this << " Free: " << *node << std::endl;
-            }
+            auto index = body_output_description->m_output_index;
+            auto body_value = body_output_description->m_body_value;
+            set_output_type(index, body_value.get_element_type(), body_value.get_partial_shape());
         }
     }
 }
-#endif
 
 std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& new_args) const
 {

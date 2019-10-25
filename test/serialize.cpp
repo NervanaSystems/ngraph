@@ -454,19 +454,26 @@ TEST(serialize, tensor_iterator_raw)
     auto bY = make_shared<op::Parameter>(element::f32, Shape{5});
 
     // Initial values
-    auto Hinit = make_shared<op::Parameter>(element::f32, Shape{20});
+    auto Hinit = make_shared<op::Parameter>(element::f32, Shape{32, 1, 20});
 
     // Set up the cell body, a function from (Hi, Xi) -> (Ho, Yo)
     // Cell parameters
-    auto Hi = make_shared<op::Parameter>(element::f32, Shape{32, 20});
+    auto Hi = make_shared<op::Parameter>(element::f32, Shape{32, 1, 20});
     auto Xi = make_shared<op::Parameter>(element::f32, Shape{32, 1, 10});
 
     // Body
-    auto Ho = make_shared<op::Relu>(
-        make_shared<op::Dot>(make_shared<op::Reshape>(Xi, AxisVector{0, 1, 2}, Shape{32, 10}), WX) +
-        make_shared<op::Dot>(Hi, WH) + make_shared<op::Broadcast>(bH, Shape{32, 20}, AxisSet{0}));
-    auto Yo = make_shared<op::Relu>(make_shared<op::Dot>(Ho, WY) +
-                                    make_shared<op::Broadcast>(bY, Shape{32, 5}, AxisSet{0}));
+    auto Ho = make_shared<op::Reshape>(
+        make_shared<op::Relu>(
+            make_shared<op::Dot>(make_shared<op::Reshape>(Xi, AxisVector{0, 1, 2}, Shape{32, 10}),
+                                 WX) +
+            make_shared<op::Dot>(make_shared<op::Reshape>(Hi, AxisVector{0, 1, 2}, Shape{32, 20}),
+                                 WH) +
+            make_shared<op::Broadcast>(bH, Shape{32, 20}, AxisSet{0})),
+        AxisVector{0, 1},
+        Shape{32, 1, 20});
+    auto Yo = make_shared<op::Relu>(
+        make_shared<op::Dot>(make_shared<op::Reshape>(Ho, AxisVector{0, 1, 2}, Shape{32, 20}), WY) +
+        make_shared<op::Broadcast>(bY, Shape{32, 5}, AxisSet{0}));
 
     auto tensor_iterator = make_shared<op::TensorIterator>();
     // The Xi are the elements of Xseq
@@ -496,20 +503,26 @@ TEST(serialize, tensor_iterator_lstm)
     const size_t H = 32; // Hidden size
     auto SENT = make_shared<op::Parameter>(element::f32, Shape{N, L, I});
 
-    auto H_init = make_shared<op::Parameter>(element::f32, Shape{H});
-    auto C_init = make_shared<op::Parameter>(element::f32, Shape{H});
+    auto H_init = make_shared<op::Parameter>(element::f32, Shape{N, 1, H});
+    auto C_init = make_shared<op::Parameter>(element::f32, Shape{N, 1, H});
 
     auto W = make_shared<op::Parameter>(element::f32, Shape{4 * H, I});
     auto R = make_shared<op::Parameter>(element::f32, Shape{4 * H, H});
     auto B = make_shared<op::Parameter>(element::f32, Shape{4 * H});
-    auto H_t = make_shared<op::Parameter>(element::f32, Shape{N, H});
-    auto C_t = make_shared<op::Parameter>(element::f32, Shape{N, H});
+    auto H_t = make_shared<op::Parameter>(element::f32, Shape{N, 1, H});
+    auto C_t = make_shared<op::Parameter>(element::f32, Shape{N, 1, H});
 
     // Body
-    auto X = make_shared<op::Parameter>(element::f32, Shape{N, I});
-    auto LSTM_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, H);
-    auto H_o = LSTM_cell->output(0);
-    auto C_o = LSTM_cell->output(1);
+    auto X = make_shared<op::Parameter>(element::f32, Shape{N, 1, I});
+    auto LSTM_cell =
+        make_shared<op::LSTMCell>(make_shared<op::Reshape>(X, AxisVector{0, 1, 2}, Shape{N, I}),
+                                  W,
+                                  R,
+                                  make_shared<op::Reshape>(H_t, AxisVector{0, 1, 2}, Shape{N, H}),
+                                  make_shared<op::Reshape>(C_t, AxisVector{0, 1, 2}, Shape{N, H}),
+                                  H);
+    auto H_o = make_shared<op::Reshape>(LSTM_cell->output(0), AxisVector{0, 1}, Shape{N, 1, H});
+    auto C_o = make_shared<op::Reshape>(LSTM_cell->output(1), AxisVector{0, 1}, Shape{N, 1, H});
 
     auto tensor_iterator = make_shared<op::TensorIterator>();
     // start=0, stride=1, part_size=1, end=40, axis=1
