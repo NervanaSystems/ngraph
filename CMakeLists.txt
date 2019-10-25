@@ -631,8 +631,7 @@ endif()
 
 include(CMakePackageConfigHelpers)
 
-export(TARGETS ngraph NAMESPACE ngraph::
-       APPEND FILE "${CMAKE_CURRENT_BINARY_DIR}/ngraphTargets.cmake")
+export(TARGETS ngraph NAMESPACE ngraph:: FILE "${CMAKE_CURRENT_BINARY_DIR}/ngraphTargets.cmake")
 
 install(EXPORT ngraphTargets
     FILE ngraphTargets.cmake
@@ -641,8 +640,7 @@ install(EXPORT ngraphTargets
 
 configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/share/ngraphConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfig.cmake
-    INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/cmake
-    PATH_VARS NGRAPH_INSTALL_INCLUDE)
+    INSTALL_DESTINATION cmake)
 
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/ngraphConfigVersion.cmake
     VERSION ${NGRAPH_VERSION}

@@ -18,40 +18,22 @@
 # FindNGraph
 # ------
 #
-#   You can specify the path to nGraph files in NGRAPH_ROOT_DIR
-#
 # This will define the following variables:
 #
-#   NGRAPH_FOUND        - True if the system has the nGraph library
-#   NGRAPH_INCLUDE_DIR  - nGraph include directories
+#   ngraph_FOUND        - True if the system has the nGraph library
 #   NGRAPH_LIBRARIES    - nGraph libraries
+#   ngraph::ngraph      - nGraph core target
 #
 #
 
 @PACKAGE_INIT@
 
-if(NOT NGRAPH_ROOT_DIR AND (DEFINED ENV{ngraph_DIR} OR ngraph_DIR))
-    if (EXISTS "${ngraph_DIR}")
-        # ngraph_DIR manually set via command line params
-        set(NGRAPH_ROOT_DIR "${ngraph_DIR}/..")
-    elseif (EXISTS "$ENV{ngraph_DIR}")
-        # ngraph_DIR manually set via env
-        set(NGRAPH_ROOT_DIR "$ENV{ngraph_DIR}/..")
-    endif()
-endif()
-if(NOT NGRAPH_ROOT_DIR)
-    ext_message(FATAL_ERROR "ngraph root directory is not found")
-endif()
+include(CMakeFindDependencyMacro)
+find_dependency(Threads)
 
-if (NOT NGRAPH_INCLUDE_DIR)
-    set_and_check(NGRAPH_INCLUDE_DIR "${NGRAPH_ROOT_DIR}/include")
-endif()
-
-if(NOT TARGET ngraph AND NOT ngraph_BINARY_DIR)
+if(NOT TARGET ngraph)
     include("${CMAKE_CURRENT_LIST_DIR}/ngraphTargets.cmake")
-    set(NGRAPH_LIBRARIES ngraph::ngraph)
-else()
-    set(NGRAPH_LIBRARIES ngraph)
 endif()
 
+set(NGRAPH_LIBRARIES ngraph::ngraph)
 check_required_components(ngraph)
