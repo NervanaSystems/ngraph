@@ -184,9 +184,11 @@ NodeVector op::SoftmaxCrossEntropyBackprop::decompose_op() const
 
     if (m_soft_label)
     {
-        auto broadcast_delta =
-            std::make_shared<ngraph::op::Broadcast>(delta, labels.get_shape(), AxisSet{1});
-        auto delta_mul_labels = std::make_shared<ngraph::op::Multiply>(broadcast_delta, labels);
+        if (delta.get_shape() != labels.get_shape())
+        {
+            delta = std::make_shared<ngraph::op::Broadcast>(delta, labels.get_shape(), AxisSet{1});
+        }
+        auto delta_mul_labels = std::make_shared<ngraph::op::Multiply>(delta, labels);
         auto summation_delta_mul_labels = std::make_shared<ngraph::op::Sum>(
             delta_mul_labels, AxisSet{static_cast<size_t>(reduction_axis)});
         auto broadcast_sum = std::make_shared<ngraph::op::Broadcast>(
