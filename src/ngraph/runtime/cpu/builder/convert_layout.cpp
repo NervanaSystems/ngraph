@@ -43,6 +43,8 @@ namespace ngraph
                 auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                 auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
+                size_t scratchpad_size = 0;
+
 #if MKLDNN_VERSION_MAJOR < 1
                 if (input_desc.data.format == mkldnn_nchw &&
                     result_desc.data.format == mkldnn_goihw)
@@ -129,32 +131,41 @@ namespace ngraph
                         mkldnn::memory::format_tag::goihw);
                 }
 
-                mkldnn_emitter->query_scratchpad_reorder(input_desc, result_desc);
+                scratchpad_size = mkldnn_emitter->query_scratchpad_reorder(input_desc, result_desc);
 #endif
                 // ConvertLayout needs 3 primitives: input, result, and reorder.
                 size_t reorder_index = mkldnn_emitter->reserve_primitive_space(3);
                 auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);
-                auto functor =
-                    [&, input_desc, result_desc, reorder_index, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
-                        if (ctx->first_iteration)
-                        {
-                            mkldnn_emitter->build_reorder(ctx->mkldnn_memories,
-                                                          ctx->mkldnn_primitives,
-                                                          ctx->mkldnn_scratchpad_mds,
-                                                          input_desc,
-                                                          result_desc,
-                                                          deps,
-                                                          reorder_index);
-                        }
-                        cpu::mkldnn_utils::set_memory_ptr(
-                            ctx, deps[0], ctx->buffer_data[arg_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
-                            ctx, deps[1], ctx->buffer_data[out_buffer_index]);
+                auto functor = [&,
+                                input_desc,
+                                result_desc,
+                                reorder_index,
+                                scratchpad_size,
+                                arg_buffer_index,
+                                out_buffer_index](CPURuntimeContext* ctx,
+                                                  CPUExecutionContext* /* ectx */) {
+                    if (ctx->first_iteration)
+                    {
+                        mkldnn_emitter->build_reorder(ctx->mkldnn_memories,
+                                                      ctx->mkldnn_primitives,
+                                                      ctx->mkldnn_scratchpad_mds,
+                                                      input_desc,
+                                                      result_desc,
+                                                      deps,
+                                                      reorder_index);
+                    }
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[0], ctx->buffer_data[arg_buffer_index]);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, reorder_index, deps, cpu::mkldnn_utils::OpType::CONVERTLAYOUT);
-                    };
+                    cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                        ctx,
+                        reorder_index,
+                        deps,
+                        cpu::mkldnn_utils::OpType::CONVERTLAYOUT,
+                        scratchpad_size);
+                };
                 functors.emplace_back(functor);
             }
 
