@@ -342,6 +342,10 @@ protected:
 class JSONDeserializer
 {
 public:
+    JSONDeserializer()
+        : m_factory_registry(FactoryRegistry<Node>::get())
+    {
+    }
     void set_const_data_callback(function<const_data_callback_t> const_data_callback)
     {
         m_const_data_callback = const_data_callback;
@@ -359,7 +363,7 @@ protected:
     unordered_map<string, shared_ptr<Node>> m_node_map;
     unordered_map<string, shared_ptr<Function>> m_function_map;
     function<const_data_callback_t> m_const_data_callback;
-    FactoryRegistry<Node>& m_factory_registry{FactoryRegistry<Node>::get()};
+    FactoryRegistry<Node>& m_factory_registry;
 };
 
 static string
