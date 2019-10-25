@@ -359,7 +359,7 @@ protected:
     unordered_map<string, shared_ptr<Node>> m_node_map;
     unordered_map<string, shared_ptr<Function>> m_function_map;
     function<const_data_callback_t> m_const_data_callback;
-    FactoryRegistry<Node>* m_factory_registry{FactoryRegistry<Node>::get()};
+    FactoryRegistry<Node>& m_factory_registry{FactoryRegistry<Node>::get()};
 };
 
 static string
@@ -836,9 +836,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             string type_info_name = ti.at("name").get<string>();
             uint64_t type_info_version = ti.at("version").get<int64_t>();
             NodeTypeInfo type_info{type_info_name.c_str(), type_info_version};
-            if (m_factory_registry->has_factory(type_info))
+            if (m_factory_registry.has_factory(type_info))
             {
-                node = shared_ptr<Node>(m_factory_registry->create(type_info));
+                node = shared_ptr<Node>(m_factory_registry.create(type_info));
                 JSONAttributeDeserializer visitor(node_js);
                 node->set_arguments(static_cast<OutputVector>(args));
                 node->visit_attributes(visitor);

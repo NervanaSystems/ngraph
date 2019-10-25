@@ -32,22 +32,22 @@ using namespace std;
 namespace ngraph
 {
     template <>
-    FactoryRegistry<Node>* FactoryRegistry<Node>::get()
+    FactoryRegistry<Node>& FactoryRegistry<Node>::get()
     {
-        static FactoryRegistry<Node>* registry = nullptr;
-        if (registry == nullptr)
+        static FactoryRegistry<Node> registry;
+        // TODO: Add a lock
+        if (registry.m_factory_map.size() == 0)
         {
-            registry = new FactoryRegistry<Node>();
-            registry->register_factory<op::Abs>();
-            registry->register_factory<op::Acos>();
-            registry->register_factory<op::Add>();
-            registry->register_factory<op::All>();
-            registry->register_factory<op::AllReduce>();
-            registry->register_factory<op::And>();
-            registry->register_factory<op::Any>();
-            registry->register_factory<op::ArgMax>();
-            registry->register_factory<op::ArgMin>();
-            registry->register_factory<op::Parameter>();
+            registry.register_factory<op::Abs>();
+            registry.register_factory<op::Acos>();
+            registry.register_factory<op::Add>();
+            registry.register_factory<op::All>();
+            registry.register_factory<op::AllReduce>();
+            registry.register_factory<op::And>();
+            registry.register_factory<op::Any>();
+            registry.register_factory<op::ArgMax>();
+            registry.register_factory<op::ArgMin>();
+            registry.register_factory<op::Parameter>();
         }
         return registry;
     }

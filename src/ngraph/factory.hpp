@@ -44,7 +44,7 @@ namespace ngraph
             auto it = m_factory_map.find(info);
             return it == m_factory_map.end() ? nullptr : it->second();
         }
-        static FactoryRegistry<T>* get();
+        static FactoryRegistry<T>& get();
 
     protected:
         // Need a Compare on type_info

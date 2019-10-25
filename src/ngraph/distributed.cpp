@@ -25,13 +25,13 @@ using namespace ngraph;
 namespace ngraph
 {
     template <>
-    EnumNames<reduction::Type>* EnumNames<reduction::Type>::get()
+    EnumNames<reduction::Type>& EnumNames<reduction::Type>::get()
     {
-        static auto enum_names = new EnumNames<reduction::Type>("reduction::Type",
-                                                                {{"SUM", reduction::Type::SUM},
-                                                                 {"PROD", reduction::Type::PROD},
-                                                                 {"MIN", reduction::Type::MIN},
-                                                                 {"MAX", reduction::Type::MAX}});
+        static auto enum_names = EnumNames<reduction::Type>("reduction::Type",
+                                                            {{"SUM", reduction::Type::SUM},
+                                                             {"PROD", reduction::Type::PROD},
+                                                             {"MIN", reduction::Type::MIN},
+                                                             {"MAX", reduction::Type::MAX}});
         return enum_names;
     }
 }

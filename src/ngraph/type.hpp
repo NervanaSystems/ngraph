@@ -87,26 +87,26 @@ namespace ngraph
     public:
         static EnumType as_type(const std::string& name)
         {
-            for (auto p : get()->m_string_enums)
+            for (auto p : get().m_string_enums)
             {
                 if (p.first == name)
                 {
                     return p.second;
                 }
             }
-            NGRAPH_CHECK(false, "\"", name, "\"", " is not a member of enum ", get()->m_enum_name);
+            NGRAPH_CHECK(false, "\"", name, "\"", " is not a member of enum ", get().m_enum_name);
         }
 
         static std::string as_type(EnumType e)
         {
-            for (auto p : get()->m_string_enums)
+            for (auto p : get().m_string_enums)
             {
                 if (p.second == e)
                 {
                     return p.first;
                 }
             }
-            NGRAPH_CHECK(false, " invalid member of enum ", get()->m_enum_name);
+            NGRAPH_CHECK(false, " invalid member of enum ", get().m_enum_name);
         }
 
     private:
@@ -116,7 +116,7 @@ namespace ngraph
             , m_string_enums(string_enums)
         {
         }
-        static EnumNames<EnumType>* get();
+        static EnumNames<EnumType>& get();
 
         const std::string m_enum_name;
         std::vector<std::pair<std::string, EnumType>> m_string_enums;

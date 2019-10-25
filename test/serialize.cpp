@@ -450,9 +450,9 @@ enum class TuringModel
 namespace ngraph
 {
     template <>
-    EnumNames<TuringModel>* EnumNames<TuringModel>::get()
+    EnumNames<TuringModel>& EnumNames<TuringModel>::get()
     {
-        static auto enum_names = new EnumNames<TuringModel>(
+        static auto enum_names = EnumNames<TuringModel>(
             "TuringModel", {{"XL400", TuringModel::XL400}, {"XL1200", TuringModel::XL1200}});
         return enum_names;
     }
@@ -507,7 +507,7 @@ constexpr NodeTypeInfo Oracle::type_info;
 
 TEST(serialize, user_op)
 {
-    FactoryRegistry<Node>::get()->register_factory<Oracle>();
+    FactoryRegistry<Node>::get().register_factory<Oracle>();
     auto program = make_shared<op::Parameter>(element::i32, Shape{200});
     auto data = make_shared<op::Parameter>(element::i32, Shape{200});
     auto oracle = make_shared<Oracle>(program, data, TuringModel::XL1200, 2, "12AU7");
