@@ -59,11 +59,11 @@ void op::Concat::validate_and_infer_types()
                                            ? get_axis() + static_cast<int64_t>(this_input_rank)
                                            : get_axis());
             }
-            auto concat_axis = get_concatenation_axis();
+            auto concatenation_axis = get_concatenation_axis();
             NODE_VALIDATION_CHECK(this,
-                                  concat_axis < static_cast<int64_t>(this_input_rank),
+                                  concatenation_axis < static_cast<int64_t>(this_input_rank),
                                   "Concatenation axis (",
-                                  concat_axis,
+                                  concatenation_axis,
                                   ") is out of bounds for ",
                                   "argument ",
                                   i,
@@ -71,15 +71,15 @@ void op::Concat::validate_and_infer_types()
                                   this_input_shape,
                                   ".");
 
-            concatenation_axis_output_dim += this_input_shape[concat_axis];
-            this_input_shape[concat_axis] = Dimension::dynamic();
+            concatenation_axis_output_dim += this_input_shape[concatenation_axis];
+            this_input_shape[concatenation_axis] = Dimension::dynamic();
 
             NODE_VALIDATION_CHECK(
                 this,
                 PartialShape::merge_into(inputs_shape_scheme, this_input_shape),
                 "Argument shapes are inconsistent; they must have the same rank, and must have ",
                 "equal dimension everywhere except on the concatenation axis (axis ",
-                concat_axis,
+                concatenation_axis,
                 ").");
         }
         else
