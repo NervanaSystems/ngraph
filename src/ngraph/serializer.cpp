@@ -86,6 +86,7 @@
 #include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize_l2.hpp"
+#include "ngraph/op/fused/partial_slice.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
@@ -1839,6 +1840,25 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Parameter>(element_type, read_partial_shape(shape), cacheable);
             break;
         }
+        case OP_TYPEID::PartialSlice:
+        {
+            auto axes = node_js.at("axes").get<vector<size_t>>();
+            auto lower_bounds = node_js.at("lower_bounds").get<vector<int64_t>>();
+            auto upper_bounds = node_js.at("upper_bounds").get<vector<int64_t>>();
+            auto decrease_axes = node_js.at("decrease_axes").get<vector<size_t>>();
+            node = make_shared<op::PartialSlice>(
+                args[0], axes, lower_bounds, upper_bounds, decrease_axes);
+            break;
+        }
+        case OP_TYPEID::PartialSliceBackprop:
+        {
+            auto axes = node_js.at("axes").get<vector<size_t>>();
+            auto lower_bounds = node_js.at("lower_bounds").get<vector<int64_t>>();
+            auto upper_bounds = node_js.at("upper_bounds").get<vector<int64_t>>();
+            node = make_shared<op::PartialSliceBackprop>(
+                args[0], args[1], axes, lower_bounds, upper_bounds);
+            break;
+        }
         case OP_TYPEID::Passthrough:
         {
             std::vector<json> outputs_js = node_js.at("output_shapes");
@@ -3181,6 +3201,23 @@ json JSONSerializer::serialize_node(const Node& n)
         node["shape"] = write_partial_shape(tmp->get_output_partial_shape(0));
         node["cacheable"] = tmp->get_cacheable();
         node["element_type"] = write_element_type(tmp->get_element_type());
+        break;
+    }
+    case OP_TYPEID::PartialSlice:
+    {
+        auto tmp = dynamic_cast<const op::PartialSlice*>(&n);
+        node["axes"] = tmp->get_axes();
+        node["lower_bounds"] = tmp->get_lower_bounds();
+        node["upper_bounds"] = tmp->get_upper_bounds();
+        node["decrease_axes"] = tmp->get_decrease_axes();
+        break;
+    }
+    case OP_TYPEID::PartialSliceBackprop:
+    {
+        auto tmp = dynamic_cast<const op::PartialSliceBackprop*>(&n);
+        node["axes"] = tmp->get_axes();
+        node["lower_bounds"] = tmp->get_lower_bounds();
+        node["upper_bounds"] = tmp->get_upper_bounds();
         break;
     }
     case OP_TYPEID::Passthrough:
