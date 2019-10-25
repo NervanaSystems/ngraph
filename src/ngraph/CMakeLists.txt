@@ -353,6 +353,8 @@ set (SRC
     op/fused/mvn.hpp
     op/fused/normalize_l2.cpp
     op/fused/normalize_l2.hpp
+    op/fused/partial_slice.cpp
+    op/fused/partial_slice.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
     op/fused/rnn_cell.cpp
