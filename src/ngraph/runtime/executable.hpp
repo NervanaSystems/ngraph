@@ -73,6 +73,14 @@ public:
     /// \returns  preferred pipeline_depth
     virtual size_t get_preferred_pipeline_depth() const;
 
+    /// \brief Set the input Parameters
+    /// \param params ngraph::ParameterVector of all input parameters
+    void set_parameters(const ngraph::ParameterVector& params);
+
+    /// \brief Set the output Results
+    /// \param results ngraph::ResultVector of all output results
+    void set_results(const ngraph::ResultVector& results);
+
     /// \brief Save this compiled Executable to an output stream.
     ///    Saved stream may be read with Backend::load
     virtual void save(std::ostream& output_stream);
