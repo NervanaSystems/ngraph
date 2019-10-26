@@ -187,14 +187,16 @@ NodeVector op::TensorIterator::decompose_op() const
     return NodeVector{};
 }
 
-static void revalidate_and_infer_types_for_body_op(std::shared_ptr<Node> end)
+static void revalidate_and_infer_types_for_body_ops(std::vector<std::shared_ptr<Node>> ends)
 {
-    NGRAPH_CHECK(as_type_ptr<op::TensorIterator>(end) == nullptr, "No nested TensorIterator");
-
     std::stack<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>> nodes_to_do;
     std::unordered_set<std::shared_ptr<Node>> nodes_done;
 
-    nodes_to_do.push(end);
+    for (auto end : ends)
+    {
+        NGRAPH_CHECK(as_type_ptr<op::TensorIterator>(end) == nullptr, "No nested TensorIterator");
+        nodes_to_do.push(end);
+    }
     while (nodes_to_do.size() > 0)
     {
         auto node = nodes_to_do.top();
@@ -346,6 +348,15 @@ void op::TensorIterator::validate_and_infer_types()
         }
     }
 
+    // Body
+    std::vector<std::shared_ptr<Node>> ends;
+    for (auto output_description : m_output_descriptions)
+    {
+        auto body_value = output_description->m_body_value;
+        ends.push_back(body_value.get_node()->shared_from_this());
+    }
+    revalidate_and_infer_types_for_body_ops(ends);
+
     // Output
     index_it = 0;
     for (auto output_description : m_output_descriptions)
@@ -355,7 +366,6 @@ void op::TensorIterator::validate_and_infer_types()
         index_it++;
 
         auto body_value = output_description->m_body_value;
-        revalidate_and_infer_types_for_body_op(body_value.get_node()->shared_from_this());
 
         if (auto concat_output_description =
                 as_type_ptr<ConcatOutputDescription>(output_description))
