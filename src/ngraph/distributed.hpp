@@ -39,6 +39,9 @@ namespace ngraph
         std::ostream& operator<<(std::ostream& out, const Type& obj);
     }
 
+    template <>
+    const DiscreteTypeInfo EnumAdapter<reduction::Type>::type_info;
+
     class DistributedInterface
     {
     public:

@@ -16,6 +16,7 @@
 
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/attribute_visitor.hpp"
+#include "ngraph/type.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -50,7 +51,7 @@ shared_ptr<Node> op::AllReduce::copy_with_new_args(const NodeVector& new_args) c
 
 bool op::AllReduce::visit_attributes(AttributeVisitor& visitor)
 {
-    visitor.on_attribute("reduce_type", StringAdapter<reduction::Type>(m_reduce_type));
+    visitor.on_attribute("reduce_type", EnumAdapter<reduction::Type>(m_reduce_type));
     return true;
 }
 

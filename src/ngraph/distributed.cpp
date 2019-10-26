@@ -19,6 +19,7 @@
 #include "ngraph/distributed/null.hpp"
 #include "ngraph/distributed/open_mpi.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/type.hpp"
 
 using namespace ngraph;
 
@@ -34,6 +35,9 @@ namespace ngraph
                                                              {"MAX", reduction::Type::MAX}});
         return enum_names;
     }
+
+    template <>
+    const DiscreteTypeInfo EnumAdapter<reduction::Type>::type_info = {"reduction::Type", 0};
 }
 
 std::ostream& reduction::operator<<(std::ostream& out, const reduction::Type& obj)

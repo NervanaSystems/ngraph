@@ -136,6 +136,63 @@ namespace ngraph
         return EnumNames<Value>::as_type(value);
     }
 
+    class VisitorAdapter
+    {
+    public:
+        static constexpr DiscreteTypeInfo type_info{"VisitorAdapter", 0};
+        virtual ~VisitorAdapter() {}
+        virtual const DiscreteTypeInfo& get_type_info() const { return type_info; }
+        virtual std::string get_string() const = 0;
+        virtual void set_string(const std::string& value) const = 0;
+    };
+
+    template <typename Type>
+    class TypeAdapter : public VisitorAdapter
+    {
+    public:
+        operator Type&() const { return m_value; }
+    protected:
+        TypeAdapter(Type& value)
+            : m_value(value)
+        {
+        }
+        Type& m_value;
+    };
+
+    template <typename Type>
+    class EnumAdapter : public TypeAdapter<Type>
+    {
+    public:
+        EnumAdapter(Type& value)
+            : TypeAdapter<Type>(value)
+        {
+        }
+        static const DiscreteTypeInfo type_info;
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        std::string get_string() const override
+        {
+            return as_type<std::string>(TypeAdapter<Type>::m_value);
+        }
+        void set_string(const std::string& value) const override
+        {
+            TypeAdapter<Type>::m_value = as_type<Type>(value);
+        }
+    };
+
+    template <typename Type>
+    class ObjectAdapter : public TypeAdapter<Type>
+    {
+    public:
+        ObjectAdapter(Type& value)
+            : TypeAdapter<Type>(value)
+        {
+        }
+        static const DiscreteTypeInfo type_info;
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        std::string get_string() const override { return "TODO"; }
+        void set_string(const std::string& value) const override {}
+    };
+
     /// Adapts references to a value to a reference to a string
     template <typename Type>
     class StringAdapter

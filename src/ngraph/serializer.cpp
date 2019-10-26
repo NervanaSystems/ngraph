@@ -250,6 +250,11 @@ public:
     void on_attribute(const std::string& name, bool& value) override { m_json[name] = value; }
     void on_attribute(const std::string& name, int64_t& value) override { m_json[name] = value; }
     void on_attribute(const std::string& name, uint64_t& value) override { m_json[name] = value; }
+    void on_attribute(const std::string& name, const VisitorAdapter& adapter) override
+    {
+        m_json[name] = adapter.get_string();
+    }
+
 protected:
     json& m_json;
 };
@@ -332,6 +337,13 @@ public:
         if (has_key(m_json, name))
         {
             value = m_json.at(name).get<uint64_t>();
+        }
+    }
+    void on_attribute(const std::string& name, const VisitorAdapter& adapter) override
+    {
+        if (has_key(m_json, name))
+        {
+            adapter.set_string(m_json.at(name).get<std::string>());
         }
     }
 

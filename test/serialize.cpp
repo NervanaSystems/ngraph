@@ -456,6 +456,9 @@ namespace ngraph
             "TuringModel", {{"XL400", TuringModel::XL400}, {"XL1200", TuringModel::XL1200}});
         return enum_names;
     }
+
+    template <>
+    const DiscreteTypeInfo EnumAdapter<TuringModel>::type_info{"TuringModel", 0};
 }
 
 // Given a Turing machine program and data, return scalar 1 if the program would
@@ -491,7 +494,7 @@ public:
     void validate_and_infer_types() override { set_output_type(0, element::i64, {}); }
     bool visit_attributes(AttributeVisitor& visitor) override
     {
-        visitor.on_attribute("turing_model", StringAdapter<TuringModel>(m_turing_model));
+        visitor.on_attribute("turing_model", EnumAdapter<TuringModel>(m_turing_model));
         visitor.on_attribute("model_version", m_model_version);
         visitor.on_attribute("serial_number", m_serial_number);
         return true;
