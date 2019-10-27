@@ -58,7 +58,7 @@ void regclass_pyngraph_Function(py::module m)
         auto* capsule_ptr = PyCapsule_GetPointer(pybind_capsule_ptr, CAPSULE_NAME);
 
         auto* ngraph_function = static_cast<std::shared_ptr<ngraph::Function>*>(capsule_ptr);
-        if (ngraph_function)
+        if (ngraph_function && *ngraph_function)
         {
             return *ngraph_function;
         }

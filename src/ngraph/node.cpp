@@ -389,7 +389,7 @@ shared_ptr<Node> Node::add_provenance_group_members_above(const OutputVector& ba
         add_provenance_group_member(node->shared_from_this());
         for (auto value : node->input_values())
         {
-            if (0 == node->m_provenance_group.count(value.get_node_shared_ptr()))
+            if (m_provenance_group.count(value.get_node_shared_ptr()) == 0)
             {
                 todo.push_back(value.get_node());
             }
@@ -454,13 +454,6 @@ void Node::merge_provenance_tags_from(const std::shared_ptr<const Node>& source)
 
 std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
-    for (auto& i : m_inputs)
-    {
-        NGRAPH_CHECK(i.get_output().get_node()->get_output_size() == 1,
-                     "child ",
-                     i.get_output().get_node()->get_name(),
-                     " has multiple outputs");
-    }
     NGRAPH_CHECK(
         index < m_inputs.size(), "index '", index, "' out of range in get_argument(size_t index)");
     return m_inputs[index].get_output().get_node();
