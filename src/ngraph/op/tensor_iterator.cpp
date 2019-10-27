@@ -242,6 +242,8 @@ void op::TensorIterator::validate_and_infer_types()
                           get_output_size() == m_output_descriptions.size(),
                           "Number of outputs must be the same as number of output descriptions");
 
+    std::vector<std::shared_ptr<Node>> ends;
+
     // Input
     uint64_t index_it = 0;
     for (auto input_description : m_input_descriptions)
@@ -275,12 +277,21 @@ void op::TensorIterator::validate_and_infer_types()
             {
                 auto input_shape = input_partial_shape.to_shape();
                 auto axis = slice_input_description->m_axis;
-                if (end == -1 && m_num_iterations == -1)
+                if (end == -1)
                 {
                     // for simple RNN case where stride is the same as part_size
                     // when end is -1, we assume that we slice the input from "start" to the very
                     // end.
-                    m_num_iterations = static_cast<size_t>(input_shape[axis]) / part_size - start;
+                    end = static_cast<size_t>(input_shape[axis]) / part_size + start;
+                    if (m_num_iterations == -1)
+                    {
+                        m_num_iterations = end - start;
+                    }
+                    else
+                    {
+                        NODE_VALIDATION_CHECK(
+                            this, m_num_iterations == end - start, "Number of slices not the same");
+                    }
                 }
 
                 if (body_param_partial_shape.is_static())
@@ -302,19 +313,18 @@ void op::TensorIterator::validate_and_infer_types()
                 {
                     // infer type for m_body_parameter
                     Shape out_shape{input_shape};
-                    input_shape[axis] = 1;
-                    slice_input_description->m_body_parameter->set_output_type(
-                        0,
-                        slice_input_description->m_body_parameter->get_element_type(),
-                        out_shape);
+                    out_shape[axis] = part_size;
+                    slice_input_description->m_body_parameter->set_partial_shape(out_shape);
                 }
             }
         }
         else if (auto body_connection_input_description =
                      as_type_ptr<BodyConnectionInputDescription>(input_description))
         {
-            auto body_value_partial_shape =
-                body_connection_input_description->m_body_value.get_partial_shape();
+            auto body_value = body_connection_input_description->m_body_value;
+            ends.push_back(body_value.get_node()->shared_from_this());
+
+            auto body_value_partial_shape = body_value.get_partial_shape();
             auto body_param_partial_shape =
                 body_connection_input_description->m_body_parameter->get_partial_shape();
             auto input_partial_shape = inputs().at(index).get_source_output().get_partial_shape();
@@ -331,17 +341,7 @@ void op::TensorIterator::validate_and_infer_types()
                 // infer type for m_body_parameter
                 if (body_param_partial_shape.is_dynamic())
                 {
-                    body_connection_input_description->m_body_parameter->set_output_type(
-                        0,
-                        body_connection_input_description->m_body_parameter->get_element_type(),
-                        input_shape);
-                }
-                // infer type for m_body_value
-                if (body_value_partial_shape.is_dynamic())
-                {
-                    body_connection_input_description->m_body_value.get_node()->set_output_type(
-                        0,
-                        body_connection_input_description->m_body_value.get_element_type(),
+                    body_connection_input_description->m_body_parameter->set_partial_shape(
                         input_shape);
                 }
             }
@@ -349,7 +349,6 @@ void op::TensorIterator::validate_and_infer_types()
     }
 
     // Body
-    std::vector<std::shared_ptr<Node>> ends;
     for (auto output_description : m_output_descriptions)
     {
         auto body_value = output_description->m_body_value;

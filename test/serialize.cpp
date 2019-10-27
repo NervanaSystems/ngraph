@@ -542,3 +542,88 @@ TEST(serialize, tensor_iterator_lstm)
     string s = serialize(f);
     shared_ptr<Function> g = deserialize(s);
 }
+
+TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2)
+{
+    // That which we iterate over
+    auto X = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
+    auto Y = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
+
+    // Set up the cell body, a function from (Xi, Yi) -> (Zo)
+    // Body parameters
+    auto Xi = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
+    auto Yi = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
+    // auto Yi = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+
+    // Body
+    auto Zo = Xi + Yi;
+
+    auto tensor_iterator = make_shared<op::TensorIterator>();
+    // The Xi are the elements of Xseq
+    // start=0, stride=2, part_size=2, end=20, axis=1
+    tensor_iterator->set_sliced_input(Xi, X, 0, 2, 2, 20, 1);
+    // The Yi are the elements of Yseq
+    // start=0, stride=2, part_size=2, end=-1, axis=1
+    tensor_iterator->set_sliced_input(Yi, Y, 0, 2, 2, -1, 1);
+
+    // Output 0 is last Zo
+    auto out0 = tensor_iterator->get_iter_value(Zo, -1);
+    // Output 1 is concat of Zos
+    // start=0, stride=2, part_size=2, end=20, axis=1
+    auto out1 = tensor_iterator->get_concatenated_slices(Zo, 0, 2, 2, 20, 1);
+
+    auto result0 = make_shared<op::Result>(out0);
+    auto result1 = make_shared<op::Result>(out1);
+    Shape out0_shape{32, 2, 10};
+    Shape out1_shape{32, 40, 10};
+
+    auto results = ResultVector{result0, result1};
+    auto f = make_shared<Function>(results, ParameterVector{X, Y});
+    EXPECT_EQ(result0->output(0).get_shape(), out0_shape);
+    EXPECT_EQ(result1->output(0).get_shape(), out1_shape);
+
+    string s = serialize(f);
+    shared_ptr<Function> g = deserialize(s);
+}
+
+TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
+{
+    // That which we iterate over
+    auto X = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
+    auto Y = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
+
+    // Set up the cell body, a function from (Xi, Yi) -> (Zo)
+    // Body parameters
+    auto Xi = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto Yi = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+
+    // Body
+    auto Zo = Xi + Yi;
+
+    auto tensor_iterator = make_shared<op::TensorIterator>();
+    // The Xi are the elements of Xseq
+    // start=0, stride=2, part_size=2, end=20, axis=1
+    tensor_iterator->set_sliced_input(Xi, X, 0, 2, 2, 20, 1);
+    // The Yi are the elements of Yseq
+    // start=0, stride=2, part_size=2, end=-1, axis=1
+    tensor_iterator->set_sliced_input(Yi, Y, 0, 2, 2, -1, 1);
+
+    // Output 0 is last Zo
+    auto out0 = tensor_iterator->get_iter_value(Zo, -1);
+    // Output 1 is concat of Zos
+    // start=0, stride=2, part_size=2, end=20, axis=1
+    auto out1 = tensor_iterator->get_concatenated_slices(Zo, 0, 2, 2, 20, 1);
+
+    auto result0 = make_shared<op::Result>(out0);
+    auto result1 = make_shared<op::Result>(out1);
+    Shape out0_shape{32, 2, 10};
+    Shape out1_shape{32, 40, 10};
+
+    auto results = ResultVector{result0, result1};
+    auto f = make_shared<Function>(results, ParameterVector{X, Y});
+    EXPECT_EQ(result0->output(0).get_shape(), out0_shape);
+    EXPECT_EQ(result1->output(0).get_shape(), out1_shape);
+
+    string s = serialize(f);
+    shared_ptr<Function> g = deserialize(s);
+}
