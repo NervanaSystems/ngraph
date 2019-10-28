@@ -1214,8 +1214,19 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Divide:
         {
             bool pythondiv = get_or_default(node_js, "pythondiv", true);
-            node = make_shared<op::Divide>(
-                args[0], args[1], pythondiv, read_auto_broadcast(node_js, "auto_broadcast"));
+            if (op_version == 0)
+            {
+                node = make_shared<op::v0::Divide>(
+                    args[0], args[1], pythondiv, read_auto_broadcast(node_js, "auto_broadcast"));
+            }
+            if (op_version == 1)
+            {
+                node = make_shared<op::v1::Divide>(
+                    args[0],
+                    args[1],
+                    pythondiv,
+                    read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+            }
             break;
         }
         case OP_TYPEID::Dot:
@@ -2822,11 +2833,22 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Divide:
     {
-        auto tmp = static_cast<const op::Divide*>(&n);
-        node["pythondiv"] = tmp->is_pythondiv();
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        const op::util::BinaryElementwiseArithmetic* bea_node;
+        if (op_version == 0)
         {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+            auto tmp = static_cast<const op::v0::Divide*>(&n);
+            bea_node = tmp;
+            node["pythondiv"] = tmp->is_pythondiv();
+        }
+        if (op_version == 1)
+        {
+            auto tmp = static_cast<const op::v1::Divide*>(&n);
+            bea_node = tmp;
+            node["pythondiv"] = tmp->is_pythondiv();
+        }
+        if (bea_node->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(bea_node->get_autob());
         }
         break;
     }

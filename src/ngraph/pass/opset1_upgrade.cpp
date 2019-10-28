@@ -20,6 +20,7 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/divide.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -74,8 +75,8 @@ static OP_TYPEID get_typeid(shared_ptr<Node> node)
 template <typename OpV0, typename OpV1>
 static inline shared_ptr<Node> replace_binary_elementwise_node(const shared_ptr<Node>& node)
 {
-    auto tmp = dynamic_cast<const OpV0*>(node.get());
-    auto const autob = tmp->get_autob();
+    const auto tmp = dynamic_cast<const OpV0*>(node.get());
+    const auto autob = tmp->get_autob();
     auto replacement_node = make_shared<OpV1>(
         node->input(0).get_source_output(), node->input(1).get_source_output(), autob);
     replace_node(node, replacement_node);
@@ -280,6 +281,17 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
                                                             dilations,
                                                             pads_begin,
                                                             pads_end);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Divide:
+    {
+        const auto tmp = dynamic_cast<const op::v0::Divide*>(node.get());
+        const auto autob = tmp->get_autob();
+        const bool pydiv = tmp->is_pythondiv();
+        auto replacement_node = make_shared<op::v1::Divide>(
+            node->input(0).get_source_output(), node->input(1).get_source_output(), pydiv, autob);
         replace_node(node, replacement_node);
         modified = true;
         break;

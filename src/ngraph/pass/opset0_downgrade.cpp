@@ -23,6 +23,7 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/divide.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -73,9 +74,9 @@ template <typename OpV0, typename OpV1>
 static inline shared_ptr<Node> replace_binary_elementwise_node(const shared_ptr<Node>& node)
 {
     const auto tmp = as_type_ptr<OpV1>(node);
-    auto const input_arg0 = node->input(0).get_source_output();
-    auto const input_arg1 = node->input(1).get_source_output();
-    auto const autob = tmp->get_autob();
+    const auto input_arg0 = node->input(0).get_source_output();
+    const auto input_arg1 = node->input(1).get_source_output();
+    const auto autob = tmp->get_autob();
     auto replacement_node = make_shared<OpV0>(input_arg0, input_arg1, autob);
     replace_node(node, replacement_node);
 }
@@ -245,6 +246,18 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
                                                             tmp->get_pads_begin(),
                                                             tmp->get_pads_end(),
                                                             Strides(num_spatial_dims, 1));
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Divide:
+    {
+        const auto tmp = as_type_ptr<op::v1::Divide>(node);
+        const auto input_arg0 = node->input(0).get_source_output();
+        const auto input_arg1 = node->input(1).get_source_output();
+        const auto autob = tmp->get_autob();
+        const bool pydiv = tmp->is_pythondiv();
+        auto replacement_node = make_shared<op::v0::Divide>(input_arg0, input_arg1, pydiv, autob);
         replace_node(node, replacement_node);
         modified = true;
         break;
