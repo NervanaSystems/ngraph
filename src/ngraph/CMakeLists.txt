@@ -342,12 +342,16 @@ set (SRC
     op/fused/layer_norm.hpp
     op/fused/lstm_cell.cpp
     op/fused/lstm_cell.hpp
+    op/fused/lstm_sequence.cpp
+    op/fused/lstm_sequence.hpp
     op/fused/matmul.cpp
     op/fused/matmul.hpp
     op/fused/mvn.cpp
     op/fused/mvn.hpp
     op/fused/normalize_l2.cpp
     op/fused/normalize_l2.hpp
+    op/fused/partial_slice.cpp
+    op/fused/partial_slice.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
     op/fused/rnn_cell.cpp
@@ -356,6 +360,8 @@ set (SRC
     op/fused/scale_shift.hpp
     op/fused/shuffle_channels.cpp
     op/fused/shuffle_channels.hpp
+    op/fused/softmax_crossentropy.cpp
+    op/fused/softmax_crossentropy.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
     op/fused/split.cpp
@@ -420,6 +426,8 @@ set (SRC
     pass/constant_folding_reshape.cpp
     pass/constant_folding_reverse.cpp
     pass/constant_folding_select.cpp
+    pass/constant_folding_squeeze.cpp
+    pass/constant_folding_unsqueeze.cpp
     pass/constant_folding_shape_of.cpp
     pass/constant_folding_slice.cpp
     pass/constant_folding_transpose.cpp
@@ -638,7 +646,11 @@ elseif(APPLE)
 endif()
 
 # Defines macro in C++ to load backend plugin
-target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
+target_include_directories(ngraph PUBLIC $<BUILD_INTERFACE:${NGRAPH_INCLUDE_PATH}> $<INSTALL_INTERFACE:include>)
+
+#Add an alias so that library can be used inside the build tree, e.g. when testing
+add_library(ngraph::ngraph ALIAS ngraph)
+
 if (NOT WIN32)
     find_package(Threads REQUIRED)
     target_link_libraries(ngraph PUBLIC dl Threads::Threads)
@@ -663,8 +675,7 @@ endif()
 #-----------------------------------------------------------------------------------------------
 
 # nGraph
-install(FILES ${CMAKE_BINARY_DIR}/VERSION DESTINATION ${CMAKE_INSTALL_PREFIX})
-install(TARGETS ngraph DESTINATION ${NGRAPH_INSTALL_LIB})  # libngraph.so
+install(TARGETS ngraph DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT ngraphTargets)  # libngraph.so
 install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/
     DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph"
@@ -672,7 +683,7 @@ install(DIRECTORY
         PATTERN "*.hpp"
         PATTERN "*.h"
 )
-install(FILES ${CMAKE_BINARY_DIR}/src/ngraph/version.hpp
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/version.hpp
     DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph")
 
 set(CPACK_GENERATOR "DEB")

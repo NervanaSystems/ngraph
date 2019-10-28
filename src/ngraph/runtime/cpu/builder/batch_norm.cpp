@@ -84,7 +84,8 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto batchnorm_desc =
                         mkldnn_emitter->get_batchnorm_forward_desc<OP>(node, true);
-                    QUERY_SCRATCHPAD_2ARGS(batchnorm_forward, batchnorm_desc, ops);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(batchnorm_forward, batchnorm_desc, ops);
 
                     auto weights_shape = Shape{2, args[0].get_size()};
                     auto weights_desc = mkldnn_emitter->build_memory_descriptor(
@@ -101,6 +102,7 @@ namespace ngraph
                                     training,
                                     ops,
                                     batchnorm_index,
+                                    scratchpad_size,
                                     stacked_weights,
                                     weight_sizes,
                                     arg0_buffer_index,
@@ -140,7 +142,11 @@ namespace ngraph
                             ctx, deps[4], ctx->buffer_data[out2_buffer_index]);
 
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, batchnorm_index, deps, cpu::mkldnn_utils::OpType::BATCHNORM3ARGS);
+                            ctx,
+                            batchnorm_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::BATCHNORM3ARGS,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -155,7 +161,8 @@ namespace ngraph
                     auto batchnorm_desc =
                         mkldnn_emitter->get_batchnorm_forward_desc<OP>(node, false);
 
-                    QUERY_SCRATCHPAD_2ARGS(batchnorm_forward, batchnorm_desc, ops);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(batchnorm_forward, batchnorm_desc, ops);
 
                     auto weights_shape = Shape{2, args[0].get_size()};
                     auto weights_desc = mkldnn_emitter->build_memory_descriptor(
@@ -172,6 +179,7 @@ namespace ngraph
                                     training,
                                     ops,
                                     batchnorm_index,
+                                    scratchpad_size,
                                     stacked_weights,
                                     weight_sizes,
                                     arg0_buffer_index,
@@ -211,7 +219,11 @@ namespace ngraph
                             ctx, deps[4], ctx->buffer_data[out0_buffer_index]);
 
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, batchnorm_index, deps, cpu::mkldnn_utils::OpType::BATCHNORM5ARGS);
+                            ctx,
+                            batchnorm_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::BATCHNORM5ARGS,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -515,7 +527,8 @@ namespace ngraph
                         static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
                     auto eps = batchnorm->get_eps_value();
                     (void)eps; // Use depends on mkl-dnn version
-                    QUERY_SCRATCHPAD_3ARGS(batchnorm_backward, batchnorm_desc, input_desc, eps);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_3ARGS(batchnorm_backward, batchnorm_desc, input_desc, eps);
 
                     auto functor = [&,
                                     batchnorm_desc,
@@ -523,6 +536,7 @@ namespace ngraph
                                     weights_desc,
                                     dweights_desc,
                                     batchnorm_index,
+                                    scratchpad_size,
                                     stacked_weights,
                                     stacked_dweights,
                                     weight_sizes,
@@ -573,7 +587,8 @@ namespace ngraph
                             ctx,
                             batchnorm_index,
                             deps,
-                            cpu::mkldnn_utils::OpType::BATCHNORMBACKPROP);
+                            cpu::mkldnn_utils::OpType::BATCHNORMBACKPROP,
+                            scratchpad_size);
 
                         memcpy(ctx->buffer_data[out1_buffer_index],
                                stacked_dweights.get(),
