@@ -81,6 +81,7 @@ void runtime::Executable::validate(const vector<std::shared_ptr<runtime::Tensor>
     for (size_t i = 0; i < results.size(); i++)
     {
         if (outputs[i]->get_element_type().is_static() &&
+            results[i]->get_element_type().is_static() &&
             results[i]->get_element_type() != outputs[i]->get_element_type())
         {
             stringstream ss;
