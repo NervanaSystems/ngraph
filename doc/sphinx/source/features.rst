@@ -1,5 +1,7 @@
 .. features.rst
 
+:orphan:
+
 .. _features:
 
 Features
