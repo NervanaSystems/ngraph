@@ -454,7 +454,7 @@ def test_rnn_cell_operator():
     W_shape = [hidden_size, input_size]
     R_shape = [hidden_size, hidden_size]
     H_t_shape = [batch_size, hidden_size]
-    B_shape = [2 * hidden_size]
+    B_shape = [hidden_size]
 
     parameter_X = ng.parameter(X_shape, name='X', dtype=np.float32)
     parameter_H_t = ng.parameter(H_t_shape, name='H_t', dtype=np.float32)
@@ -465,6 +465,9 @@ def test_rnn_cell_operator():
     X_value = np.array([0.3432185, 0.612268, 0.20272376,
                         0.9513413, 0.30585995, 0.7265472],
                        dtype=np.float32).reshape(X_shape)
+    H_t_value = np.array([0.12444675, 0.52055854, 0.46489045,
+                          0.4983964, 0.7730452, 0.28439692],
+                         dtype=np.float32).reshape(H_t_shape)
     W_value = np.array([0.41930267, 0.7872176, 0.89940447,
                         0.23659843, 0.24676207, 0.17101714,
                         0.3147149, 0.6555601, 0.4559603],
@@ -473,11 +476,7 @@ def test_rnn_cell_operator():
                         0.71549815, 0.18775631, 0.3182116,
                         0.25392973, 0.38301638, 0.85531586],
                        dtype=np.float32).reshape(R_shape)
-    H_t_value = np.array([0.12444675, 0.52055854, 0.46489045,
-                          0.4983964, 0.7730452, 0.28439692],
-                         dtype=np.float32).reshape(H_t_shape)
-    B_value = np.array([0.45513555, 0.96227735, 0.24737759,
-                        0.57380486, 0.67398053, 0.18968852],
+    B_value = np.array([1.0289404, 1.6362579, 0.4370661],
                        dtype=np.float32).reshape(B_shape)
     activations = ['sigmoid']
     activation_alpha = []
