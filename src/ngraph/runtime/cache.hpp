@@ -37,9 +37,9 @@ namespace ngraph
             bool is_cached(Shape);
             shared_ptr<Function> get_cached_entry(Shape);
   
-        private:
+        protected:
             int m_size; // cache size
-            unordered_map<Shape, shared_ptr<Function>> m_map;
+            static unordered_map<Shape, shared_ptr<Function>> m_map;
             list<Shape> m_list;
         };
     }
