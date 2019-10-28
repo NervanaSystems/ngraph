@@ -22,7 +22,9 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reduce_prod.hpp"
@@ -91,6 +93,57 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 #endif
     switch (get_typeid(node))
     {
+    case OP_TYPEID::AvgPool:
+    {
+        const auto tmp = as_type_ptr<op::v1::AvgPool>(node);
+
+        auto const input_arg = node->input(0).get_source_output();
+        const auto ceil_mode = static_cast<bool>(tmp->get_rounding_type());
+        const auto include_padding_in_avg_computation = !tmp->get_exclude_pad();
+        const auto pad_type = tmp->get_auto_pad();
+        const auto padding_below = tmp->get_pads_begin();
+        const auto padding_above = tmp->get_pads_end();
+        const auto window_movement_strides = tmp->get_strides();
+        const auto window_shape = tmp->get_kernel();
+
+        auto replacement_node = make_shared<op::v0::AvgPool>(input_arg,
+                                                             window_shape,
+                                                             window_movement_strides,
+                                                             padding_below,
+                                                             padding_above,
+                                                             include_padding_in_avg_computation,
+                                                             pad_type,
+                                                             ceil_mode);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::AvgPoolBackprop:
+    {
+        const auto tmp = as_type_ptr<op::v1::AvgPoolBackprop>(node);
+        NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
+        const auto forward_arg_shape =
+            static_pointer_cast<op::Constant>(node->input_value(1).get_node_shared_ptr())
+                ->get_shape_val();
+        const auto delta = node->input(0).get_source_output();
+        const auto include_padding_in_avg_computation = !tmp->get_exclude_pad();
+        const auto padding_below = tmp->get_pads_begin();
+        const auto padding_above = tmp->get_pads_end();
+        const auto window_movement_strides = tmp->get_strides();
+        const auto window_shape = tmp->get_kernel();
+
+        auto replacement_node =
+            make_shared<op::v0::AvgPoolBackprop>(forward_arg_shape,
+                                                 delta,
+                                                 window_shape,
+                                                 window_movement_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 include_padding_in_avg_computation);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::Broadcast:
     {
         auto tmp = dynamic_cast<const op::v1::Broadcast*>(node.get());
@@ -174,6 +227,66 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
                                                             tmp->get_pads_begin(),
                                                             tmp->get_pads_end(),
                                                             Strides(num_spatial_dims, 1));
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::MaxPool:
+    {
+        auto tmp = as_type_ptr<op::v1::MaxPool>(node);
+
+        auto const input_arg = node->input(0).get_source_output();
+        auto ceil_mode = static_cast<bool>(tmp->get_rounding_type());
+        auto pad_type = tmp->get_auto_pad();
+        auto padding_below = tmp->get_pads_begin();
+        auto padding_above = tmp->get_pads_end();
+        auto window_movement_strides = tmp->get_strides();
+        auto window_shape = tmp->get_kernel();
+
+        auto replacement_node = make_shared<op::v0::MaxPool>(input_arg,
+                                                             window_shape,
+                                                             window_movement_strides,
+                                                             padding_below,
+                                                             padding_above,
+                                                             pad_type,
+                                                             ceil_mode);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::MaxPoolBackprop:
+    {
+        const auto tmp = as_type_ptr<op::v1::MaxPoolBackprop>(node);
+
+        const auto padding_below = tmp->get_pads_begin();
+        const auto padding_above = tmp->get_pads_end();
+        const auto window_movement_strides = tmp->get_strides();
+        const auto window_shape = tmp->get_kernel();
+
+        const auto arg_forward = node->input(0).get_source_output();
+        const auto delta = node->input(1).get_source_output();
+
+        shared_ptr<Node> replacement_node;
+        if (node->get_inputs().size() == 3)
+        {
+            const auto result_forward = node->input(2).get_source_output();
+            replacement_node = make_shared<op::v0::MaxPoolBackprop>(arg_forward,
+                                                                    delta,
+                                                                    result_forward,
+                                                                    window_shape,
+                                                                    window_movement_strides,
+                                                                    padding_below,
+                                                                    padding_above);
+        }
+        else
+        {
+            replacement_node = make_shared<op::v0::MaxPoolBackprop>(arg_forward,
+                                                                    delta,
+                                                                    window_movement_strides,
+                                                                    window_shape,
+                                                                    padding_below,
+                                                                    padding_above);
+        }
         replace_node(node, replacement_node);
         modified = true;
         break;
@@ -290,31 +403,27 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::AvgPoolBackprop:
+
+    case OP_TYPEID::GenerateMask:
     {
-        auto tmp = dynamic_cast<const op::v1::AvgPoolBackprop*>(node.get());
+        auto tmp = dynamic_cast<const op::v1::GenerateMask*>(node.get());
         NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
-        auto forward_arg_shape =
+        auto mask_shape =
             static_pointer_cast<op::Constant>(node->input_value(1).get_node_shared_ptr())
                 ->get_shape_val();
-        auto exclude_pad = tmp->get_exclude_pad();
-        auto pads_begin = tmp->get_pads_begin();
-        auto pads_end = tmp->get_pads_end();
-        auto strides = tmp->get_strides();
-        auto kernel = tmp->get_kernel();
+        auto seed = tmp->get_seed();
+        auto use_seed = tmp->get_use_seed();
+        auto probability = tmp->get_probability();
+        auto et = tmp->get_element_type();
 
-        auto replacement_node =
-            make_shared<op::v0::AvgPoolBackprop>(forward_arg_shape,
-                                                 node->input(0).get_source_output(),
-                                                 kernel,
-                                                 strides,
-                                                 pads_begin,
-                                                 pads_end,
-                                                 exclude_pad);
+        auto replacement_node = make_shared<op::v0::GenerateMask>(
+            node->input(0).get_source_output(), mask_shape, et, seed, probability, use_seed);
+
         replace_node(node, replacement_node);
         modified = true;
         break;
     }
+
     default: break;
     }
 #if defined(__clang__)
