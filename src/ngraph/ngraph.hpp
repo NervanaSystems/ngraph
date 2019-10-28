@@ -81,6 +81,7 @@ namespace ngraph
 #include "ngraph/dimension.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/lambda.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"

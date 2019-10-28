@@ -18,6 +18,7 @@
 
 #include <vector>
 
+#include "ngraph/lambda.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/util/fused_op.hpp"
 
@@ -35,9 +36,19 @@ namespace ngraph
             // Forward declarations
             class SliceInputDescription;
             class BodyConnectionInputDescription;
+            class ConstantInputDescription;
 
             TensorIterator() = default;
             TensorIterator(const OutputVector& values);
+
+            class BodyLambda : public Lambda
+            {
+            public:
+                BodyLambda(const OutputVector& outputs, const ParameterVector& parameters)
+                    : Lambda(outputs, parameters)
+                {
+                }
+            };
 
             /// \brief Describes a connection between a TensorIterator input and the body.
             class InputDescription
@@ -105,6 +116,16 @@ namespace ngraph
                 std::shared_ptr<InputDescription> copy() const override;
 
                 Output<Node> m_body_value;
+            };
+
+            class ConstantInputDescription : public InputDescription
+            {
+            public:
+                static constexpr DiscreteTypeInfo type_info{"ConstantInputDescription", 0};
+                const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+                ConstantInputDescription(uint64_t input_index,
+                                         const std::shared_ptr<op::Parameter>& body_parameter);
+                std::shared_ptr<InputDescription> copy() const override;
             };
 
             // Forward declarations
@@ -200,6 +221,12 @@ namespace ngraph
             void set_initialized_input(const std::shared_ptr<Parameter>& body_parameter,
                                        const Output<Node>& initial_value,
                                        const Output<Node>& successive_value);
+            /// \brief Indicates that a body parameter has a constant value during iteration that
+            /// may depend on values computed outside of the iteration
+            /// \param body_parameter The body parameter
+            /// \param value The value supplied as an input to the block
+            void set_constant_input(const std::shared_ptr<Parameter>& body_parameter,
+                                    const Output<Node>& value);
             /// \brief Gets a value for a particular iteration point
             /// \param body_value The value
             /// \param iteration The iteration that supplies the value. Negative values are from the

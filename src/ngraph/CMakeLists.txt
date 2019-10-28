@@ -83,6 +83,8 @@ set (SRC
     function.cpp
     function.hpp
     graph_util.cpp
+    lambda.cpp
+    lambda.hpp
     log.cpp
     log.hpp
     ngraph.cpp

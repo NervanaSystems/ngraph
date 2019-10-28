@@ -24,6 +24,7 @@ constexpr NodeTypeInfo op::TensorIterator::type_info;
 
 constexpr DiscreteTypeInfo op::TensorIterator::SliceInputDescription::type_info;
 constexpr DiscreteTypeInfo op::TensorIterator::BodyConnectionInputDescription::type_info;
+constexpr DiscreteTypeInfo op::TensorIterator::ConstantInputDescription::type_info;
 
 constexpr DiscreteTypeInfo op::TensorIterator::BodyOutputDescription::type_info;
 constexpr DiscreteTypeInfo op::TensorIterator::ConcatOutputDescription::type_info;
@@ -78,6 +79,18 @@ shared_ptr<op::TensorIterator::InputDescription>
 {
     return make_shared<BodyConnectionInputDescription>(
         m_input_index, m_body_parameter, m_body_value);
+}
+
+op::TensorIterator::ConstantInputDescription::ConstantInputDescription(
+    uint64_t input_index, const std::shared_ptr<op::Parameter>& body_parameter)
+    : InputDescription(input_index, body_parameter)
+{
+}
+
+shared_ptr<op::TensorIterator::InputDescription>
+    op::TensorIterator::ConstantInputDescription::copy() const
+{
+    return make_shared<ConstantInputDescription>(m_input_index, m_body_parameter);
 }
 
 op::TensorIterator::OutputDescription::OutputDescription(const Output<Node>& body_value,
@@ -156,6 +169,13 @@ void op::TensorIterator::set_initialized_input(const std::shared_ptr<Parameter>&
 {
     m_input_descriptions.push_back(make_shared<BodyConnectionInputDescription>(
         input_for_value(initial_value).get_index(), body_parameter, successive_value));
+}
+
+void op::TensorIterator::set_constant_input(const std::shared_ptr<Parameter>& body_parameter,
+                                            const Output<Node>& value)
+{
+    m_input_descriptions.push_back(
+        make_shared<ConstantInputDescription>(input_for_value(value).get_index(), body_parameter));
 }
 
 Output<Node> op::TensorIterator::get_iter_value(const Output<Node>& body_value, int64_t iteration)

@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/lambda.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
@@ -30,7 +31,7 @@
 namespace ngraph
 {
     /// A user-defined function.
-    class Function
+    class Function : public Lambda
     {
     public:
         Function(const NodeVector& results,
