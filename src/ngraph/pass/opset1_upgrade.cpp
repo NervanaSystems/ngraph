@@ -15,6 +15,7 @@
 //*****************************************************************************
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/op/add.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
@@ -70,6 +71,16 @@ static OP_TYPEID get_typeid(shared_ptr<Node> node)
 }
 // END mapping to OP_TYPEID
 
+template <typename OpV0, typename OpV1>
+static inline shared_ptr<Node> replace_binary_elementwise_node(const shared_ptr<Node>& node)
+{
+    auto tmp = dynamic_cast<const OpV0*>(node.get());
+    auto const autob = tmp->get_autob();
+    auto replacement_node = make_shared<OpV1>(
+        node->input(0).get_source_output(), node->input(1).get_source_output(), autob);
+    replace_node(node, replacement_node);
+}
+
 bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 {
     bool modified = false;
@@ -95,6 +106,12 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 #endif
     switch (get_typeid(node))
     {
+    case OP_TYPEID::Add:
+    {
+        replace_binary_elementwise_node<op::v0::Add, op::v1::Add>(node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::AvgPool:
     {
         auto tmp = dynamic_cast<const op::v0::AvgPool*>(node.get());

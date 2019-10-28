@@ -18,6 +18,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/add.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
@@ -68,6 +69,17 @@ static OP_TYPEID get_typeid(shared_ptr<Node> node)
 }
 // END mapping to OP_TYPEID
 
+template <typename OpV0, typename OpV1>
+static inline shared_ptr<Node> replace_binary_elementwise_node(const shared_ptr<Node>& node)
+{
+    const auto tmp = as_type_ptr<OpV1>(node);
+    auto const input_arg0 = node->input(0).get_source_output();
+    auto const input_arg1 = node->input(1).get_source_output();
+    auto const autob = tmp->get_autob();
+    auto replacement_node = make_shared<OpV0>(input_arg0, input_arg1, autob);
+    replace_node(node, replacement_node);
+}
+
 bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 {
     bool modified = false;
@@ -93,6 +105,12 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 #endif
     switch (get_typeid(node))
     {
+    case OP_TYPEID::Add:
+    {
+        replace_binary_elementwise_node<op::v0::Add, op::v1::Add>(node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::AvgPool:
     {
         const auto tmp = as_type_ptr<op::v1::AvgPool>(node);
