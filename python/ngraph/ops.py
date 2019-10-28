@@ -277,7 +277,8 @@ def rnn_cell(X,                      # type: Node
     :param      clip:              The value defining clipping range [-clip, clip] on input of
                                    activation functions.
     :param      name:              Optional output node name.
-    :returns:   The new node performing a RNNCell operation on tensor from input node. """
+    :returns:   The new node performing a RNNCell operation on tensor from input node.
+    """
     return RNNCell(X,
                    H_t,
                    W,
