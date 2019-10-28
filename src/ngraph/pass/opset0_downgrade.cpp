@@ -241,15 +241,15 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         auto tmp = dynamic_cast<const op::v1::GenerateMask*>(node.get());
         NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
         auto mask_shape =
-                static_pointer_cast<op::Constant>(node->input_value(1).get_node_shared_ptr())
-                        ->get_shape_val();
+            static_pointer_cast<op::Constant>(node->input_value(1).get_node_shared_ptr())
+                ->get_shape_val();
         auto seed = tmp->get_seed();
         auto use_seed = tmp->get_use_seed();
         auto probability = tmp->get_probability();
         auto et = tmp->get_element_type();
 
         auto replacement_node = make_shared<op::v0::GenerateMask>(
-                node->input(0).get_source_output(), mask_shape, et, seed, probability, use_seed);
+            node->input(0).get_source_output(), mask_shape, et, seed, probability, use_seed);
 
         replace_node(node, replacement_node);
         modified = true;
