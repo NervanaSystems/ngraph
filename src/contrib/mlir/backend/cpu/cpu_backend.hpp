@@ -60,9 +60,9 @@ namespace ngraph
             private:
                 // Apply CPU specific optimizations at nGraph dialect level
                 void optimizeNgDialect();
-                // Lowers nGraph dialect all the way to Affine module.
+                // Lowers nGraph dialect all the way to Affine dialect.
                 void lowerNgDialect();
-                // Lowers standard dialect all the way to LLVM module.
+                // Lowers standard dialect all the way to LLVM dialect.
                 void lowerStandardDialect();
                 // Apply affine dialect optimizations
                 void optimizeAffineDialect();

@@ -194,20 +194,8 @@ void MLIRCPUBackend::lowerNgDialect()
 // Lower Standard dialect to LLVM dialect
 void MLIRCPUBackend::lowerStandardDialect()
 {
-    // lamda call backs to collect a set of patterns to convert from the Standard dialect to LLVM.
-    auto patternListFiller = [&](mlir::LLVMTypeConverter& converter,
-                                 mlir::OwningRewritePatternList& patterns) -> void {
-        mlir::populateStdToLLVMConversionPatterns(converter, patterns);
-    };
-
-    // lamda callbacks to create an instance of LLVMTypeConverter in the given context.
-    auto typeConverterMaker =
-        [&](mlir::MLIRContext* context) -> std::unique_ptr<mlir::LLVMTypeConverter> {
-        return std::make_unique<mlir::LLVMTypeConverter>(context);
-    };
-
     mlir::PassManager pm(&m_context);
-    pm.addPass(mlir::createLowerToLLVMPass(patternListFiller, typeConverterMaker));
+    pm.addPass(mlir::createLowerToLLVMPass());
 
     // Apply any generic pass manager command line options.
     mlir::applyPassManagerCLOptions(pm);
@@ -221,8 +209,6 @@ void MLIRCPUBackend::lowerStandardDialect()
     {
         NGRAPH_CHECK(false, "Incorrect module after dialect lowering");
     }
-
-    dumpMlirModule("LLVM-IR Dialect Conversion", m_module.get());
 }
 // Receives affine dialect as input and applies affine and standard dialect based optimizations.
 // Lowering from affine dialect to standard dialect happens along the way. Output consists of
