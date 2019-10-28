@@ -129,10 +129,10 @@ Quantized builders help nGraph framework bridges by:
 * Converting from min and max to scale and zero point based on the quantization
   mode described by the DL framework
 
-.. note:: Fused ops and quantized builders serve the same purpose; in the future, 
-   fused ops will replace quantized builders.
+.. note::  Fused ops and quantized builders serve the same purpose. 
+   In the future, fused ops will replace quantized builders.
 
- .. table:: nGraph Quantized Builders
+.. table:: nGraph Quantized Builders
 
 	+--------------------------+-----------------------------------+-----------------------------------------+
 	| Category                 | Builder                           | Description                             |
@@ -165,4 +165,4 @@ Quantized builders help nGraph framework bridges by:
 	|                          |                                   | with bias and an optional ReLU.         |
 	+--------------------------+-----------------------------------+-----------------------------------------+
 	| Quantized Concat         | ScaledQuantizedConcat             | Constructs a quantized concatenation.   |
-	+-------------------- -----+-----------------------------------+-----------------------------------------+
+	+--------------------------+-----------------------------------+-----------------------------------------+
