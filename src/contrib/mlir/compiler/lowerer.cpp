@@ -620,8 +620,8 @@ namespace
         auto rank = vRes.rank();
 
         // For each operand, generate a separate loop to copy into the target slice of "result".
-        // We'll keep track of the slice offsets via concatenation_axis_pos.
-        auto concatenationAxis = concat.concatenation_axis().getSExtValue();
+        // We'll keep track of the slice offsets via normalized_axis_pos.
+        auto concatenationAxis = concat.normalized_axis().getSExtValue();
         IndexHandle concatenationAxisPos(index_t(0));
 
         for (auto& operand : operands)
@@ -674,7 +674,7 @@ namespace
                 ivRes(resIndexHandles) = ivOperand(indexVars);
             });
 
-            // Move up concatenation_axis_pos for the next operand.
+            // Move up normalized_axis_pos for the next operand.
             concatenationAxisPos = concatenationAxisPos + vOperand.ub(concatenationAxis);
         }
 

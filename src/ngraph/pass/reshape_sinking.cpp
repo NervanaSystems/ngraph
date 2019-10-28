@@ -476,7 +476,7 @@ static void sink_concat(shared_ptr<op::Concat> n,
         new_args.push_back(idummy_correct_shape);
     }
 
-    auto new_axis = order.at(n->get_concatenation_axis());
+    auto new_axis = order.at(n->get_normalized_axis());
     auto new_concat = make_shared<op::Concat>(new_args, new_axis);
     // put back the original arguments
     for (size_t i = 0; i < new_concat->get_input_size(); i++)

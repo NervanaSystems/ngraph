@@ -653,7 +653,7 @@ namespace ngraph
                     std::ofstream& desc_file)
                 {
                     auto concat = static_cast<OP*>(node);
-                    size_t concat_dim = concat->get_concatenation_axis();
+                    size_t concat_dim = concat->get_normalized_axis();
                     size_t nargs = node->get_inputs().size();
 
                     // query scratchpad size

@@ -90,10 +90,10 @@ namespace ngraph
     ///   A                       B
     ///   |                       |
     ///   v                       v
-    /// N0[Concat, concatenation_axis=3]     C
+    /// N0[Concat, normalized_axis=3]     C
     ///          |                           |
     ///          v                           v
-    ///        N1[Concat, concatenation_axis=3]
+    ///        N1[Concat, normalized_axis=3]
     ///          |                |
     ///          v                v
     ///       some_user         another_user
@@ -107,10 +107,10 @@ namespace ngraph
     ///   |                       B----------------)--.
     ///   |                       |                |  |
     ///   v                       v                |  |
-    /// N0[Concat, concatenation_axis=3]     C-----)--)--.
+    /// N0[Concat, normalized_axis=3]     C-----)--)--.
     ///          |                           |     |  |  |
     ///          v                           v     v  v  v
-    ///        N1[Concat, concatenation_axis=3]   new_N1[Concat, concatenation_axis=3]
+    ///        N1[Concat, normalized_axis=3]   new_N1[Concat, normalized_axis=3]
     ///          |                |
     ///          v                v
     ///       some_user         another_user
@@ -124,10 +124,10 @@ namespace ngraph
     ///   |                       B----------------)--.
     ///   |                       |                |  |
     ///   v                       v                |  |
-    /// N0[Concat, concatenation_axis=3]     C-----)--)--.
+    /// N0[Concat, normalized_axis=3]     C-----)--)--.
     ///          |                           |     |  |  |
     ///          v                           v     v  v  v
-    ///        N1[Concat, concatenation_axis=3]   new_N1[Concat, concatenation_axis=3]
+    ///        N1[Concat, normalized_axis=3]   new_N1[Concat, normalized_axis=3]
     ///                                                  |                |
     ///                                                  v                v
     ///                                               some_user         another_user
@@ -144,7 +144,7 @@ namespace ngraph
     ///                                      C-----)--)--.
     ///                                            |  |  |
     ///                                            v  v  v
-    ///                                           new_N1[Concat, concatenation_axis=3]
+    ///                                           new_N1[Concat, normalized_axis=3]
     ///                                                  |                |
     ///                                                  v                v
     ///                                               some_user         another_user

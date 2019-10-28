@@ -45,8 +45,7 @@ namespace
     bool check_concat_axis_dim_value(const std::shared_ptr<Node>& concat_op)
     {
         auto input_shape = concat_op->get_input_shape(0);
-        size_t concat_axis =
-            std::static_pointer_cast<op::Concat>(concat_op)->get_concatenation_axis();
+        size_t concat_axis = std::static_pointer_cast<op::Concat>(concat_op)->get_normalized_axis();
 
         return (input_shape[concat_axis] == 1);
     }
@@ -76,13 +75,13 @@ namespace
         return true;
     }
 
-    std::vector<size_t> get_concatenation_axis_vector(const NodeVector& bounded_concat_ops)
+    std::vector<size_t> get_normalized_axis_vector(const NodeVector& bounded_concat_ops)
     {
         std::vector<size_t> concat_axis_vec;
         for (auto iter : bounded_concat_ops)
         {
             auto concat_op = std::static_pointer_cast<op::Concat>(iter);
-            concat_axis_vec.push_back(concat_op->get_concatenation_axis());
+            concat_axis_vec.push_back(concat_op->get_normalized_axis());
         }
         return concat_axis_vec;
     }
@@ -263,7 +262,7 @@ bool ngraph::pass::SelfConcatFusion::replace_patterns(const NodeVector& bounded_
         return scalarized_shape;
     };
 
-    auto concat_axis_vector = get_concatenation_axis_vector(bounded_concat_ops);
+    auto concat_axis_vector = get_normalized_axis_vector(bounded_concat_ops);
 
     auto& first_bounded_concat = (*bounded_concat_ops.begin());
     auto driver_op = first_bounded_concat->get_argument(0);

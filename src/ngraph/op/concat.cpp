@@ -53,17 +53,17 @@ void op::Concat::validate_and_infer_types()
         Dimension this_input_rank = this_input_shape.rank();
         if (this_input_rank.is_static())
         {
-            if (get_concatenation_axis() < 0)
+            if (get_normalized_axis() < 0)
             {
-                set_concatenation_axis(get_axis() < 0
-                                           ? get_axis() + static_cast<int64_t>(this_input_rank)
-                                           : get_axis());
+                set_normalized_axis(get_axis() < 0
+                                        ? get_axis() + static_cast<int64_t>(this_input_rank)
+                                        : get_axis());
             }
-            auto concatenation_axis = get_concatenation_axis();
+            auto concat_axis = get_normalized_axis();
             NODE_VALIDATION_CHECK(this,
-                                  concatenation_axis < static_cast<int64_t>(this_input_rank),
+                                  concat_axis < static_cast<int64_t>(this_input_rank),
                                   "Concatenation axis (",
-                                  concatenation_axis,
+                                  concat_axis,
                                   ") is out of bounds for ",
                                   "argument ",
                                   i,
@@ -71,15 +71,15 @@ void op::Concat::validate_and_infer_types()
                                   this_input_shape,
                                   ".");
 
-            concatenation_axis_output_dim += this_input_shape[concatenation_axis];
-            this_input_shape[concatenation_axis] = Dimension::dynamic();
+            concatenation_axis_output_dim += this_input_shape[concat_axis];
+            this_input_shape[concat_axis] = Dimension::dynamic();
 
             NODE_VALIDATION_CHECK(
                 this,
                 PartialShape::merge_into(inputs_shape_scheme, this_input_shape),
                 "Argument shapes are inconsistent; they must have the same rank, and must have ",
                 "equal dimension everywhere except on the concatenation axis (axis ",
-                concatenation_axis,
+                concat_axis,
                 ").");
         }
         else
@@ -91,7 +91,7 @@ void op::Concat::validate_and_infer_types()
 
     if (concatenated_shape.rank().is_static())
     {
-        concatenated_shape[get_concatenation_axis()] = concatenation_axis_output_dim;
+        concatenated_shape[get_normalized_axis()] = concatenation_axis_output_dim;
         set_output_type(0, inputs_et, concatenated_shape);
     }
     else

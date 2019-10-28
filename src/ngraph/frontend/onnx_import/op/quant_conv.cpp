@@ -140,9 +140,9 @@ namespace ngraph
                                             ngraph::AxisSet{}));
                                 }
                             }
-                            std::size_t concatenation_axis = 1;
+                            std::size_t normalized_axis = 1;
                             return std::make_shared<ngraph::op::Concat>(convolution_nodes,
-                                                                        concatenation_axis);
+                                                                        normalized_axis);
                         }
                         else
                         {

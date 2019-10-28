@@ -41,11 +41,11 @@ TEST(benchmark, concat_32x1x200_axis1_6)
 {
     const size_t n_arrays = 6;
     Shape shape_of_each_array = Shape{32, 1, 200};
-    size_t concatenation_axis = 1;
+    size_t normalized_axis = 1;
 
     Shape result_shape;
     result_shape = shape_of_each_array;
-    result_shape[concatenation_axis] *= n_arrays;
+    result_shape[normalized_axis] *= n_arrays;
 
     size_t elements_per_array = 1;
     for (size_t d : shape_of_each_array)
@@ -81,7 +81,7 @@ TEST(benchmark, concat_32x1x200_axis1_6)
             params_as_nodes[i] = param;
         }
 
-        auto concat = make_shared<op::Concat>(params_as_nodes, concatenation_axis);
+        auto concat = make_shared<op::Concat>(params_as_nodes, normalized_axis);
         auto f = make_shared<Function>(concat, params);
 
         auto backend = runtime::Backend::create(backend_name);

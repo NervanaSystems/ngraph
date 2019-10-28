@@ -32,7 +32,7 @@ namespace ngraph
                         T* out,
                         const std::vector<Shape>& in_shapes,
                         const Shape& out_shape,
-                        int64_t concatenation_axis)
+                        int64_t normalized_axis)
             {
                 // We will copy the inputs to the output one at a time. As we go, we will move out
                 // along the concatenation axis, starting at 0.
@@ -49,13 +49,13 @@ namespace ngraph
                     // The start coordinate for the copy is (0,...,0) except at the concatenation
                     // axis.
                     Coordinate out_start_coord(out_shape.size(), 0);
-                    out_start_coord[concatenation_axis] = concatenation_pos;
+                    out_start_coord[normalized_axis] = concatenation_pos;
 
                     // The end coordinate for the copy is the same as the output shape except at the
                     // concatenation axis.
                     Coordinate out_end_coord = out_shape;
-                    out_end_coord[concatenation_axis] =
-                        concatenation_pos + in_shapes[i][concatenation_axis];
+                    out_end_coord[normalized_axis] =
+                        concatenation_pos + in_shapes[i][normalized_axis];
 
                     CoordinateTransform input_transform(in_shapes[i]);
                     CoordinateTransform output_chunk_transform(
@@ -75,7 +75,7 @@ namespace ngraph
                         out[output_chunk_index] = args[i][input_index];
                     }
 
-                    concatenation_pos += in_shapes[i][concatenation_axis];
+                    concatenation_pos += in_shapes[i][normalized_axis];
                 }
             }
         }

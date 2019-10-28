@@ -2653,7 +2653,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Concat:
     {
         auto tmp = static_cast<const op::Concat*>(&n);
-        node["axis"] = tmp->get_concatenation_axis();
+        node["axis"] = tmp->get_normalized_axis();
         break;
     }
     case OP_TYPEID::Constant:

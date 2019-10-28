@@ -590,9 +590,8 @@ namespace ngraph
             {
                 auto concat = static_cast<const ngraph::op::Concat*>(ngNode);
                 auto op = compiler.createGenericOp<mlir::NGConcatOp>(ngNode);
-                op->setAttr(
-                    "concatenation_axis",
-                    compiler.m_builder->getI64IntegerAttr(concat->get_concatenation_axis()));
+                op->setAttr("normalized_axis",
+                            compiler.m_builder->getI64IntegerAttr(concat->get_normalized_axis()));
                 return op;
             }
 

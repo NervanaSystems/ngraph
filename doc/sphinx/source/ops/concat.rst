@@ -22,7 +22,7 @@ Inputs
 | Name            | Type            | Notes                                                |
 +=================+=================+======================================================+
 | ``args``        | ``Nodes``       | All element types the same.                          |
-|                 |                 | All shapes the same except on ``concatenation_axis`` |
+|                 |                 | All shapes the same except on ``normalized_axis`` |
 +-----------------+-----------------+------------------------------------------------------+
 
 Attributes
@@ -31,7 +31,7 @@ Attributes
 +-------------------------+----------------------------------+
 | Name                    | Notes                            |
 +=========================+==================================+
-| ``concatenation_axis``  | Less than the rank of the shape  |
+| ``normalized_axis``  | Less than the rank of the shape  |
 +-------------------------+----------------------------------+
 
 Outputs
@@ -40,8 +40,8 @@ Outputs
 +-----------------+-------------------------+----------------------------------------------------+
 | Name            | Element Type            | Shape                                              |
 +=================+=========================+====================================================+
-| ``output``      | Same as ``args``         | Same as ``arg`` on non-``concatenation_axis``     |
-|                 |                          | Sum of ``concatenation_axis`` lengths of ``args`` |
+| ``output``      | Same as ``args``         | Same as ``arg`` on non-``normalized_axis``     |
+|                 |                          | Sum of ``normalized_axis`` lengths of ``args`` |
 +-----------------+-------------------------+----------------------------------------------------+
 
 
@@ -55,10 +55,10 @@ Let
 
 .. math::
 
-   s(i) &= \sum_{j<i} \mathtt{args}[i].\mathtt{shape}\left[\mathtt{concatenation_axis}\right]\\
+   s(i) &= \sum_{j<i} \mathtt{args}[i].\mathtt{shape}\left[\mathtt{normalized_axis}\right]\\
    t(i) &= \text{The greatest }j\text{ such that }i \ge s(j)\\
    p(C)_i &= \begin{cases}
-   C_i-s(t(i))&\text{if }i==\mathtt{concatenation_axis}\\
+   C_i-s(t(i))&\text{if }i==\mathtt{normalized_axis}\\
    C_i&\text{otherwise}
    \end{cases}\\
    \mathtt{output}_C&=\mathtt{args}[t(C_i)]_{p(C)}

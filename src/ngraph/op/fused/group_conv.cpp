@@ -209,8 +209,8 @@ NodeVector op::GroupConvolution::decompose_op() const
                                                       m_data_dilation_strides,
                                                       m_pad_type));
     }
-    std::size_t concatenation_axis = 1;
-    return {std::make_shared<ngraph::op::Concat>(convolution_nodes, concatenation_axis)};
+    std::size_t normalized_axis = 1;
+    return {std::make_shared<ngraph::op::Concat>(convolution_nodes, normalized_axis)};
 }
 
 void op::GroupConvolution::generate_adjoints(autodiff::Adjoints& /* adjoints */,

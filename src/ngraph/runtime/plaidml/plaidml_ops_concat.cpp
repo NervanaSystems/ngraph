@@ -51,7 +51,7 @@ void ngraph::runtime::plaidml::ImplConcat::Apply()
             concat_dsize << "+";
         }
         saw_non_zero_tensor = true;
-        concat_dsize << "I" << iidx << "_D" << op().get_concatenation_axis();
+        concat_dsize << "I" << iidx << "_D" << op().get_normalized_axis();
     }
 
     saw_non_zero_tensor = false;
@@ -69,7 +69,7 @@ void ngraph::runtime::plaidml::ImplConcat::Apply()
                                for (std::size_t idx = 0; idx < dim_count; ++idx)
                                {
                                    std::ostringstream s;
-                                   if (idx == op().get_concatenation_axis())
+                                   if (idx == op().get_normalized_axis())
                                    {
                                        out = concat_dsize.str();
                                    }
@@ -85,7 +85,7 @@ void ngraph::runtime::plaidml::ImplConcat::Apply()
                                {
                                    std::ostringstream s;
                                    s << "d" << idx;
-                                   if (saw_non_zero_tensor && idx == op().get_concatenation_axis())
+                                   if (saw_non_zero_tensor && idx == op().get_normalized_axis())
                                    {
                                        s << " + " << offset.str();
                                    }
@@ -99,7 +99,7 @@ void ngraph::runtime::plaidml::ImplConcat::Apply()
             offset << " + ";
         }
         oexpr << "E" << sidx;
-        offset << "I" << iidx << "_D" << op().get_concatenation_axis();
+        offset << "I" << iidx << "_D" << op().get_normalized_axis();
         saw_non_zero_tensor = true;
     }
     f.add(builder::Elementwise{"O", oexpr.str()});

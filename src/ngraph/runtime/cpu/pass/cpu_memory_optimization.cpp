@@ -69,7 +69,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
         {
             auto concat = std::static_pointer_cast<ngraph::op::Concat>(n);
             auto shape = concat->get_input_shape(0);
-            auto axis = concat->get_concatenation_axis();
+            auto axis = concat->get_normalized_axis();
             auto product = 1;
             for (size_t i = 0; i < axis; i++)
             {

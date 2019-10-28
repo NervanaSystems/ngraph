@@ -50,25 +50,23 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            /// \return The concatenation axis.
-            NGRAPH_DEPRECATED("Use temporarily to handle negative axis")
-            int64_t get_concatenation_axis() const { return m_concatenation_axis; }
-            /// \return The concatenation axis.
+            /// \return the normalized axis.
+            int64_t get_normalized_axis() const { return m_normalized_axis; }
+            /// \return the concatenation axis.
             int64_t get_axis() const { return m_axis; }
             void set_axis(int64_t axis) { m_axis = axis; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-            // get setter protected as it is for an internal state variable
-            NGRAPH_DEPRECATED("Use temporarily to handle negative axis")
-            void set_concatenation_axis(int64_t concatenation_axis)
+            // keep protected as it is for an internal state
+            void set_normalized_axis(int64_t normalized_axis)
             {
-                m_concatenation_axis = concatenation_axis;
+                m_normalized_axis = normalized_axis;
             }
             /// \ brief m_axis stores default value for all iterations
             int64_t m_axis;
-            /// \brief m_concatenation_axis stores m_axis plus the number of rank for each iteration
-            int64_t m_concatenation_axis = -1;
+            /// \brief m_normalized_axis stores m_axis plus the number of rank for each iteration
+            int64_t m_normalized_axis = -1;
         };
     }
 }

@@ -26,7 +26,7 @@ namespace ngraph
     namespace builder
     {
         shared_ptr<Node> QuantizedConcatBuilder(const NodeVector& args,
-                                                size_t concatenation_axis,
+                                                size_t normalized_axis,
                                                 const NodeVector& mins,
                                                 const NodeVector& maxs)
         {
@@ -67,7 +67,7 @@ namespace ngraph
             {
                 base.push_back(node);
             };
-            return make_shared<op::Concat>(rescaled_args, concatenation_axis)
+            return make_shared<op::Concat>(rescaled_args, normalized_axis)
                 ->add_provenance_group_members_above(base);
         }
     }

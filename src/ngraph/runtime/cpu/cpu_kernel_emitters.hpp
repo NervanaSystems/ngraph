@@ -42,7 +42,7 @@ namespace ngraph
                                  const std::string& out,
                                  const std::vector<Shape>& in_shapes,
                                  const Shape& out_shape,
-                                 const size_t concatenation_axis);
+                                 const size_t normalized_axis);
 
                 void emit_replace_slice(CodeWriter& writer,
                                         const std::string& element_type,

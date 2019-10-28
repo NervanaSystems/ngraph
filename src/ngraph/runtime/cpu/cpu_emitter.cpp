@@ -1144,7 +1144,7 @@ namespace ngraph
                 else
                 {
                     auto axis =
-                        (static_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
+                        (static_cast<const ngraph::op::Concat*>(node))->get_normalized_axis();
 
                     std::vector<std::string> arg_names;
                     std::vector<Shape> arg_shapes;

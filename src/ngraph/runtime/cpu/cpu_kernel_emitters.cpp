@@ -147,7 +147,7 @@ void ngraph::runtime::cpu::kernel::emit_concat(CodeWriter& writer,
                                                const string& out,
                                                const vector<Shape>& in_shapes,
                                                const Shape& out_shape,
-                                               size_t concatenation_axis)
+                                               size_t normalized_axis)
 {
     size_t concatenation_pos = 0;
 
@@ -159,10 +159,10 @@ void ngraph::runtime::cpu::kernel::emit_concat(CodeWriter& writer,
         }
 
         Coordinate out_start_coord = Coordinate(out_shape.size(), 0);
-        out_start_coord[concatenation_axis] = concatenation_pos;
+        out_start_coord[normalized_axis] = concatenation_pos;
 
         Coordinate out_end_coord = out_shape;
-        out_end_coord[concatenation_axis] = concatenation_pos + in_shapes[i][concatenation_axis];
+        out_end_coord[normalized_axis] = concatenation_pos + in_shapes[i][normalized_axis];
 
         CoordinateTransform input_transform(in_shapes[i]);
         CoordinateTransform output_chunk_transform(out_shape, out_start_coord, out_end_coord);
@@ -170,7 +170,7 @@ void ngraph::runtime::cpu::kernel::emit_concat(CodeWriter& writer,
         emit_pointwise_copy(
             writer, element_type, args[i], out, input_transform, output_chunk_transform);
 
-        concatenation_pos += in_shapes[i][concatenation_axis];
+        concatenation_pos += in_shapes[i][normalized_axis];
     }
 }
 

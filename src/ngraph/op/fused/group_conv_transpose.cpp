@@ -311,8 +311,8 @@ NodeVector op::GroupConvolutionTranspose::decompose_op() const
                                                          m_padding_end,
                                                          Strides(num_spatial_dims, 1)));
         }
-        size_t concatenation_axis = 1;
-        return {make_shared<op::Concat>(convolution_nodes, concatenation_axis)};
+        size_t normalized_axis = 1;
+        return {make_shared<op::Concat>(convolution_nodes, normalized_axis)};
     }
     else
     {
