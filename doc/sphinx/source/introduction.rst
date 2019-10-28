@@ -34,7 +34,7 @@ Motivations
 The current :abbr:`State-of-the-Art (SoTA)` software solution for deep 
 learning computation is to integrate kernel libraries such as Intel® 
 :abbr:`Math Kernel Library for Deep Neural Networks (Intel® MKL DNN)` 
-and Nvidia\*'s CuDNN into deep learning frameworks. These kernel 
+and Nvidia's CuDNN into deep learning frameworks. These kernel 
 libraries offer a performance boost during runtime on specific hardware 
 targets through highly-optimized kernels and other operator-level 
 optimizations.
@@ -166,7 +166,7 @@ computational graphsfrom deep learning frameworks with nGraph IR.
 In conjunction with nGraph's graph-level optimizations, PlaidML automatically
 applies low-level optimizations to improve deep learning performance.
 Additionally, PlaidML offers extensive support for various hardware targets
-due to its abilility to generate code in LLVM, OpenCL, OpenGL, and Metal.
+due to its ability to generate code in LLVM, OpenCL, OpenGL, and Metal.
 
 Given a backend with existing kernel libraries, nGraph can readily support the
 target hardware because the backend only needs to support a few primitive
