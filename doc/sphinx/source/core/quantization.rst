@@ -18,14 +18,14 @@ quantized FP32 model (e.g., where the convolution layer in the model is replaced
 with a quantized convolution) to the nGraph Library along with quantized
 parameters: weights, activations, scale, and zero point. 
 
-.. Note:: Currently, nGraph only supports quantization for inference.
+.. note:: Currently, nGraph only supports quantization for inference.
 
 nGraph Quantized Operators (Ops)
 --------------------------------
 
 nGraph uses scale and zero point (also used by ONNX\*) to map real values to
-quantized values.  All quantized ops (APIs) in nGraph use scale and zero point
-and they can be used just like any other nGraph op. 
+quantized values. All quantized ops use scale and zero point
+and can be used just like any other nGraph op. 
 
 **Scale**: the quantization scale of the tensor 
 
@@ -50,12 +50,14 @@ values to quantized values
 	+----------------------+------------------------------------------------+
 	| FakeQuantize         | Performs element-wise linear quantization.     |
 	+----------------------+------------------------------------------------+
-	| QuantizedConvolution | Performs quantized convolution; takes the      |
-	|                      | takes the same parameters as the               |
-	|                      | non-quantized convolution operator.            |
+	| QuantizedConvolution | Performs quantized convolution;                |
+	|                      | the computation is the same as the             |
+	|                      | non-quantized convolution operator, except     |
+	|                      | the data type it operates on is INT8.          |
 	+----------------------+------------------------------------------------+
-	| QuantizedDot         | Performs quantized dot; takes the same         |
-	|                      | parameters as the non-quantized dot operator.  |
+	| QuantizedDot         | Performs quantized dot; the computation is     |
+	|                      | the same as the non-quantized dot operator,    |
+	|                      | except the data type it operates is INT8.      |
 	+----------------------+------------------------------------------------+
 
 Some frameworks such as TensorFlow\* have fused ops. nGraph provides optional
@@ -127,8 +129,8 @@ Quantized builders help nGraph framework bridges by:
 * Converting from min and max to scale and zero point based on the quantization
   mode described by the DL framework
 
-.. Note:: Fused ops and quantized builders serve the same purpose; in the future, 
- fused ops will replace quantized builders.
+.. note:: Fused ops and quantized builders serve the same purpose; in the future, 
+   fused ops will replace quantized builders.
 
  .. table:: nGraph Quantized Builders
 
