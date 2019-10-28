@@ -21,6 +21,7 @@
 #include <utility>
 
 #include "ngraph/check.hpp"
+#include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
 {
@@ -31,6 +32,7 @@ namespace ngraph
 
     /// Type information for a type system without inheritance; instances have exactly one type not
     /// related to any other type.
+    NGRAPH_API
     struct DiscreteTypeInfo
     {
         const char* name;
