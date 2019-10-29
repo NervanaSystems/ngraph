@@ -177,3 +177,13 @@ TEST(opset_transform, opset1_equal_upgrade_pass)
 {
     test_opset0_comparison_upgrade_pass<op::v0::Equal, op::v1::Equal>("Equal");
 }
+
+TEST(opset_transform, opset0_greater_downgrade_pass)
+{
+    test_opset0_comparison_downgrade_pass<op::v0::Greater, op::v1::Greater>("Greater");
+}
+
+TEST(opset_transform, opset1_greater_upgrade_pass)
+{
+    test_opset0_comparison_upgrade_pass<op::v0::Greater, op::v1::Greater>("Greater");
+}
