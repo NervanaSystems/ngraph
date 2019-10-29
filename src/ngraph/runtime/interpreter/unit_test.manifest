@@ -18,3 +18,7 @@ convert_bf16_float32
 # ONNX TopK with dynamic K
 top_k_opset_10
 top_k_opset_11_const_k_smallest
+
+# Tile op case that the number of elements in "repeats" and shape of "data" are different
+tile_3d_small_data_rank
+tile_3d_few_repeats

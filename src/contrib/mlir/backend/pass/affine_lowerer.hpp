@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "contrib/mlir/compiler/compiler.hpp"
+#include "contrib/mlir/core/compiler.hpp"
 
 #include <mlir/Pass/Pass.h>
 
