@@ -35,6 +35,7 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 
@@ -143,7 +144,6 @@ namespace ngraph
         class Result;
         class And;
         class Or;
-        class Xor;
         class CompiledKernel;
         class Dropout;
         class Dequantize;
