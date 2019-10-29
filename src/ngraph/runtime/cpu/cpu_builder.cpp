@@ -112,7 +112,7 @@
 #include "ngraph/util.hpp"
 
 #ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/compiler/compiler.hpp"
+#include "contrib/mlir/core/compiler.hpp"
 #endif
 
 using namespace std;

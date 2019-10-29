@@ -31,7 +31,7 @@
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 
 #ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/compiler/compiler.hpp"
+#include "contrib/mlir/runtime/cpu/cpu_runtime.hpp"
 #endif
 
 namespace mkldnn
@@ -84,8 +84,8 @@ namespace ngraph
                 /// The MLIR compiler caches the compiled code on the first invocation,
                 /// and may in the future support re-compilation
                 std::unordered_map<ngraph::op::CompiledKernel*,
-                                   ngraph::runtime::ngmlir::MLIRCompiler>
-                    mlir_compilers;
+                                   ngraph::runtime::ngmlir::MLIRCPURuntime>
+                    mlir_runtimes;
 #endif
             };
             }

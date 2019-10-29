@@ -549,5 +549,5 @@ void MLIRSubgraphExtractionPass::clean_up()
 
 const std::set<std::type_index> MLIRSubgraphExtractionPass::m_supported_ops{
 #define MLIR_OP(OP) TI(ngraph::op::OP),
-#include "contrib/mlir/compiler/ops_supported.inc"
+#include "contrib/mlir/core/ops_supported.inc"
 };
