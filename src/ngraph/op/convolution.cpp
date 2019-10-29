@@ -472,24 +472,27 @@ void op::v1::ConvolutionBackpropFilters::validate_and_infer_types()
         delta_et,
         ").");
 
-    forward_result_shape =
-        infer_convolution_forward(this,
-                                  data_batch_shape,
-                                  Strides(static_cast<size_t>(data_batch_shape.rank()) - 2, 1),
-                                  m_pads_begin,
-                                  m_pads_end,
-                                  filters_shape,
-                                  m_strides,
-                                  m_dilations);
+    if (input_value(1).get_node_shared_ptr()->is_constant())
+    {
+        forward_result_shape =
+            infer_convolution_forward(this,
+                                      data_batch_shape,
+                                      Strides(static_cast<size_t>(data_batch_shape.rank()) - 2, 1),
+                                      m_pads_begin,
+                                      m_pads_end,
+                                      filters_shape,
+                                      m_strides,
+                                      m_dilations);
 
-    NODE_VALIDATION_CHECK(this,
-                          forward_result_shape.compatible(delta_shape),
-                          "Inferred forward output shape (",
-                          forward_result_shape,
-                          ") does not match shape of ",
-                          "delta (",
-                          delta_shape,
-                          ").");
+        NODE_VALIDATION_CHECK(this,
+                              forward_result_shape.compatible(delta_shape),
+                              "Inferred forward output shape (",
+                              forward_result_shape,
+                              ") does not match shape of ",
+                              "delta (",
+                              delta_shape,
+                              ").");
+    }
 
     set_input_is_relevant_to_shape(0);
     set_input_is_relevant_to_shape(1);

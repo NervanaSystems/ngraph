@@ -142,9 +142,9 @@ NGRAPH_TEST(${BACKEND_NAME}, convolution_simple_padding)
 NGRAPH_TEST(${BACKEND_NAME}, dyn_convolution_backprop_data)
 {
     Shape shape_filter{6, 3, 3, 3};
-    auto filters = make_shared<op::Parameter>(element::f32, shape_filter);
+    auto filters = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     Shape shape_delta{2, 6, 3, 3};
-    auto deltas = make_shared<op::Parameter>(element::f32, shape_delta);
+    auto deltas = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     Shape shape_data_batch_shape{2, 3, 5, 5};
     auto data_batch_shape =
         make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
@@ -193,9 +193,9 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_convolution_backprop_data)
 NGRAPH_TEST(${BACKEND_NAME}, dyn_convolution_backprop_filter)
 {
     Shape shape_data{64, 3, 100};
-    auto data = make_shared<op::Parameter>(element::f32, shape_data);
+    auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     Shape shape_delta{64, 128, 96};
-    auto deltas = make_shared<op::Parameter>(element::f32, shape_delta);
+    auto deltas = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto filters_shape =
         make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
     auto strides = Strides{1};
