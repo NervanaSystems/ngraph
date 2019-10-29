@@ -197,3 +197,13 @@ TEST(opset_transform, opset1_greater_eq_upgrade_pass)
 {
     test_opset0_comparison_upgrade_pass<op::v0::GreaterEq, op::v1::GreaterEq>("GreaterEq");
 }
+
+TEST(opset_transform, opset0_less_downgrade_pass)
+{
+    test_opset0_comparison_downgrade_pass<op::v0::Less, op::v1::Less>("Less");
+}
+
+TEST(opset_transform, opset1_less_upgrade_pass)
+{
+    test_opset0_comparison_upgrade_pass<op::v0::Less, op::v1::Less>("Less");
+}
