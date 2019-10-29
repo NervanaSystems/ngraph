@@ -484,6 +484,7 @@ TEST(serialize, tensor_iterator_raw)
         OutputVector{Yo, Ho}, ParameterVector{Xi, Hi, WH_body, WX_body, WY_body, bH_body, bY_body});
 
     auto tensor_iterator = make_shared<op::TensorIterator>();
+    tensor_iterator->set_body(body);
     // The Xi are the elements of Xseq
     // start=0, stride=1, part_size=1, end=40, axis=1
     tensor_iterator->set_sliced_input(Xi, X, 0, 1, 1, 40, 1);
@@ -541,6 +542,7 @@ TEST(serialize, tensor_iterator_lstm)
         OutputVector{H_o, C_o}, ParameterVector{X, H_t, C_t, W_body, R_body});
 
     auto tensor_iterator = make_shared<op::TensorIterator>();
+    tensor_iterator->set_body(body);
     // start=0, stride=1, part_size=1, end=40, axis=1
     tensor_iterator->set_sliced_input(X, SENT, 0, 1, 1, -1, 1);
     // H_t is Hinit on the first iteration, Ho after that
@@ -580,6 +582,7 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2)
                                                             ParameterVector{Xi, Yi, M_body});
 
     auto tensor_iterator = make_shared<op::TensorIterator>();
+    tensor_iterator->set_body(body);
     // The Xi are the elements of Xseq
     // start=0, stride=2, part_size=2, end=20, axis=1
     tensor_iterator->set_sliced_input(Xi, X, 0, 2, 2, 20, 1);
@@ -627,6 +630,7 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
                                                             ParameterVector{Xi, Yi, M_body});
 
     auto tensor_iterator = make_shared<op::TensorIterator>();
+    tensor_iterator->set_body(body);
     // The Xi are the elements of Xseq
     // start=0, stride=2, part_size=2, end=20, axis=1
     tensor_iterator->set_sliced_input(Xi, X, 0, 2, 2, 20, 1);
@@ -655,6 +659,7 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
 
     string s = serialize(f);
     shared_ptr<Function> g = deserialize(s);
+}
 
 TEST(serialize, opset1_strided_slice)
 {

@@ -31,3 +31,46 @@ Lambda::Lambda(const ResultVector& results, const ParameterVector& parameters)
     , m_parameters(parameters)
 {
 }
+
+int64_t Lambda::get_parameter_index(const std::shared_ptr<op::Parameter>& parameter) const
+{
+    int64_t pos = 0;
+    for (auto p : get_parameters())
+    {
+        if (p == parameter)
+        {
+            return pos;
+        }
+        pos++;
+    }
+    return -1;
+}
+
+int64_t Lambda::get_result_index(const Output<Node>& value) const
+{
+    int64_t pos = 0;
+    if (is_type<op::Result>(value.get_node_shared_ptr()))
+    {
+        auto result = value.get_node_shared_ptr();
+        for (auto r : get_results())
+        {
+            if (r == result)
+            {
+                return pos;
+            }
+            pos++;
+        }
+    }
+    else
+    {
+        for (auto r : get_results())
+        {
+            if (r->input_value(0) == value)
+            {
+                return pos;
+            }
+            pos++;
+        }
+    }
+    return -1;
+}

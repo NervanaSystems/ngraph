@@ -651,7 +651,7 @@ json JSONSerializer::serialize_tensor_iterator_input_description(
     {
         result["kind"] = "slice";
         result["input_index"] = slice->m_input_index;
-        result["body_parameter"] = serialize_node_reference(*slice->m_body_parameter.get());
+        result["body_parameter_index"] = slice->m_body_parameter_index;
         result["start"] = slice->m_start;
         result["stride"] = slice->m_stride;
         result["part_size"] = slice->m_part_size;
@@ -663,16 +663,15 @@ json JSONSerializer::serialize_tensor_iterator_input_description(
     {
         result["kind"] = "body_connection";
         result["input_index"] = body_connection->m_input_index;
-        result["body_parameter"] =
-            serialize_node_reference(*body_connection->m_body_parameter.get());
-        result["body_value"] = serialize_output(body_connection->m_body_value);
+        result["body_parameter_index"] = body_connection->m_body_parameter_index;
+        result["body_value_index"] = body_connection->m_body_value_index;
     }
     else if (auto constant =
                  as_type_ptr<op::TensorIterator::ConstantInputDescription>(input_description))
     {
         result["kind"] = "constant";
         result["input_index"] = constant->m_input_index;
-        result["body_parameter"] = serialize_node_reference(*constant->m_body_parameter.get());
+        result["body_parameter_index"] = constant->m_body_parameter_index;
     }
     else
     {
@@ -689,32 +688,29 @@ shared_ptr<op::TensorIterator::InputDescription>
     if (kind == "slice")
     {
         uint64_t input_index = j["input_index"].get<uint64_t>();
-        std::shared_ptr<op::Parameter> body_parameter =
-            dynamic_pointer_cast<op::Parameter>(deserialize_node_reference(j["body_parameter"]));
+        uint64_t body_parameter_index = j["body_parameter_index"].get<uint64_t>();
         int64_t start = j["start"].get<int64_t>();
         int64_t stride = j["stride"].get<int64_t>();
         uint64_t part_size = j["part_size"].get<uint64_t>();
         int64_t end = j["end"].get<int64_t>();
         int64_t axis = j["axis"].get<int64_t>();
         result = make_shared<op::TensorIterator::SliceInputDescription>(
-            input_index, body_parameter, start, stride, part_size, end, axis);
+            input_index, body_parameter_index, start, stride, part_size, end, axis);
     }
     else if (kind == "body_connection")
     {
         uint64_t input_index = j["input_index"].get<uint64_t>();
-        std::shared_ptr<op::Parameter> body_parameter =
-            dynamic_pointer_cast<op::Parameter>(deserialize_node_reference(j["body_parameter"]));
-        Output<Node> body_value = (deserialize_output(j["body_value"]));
+        uint64_t body_parameter_index = j["body_parameter_index"].get<uint64_t>();
+        uint64_t body_value_index = j["body_value_index"].get<uint64_t>();
         result = make_shared<op::TensorIterator::BodyConnectionInputDescription>(
-            input_index, body_parameter, body_value);
+            input_index, body_parameter_index, body_value_index);
     }
     else if (kind == "constant")
     {
         uint64_t input_index = j["input_index"].get<uint64_t>();
-        std::shared_ptr<op::Parameter> body_parameter =
-            dynamic_pointer_cast<op::Parameter>(deserialize_node_reference(j["body_parameter"]));
-        result =
-            make_shared<op::TensorIterator::ConstantInputDescription>(input_index, body_parameter);
+        uint64_t body_parameter_index = j["body_parameter_index"].get<uint64_t>();
+        result = make_shared<op::TensorIterator::ConstantInputDescription>(input_index,
+                                                                           body_parameter_index);
     }
     else
     {
@@ -730,7 +726,7 @@ json JSONSerializer::serialize_tensor_iterator_output_description(
     if (auto concat = as_type_ptr<op::TensorIterator::ConcatOutputDescription>(output_description))
     {
         result["kind"] = "concat";
-        result["body_value"] = serialize_output(concat->m_body_value);
+        result["body_value_index"] = concat->m_body_value_index;
         result["output_index"] = concat->m_output_index;
         result["start"] = concat->m_start;
         result["stride"] = concat->m_stride;
@@ -742,7 +738,7 @@ json JSONSerializer::serialize_tensor_iterator_output_description(
                  as_type_ptr<op::TensorIterator::BodyOutputDescription>(output_description))
     {
         result["kind"] = "body_output";
-        result["body_value"] = serialize_output(body_output->m_body_value);
+        result["body_value_index"] = body_output->m_body_value_index;
         result["output_index"] = body_output->m_output_index;
         result["iteration"] = body_output->m_iteration;
     }
@@ -760,7 +756,7 @@ std::shared_ptr<op::TensorIterator::OutputDescription>
     shared_ptr<op::TensorIterator::OutputDescription> result;
     if (kind == "concat")
     {
-        Output<Node> body_value = deserialize_output(j["body_value"]);
+        uint64_t body_value_index = j["body_value_index"].get<uint64_t>();
         uint64_t output_index = j["output_index"].get<uint64_t>();
         int64_t start = j["start"].get<int64_t>();
         int64_t stride = j["stride"].get<int64_t>();
@@ -768,15 +764,15 @@ std::shared_ptr<op::TensorIterator::OutputDescription>
         int64_t end = j["end"].get<int64_t>();
         int64_t axis = j["axis"].get<int64_t>();
         result = make_shared<op::TensorIterator::ConcatOutputDescription>(
-            body_value, output_index, start, stride, part_size, end, axis);
+            body_value_index, output_index, start, stride, part_size, end, axis);
     }
     else if (kind == "body_output")
     {
-        Output<Node> body_value = deserialize_output(j["body_value"]);
+        uint64_t body_value_index = j["body_value_index"].get<uint64_t>();
         uint64_t output_index = j["output_index"].get<uint64_t>();
         int64_t iteration = j["iteration"].get<int64_t>();
         result = make_shared<op::TensorIterator::BodyOutputDescription>(
-            body_value, output_index, iteration);
+            body_value_index, output_index, iteration);
     }
     else
     {
@@ -2421,6 +2417,29 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::TensorIterator:
         {
             auto ti = make_shared<op::TensorIterator>(args);
+            json jbody = node_js["body"];
+            // Serializer assumes inputs are available before users sp we
+            // need to make sure the body nodes are all deerialized before
+            // referencing them.
+            json jbody_nodes = jbody["nodes"];
+            NodeVector body_nodes;
+            for (json jnode : jbody_nodes)
+            {
+                body_nodes.push_back(deserialize_node(jnode));
+            }
+            json jparams = jbody["parameters"];
+            ParameterVector parameters;
+            for (json jparam : jparams)
+            {
+                parameters.push_back(as_type_ptr<op::Parameter>(deserialize_node(jparam)));
+            }
+            json jresults = jbody["results"];
+            ResultVector results;
+            for (json jresult : jresults)
+            {
+                results.push_back(as_type_ptr<op::Result>(deserialize_node(jresult)));
+            }
+            ti->set_body(make_shared<op::TensorIterator::BodyLambda>(results, parameters));
             json jins = node_js["input_descriptions"];
             for (json jin : jins)
             {
@@ -3722,7 +3741,32 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::TensorIterator:
     {
-        auto tmp = dynamic_cast<const op::TensorIterator*>(&n);
+        auto tmp = static_cast<const op::TensorIterator*>(&n);
+        json body = json::object();
+        {
+            auto& body_results = tmp->get_body()->get_results();
+            // Serializer assumes node inputs are already serialized, so
+            // we need to capture the body-referenced nodes here.
+            json body_nodes = json::array();
+            for (auto n : topological_sort(body_results))
+            {
+                body_nodes.push_back(serialize_node(*n));
+            }
+            body["nodes"] = body_nodes;
+            json params = json::array();
+            for (auto param : tmp->get_body()->get_parameters())
+            {
+                params.push_back(serialize_node(*param));
+            }
+            body["parameters"] = params;
+            json results = json::array();
+            for (auto result : body_results)
+            {
+                results.push_back(serialize_node(*result));
+            }
+            body["results"] = results;
+        }
+        node["body"] = body;
         json ins = json::array();
         for (auto in : tmp->get_input_descriptions())
         {

@@ -50,6 +50,10 @@ namespace ngraph
                     : Lambda(outputs, parameters)
                 {
                 }
+                BodyLambda(const ResultVector& results, const ParameterVector& parameters)
+                    : Lambda(results, parameters)
+                {
+                }
             };
 
             /// \brief Describes a connection between a TensorIterator input and the body.
@@ -58,8 +62,7 @@ namespace ngraph
             protected:
                 /// \param input_index Position of the TensorIterator input
                 /// \param body_parameter Body parameter to receive input
-                InputDescription(uint64_t input_index,
-                                 const std::shared_ptr<Parameter>& body_parameter);
+                InputDescription(uint64_t input_index, uint64_t body_parameter_index);
 
             public:
                 virtual ~InputDescription() {}
@@ -68,7 +71,7 @@ namespace ngraph
                 virtual const DiscreteTypeInfo& get_type_info() const = 0;
 
                 uint64_t m_input_index;
-                std::shared_ptr<Parameter> m_body_parameter;
+                uint64_t m_body_parameter_index;
             };
 
             /// \brief Describes a body input formed from slices of an input to TensorIterator.
@@ -78,14 +81,14 @@ namespace ngraph
                 static constexpr DiscreteTypeInfo type_info{"SliceInputDescription", 0};
                 const DiscreteTypeInfo& get_type_info() const override { return type_info; }
                 /// \param input_index Position of the TensorIterator input
-                /// \param body_parameter Body parameter to receive input
+                /// \param body_parameter_index Body parameter position to receive input
                 /// \param start First index for slices
                 /// \param stride Step amount for slices
                 /// \param part_size Width of slices
                 /// \param end Last index for slices
                 /// \param axis Axis being sliced
                 SliceInputDescription(uint64_t input_index,
-                                      const std::shared_ptr<Parameter>& body_parameter,
+                                      uint64_t body_parameter_index,
                                       int64_t start,
                                       int64_t stride,
                                       uint64_t part_size,
@@ -110,14 +113,15 @@ namespace ngraph
                 /// \param input_index Position of the TensorIterator input supplying a value to
                 /// body_parameter
                 /// for the initial iteration.
-                /// \param body_parameter Body parameter to receive input.
-                /// \param body_value Body value to supply body_parameter for successive iterations.
+                /// \param body_parameter_index Body parameter position to receive input.
+                /// \param body_value_index Body value to supply body_parameter for successive
+                /// iterations.
                 BodyConnectionInputDescription(uint64_t input_index,
-                                               const std::shared_ptr<Parameter>& body_parameter,
-                                               const Output<Node>& body_value);
+                                               uint64_t body_parameter_index,
+                                               uint64_t body_value_index);
                 std::shared_ptr<InputDescription> copy() const override;
 
-                Output<Node> m_body_value;
+                uint64_t m_body_value_index;
             };
 
             class ConstantInputDescription : public InputDescription
@@ -125,8 +129,7 @@ namespace ngraph
             public:
                 static constexpr DiscreteTypeInfo type_info{"ConstantInputDescription", 0};
                 const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-                ConstantInputDescription(uint64_t input_index,
-                                         const std::shared_ptr<op::Parameter>& body_parameter);
+                ConstantInputDescription(uint64_t input_index, uint64_t body_parameter_index);
                 std::shared_ptr<InputDescription> copy() const override;
             };
 
@@ -138,16 +141,16 @@ namespace ngraph
             class OutputDescription
             {
             protected:
-                /// \param body_value A body value that produces the output
+                /// \param body_value_index A body value that produces the output
                 /// \param output_index The TensorIterator output index
-                OutputDescription(const Output<Node>& body_value, uint64_t output_index);
+                OutputDescription(uint64_t body_value_index, uint64_t output_index);
 
             public:
                 virtual ~OutputDescription() {}
                 virtual std::shared_ptr<OutputDescription> copy() const = 0;
                 virtual const DiscreteTypeInfo& get_type_info() const = 0;
 
-                Output<Node> m_body_value;
+                uint64_t m_body_value_index;
                 uint64_t m_output_index;
             };
 
@@ -157,14 +160,14 @@ namespace ngraph
             public:
                 static constexpr DiscreteTypeInfo type_info{"ConcatOutputDescription", 0};
                 const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-                /// \param body_value A body value that produces the output
+                /// \param body_value_index A body value that produces the output
                 /// \param output_index The TensorIterator output index
                 /// \param start First index for slices
                 /// \param stride Step amount for slices
                 /// \param part_size Width of slices
                 /// \param end Last index for slices
                 /// \param axis Axis being sliced
-                ConcatOutputDescription(const Output<Node>& body_value,
+                ConcatOutputDescription(uint64_t body_value_index,
                                         uint64_t output_index,
                                         int64_t start,
                                         int64_t stride,
@@ -187,10 +190,10 @@ namespace ngraph
             public:
                 static constexpr DiscreteTypeInfo type_info{"BodyOutputDescription", 0};
                 const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-                /// \param body_value A body value that produces the output
+                /// \param body_value_index A body value that produces the output
                 /// \param output_index The TensorIterator output index
                 /// \param iteration which iteration (typically -1, final) will supply the value
-                BodyOutputDescription(const Output<Node>& body_value,
+                BodyOutputDescription(uint64_t body_value_index,
                                       uint64_t output_index,
                                       int64_t iteration);
                 std::shared_ptr<OutputDescription> copy() const override;
@@ -250,22 +253,30 @@ namespace ngraph
 
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
             NodeVector decompose_op() const override;
-
+            /// \return the body of the iteration
+            std::shared_ptr<BodyLambda> get_body() const { return m_body; }
+            /// \param body set the body of the iteration
+            void set_body(const std::shared_ptr<BodyLambda>& body) { m_body = body; }
+            /// \return a reference to the input descriptions.
             const std::vector<std::shared_ptr<InputDescription>>& get_input_descriptions() const
             {
                 return m_input_descriptions;
             }
-
+            /// \return a reference to the input descriptions. Can add input descriptions before
+            /// validation.
             std::vector<std::shared_ptr<InputDescription>>& get_input_descriptions()
             {
                 return m_input_descriptions;
             }
 
+            /// \return a reference to the output descriptions.
             const std::vector<std::shared_ptr<OutputDescription>>& get_output_descriptions() const
             {
                 return m_output_descriptions;
             }
 
+            /// \return a reference to the output descriptions. Can add output descriptions before
+            /// validation.
             std::vector<std::shared_ptr<OutputDescription>>& get_output_descriptions()
             {
                 return m_output_descriptions;
@@ -278,6 +289,7 @@ namespace ngraph
             // Find an input corresponding to value, adding one if necessary.
             Input<Node> input_for_value(const Output<Node>& value);
 
+            std::shared_ptr<BodyLambda> m_body;
             std::vector<std::shared_ptr<InputDescription>> m_input_descriptions;
             std::vector<std::shared_ptr<OutputDescription>> m_output_descriptions;
 

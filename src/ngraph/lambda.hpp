@@ -28,7 +28,12 @@ namespace ngraph
         static constexpr DiscreteTypeInfo type_info{"Lamdba", 0};
         const DiscreteTypeInfo& get_type_info() const { return type_info; }
         const ParameterVector& get_parameters() const { return m_parameters; };
+        /// Index for parameter, or -1
+        int64_t get_parameter_index(const std::shared_ptr<op::Parameter>& parameter) const;
         const ResultVector& get_results() const { return m_results; };
+        /// Index for value or result referencing it, or -1
+        int64_t get_result_index(const Output<Node>& value) const;
+
     protected:
         Lambda(const ResultVector& results, const ParameterVector& parameters);
         Lambda(const OutputVector& results, const ParameterVector& parameters);
