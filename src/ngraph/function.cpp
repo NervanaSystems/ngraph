@@ -26,6 +26,8 @@
 using namespace std;
 using namespace ngraph;
 
+constexpr DiscreteTypeInfo Function::type_info;
+
 atomic<size_t> Function::m_next_instance_id(0);
 
 Function::Function(const ResultVector& results,

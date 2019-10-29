@@ -44,6 +44,8 @@ namespace ngraph
             class BodyLambda : public Lambda
             {
             public:
+                static constexpr DiscreteTypeInfo type_info{"BodyLamdba", 0};
+                const DiscreteTypeInfo& get_type_info() const { return type_info; }
                 BodyLambda(const OutputVector& outputs, const ParameterVector& parameters)
                     : Lambda(outputs, parameters)
                 {

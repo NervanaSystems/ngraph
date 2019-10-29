@@ -663,6 +663,13 @@ json JSONSerializer::serialize_tensor_iterator_input_description(
             serialize_node_reference(*body_connection->m_body_parameter.get());
         result["body_value"] = serialize_output(body_connection->m_body_value);
     }
+    else if (auto constant =
+                 as_type_ptr<op::TensorIterator::ConstantInputDescription>(input_description))
+    {
+        result["kind"] = "constant";
+        result["input_index"] = constant->m_input_index;
+        result["body_parameter"] = serialize_node_reference(*constant->m_body_parameter.get());
+    }
     else
     {
         NGRAPH_UNREACHABLE("Unknown input description type");
@@ -696,6 +703,14 @@ shared_ptr<op::TensorIterator::InputDescription>
         Output<Node> body_value = (deserialize_output(j["body_value"]));
         result = make_shared<op::TensorIterator::BodyConnectionInputDescription>(
             input_index, body_parameter, body_value);
+    }
+    else if (kind == "constant")
+    {
+        uint64_t input_index = j["input_index"].get<uint64_t>();
+        std::shared_ptr<op::Parameter> body_parameter =
+            dynamic_pointer_cast<op::Parameter>(deserialize_node_reference(j["body_parameter"]));
+        result =
+            make_shared<op::TensorIterator::ConstantInputDescription>(input_index, body_parameter);
     }
     else
     {

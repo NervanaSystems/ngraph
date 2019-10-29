@@ -19,14 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
-Lambda::Lambda(const OutputVector& results,
-               const ParameterVector& parameters)
+constexpr DiscreteTypeInfo Lambda::type_info;
+
+Lambda::Lambda(const OutputVector& results, const ParameterVector& parameters)
     : Lambda(as_result_vector(results), parameters)
 {
 }
 
-Lambda::Lambda(const ResultVector& results,
-               const ParameterVector& parameters)
+Lambda::Lambda(const ResultVector& results, const ParameterVector& parameters)
     : m_results(results)
     , m_parameters(parameters)
 {

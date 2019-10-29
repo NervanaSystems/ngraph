@@ -25,13 +25,13 @@ namespace ngraph
     class Lambda
     {
     public:
+        static constexpr DiscreteTypeInfo type_info{"Lamdba", 0};
+        const DiscreteTypeInfo& get_type_info() const { return type_info; }
         const ParameterVector& get_parameters() const { return m_parameters; };
         const ResultVector& get_results() const { return m_results; };
     protected:
-        Lambda(const ResultVector& results,
-               const ParameterVector& parameters);
-        Lambda(const OutputVector& results,
-               const ParameterVector& parameters);
+        Lambda(const ResultVector& results, const ParameterVector& parameters);
+        Lambda(const OutputVector& results, const ParameterVector& parameters);
 
         ResultVector m_results;
         ParameterVector m_parameters;

@@ -34,6 +34,8 @@ namespace ngraph
     class Function : public Lambda
     {
     public:
+        static constexpr DiscreteTypeInfo type_info{"Function", 0};
+        const DiscreteTypeInfo& get_type_info() const { return type_info; }
         Function(const NodeVector& results,
                  const ParameterVector& parameters,
                  const std::string& name = "");
@@ -129,8 +131,6 @@ namespace ngraph
                                const std::shared_ptr<op::Parameter>& parameter);
 
     protected:
-        ResultVector m_results;
-        ParameterVector m_parameters;
         size_t m_temporary_pool_size;
 
     private:

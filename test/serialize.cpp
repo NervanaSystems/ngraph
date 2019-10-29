@@ -440,7 +440,7 @@ TEST(serialize, opset1_pad)
     EXPECT_EQ(g_pad->get_version(), 1);
     EXPECT_EQ(dynamic_cast<const op::v1::Pad*>(g_pad.get())->get_pad_mode(), pad_mode);
 }
-#if 0
+
 TEST(serialize, tensor_iterator_raw)
 {
     // That which we iterate over
@@ -460,20 +460,28 @@ TEST(serialize, tensor_iterator_raw)
     // Cell parameters
     auto Hi = make_shared<op::Parameter>(element::f32, Shape{32, 1, 20});
     auto Xi = make_shared<op::Parameter>(element::f32, Shape{32, 1, 10});
+    auto WH_body = make_shared<op::Parameter>(element::f32, Shape{20, 20});
+    auto WX_body = make_shared<op::Parameter>(element::f32, Shape{10, 20});
+    auto bH_body = make_shared<op::Parameter>(element::f32, Shape{20});
+    auto WY_body = make_shared<op::Parameter>(element::f32, Shape{20, 5});
+    auto bY_body = make_shared<op::Parameter>(element::f32, Shape{5});
 
     // Body
     auto Ho = make_shared<op::Reshape>(
         make_shared<op::Relu>(
             make_shared<op::Dot>(make_shared<op::Reshape>(Xi, AxisVector{0, 1, 2}, Shape{32, 10}),
-                                 WX) +
+                                 WX_body) +
             make_shared<op::Dot>(make_shared<op::Reshape>(Hi, AxisVector{0, 1, 2}, Shape{32, 20}),
-                                 WH) +
-            make_shared<op::Broadcast>(bH, Shape{32, 20}, AxisSet{0})),
+                                 WH_body) +
+            make_shared<op::Broadcast>(bH_body, Shape{32, 20}, AxisSet{0})),
         AxisVector{0, 1},
         Shape{32, 1, 20});
     auto Yo = make_shared<op::Relu>(
-        make_shared<op::Dot>(make_shared<op::Reshape>(Ho, AxisVector{0, 1, 2}, Shape{32, 20}), WY) +
-        make_shared<op::Broadcast>(bY, Shape{32, 5}, AxisSet{0}));
+        make_shared<op::Dot>(make_shared<op::Reshape>(Ho, AxisVector{0, 1, 2}, Shape{32, 20}),
+                             WY_body) +
+        make_shared<op::Broadcast>(bY_body, Shape{32, 5}, AxisSet{0}));
+    auto body = make_shared<op::TensorIterator::BodyLambda>(
+        OutputVector{Yo, Ho}, ParameterVector{Xi, Hi, WH_body, WX_body, WY_body, bH_body, bY_body});
 
     auto tensor_iterator = make_shared<op::TensorIterator>();
     // The Xi are the elements of Xseq
@@ -481,6 +489,11 @@ TEST(serialize, tensor_iterator_raw)
     tensor_iterator->set_sliced_input(Xi, X, 0, 1, 1, 40, 1);
     // Hi is Hinit on the first iteration, Ho after that
     tensor_iterator->set_initialized_input(Hi, Hinit, Ho);
+    tensor_iterator->set_constant_input(WH_body, WH);
+    tensor_iterator->set_constant_input(WX_body, WX);
+    tensor_iterator->set_constant_input(WY_body, WY);
+    tensor_iterator->set_constant_input(bH_body, bH);
+    tensor_iterator->set_constant_input(bY_body, bY);
 
     // Output 0 is last Yo
     auto out0 = tensor_iterator->get_iter_value(Yo, -1);
@@ -493,7 +506,7 @@ TEST(serialize, tensor_iterator_raw)
     string s = serialize(f);
     shared_ptr<Function> g = deserialize(s);
 }
-#endif
+
 TEST(serialize, tensor_iterator_lstm)
 {
     // That which we iterate over
@@ -514,7 +527,7 @@ TEST(serialize, tensor_iterator_lstm)
     // Body
     auto X = make_shared<op::Parameter>(element::f32, Shape{N, 1, I});
     auto W_body = make_shared<op::Parameter>(element::f32, Shape{4 * H, I});
-    auto R_body = make_shared<op::Parameter>(element::f32, Shape{4 * H, I});
+    auto R_body = make_shared<op::Parameter>(element::f32, Shape{4 * H, H});
     auto LSTM_cell =
         make_shared<op::LSTMCell>(make_shared<op::Reshape>(X, AxisVector{0, 1, 2}, Shape{N, I}),
                                   W_body,
@@ -525,7 +538,7 @@ TEST(serialize, tensor_iterator_lstm)
     auto H_o = make_shared<op::Reshape>(LSTM_cell->output(0), AxisVector{0, 1}, Shape{N, 1, H});
     auto C_o = make_shared<op::Reshape>(LSTM_cell->output(1), AxisVector{0, 1}, Shape{N, 1, H});
     auto body = make_shared<op::TensorIterator::BodyLambda>(
-        OutputVector{H_o, C_o}, ParameterVector{W_body, R_body, X, H_t, C_t});
+        OutputVector{H_o, C_o}, ParameterVector{X, H_t, C_t, W_body, R_body});
 
     auto tensor_iterator = make_shared<op::TensorIterator>();
     // start=0, stride=1, part_size=1, end=40, axis=1
@@ -547,21 +560,24 @@ TEST(serialize, tensor_iterator_lstm)
     string s = serialize(f);
     shared_ptr<Function> g = deserialize(s);
 }
-#if 0
+
 TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2)
 {
     // That which we iterate over
     auto X = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
     auto Y = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
+    auto M = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
 
     // Set up the cell body, a function from (Xi, Yi) -> (Zo)
     // Body parameters
     auto Xi = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
     auto Yi = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
-    // auto Yi = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto M_body = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
 
     // Body
-    auto Zo = Xi + Yi;
+    auto Zo = (Xi + Yi) * M_body;
+    auto body = make_shared<op::TensorIterator::BodyLambda>(OutputVector{Zo},
+                                                            ParameterVector{Xi, Yi, M_body});
 
     auto tensor_iterator = make_shared<op::TensorIterator>();
     // The Xi are the elements of Xseq
@@ -570,6 +586,7 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2)
     // The Yi are the elements of Yseq
     // start=0, stride=2, part_size=2, end=-1, axis=1
     tensor_iterator->set_sliced_input(Yi, Y, 0, 2, 2, -1, 1);
+    tensor_iterator->set_constant_input(M_body, M);
 
     // Output 0 is last Zo
     auto out0 = tensor_iterator->get_iter_value(Zo, -1);
@@ -583,7 +600,7 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2)
     Shape out1_shape{32, 40, 10};
 
     auto results = ResultVector{result0, result1};
-    auto f = make_shared<Function>(results, ParameterVector{X, Y});
+    auto f = make_shared<Function>(results, ParameterVector{X, Y, M});
     EXPECT_EQ(result0->output(0).get_shape(), out0_shape);
     EXPECT_EQ(result1->output(0).get_shape(), out1_shape);
 
@@ -596,14 +613,18 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
     // That which we iterate over
     auto X = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
     auto Y = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
+    auto M = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
 
     // Set up the cell body, a function from (Xi, Yi) -> (Zo)
     // Body parameters
     auto Xi = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto Yi = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto M_body = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
 
     // Body
-    auto Zo = Xi + Yi;
+    auto Zo = (Xi + Yi) * M_body;
+    auto body = make_shared<op::TensorIterator::BodyLambda>(OutputVector{Zo},
+                                                            ParameterVector{Xi, Yi, M_body});
 
     auto tensor_iterator = make_shared<op::TensorIterator>();
     // The Xi are the elements of Xseq
@@ -612,6 +633,7 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
     // The Yi are the elements of Yseq
     // start=0, stride=2, part_size=2, end=-1, axis=1
     tensor_iterator->set_sliced_input(Yi, Y, 0, 2, 2, -1, 1);
+    tensor_iterator->set_constant_input(M_body, M);
 
     // Output 0 is last Zo
     auto out0 = tensor_iterator->get_iter_value(Zo, -1);
@@ -625,11 +647,12 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
     Shape out1_shape{32, 40, 10};
 
     auto results = ResultVector{result0, result1};
-    auto f = make_shared<Function>(results, ParameterVector{X, Y});
+    auto f = make_shared<Function>(results, ParameterVector{X, Y, M});
     EXPECT_EQ(result0->output(0).get_shape(), out0_shape);
     EXPECT_EQ(result1->output(0).get_shape(), out1_shape);
+
+    EXPECT_EQ(body->get_results()[0]->output(0).get_shape(), out0_shape);
 
     string s = serialize(f);
     shared_ptr<Function> g = deserialize(s);
 }
-#endif

@@ -29,6 +29,8 @@ constexpr DiscreteTypeInfo op::TensorIterator::ConstantInputDescription::type_in
 constexpr DiscreteTypeInfo op::TensorIterator::BodyOutputDescription::type_info;
 constexpr DiscreteTypeInfo op::TensorIterator::ConcatOutputDescription::type_info;
 
+constexpr DiscreteTypeInfo op::TensorIterator::BodyLambda::type_info;
+
 op::TensorIterator::TensorIterator(const OutputVector& values)
     : op::util::FusedOp(values)
 {
@@ -366,6 +368,26 @@ void op::TensorIterator::validate_and_infer_types()
                 }
             }
         }
+        else if (auto constant_input_description =
+                     as_type_ptr<ConstantInputDescription>(input_description))
+        {
+            auto body_param_partial_shape =
+                constant_input_description->m_body_parameter->get_partial_shape();
+            auto input_partial_shape = inputs().at(index).get_source_output().get_partial_shape();
+            NODE_VALIDATION_CHECK(this,
+                                  input_partial_shape.compatible(body_param_partial_shape),
+                                  "Iterator initial value is not compatible with body param");
+
+            if (input_partial_shape.is_static())
+            {
+                auto input_shape = input_partial_shape.to_shape();
+                // infer type for m_body_parameter
+                if (body_param_partial_shape.is_dynamic())
+                {
+                    constant_input_description->m_body_parameter->set_partial_shape(input_shape);
+                }
+            }
+        }
     }
 
     // Body
@@ -415,6 +437,14 @@ void op::TensorIterator::validate_and_infer_types()
                     // for simple RNN case where stride is the same as part_size
                     out_shape[axis] = m_num_iterations * part_size;
                     set_output_type(index, body_value.get_element_type(), out_shape);
+                    // set the shape of Result in BodyLambda
+                    for (auto in : body_value.get_target_inputs())
+                    {
+                        if (auto r = as_type_ptr<Result>(in.get_node()->shared_from_this()))
+                        {
+                            r->revalidate_and_infer_types();
+                        }
+                    }
                 }
             }
         }
@@ -422,6 +452,14 @@ void op::TensorIterator::validate_and_infer_types()
                      as_type_ptr<BodyOutputDescription>(output_description))
         {
             set_output_type(index, body_value.get_element_type(), body_value.get_partial_shape());
+            // set the shape of Result in BodyLambda
+            for (auto in : body_value.get_target_inputs())
+            {
+                if (auto r = as_type_ptr<Result>(in.get_node()->shared_from_this()))
+                {
+                    r->revalidate_and_infer_types();
+                }
+            }
         }
     }
 }
