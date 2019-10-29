@@ -80,7 +80,8 @@ bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
         m_matchers.clear();
         for (auto node : f->get_ordered_ops())
         {
-            if (m_enable_shape_inference) {
+            if (m_enable_shape_inference)
+            {
                 node->revalidate_and_infer_types();
             }
             for (auto& closure : matchers_to_run)

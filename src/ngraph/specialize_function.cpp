@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <pass/constant_folding.hpp>
 #include "ngraph/specialize_function.hpp"
+#include <pass/constant_folding.hpp>
 #include "ngraph/op/constant.hpp"
 
 using namespace ngraph;
@@ -24,7 +24,8 @@ std::shared_ptr<Function>
     ngraph::specialize_function(std::shared_ptr<Function> f,
                                 const std::vector<element::Type>& parameter_element_types,
                                 const std::vector<PartialShape>& parameter_shapes,
-                                const std::vector<void*>& parameter_values, bool constant_folding)
+                                const std::vector<void*>& parameter_values,
+                                bool constant_folding)
 {
     NGRAPH_CHECK(f->get_parameters().size() == parameter_shapes.size());
     NGRAPH_CHECK(f->get_parameters().size() == parameter_element_types.size());
@@ -93,7 +94,8 @@ std::shared_ptr<Function>
     }
 
     auto function = std::make_shared<Function>(new_results, new_parameters);
-    if (constant_folding) {
+    if (constant_folding)
+    {
         ngraph::pass::ConstantFolding().run_on_function(function);
     }
     return function;
