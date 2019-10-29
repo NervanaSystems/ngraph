@@ -35,6 +35,7 @@
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
+#include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reduce_prod.hpp"
@@ -375,6 +376,12 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
     case OP_TYPEID::Multiply:
     {
         downgrade_binary_elementwise_node<op::v0::Multiply, op::v1::Multiply>(node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::NotEqual:
+    {
+        downgrade_binary_elementwise_node<op::v0::NotEqual, op::v1::NotEqual>(node);
         modified = true;
         break;
     }
