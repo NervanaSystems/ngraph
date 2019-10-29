@@ -31,9 +31,14 @@
 #include "ngraph/op/reduce_sum.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/slice.hpp"
+#include "ngraph/op/strided_slice.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/xor.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
+#include "ngraph/slice_plan.hpp"
+
+#include <algorithm>
 
 using namespace std;
 using namespace ngraph;
@@ -395,6 +400,73 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 
         replace_node(node, replacement_node);
         modified = true;
+        break;
+    }
+    case OP_TYPEID::Slice:
+    {
+        auto convert_mask_to_axes = [](const std::vector<int64_t>& mask) {
+            AxisSet axes{};
+            for (auto i = 0; i < mask.size(); ++i)
+            {
+                if (mask[i] == 1)
+                {
+                    axes.emplace(i);
+                }
+            }
+            return axes;
+        };
+
+        const auto input_data = node->input_value(0);
+        const auto input_data_pshape = input_data.get_partial_shape();
+
+        NGRAPH_CHECK(input_data_pshape.is_static(),
+                     "Unable to convert StridedSlice:v1 to Slice:v0 "
+                     "if input rank is not static. Node: ",
+                     *node);
+
+        const auto begin_const =
+            as_type_ptr<op::Constant>(node->input_value(1).get_node_shared_ptr());
+        const auto end_const =
+            as_type_ptr<op::Constant>(node->input_value(2).get_node_shared_ptr());
+        const auto strides = as_type_ptr<op::Constant>(node->input_value(3).get_node_shared_ptr());
+
+        NGRAPH_CHECK(begin_const && end_const && strides,
+                     "Unable to convert StridedSlice:v1 to Slice:v0 "
+                     "if begin, end or strides are not constant. Node: ",
+                     *node);
+
+        const auto tmp = as_type_ptr<op::v1::StridedSlice>(node);
+
+        SlicePlan p = make_slice_plan(input_data_pshape.to_shape(),
+                                      begin_const->get_vector<int64_t>(),
+                                      end_const->get_vector<int64_t>(),
+                                      strides->get_vector<int64_t>(),
+                                      convert_mask_to_axes(tmp->get_begin_mask()),
+                                      convert_mask_to_axes(tmp->get_end_mask()),
+                                      convert_mask_to_axes(tmp->get_new_axis_mask()),
+                                      convert_mask_to_axes(tmp->get_shrink_axis_mask()),
+                                      convert_mask_to_axes(tmp->get_ellipsis_mask()));
+
+        shared_ptr<Node> replacement_node =
+            make_shared<op::v0::Slice>(input_data,
+                                       Coordinate(p.begins.begin(), p.begins.end()),
+                                       Coordinate(p.ends.begin(), p.ends.end()),
+                                       Strides(p.strides.begin(), p.strides.end()));
+
+        if (p.reshape_in_shape != p.reshape_out_shape)
+        {
+            replacement_node =
+                make_shared<op::Reshape>(replacement_node,
+                                         ngraph::get_default_order(p.reshape_in_shape),
+                                         p.reshape_out_shape);
+        }
+
+        if (!p.reverse_axes.empty())
+        {
+            replacement_node = make_shared<op::Reverse>(replacement_node, p.reverse_axes);
+        }
+
+        replace_node(node, replacement_node);
         break;
     }
     case OP_TYPEID::Sum:
