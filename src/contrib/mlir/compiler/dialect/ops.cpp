@@ -306,7 +306,6 @@ mlir::LogicalResult verifyOp(NGConvolutionOp* op)
     return mlir::success();
 }
 
-
 static std::string getBufferIdAttrName()
 {
     return "ng.buffer_id";
