@@ -18,7 +18,7 @@ using namespace ngraph;
 //------------------------------------------------------------------------------
 
 template <typename OpV0, typename OpV1>
-static inline void test_opset0_downgrade_pass(const string& node_name,
+void test_opset0_downgrade_pass(const string& node_name,
                                               const element::Type& output_type,
                                               const element::Type& input_type = element::f32)
 {
@@ -46,19 +46,19 @@ static inline void test_opset0_downgrade_pass(const string& node_name,
 }
 
 template <typename OpV0, typename OpV1>
-static inline void test_opset0_arithmetic_downgrade_pass(const string& node_name)
+void test_opset0_arithmetic_downgrade_pass(const string& node_name)
 {
     test_opset0_downgrade_pass<OpV0, OpV1>(node_name, element::f32);
 }
 
 template <typename OpV0, typename OpV1>
-static inline void test_opset0_comparison_downgrade_pass(const string& node_name)
+void test_opset0_comparison_downgrade_pass(const string& node_name)
 {
     test_opset0_downgrade_pass<OpV0, OpV1>(node_name, element::boolean);
 }
 
 template <typename OpV0, typename OpV1>
-static inline void test_opset0_upgrade_pass(const string& node_name,
+void test_opset1_upgrade_pass(const string& node_name,
                                             const element::Type& output_type,
                                             const element::Type& input_type = element::f32)
 {
@@ -86,15 +86,15 @@ static inline void test_opset0_upgrade_pass(const string& node_name,
 }
 
 template <typename OpV0, typename OpV1>
-static inline void test_opset0_arithmetic_upgrade_pass(const string& node_name)
+void test_opset1_arithmetic_upgrade_pass(const string& node_name)
 {
-    test_opset0_upgrade_pass<OpV0, OpV1>(node_name, element::f32);
+    test_opset1_upgrade_pass<OpV0, OpV1>(node_name, element::f32);
 }
 
 template <typename OpV0, typename OpV1>
-static inline void test_opset0_comparison_upgrade_pass(const string& node_name)
+void test_opset1_comparison_upgrade_pass(const string& node_name)
 {
-    test_opset0_upgrade_pass<OpV0, OpV1>(node_name, element::boolean);
+    test_opset1_upgrade_pass<OpV0, OpV1>(node_name, element::boolean);
 }
 
 //------------------------------------------------------------------------------
@@ -103,15 +103,15 @@ static inline void test_opset0_comparison_upgrade_pass(const string& node_name)
 //
 //------------------------------------------------------------------------------
 
-TEST(opset_transform, opset0_add_downgrade_pass)
-{
-    test_opset0_arithmetic_downgrade_pass<op::v0::Add, op::v1::Add>("Add");
-}
+// TEST(opset_transform, opset0_add_downgrade_pass)
+// {
+//     test_opset0_arithmetic_downgrade_pass<op::v0::Add, op::v1::Add>("Add");
+// }
 
-TEST(opset_transform, opset1_add_upgrade_pass)
-{
-    test_opset0_arithmetic_upgrade_pass<op::v0::Add, op::v1::Add>("Add");
-}
+// TEST(opset_transform, opset1_add_upgrade_pass)
+// {
+//     test_opset1_arithmetic_upgrade_pass<op::v0::Add, op::v1::Add>("Add");
+// }
 
 TEST(opset_transform, opset0_divide_downgrade_pass)
 {
@@ -175,7 +175,7 @@ TEST(opset_transform, opset0_equal_downgrade_pass)
 
 TEST(opset_transform, opset1_equal_upgrade_pass)
 {
-    test_opset0_comparison_upgrade_pass<op::v0::Equal, op::v1::Equal>("Equal");
+    test_opset1_comparison_upgrade_pass<op::v0::Equal, op::v1::Equal>("Equal");
 }
 
 TEST(opset_transform, opset0_greater_downgrade_pass)
@@ -185,7 +185,7 @@ TEST(opset_transform, opset0_greater_downgrade_pass)
 
 TEST(opset_transform, opset1_greater_upgrade_pass)
 {
-    test_opset0_comparison_upgrade_pass<op::v0::Greater, op::v1::Greater>("Greater");
+    test_opset1_comparison_upgrade_pass<op::v0::Greater, op::v1::Greater>("Greater");
 }
 
 TEST(opset_transform, opset0_greater_eq_downgrade_pass)
@@ -195,7 +195,7 @@ TEST(opset_transform, opset0_greater_eq_downgrade_pass)
 
 TEST(opset_transform, opset1_greater_eq_upgrade_pass)
 {
-    test_opset0_comparison_upgrade_pass<op::v0::GreaterEq, op::v1::GreaterEq>("GreaterEq");
+    test_opset1_comparison_upgrade_pass<op::v0::GreaterEq, op::v1::GreaterEq>("GreaterEq");
 }
 
 TEST(opset_transform, opset0_less_downgrade_pass)
@@ -205,7 +205,7 @@ TEST(opset_transform, opset0_less_downgrade_pass)
 
 TEST(opset_transform, opset1_less_upgrade_pass)
 {
-    test_opset0_comparison_upgrade_pass<op::v0::Less, op::v1::Less>("Less");
+    test_opset1_comparison_upgrade_pass<op::v0::Less, op::v1::Less>("Less");
 }
 
 TEST(opset_transform, opset0_less_eq_downgrade_pass)
@@ -215,7 +215,7 @@ TEST(opset_transform, opset0_less_eq_downgrade_pass)
 
 TEST(opset_transform, opset1_less_eq_upgrade_pass)
 {
-    test_opset0_comparison_upgrade_pass<op::v0::LessEq, op::v1::LessEq>("LessEq");
+    test_opset1_comparison_upgrade_pass<op::v0::LessEq, op::v1::LessEq>("LessEq");
 }
 
 TEST(opset_transform, opset0_maximum_downgrade_pass)
@@ -225,7 +225,7 @@ TEST(opset_transform, opset0_maximum_downgrade_pass)
 
 TEST(opset_transform, opset1_maximum_upgrade_pass)
 {
-    test_opset0_arithmetic_upgrade_pass<op::v0::Maximum, op::v1::Maximum>("Maximum");
+    test_opset1_arithmetic_upgrade_pass<op::v0::Maximum, op::v1::Maximum>("Maximum");
 }
 
 TEST(opset_transform, opset0_minimum_downgrade_pass)
@@ -235,7 +235,7 @@ TEST(opset_transform, opset0_minimum_downgrade_pass)
 
 TEST(opset_transform, opset1_minimum_upgrade_pass)
 {
-    test_opset0_arithmetic_upgrade_pass<op::v0::Minimum, op::v1::Minimum>("Minimum");
+    test_opset1_arithmetic_upgrade_pass<op::v0::Minimum, op::v1::Minimum>("Minimum");
 }
 
 TEST(opset_transform, opset0_multiply_downgrade_pass)
@@ -245,7 +245,7 @@ TEST(opset_transform, opset0_multiply_downgrade_pass)
 
 TEST(opset_transform, opset1_multiply_upgrade_pass)
 {
-    test_opset0_arithmetic_upgrade_pass<op::v0::Multiply, op::v1::Multiply>("Multiply");
+    test_opset1_arithmetic_upgrade_pass<op::v0::Multiply, op::v1::Multiply>("Multiply");
 }
 
 TEST(opset_transform, opset0_not_equal_downgrade_pass)
@@ -255,7 +255,7 @@ TEST(opset_transform, opset0_not_equal_downgrade_pass)
 
 TEST(opset_transform, opset1_not_equal_upgrade_pass)
 {
-    test_opset0_comparison_upgrade_pass<op::v0::NotEqual, op::v1::NotEqual>("NotEqual");
+    test_opset1_comparison_upgrade_pass<op::v0::NotEqual, op::v1::NotEqual>("NotEqual");
 }
 
 TEST(opset_transform, opset0_power_downgrade_pass)
@@ -265,5 +265,5 @@ TEST(opset_transform, opset0_power_downgrade_pass)
 
 TEST(opset_transform, opset1_power_upgrade_pass)
 {
-    test_opset0_arithmetic_upgrade_pass<op::v0::Power, op::v1::Power>("Power");
+    test_opset1_arithmetic_upgrade_pass<op::v0::Power, op::v1::Power>("Power");
 }
