@@ -1436,8 +1436,18 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::GreaterEq:
         {
-            node = make_shared<op::GreaterEq>(
-                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            if (op_version == 0)
+            {
+                node = make_shared<op::v0::GreaterEq>(
+                    args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            }
+            if (op_version == 1)
+            {
+                node = make_shared<op::v1::GreaterEq>(
+                    args[0],
+                    args[1],
+                    read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+            }
             break;
         }
         case OP_TYPEID::GRN:
@@ -3016,7 +3026,15 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::GreaterEq:
     {
-        auto tmp = static_cast<const op::GreaterEq*>(&n);
+        const op::util::BinaryElementwiseComparison* tmp;
+        if (op_version == 0)
+        {
+            tmp = static_cast<const op::v1::GreaterEq*>(&n);
+        }
+        else if (op_version == 1)
+        {
+            tmp = static_cast<const op::v1::GreaterEq*>(&n);
+        }
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
