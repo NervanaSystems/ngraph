@@ -16,6 +16,7 @@
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
@@ -28,11 +29,14 @@
 #include "ngraph/op/reduce_sum.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
+#include "ngraph/op/strided_slice.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
 
 #include <limits>
+#include <numeric>
 
 using namespace std;
 using namespace ngraph;
@@ -40,12 +44,14 @@ using namespace ngraph;
 #define NGRAPH_OP(a, b) a,
 enum class OP_TYPEID
 {
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
 };
 #undef NGRAPH_OP
 
 #define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
 static unordered_map<string, OP_TYPEID> typeid_map{
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
 };
 #undef NGRAPH_OP
@@ -126,13 +132,38 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         auto kernel = tmp->get_window_shape();
 
         auto replacement_node =
-            make_shared<op::v1::AvgPoolBackprop>(tmp->get_forward_arg_shape(),
-                                                 node->input(0).get_source_output(),
+            make_shared<op::v1::AvgPoolBackprop>(node->input(0).get_source_output(),
+                                                 node->input(1).get_source_output(),
                                                  strides,
                                                  pads_begin,
                                                  pads_end,
                                                  kernel,
                                                  exclude_pad);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Broadcast:
+    {
+        auto tmp = dynamic_cast<const op::v0::Broadcast*>(node.get());
+        auto result_shape = tmp->get_broadcast_shape();
+        auto result_shape_node =
+            op::Constant::create(element::i64, Shape{result_shape.size()}, result_shape);
+        auto broadcast_axes = tmp->get_broadcast_axes();
+
+        // Flip broadcast_axes to get axes_mapping
+        std::vector<size_t> axes_mapping(result_shape.size());
+        std::iota(axes_mapping.begin(), axes_mapping.end(), 0);
+        for (auto i = broadcast_axes.rbegin(); i != broadcast_axes.rend(); i++)
+        {
+            axes_mapping.erase(axes_mapping.begin() + *i);
+        }
+        auto axes_mapping_node =
+            op::Constant::create(element::i64, Shape{axes_mapping.size()}, axes_mapping);
+
+        auto replacement_node = make_shared<op::v1::Broadcast>(node->input(0).get_source_output(),
+                                                               result_shape_node->output(0),
+                                                               axes_mapping_node->output(0));
         replace_node(node, replacement_node);
         modified = true;
         break;
@@ -384,6 +415,30 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
+    case OP_TYPEID::Slice:
+    {
+        const auto tmp = as_type_ptr<op::v0::Slice>(node);
+
+        const auto data = node->input(0).get_source_output();
+        const auto begin = op::Constant::create(
+            element::i64, Shape{tmp->get_lower_bounds().size()}, tmp->get_lower_bounds());
+        const auto end = op::Constant::create(
+            element::i64, Shape{tmp->get_upper_bounds().size()}, tmp->get_upper_bounds());
+        const auto strides = op::Constant::create(
+            element::i64, Shape{tmp->get_strides().size()}, tmp->get_strides());
+        int64_t input_size = tmp->get_lower_bounds().size();
+
+        auto replacement_node = make_shared<op::v1::StridedSlice>(data,
+                                                                  begin,
+                                                                  end,
+                                                                  strides,
+                                                                  vector<int64_t>(input_size, 0),
+                                                                  vector<int64_t>(input_size, 0));
+
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::Sum:
     {
         bool keep_dims = false;
@@ -396,6 +451,12 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
     case OP_TYPEID::TopK:
     {
         const auto topk_v0 = dynamic_cast<const op::TopK*>(node.get());
+
+        NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant(),
+                     "parameter k is expected to be a static constant");
+        NGRAPH_CHECK(node->input_value(2).get_node_shared_ptr()->is_constant(),
+                     "parameter top_k_axis is expected to be a static constant");
+
         const auto k = topk_v0->get_k();
         const auto axis = topk_v0->get_top_k_axis();
 

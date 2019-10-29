@@ -21,3 +21,6 @@ lrn_across_all_dims
 lrn_across_nw
 lrn_across_empty
 lrn_6D_across_2_axes
+
+# ONNX TopK with dynamic K
+top_k_opset_10

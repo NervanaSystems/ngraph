@@ -210,6 +210,7 @@ void MLIRCPUBackend::lowerStandardDialect()
         NGRAPH_CHECK(false, "Incorrect module after dialect lowering");
     }
 }
+
 // Receives affine dialect as input and applies affine and standard dialect based optimizations.
 // Lowering from affine dialect to standard dialect happens along the way. Output consists of
 // standard dialect only ops.

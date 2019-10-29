@@ -41,14 +41,19 @@ namespace ngraph
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto relu_desc = mkldnn_emitter->get_relu_forward_desc(node);
-                    QUERY_SCRATCHPAD(eltwise_forward, relu_desc);
+                    size_t scratchpad_size = QUERY_SCRATCHPAD(eltwise_forward, relu_desc);
 
                     // Relu needs 3 primitives: input, result, and eltwise_forward.
                     size_t relu_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(relu_index);
 
-                    auto functor = [&, relu_desc, relu_index, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
+                    auto functor = [&,
+                                    relu_desc,
+                                    relu_index,
+                                    scratchpad_size,
+                                    arg_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_relu_forward(ctx->mkldnn_memories,
@@ -63,8 +68,11 @@ namespace ngraph
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, relu_index, deps, cpu::mkldnn_utils::OpType::RELU);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx,
+                                                                   relu_index,
+                                                                   deps,
+                                                                   cpu::mkldnn_utils::OpType::RELU,
+                                                                   scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -89,7 +97,8 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto bwd_desc = mkldnn_emitter->get_relu_backward_desc(node);
                     auto fwd_desc = mkldnn_emitter->get_relu_forward_desc(node);
-                    QUERY_SCRATCHPAD_2ARGS(eltwise_backward, fwd_desc, bwd_desc);
+                    size_t scratchpad_size =
+                        QUERY_SCRATCHPAD_2ARGS(eltwise_backward, fwd_desc, bwd_desc);
 
                     // ReluBackprop needs 4 primitives: input, delta, result, and eltwise_backward.
                     size_t relu_index = mkldnn_emitter->reserve_primitive_space(4);
@@ -99,6 +108,7 @@ namespace ngraph
                                     bwd_desc,
                                     fwd_desc,
                                     relu_index,
+                                    scratchpad_size,
                                     arg_fwd_buffer_index,
                                     delta_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
@@ -121,7 +131,11 @@ namespace ngraph
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
 
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, relu_index, deps, cpu::mkldnn_utils::OpType::RELUBACKPROP);
+                            ctx,
+                            relu_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::RELUBACKPROP,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
