@@ -33,9 +33,9 @@ namespace ngraph
             Tile() = default;
             /// \brief Perform dynamic padding of a tensor
             ///
-            /// \param arg The node producing input tensor to be padded.
+            /// \param data The node producing input tensor to be padded.
             /// \param repeats The node producing the per-dimension replication factor
-            Tile(const Output<Node>& arg, const Output<Node>& repeats);
+            Tile(const Output<Node>& data, const Output<Node>& repeats);
 
             void validate_and_infer_types() override;
 
