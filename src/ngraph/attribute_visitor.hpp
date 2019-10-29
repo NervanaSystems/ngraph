@@ -24,6 +24,7 @@
 namespace ngraph
 {
     class VisitorAdapter;
+    class PartialShape;
 
     /// \brief Visits the attributes of a node.
     ///
@@ -38,8 +39,12 @@ namespace ngraph
         virtual void on_attribute(const std::string& name, element::Type& value) = 0;
         virtual void on_attribute(const std::string& name, PartialShape& value) = 0;
         virtual void on_attribute(const std::string& name, bool& value) = 0;
+        virtual void on_attribute(const std::string& name, size_t& value) = 0;
+        virtual void on_attribute(const std::string& name, std::vector<size_t>& value) = 0;
         virtual void on_attribute(const std::string& name, int64_t& value) = 0;
+        virtual void on_attribute(const std::string& name, std::vector<int64_t>& value) = 0;
         virtual void on_attribute(const std::string& name, uint64_t& value) = 0;
+        virtual void on_attribute(const std::string& name, std::vector<uint64_t>& value) = 0;
         virtual void on_attribute(const std::string& name,
                                   const VisitorAdapter& visitor_adapter) = 0;
     };

@@ -19,6 +19,9 @@
 #include <cstddef>
 #include <ostream>
 
+#include "ngraph/attribute_visitor.hpp"
+#include "ngraph/type.hpp"
+
 namespace ngraph
 {
     namespace op
@@ -32,6 +35,14 @@ namespace ngraph
             SYMMETRIC
         };
 
+        std::ostream& operator<<(std::ostream& s, const PadMode& type);
+    }
+
+    template <>
+    const DiscreteTypeInfo EnumAdapter<op::PadMode>::type_info;
+
+    namespace op
+    {
         /// \brief Padding Type used for `Convolution` and `Pooling`
         ///
         /// Follows ONNX padding type definitions
@@ -54,6 +65,14 @@ namespace ngraph
             NOTSET = EXPLICIT,
         };
 
+        std::ostream& operator<<(std::ostream& s, const PadType& type);
+    }
+
+    template <>
+    const DiscreteTypeInfo EnumAdapter<op::PadType>::type_info;
+
+    namespace op
+    {
         /// \brief Rounding Type used for `Pooling` operators.
         enum class RoundingType
         {
@@ -61,6 +80,14 @@ namespace ngraph
             CEIL = 1,
         };
 
+        std::ostream& operator<<(std::ostream& s, const RoundingType& type);
+    }
+
+    template <>
+    const DiscreteTypeInfo EnumAdapter<op::RoundingType>::type_info;
+
+    namespace op
+    {
         /// \brief Specifies the algorithm to use for implicit broadcasting of a tensor
         ///        to align with another tensor
         ///
@@ -107,6 +134,12 @@ namespace ngraph
             PDPD
         };
 
+        std::ostream& operator<<(std::ostream& s, const AutoBroadcastType& type);
+    }
+    template <>
+    const DiscreteTypeInfo EnumAdapter<op::AutoBroadcastType>::type_info;
+    namespace op
+    {
         /// \brief Specifies how eps is combined with L2 value
         enum class EpsMode
         {
@@ -116,6 +149,13 @@ namespace ngraph
             MAX
         };
 
+        std::ostream& operator<<(std::ostream& s, const EpsMode& type);
+    }
+    template <>
+    const DiscreteTypeInfo EnumAdapter<op::EpsMode>::type_info;
+
+    namespace op
+    {
         /// \brief Implicit broadcast specification
         struct AutoBroadcastSpec
         {
@@ -143,7 +183,5 @@ namespace ngraph
                 return a.m_type == m_type && a.m_axis == m_axis;
             }
         };
-
-        std::ostream& operator<<(std::ostream& s, const AutoBroadcastType& type);
     }
 }

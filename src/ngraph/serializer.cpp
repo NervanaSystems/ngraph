@@ -250,8 +250,21 @@ public:
         m_json[name] = write_partial_shape(value);
     }
     void on_attribute(const std::string& name, bool& value) override { m_json[name] = value; }
+    void on_attribute(const std::string& name, size_t& value) override { m_json[name] = value; }
+    void on_attribute(const std::string& name, std::vector<size_t>& value) override
+    {
+        m_json[name] = value;
+    }
     void on_attribute(const std::string& name, int64_t& value) override { m_json[name] = value; }
+    void on_attribute(const std::string& name, std::vector<int64_t>& value) override
+    {
+        m_json[name] = value;
+    }
     void on_attribute(const std::string& name, uint64_t& value) override { m_json[name] = value; }
+    void on_attribute(const std::string& name, std::vector<uint64_t>& value) override
+    {
+        m_json[name] = value;
+    }
     void on_attribute(const std::string& name, const VisitorAdapter& adapter) override
     {
         m_json[name] = adapter.get_string();
@@ -327,11 +340,32 @@ public:
             value = m_json.at(name).get<bool>();
         }
     }
+    void on_attribute(const std::string& name, size_t& value) override
+    {
+        if (has_key(m_json, name))
+        {
+            value = m_json.at(name).get<size_t>();
+        }
+    }
+    void on_attribute(const std::string& name, vector<size_t>& value) override
+    {
+        if (has_key(m_json, name))
+        {
+            value = m_json.at(name).get<vector<size_t>>();
+        }
+    }
     void on_attribute(const std::string& name, int64_t& value) override
     {
         if (has_key(m_json, name))
         {
             value = m_json.at(name).get<int64_t>();
+        }
+    }
+    void on_attribute(const std::string& name, vector<int64_t>& value) override
+    {
+        if (has_key(m_json, name))
+        {
+            value = m_json.at(name).get<vector<int64_t>>();
         }
     }
     void on_attribute(const std::string& name, uint64_t& value) override
@@ -341,6 +375,14 @@ public:
             value = m_json.at(name).get<uint64_t>();
         }
     }
+    void on_attribute(const std::string& name, vector<uint64_t>& value) override
+    {
+        if (has_key(m_json, name))
+        {
+            value = m_json.at(name).get<vector<uint64_t>>();
+        }
+    }
+
     void on_attribute(const std::string& name, const VisitorAdapter& adapter) override
     {
         if (has_key(m_json, name))
