@@ -73,7 +73,7 @@ namespace ngraph
             {
             public:
                 NGRAPH_API
-                static constexpr NodeTypeInfo type_info{"Divide", 0};
+                static constexpr NodeTypeInfo type_info{"Divide", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a division operation.
                 Divide() = default;
@@ -107,7 +107,6 @@ namespace ngraph
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const NodeVector& deltas) override;
                 size_t get_version() const override { return 1; }
-
             protected:
                 bool m_pythondiv{true};
             };
