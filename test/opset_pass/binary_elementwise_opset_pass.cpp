@@ -217,3 +217,13 @@ TEST(opset_transform, opset1_LessEq_upgrade_pass)
 {
     test_opset0_comparison_upgrade_pass<op::v0::LessEq, op::v1::LessEq>("LessEq");
 }
+
+TEST(opset_transform, opset0_maximum_downgrade_pass)
+{
+    test_opset0_arithmetic_downgrade_pass<op::v0::Maximum, op::v1::Maximum>("Maximum");
+}
+
+TEST(opset_transform, opset1_maximum_upgrade_pass)
+{
+    test_opset0_arithmetic_upgrade_pass<op::v0::Maximum, op::v1::Maximum>("Maximum");
+}

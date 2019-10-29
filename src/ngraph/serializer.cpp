@@ -1805,8 +1805,18 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Maximum:
         {
-            node = make_shared<op::Maximum>(
-                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            if (op_version == 0)
+            {
+                node = make_shared<op::v0::Maximum>(
+                    args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            }
+            else if (op_version == 1)
+            {
+                node = make_shared<op::v1::Maximum>(
+                    args[0],
+                    args[1],
+                    read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+            }
             break;
         }
         case OP_TYPEID::Min:
@@ -3254,7 +3264,15 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Maximum:
     {
-        auto tmp = static_cast<const op::Maximum*>(&n);
+        const op::util::BinaryElementwiseArithmetic* tmp;
+        if (op_version == 0)
+        {
+            tmp = static_cast<const op::v0::Maximum*>(&n);
+        }
+        else if (op_version == 1)
+        {
+            tmp = static_cast<const op::v1::Maximum*>(&n);
+        }
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());

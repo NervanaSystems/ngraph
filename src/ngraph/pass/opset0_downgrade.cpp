@@ -32,6 +32,7 @@
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/maximum.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reduce_prod.hpp"
@@ -294,6 +295,12 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
     case OP_TYPEID::LessEq:
     {
         downgrade_binary_elementwise_node<op::v0::LessEq, op::v1::LessEq>(node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Maximum:
+    {
+        downgrade_binary_elementwise_node<op::v0::Maximum, op::v1::Maximum>(node);
         modified = true;
         break;
     }
