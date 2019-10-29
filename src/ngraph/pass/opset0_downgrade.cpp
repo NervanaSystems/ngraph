@@ -34,6 +34,7 @@
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
+#include "ngraph/op/multiply.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reduce_prod.hpp"
@@ -305,12 +306,6 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Minimum:
-    {
-        downgrade_binary_elementwise_node<op::v0::Minimum, op::v1::Minimum>(node);
-        modified = true;
-        break;
-    }
     case OP_TYPEID::MaxPool:
     {
         auto tmp = as_type_ptr<op::v1::MaxPool>(node);
@@ -368,6 +363,18 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
                                                                     padding_above);
         }
         replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Minimum:
+    {
+        downgrade_binary_elementwise_node<op::v0::Minimum, op::v1::Minimum>(node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Multiply:
+    {
+        downgrade_binary_elementwise_node<op::v0::Multiply, op::v1::Multiply>(node);
         modified = true;
         break;
     }

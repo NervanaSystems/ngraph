@@ -237,3 +237,13 @@ TEST(opset_transform, opset1_minimum_upgrade_pass)
 {
     test_opset0_arithmetic_upgrade_pass<op::v0::Minimum, op::v1::Minimum>("Minimum");
 }
+
+TEST(opset_transform, opset0_multiply_downgrade_pass)
+{
+    test_opset0_arithmetic_downgrade_pass<op::v0::Multiply, op::v1::Multiply>("Multiply");
+}
+
+TEST(opset_transform, opset1_multiply_upgrade_pass)
+{
+    test_opset0_arithmetic_upgrade_pass<op::v0::Multiply, op::v1::Multiply>("Multiply");
+}
