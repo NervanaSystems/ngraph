@@ -283,6 +283,7 @@ namespace ngraph
             }
 
             virtual void validate_and_infer_types() override;
+            void revalidate_and_infer_types_for_body_ops();
 
             int64_t get_num_iterations() const { return m_num_iterations; }
         private:

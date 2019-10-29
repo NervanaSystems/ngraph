@@ -2419,7 +2419,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto ti = make_shared<op::TensorIterator>(args);
             json jbody = node_js["body"];
             // Serializer assumes inputs are available before users sp we
-            // need to make sure the body nodes are all deerialized before
+            // need to make sure the body nodes are all deserialized before
             // referencing them.
             json jbody_nodes = jbody["nodes"];
             NodeVector body_nodes;

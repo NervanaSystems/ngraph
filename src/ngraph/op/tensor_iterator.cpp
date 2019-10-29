@@ -214,15 +214,14 @@ NodeVector op::TensorIterator::decompose_op() const
     return NodeVector{};
 }
 
-static void revalidate_and_infer_types_for_body_ops(std::vector<std::shared_ptr<Node>> ends)
+void op::TensorIterator::revalidate_and_infer_types_for_body_ops()
 {
     std::stack<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>> nodes_to_do;
     std::unordered_set<std::shared_ptr<Node>> nodes_done;
 
-    for (auto end : ends)
+    for (auto r : m_body->get_results())
     {
-        NGRAPH_CHECK(as_type_ptr<op::TensorIterator>(end) == nullptr, "No nested TensorIterator");
-        nodes_to_do.push(end);
+        nodes_to_do.push(r);
     }
     while (nodes_to_do.size() > 0)
     {
@@ -402,13 +401,7 @@ void op::TensorIterator::validate_and_infer_types()
     }
 
     // Body
-    for (auto output_description : m_output_descriptions)
-    {
-        auto body_value =
-            m_body->get_results().at(output_description->m_body_value_index)->input_value(0);
-        ends.push_back(body_value.get_node()->shared_from_this());
-    }
-    revalidate_and_infer_types_for_body_ops(ends);
+    revalidate_and_infer_types_for_body_ops();
 
     // Output
     index_it = 0;
@@ -450,14 +443,6 @@ void op::TensorIterator::validate_and_infer_types()
                     // for simple RNN case where stride is the same as part_size
                     out_shape[axis] = m_num_iterations * part_size;
                     set_output_type(index, body_value.get_element_type(), out_shape);
-                    // set the shape of Result in BodyLambda
-                    for (auto in : body_value.get_target_inputs())
-                    {
-                        if (auto r = as_type_ptr<Result>(in.get_node()->shared_from_this()))
-                        {
-                            r->revalidate_and_infer_types();
-                        }
-                    }
                 }
             }
         }
@@ -465,14 +450,6 @@ void op::TensorIterator::validate_and_infer_types()
                      as_type_ptr<BodyOutputDescription>(output_description))
         {
             set_output_type(index, body_value.get_element_type(), body_value.get_partial_shape());
-            // set the shape of Result in BodyLambda
-            for (auto in : body_value.get_target_inputs())
-            {
-                if (auto r = as_type_ptr<Result>(in.get_node()->shared_from_this()))
-                {
-                    r->revalidate_and_infer_types();
-                }
-            }
         }
     }
 }
