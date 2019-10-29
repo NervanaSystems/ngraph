@@ -32,7 +32,7 @@
      core/constructing-graphs/index.rst
      core/passes/passes.rst
      nGraph Core Ops <ops/index.rst>
-
+     provenance/index.rst
 
 * :ref:`Backend Support <backend_support>`
 
