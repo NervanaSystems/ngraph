@@ -389,7 +389,7 @@ shared_ptr<Node> Node::add_provenance_group_members_above(const OutputVector& ba
         add_provenance_group_member(node->shared_from_this());
         for (auto value : node->input_values())
         {
-            if (0 == node->m_provenance_group.count(value.get_node_shared_ptr()))
+            if (m_provenance_group.count(value.get_node_shared_ptr()) == 0)
             {
                 todo.push_back(value.get_node());
             }

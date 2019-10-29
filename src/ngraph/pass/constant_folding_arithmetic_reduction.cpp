@@ -19,8 +19,12 @@
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/reduce_mean.hpp"
+#include "ngraph/op/reduce_prod.hpp"
+#include "ngraph/op/reduce_sum.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/runtime/reference/max.hpp"
+#include "ngraph/runtime/reference/mean.hpp"
 #include "ngraph/runtime/reference/min.hpp"
 #include "ngraph/runtime/reference/product.hpp"
 #include "ngraph/runtime/reference/sum.hpp"
@@ -43,6 +47,24 @@ static shared_ptr<op::Constant>
                                    reduction_node->get_shape(),
                                    max->get_reduction_axes());
     }
+    else if (auto reduce_max = as_type_ptr<op::v1::ReduceMax>(reduction_node))
+    {
+        auto reduction_axes = reduce_max->get_reduction_axes();
+        auto input_shape = reduce_max->get_input_shape(0);
+        Shape shape_no_keep_dims;
+        for (size_t i = 0; i < input_shape.size(); i++)
+        {
+            if (reduction_axes.count(i) == 0)
+            {
+                shape_no_keep_dims.push_back(input_shape[i]);
+            }
+        }
+        runtime::reference::max<T>(constant->get_vector<T>().data(),
+                                   out_vec.data(),
+                                   constant->get_output_shape(0),
+                                   shape_no_keep_dims,
+                                   reduce_max->get_reduction_axes());
+    }
     else if (auto min = as_type_ptr<op::Min>(reduction_node))
     {
         runtime::reference::min<T>(constant->get_vector<T>().data(),
@@ -50,6 +72,24 @@ static shared_ptr<op::Constant>
                                    constant->get_output_shape(0),
                                    reduction_node->get_shape(),
                                    min->get_reduction_axes());
+    }
+    else if (auto reduce_min = as_type_ptr<op::v1::ReduceMin>(reduction_node))
+    {
+        auto reduction_axes = reduce_min->get_reduction_axes();
+        auto input_shape = reduce_min->get_input_shape(0);
+        Shape shape_no_keep_dims;
+        for (size_t i = 0; i < input_shape.size(); i++)
+        {
+            if (reduction_axes.count(i) == 0)
+            {
+                shape_no_keep_dims.push_back(input_shape[i]);
+            }
+        }
+        runtime::reference::min<T>(constant->get_vector<T>().data(),
+                                   out_vec.data(),
+                                   constant->get_output_shape(0),
+                                   shape_no_keep_dims,
+                                   reduce_min->get_reduction_axes());
     }
     else if (auto prod = as_type_ptr<op::Product>(reduction_node))
     {
@@ -59,6 +99,24 @@ static shared_ptr<op::Constant>
                                        reduction_node->get_shape(),
                                        prod->get_reduction_axes());
     }
+    else if (auto reduce_prod = as_type_ptr<op::v1::ReduceProd>(reduction_node))
+    {
+        auto reduction_axes = reduce_prod->get_reduction_axes();
+        auto input_shape = reduce_prod->get_input_shape(0);
+        Shape shape_no_keep_dims;
+        for (size_t i = 0; i < input_shape.size(); i++)
+        {
+            if (reduction_axes.count(i) == 0)
+            {
+                shape_no_keep_dims.push_back(input_shape[i]);
+            }
+        }
+        runtime::reference::product<T>(constant->get_vector<T>().data(),
+                                       out_vec.data(),
+                                       constant->get_output_shape(0),
+                                       shape_no_keep_dims,
+                                       reduce_prod->get_reduction_axes());
+    }
     else if (auto sum = as_type_ptr<op::Sum>(reduction_node))
     {
         runtime::reference::sum<T>(constant->get_vector<T>().data(),
@@ -66,6 +124,42 @@ static shared_ptr<op::Constant>
                                    constant->get_output_shape(0),
                                    reduction_node->get_shape(),
                                    sum->get_reduction_axes());
+    }
+    else if (auto reduce_sum = as_type_ptr<op::v1::ReduceSum>(reduction_node))
+    {
+        auto reduction_axes = reduce_sum->get_reduction_axes();
+        auto input_shape = reduce_sum->get_input_shape(0);
+        Shape shape_no_keep_dims;
+        for (size_t i = 0; i < input_shape.size(); i++)
+        {
+            if (reduction_axes.count(i) == 0)
+            {
+                shape_no_keep_dims.push_back(input_shape[i]);
+            }
+        }
+        runtime::reference::sum<T>(constant->get_vector<T>().data(),
+                                   out_vec.data(),
+                                   constant->get_output_shape(0),
+                                   shape_no_keep_dims,
+                                   reduce_sum->get_reduction_axes());
+    }
+    else if (auto reduce_mean = as_type_ptr<op::v1::ReduceMean>(reduction_node))
+    {
+        auto reduction_axes = reduce_mean->get_reduction_axes();
+        auto input_shape = reduce_mean->get_input_shape(0);
+        Shape shape_no_keep_dims;
+        for (size_t i = 0; i < input_shape.size(); i++)
+        {
+            if (reduction_axes.count(i) == 0)
+            {
+                shape_no_keep_dims.push_back(input_shape[i]);
+            }
+        }
+        runtime::reference::mean<T>(constant->get_vector<T>().data(),
+                                    out_vec.data(),
+                                    constant->get_output_shape(0),
+                                    shape_no_keep_dims,
+                                    reduce_mean->get_reduction_axes());
     }
     else
     {
@@ -134,7 +228,12 @@ void pass::ConstantFolding::construct_constant_arithmetic_reduction()
         make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
     auto is_supported_reduction = [](std::shared_ptr<Node> n) {
         return (pattern::has_class<op::Max>()(n) || pattern::has_class<op::Min>()(n) ||
-                pattern::has_class<op::Product>()(n) || pattern::has_class<op::Sum>()(n));
+                pattern::has_class<op::Product>()(n) || pattern::has_class<op::Sum>()(n) ||
+                pattern::has_class<op::v1::ReduceMax>()(n) ||
+                pattern::has_class<op::v1::ReduceMin>()(n) ||
+                pattern::has_class<op::v1::ReduceProd>()(n) ||
+                pattern::has_class<op::v1::ReduceSum>()(n) ||
+                pattern::has_class<op::v1::ReduceMean>()(n));
     };
     auto reduction =
         std::make_shared<pattern::op::Any>(element::i32,

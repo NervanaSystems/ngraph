@@ -206,11 +206,9 @@ TEST(memory_manager, memory_align)
 
 TEST(memory_layout, basic)
 {
-    string dump_file = "memory_layout.txt";
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.register_pass<pass::MemoryLayout>();
-    pass_manager.register_pass<pass::DumpSorted>(dump_file);
 
     auto graph = make_test_graph();
     pass_manager.run_passes(graph);
@@ -221,11 +219,9 @@ TEST(memory_layout, basic)
 
 TEST(memory_layout, constant)
 {
-    string dump_file = "constant.txt";
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.register_pass<pass::MemoryLayout>();
-    pass_manager.register_pass<pass::DumpSorted>(dump_file);
 
     Shape shape{1};
     auto c = op::Constant::create(element::i32, shape, {5});
