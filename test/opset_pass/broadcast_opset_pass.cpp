@@ -4,8 +4,8 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/opset0_downgrade.hpp"
-#include "ngraph/pass/opset1_upgrade.hpp"
+#include "ngraph/pass/op_downgrade_v1tov0.hpp"
+#include "ngraph/pass/op_upgrade_v0tov1.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;
@@ -19,7 +19,7 @@ TEST(opset_transform, opset1_broadcast_upgrade_pass)
     auto f = make_shared<Function>(NodeVector{bcast_v0}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Upgrade>();
+    pass_manager.register_pass<pass::OpUpgradeV0ToV1>();
     pass_manager.run_passes(f);
 
     auto bcast_v1 = static_pointer_cast<op::v1::Broadcast>(
@@ -50,7 +50,7 @@ TEST(opset_transform, opset1_broadcast_downgrade_pass)
     auto f = make_shared<Function>(NodeVector{bcast_v1}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.register_pass<pass::OpDowngradeV1ToV0>();
     pass_manager.run_passes(f);
 
     auto bcast_v0 = static_pointer_cast<op::v0::Broadcast>(

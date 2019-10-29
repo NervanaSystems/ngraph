@@ -21,6 +21,7 @@
 
 #include "ngraph/code_writer.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/add.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/convolution.hpp"
@@ -48,7 +49,6 @@ namespace ngraph
 {
     namespace op
     {
-        class Add;
         class AllReduce;
         class BroadcastDistributed;
         class MatmulBias;

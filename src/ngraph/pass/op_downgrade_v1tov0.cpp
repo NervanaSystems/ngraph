@@ -32,7 +32,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/pass/opset0_downgrade.hpp"
+#include "ngraph/pass/op_downgrade_v1tov0.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -68,7 +68,7 @@ static OP_TYPEID get_typeid(shared_ptr<Node> node)
 }
 // END mapping to OP_TYPEID
 
-bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
+bool pass::OpDowngradeV1ToV0::run_on_node(shared_ptr<Node> node)
 {
     bool modified = false;
 

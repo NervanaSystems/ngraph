@@ -464,10 +464,10 @@ set (SRC
     pass/nop_elimination.hpp
     pass/pass.cpp
     pass/pass.hpp
-    pass/opset0_downgrade.cpp
-    pass/opset0_downgrade.hpp
-    pass/opset1_upgrade.cpp
-    pass/opset1_upgrade.hpp
+    pass/op_downgrade_v1tov0.cpp
+    pass/op_downgrade_v1tov0.hpp
+    pass/op_upgrade_v0tov1.cpp
+    pass/op_upgrade_v0tov1.hpp
     pass/pass_config.cpp
     pass/pass_config.hpp
     pass/propagate_cacheability.cpp

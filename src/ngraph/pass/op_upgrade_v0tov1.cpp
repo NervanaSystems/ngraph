@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "ngraph/pass/opset1_upgrade.hpp"
+#include "ngraph/pass/op_upgrade_v0tov1.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/broadcast.hpp"
@@ -70,7 +70,7 @@ static OP_TYPEID get_typeid(shared_ptr<Node> node)
 }
 // END mapping to OP_TYPEID
 
-bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
+bool pass::OpUpgradeV0ToV1::run_on_node(shared_ptr<Node> node)
 {
     bool modified = false;
 

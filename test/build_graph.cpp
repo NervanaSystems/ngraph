@@ -21,6 +21,8 @@
 #include "ngraph/serializer.hpp"
 #include "util/test_tools.hpp"
 
+#include "ngraph/op/util/opset1.hpp"
+
 #include <memory>
 using namespace std;
 using namespace ngraph;
@@ -218,4 +220,10 @@ TEST(build_graph, validate_function_for_dynamic_shape)
 
     EXPECT_EQ(true, make_function(true)->is_dynamic());
     EXPECT_EQ(false, make_function(false)->is_dynamic());
+}
+
+TEST(build_graph, opset1)
+{
+    ASSERT_EQ(make_shared<opset1::Add>()->get_version(), 0);
+    ASSERT_EQ(make_shared<opset1::Convolution>()->get_version(), 1);
 }

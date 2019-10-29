@@ -19,7 +19,7 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/opset1_upgrade.hpp"
+#include "ngraph/pass/op_upgrade_v0tov1.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;
@@ -35,7 +35,7 @@ TEST(opset_transform, opset1_softmax_upgrade_pass_axis)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Upgrade>();
+    pass_manager.register_pass<pass::OpUpgradeV0ToV1>();
     pass_manager.run_passes(f);
 
     auto softmax_s1_result = f->get_results().at(0);
@@ -56,12 +56,12 @@ TEST(opset_transform, opset1_softmax_upgrade_pass_axis_exception)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Upgrade>();
+    pass_manager.register_pass<pass::OpUpgradeV0ToV1>();
 
     try
     {
         pass_manager.run_passes(f);
-        FAIL() << "Exception after Opset1Upgrade pass was not thrown.";
+        FAIL() << "Exception after OpUpgradeV0ToV1 pass was not thrown.";
     }
     catch (const ngraph_error& error)
     {
@@ -98,7 +98,7 @@ TEST(opset_transform, opset1_softmax_upgrade_pass_incorrect_op_version)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Upgrade>();
+    pass_manager.register_pass<pass::OpUpgradeV0ToV1>();
 
     try
     {

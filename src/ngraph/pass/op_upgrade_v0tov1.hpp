@@ -22,16 +22,16 @@ namespace ngraph
 {
     namespace pass
     {
-        class Opset0Downgrade : public NodePass
+        class OpUpgradeV0ToV1 : public NodePass
         {
         public:
             ///
-            /// \brief    Constructor for the Opset 1 downgrade transformation pass.
+            /// \brief    Constructor for the OpUpgradeV0ToV1 transformation pass.
             ///
             /// \details  This transformation pass iterates over all nodes in a graph
-            /// and updates opset version 1 ops to their opset version 0 equivalents.
-            /// All ops in the final graph have opset version 0.
-            Opset0Downgrade() = default;
+            /// and updates version 0 ops to their version 1 equivalents.
+            /// All ops in the final graph have op version 1.
+            OpUpgradeV0ToV1() = default;
             bool run_on_node(std::shared_ptr<ngraph::Node> node) override;
         };
     }

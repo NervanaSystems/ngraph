@@ -3,8 +3,8 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/opset0_downgrade.hpp"
-#include "ngraph/pass/opset1_upgrade.hpp"
+#include "ngraph/pass/op_downgrade_v1tov0.hpp"
+#include "ngraph/pass/op_upgrade_v0tov1.hpp"
 #include "util/test_control.hpp"
 #include "util/type_prop.hpp"
 
@@ -28,7 +28,7 @@ TEST(opset_transform, opset1_avgpool_upgrade_pass)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Upgrade>();
+    pass_manager.register_pass<pass::OpUpgradeV0ToV1>();
     pass_manager.run_passes(f);
 
     auto avgpool_s1_result = f->get_results().at(0);
@@ -63,7 +63,7 @@ TEST(opset_transform, opset1_maxpool_upgrade_pass)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Upgrade>();
+    pass_manager.register_pass<pass::OpUpgradeV0ToV1>();
     pass_manager.run_passes(f);
 
     auto maxpool_s1_result = f->get_results().at(0);
@@ -104,7 +104,7 @@ TEST(opset_transform, opset1_avgpool_downgrade_pass)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.register_pass<pass::OpDowngradeV1ToV0>();
     pass_manager.run_passes(f);
 
     auto avgpool_s0_result = f->get_results().at(0);
@@ -144,7 +144,7 @@ TEST(opset_transform, opset1_maxpool_downgrade_pass)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.register_pass<pass::OpDowngradeV1ToV0>();
     pass_manager.run_passes(f);
 
     auto maxpool_s0_result = f->get_results().at(0);
@@ -184,7 +184,7 @@ TEST(opset_transform, opset1_avgpool_backprop_downgrade_pass)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{delta});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.register_pass<pass::OpDowngradeV1ToV0>();
     pass_manager.run_passes(f);
 
     auto avgpool_backprop_s0_result = f->get_results().at(0);
@@ -224,7 +224,7 @@ TEST(opset_transform, opset1_maxpool_backprop_downgrade_pass)
                                    ParameterVector{arg_forward, delta, result_forward});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.register_pass<pass::OpDowngradeV1ToV0>();
     pass_manager.run_passes(f);
 
     auto max_pool_backprop_s0_result = f->get_results().at(0);

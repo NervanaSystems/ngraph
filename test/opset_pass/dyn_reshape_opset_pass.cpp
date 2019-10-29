@@ -19,7 +19,7 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/opset1_upgrade.hpp"
+#include "ngraph/pass/op_upgrade_v0tov1.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;
@@ -35,7 +35,7 @@ TEST(opset_transform, opset1_dyn_reshape_upgrade_pass)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg, pattern});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Upgrade>();
+    pass_manager.register_pass<pass::OpUpgradeV0ToV1>();
     pass_manager.run_passes(f);
 
     const auto pass_replacement_node =

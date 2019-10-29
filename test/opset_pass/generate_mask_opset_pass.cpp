@@ -4,7 +4,7 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/opset0_downgrade.hpp"
+#include "ngraph/pass/op_downgrade_v1tov0.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;
@@ -23,7 +23,7 @@ TEST(opset_transform, opset1_generate_mask_downgrade_pass)
     auto f = make_shared<Function>(NodeVector{gen_mask, gen_mask2}, ParameterVector{});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.register_pass<pass::OpDowngradeV1ToV0>();
     pass_manager.run_passes(f);
 
     auto generate_mask_v0 = static_pointer_cast<op::v0::GenerateMask>(
