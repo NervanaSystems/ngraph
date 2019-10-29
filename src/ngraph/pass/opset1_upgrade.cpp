@@ -489,7 +489,7 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
     }
     case OP_TYPEID::Xor:
     {
-        const auto xor_v0 = dynamic_cast<const op::v0::Xor*>(node.get()); 
+        const auto xor_v0 = dynamic_cast<const op::v0::Xor*>(node.get());
         auto replacement_node = make_shared<op::v1::LogicalXor>(node->input(0).get_source_output(),
                                                                 node->input(1).get_source_output(),
                                                                 xor_v0->get_autob());
