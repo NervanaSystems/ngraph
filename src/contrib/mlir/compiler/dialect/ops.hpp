@@ -36,3 +36,7 @@ namespace mlir
 void setBufferId(mlir::Operation* op, mlir::IntegerAttr attr);
 mlir::IntegerAttr setBufferId(mlir::Operation* op, unsigned val);
 mlir::IntegerAttr getBufferId(mlir::Operation* op);
+
+void setBufferOffset(mlir::Operation* op, mlir::IntegerAttr attr);
+mlir::IntegerAttr setBufferOffset(mlir::Operation* op, unsigned val);
+mlir::IntegerAttr getBufferOffset(mlir::Operation* op);

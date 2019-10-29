@@ -75,6 +75,7 @@ namespace
         bool isLive(Value* v);
         void setLive(Value* v);
         void kill(Value* v);
+        void getLiveValues(llvm::SmallVectorImpl<Value*>& values);
         void reset();
         private: 
         unsigned m_maxIdx = 0;
@@ -99,12 +100,17 @@ namespace
 
     private:
         bool isSafeInPlace(mlir::Operation* op);
+        bool isInputOrOutputValue(mlir::Value* value);
         std::unordered_map<std::string, bool> m_inplaceOps;
         static unsigned bufferId;
     };
 
     unsigned MemoryOptimizationPass::bufferId = 0;
 
+// Go backwards over instructions
+//  Update aliasing assignment
+//  Update liveness info
+// 
 // Aliasing conditions:
 // General conditions:
 //      Operand cannot be argument or output of the sub-graph
@@ -130,8 +136,246 @@ namespace
 
     void MemoryOptimizationPass::runOnFunction()
     {
+        Liveness liveness;
+        AliasRelation aliasRelation;
         auto f = getFunction();
 
+        auto& blocks = f.getBlocks();
+        if (blocks.size() != 1)
+        {
+            // single block func for now
+            return;
+        }
+        auto& block = *(blocks.begin());
+
+        // scan instructions backwards
+        for (auto it = block.rbegin(); it != block.rend(); it++)
+        {
+            Operation* op = &(*it);
+
+            // TODO: replace with Op Interface check
+            if (/*inplace and destructive*/ false)
+            {
+                NGRAPH_CHECK(op->getNumResults() == 1, "Destructive in-place with multi-def ?");
+                Value* use = nullptr;
+
+                unsigned useCount = 0;
+                // pick a dead operand, not input or output with the least number of uses
+                for (auto opnd : op->getOperands())
+                {
+                   if (!liveness.isLive(opnd) && !isInputOrOutputValue(opnd))
+                   {
+                       unsigned uses = 0;
+                       for (auto& i : opnd->getUses())
+                       {
+                           uses++;
+                       }
+                       if (useCount > uses)
+                       {
+                           use = opnd;
+                       }
+                   }
+                }
+                if (use)
+                {
+                    // assign new buffer or copy buffer info from dst
+                    IntegerAttr attr = getBufferId(op);
+                    if (!attr)
+                    {
+                        // attach a new buffer id, and 0 offset on obth src and result
+                        attr = setBufferId(op, this->bufferId++);
+                        setBufferId(use->getDefiningOp(), attr);
+
+                        attr = setBufferOffset(op, 0);
+                        setBufferOffset(use->getDefiningOp(), 0);
+                    }
+                    else
+                    {
+                        // copy result buffer id and offset to src
+                        setBufferId(use->getDefiningOp(), attr);
+                        attr = getBufferOffset(op);
+                        setBufferOffset(use->getDefiningOp(), attr);
+                    }
+
+                    // update aliasing info
+                    // use value cannot alias any live value 
+                    SmallVector<Value*, 10> liveValues;
+                    liveness.getLiveValues(liveValues);
+                    for (auto& value :  liveValues)
+                    {
+                        aliasRelation.insertNoAlias(use, value);
+                    }
+                    
+                }
+                
+            } 
+
+            // TODO: replace with Op Interface check
+            if (/*inplace and non-destructive*/ false)
+            {
+                if (auto concat = cast<mlir::NGConcatOp>(op))
+                {
+                    // concat on the highest non-one axis
+                    auto concatAxis = concat.concatenation_axis();
+                    auto result = concat.getResult();
+                    auto shape = (result.getType().cast<NGTensorType>()).getShape();
+                    bool optimize = true;
+                    std::vector<int> offsetDeltas;
+                    IntegerAttr attr;
+                    int bufferId = -1, baseOffset = 0;
+
+                    for (auto i : shape)
+                    {
+                        if (i == concatAxis)
+                        {
+                            break;
+                        }
+                        if (i != 1)
+                        {
+                            optimize = false;
+                        }
+                    }
+                    if (optimize)
+                    {
+                        // check that all operands and dst can alias
+                        // and that none is input or output
+                        for (auto opnd : op->getOperands())
+                        {
+                            if (!aliasRelation.canAlias(result, opnd) ||
+                                isInputOrOutputValue(opnd))
+                            {
+                                optimize = false;
+                            }
+                        }
+                    }
+
+                    if (optimize)
+                    {
+                        // calculate offset deltas
+                        int offsetDelta = 0;
+                        for (auto i = 0; i < op->getNumOperands(); i++)
+                        {
+                            if (i = 0)
+                            {
+                                offsetDeltas.push_back(0);
+                            }
+                            else
+                            {
+                                auto opnd = op->getOperand(i-1);
+                                auto tensorType = opnd->getType().cast<NGTensorType>();
+                                offsetDelta += tensorType.getNumElements();
+                                offsetDeltas.push_back(offsetDelta);
+                            }
+                        }
+                        // check for consistent pre-existing buffer assignments
+                        
+                        // dest has an assignment
+                        attr = getBufferId(op);
+                        if (attr)
+                        {
+                            // set buffer ID and base offset to that of dest's
+                            bufferId = attr.getInt();
+                            baseOffset = getBufferOffset(op).getInt();
+
+                            // check if we can re-use it for all src operands
+                            int currOffset = 0;
+                            for (auto i = 0; i < op->getNumOperands(); i++)
+                            {
+                                auto opnd = op->getOperand(i);
+                                auto defOp = opnd->getDefiningOp();
+                                // expected offset 
+                                currOffset = baseOffset + offsetDeltas[i];
+
+                                attr = getBufferId(defOp);
+                                if (attr)
+                                {
+                                    if (attr.getInt() != bufferId || 
+                                        currOffset != getBufferOffset(defOp).getInt())
+                                    {
+                                        // buffer ID mismatch, bailout
+                                        optimize = false;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // dst has no buffer assignment
+                            // Check if any of the srcs does. If so, check if we can use it for all operands and dst
+                            int currOffset;
+                            bool srcFound = false;
+                            for (auto i = 0; i < op->getNumOperands(); i++)
+                            {
+                                auto opnd = op->getOperand(i);
+                                auto defOp = opnd->getDefiningOp();
+
+                                attr = getBufferId(defOp);
+                                if (attr)
+                                {
+                                    bufferId = attr.getInt();
+                                    attr = getBufferOffset(defOp);
+                                    baseOffset = attr.getInt() - offsetDeltas[i];
+                                    if (baseOffset < 0)
+                                    {
+                                        // offset at src will not make all src tensors to fit in src's buffer
+                                        // bailout 
+                                        optimize = false;
+                                        break;
+                                    }
+                                    srcFound = true;
+                                    continue; // next src
+                                }
+                                if (srcFound)
+                                {
+                                    // we have found a pre-assigned src, check that buffer ID and offsets match
+                                    NGRAPH_CHECK(bufferId >= 0, "Cannot re-use buffer negative buffer ID");
+                                    attr = getBufferId(defOp);
+                                    if (attr)
+                                    {
+
+                                        if (bufferId != attr.getInt() || 
+                                            getBufferOffset(defOp).getInt() != (baseOffset + offsetDeltas[i]))
+                                        {
+                                            // incompatible buffer, bail out
+                                            optimize = false;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        // we should have a valid buffer ID and offset at this point
+                        NGRAPH_CHECK(optimize || (bufferId == -1 && baseOffset == 0));
+                        if (optimize)
+                        {  
+                            // TODO: Write annotations now. No need to check if we are over-writing since they should all match. 
+
+                        }
+                        
+
+                    }
+                     
+                        
+
+                        
+                    }
+                }
+
+            }
+
+            // update liveness info
+
+            for (auto dit : op->getResults())
+            {
+                liveness.kill(dit);
+            }
+            for (auto uit : op->getOperands())
+            {
+                liveness.setLive(uit);
+            }
+        }
+        #if 0
         f.walk([&](mlir::Operation* op) {
             if (!isSafeInPlace(op))
             {
@@ -204,8 +448,30 @@ namespace
                 }
             }
         });
+        #endif 
     }
 
+    bool MemoryOptimizationPass::isInputOrOutputValue(mlir::Value* value)
+    {
+        // do we have a buffer id attached to this value
+        auto defOp = value->getDefiningOp();
+        // If no defining op, then this is a block arg, skip operand
+        if (!defOp)
+        {
+            return true;
+        }
+
+        // If the defined value is an output of the sub-graph, cannot do it in place
+        for (auto& use : value->getUses())
+        {
+            auto useOp = use.getOwner();
+            if (isa<NGReturnOp>(useOp))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
     // TODO Change this to use interfaces. 
     bool MemoryOptimizationPass::isSafeInPlace(mlir::Operation* op)
     {
@@ -337,6 +603,17 @@ namespace
         m_valueToIdx.clear();
         m_liveness.clear();
         m_maxIdx = 0;
+    }
+
+    void Liveness::getLiveValues(llvm::SmallVectorImpl<Value*>& values)
+    {
+        for (auto& entry : m_valueToIdx)
+        {
+            if (m_liveness[entry.second])
+            {
+                values.push_back(entry.first);
+            }
+        }
     }
 
     bool Liveness::isLive(Value* v)
