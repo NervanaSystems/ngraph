@@ -91,6 +91,7 @@
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/shuffle_channels.hpp"
+#include "ngraph/op/fused/softmax_crossentropy.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/fused/split.hpp"
 #include "ngraph/op/fused/squared_difference.hpp"
@@ -145,6 +146,7 @@
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/stop_gradient.hpp"
+#include "ngraph/op/strided_slice.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
@@ -2142,10 +2144,30 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Slice:
         {
-            auto lower_bounds = node_js.at("lower_bounds").get<vector<size_t>>();
-            auto upper_bounds = node_js.at("upper_bounds").get<vector<size_t>>();
-            auto strides = node_js.at("strides").get<vector<size_t>>();
-            node = make_shared<op::Slice>(args[0], lower_bounds, upper_bounds, strides);
+            if (op_version == 0)
+            {
+                auto lower_bounds = node_js.at("lower_bounds").get<vector<size_t>>();
+                auto upper_bounds = node_js.at("upper_bounds").get<vector<size_t>>();
+                auto strides = node_js.at("strides").get<vector<size_t>>();
+                node = make_shared<op::Slice>(args[0], lower_bounds, upper_bounds, strides);
+            }
+            if (op_version == 1)
+            {
+                auto begin_mask = node_js.at("begin_mask").get<vector<int64_t>>();
+                auto end_mask = node_js.at("end_mask").get<vector<int64_t>>();
+                auto new_axis_mask = node_js.at("new_axis_mask").get<vector<int64_t>>();
+                auto shrink_axis_mask = node_js.at("shrink_axis_mask").get<vector<int64_t>>();
+                auto ellipsis_mask = node_js.at("ellipsis_mask").get<vector<int64_t>>();
+                node = make_shared<op::v1::StridedSlice>(args[0],
+                                                         args[1],
+                                                         args[2],
+                                                         args[3],
+                                                         begin_mask,
+                                                         end_mask,
+                                                         new_axis_mask,
+                                                         shrink_axis_mask,
+                                                         ellipsis_mask);
+            }
             break;
         }
         case OP_TYPEID::Softmax:
@@ -2167,6 +2189,21 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 size_t softmax_axis = node_js.at("softmax_axis");
                 node = make_shared<op::v1::Softmax>(args[0], softmax_axis);
             }
+            break;
+        }
+        case OP_TYPEID::SoftmaxCrossEntropy:
+        {
+            auto soft_label = node_js.at("soft_label");
+            auto ignore_index = node_js.at("ignore_index");
+            node = make_shared<op::SoftmaxCrossEntropy>(args[0], args[1], soft_label, ignore_index);
+            break;
+        }
+        case OP_TYPEID::SoftmaxCrossEntropyBackprop:
+        {
+            auto soft_label = node_js.at("soft_label");
+            auto ignore_index = node_js.at("ignore_index");
+            node = make_shared<op::SoftmaxCrossEntropyBackprop>(
+                args[0], args[1], args[2], soft_label, ignore_index);
             break;
         }
         case OP_TYPEID::SpaceToDepth:
@@ -3418,10 +3455,22 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Slice:
     {
-        auto tmp = static_cast<const op::Slice*>(&n);
-        node["lower_bounds"] = tmp->get_lower_bounds();
-        node["upper_bounds"] = tmp->get_upper_bounds();
-        node["strides"] = tmp->get_strides();
+        if (op_version == 0)
+        {
+            auto tmp = static_cast<const op::Slice*>(&n);
+            node["lower_bounds"] = tmp->get_lower_bounds();
+            node["upper_bounds"] = tmp->get_upper_bounds();
+            node["strides"] = tmp->get_strides();
+        }
+        if (op_version == 1)
+        {
+            auto tmp = static_cast<const op::v1::StridedSlice*>(&n);
+            node["begin_mask"] = tmp->get_begin_mask();
+            node["end_mask"] = tmp->get_end_mask();
+            node["new_axis_mask"] = tmp->get_new_axis_mask();
+            node["shrink_axis_mask"] = tmp->get_shrink_axis_mask();
+            node["ellipsis_mask"] = tmp->get_ellipsis_mask();
+        }
         break;
     }
     case OP_TYPEID::SpaceToDepth:
@@ -3479,6 +3528,20 @@ json JSONSerializer::serialize_node(const Node& n)
             auto tmp = static_cast<const op::v1::Softmax*>(&n);
             node["softmax_axis"] = tmp->get_axis();
         }
+        break;
+    }
+    case OP_TYPEID::SoftmaxCrossEntropy:
+    {
+        auto tmp = static_cast<const op::SoftmaxCrossEntropy*>(&n);
+        node["soft_label"] = tmp->get_soft_label();
+        node["ignore_index"] = tmp->get_ignore_index();
+        break;
+    }
+    case OP_TYPEID::SoftmaxCrossEntropyBackprop:
+    {
+        auto tmp = static_cast<const op::SoftmaxCrossEntropyBackprop*>(&n);
+        node["soft_label"] = tmp->get_soft_label();
+        node["ignore_index"] = tmp->get_ignore_index();
         break;
     }
     case OP_TYPEID::Tan: { break;

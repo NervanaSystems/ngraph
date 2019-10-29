@@ -32,12 +32,11 @@ namespace ngraph
                         T* out,
                         const std::vector<Shape>& in_shapes,
                         const Shape& out_shape,
-                        size_t concatenation_axis)
+                        int64_t concatenation_axis)
             {
                 // We will copy the inputs to the output one at a time. As we go, we will move out
                 // along the concatenation axis, starting at 0.
                 size_t concatenation_pos = 0;
-
                 for (size_t i = 0; i < args.size(); i++)
                 {
                     // CoordinateTransform gets confused when the last input has a zero-size dim, so
