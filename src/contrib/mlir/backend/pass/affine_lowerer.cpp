@@ -17,10 +17,10 @@
 // NOTE: This file follows nGraph format style and MLIR naming convention since it does
 // not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
 
-#include "lowerer.hpp"
+#include "affine_lowerer.hpp"
 
-#include "dialect/ops.hpp"
-#include "dialect/type.hpp"
+#include "contrib/mlir/core/ngraph_dialect/ops.hpp"
+#include "contrib/mlir/core/ngraph_dialect/type.hpp"
 #include "ngraph/assertion.hpp"
 
 #include <llvm/ADT/DenseSet.h>
