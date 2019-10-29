@@ -4112,6 +4112,17 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::LogicalXor)
+            {
+                (void)external_function;
+                (void)node;
+                writer << "reference::logical_xor(" << args[0].get_name() << ",\n"
+                       << "                       " << args[1].get_name() << ",\n"
+                       << "                       " << out[0].get_name() << ",\n"
+                       << "                       " << out[0].get_size() << ");\n";
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Xor)
             {
                 (void)external_function;

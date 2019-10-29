@@ -258,8 +258,10 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
     }
     case OP_TYPEID::LogicalXor:
     {
+        auto xor_v1 = as_type_ptr<op::v1::LogicalXor>(node);
         auto replacement_node = make_shared<op::v0::Xor>(node->input(0).get_source_output(),
-                                                         node->input(1).get_source_output());
+                                                         node->input(1).get_source_output(),
+                                                         xor_v1->get_autob());
         replace_node(node, replacement_node);
         modified = true;
         break;
