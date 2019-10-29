@@ -180,6 +180,56 @@ TEST(constant_folding, constant_dyn_broadcast)
     ASSERT_EQ(values_expected, values_out);
 }
 
+TEST(constant_folding, constant_broadcast_v1)
+{
+    vector<int32_t> values_in{0, 1};
+    auto constant_in = make_shared<op::Constant>(element::i32, Shape{2}, values_in);
+    vector<int64_t> shape_in{2, 4};
+    auto constant_shape = make_shared<op::Constant>(element::i64, Shape{2}, shape_in);
+    vector<int64_t> axes_in{0};
+    auto constant_axes = make_shared<op::Constant>(element::i64, Shape{1}, axes_in);
+    auto broadcast_v1 = make_shared<op::v1::Broadcast>(constant_in, constant_shape, constant_axes);
+    auto f = make_shared<Function>(broadcast_v1, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Broadcast>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int32_t>();
+
+    vector<int32_t> values_expected{0, 0, 0, 0, 1, 1, 1, 1};
+    ASSERT_EQ(values_expected, values_out);
+}
+
+TEST(constant_folding, constant_broadcast_v1_numpy)
+{
+    vector<int32_t> values_in{0, 1};
+    auto constant_in = make_shared<op::Constant>(element::i32, Shape{2}, values_in);
+    vector<int64_t> shape_in{4, 2};
+    auto constant_shape = make_shared<op::Constant>(element::i64, Shape{2}, shape_in);
+    auto broadcast_v1 = make_shared<op::v1::Broadcast>(constant_in, constant_shape);
+    auto f = make_shared<Function>(broadcast_v1, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Broadcast>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int32_t>();
+
+    vector<int32_t> values_expected{0, 1, 0, 1, 0, 1, 0, 1};
+    ASSERT_EQ(values_expected, values_out);
+}
+
 TEST(constant_folding, constant_pad_exterior)
 {
     Shape shape_in{2};
