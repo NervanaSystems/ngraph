@@ -29,6 +29,7 @@
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reverse.hpp"
@@ -143,7 +144,6 @@ namespace ngraph
         class SigmoidMultiplyBackprop;
         class Result;
         class And;
-        class Or;
         class CompiledKernel;
         class Dropout;
         class Dequantize;

@@ -26,6 +26,7 @@
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reduce_prod.hpp"
@@ -263,6 +264,16 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         auto replacement_node = make_shared<op::v0::GenerateMask>(
             node->input(0).get_source_output(), mask_shape, et, seed, probability, use_seed);
 
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::LogicalOr:
+    {
+        auto or_v1 = as_type_ptr<op::v1::LogicalOr>(node);
+        auto replacement_node = make_shared<op::v0::Or>(node->input(0).get_source_output(),
+                                                        node->input(1).get_source_output(),
+                                                        or_v1->get_autob());
         replace_node(node, replacement_node);
         modified = true;
         break;

@@ -23,6 +23,7 @@
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reduce_prod.hpp"
@@ -344,6 +345,16 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
                                                      pads_end,
                                                      kernel);
         }
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Or:
+    {
+        const auto or_v0 = dynamic_cast<const op::v0::Or*>(node.get());
+        auto replacement_node = make_shared<op::v1::LogicalOr>(node->input(0).get_source_output(),
+                                                               node->input(1).get_source_output(),
+                                                               or_v0->get_autob());
         replace_node(node, replacement_node);
         modified = true;
         break;

@@ -72,6 +72,7 @@ set(SRC
     opset_pass/broadcast_opset_pass.cpp
     opset_pass/convolution_opset_pass.cpp
     opset_pass/dyn_reshape_opset_pass.cpp
+    opset_pass/logical_or_opset_pass.cpp
     opset_pass/logical_xor_opset_pass.cpp
     opset_pass/gather_opset_pass.cpp
     opset_pass/generate_mask_opset_pass.cpp
