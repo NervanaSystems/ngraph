@@ -24,6 +24,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
+#include "ngraph/op/equal.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -259,6 +260,12 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         const bool pydiv = tmp->is_pythondiv();
         auto replacement_node = make_shared<op::v0::Divide>(input_arg0, input_arg1, pydiv, autob);
         replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Equal:
+    {
+        downgrade_binary_elementwise_node<op::v0::Equal, op::v1::Equal>(node);
         modified = true;
         break;
     }

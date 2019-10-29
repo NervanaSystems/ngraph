@@ -21,6 +21,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
+#include "ngraph/op/equal.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -302,6 +303,12 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         auto replacement_node = make_shared<op::v1::Reshape>(
             node->input(0).get_source_output(), node->input(1).get_source_output(), zero_flag);
         replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Equal:
+    {
+        upgrade_binary_elementwise_node<op::v0::Equal, op::v1::Equal>(node);
         modified = true;
         break;
     }
