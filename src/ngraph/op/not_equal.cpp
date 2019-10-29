@@ -37,7 +37,7 @@ shared_ptr<Node> op::v0::NotEqual::copy_with_new_args(const NodeVector& new_args
     return make_shared<op::v0::NotEqual>(new_args.at(0), new_args.at(1), this->get_autob());
 }
 
-// ----------------------------------- v0 --------------------------------------
+// ----------------------------------- v1 --------------------------------------
 
 constexpr NodeTypeInfo op::v1::NotEqual::type_info;
 

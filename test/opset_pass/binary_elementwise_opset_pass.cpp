@@ -257,3 +257,13 @@ TEST(opset_transform, opset1_not_equal_upgrade_pass)
 {
     test_opset0_comparison_upgrade_pass<op::v0::NotEqual, op::v1::NotEqual>("NotEqual");
 }
+
+TEST(opset_transform, opset0_power_downgrade_pass)
+{
+    test_opset0_arithmetic_downgrade_pass<op::v0::Power, op::v1::Power>("Power");
+}
+
+TEST(opset_transform, opset1_power_upgrade_pass)
+{
+    test_opset0_arithmetic_upgrade_pass<op::v0::Power, op::v1::Power>("Power");
+}

@@ -35,6 +35,7 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/pad.hpp"
+#include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reduce_prod.hpp"
 #include "ngraph/op/reduce_sum.hpp"
@@ -454,6 +455,12 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
                                                          tmp->get_pad_mode());
 
         replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Power:
+    {
+        upgrade_binary_elementwise_node<op::v0::Power, op::v1::Power>(node);
         modified = true;
         break;
     }
