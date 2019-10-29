@@ -82,13 +82,16 @@
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/layer_norm.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/fused/lstm_sequence.hpp"
 #include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize_l2.hpp"
+#include "ngraph/op/fused/partial_slice.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/shuffle_channels.hpp"
+#include "ngraph/op/fused/softmax_crossentropy.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/fused/split.hpp"
 #include "ngraph/op/fused/squared_difference.hpp"
@@ -143,6 +146,7 @@
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/stop_gradient.hpp"
+#include "ngraph/op/strided_slice.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
@@ -1353,14 +1357,24 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::GenerateMask:
         {
-            auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
             auto type = read_element_type(node_js.at("type"));
             auto seed = node_js.at("seed").get<unsigned int>();
             auto probability = node_js.at("probability").get<double>();
             bool use_seed = get_or_default<bool>(node_js, "use_seed", false);
 
-            node = make_shared<op::GenerateMask>(
-                args[0], output_shape, type, seed, probability, use_seed);
+            if (op_version == 0)
+            {
+                auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
+
+                node = make_shared<op::v0::GenerateMask>(
+                    args[0], output_shape, type, seed, probability, use_seed);
+            }
+            if (op_version == 1)
+            {
+                node = make_shared<op::v1::GenerateMask>(
+                    args[0], args[1], type, seed, probability, use_seed);
+            }
+
             break;
         }
         case OP_TYPEID::GetOutputElement:
@@ -1554,6 +1568,52 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                              activation_beta,
                                              clip,
                                              input_forget);
+            break;
+        }
+        case OP_TYPEID::LSTMSequence:
+        {
+            auto hidden_size = node_js.at("hidden_size").get<size_t>();
+            auto clip = node_js.at("clip").get<float>();
+            auto activations = node_js.at("activations").get<vector<string>>();
+            auto activations_alpha = node_js.at("activations_alpha").get<vector<float>>();
+            auto activations_beta = node_js.at("activations_beta").get<vector<float>>();
+            auto input_forget = node_js.at("input_forget").get<bool>();
+            auto direction = node_js.at("direction").get<op::LSTMSequence::direction>();
+            if (args.size() == 8)
+            {
+                node = make_shared<op::LSTMSequence>(args[0],
+                                                     args[1],
+                                                     args[2],
+                                                     args[3],
+                                                     args[4],
+                                                     args[5],
+                                                     args[6],
+                                                     args[7],
+                                                     hidden_size,
+                                                     direction,
+                                                     activations_alpha,
+                                                     activations_beta,
+                                                     activations,
+                                                     clip,
+                                                     input_forget);
+            }
+            else
+            {
+                node = make_shared<op::LSTMSequence>(args[0],
+                                                     args[1],
+                                                     args[2],
+                                                     args[3],
+                                                     args[4],
+                                                     args[5],
+                                                     args[6],
+                                                     hidden_size,
+                                                     direction,
+                                                     activations_alpha,
+                                                     activations_beta,
+                                                     activations,
+                                                     clip,
+                                                     input_forget);
+            }
             break;
         }
         case OP_TYPEID::MatMul:
@@ -1780,6 +1840,25 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto shape = type_node_js.at("shape");
             auto cacheable = get_or_default<bool>(node_js, "cacheable", false);
             node = make_shared<op::Parameter>(element_type, read_partial_shape(shape), cacheable);
+            break;
+        }
+        case OP_TYPEID::PartialSlice:
+        {
+            auto axes = node_js.at("axes").get<vector<size_t>>();
+            auto lower_bounds = node_js.at("lower_bounds").get<vector<int64_t>>();
+            auto upper_bounds = node_js.at("upper_bounds").get<vector<int64_t>>();
+            auto decrease_axes = node_js.at("decrease_axes").get<vector<size_t>>();
+            node = make_shared<op::PartialSlice>(
+                args[0], axes, lower_bounds, upper_bounds, decrease_axes);
+            break;
+        }
+        case OP_TYPEID::PartialSliceBackprop:
+        {
+            auto axes = node_js.at("axes").get<vector<size_t>>();
+            auto lower_bounds = node_js.at("lower_bounds").get<vector<int64_t>>();
+            auto upper_bounds = node_js.at("upper_bounds").get<vector<int64_t>>();
+            node = make_shared<op::PartialSliceBackprop>(
+                args[0], args[1], axes, lower_bounds, upper_bounds);
             break;
         }
         case OP_TYPEID::Passthrough:
@@ -2065,10 +2144,30 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Slice:
         {
-            auto lower_bounds = node_js.at("lower_bounds").get<vector<size_t>>();
-            auto upper_bounds = node_js.at("upper_bounds").get<vector<size_t>>();
-            auto strides = node_js.at("strides").get<vector<size_t>>();
-            node = make_shared<op::Slice>(args[0], lower_bounds, upper_bounds, strides);
+            if (op_version == 0)
+            {
+                auto lower_bounds = node_js.at("lower_bounds").get<vector<size_t>>();
+                auto upper_bounds = node_js.at("upper_bounds").get<vector<size_t>>();
+                auto strides = node_js.at("strides").get<vector<size_t>>();
+                node = make_shared<op::Slice>(args[0], lower_bounds, upper_bounds, strides);
+            }
+            if (op_version == 1)
+            {
+                auto begin_mask = node_js.at("begin_mask").get<vector<int64_t>>();
+                auto end_mask = node_js.at("end_mask").get<vector<int64_t>>();
+                auto new_axis_mask = node_js.at("new_axis_mask").get<vector<int64_t>>();
+                auto shrink_axis_mask = node_js.at("shrink_axis_mask").get<vector<int64_t>>();
+                auto ellipsis_mask = node_js.at("ellipsis_mask").get<vector<int64_t>>();
+                node = make_shared<op::v1::StridedSlice>(args[0],
+                                                         args[1],
+                                                         args[2],
+                                                         args[3],
+                                                         begin_mask,
+                                                         end_mask,
+                                                         new_axis_mask,
+                                                         shrink_axis_mask,
+                                                         ellipsis_mask);
+            }
             break;
         }
         case OP_TYPEID::Softmax:
@@ -2090,6 +2189,21 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 size_t softmax_axis = node_js.at("softmax_axis");
                 node = make_shared<op::v1::Softmax>(args[0], softmax_axis);
             }
+            break;
+        }
+        case OP_TYPEID::SoftmaxCrossEntropy:
+        {
+            auto soft_label = node_js.at("soft_label");
+            auto ignore_index = node_js.at("ignore_index");
+            node = make_shared<op::SoftmaxCrossEntropy>(args[0], args[1], soft_label, ignore_index);
+            break;
+        }
+        case OP_TYPEID::SoftmaxCrossEntropyBackprop:
+        {
+            auto soft_label = node_js.at("soft_label");
+            auto ignore_index = node_js.at("ignore_index");
+            node = make_shared<op::SoftmaxCrossEntropyBackprop>(
+                args[0], args[1], args[2], soft_label, ignore_index);
             break;
         }
         case OP_TYPEID::SpaceToDepth:
@@ -2821,11 +2935,15 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::GenerateMask:
     {
         auto tmp = static_cast<const op::GenerateMask*>(&n);
-        node["output_shape"] = tmp->get_mask_shape();
         node["type"] = write_element_type(tmp->get_element_type());
         node["use_seed"] = tmp->get_use_seed();
         node["seed"] = tmp->get_seed();
         node["probability"] = tmp->get_probability();
+        if (op_version == 0)
+        {
+            node["output_shape"] = tmp->get_mask_shape();
+        }
+
         break;
     }
     case OP_TYPEID::Greater:
@@ -2950,6 +3068,18 @@ json JSONSerializer::serialize_node(const Node& n)
         node["activations"] = tmp->get_activations();
         node["activation_alpha"] = tmp->get_activation_alpha();
         node["activation_beta"] = tmp->get_activation_beta();
+        node["input_forget"] = tmp->get_input_forget();
+        break;
+    }
+    case OP_TYPEID::LSTMSequence:
+    {
+        auto tmp = dynamic_cast<const op::LSTMSequence*>(&n);
+        node["direction"] = tmp->get_direction();
+        node["hidden_size"] = tmp->get_hidden_size();
+        node["clip_threshold"] = tmp->get_clip_threshold();
+        node["activations"] = tmp->get_activations();
+        node["activations_alpha"] = tmp->get_activations_alpha();
+        node["activations_beta"] = tmp->get_activations_beta();
         node["input_forget"] = tmp->get_input_forget();
         break;
     }
@@ -3108,6 +3238,23 @@ json JSONSerializer::serialize_node(const Node& n)
         node["shape"] = write_partial_shape(tmp->get_output_partial_shape(0));
         node["cacheable"] = tmp->get_cacheable();
         node["element_type"] = write_element_type(tmp->get_element_type());
+        break;
+    }
+    case OP_TYPEID::PartialSlice:
+    {
+        auto tmp = dynamic_cast<const op::PartialSlice*>(&n);
+        node["axes"] = tmp->get_axes();
+        node["lower_bounds"] = tmp->get_lower_bounds();
+        node["upper_bounds"] = tmp->get_upper_bounds();
+        node["decrease_axes"] = tmp->get_decrease_axes();
+        break;
+    }
+    case OP_TYPEID::PartialSliceBackprop:
+    {
+        auto tmp = dynamic_cast<const op::PartialSliceBackprop*>(&n);
+        node["axes"] = tmp->get_axes();
+        node["lower_bounds"] = tmp->get_lower_bounds();
+        node["upper_bounds"] = tmp->get_upper_bounds();
         break;
     }
     case OP_TYPEID::Passthrough:
@@ -3308,10 +3455,22 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Slice:
     {
-        auto tmp = static_cast<const op::Slice*>(&n);
-        node["lower_bounds"] = tmp->get_lower_bounds();
-        node["upper_bounds"] = tmp->get_upper_bounds();
-        node["strides"] = tmp->get_strides();
+        if (op_version == 0)
+        {
+            auto tmp = static_cast<const op::Slice*>(&n);
+            node["lower_bounds"] = tmp->get_lower_bounds();
+            node["upper_bounds"] = tmp->get_upper_bounds();
+            node["strides"] = tmp->get_strides();
+        }
+        if (op_version == 1)
+        {
+            auto tmp = static_cast<const op::v1::StridedSlice*>(&n);
+            node["begin_mask"] = tmp->get_begin_mask();
+            node["end_mask"] = tmp->get_end_mask();
+            node["new_axis_mask"] = tmp->get_new_axis_mask();
+            node["shrink_axis_mask"] = tmp->get_shrink_axis_mask();
+            node["ellipsis_mask"] = tmp->get_ellipsis_mask();
+        }
         break;
     }
     case OP_TYPEID::SpaceToDepth:
@@ -3369,6 +3528,20 @@ json JSONSerializer::serialize_node(const Node& n)
             auto tmp = static_cast<const op::v1::Softmax*>(&n);
             node["softmax_axis"] = tmp->get_axis();
         }
+        break;
+    }
+    case OP_TYPEID::SoftmaxCrossEntropy:
+    {
+        auto tmp = static_cast<const op::SoftmaxCrossEntropy*>(&n);
+        node["soft_label"] = tmp->get_soft_label();
+        node["ignore_index"] = tmp->get_ignore_index();
+        break;
+    }
+    case OP_TYPEID::SoftmaxCrossEntropyBackprop:
+    {
+        auto tmp = static_cast<const op::SoftmaxCrossEntropyBackprop*>(&n);
+        node["soft_label"] = tmp->get_soft_label();
+        node["ignore_index"] = tmp->get_ignore_index();
         break;
     }
     case OP_TYPEID::Tan: { break;

@@ -35,19 +35,6 @@
 using namespace ngraph;
 using namespace std;
 
-TEST(pass, visualize_tree)
-{
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
-
-    ngraph::pass::Manager pm;
-    pm.register_pass<pass::VisualizeTree>("test_viz.png");
-    pm.run_passes(f);
-}
-
 TEST(pass, constant_to_broadcast)
 {
     Shape shape{128, 256, 1, 1};
@@ -57,19 +44,9 @@ TEST(pass, constant_to_broadcast)
 
     {
         ngraph::pass::Manager pm;
-        pm.register_pass<pass::VisualizeTree>("pre_constant_to_broadcast.png");
-        pm.run_passes(f);
-    }
-    {
-        ngraph::pass::Manager pm;
         pm.register_pass<pass::ConstantToBroadcast>();
         EXPECT_EQ(count_ops_of_type<op::Broadcast>(f), 0);
         pm.run_passes(f);
         EXPECT_EQ(count_ops_of_type<op::Broadcast>(f), 1);
-    }
-    {
-        ngraph::pass::Manager pm;
-        pm.register_pass<pass::VisualizeTree>("post_constant_to_broadcast.png");
-        pm.run_passes(f);
     }
 }

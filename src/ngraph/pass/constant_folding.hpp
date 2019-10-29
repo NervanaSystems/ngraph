@@ -53,7 +53,9 @@ public:
         DYN_RESHAPE,
         TRANSPOSE,
         RANGE,
-        SELECT
+        SELECT,
+        SQUEEZE,
+        UNSQUEEZE
     };
 
     ConstantFolding(const ngraph::BuildNodeExecutorMap& cfmap = ngraph::BuildNodeExecutorMap())
@@ -81,6 +83,8 @@ public:
         construct_constant_transpose();
         construct_constant_range();
         construct_constant_select();
+        construct_constant_squeeze();
+        construct_constant_unsqueeze();
     }
 
     // this allows to specify the order in which matchers will be run
@@ -119,6 +123,8 @@ public:
             case CFTransformations::TRANSPOSE: construct_constant_transpose(); break;
             case CFTransformations::RANGE: construct_constant_range(); break;
             case CFTransformations::SELECT: construct_constant_select(); break;
+            case CFTransformations::SQUEEZE: construct_constant_squeeze(); break;
+            case CFTransformations::UNSQUEEZE: construct_constant_unsqueeze(); break;
             }
         }
     }
@@ -145,6 +151,8 @@ private:
     void construct_constant_transpose();
     void construct_constant_range();
     void construct_constant_select();
+    void construct_constant_squeeze();
+    void construct_constant_unsqueeze();
 
     ngraph::BuildNodeExecutorMap m_cfmap;
 };
