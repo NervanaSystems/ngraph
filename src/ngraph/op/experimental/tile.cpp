@@ -23,8 +23,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Tile::type_info;
 
-op::Tile::Tile(const Output<Node>& arg, const Output<Node>& repeats)
-    : Op({arg, repeats})
+op::Tile::Tile(const Output<Node>& data, const Output<Node>& repeats)
+    : Op({data, repeats})
 {
     constructor_validate_and_infer_types();
 }
@@ -41,36 +41,31 @@ void op::Tile::validate_and_infer_types()
                           repeats_et);
 
     auto arg_shape = get_input_partial_shape(0);
-    auto arg_rank = arg_shape.rank();
     auto repeats_shape = get_input_partial_shape(1);
     auto repeats_rank = repeats_shape.rank();
 
-    auto output_rank = Rank::dynamic();
     NODE_VALIDATION_CHECK(this, repeats_rank.compatible(1), "Shape of repeats must be of rank 1");
 
-    if (arg_rank.is_static())
-    {
-        // Repeats shapes should be of form {arg_rank} or dynamic
-        NODE_VALIDATION_CHECK(this,
-                              repeats_shape.compatible(PartialShape{arg_rank}),
-                              "Arg and repeats ranks mismatch");
-
-        output_rank = arg_rank;
-    }
-
-    auto out_shape = PartialShape::dynamic(output_rank);
+    auto out_shape = PartialShape::dynamic();
 
     if (auto const_repeats = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr()))
     {
         if (arg_shape.is_static())
         {
-            auto shape = arg_shape.to_shape();
+            auto data_shape = arg_shape.to_shape();
+            auto data_rank = data_shape.size();
             auto repeats_val = const_repeats->get_vector<int64_t>();
+            auto repeats_rank = repeats_val.size();
+            auto output_rank = std::max(data_rank, repeats_rank);
 
-            Shape output_shape(shape.size());
-            for (size_t i = 0; i < shape.size(); i++)
+            // expand data shape and repeats to output rank
+            data_shape.insert(data_shape.begin(), output_rank - data_rank, 1);
+            repeats_val.insert(repeats_val.begin(), output_rank - repeats_rank, 1);
+
+            Shape output_shape(output_rank);
+            for (size_t i = 0; i < output_rank; i++)
             {
-                output_shape[i] = shape[i] * repeats_val[i];
+                output_shape[i] = data_shape[i] * repeats_val[i];
             }
             set_output_type(0, arg_et, output_shape);
         }
@@ -84,6 +79,7 @@ void op::Tile::validate_and_infer_types()
         set_output_type(0, arg_et, out_shape);
     }
 
+    set_input_is_relevant_to_shape(0);
     set_input_is_relevant_to_shape(1);
 }
 

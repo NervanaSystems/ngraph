@@ -309,5 +309,9 @@ convert_bf16_float32
 normalize_across_c_2x2_shape
 normalize_across_c_2x4_shape
 
+# Tile op case that the number of elements in "repeats" and shape of "data" are different
+tile_3d_small_data_rank
+tile_3d_few_repeats
+
 # dyn shape
 dyn_generate_mask

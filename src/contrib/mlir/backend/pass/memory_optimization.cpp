@@ -17,9 +17,9 @@
 // NOTE: This file follows nGraph format style and MLIR naming convention since it does
 // not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
 
-#include "contrib/mlir/compiler/compiler.hpp"
-#include "contrib/mlir/compiler/dialect/ops.hpp"
-#include "contrib/mlir/compiler/dialect/type.hpp"
+#include "contrib/mlir/core/compiler.hpp"
+#include "contrib/mlir/core/ngraph_dialect/ops.hpp"
+#include "contrib/mlir/core/ngraph_dialect/type.hpp"
 
 #include "ngraph/assertion.hpp"
 
@@ -53,7 +53,7 @@ namespace
         {
             m_inplaceOps = {
 #define MLIR_OP(OP, INPLACE) {OP::getOperationName().str(), INPLACE},
-#include "contrib/mlir/compiler/op_lowerers.inc"
+#include "contrib/mlir/backend/pass/op_lowerers.inc"
             };
         }
         void runOnFunction() override;
