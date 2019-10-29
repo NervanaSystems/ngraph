@@ -227,3 +227,13 @@ TEST(opset_transform, opset1_maximum_upgrade_pass)
 {
     test_opset0_arithmetic_upgrade_pass<op::v0::Maximum, op::v1::Maximum>("Maximum");
 }
+
+TEST(opset_transform, opset0_minimum_downgrade_pass)
+{
+    test_opset0_arithmetic_downgrade_pass<op::v0::Minimum, op::v1::Minimum>("Minimum");
+}
+
+TEST(opset_transform, opset1_minimum_upgrade_pass)
+{
+    test_opset0_arithmetic_upgrade_pass<op::v0::Minimum, op::v1::Minimum>("Minimum");
+}
