@@ -282,7 +282,7 @@ def NGAvgPoolBackPropOp :
 }
 
 // BatchNorm for Training
-def NGBacthNormTrainingOp :
+def NGBatchNormTrainingOp :
     NG_OneResult_Op<"batchNormTraining", [NoSideEffect, OpVersion0]>,
     Arguments<(ins NG_TensorType :$input, 
                NG_TensorType     :$gamma, 
@@ -304,7 +304,7 @@ def NGBacthNormTrainingOp :
 }
 
 // BatchNorm for Inference
-def NGBacthNormInferenceOp :
+def NGBatchNormInferenceOp :
     NG_OneResult_Op<"batchNormInference", [NoSideEffect, OpVersion0]>,
     Arguments<(ins NG_TensorType :$input, 
                NG_TensorType     :$gamma, 
@@ -328,7 +328,7 @@ def NGBacthNormInferenceOp :
 
 
 // BatchNorm for Training BackProp
-def NGBacthNormTrainingBackPropOp :
+def NGBatchNormTrainingBackPropOp :
     NG_OneResult_Op<"batchNormTrainingBackProp", [NoSideEffect, OpVersion0]>,
     Arguments<(ins NG_TensorType :$input, 
                NG_TensorType     :$gamma, 
