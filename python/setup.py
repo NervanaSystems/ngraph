@@ -78,6 +78,7 @@ NGRAPH_CPP_LIBRARY_NAME = 'ngraph'
 if len([fn for fn in os.listdir(NGRAPH_CPP_LIBRARY_DIR) if re.search('ngraphd', fn)]):
     NGRAPH_CPP_LIBRARY_NAME = 'ngraphd'
 
+
 def parallelCCompile(
     self,
     sources,
