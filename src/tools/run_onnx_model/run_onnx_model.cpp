@@ -45,7 +45,7 @@ SYNOPSIS
 
 OPTIONS
         -m or --model    Path to ONNX protobuf file with extension .onnx or .prototext  
-        -i or --input    Path to a raw binary file with an array of input data. If not provided, input loaded with random data. 
+        -i or --input    Path to a raw binary file with an array of input data. If not provided, model will be executed with random data.
         -b or --backend  backend name, available backend ['INTERPRETER', 'CPU', 'GPU', 'NNP', 'PlaidML', 'INTELGPU'], default backend: CPU
 
 )###";
