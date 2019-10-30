@@ -35,7 +35,6 @@
 #include <mlir/Pass/Pass.h>
 #include <mlir/Transforms/DialectConversion.h>
 
-
 #define PASS_NAME "ng-memory-opt"
 #define DEBUG_TYPE PASS_NAME
 
@@ -100,7 +99,7 @@ namespace
 #define MLIR_OP(OP, INPLACE) {OP::getOperationName().str(), INPLACE},
 #include "contrib/mlir/compiler/op_lowerers.inc"
             };
-            bufferId = 0;
+            m_bufferId = 0;
         }
         void runOnFunction() override;
 
@@ -112,10 +111,8 @@ namespace
         Liveness m_liveness;
         AliasRelation m_aliasRelation;
         std::unordered_map<std::string, bool> m_inplaceOps;
-        unsigned bufferId;
+        unsigned m_bufferId;
     };
-
-    
 
     // Go backwards over instructions
     //  Update aliasing assignment
@@ -160,19 +157,18 @@ namespace
         {
             Operation* op = &(*it);
 
-            // TODO: replace with Op Interface check
-            if (isSafeInPlace(op) && dyn_cast<NGConcatOp>(op))
-            {
-                processConcat(op);
-            }
-
-            // TODO: replace with Op Interface check
-            // Safe in place and not concat
             if (isSafeInPlace(op))
             {
-                processDestructiveInPlace(op);
+                // TODO: replace with Op Interface check
+                if (dyn_cast<NGConcatOp>(op))
+                {
+                    processConcat(op);
+                }
+                else
+                {
+                    processDestructiveInPlace(op);
+                }
             }
-
             // update liveness info
 
             for (auto dit : op->getResults())
@@ -311,9 +307,13 @@ namespace
                     }
                 }
             }
-            // we should have a valid buffer ID and offset at this point
-            NGRAPH_CHECK(bufferId == -1 && baseOffset == 0);
-            // TODO: Write annotations now. No need to check if we are over-writing since they
+            // We didn't find any pre-existing buffer assignment, create a new one
+            if (bufferId == -1)
+            {
+                bufferId = m_bufferId++;
+                baseOffset = 0;
+            }
+            // Write annotations now. No need to check if we are over-writing since they
             // should all match.
             setBufferId(op, bufferId);
             setBufferOffset(op, baseOffset);
@@ -321,7 +321,7 @@ namespace
             {
                 auto opnd = op->getOperand(i);
                 setBufferId(opnd->getDefiningOp(), bufferId);
-                setBufferOffset(opnd->getDefiningOp(), opndOffsets[i]);
+                setBufferOffset(opnd->getDefiningOp(), baseOffset + opndOffsets[i]);
             }
         }
     }
@@ -332,7 +332,7 @@ namespace
         Value* use = nullptr;
 
         int useCount = -1;
-        
+
         if (isInputOrOutputValue(op->getResult(0)))
         {
             // dst is output, bail out
@@ -359,13 +359,13 @@ namespace
         {
             return;
         }
-        
+
         // assign new buffer or copy buffer info from dst
         IntegerAttr attr = getBufferId(op);
         if (!attr)
         {
             // attach a new buffer id, and 0 offset on obth src and result
-            attr = setBufferId(op, this->bufferId++);
+            attr = setBufferId(op, m_bufferId++);
             setBufferId(use->getDefiningOp(), attr);
             attr = setBufferOffset(op, 0);
             setBufferOffset(use->getDefiningOp(), 0);
@@ -386,19 +386,25 @@ namespace
         {
             m_aliasRelation.insertNoAlias(use, value);
         }
-        
     }
     bool MemoryOptimizationPass::isInputOrOutputValue(mlir::Value* value)
     {
-        // do we have a buffer id attached to this value
         auto defOp = value->getDefiningOp();
         // If no defining op, then this is a block arg, skip operand
+        //
+        // TODO: This check is assuming single BB function, improve to handle control-flow.
+        // In which case, we have to track block args to all pred branches that feed them,
+        // all the way up to the initial def, if any, or entry block arg. This is preferably
+        // done as a pre-pass to capture all inputs/output values.
         if (!defOp)
         {
             return true;
         }
 
         // If the defined value is an output of the sub-graph, cannot do it in place
+        //
+        // TODO: Improve to support control flow. Track value use-chain along branches/block-args,
+        // if we hit a use in a return, it is an output value.
         for (auto& use : value->getUses())
         {
             auto useOp = use.getOwner();
@@ -513,6 +519,7 @@ namespace
                 }
             }
         }
+        m_needsTransitiveClosure = false;
     }
 
 #ifdef NGRAPH_DEBUG_ENABLE
@@ -591,7 +598,7 @@ namespace
 }
 
 static PassRegistration<MemoryOptimizationPass> pass(PASS_NAME,
-                                                  "Convert nGraph dialect to affine dialect");
+                                                     "Convert nGraph dialect to affine dialect");
 
 namespace mlir
 {
