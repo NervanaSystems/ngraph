@@ -75,6 +75,7 @@ else:
     sys.exit(1)
 
 NGRAPH_CPP_LIBRARY_NAME = 'ngraph'
+"""For some platforms OpenVINO adds 'd' suffix to library names in debug configuration"""
 if len([fn for fn in os.listdir(NGRAPH_CPP_LIBRARY_DIR) if re.search('ngraphd', fn)]):
     NGRAPH_CPP_LIBRARY_NAME = 'ngraphd'
 
