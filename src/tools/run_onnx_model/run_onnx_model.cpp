@@ -44,13 +44,14 @@ SYNOPSIS
         run_onnx_model -m|--model <model file> [-i|--input <input file>]  [-b|--backend <backend name>]
 
 OPTIONS
-        -m or --model    model file
-        -i or --input    input binary file
-        -b or --backend  backend name
+        -m or --model    Path to ONNX protobuf file with extension .onnx or .prototext  
+        -i or --input    Path to a raw binary file with an array of input data. If not provided, input loaded with random data. 
+        -b or --backend  backend name, available backend ['INTERPRETER', 'CPU', 'GPU', 'NNP', 'PlaidML', 'INTELGPU'], default backend: CPU
 
 )###";
 }
 
+// Load raw binary data from a file to  dynamically allocated memory buffer.
 unique_ptr<char[]> load_data_frome_file(string file_name)
 {
     ifstream file(file_name);
@@ -64,6 +65,7 @@ unique_ptr<char[]> load_data_frome_file(string file_name)
     return data;
 }
 
+// Prepare input tensors for given model and load them with data from binary files.
 vector<shared_ptr<runtime::Tensor>> load_inputs(std::shared_ptr<runtime::Backend> backend,
                                                 std::shared_ptr<ngraph::Function> function,
                                                 vector<string> input_paths)
@@ -87,6 +89,7 @@ vector<shared_ptr<runtime::Tensor>> load_inputs(std::shared_ptr<runtime::Backend
     return inputs;
 }
 
+// Prepare input tensors for given model and load them with random generated data.
 vector<shared_ptr<runtime::Tensor>> random_inputs(std::shared_ptr<runtime::Backend> backend,
                                                   std::shared_ptr<ngraph::Function> function)
 {
@@ -111,6 +114,7 @@ vector<shared_ptr<runtime::Tensor>> random_inputs(std::shared_ptr<runtime::Backe
     return inputs;
 }
 
+// Prepare output tensors for given model.
 vector<shared_ptr<runtime::Tensor>> make_outputs(std::shared_ptr<runtime::Backend> backend,
                                                  std::shared_ptr<ngraph::Function> function)
 {
@@ -125,6 +129,7 @@ vector<shared_ptr<runtime::Tensor>> make_outputs(std::shared_ptr<runtime::Backen
     return outputs;
 }
 
+// Validate provided arguments and split them into options and values.
 std::tuple<string, string> validate_argument(string arg, string arg2)
 {
     size_t index = arg.find_first_of('=');
@@ -138,6 +143,7 @@ std::tuple<string, string> validate_argument(string arg, string arg2)
     return std::make_tuple(option, value);
 }
 
+// Print vector as tensor with given shape.
 void print_vector(vector<float> data,
                   vector<size_t> shape,
                   size_t shape_pointer,
@@ -198,6 +204,8 @@ void print_vector(vector<float> data,
         cout << "]";
     }
 }
+
+// Print model outputs' metadata and data.
 void print_outputs(vector<shared_ptr<runtime::Tensor>> outputs)
 {
     cout << "Outputs info:" << endl;
