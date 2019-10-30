@@ -16,11 +16,15 @@
 
 #pragma once
 
-#include "ngraph/function.hpp"
-#include "ngraph/shape.hpp"
-#include <map>
-#include <unordered_map>
+#include <algorithm>
+#include <iostream>
+#include <iterator>
 #include <list>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include "ngraph/runtime/executable.hpp"
+#include "ngraph/shape.hpp"
 
 using namespace std;
 
@@ -28,18 +32,20 @@ namespace ngraph
 {
     namespace runtime
     {
-        class LRUCache: public std::enable_shared_from_this<LRUCache>
+        class LRUCache : public std::enable_shared_from_this<LRUCache>
         {
         public:
             LRUCache(int);
 
-            void add_entry(Shape, shared_ptr<Function>);
+            void add_entry(Shape, shared_ptr<Executable>);
             bool is_cached(Shape);
-            shared_ptr<Function> get_cached_entry(Shape);
-  
+            shared_ptr<Executable> get_cached_entry(Shape);
+            ostringstream convert_shape_to_string(Shape shape);
+
         protected:
             int m_size; // cache size
-            static unordered_map<Shape, shared_ptr<Function>> m_map;
+            using GraphCache = unordered_map<string, shared_ptr<Executable>>;
+            GraphCache m_map;
             list<Shape> m_list;
         };
     }

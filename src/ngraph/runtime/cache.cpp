@@ -24,15 +24,32 @@ runtime::LRUCache::LRUCache(int size)
     m_size = size;
 }
 
-void runtime::LRUCache::add_entry(Shape shape, shared_ptr<Function> funct)
+ostringstream runtime::LRUCache::convert_shape_to_string(Shape shape)
 {
-    // check if the list is empty
-    if(m_list.size() == m_size)
+    ostringstream key;
+
+    if (!shape.empty())
     {
-        m_map.erase(m_list.pop_back()); 
+        std::copy(shape.begin(), shape.end() - 1, std::ostream_iterator<size_t>(key, ", "));
+
+        key << shape.back();
     }
-    
-    m_map.insert({shape, funct});
+    return key;
+}
+
+void runtime::LRUCache::add_entry(Shape shape, shared_ptr<runtime::Executable> exec)
+{
+    ostringstream key;
+    // check if the list is empty
+    if (m_list.size() == m_size)
+    {
+        ostringstream key = convert_shape_to_string(m_list.back());
+        m_list.pop_back();
+        m_map.erase(key.str());
+    }
+
+    key = convert_shape_to_string(shape);
+    m_map.insert({key.str(), exec});
     m_list.push_front(shape);
 }
 
@@ -48,10 +65,12 @@ bool runtime::LRUCache::is_cached(Shape shape)
     return false;
 }
 
-shared_ptr<Function> runtime::LRUCache::get_cached_entry(Shape shape)
+shared_ptr<runtime::Executable> runtime::LRUCache::get_cached_entry(Shape shape)
 {
     // find the entry and return the function
-    auto it = m_map.find(shape);
+    ostringstream key;
+    key = convert_shape_to_string(shape);
+    auto it = m_map.find(key.str());
     if (it != m_map.end())
     {
         // update list to push this reference to the front
