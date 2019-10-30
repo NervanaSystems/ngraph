@@ -109,7 +109,11 @@ namespace ngraph
                 }
                 else
                 {
-                    throw ngraph_error("Cannot convert from an invalid input element type");
+                    NGRAPH_CHECK(false,
+                                 "Cannot convert from an invalid input element type : ",
+                                 args[0].get_element_type(),
+                                 " -> ",
+                                 out[0].get_element_type());
                 }
 
                 auto functor = [&, kernel, element_count, arg_buffer_index, out_buffer_index](
