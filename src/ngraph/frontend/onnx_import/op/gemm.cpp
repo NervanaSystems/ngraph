@@ -34,15 +34,17 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> input_a = inputs.at(0);
                     std::shared_ptr<ngraph::Node> input_b = inputs.at(1);
                     std::shared_ptr<ngraph::Node> input_c;
-                    
-                    if(inputs.size()==3){
-                        input_c= inputs.at(2);
+
+                    if (inputs.size() == 3)
+                    {
+                        input_c = inputs.at(2);
                     }
-                    else{
+                    else
+                    {
                         std::shared_ptr<ngraph::op::Constant> constant_c;
-                        constant_c =   ngraph::op::Constant::create(input_b->get_element_type(), input_b->get_shape(), {0});
+                        constant_c = ngraph::op::Constant::create(
+                            input_b->get_element_type(), input_b->get_shape(), {0});
                     }
-                     
 
                     double alpha = node.get_attribute_value<double>("alpha", 1);
                     double beta = node.get_attribute_value<double>("beta", 1);
