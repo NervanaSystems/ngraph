@@ -440,3 +440,25 @@ TEST(serialize, opset1_pad)
     EXPECT_EQ(g_pad->get_version(), 1);
     EXPECT_EQ(dynamic_cast<const op::v1::Pad*>(g_pad.get())->get_pad_mode(), pad_mode);
 }
+
+TEST(serialize, depth_to_space)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{4, 5, 6});
+    auto mode = op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST;
+    size_t block_size = 2;
+    auto depth_to_space_in = make_shared<op::DepthToSpace>(arg, mode, block_size);
+
+    auto result = make_shared<op::Result>(depth_to_space_in);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_depth_to_space = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto depth_to_space_out = as_type_ptr<op::DepthToSpace>(g_depth_to_space);
+
+    EXPECT_EQ(depth_to_space_out->description(), "DepthToSpace");
+    EXPECT_EQ(depth_to_space_out->get_version(), 0);
+    EXPECT_EQ(depth_to_space_out->get_block_size(), block_size);
+    EXPECT_EQ(depth_to_space_out->get_mode(), mode);
+}

@@ -27,5 +27,11 @@ void regclass_pyngraph_op_DepthToSpace(py::module m)
     py::class_<ngraph::op::DepthToSpace, std::shared_ptr<ngraph::op::DepthToSpace>, ngraph::op::Op>
         depthtospace(m, "DepthToSpace");
     depthtospace.doc() = "ngraph.impl.op.DepthToSpace wraps ngraph::op::DepthToSpace";
-    depthtospace.def(py::init<const std::shared_ptr<ngraph::Node>&, std::size_t&>());
+    depthtospace.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                              const ngraph::op::DepthToSpace::DepthToSpaceMode&,
+                              std::size_t&>());
+    py::enum_<ngraph::op::DepthToSpace::DepthToSpaceMode>(depthtospace, "mode", py::arithmetic())
+        .value("BLOCKS_FIRST", ngraph::op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST)
+        .value("DEPTH_FIRST", ngraph::op::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST)
+        .export_values();
 }
