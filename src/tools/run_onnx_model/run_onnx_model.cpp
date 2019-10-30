@@ -45,8 +45,8 @@ SYNOPSIS
 
 OPTIONS
         -m or --model    Path to ONNX protobuf file with extension .onnx or .prototext  
-        -i or --input    Path to a raw binary file with an array of input data. If not provided, input loaded with random data. 
-        -b or --backend  backend name, available backend ['INTERPRETER', 'CPU', 'GPU', 'NNP', 'PlaidML', 'INTELGPU'], default backend: CPU
+        -i or --input    Path to a raw binary file with an array of input data. If not provided, model will be executed with random data.
+        -b or --backend  nGraph backend name, such as INTERPRETER, CPU, GPU, NNP, PlaidML, INTELGPU, where available. Default backend: CPU
 
 )###";
 }
@@ -229,6 +229,7 @@ int main(int argc, char** argv)
     vector<shared_ptr<runtime::Tensor>> inputs;
     vector<shared_ptr<runtime::Tensor>> outputs;
     std::shared_ptr<ngraph::Function> function;
+    std::shared_ptr<runtime::Backend> backend;
 
     for (int i = 1; i < argc; i++)
     {
@@ -260,7 +261,6 @@ int main(int argc, char** argv)
         }
     }
 
-    auto backend = ngraph::runtime::Backend::create(backend_type);
     ifstream f(model);
     if (f)
     {
@@ -271,6 +271,16 @@ int main(int argc, char** argv)
     {
         cout << "Failed to open '" << model << "' for model\n";
         return 1;
+    }
+
+    try
+    {
+        backend = ngraph::runtime::Backend::create(backend_type);
+    }
+    catch (runtime_error e)
+    {
+        cout << "Backend " << backend_type << " not supported." << endl;
+        return 2;
     }
 
     const size_t inputs_size = function->get_parameters().size();
