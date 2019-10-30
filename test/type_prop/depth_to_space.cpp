@@ -16,8 +16,6 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/pass/fused_op_decomposition.hpp"
-#include "ngraph/pass/manager.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;
@@ -36,18 +34,13 @@ TEST(type_prop, depth_to_space)
 TEST(type_prop, depth_to_space_input_rank_not_supported)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{1, 8, 8, 8, 4});
-    auto space_to_depth =
-        make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST, 2);
-    const auto result = make_shared<op::Result>(space_to_depth);
-    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{A});
-    ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::FusedOpDecomposition>();
     try
     {
-        pass_manager.run_passes(f);
+        auto space_to_depth =
+            make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST, 2);
         FAIL() << "Not supported input shape for DepthToSpace exception not thrown";
     }
-    catch (const NodeValidationFailure& error)
+    catch (const ngraph_error& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "The provided tensor shape: ");
     }
