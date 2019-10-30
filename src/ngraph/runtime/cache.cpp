@@ -31,8 +31,6 @@ ostringstream runtime::LRUCache::convert_shape_to_string(Shape shape)
     if (!shape.empty())
     {
         std::copy(shape.begin(), shape.end() - 1, std::ostream_iterator<size_t>(key, ", "));
-
-        key << shape.back();
     }
     return key;
 }

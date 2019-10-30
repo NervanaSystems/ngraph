@@ -117,130 +117,158 @@ bool runtime::dynamic::DynamicExecutable::call(
     // (1) all shapes;
     // (2) all values of shape-relevant input tensors.
 
-    NGRAPH_CHECK(m_wrapped_function->get_parameters().size() == inputs.size());
+    auto lru = std::make_shared<runtime::LRUCache>(4);
+    std::vector<size_t> merged_input_shapes;
+    std::ostringstream key;
 
-    std::vector<std::shared_ptr<runtime::Tensor>> wrapped_inputs;
-    std::vector<element::Type> arg_element_types;
-    std::vector<PartialShape> arg_shapes;
-
-    std::shared_ptr<Function> clone;
+    for (auto& input : inputs)
     {
-        // We'll use AlignedBuffers to back the base pointers, storing them in this vector for RAII
-        // purposes.
-        std::vector<AlignedBuffer> arg_buffers;
-        arg_buffers.reserve(inputs.size());
-        std::vector<void*> arg_value_base_pointers(inputs.size());
-
-        size_t i = 0;
-
-        for (auto& input : inputs)
+        for (int i = 0; i < input->get_shape().size(); i++)
         {
-            if (m_wrapped_function->get_parameters()[i]->is_relevant_to_shapes())
+            merged_input_shapes.emplace_back(input->get_shape()[i]);
+        }
+    }
+
+    std::copy(merged_input_shapes.begin(),
+              merged_input_shapes.end() - 1,
+              std::ostream_iterator<size_t>(key, ", "));
+
+    if (lru->is_cached(merged_input_shapes))
+    {
+        return lru->get_cached_entry(merged_input_shapes)->call(outputs, inputs);
+    }
+    else
+    {
+        NGRAPH_CHECK(m_wrapped_function->get_parameters().size() == inputs.size());
+
+        std::vector<std::shared_ptr<runtime::Tensor>> wrapped_inputs;
+        std::vector<element::Type> arg_element_types;
+        std::vector<PartialShape> arg_shapes;
+
+        std::shared_ptr<Function> clone;
+        {
+            // We'll use AlignedBuffers to back the base pointers, storing them in this vector for
+            // RAII
+            // purposes.
+            std::vector<AlignedBuffer> arg_buffers;
+            arg_buffers.reserve(inputs.size());
+            std::vector<void*> arg_value_base_pointers(inputs.size());
+
+            size_t i = 0;
+
+            for (auto& input : inputs)
             {
-                // TODO(amprocte): Move has_storage() to runtime::Tensor?
+                if (m_wrapped_function->get_parameters()[i]->is_relevant_to_shapes())
+                {
+                    // TODO(amprocte): Move has_storage() to runtime::Tensor?
+                    if (auto dynamic_tensor =
+                            std::dynamic_pointer_cast<runtime::dynamic::DynamicTensor>(input))
+                    {
+                        NGRAPH_CHECK(dynamic_tensor->has_storage());
+                    }
+
+                    arg_buffers.emplace_back(input->get_size_in_bytes(), /*alignment=*/64);
+                    arg_value_base_pointers[i] = arg_buffers.back().get_ptr();
+
+                    // TODO(amprocte): For host-resident tensors we should be able to skip the read,
+                    // but no API for that yet.
+                    input->read(arg_value_base_pointers[i], input->get_size_in_bytes());
+                }
+                else
+                {
+                    arg_value_base_pointers[i] = nullptr;
+                }
+
                 if (auto dynamic_tensor =
                         std::dynamic_pointer_cast<runtime::dynamic::DynamicTensor>(input))
                 {
                     NGRAPH_CHECK(dynamic_tensor->has_storage());
+                    arg_element_types.push_back(
+                        dynamic_tensor->get_wrapped_tensor()->get_element_type());
+                    arg_shapes.push_back(dynamic_tensor->get_wrapped_tensor()->get_shape());
+                    wrapped_inputs.push_back(dynamic_tensor->get_wrapped_tensor());
+                }
+                else
+                {
+                    arg_element_types.push_back(input->get_element_type());
+                    arg_shapes.push_back(input->get_shape());
+                    wrapped_inputs.push_back(input);
                 }
 
-                arg_buffers.emplace_back(input->get_size_in_bytes(), /*alignment=*/64);
-                arg_value_base_pointers[i] = arg_buffers.back().get_ptr();
-
-                // TODO(amprocte): For host-resident tensors we should be able to skip the read,
-                // but no API for that yet.
-                input->read(arg_value_base_pointers[i], input->get_size_in_bytes());
-            }
-            else
-            {
-                arg_value_base_pointers[i] = nullptr;
+                i++;
             }
 
+            clone = specialize_function(
+                m_wrapped_function, arg_element_types, arg_shapes, arg_value_base_pointers);
+        }
+
+        pass::Manager passes;
+        passes.register_pass<pass::ConstantFolding>();
+        passes.register_pass<pass::DynElimination>();
+        passes.register_pass<pass::Opset0Downgrade>(); // Converts dynamic v1 variants to v0 ops
+        passes.set_per_pass_validation(false);
+
+        // FIXME(amprocte): Vile, temporary hack: we need to do repeated rounds of
+        // ConstantFolding/DynElimination until everything that DynElimination is supposed to
+        // eliminate has actually been eliminated. We could do this by monitoring the return values
+        // of
+        // of the passes (keep iterating until both CF and DE report no changes), but that did not
+        // seem to work so here we are. Probably a better fix is to somehow combine the matchers in
+        // CF
+        // and DE into one pass.
+        size_t num_dyn_nodes_last_pass = std::numeric_limits<size_t>::max();
+
+        while (num_dyn_nodes_last_pass != 0)
+        {
+            passes.run_passes(clone);
+            auto num_dyn_nodes_this_pass = count_dyn_nodes(clone);
+
+            NGRAPH_CHECK(num_dyn_nodes_this_pass < num_dyn_nodes_last_pass,
+                         "Could not eliminate all Dyn nodes (",
+                         num_dyn_nodes_this_pass,
+                         " remaining)");
+
+            num_dyn_nodes_last_pass = num_dyn_nodes_this_pass;
+        }
+
+        pass::Manager pass_val;
+        pass_val.register_pass<pass::Validate>();
+        pass_val.run_passes(clone);
+
+        std::vector<std::shared_ptr<runtime::Tensor>> wrapped_outputs;
+
+        const ResultVector& results = clone->get_results();
+        for (auto& result : results)
+        {
+            NGRAPH_CHECK(result->get_output_partial_shape(0).is_static(),
+                         "Shape staticization failed for result node ",
+                         *result);
+        }
+        NGRAPH_CHECK(results.size() == outputs.size());
+
+        for (size_t i = 0; i < outputs.size(); i++)
+        {
             if (auto dynamic_tensor =
-                    std::dynamic_pointer_cast<runtime::dynamic::DynamicTensor>(input))
+                    std::dynamic_pointer_cast<runtime::dynamic::DynamicTensor>(outputs[i]))
             {
-                NGRAPH_CHECK(dynamic_tensor->has_storage());
-                arg_element_types.push_back(
-                    dynamic_tensor->get_wrapped_tensor()->get_element_type());
-                arg_shapes.push_back(dynamic_tensor->get_wrapped_tensor()->get_shape());
-                wrapped_inputs.push_back(dynamic_tensor->get_wrapped_tensor());
+                dynamic_tensor->make_storage(results[i]->get_output_element_type(0),
+                                             results[i]->get_output_shape(0));
+                wrapped_outputs.push_back(dynamic_tensor->get_wrapped_tensor());
             }
             else
             {
-                arg_element_types.push_back(input->get_element_type());
-                arg_shapes.push_back(input->get_shape());
-                wrapped_inputs.push_back(input);
+                wrapped_outputs.push_back(outputs[i]);
             }
-
-            i++;
         }
 
-        clone = specialize_function(
-            m_wrapped_function, arg_element_types, arg_shapes, arg_value_base_pointers);
+        auto compiled_executable =
+            m_wrapped_backend->compile(clone, m_enable_performance_collection);
+        // Put compiled executable in the cache.
+        lru->add_entry(merged_input_shapes, compiled_executable);
+        auto result = compiled_executable->call(wrapped_outputs, wrapped_inputs);
+
+        return result;
     }
-
-    pass::Manager passes;
-    passes.register_pass<pass::ConstantFolding>();
-    passes.register_pass<pass::DynElimination>();
-    passes.register_pass<pass::Opset0Downgrade>(); // Converts dynamic v1 variants to v0 ops
-    passes.set_per_pass_validation(false);
-
-    // FIXME(amprocte): Vile, temporary hack: we need to do repeated rounds of
-    // ConstantFolding/DynElimination until everything that DynElimination is supposed to
-    // eliminate has actually been eliminated. We could do this by monitoring the return values of
-    // of the passes (keep iterating until both CF and DE report no changes), but that did not
-    // seem to work so here we are. Probably a better fix is to somehow combine the matchers in CF
-    // and DE into one pass.
-    size_t num_dyn_nodes_last_pass = std::numeric_limits<size_t>::max();
-
-    while (num_dyn_nodes_last_pass != 0)
-    {
-        passes.run_passes(clone);
-        auto num_dyn_nodes_this_pass = count_dyn_nodes(clone);
-
-        NGRAPH_CHECK(num_dyn_nodes_this_pass < num_dyn_nodes_last_pass,
-                     "Could not eliminate all Dyn nodes (",
-                     num_dyn_nodes_this_pass,
-                     " remaining)");
-
-        num_dyn_nodes_last_pass = num_dyn_nodes_this_pass;
-    }
-
-    pass::Manager pass_val;
-    pass_val.register_pass<pass::Validate>();
-    pass_val.run_passes(clone);
-
-    std::vector<std::shared_ptr<runtime::Tensor>> wrapped_outputs;
-
-    const ResultVector& results = clone->get_results();
-    for (auto& result : results)
-    {
-        NGRAPH_CHECK(result->get_output_partial_shape(0).is_static(),
-                     "Shape staticization failed for result node ",
-                     *result);
-    }
-    NGRAPH_CHECK(results.size() == outputs.size());
-
-    for (size_t i = 0; i < outputs.size(); i++)
-    {
-        if (auto dynamic_tensor =
-                std::dynamic_pointer_cast<runtime::dynamic::DynamicTensor>(outputs[i]))
-        {
-            dynamic_tensor->make_storage(results[i]->get_output_element_type(0),
-                                         results[i]->get_output_shape(0));
-            wrapped_outputs.push_back(dynamic_tensor->get_wrapped_tensor());
-        }
-        else
-        {
-            wrapped_outputs.push_back(outputs[i]);
-        }
-    }
-
-    // TODO: Put compiled executable in the cache.
-    auto compiled_executable = m_wrapped_backend->compile(clone, m_enable_performance_collection);
-    auto result = compiled_executable->call(wrapped_outputs, wrapped_inputs);
-
-    return result;
 }
 
 runtime::dynamic::DynamicTensor::DynamicTensor(

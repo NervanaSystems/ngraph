@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/cache.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
