@@ -38,6 +38,7 @@ namespace ngraph
         uint64_t version;
 
         bool is_castable(const DiscreteTypeInfo& target_type) const { return this == &target_type; }
+        // For use as a key
         bool operator<(const DiscreteTypeInfo& b) const
         {
             return version < b.version ||

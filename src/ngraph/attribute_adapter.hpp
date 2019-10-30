@@ -21,13 +21,16 @@
 
 namespace ngraph
 {
+    /// Provides a generic way to access attribute values for serialization
     class AttributeAdapter
     {
     public:
-        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter", 0};
         virtual ~AttributeAdapter() {}
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter", 0};
         virtual const DiscreteTypeInfo& get_type_info() const { return type_info; }
+        /// Returns the value as a string
         virtual std::string get_string() const = 0;
+        /// 
         virtual void set_string(const std::string& value) const = 0;
     };
 

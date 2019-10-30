@@ -23,10 +23,13 @@
 
 namespace ngraph
 {
+    /// Uses a pairings defined by EnumTypes::get() to convert between strings
+    /// and enum values.
     template <typename EnumType>
     class EnumNames
     {
     public:
+        /// Converts strings to enum values
         static EnumType as_enum(const std::string& name)
         {
             for (auto p : get().m_string_enums)
@@ -39,6 +42,7 @@ namespace ngraph
             NGRAPH_CHECK(false, "\"", name, "\"", " is not a member of enum ", get().m_enum_name);
         }
 
+        /// Converts enum values to strings
         static std::string as_string(EnumType e)
         {
             for (auto p : get().m_string_enums)
@@ -52,18 +56,22 @@ namespace ngraph
         }
 
     private:
+        /// Creates the mapping.
         EnumNames(const std::string& enum_name,
                   const std::vector<std::pair<std::string, EnumType>> string_enums)
             : m_enum_name(enum_name)
             , m_string_enums(string_enums)
         {
         }
+
+        /// Must be defined to returns a singleton for each supported enum class
         static EnumNames<EnumType>& get();
 
         const std::string m_enum_name;
         std::vector<std::pair<std::string, EnumType>> m_string_enums;
     };
 
+    /// Returns the enum value matching the string
     template <typename Type, typename Value>
     typename std::enable_if<std::is_convertible<Value, std::string>::value, Type>::type
         as_enum(const Value& value)
@@ -71,6 +79,7 @@ namespace ngraph
         return EnumNames<Type>::as_enum(value);
     }
 
+    /// Returns the string matching the enum value
     template <typename Value>
     std::string as_string(Value value)
     {
