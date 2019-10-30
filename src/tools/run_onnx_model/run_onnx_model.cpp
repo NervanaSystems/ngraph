@@ -56,7 +56,7 @@ unique_ptr<char[]> load_data_frome_file(string file_name)
     ifstream file(file_name);
     file.seekg(0, ios::end);
     size_t len = file.tellg();
-    unique_ptr<char[]> data(new char[len]());
+    unique_ptr<char[]> data(new char[len]);
     file.seekg(0, ios::beg);
     file.read(data.get(), len);
     file.close();
@@ -73,6 +73,7 @@ vector<shared_ptr<runtime::Tensor>> load_inputs(std::shared_ptr<runtime::Backend
 
     for (int i = 0; i < input_paths.size(); i++)
     {
+        cout << "Input " << i << " file path:" << input_paths.at(i) << endl;
         auto tensor =
             backend->create_tensor(params.at(i)->get_element_type(), params.at(i)->get_shape());
         const string input_path = input_paths.at(i);
@@ -137,6 +138,81 @@ std::tuple<string, string> validate_argument(string arg, string arg2)
     return std::make_tuple(option, value);
 }
 
+void print_vector(vector<float> data,
+                  vector<size_t> shape,
+                  size_t shape_pointer,
+                  size_t data_pointer)
+{
+    cout << "[ ";
+    if (shape_pointer == shape.size() - 2)
+    {
+        const size_t pointed_dim = shape.at(shape_pointer);
+        const size_t next_dim = shape.at(shape_pointer + 1);
+        for (int i = 0; i < pointed_dim; i++)
+        {
+            cout << "[";
+            for (int j = 0; j < next_dim; j++)
+            {
+                cout << data.at(data_pointer + (i * next_dim) + j);
+                if (j != next_dim - 1)
+                    cout << ", ";
+            }
+
+            if (i == pointed_dim - 1)
+            {
+                cout << "]";
+            }
+            else
+            {
+                cout << "]" << endl;
+            }
+        }
+    }
+    else
+    {
+        size_t data_offset = 1;
+        const size_t pointed_dim = shape.at(shape_pointer);
+        for (int i = shape_pointer + 1; i < shape.size(); i++)
+        {
+            data_offset *= shape.at(i);
+        }
+        size_t next_data_pointer;
+        for (int k = 0; k < pointed_dim; k++)
+        {
+            next_data_pointer = data_pointer + (k * data_offset);
+            if (next_data_pointer != 0)
+            {
+                cout << endl;
+            }
+
+            print_vector(data, shape, shape_pointer + 1, next_data_pointer);
+        }
+    }
+
+    if (shape_pointer == 0)
+    {
+        cout << "]" << endl;
+    }
+    else
+    {
+        cout << "]";
+    }
+}
+void print_outputs(vector<shared_ptr<runtime::Tensor>> outputs)
+{
+    cout << "Outputs info:" << endl;
+    for (int i = 0; i < outputs.size(); i++)
+    {
+        shared_ptr<runtime::Tensor> output = outputs.at(i);
+        cout << "Output " << i << endl;
+        cout << output->get_shape() << endl;
+        cout << output->get_element_type() << endl;
+        cout << "Count of elements:" << output->get_element_count() << endl;
+        vector<float> output_values = read_float_vector(output);
+        print_vector(output_values, output->get_shape(), 0, 0);
+    }
+}
+
 int main(int argc, char** argv)
 {
     vector<string> input_paths{};
@@ -181,6 +257,7 @@ int main(int argc, char** argv)
     if (f)
     {
         function = ngraph::onnx_import::import_onnx_model(model);
+        cout << "Model file path:" << model << endl;
     }
     else
     {
@@ -211,7 +288,7 @@ int main(int argc, char** argv)
 
         if (handle->call_with_validate(outputs, inputs))
         {
-            cout << "PASSED" << endl;
+            print_outputs(outputs);
         }
         else
         {
