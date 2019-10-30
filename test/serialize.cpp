@@ -209,8 +209,8 @@ TEST(benchmark, serialize)
     timer.stop();
     cout << "deserialize took " << timer.get_milliseconds() << "ms\n";
 
-    ofstream out("test.json");
     WithSerializeOutputShapesEnabled serialize_outputs(true);
+    ofstream out("test.json");
     out << serialize(f, 4);
 }
 
