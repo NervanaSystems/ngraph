@@ -61,4 +61,22 @@ namespace ngraph
     ///
     /// Option may be enabled by setting the environment variable NGRAPH_SERIALIZER_OUTPUT_SHAPES
     void set_serialize_output_shapes(bool enable);
+    bool get_serialize_output_shapes();
+
+    class WithSerializeOutputShapesEnabled
+    {
+    public:
+        WithSerializeOutputShapesEnabled(bool enabled = true)
+        {
+            m_serialize_output_shapes_enabled = get_serialize_output_shapes();
+            set_serialize_output_shapes(enabled);
+        }
+        ~WithSerializeOutputShapesEnabled()
+        {
+            set_serialize_output_shapes(m_serialize_output_shapes_enabled);
+        }
+
+    private:
+        bool m_serialize_output_shapes_enabled;
+    };
 }
