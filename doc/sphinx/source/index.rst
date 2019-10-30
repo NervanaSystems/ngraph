@@ -61,10 +61,9 @@ nGraph Compiler Stack Documentation
    
 .. toctree::
    :maxdepth: 1
-   :caption: APIs 
+   :caption: Backend Support
 
-   python_api/index.rst
-   backends/index.rst
+   python_api/index.r   backends/index.rst
    backends/cpp-api.rst
 
 
