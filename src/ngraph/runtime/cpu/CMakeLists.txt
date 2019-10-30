@@ -274,7 +274,7 @@ if (NGRAPH_CPU_ENABLE)
         # TODO: can we get away without LLVM/MLIR include path. 
         # Currently mlir backend compiler.hpp include LLVM/MLIR files
         get_directory_property(MLIR_LLVM_INCLUDEPATH
-                               DIRECTORY ${NGRAPH_MLIR_SOURCE_DIR}/compiler
+                               DIRECTORY ${NGRAPH_MLIR_SOURCE_DIR}
                                DEFINITION MLIR_LLVM_INCLUDEPATH)
         
         message(STATUS "Building CPU backend with MLIR")

@@ -19,10 +19,11 @@
 
 #pragma once
 
-#include "memory_manager.hpp"
+#include "contrib/mlir/runtime/cpu/memory_manager.hpp"
+#include "ngraph/check.hpp"
+#include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/node.hpp"
 
-#include <mlir/ExecutionEngine/ExecutionEngine.h>
 #include <mlir/ExecutionEngine/MemRefUtils.h>
 #include <mlir/IR/Builders.h>
 #include <mlir/IR/Module.h>
@@ -31,11 +32,6 @@
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
-
-namespace llvm
-{
-    class TargetMachine;
-}
 
 namespace ngraph
 {
@@ -55,30 +51,34 @@ namespace ngraph
     {
         namespace ngmlir
         {
-            /// This class is the entry point to MLIR from nGraph. It drives the conversion of
-            /// nGraph sub-graphs, represented with CompiledKernel nodes, to MLIR nGraph dialect
-            /// and its lowering, optimization and execution using LLVM-based MLIR execution engine.
+            /// MLIR Compiler. Given an nGraph sub-graph, represented as CompiledKernel node, it
+            /// translates the graph down to nGraph dialect and applies core optimizations.
+            ///
+            /// The compiler owns the MLIR module until compilation is done. After that,
+            /// the module can be grabbed and plugged into MLIR backends.
             class MLIRCompiler
             {
             public:
-                /// Initializes MLIR environment. It must be called only once per execution.
-                static void init_mlir();
+                /// Initializes MLIR environment. It must be called only once.
+                static void init();
 
             public:
                 using TensorList = std::vector<descriptor::Tensor*>;
                 using TypeList = llvm::SmallVector<mlir::Type, 4>;
 
-                MLIRCompiler(const ngraph::op::CompiledKernel* compiled_kernel)
+                MLIRCompiler(const ngraph::op::CompiledKernel* compiled_kernel,
+                             mlir::MLIRContext& context)
                     : m_compiledKernel(compiled_kernel)
+                    , m_context(context)
                 {
+                    NGRAPH_CHECK(initialized,
+                                 "Cannot instantiate a compiler without initializing MLIR");
                 }
 
                 /// Compiles a subgraph with MLIR
                 void compile();
 
-                /// Executes a pre-compiled subgraph
-                void run(std::vector<void*>& externalTensors);
-
+                mlir::OwningModuleRef& get_module() { return m_module; }
             private:
                 struct TensorInfo
                 {
@@ -87,13 +87,11 @@ namespace ngraph
                 };
 
             private:
+                // Converts an nGraph sub-graph to MLIR nGraph dialect.
                 void buildNgDialectModule();
-                void lowerNgDialect();
-                void optimizeNgDialect();
-                void optimize();
-                void bindArguments(std::vector<void*>& externalTensors);
-                void execute();
-                void cleanup();
+                void buildNgDialect();
+                // Applies any nGraph dialect optimizations
+                void optimizeNgDialect() { /*TODO: Add Core NG dialect optimizations */}
 
                 mlir::Type getMlirType(const descriptor::Tensor* tensor);
                 mlir::Type getMlirType(const element::Type& type);
@@ -101,8 +99,6 @@ namespace ngraph
 
                 TensorInfo getTensorValue(descriptor::Tensor* tensor);
                 void updateTensorValue(descriptor::Tensor* tensor, mlir::Value* value);
-
-                void buildNgDialect();
 
                 template <typename Op>
                 static mlir::Operation* createOp(MLIRCompiler& compiler, const ngraph::Node* ngNode)
@@ -121,15 +117,6 @@ namespace ngraph
 
                 void createReturn();
 
-                /// Helper to create memref arguments for MLIR function signature
-                llvm::SmallVector<void*, 8> allocateMemrefArgs();
-
-                /// Helper to allocate a mem ref object. Handles static shapes only for now.
-                mlir::StaticFloatMemRef* allocateMemrefDescriptor();
-
-                /// Helper to dump MLIR module into llvm::dbgs prepended by the message \p msg.
-                void dumpMlirModule(const std::string msg);
-
                 /// Converts nGraph shape-like types \p ng_shape to MLIR shape \p mlir_shape.
                 template <typename T>
                 void getMlirShape(T ngShape, llvm::SmallVectorImpl<int64_t>& mlirShape);
@@ -142,19 +129,12 @@ namespace ngraph
                 // Sub-graph to be compiled and executed with MLIR.
                 const ngraph::op::CompiledKernel* m_compiledKernel;
 
-                // Pointers to externally allocated memory for sub-graph's input and output tensors.
-                std::vector<void*>* m_externalTensors;
-
-                // Arguments for the MLIR function generated for the nGraph sub-graph.
-                llvm::SmallVector<void*, 8> m_invokeArgs;
-
                 // MLIR context that holds all the MLIR information related to the sub-graph
                 // compilation.
-                mlir::MLIRContext m_context;
+                mlir::MLIRContext& m_context;
 
                 mlir::OwningModuleRef m_module;
                 std::unique_ptr<mlir::OpBuilder> m_builder;
-                std::unique_ptr<mlir::ExecutionEngine> m_engine;
 
                 using TensorToInfo = std::pair<descriptor::Tensor*, TensorInfo>;
                 using TensorToInfoMap = std::unordered_map<descriptor::Tensor*, TensorInfo>;
@@ -166,26 +146,8 @@ namespace ngraph
                 // use for MLIR dialect gen
                 TensorToInfoMap m_tensorToValueMap;
                 static const MLIRCompOpMap opDispatcher;
-
-                // Optimization level used by MLIR and LLVM compilers. It's based on LLVM CG
-                // optimization levels:
-                // enum Level {
-                //   None,        // -O0
-                //   Less,        // -O1
-                //   Default,     // -O2, -Os
-                //   Aggressive   // -O3
-                // };
-                static llvm::CodeGenOpt::Level mlirOptLevel;
-
-                // LLVM target machine to be used by this MLIR compiler instance to retrieve
-                // information about target features.
-                // TODO: Note that, unfortunatelly, MLIR/OrcJIT execution engine creates its own
-                // target machine for compilation internally. This target machine is for non-JIT
-                // related stuff. We should change OrcJIT API so that we can pass an external target
-                // machine or configuration flags.
-                // TODO: Move target machine to external nGraph backend when multiple backends start
-                // to use MLIR.
-                static std::unique_ptr<llvm::TargetMachine> targetMachine;
+                // Global initialization for MLIR compiler
+                static bool initialized;
             };
         }
     }

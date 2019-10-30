@@ -4570,9 +4570,11 @@ namespace ngraph
                 }
                 else
                 {
+                    auto out_rank = out_shape.size();
+                    arg_shape.insert(arg_shape.begin(), out_rank - arg_rank, 1);
                     writer.block_begin();
                     writer << "cpu::kernel::tile<" << et.c_type_string() << ", "
-                           << std::to_string(arg_rank) << ">(" << args[0].get_name() << ", "
+                           << std::to_string(out_rank) << ">(" << args[0].get_name() << ", "
                            << out[0].get_name() << ", {" << join(arg_shape) << "}, {"
                            << join(out_shape) << "}, 0);\n";
 

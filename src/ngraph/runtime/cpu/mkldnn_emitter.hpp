@@ -1221,7 +1221,7 @@ namespace ngraph
 
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    size_t concat_dim = concat->get_concatenation_axis();
+                    auto concat_dim = concat->get_concatenation_axis();
 
                     mkldnn::primitive_attr attr;
                     attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
@@ -1492,7 +1492,7 @@ namespace ngraph
 
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    size_t concat_dim = concat->get_concatenation_axis();
+                    auto concat_dim = concat->get_concatenation_axis();
 
                     // concat primitive descriptor
                     return mkldnn::concat::primitive_desc(

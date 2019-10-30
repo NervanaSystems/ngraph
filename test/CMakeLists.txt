@@ -71,12 +71,14 @@ set(SRC
     op.cpp
     opset_pass/broadcast_opset_pass.cpp
     opset_pass/convolution_opset_pass.cpp
-    opset_pass/generate_mask_opset_pass.cpp
+    opset_pass/dyn_reshape_opset_pass.cpp
     opset_pass/gather_opset_pass.cpp
+    opset_pass/generate_mask_opset_pass.cpp
     opset_pass/pad_opset_pass.cpp
     opset_pass/poolings_opset_pass.cpp
     opset_pass/product_opset_pass.cpp
     opset_pass/reverse_opset_pass.cpp
+    opset_pass/slice_opset_pass.cpp
     opset_pass/softmax_opset_pass.cpp
     opset_pass/sum_opset_pass.cpp
     opset_pass/topk_opset_pass.cpp
@@ -115,6 +117,7 @@ set(SRC
     type_prop/dyn_replace_slice.cpp
     type_prop/dyn_reshape.cpp
     type_prop/dyn_slice.cpp
+    type_prop/strided_slice.cpp
     type_prop/elu.cpp
     type_prop/embedding_lookup.cpp
     type_prop/fake_quantize.cpp
@@ -280,6 +283,7 @@ set(MULTI_TEST_SRC
     backend/dyn_replace_slice_reference.in.cpp
     backend/dyn_reshape.in.cpp
     backend/dyn_slice_reference.in.cpp
+    backend/strided_slice.in.cpp
     backend/dynamic.in.cpp
     backend/embedding_lookup.in.cpp
     backend/erf.in.cpp
@@ -339,6 +343,7 @@ set(MULTI_TEST_SRC
     backend/tan.in.cpp
     backend/tanh.in.cpp
     backend/tensorview_custom_mem.in.cpp
+    backend/tile.in.cpp
     backend/topk.in.cpp
     backend/transpose.in.cpp
     backend/unhandled_op.in.cpp
