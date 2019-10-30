@@ -24,7 +24,6 @@ namespace ngraph
     {
         struct PriorBoxClusteredAttrs
         {
-            // num_priors     Number of prior boxes
             // widths         Desired widths of prior boxes
             // heights        Desired heights of prior boxes
             // clip           Clip output to [0,1]
@@ -32,7 +31,6 @@ namespace ngraph
             // step_heights   Distance between prior box centers
             // offset         Box offset relative to top center of image
             // variances      Values to adjust prior boxes with
-            size_t num_priors;
             std::vector<float> widths;
             std::vector<float> heights;
             bool clip = false;
