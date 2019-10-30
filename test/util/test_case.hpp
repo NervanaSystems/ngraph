@@ -20,7 +20,6 @@
 
 #include "all_close.hpp"
 #include "all_close_f.hpp"
-#include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/ngraph.hpp"
 #include "test_tools.hpp"
@@ -76,7 +75,7 @@ namespace ngraph
             template <typename T>
             void add_input_from_file(const std::string& filepath)
             {
-                auto value = ngraph::file_util::read_binary_file<T>(filepath);
+                auto value = read_binary_file<T>(filepath);
                 add_input(value);
             }
 
@@ -127,7 +126,7 @@ namespace ngraph
             void add_expected_output_from_file(ngraph::Shape expected_shape,
                                                const std::string& filepath)
             {
-                auto value = ngraph::file_util::read_binary_file<T>(filepath);
+                auto value = read_binary_file<T>(filepath);
                 add_expected_output(expected_shape, value);
             }
 
