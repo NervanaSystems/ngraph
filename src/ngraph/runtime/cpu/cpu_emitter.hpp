@@ -27,6 +27,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/gather.hpp"
+#include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
@@ -76,7 +77,6 @@ namespace ngraph
         class Greater;
         class GreaterEq;
         class Less;
-        class LessEq;
         class Any;
         class All;
         class LRN;

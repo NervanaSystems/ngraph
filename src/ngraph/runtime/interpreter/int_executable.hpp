@@ -1000,6 +1000,17 @@ private:
                                   less_eq->get_autob());
             break;
         }
+        case OP_TYPEID::LessEqual:
+        {
+            auto less_eq = static_cast<const op::v1::LessEqual*>(&node);
+            reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
+                                  args[1]->get_data_ptr<const T>(),
+                                  out[0]->get_data_ptr<char>(),
+                                  node.get_input_shape(0),
+                                  node.get_input_shape(1),
+                                  less_eq->get_autob());
+            break;
+        }
         case OP_TYPEID::Log:
         {
             size_t element_count = shape_size(node.get_output_shape(0));

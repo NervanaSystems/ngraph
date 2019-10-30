@@ -26,6 +26,7 @@
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/not.hpp"
 #include "ngraph/op/or.hpp"
@@ -266,6 +267,16 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         auto replacement_node = make_shared<op::v0::GenerateMask>(
             node->input(0).get_source_output(), mask_shape, et, seed, probability, use_seed);
 
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::LessEqual:
+    {
+        auto less_eq_v1 = as_type_ptr<op::v1::LessEqual>(node);
+        auto replacement_node = make_shared<op::v0::LessEq>(node->input(0).get_source_output(),
+                                                            node->input(1).get_source_output(),
+                                                            less_eq_v1->get_autob());
         replace_node(node, replacement_node);
         modified = true;
         break;
