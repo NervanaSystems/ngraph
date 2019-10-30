@@ -57,18 +57,11 @@ void op::PriorBoxClustered::validate_and_infer_types()
                           image_shape_rank);
 
     NODE_VALIDATION_CHECK(this,
-                          m_attrs.widths.size() == m_attrs.num_priors,
-                          "Num_priors ",
-                          m_attrs.num_priors,
+                          m_attrs.widths.size() == m_attrs.heights.size(),
+                          "Size of heights vector",
+                          m_attrs.widths.size(),
                           " doesn't match size of widths vector ",
                           m_attrs.widths.size());
-
-    NODE_VALIDATION_CHECK(this,
-                          m_attrs.heights.size() == m_attrs.num_priors,
-                          "Num_priors ",
-                          m_attrs.num_priors,
-                          " doesn't match size of heights vector ",
-                          m_attrs.heights.size());
 
     set_input_is_relevant_to_shape(0);
 
@@ -81,8 +74,9 @@ void op::PriorBoxClustered::validate_and_infer_types()
 
         auto layer_shape = const_shape->get_shape_val();
         // {Prior boxes, variances-adjusted prior boxes}
+        const auto num_priors = m_attrs.widths.size();
         set_output_type(
-            0, element::f32, Shape{2, 4 * layer_shape[0] * layer_shape[1] * m_attrs.num_priors});
+            0, element::f32, Shape{2, 4 * layer_shape[0] * layer_shape[1] * num_priors});
     }
     else
     {
