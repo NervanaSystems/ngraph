@@ -30,6 +30,7 @@
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
+#include "ngraph/op/not.hpp"
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
@@ -128,7 +129,6 @@ namespace ngraph
         class ConvolutionBiasAdd;
         class ConvolutionAdd;
         class ConvolutionBiasBackpropFiltersBias;
-        class Not;
         class QuantizedMaxPool;
         class QuantizedAvgPool;
         class MaxPoolWithIndices;

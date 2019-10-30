@@ -1544,6 +1544,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
+        case OP_TYPEID::LogicalNot:
+        {
+            node = make_shared<op::v1::LogicalNot>(args[0]);
+            break;
+        }
         case OP_TYPEID::LogicalOr:
         {
             node = make_shared<op::v1::LogicalOr>(
@@ -3077,6 +3082,8 @@ json JSONSerializer::serialize_node(const Node& n)
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
+    }
+    case OP_TYPEID::LogicalNot: { break;
     }
     case OP_TYPEID::LogicalOr:
     {

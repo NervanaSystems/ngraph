@@ -24,6 +24,7 @@
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/not.hpp"
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
@@ -357,6 +358,12 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
                                                      kernel);
         }
         replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Not:
+    {
+        replace_node(node, make_shared<op::v1::LogicalNot>(node->input(0).get_source_output()));
         modified = true;
         break;
     }
