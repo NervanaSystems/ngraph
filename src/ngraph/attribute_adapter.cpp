@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/type.hpp"
+#include "ngraph/attribute_adapter.hpp"
 
 using namespace ngraph;
 
-constexpr DiscreteTypeInfo VisitorAdapter::type_info;
+constexpr DiscreteTypeInfo AttributeAdapter::type_info;

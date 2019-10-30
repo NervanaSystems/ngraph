@@ -14,6 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <mutex>
+
 #include "ngraph/factory.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
@@ -25,29 +27,44 @@
 #include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
+#include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/parameter.hpp"
 
 using namespace std;
 
 namespace ngraph
 {
+    mutex& get_registry_mutex(){
+        static mutex registry_mutex;
+        return registry_mutex;
+    }
+
     template <>
     FactoryRegistry<Node>& FactoryRegistry<Node>::get()
     {
         static FactoryRegistry<Node> registry;
+        static mutex init_guard;
         // TODO: Add a lock
         if (registry.m_factory_map.size() == 0)
         {
-            registry.register_factory<op::Abs>();
-            registry.register_factory<op::Acos>();
-            registry.register_factory<op::Add>();
-            registry.register_factory<op::All>();
-            registry.register_factory<op::AllReduce>();
-            registry.register_factory<op::And>();
-            registry.register_factory<op::Any>();
-            registry.register_factory<op::ArgMax>();
-            registry.register_factory<op::ArgMin>();
-            registry.register_factory<op::Parameter>();
+            lock_guard<mutex> guard(init_guard);
+            if (registry.m_factory_map.size() == 0)
+            {
+                registry.register_factory<op::Abs>();
+                registry.register_factory<op::Acos>();
+                registry.register_factory<op::Add>();
+                registry.register_factory<op::All>();
+                registry.register_factory<op::AllReduce>();
+                registry.register_factory<op::And>();
+                registry.register_factory<op::Any>();
+                registry.register_factory<op::ArgMax>();
+                registry.register_factory<op::ArgMin>();
+                registry.register_factory<op::v0::AvgPool>();
+                registry.register_factory<op::v0::AvgPoolBackprop>();
+                registry.register_factory<op::v1::AvgPool>();
+                registry.register_factory<op::v1::AvgPoolBackprop>();
+                registry.register_factory<op::Parameter>();
+            }
         }
         return registry;
     }

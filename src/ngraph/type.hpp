@@ -20,7 +20,6 @@
 #include <string>
 #include <utility>
 
-#include "ngraph/check.hpp"
 #include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
@@ -41,9 +40,8 @@ namespace ngraph
         bool is_castable(const DiscreteTypeInfo& target_type) const { return this == &target_type; }
         bool operator<(const DiscreteTypeInfo& b) const
         {
-            std::string sa(name);
-            std::string sb(b.name);
-            return sa < sb || (sa == sb && version < b.version);
+            return version < b.version ||
+                   (version == b.version && std::string(name) < std::string(b.name));
         }
     };
 
@@ -82,133 +80,4 @@ namespace ngraph
         return is_type<Type>(value) ? std::static_pointer_cast<Type>(value)
                                     : std::shared_ptr<Type>();
     }
-
-    template <typename EnumType>
-    class EnumNames
-    {
-    public:
-        static EnumType as_type(const std::string& name)
-        {
-            for (auto p : get().m_string_enums)
-            {
-                if (p.first == name)
-                {
-                    return p.second;
-                }
-            }
-            NGRAPH_CHECK(false, "\"", name, "\"", " is not a member of enum ", get().m_enum_name);
-        }
-
-        static std::string as_type(EnumType e)
-        {
-            for (auto p : get().m_string_enums)
-            {
-                if (p.second == e)
-                {
-                    return p.first;
-                }
-            }
-            NGRAPH_CHECK(false, " invalid member of enum ", get().m_enum_name);
-        }
-
-    private:
-        EnumNames(const std::string& enum_name,
-                  const std::vector<std::pair<std::string, EnumType>> string_enums)
-            : m_enum_name(enum_name)
-            , m_string_enums(string_enums)
-        {
-        }
-        static EnumNames<EnumType>& get();
-
-        const std::string m_enum_name;
-        std::vector<std::pair<std::string, EnumType>> m_string_enums;
-    };
-
-    template <typename Type, typename Value>
-    typename std::enable_if<std::is_convertible<Value, std::string>::value, Type>::type
-        as_type(const Value& value)
-    {
-        return EnumNames<Type>::as_type(value);
-    }
-
-    template <typename Type, typename Value>
-    typename std::enable_if<std::is_convertible<Type, std::string>::value, Type>::type
-        as_type(Value value)
-    {
-        return EnumNames<Value>::as_type(value);
-    }
-
-    class VisitorAdapter
-    {
-    public:
-        static constexpr DiscreteTypeInfo type_info{"VisitorAdapter", 0};
-        virtual ~VisitorAdapter() {}
-        virtual const DiscreteTypeInfo& get_type_info() const { return type_info; }
-        virtual std::string get_string() const = 0;
-        virtual void set_string(const std::string& value) const = 0;
-    };
-
-    template <typename Type>
-    class TypeAdapter : public VisitorAdapter
-    {
-    public:
-        operator Type&() const { return m_value; }
-    protected:
-        TypeAdapter(Type& value)
-            : m_value(value)
-        {
-        }
-        Type& m_value;
-    };
-
-    template <typename Type>
-    class EnumAdapter : public TypeAdapter<Type>
-    {
-    public:
-        EnumAdapter(Type& value)
-            : TypeAdapter<Type>(value)
-        {
-        }
-        static const DiscreteTypeInfo type_info;
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-        std::string get_string() const override
-        {
-            return as_type<std::string>(TypeAdapter<Type>::m_value);
-        }
-        void set_string(const std::string& value) const override
-        {
-            TypeAdapter<Type>::m_value = as_type<Type>(value);
-        }
-    };
-
-    template <typename Type>
-    class ObjectAdapter : public TypeAdapter<Type>
-    {
-    public:
-        ObjectAdapter(Type& value)
-            : TypeAdapter<Type>(value)
-        {
-        }
-        static const DiscreteTypeInfo type_info;
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-        std::string get_string() const override { return "TODO"; }
-        void set_string(const std::string& value) const override {}
-    };
-
-    /// Adapts references to a value to a reference to a string
-    template <typename Type>
-    class StringAdapter
-    {
-    public:
-        StringAdapter(Type& value)
-            : m_string(as_type<std::string>(value))
-            , m_value(value)
-        {
-        }
-        ~StringAdapter() { m_value = as_type<Type>(m_string); }
-        operator std::string&() { return m_string; }
-    private:
-        std::string m_string;
-        Type& m_value;
-    };
 }

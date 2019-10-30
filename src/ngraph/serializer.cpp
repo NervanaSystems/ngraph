@@ -265,7 +265,7 @@ public:
     {
         m_json[name] = value;
     }
-    void on_attribute(const std::string& name, const VisitorAdapter& adapter) override
+    void on_attribute(const std::string& name, const AttributeAdapter& adapter) override
     {
         m_json[name] = adapter.get_string();
     }
@@ -383,7 +383,7 @@ public:
         }
     }
 
-    void on_attribute(const std::string& name, const VisitorAdapter& adapter) override
+    void on_attribute(const std::string& name, const AttributeAdapter& adapter) override
     {
         if (has_key(m_json, name))
         {

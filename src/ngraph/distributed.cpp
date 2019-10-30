@@ -42,7 +42,7 @@ namespace ngraph
 
 std::ostream& reduction::operator<<(std::ostream& out, const reduction::Type& obj)
 {
-    return out << as_type<std::string>(obj);
+    return out << as_string(obj);
 }
 
 static std::unique_ptr<DistributedInterface> s_distributed_interface;

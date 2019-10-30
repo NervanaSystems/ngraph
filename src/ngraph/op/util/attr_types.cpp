@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/util/attr_types.hpp"
-#include "ngraph/type.hpp"
+#include "ngraph/enum_names.hpp"
 
 using namespace ngraph;
 
@@ -37,7 +37,7 @@ namespace ngraph
 
     std::ostream& op::operator<<(std::ostream& s, const op::PadMode& type)
     {
-        return s << as_type<std::string>(type);
+        return s << as_string(type);
     }
 
     template <>
@@ -56,7 +56,7 @@ namespace ngraph
 
     std::ostream& op::operator<<(std::ostream& s, const op::PadType& type)
     {
-        return s << as_type<std::string>(type);
+        return s << as_string(type);
     }
 
     template <>
@@ -73,7 +73,7 @@ namespace ngraph
 
     std::ostream& op::operator<<(std::ostream& s, const op::RoundingType& type)
     {
-        return s << as_type<std::string>(type);
+        return s << as_string(type);
     }
 
     template <>
@@ -94,7 +94,7 @@ namespace ngraph
 
     std::ostream& op::operator<<(std::ostream& s, const op::AutoBroadcastType& type)
     {
-        return s << as_type<std::string>(type);
+        return s << as_string(type);
     }
 
     template <>
@@ -110,6 +110,6 @@ namespace ngraph
 
     std::ostream& op::operator<<(std::ostream& s, const op::EpsMode& type)
     {
-        return s << as_type<std::string>(type);
+        return s << as_string(type);
     }
 }

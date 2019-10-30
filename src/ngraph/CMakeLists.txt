@@ -16,6 +16,8 @@
 
 set (SRC
     assertion.hpp
+    attribute_adapter.cpp
+    attribute_adapter.hpp
     attribute_visitor.hpp
     autodiff/adjoints.cpp
     autodiff/adjoints.hpp
@@ -78,6 +80,7 @@ set (SRC
     dimension.hpp
     distributed.cpp
     distributed.hpp
+    enum_names.hpp
     except.hpp
     factory.cpp
     factory.hpp
@@ -548,7 +551,6 @@ set (SRC
     type/float16.cpp
     type/float16.hpp
     type/element_type.cpp
-    type.cpp
     type.hpp
     util.cpp
     util.hpp

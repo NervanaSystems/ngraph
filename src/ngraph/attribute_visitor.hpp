@@ -19,11 +19,12 @@
 #include <string>
 
 #include "ngraph/partial_shape.hpp"
+#include "ngraph/type.hpp"
 #include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
-    class VisitorAdapter;
+    class AttributeAdapter;
     class PartialShape;
 
     /// \brief Visits the attributes of a node.
@@ -46,6 +47,6 @@ namespace ngraph
         virtual void on_attribute(const std::string& name, uint64_t& value) = 0;
         virtual void on_attribute(const std::string& name, std::vector<uint64_t>& value) = 0;
         virtual void on_attribute(const std::string& name,
-                                  const VisitorAdapter& visitor_adapter) = 0;
+                                  const AttributeAdapter& visitor_adapter) = 0;
     };
 }

@@ -18,9 +18,12 @@
 
 #include <functional>
 #include <map>
+#include <mutex>
 
 namespace ngraph
 {
+    std::mutex& get_registry_mutex();
+
     template <typename T>
     class FactoryRegistry
     {
@@ -31,16 +34,19 @@ namespace ngraph
         template <typename U>
         void register_factory()
         {
+            std::lock_guard<std::mutex> guard(get_registry_mutex());
             m_factory_map[U::type_info] = []() { return new U(); };
         }
 
         bool has_factory(const decltype(T::type_info) & info)
         {
+            std::lock_guard<std::mutex> guard(get_registry_mutex());
             return m_factory_map.find(info) != m_factory_map.end();
         }
 
         T* create(const decltype(T::type_info) & info)
         {
+            std::lock_guard<std::mutex> guard(get_registry_mutex());
             auto it = m_factory_map.find(info);
             return it == m_factory_map.end() ? nullptr : it->second();
         }

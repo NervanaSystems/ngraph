@@ -19,7 +19,7 @@
 #include <cstddef>
 #include <ostream>
 
-#include "ngraph/attribute_visitor.hpp"
+#include "ngraph/attribute_adapter.hpp"
 #include "ngraph/type.hpp"
 
 namespace ngraph
