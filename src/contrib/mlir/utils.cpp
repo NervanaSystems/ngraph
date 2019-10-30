@@ -17,13 +17,32 @@
 // NOTE: This file follows nGraph format style and MLIR naming convention since it does
 // not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
 
-#include "tools.hpp"
+#include "utils.hpp"
 
-#include "dialect/dialect.hpp"
+#include "contrib/mlir/core/ngraph_dialect/dialect.hpp"
 
+#include <llvm/Support/CommandLine.h>
+#include <llvm/Support/Debug.h>
 #include <mlir/IR/Dialect.h>
+
+static llvm::cl::opt<bool> clPrintIRAfterAll(
+    "ngraph-print-ir-after-all",
+    llvm::cl::init(false),
+    llvm::cl::desc(
+        "Print IR after transformation that are not implemented as passes in the MLIRCompiler. It "
+        "complements MLIR -print-ir-after-all and LLVM -print-after-all flags"));
 
 void ngraph::runtime::ngmlir::initializeNGraphMLIR()
 {
     mlir::registerDialect<mlir::NGraphOpsDialect>();
+}
+
+void ngraph::runtime::ngmlir::dumpMlirModule(const std::string msg, mlir::ModuleOp module)
+{
+    if (clPrintIRAfterAll)
+    {
+        llvm::dbgs() << "*** IR Dump After " << msg << " ***\n";
+        module.dump();
+        llvm::dbgs() << "\n\n";
+    }
 }

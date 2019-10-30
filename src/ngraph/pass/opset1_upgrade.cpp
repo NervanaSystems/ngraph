@@ -29,7 +29,9 @@
 #include "ngraph/op/reduce_sum.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
+#include "ngraph/op/strided_slice.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
 
@@ -409,6 +411,30 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 
         auto replacement_node =
             make_shared<op::v1::Softmax>(node->input(0).get_source_output(), axes.to_vector()[0]);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Slice:
+    {
+        const auto tmp = as_type_ptr<op::v0::Slice>(node);
+
+        const auto data = node->input(0).get_source_output();
+        const auto begin = op::Constant::create(
+            element::i64, Shape{tmp->get_lower_bounds().size()}, tmp->get_lower_bounds());
+        const auto end = op::Constant::create(
+            element::i64, Shape{tmp->get_upper_bounds().size()}, tmp->get_upper_bounds());
+        const auto strides = op::Constant::create(
+            element::i64, Shape{tmp->get_strides().size()}, tmp->get_strides());
+        int64_t input_size = tmp->get_lower_bounds().size();
+
+        auto replacement_node = make_shared<op::v1::StridedSlice>(data,
+                                                                  begin,
+                                                                  end,
+                                                                  strides,
+                                                                  vector<int64_t>(input_size, 0),
+                                                                  vector<int64_t>(input_size, 0));
+
         replace_node(node, replacement_node);
         modified = true;
         break;
