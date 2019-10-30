@@ -44,7 +44,7 @@ namespace ngraph
                     auto gelu_desc = mkldnn_emitter->get_gelu_forward_desc(node);
                     size_t scratchpad_size = QUERY_SCRATCHPAD(eltwise_forward, gelu_desc);
 
-                    // Gelu needs 3 primitives: input, result, and eltwise_forward.
+                    // Gelu needs 3 primitives: input, result, and eltwise_forward
                     auto gelu_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(gelu_index);
 
