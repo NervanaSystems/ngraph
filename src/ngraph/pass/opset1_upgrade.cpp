@@ -15,6 +15,7 @@
 //*****************************************************************************
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
@@ -99,6 +100,16 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 #endif
     switch (get_typeid(node))
     {
+    case OP_TYPEID::And:
+    {
+        const auto and_v0 = dynamic_cast<const op::v0::And*>(node.get());
+        auto replacement_node = make_shared<op::v1::LogicalAnd>(node->input(0).get_source_output(),
+                                                                node->input(1).get_source_output(),
+                                                                and_v0->get_autob());
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::AvgPool:
     {
         auto tmp = dynamic_cast<const op::v0::AvgPool*>(node.get());

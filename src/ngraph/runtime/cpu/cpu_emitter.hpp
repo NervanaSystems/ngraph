@@ -21,6 +21,7 @@
 
 #include "ngraph/code_writer.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/convolution.hpp"
@@ -143,7 +144,6 @@ namespace ngraph
         class SigmoidMultiply;
         class SigmoidMultiplyBackprop;
         class Result;
-        class And;
         class CompiledKernel;
         class Dropout;
         class Dequantize;

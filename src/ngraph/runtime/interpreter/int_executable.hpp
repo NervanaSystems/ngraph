@@ -1007,6 +1007,17 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
+        case OP_TYPEID::LogicalAnd:
+        {
+            auto logical_and = static_cast<const op::v1::LogicalAnd*>(&node);
+            reference::logical_and(args[0]->get_data_ptr<const T>(),
+                                   args[1]->get_data_ptr<const T>(),
+                                   out[0]->get_data_ptr<T>(),
+                                   node.get_input_shape(0),
+                                   node.get_input_shape(1),
+                                   logical_and->get_autob());
+            break;
+        }
         case OP_TYPEID::LogicalOr:
         {
             auto logical_or = static_cast<const op::v1::LogicalOr*>(&node);

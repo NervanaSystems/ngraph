@@ -18,6 +18,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
@@ -264,6 +265,16 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         auto replacement_node = make_shared<op::v0::GenerateMask>(
             node->input(0).get_source_output(), mask_shape, et, seed, probability, use_seed);
 
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::LogicalAnd:
+    {
+        auto and_v1 = as_type_ptr<op::v1::LogicalAnd>(node);
+        auto replacement_node = make_shared<op::v0::And>(node->input(0).get_source_output(),
+                                                         node->input(1).get_source_output(),
+                                                         and_v1->get_autob());
         replace_node(node, replacement_node);
         modified = true;
         break;
