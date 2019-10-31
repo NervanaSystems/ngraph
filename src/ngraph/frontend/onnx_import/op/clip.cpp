@@ -19,10 +19,12 @@
 
 #include "clip.hpp"
 #include "ngraph/builder/make_constant.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/clamp.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
+#include "ngraph/op/reshape.hpp"
 
 namespace ngraph
 {
@@ -66,14 +68,14 @@ namespace ngraph
                     {
                         if (!inputs.at(1)->is_null())
                         {
-                            min = inputs.at(1);
+                            min = ngraph::builder::reshape(inputs.at(1), data_shape);
                         }
 
                         if (inputs.size() == 3)
                         {
                             if (!inputs.at(2)->is_null())
                             {
-                                max = inputs.at(2);
+                                max = ngraph::builder::reshape(inputs.at(2), data_shape);
                             }
                         }
                     }
