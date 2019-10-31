@@ -1,7 +1,5 @@
 // RUN: ngraph-opt %s --split-input-file --ng-memory-opt --ngraph-memory-opt-concat --ngraph-memory-opt-eltwise | FileCheck %s
 
-
-
 // CHECK-LABEL: test0
 // CHECK:       add
 // CHECK-SAME:  buffer_id = 0

@@ -125,30 +125,31 @@ namespace
     };
 
     // Go backwards over instructions
-    //  Update aliasing assignment
-    //  Update liveness info
     //
-    // Aliasing conditions:
-    // General conditions:
-    //      Operand cannot be argument or output of the sub-graph
-    // Destructive in-place:
-    //      Find first operand where:
-    //          It is last use (operand is dead). If both are las-use, then pick one with lower # of
-    //          uses.
-    //      Assert operand has no prior buffer Id assigned (since last use).
-    //      If result has bufferId + Offset, then copy them to operand. If not create new BufferId
-    //      and Offset = 0.
+    // Re-use buffers if none of the dst/srcs are input/output of the sub-graph
     //
-    // Non-Destructive in-place:
+    // For destructive in-place ops (elt-wise):
+    //      - Find first src where it is last use (src is dead). 
+    //        If all srcs are last-use, then pick one with lower number of uses.
+    //        If no src is found, bail out.
+    //      - If dst has pre-assigned buffer/offset, then copy them to src. 
+    //        If not, assign new buffer to both dst and src.
+    //      - Mark all live syms at this point to not alias src
+    //
+    // For non-Destructive in-place ops:
     //      Concat:
-    //          Concat axis is most-significant non-one axis.
-    //          All operands can alias dest.
-    //          Compute buffer ID and offset for each operand and try to assign, if any of the
-    //          operands already have an attribute that doesnt match what we want to assign, bail
-    //          out.
-    //
+    //          - Reuse buffer if
+    //              - Concat axis is most-significant non-one axis, and
+    //              - all operands can alias dest.
+    //          - If dst has an assignment, copy it over to srcs as long as 
+    //          there is no conflicting src pre-assignment
+    //          - If dst has no assignment, and all srcs have no assignment, 
+    //          assign new buffer to dst and srcs
     //
     //      Slice: TBD
+    //      Reshape: TBD
+    //
+    // Update liveness info
 
     void MemoryOptimizationPass::runOnFunction()
     {
