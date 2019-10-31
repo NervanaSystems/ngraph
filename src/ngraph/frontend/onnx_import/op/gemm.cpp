@@ -42,7 +42,7 @@ namespace ngraph
                     else
                     {
                         input_c = ngraph::op::Constant::create(
-                            input_b->get_element_type(), input_b->get_shape(), {0});
+                            input_b->get_element_type(), ngraph::Shape{}, {0});
                     }
 
                     double alpha = node.get_attribute_value<double>("alpha", 1);
