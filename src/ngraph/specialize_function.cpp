@@ -24,6 +24,15 @@ std::shared_ptr<Function>
     ngraph::specialize_function(std::shared_ptr<Function> f,
                                 const std::vector<element::Type>& parameter_element_types,
                                 const std::vector<PartialShape>& parameter_shapes,
+                                const std::vector<void*>& parameter_values)
+{
+    return specialize_function(f, parameter_element_types, parameter_shapes, parameter_values, false);
+}
+
+std::shared_ptr<Function>
+    ngraph::specialize_function(std::shared_ptr<Function> f,
+                                const std::vector<element::Type>& parameter_element_types,
+                                const std::vector<PartialShape>& parameter_shapes,
                                 const std::vector<void*>& parameter_values,
                                 bool constant_folding)
 {
