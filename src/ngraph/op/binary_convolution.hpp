@@ -107,9 +107,9 @@ namespace ngraph
                 Strides m_dilations;
                 CoordinateDiff m_pads_begin;
                 CoordinateDiff m_pads_end;
-                PadType m_auto_pad;
                 BinaryConvolutionMode m_mode;
                 float m_pad_value;
+                PadType m_auto_pad;
             };
         }
     } // namespace op
