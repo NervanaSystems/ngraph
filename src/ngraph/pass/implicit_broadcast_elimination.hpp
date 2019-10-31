@@ -24,7 +24,7 @@ namespace ngraph
     namespace pass
     {
         NodeVector explicit_broadcast(std::shared_ptr<Node>& node);
-        class ImplicitBroadcastElimination;
+        class ImplicitBroadcastElimination sdjk;ndsfkv
     }
 }
 
