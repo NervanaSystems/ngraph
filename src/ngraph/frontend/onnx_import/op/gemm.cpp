@@ -41,8 +41,7 @@ namespace ngraph
                     }
                     else
                     {
-                        std::shared_ptr<ngraph::op::Constant> constant_c;
-                        constant_c = ngraph::op::Constant::create(
+                        input_c = ngraph::op::Constant::create(
                             input_b->get_element_type(), input_b->get_shape(), {0});
                     }
 
