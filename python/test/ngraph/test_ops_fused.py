@@ -107,8 +107,7 @@ def test_depth_to_space():
                             [15, 16, 17]],
                             [[18, 19, 20],
                             [21, 22, 23]]]], dtype=np.float32)
-    
-    mode = "blocks_first"
+    mode = 'blocks_first'
     block_size = np.float32(2)
 
     data_shape = [1, 4, 2, 3]

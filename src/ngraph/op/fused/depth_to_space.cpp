@@ -111,14 +111,14 @@ shared_ptr<Node> op::DepthToSpace::copy_with_new_args(const NodeVector& new_args
 }
 
 op::DepthToSpace::DepthToSpaceMode
-    op::DepthToSpace::depth_to_space_mode_from_string(const std::string& sort) const
+    op::DepthToSpace::depth_to_space_mode_from_string(const std::string& mode) const
 {
     static const std::map<std::string, DepthToSpaceMode> allowed_values = {
         {"blocks_first", DepthToSpaceMode::BLOCKS_FIRST},
         {"depth_first", DepthToSpaceMode::DEPTH_FIRST}};
 
     NODE_VALIDATION_CHECK(
-        this, allowed_values.count(sort) > 0, "Invalid 'depth_to_space_mode' value passed in.");
+        this, allowed_values.count(mode) > 0, "Invalid 'depth_to_space_mode' value passed in.");
 
-    return allowed_values.at(sort);
+    return allowed_values.at(mode);
 }
