@@ -19,12 +19,12 @@
 
 #include "clip.hpp"
 #include "ngraph/builder/make_constant.hpp"
-#include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/clamp.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -68,20 +68,25 @@ namespace ngraph
                     {
                         if (!inputs.at(1)->is_null())
                         {
-                            min = ngraph::builder::reshape(inputs.at(1), data_shape);
+                            min = inputs.at(1);
                         }
 
                         if (inputs.size() == 3)
                         {
                             if (!inputs.at(2)->is_null())
                             {
-                                max = ngraph::builder::reshape(inputs.at(2), data_shape);
+                                max = inputs.at(2);
                             }
                         }
                     }
 
                     return {std::make_shared<ngraph::op::Minimum>(
-                        max, std::make_shared<ngraph::op::Maximum>(min, data))};
+                        max,
+                        std::make_shared<ngraph::op::Maximum>(
+                            min,
+                            data,
+                            ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY)),
+                        ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY))};
                 }
 
             } // namespace set_11
