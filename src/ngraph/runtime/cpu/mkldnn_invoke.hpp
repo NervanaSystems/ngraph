@@ -47,6 +47,8 @@ namespace ngraph
                     CONVOLUTIONBACKPROPDATA,
                     CONVOLUTIONBACKPROPWEIGHTS,
                     CONVOLUTIONBACKPROPWEIGHTSBIAS,
+                    GELU,
+                    GELUBACKPROP,
                     GROUPCONVOLUTION,
                     GROUPCONVOLUTIONBIAS,
                     DECONVOLUTIONBIAS,
