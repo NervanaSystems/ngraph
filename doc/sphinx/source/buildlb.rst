@@ -41,8 +41,8 @@ Prerequisites
    :escape: ~
 
    CentOS 7.4 64-bit, GCC 4.8, CMake 3.9.0, supported, ``wget zlib-devel ncurses-libs ncurses-devel patch diffutils gcc-c++ make git perl-Data-Dumper`` 
-   Ubuntu 16.04 or 18.04 (LTS) 64-bit, Clang 6, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-3.9 clang-format-3.9 git curl zlib1g zlib1g-dev libtinfo-dev unzip autoconf automake libtool``
-   Clear Linux\* OS for Intel® Architecture version 28880, Clang 8.0, CMake 3.14.2, experimental, bundles ``machine-learning-basic c-basic python-basic python-basic-dev dev-utils``
+   Ubuntu 16.04 or 18.04 (LTS) 64-bit, Clang 6, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-format-6.0 clang-tidy-6.0 clang-6.0 git curl zlib1g zlib1g-dev libtinfo-dev unzip autoconf automake libtool``
+   Clear Linux\* OS for Intel® Architecture version 28880+, Clang 8.0, CMake 3.14.2, experimental, bundles ``machine-learning-basic c-basic python-basic python-basic-dev dev-utils``
 
 
 .. _default_ngflags:
