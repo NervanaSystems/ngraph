@@ -13,22 +13,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
+#include "ngraph/util.hpp"
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+using namespace std;
+using namespace ngraph;
 
-#pragma once
+constexpr NodeTypeInfo op::GeluBackprop::type_info;
 
-namespace ngraph
+op::GeluBackprop::GeluBackprop(const Output<ngraph::Node>& arg, const Output<ngraph::Node>& delta)
+    : BinaryElementwiseArithmetic(arg, delta)
 {
-    namespace runtime
-    {
-        namespace ngmlir
-        {
-            /// Common nGraph dialect initialization code. Used by nGraph compiler and tools that
-            /// require nGraph dialect initialization.
-            void initializeNGraphMLIR();
+    constructor_validate_and_infer_types();
+    set_output_size(1);
+    set_output_type(0, get_input_element_type(0), arg.get_shape());
+}
 
-        } // namespace ngmlir
-    }     // namespace runtime
-} // namespace ngraph
+shared_ptr<Node> op::GeluBackprop::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<GeluBackprop>(new_args.at(0), new_args.at(1));
+}
