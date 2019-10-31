@@ -135,10 +135,12 @@ bool runtime::dynamic::DynamicExecutable::call(
 
     if (lru->is_cached(merged_input_shapes))
     {
+        std::cout << "Cache Hit " << std::endl;
         return lru->get_cached_entry(merged_input_shapes)->call(outputs, inputs);
     }
     else
     {
+        std::cout << "Cache Miss" << std::endl;
         NGRAPH_CHECK(m_wrapped_function->get_parameters().size() == inputs.size());
 
         std::vector<std::shared_ptr<runtime::Tensor>> wrapped_inputs;

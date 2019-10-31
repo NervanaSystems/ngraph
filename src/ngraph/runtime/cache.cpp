@@ -19,6 +19,9 @@
 using namespace ngraph;
 using namespace std;
 
+list<Shape> runtime::LRUCache::m_list = {};
+runtime::LRUCache::GraphCache runtime::LRUCache::m_map = {};
+
 runtime::LRUCache::LRUCache(int size)
 {
     m_size = size;
@@ -49,10 +52,13 @@ void runtime::LRUCache::add_entry(Shape shape, shared_ptr<runtime::Executable> e
     key = convert_shape_to_string(shape);
     m_map.insert({key.str(), exec});
     m_list.push_front(shape);
+    std::cout << "Entry in list is " << shape << std::endl;
+    std::cout << "Key is " << key.str() << std::endl;
 }
 
 bool runtime::LRUCache::is_cached(Shape shape)
 {
+    std::cout << "List size " << m_list.size() << std::endl;
     for (auto itr = m_list.begin(); itr != m_list.end(); itr++)
     {
         if (*itr == shape)
