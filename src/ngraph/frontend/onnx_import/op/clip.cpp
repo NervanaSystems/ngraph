@@ -59,7 +59,7 @@ namespace ngraph
                     const double min_value = std::numeric_limits<double>::lowest();
                     std::shared_ptr<ngraph::Node> min =
                         builder::make_constant(data_type, data_shape, min_value);
-                    std::shared_ptr<ngraph::Node> max = 
+                    std::shared_ptr<ngraph::Node> max =
                         builder::make_constant(data_type, data_shape, max_value);
 
                     if (inputs.size() > 1)
@@ -79,7 +79,7 @@ namespace ngraph
                     }
 
                     return {std::make_shared<ngraph::op::Minimum>(
-                            max, std::make_shared<ngraph::op::Maximum>(min, data))};
+                        max, std::make_shared<ngraph::op::Maximum>(min, data))};
                 }
 
             } // namespace set_11
