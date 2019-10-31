@@ -52,7 +52,7 @@ OPTIONS
 }
 
 // Load raw binary data from a file to  dynamically allocated memory buffer.
-unique_ptr<char[]> load_data_frome_file(string file_name)
+unique_ptr<char[]> load_data_from_file(const string& file_name)
 {
     ifstream file(file_name);
     file.seekg(0, ios::end);
@@ -68,7 +68,7 @@ unique_ptr<char[]> load_data_frome_file(string file_name)
 // Prepare input tensors for given model and load them with data from binary files.
 vector<shared_ptr<runtime::Tensor>> load_inputs(std::shared_ptr<runtime::Backend> backend,
                                                 std::shared_ptr<ngraph::Function> function,
-                                                vector<string> input_paths)
+                                                const vector<string>& input_paths)
 {
     vector<shared_ptr<runtime::Tensor>> inputs{};
     auto params = function->get_parameters();
@@ -81,7 +81,7 @@ vector<shared_ptr<runtime::Tensor>> load_inputs(std::shared_ptr<runtime::Backend
         const string input_path = input_paths.at(i);
         const size_t data_size =
             shape_size(tensor->get_shape()) * tensor->get_element_type().size();
-        unique_ptr<char[]> data = load_data_frome_file(input_paths.at(i));
+        unique_ptr<char[]> data = load_data_from_file(input_paths.at(i));
         tensor->write(data.get(), data_size);
         inputs.push_back(tensor);
     }
@@ -144,8 +144,8 @@ std::tuple<string, string> validate_argument(string arg, string arg2)
 }
 
 // Print vector as tensor with given shape.
-void print_vector(vector<float> data,
-                  vector<size_t> shape,
+void print_vector(const vector<float>& data,
+                  const vector<size_t>& shape,
                   size_t shape_pointer,
                   size_t data_pointer)
 {
@@ -154,7 +154,7 @@ void print_vector(vector<float> data,
     {
         const size_t pointed_dim = shape.at(shape_pointer);
         const size_t next_dim = shape.at(shape_pointer + 1);
-        for (int i = 0; i < pointed_dim; i++)
+        for (size_t i = 0; i < pointed_dim; i++)
         {
             cout << "[";
             for (int j = 0; j < next_dim; j++)
@@ -178,12 +178,12 @@ void print_vector(vector<float> data,
     {
         size_t data_offset = 1;
         const size_t pointed_dim = shape.at(shape_pointer);
-        for (int i = shape_pointer + 1; i < shape.size(); i++)
+        for (size_t i = shape_pointer + 1; i < shape.size(); i++)
         {
             data_offset *= shape.at(i);
         }
         size_t next_data_pointer;
-        for (int k = 0; k < pointed_dim; k++)
+        for (size_t k = 0; k < pointed_dim; k++)
         {
             next_data_pointer = data_pointer + (k * data_offset);
             if (next_data_pointer != 0)
@@ -206,10 +206,10 @@ void print_vector(vector<float> data,
 }
 
 // Print model outputs' metadata and data.
-void print_outputs(vector<shared_ptr<runtime::Tensor>> outputs)
+void print_outputs(const vector<shared_ptr<runtime::Tensor>>& outputs)
 {
     cout << "Outputs info:" << endl;
-    for (int i = 0; i < outputs.size(); i++)
+    for (size_t i = 0; i < outputs.size(); i++)
     {
         shared_ptr<runtime::Tensor> output = outputs.at(i);
         cout << "Output " << i << endl;
@@ -231,7 +231,7 @@ int main(int argc, char** argv)
     std::shared_ptr<ngraph::Function> function;
     std::shared_ptr<runtime::Backend> backend;
 
-    for (int i = 1; i < argc; i++)
+    for (size_t i = 1; i < argc; i++)
     {
         string arg = argv[i];
         string arg2 = "";
