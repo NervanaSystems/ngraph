@@ -39,7 +39,7 @@ op::DepthToSpace::DepthToSpace(const Output<Node>& data,
 op::DepthToSpace::DepthToSpace(const Output<Node>& data,
                                const std::string& mode,
                                const size_t block_size)
-    : DepthToSpace(data, depth_to_space_mode_from_string(mode), block_size)
+    : DepthToSpace(data, mode_from_string(mode), block_size)
 {
 }
 
@@ -110,8 +110,7 @@ shared_ptr<Node> op::DepthToSpace::copy_with_new_args(const NodeVector& new_args
     return make_shared<DepthToSpace>(new_args.at(0), m_mode, m_blocksize);
 }
 
-op::DepthToSpace::DepthToSpaceMode
-    op::DepthToSpace::depth_to_space_mode_from_string(const std::string& mode) const
+op::DepthToSpace::DepthToSpaceMode op::DepthToSpace::mode_from_string(const std::string& mode) const
 {
     static const std::map<std::string, DepthToSpaceMode> allowed_values = {
         {"blocks_first", DepthToSpaceMode::BLOCKS_FIRST},

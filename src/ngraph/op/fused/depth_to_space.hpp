@@ -70,7 +70,7 @@ namespace ngraph
         protected:
             std::size_t m_blocksize;
             DepthToSpaceMode m_mode;
-            DepthToSpaceMode depth_to_space_mode_from_string(const std::string& mode) const;
+            DepthToSpaceMode mode_from_string(const std::string& mode) const;
         };
     }
 }
