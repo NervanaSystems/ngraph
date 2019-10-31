@@ -25,7 +25,7 @@
 
 namespace ngraph
 {
-    class AttributeAdapter;
+    class StringAdapter;
     class PartialShape;
 
     /// \brief Visits the attributes of a node.
@@ -41,17 +41,27 @@ namespace ngraph
         virtual void on_attribute(const std::string& name, element::Type& value) = 0;
         virtual void on_attribute(const std::string& name, PartialShape& value) = 0;
         virtual void on_attribute(const std::string& name, bool& value) = 0;
+        virtual void on_attribute(const std::string& name, double& value) = 0;
         virtual void on_attribute(const std::string& name, int64_t& value) = 0;
         virtual void on_attribute(const std::string& name, std::vector<int64_t>& value) = 0;
         virtual void on_attribute(const std::string& name, uint64_t& value) = 0;
         virtual void on_attribute(const std::string& name, std::vector<uint64_t>& value) = 0;
         virtual void on_attribute(const std::string& name,
-                                  const AttributeAdapter& visitor_adapter) = 0;
+                                  const StringAdapter& visitor_adapter) = 0;
+        virtual void on_attribute(const std::string& name,
+                                  const IntegerVectorAdapter& visitor_adapter) = 0;
+
         template <typename T>
         typename std::enable_if<std::is_enum<T>::value, void>::type
             on_attribute(const std::string& name, T& value)
         {
             on_attribute(name, EnumAdapter<T>(value));
+        }
+        template <typename T>
+        typename std::enable_if<std::is_class<T>::value, void>::type
+            on_attribute(const std::string& name, T& value)
+        {
+            on_attribute(name, ObjectAdapter<T>(value));
         }
     };
 }

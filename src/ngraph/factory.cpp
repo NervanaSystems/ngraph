@@ -28,13 +28,17 @@
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/op/parameter.hpp"
 
 using namespace std;
 
 namespace ngraph
 {
-    mutex& get_registry_mutex(){
+    mutex& get_registry_mutex()
+    {
         static mutex registry_mutex;
         return registry_mutex;
     }
@@ -63,6 +67,13 @@ namespace ngraph
                 registry.register_factory<op::v0::AvgPoolBackprop>();
                 registry.register_factory<op::v1::AvgPool>();
                 registry.register_factory<op::v1::AvgPoolBackprop>();
+                registry.register_factory<op::BatchNormInference>();
+                registry.register_factory<op::BatchNormTraining>();
+                registry.register_factory<op::BatchNormTrainingBackprop>();
+                registry.register_factory<op::BroadcastDistributed>();
+                registry.register_factory<op::v0::Broadcast>();
+                registry.register_factory<op::v0::BroadcastLike>();
+                registry.register_factory<op::v1::Broadcast>();
                 registry.register_factory<op::Parameter>();
             }
         }
