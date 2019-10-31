@@ -38,15 +38,15 @@
 #define PASS_NAME "ng-memory-opt"
 #define DEBUG_TYPE PASS_NAME
 
-static llvm::cl::opt<bool> clEnableNgInPlaceConcat(
-    "ngraph-memory-opt-concat",
-    llvm::cl::init(false),
-    llvm::cl::desc("Enable inplace concat optimization"));
+static llvm::cl::opt<bool>
+    clEnableNgInPlaceConcat("ngraph-memory-opt-concat",
+                            llvm::cl::init(false),
+                            llvm::cl::desc("Enable inplace concat optimization"));
 
-static llvm::cl::opt<bool> clEnableNgInPlaceEltWise(
-    "ngraph-memory-opt-eltwise",
-    llvm::cl::init(false),
-    llvm::cl::desc("Enable inplace element wise optimization"));
+static llvm::cl::opt<bool>
+    clEnableNgInPlaceEltWise("ngraph-memory-opt-eltwise",
+                             llvm::cl::init(false),
+                             llvm::cl::desc("Enable inplace element wise optimization"));
 
 // anonymous namespace
 // no need to expose any of the following outside of this file
