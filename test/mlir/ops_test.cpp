@@ -18,10 +18,10 @@
 // Test certain invariants about
 #include "gtest/gtest.h"
 
-#include "contrib/mlir/compiler/dialect/dialect.hpp"
-#include "contrib/mlir/compiler/dialect/ops.hpp"
-#include "contrib/mlir/compiler/dialect/type.hpp"
-#include "contrib/mlir/compiler/tools.hpp"
+#include "contrib/mlir/core/ngraph_dialect/dialect.hpp"
+#include "contrib/mlir/core/ngraph_dialect/ops.hpp"
+#include "contrib/mlir/core/ngraph_dialect/type.hpp"
+#include "contrib/mlir/utils.hpp"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/Module.h"
 #include "mlir/IR/OperationSupport.h"

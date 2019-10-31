@@ -17,7 +17,7 @@
 #include <chrono>
 #include <iostream>
 
-#include "contrib/mlir/compiler/tools.hpp"
+#include "contrib/mlir/utils.hpp"
 #include "gtest/gtest.h"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"

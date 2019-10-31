@@ -22,7 +22,7 @@
 // not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
 
 include "mlir/IR/OpBase.td"
-include "dialect/ops_interfaces.td"
+include "core/ngraph_dialect/ops_interfaces.td"
 // nGraph Dialect operations definitions
 //
 // This files declares nGraph operations that table-gen uses to create C++ code
@@ -146,13 +146,13 @@ class NG_Terminator_Op<string mnemonic, list<OpTrait> traits = []> :
 def NGReturnOp : NG_Terminator_Op<"return">;
 
 // ops attributes
-include "dialect/ops_attributes.td"
+include "core/ngraph_dialect/ops_attributes.td"
 
 // Version 0 Ops
-include "dialect/ops_v0.td"
+include "core/ngraph_dialect/ops_v0.td"
 
 // Version 1 Ops
-include "dialect/ops_v1.td"
+include "core/ngraph_dialect/ops_v1.td"
 
 // Fused Ops
-include "dialect/fused_ops.td"
+include "core/ngraph_dialect/fused_ops.td"

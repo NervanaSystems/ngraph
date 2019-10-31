@@ -594,7 +594,7 @@ if (NGRAPH_ONNXIFI_ENABLE)
 endif()
 
 if (NGRAPH_MLIR_ENABLE)
-    target_include_directories(unit-test PRIVATE ${CMAKE_BINARY_DIR}/src/contrib/mlir/compiler)
+    target_include_directories(unit-test PRIVATE ${CMAKE_BINARY_DIR}/src/contrib/mlir)
 endif()
 
 # If all the runtime libraries are installed into one location, that will make life easier.
