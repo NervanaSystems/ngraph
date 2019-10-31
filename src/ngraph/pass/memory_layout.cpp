@@ -125,7 +125,7 @@ pass::MemoryManager::MemoryManager(size_t alignment, bool disable_memory_reuse)
 
 size_t pass::MemoryManager::allocate(size_t size)
 {
-    size_t rc;
+    size_t rc = 0;
     switch (m_scheme)
     {
     case allocation_scheme::FIRST_FIT: rc = first_fit(size); break;
