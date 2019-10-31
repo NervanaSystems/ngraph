@@ -13,26 +13,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
+#include "ngraph/util.hpp"
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+using namespace std;
+using namespace ngraph;
 
-#include "tools.hpp"
+constexpr NodeTypeInfo op::GeluBackprop::type_info;
 
-#include "dialect/dialect.hpp"
-
-#include <mlir/IR/Dialect.h>
-#include <mlir/IR/MLIRContext.h>
-
-void ngraph::runtime::ngmlir::initializeNGraphMLIR()
+op::GeluBackprop::GeluBackprop(const Output<ngraph::Node>& arg, const Output<ngraph::Node>& delta)
+    : BinaryElementwiseArithmetic(arg, delta)
 {
-    // Initialize a dialect only once.
-    // We currently have no way to query if a dialect is previously
-    // registered. So using a global flag instead.
-    static bool init = false;
-    if (!init)
-    {
-        mlir::registerDialect<mlir::NGraphOpsDialect>();
-        init = true;
-    }
+    constructor_validate_and_infer_types();
+    set_output_size(1);
+    set_output_type(0, get_input_element_type(0), arg.get_shape());
+}
+
+shared_ptr<Node> op::GeluBackprop::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<GeluBackprop>(new_args.at(0), new_args.at(1));
 }

@@ -32,10 +32,12 @@
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 
 #define EMITTER_DECL(op_name)                                                                      \
     emit<op_name>(CPU_ExternalFunction * external_function,                                        \
@@ -86,7 +88,6 @@ namespace ngraph
         class Constant;
         class Reshape;
         class Sign;
-        class Slice;
         class Exp;
         class EmbeddingLookup;
         class Sin;
@@ -150,7 +151,9 @@ namespace ngraph
         class Quantize;
         class QuantizedConcat;
         class Tile;
+        class Gelu;
         class RandomUniform;
+        class GeluBackprop;
     }
     namespace runtime
     {
@@ -445,7 +448,11 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Tile);
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Gelu);
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::RandomUniform);
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::GeluBackprop);
         }
     }
 }

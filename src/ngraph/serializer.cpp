@@ -146,6 +146,7 @@
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/stop_gradient.hpp"
+#include "ngraph/op/strided_slice.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
@@ -169,6 +170,11 @@ static bool s_serialize_output_shapes_enabled =
 void ngraph::set_serialize_output_shapes(bool enable)
 {
     s_serialize_output_shapes_enabled = enable;
+}
+
+bool ngraph::get_serialize_output_shapes()
+{
+    return s_serialize_output_shapes_enabled;
 }
 
 // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
@@ -2143,10 +2149,30 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Slice:
         {
-            auto lower_bounds = node_js.at("lower_bounds").get<vector<size_t>>();
-            auto upper_bounds = node_js.at("upper_bounds").get<vector<size_t>>();
-            auto strides = node_js.at("strides").get<vector<size_t>>();
-            node = make_shared<op::Slice>(args[0], lower_bounds, upper_bounds, strides);
+            if (op_version == 0)
+            {
+                auto lower_bounds = node_js.at("lower_bounds").get<vector<size_t>>();
+                auto upper_bounds = node_js.at("upper_bounds").get<vector<size_t>>();
+                auto strides = node_js.at("strides").get<vector<size_t>>();
+                node = make_shared<op::Slice>(args[0], lower_bounds, upper_bounds, strides);
+            }
+            if (op_version == 1)
+            {
+                auto begin_mask = node_js.at("begin_mask").get<vector<int64_t>>();
+                auto end_mask = node_js.at("end_mask").get<vector<int64_t>>();
+                auto new_axis_mask = node_js.at("new_axis_mask").get<vector<int64_t>>();
+                auto shrink_axis_mask = node_js.at("shrink_axis_mask").get<vector<int64_t>>();
+                auto ellipsis_mask = node_js.at("ellipsis_mask").get<vector<int64_t>>();
+                node = make_shared<op::v1::StridedSlice>(args[0],
+                                                         args[1],
+                                                         args[2],
+                                                         args[3],
+                                                         begin_mask,
+                                                         end_mask,
+                                                         new_axis_mask,
+                                                         shrink_axis_mask,
+                                                         ellipsis_mask);
+            }
             break;
         }
         case OP_TYPEID::Softmax:
@@ -3434,10 +3460,22 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Slice:
     {
-        auto tmp = static_cast<const op::Slice*>(&n);
-        node["lower_bounds"] = tmp->get_lower_bounds();
-        node["upper_bounds"] = tmp->get_upper_bounds();
-        node["strides"] = tmp->get_strides();
+        if (op_version == 0)
+        {
+            auto tmp = static_cast<const op::Slice*>(&n);
+            node["lower_bounds"] = tmp->get_lower_bounds();
+            node["upper_bounds"] = tmp->get_upper_bounds();
+            node["strides"] = tmp->get_strides();
+        }
+        if (op_version == 1)
+        {
+            auto tmp = static_cast<const op::v1::StridedSlice*>(&n);
+            node["begin_mask"] = tmp->get_begin_mask();
+            node["end_mask"] = tmp->get_end_mask();
+            node["new_axis_mask"] = tmp->get_new_axis_mask();
+            node["shrink_axis_mask"] = tmp->get_shrink_axis_mask();
+            node["ellipsis_mask"] = tmp->get_ellipsis_mask();
+        }
         break;
     }
     case OP_TYPEID::SpaceToDepth:
