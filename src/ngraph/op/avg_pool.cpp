@@ -86,7 +86,7 @@ bool op::v0::AvgPool::visit_attributes(AttributeVisitor& visitor)
     visitor.on_attribute("padding_above", m_padding_above);
     visitor.on_attribute("include_padding_in_avg_computation",
                          m_include_padding_in_avg_computation);
-    visitor.on_attribute("pad_type", EnumAdapter<PadType>(m_pad_type));
+    visitor.on_attribute("pad_type", m_pad_type);
     visitor.on_attribute("ceil_mode", m_ceil_mode);
     return true;
 }
@@ -452,8 +452,8 @@ bool op::v1::AvgPool::visit_attributes(AttributeVisitor& visitor)
     visitor.on_attribute("pads_begin", m_pads_begin);
     visitor.on_attribute("pads_end", m_pads_end);
     visitor.on_attribute("exclude_pad", m_exclude_pad);
-    visitor.on_attribute("auto_pad", EnumAdapter<PadType>(m_auto_pad));
-    visitor.on_attribute("rounding_type", EnumAdapter<RoundingType>(m_rounding_type));
+    visitor.on_attribute("auto_pad", m_auto_pad);
+    visitor.on_attribute("rounding_type", m_rounding_type);
     return true;
 }
 

@@ -536,7 +536,7 @@ public:
     void validate_and_infer_types() override { set_output_type(0, element::i64, {}); }
     bool visit_attributes(AttributeVisitor& visitor) override
     {
-        visitor.on_attribute("turing_model", EnumAdapter<TuringModel>(m_turing_model));
+        visitor.on_attribute("turing_model", m_turing_model);
         visitor.on_attribute("model_version", m_model_version);
         visitor.on_attribute("serial_number", m_serial_number);
         return true;
