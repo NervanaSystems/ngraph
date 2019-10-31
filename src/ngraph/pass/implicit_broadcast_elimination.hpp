@@ -24,11 +24,12 @@ namespace ngraph
     namespace pass
     {
         NodeVector explicit_broadcast(std::shared_ptr<Node>& node);
-
-        class ImplicitBroadcastElimination : public NodePass
-        {
-        public:
-            bool run_on_node(std::shared_ptr<ngraph::Node> node) override;
-        };
+        class ImplicitBroadcastElimination;
     }
 }
+
+class ngraph::pass::ImplicitBroadcastElimination : public ngraph::pass::NodePass
+{
+public:
+    bool run_on_node(std::shared_ptr<ngraph::Node> node) override;
+};
