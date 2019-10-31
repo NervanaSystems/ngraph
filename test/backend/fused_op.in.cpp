@@ -2279,3 +2279,24 @@ NGRAPH_TEST(${BACKEND_NAME}, gru_cell_activation_function)
 
     test_case.run();
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, cross_entropy)
+{
+    Shape tensor_shape{2, 4};
+    auto input = make_shared<op::Parameter>(element::f32, tensor_shape);
+    auto labels = make_shared<op::Parameter>(element::i32, Shape{2, 1});
+    auto cross_entropy = make_shared<op::CrossEntropy>(input, labels, true);
+    auto f0 = make_shared<Function>(NodeVector{cross_entropy}, ParameterVector{input, labels});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, tensor_shape);
+    copy_data(a, vector<float>{0.25, 0.25, 0.25, 0.25, 0.01, 0.01, 0.01, 0.96});
+    auto b = backend->create_tensor(element::i32, Shape{2, 1});
+    copy_data(b, vector<int>{0, 1});
+    auto result0 = backend->create_tensor(element::f32, Shape{2, 1});
+    auto handle = backend->compile(f0);
+    handle->call_with_validate({result0}, {a, b});
+    vector<float> expected{0.69314718, 0.020411};
+    EXPECT_EQ(expected, read_vector<float>(result0));
+}

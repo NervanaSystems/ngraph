@@ -71,6 +71,9 @@ NodeVector op::CrossEntropy::decompose_op() const
         return -node_sum;
     };
 
+    // mask
+    std::shared_ptr<ngraph::Node> mask = create_mask();
+
     if (m_soft_label)
     {
         // insert dtype conversion if required
@@ -79,7 +82,13 @@ NodeVector op::CrossEntropy::decompose_op() const
             labels = std::make_shared<ngraph::op::Convert>(labels,
                                                            input_to_normalize.get_element_type());
         }
-        auto xe = create_xe(labels, input_to_normalize);
+        auto reshape_labels = std::make_shared<ngraph::op::Reshape>(
+            labels, AxisVector{0, 1}, Shape{labels.get_shape().at(0)});
+        auto broadcast_labels = std::make_shared<ngraph::op::Broadcast>(
+            reshape_labels,
+            input_to_normalize.get_shape(),
+            AxisSet{input_to_normalize.get_shape().size() - 1});
+        auto xe = create_xe(broadcast_labels, input_to_normalize);
         auto reshape_xe = std::make_shared<ngraph::op::Reshape>(
             xe, AxisVector{0}, Shape{xe->get_shape().at(0), 1});
         return {reshape_xe};
@@ -95,11 +104,16 @@ NodeVector op::CrossEntropy::decompose_op() const
             reshape_labels, input_to_normalize.get_shape(), one_hot_axis);
         auto convert_one_hot = std::make_shared<ngraph::op::Convert>(
             one_hot_labels, input_to_normalize.get_element_type());
-        auto mask = create_mask();
+
+        // calculate loss
         auto xe = create_xe(convert_one_hot, input_to_normalize);
         auto reshape_xe = std::make_shared<ngraph::op::Reshape>(
             xe, AxisVector{0}, Shape{xe->get_shape().at(0), 1});
-        return {reshape_xe * mask};
+        if (m_ignore_index > 0)
+        {
+            return {reshape_xe * mask};
+        }
+        return {reshape_xe};
     }
 }
 
