@@ -26,6 +26,8 @@ using namespace ngraph;
 
 constexpr DiscreteTypeInfo StringAdapter::type_info;
 
+constexpr DiscreteTypeInfo IntegerVectorAdapter::type_info;
+
 constexpr DiscreteTypeInfo ObjectAdapter<Shape>::type_info;
 
 namespace
