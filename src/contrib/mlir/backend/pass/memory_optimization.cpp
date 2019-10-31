@@ -129,10 +129,10 @@ namespace
     // Re-use buffers if none of the dst/srcs are input/output of the sub-graph
     //
     // For destructive in-place ops (elt-wise):
-    //      - Find first src where it is last use (src is dead). 
+    //      - Find first src where it is last use (src is dead).
     //        If all srcs are last-use, then pick one with lower number of uses.
     //        If no src is found, bail out.
-    //      - If dst has pre-assigned buffer/offset, then copy them to src. 
+    //      - If dst has pre-assigned buffer/offset, then copy them to src.
     //        If not, assign new buffer to both dst and src.
     //      - Mark all live syms at this point to not alias src
     //
@@ -141,9 +141,9 @@ namespace
     //          - Reuse buffer if
     //              - Concat axis is most-significant non-one axis, and
     //              - all operands can alias dest.
-    //          - If dst has an assignment, copy it over to srcs as long as 
+    //          - If dst has an assignment, copy it over to srcs as long as
     //          there is no conflicting src pre-assignment
-    //          - If dst has no assignment, and all srcs have no assignment, 
+    //          - If dst has no assignment, and all srcs have no assignment,
     //          assign new buffer to dst and srcs
     //
     //      Slice: TBD
