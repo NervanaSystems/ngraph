@@ -95,7 +95,7 @@ static llvm::cl::opt<bool> clPrintIRAfterAll(
 // *** Optimization flags ***
 
 static llvm::cl::opt<bool> clEnableNgInPlaceMemoryOpt(
-    "ng-inplace-mem-opt",
+    "ngraph-memory-opt",
     llvm::cl::init(false),
     llvm::cl::desc("Enable ngraph dialect in-place memory optimization pass"));
 

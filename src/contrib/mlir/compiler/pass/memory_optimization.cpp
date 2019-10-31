@@ -38,6 +38,16 @@
 #define PASS_NAME "ng-memory-opt"
 #define DEBUG_TYPE PASS_NAME
 
+static llvm::cl::opt<bool> clEnableNgInPlaceConcat(
+    "ngraph-memory-opt-concat",
+    llvm::cl::init(false),
+    llvm::cl::desc("Enable inplace concat optimization"));
+
+static llvm::cl::opt<bool> clEnableNgInPlaceEltWise(
+    "ngraph-memory-opt-eltwise",
+    llvm::cl::init(false),
+    llvm::cl::desc("Enable inplace element wise optimization"));
+
 // anonymous namespace
 // no need to expose any of the following outside of this file
 namespace
@@ -160,11 +170,11 @@ namespace
             if (isSafeInPlace(op))
             {
                 // TODO: replace with Op Interface check
-                if (dyn_cast<NGConcatOp>(op))
+                if (clEnableNgInPlaceConcat && dyn_cast<NGConcatOp>(op))
                 {
                     processConcat(op);
                 }
-                else
+                else if (clEnableNgInPlaceEltWise)
                 {
                     processDestructiveInPlace(op);
                 }
@@ -193,6 +203,12 @@ namespace
             std::vector<int> opndOffsets;
             IntegerAttr attr;
             int bufferId = -1, baseOffset = 0;
+
+            if (isInputOrOutputValue(op->getResult(0)))
+            {
+                // dst is output, bail out
+                return;
+            };
 
             for (auto i = 0; i < shape.size(); i++)
             {
@@ -267,43 +283,43 @@ namespace
             else
             {
                 // dst has no buffer assignment
-                // Check if any of the srcs does. If so, check if we can use it for all operands and
-                // dst
-                bool srcFound = false;
-                for (auto i = 0; i < op->getNumOperands(); i++)
-                {
-                    auto opnd = op->getOperand(i);
-                    auto defOp = opnd->getDefiningOp();
 
-                    attr = getBufferId(defOp);
-                    if (attr)
+                // TODO:
+                // We can re-use an existing assignment of a src operand if
+                //  Every other src either:
+                //    a. has a matching pre-assigned buffer ID and offset, or
+                //    b. is unassigned a buffer/offset, and the computed offset is valid
+                //    (non-negative),
+                //       and no other live tensor aliases the chunk of the buffer we want to assign.
+                //       To achieve this, we need to track buffers->{tensors,offset,size} and
+                //       perform the check
+                //
+                // Example:
+                // V1   = Concat    S0 (?), S1{0,16}, S2 (?)
+                // R0   = ...
+                // R2   = ...
+                // V2   = Concat    R0{0, 0}, S1 {0,16}, R2{0,32}
+                //
+                // For the first concat, we could use the assignment of S1 (from second concat)
+                // to define assignments for S0 and S2, and since R0, R2 are dead, no live tensors
+                // alias into the buffer.
+                //
+                // On the other hand, the following is invalid
+                // Example:
+                // R0   = ...
+                // V1   = Concat    S0, S1, S2
+                // R2   = ...
+                // V2   = Concat    R0, S1, R2
+                // Reusing assignment of S1 in the first concat will cause S0 anr R0 to alias. And
+                // since R0 is alive
+                // the write to R0 will overwrite S0.
+
+                // For now, assign only if all srcs have no prior assignments
+                for (auto opnd : op->getOperands())
+                {
+                    if (getBufferId(opnd->getDefiningOp()))
                     {
-                        bufferId = attr.getInt();
-                        attr = getBufferOffset(defOp);
-                        baseOffset = attr.getInt() - opndOffsets[i];
-                        if (baseOffset < 0)
-                        {
-                            // offset at src will not make all src tensors to fit in src's buffer
-                            // bailout
-                            return;
-                        }
-                        srcFound = true;
-                        continue; // next src
-                    }
-                    if (srcFound)
-                    {
-                        // we have found a pre-assigned src, check that buffer ID and offsets match
-                        NGRAPH_CHECK(bufferId >= 0, "Cannot re-use buffer negative buffer ID");
-                        attr = getBufferId(defOp);
-                        if (attr)
-                        {
-                            if (bufferId != attr.getInt() ||
-                                getBufferOffset(defOp).getInt() != (baseOffset + opndOffsets[i]))
-                            {
-                                // incompatible buffer, bail out
-                                return;
-                            }
-                        }
+                        return;
                     }
                 }
             }

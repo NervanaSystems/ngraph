@@ -315,15 +315,18 @@ namespace
             {
                 auto tensorType = origResult->getType().cast<NGTensorType>();
                 Value* newResult;
-                Attribute bufferIdAttr = getBufferId(op);
-                if (!bufferIdAttr)
+                auto bufferIdAttr = getBufferId(op);
+                unsigned bufferOffset = getBufferOffset(op).getInt();
+                if (!bufferIdAttr || bufferOffset != 0)
                 {
                     // Allocate new memref
                     newResult = createTempTensor(typeConverter.convertType(tensorType), rewriter);
                 }
                 else
                 {
-                    unsigned bufferId = bufferIdAttr.cast<IntegerAttr>().getInt();
+                    unsigned bufferId = bufferIdAttr.getInt();
+                    
+
                     // Re-use a memref if it exist, else create a new one and update map
                     IdToMemRefMap::iterator it = m_id_to_memref.find(bufferId);
                     if (it == m_id_to_memref.end())
