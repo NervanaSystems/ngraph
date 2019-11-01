@@ -47,7 +47,7 @@ namespace ngraph
     {
     public:
         virtual ~IntegerVectorAdapter(){};
-        static constexpr DiscreteTypeInfo type_info{"StringAdapter", 0};
+        static constexpr DiscreteTypeInfo type_info{"IntegerVectorAdapter", 0};
         virtual const DiscreteTypeInfo& get_type_info() const { return type_info; }
         /// Returns the value as an integer vector
         virtual const std::vector<int64_t>& get_vector() = 0;
