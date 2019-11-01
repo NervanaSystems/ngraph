@@ -43,9 +43,9 @@ namespace ngraph
         }
 
         /// Converts enum values to strings
-        static std::string as_string(EnumType e)
+        static const std::string& as_string(EnumType e)
         {
-            for (auto p : get().m_string_enums)
+            for (auto& p : get().m_string_enums)
             {
                 if (p.second == e)
                 {
@@ -81,7 +81,7 @@ namespace ngraph
 
     /// Returns the string matching the enum value
     template <typename Value>
-    std::string as_string(Value value)
+    const std::string& as_string(Value value)
     {
         return EnumNames<Value>::as_string(value);
     }

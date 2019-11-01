@@ -241,31 +241,26 @@ public:
     {
         m_json[name] = value;
     }
-    void on_attribute(const std::string& name, element::Type& value) override
-    {
-        m_json[name] = write_element_type(value);
-    }
-    void on_attribute(const std::string& name, PartialShape& value) override
-    {
-        m_json[name] = write_partial_shape(value);
-    }
     void on_attribute(const std::string& name, bool& value) override { m_json[name] = value; }
     void on_attribute(const std::string& name, double& value) override { m_json[name] = value; }
     void on_attribute(const std::string& name, int64_t& value) override { m_json[name] = value; }
-    void on_attribute(const std::string& name, std::vector<int64_t>& value) override
-    {
-        m_json[name] = value;
-    }
     void on_attribute(const std::string& name, uint64_t& value) override { m_json[name] = value; }
-    void on_attribute(const std::string& name, std::vector<uint64_t>& value) override
+    void on_adapter(const std::string& name, VoidAdapter& adapter) override
     {
-        m_json[name] = value;
+        if (auto a = as_type<ObjectAdapter<element::Type>>(&adapter))
+        {
+            m_json[name] = write_element_type(static_cast<element::Type&>(*a));
+        }
+        else if (auto a = as_type<ObjectAdapter<PartialShape>>(&adapter))
+        {
+            m_json[name] = write_partial_shape(static_cast<PartialShape&>(*a));
+        }
     }
-    void on_attribute(const std::string& name, const StringAdapter& adapter) override
+    void on_adapter(const std::string& name, StringAdapter& adapter) override
     {
         m_json[name] = adapter.get_string();
     }
-    void on_attribute(const std::string& name, const IntegerVectorAdapter& adapter) override
+    void on_adapter(const std::string& name, IntegerVectorAdapter& adapter) override
     {
         m_json[name] = adapter.get_vector();
     }
@@ -319,20 +314,6 @@ public:
             value = m_json.at(name).get<std::string>();
         }
     }
-    void on_attribute(const std::string& name, element::Type& value) override
-    {
-        if (has_key(m_json, name))
-        {
-            value = read_element_type(m_json.at(name).get<std::string>());
-        }
-    }
-    void on_attribute(const std::string& name, PartialShape& value) override
-    {
-        if (has_key(m_json, name))
-        {
-            value = read_partial_shape(m_json.at(name));
-        }
-    }
     void on_attribute(const std::string& name, bool& value) override
     {
         if (has_key(m_json, name))
@@ -354,13 +335,6 @@ public:
             value = m_json.at(name).get<int64_t>();
         }
     }
-    void on_attribute(const std::string& name, vector<int64_t>& value) override
-    {
-        if (has_key(m_json, name))
-        {
-            value = m_json.at(name).get<vector<int64_t>>();
-        }
-    }
     void on_attribute(const std::string& name, uint64_t& value) override
     {
         if (has_key(m_json, name))
@@ -368,21 +342,29 @@ public:
             value = m_json.at(name).get<uint64_t>();
         }
     }
-    void on_attribute(const std::string& name, vector<uint64_t>& value) override
+    void on_adapter(const std::string& name, VoidAdapter& adapter) override
     {
         if (has_key(m_json, name))
         {
-            value = m_json.at(name).get<vector<uint64_t>>();
+            if (auto a = as_type<ObjectAdapter<element::Type>>(&adapter))
+            {
+                static_cast<element::Type&>(*a) =
+                    read_element_type(m_json.at(name).get<std::string>());
+            }
+            else if (auto a = as_type<ObjectAdapter<PartialShape>>(&adapter))
+            {
+                static_cast<PartialShape&>(*a) = read_partial_shape(m_json.at(name));
+            }
         }
     }
-    void on_attribute(const std::string& name, const StringAdapter& adapter) override
+    void on_adapter(const std::string& name, StringAdapter& adapter) override
     {
         if (has_key(m_json, name))
         {
             adapter.set_string(m_json.at(name).get<std::string>());
         }
     }
-    void on_attribute(const std::string& name, const IntegerVectorAdapter& adapter) override
+    void on_adapter(const std::string& name, IntegerVectorAdapter& adapter) override
     {
         if (has_key(m_json, name))
         {
