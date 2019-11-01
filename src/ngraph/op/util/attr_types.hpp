@@ -38,6 +38,7 @@ namespace ngraph
         std::ostream& operator<<(std::ostream& s, const PadMode& type);
     }
 
+    NGRAPH_API
     template <>
     const DiscreteTypeInfo EnumAdapter<op::PadMode>::type_info;
 
@@ -68,6 +69,7 @@ namespace ngraph
         std::ostream& operator<<(std::ostream& s, const PadType& type);
     }
 
+    NGRAPH_API
     template <>
     const DiscreteTypeInfo EnumAdapter<op::PadType>::type_info;
 
@@ -83,6 +85,7 @@ namespace ngraph
         std::ostream& operator<<(std::ostream& s, const RoundingType& type);
     }
 
+    NGRAPH_API
     template <>
     const DiscreteTypeInfo EnumAdapter<op::RoundingType>::type_info;
 
@@ -136,6 +139,8 @@ namespace ngraph
 
         std::ostream& operator<<(std::ostream& s, const AutoBroadcastType& type);
     }
+
+    NGRAPH_API
     template <>
     const DiscreteTypeInfo EnumAdapter<op::AutoBroadcastType>::type_info;
     namespace op
@@ -151,6 +156,8 @@ namespace ngraph
 
         std::ostream& operator<<(std::ostream& s, const EpsMode& type);
     }
+
+    NGRAPH_API
     template <>
     const DiscreteTypeInfo EnumAdapter<op::EpsMode>::type_info;
 
