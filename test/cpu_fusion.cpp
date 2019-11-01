@@ -33,6 +33,7 @@
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -66,6 +67,7 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/dropout.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -1080,6 +1082,73 @@ TEST(cpu_fusion, conv_add)
     cpu_results = execute(cpu_f, args, "CPU");
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
+
+#if MKLDNN_VERSION_MAJOR < 1
+static double gelu_backprop_factor(double x)
+{
+    auto pi = 4.0 * std::atan(1.0);
+    return 0.5 * (1.0 + erf(x * sqrt(1.0 / 2.0))) + (x * exp(-x * x / 2.0)) / sqrt(2.0 * pi);
+}
+
+TEST(cpu_fusion, fuse_gelu_backprop_f32)
+{
+    Shape shape_a{2, 1, 60, 60};
+
+    auto make_function = [shape_a]() {
+        auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
+        auto gbpfactor = std::make_shared<op::GeluBackpropFactor>(A);
+        auto delta = std::make_shared<op::Parameter>(element::f32, shape_a);
+        auto gbp = gbpfactor * delta;
+
+        auto f = make_shared<Function>(NodeVector{gbp}, ParameterVector{A, delta});
+        return f;
+    };
+    auto fuse_func = make_function();
+    // Test fusion
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+        pass_manager.run_passes(fuse_func);
+        ASSERT_EQ(count_ops_of_type<op::GeluBackprop>(fuse_func), 1);
+    }
+
+    // Test values
+    {
+        test::Uniform<float> rng(1.0f, 100.0f);
+        vector<vector<float>> args;
+        for (shared_ptr<op::Parameter> param : fuse_func->get_parameters())
+        {
+            auto name = param->get_name();
+            vector<float> tensor_val(shape_size(param->get_shape()));
+            rng.initialize(tensor_val);
+            args.push_back(tensor_val);
+        }
+
+        auto backend = runtime::Backend::create("CPU");
+
+        // Create some tensors for input/output
+        auto a = backend->create_tensor(element::f32, shape_a);
+        auto delta = backend->create_tensor(element::f32, shape_a);
+        copy_data(a, args[0]);
+        copy_data(delta, args[1]);
+        auto result = backend->create_tensor(element::f32, shape_a);
+
+        std::transform(args[0].begin(), args[0].end(), args[0].begin(), [](float x) -> float {
+            return static_cast<float>(gelu_backprop_factor(static_cast<double>(x)));
+        });
+
+        std::transform(args[0].begin(),
+                       args[0].end(),
+                       args[1].begin(),
+                       args[0].begin(),
+                       [](float x, float delta) -> float { return static_cast<float>(x * delta); });
+
+        auto handle = backend->compile(fuse_func);
+        handle->call_with_validate({result}, {a, delta});
+        EXPECT_TRUE(test::all_close(args[0], read_vector<float>(result), 0.007f, 0.007f));
+    }
+}
+#endif
 
 shared_ptr<Function> gen_deconv(const bool add_goe)
 {
