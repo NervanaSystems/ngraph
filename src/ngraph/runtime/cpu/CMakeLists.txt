@@ -58,6 +58,7 @@ set(SRC
     builder/erf.cpp
     builder/gather.cpp
     builder/gather_nd.cpp
+    builder/gelu.cpp
     builder/leaky_relu.cpp
     builder/lstm.cpp
     builder/lrn.cpp
@@ -107,6 +108,7 @@ set(SRC
     op/convert_layout.cpp
     op/deconv.cpp
     op/dropout.cpp
+    op/gelu_backprop.cpp
     op/group_conv_bias.cpp
     op/halide_op.cpp
     op/leaky_relu.cpp
