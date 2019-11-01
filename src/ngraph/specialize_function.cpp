@@ -26,7 +26,8 @@ std::shared_ptr<Function>
                                 const std::vector<PartialShape>& parameter_shapes,
                                 const std::vector<void*>& parameter_values)
 {
-    return specialize_function(f, parameter_element_types, parameter_shapes, parameter_values, false);
+    return specialize_function(
+        f, parameter_element_types, parameter_shapes, parameter_values, false);
 }
 
 std::shared_ptr<Function>
