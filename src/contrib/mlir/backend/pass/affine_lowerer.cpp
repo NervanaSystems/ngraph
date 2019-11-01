@@ -28,6 +28,7 @@
 #include <mlir/EDSC/Helpers.h>
 #include <mlir/EDSC/Intrinsics.h>
 #include <mlir/IR/AffineExpr.h>
+#include <mlir/IR/Function.h>
 #include <mlir/IR/IntegerSet.h>
 #include <mlir/IR/MLIRContext.h>
 #include <mlir/IR/StandardTypes.h>
@@ -189,6 +190,11 @@ namespace
         void insertDeallocs(PatternRewriter& rewriter);
 
         NGraphTypeConverter& getTypeConverter() { return typeConverter; }
+        mlir::FuncOp getCallDecl(StringRef name,
+                                 ArrayRef<Type> args,
+                                 ArrayRef<Type> output,
+                                 PatternRewriter& rewriter);
+
     private:
         /// Collect a set of patterns to convert from the nGraph dialect to Affine dialect.
         void populateNGraphToAffineConversionPatterns(OwningRewritePatternList& patterns);
@@ -391,6 +397,28 @@ namespace
         {
             rewriter.create<DeallocOp>(rewriter.getUnknownLoc(), value);
         }
+    }
+
+    mlir::FuncOp DialectLoweringPass::getCallDecl(StringRef name,
+                                                  ArrayRef<Type> args,
+                                                  ArrayRef<Type> output,
+                                                  PatternRewriter& rewriter)
+    {
+        auto module = getModule();
+        auto* context = getModule().getContext();
+
+        auto callBackFunc = module.lookupSymbol<mlir::FuncOp>(name);
+        if (!callBackFunc)
+        {
+            // Create a function declaration and insert to the module.
+            auto callBackType = rewriter.getFunctionType(args, output);
+            PatternRewriter::InsertionGuard insertGuard(rewriter);
+            rewriter.setInsertionPointToStart(module.getBody());
+            SmallVector<NamedAttribute, 4> attributes;
+            rewriter.create<mlir::FuncOp>(rewriter.getUnknownLoc(), name, callBackType, attributes);
+            callBackFunc = module.lookupSymbol<mlir::FuncOp>(name);
+        }
+        return callBackFunc;
     }
 
     // NGDialect converters
@@ -601,6 +629,109 @@ namespace
         });
 
         rewriter.replaceOp(op, {result});
+
+        return matchSuccess();
+    }
+
+    REWRITER(NGMatMulOp)
+    {
+        auto matmul = cast<NGMatMulOp>(op);
+        auto loc = matmul.getLoc();
+
+        // Retrieve/generate Values for operands and result.
+        ScopedContext scope(rewriter, loc);
+        Value* lhs = operands[0];
+        Value* rhs = operands[1];
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(lhs && rhs && result, "Unexpected null values in MatMulOp");
+
+        auto resultTy = result->getType().dyn_cast<MemRefType>();
+        auto lhsTy = lhs->getType().dyn_cast<MemRefType>();
+        auto lhsShape = lhsTy.getShape();
+        auto rhsTy = rhs->getType().dyn_cast<MemRefType>();
+        auto rhsShape = rhsTy.getShape();
+        NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
+        NGRAPH_CHECK(lhsTy, "Unexpected non-memref LHS type");
+        NGRAPH_CHECK(rhsTy, "Unexpected non-memref RHS type");
+
+        Type elemTy = resultTy.getElementType();
+        NGRAPH_CHECK(elemTy == lhsTy.getElementType() && elemTy == rhsTy.getElementType(),
+                     "Types mismatch in MatMulOp");
+
+        MemRefView vRes(result), vLhs(lhs), vRhs(rhs);
+
+        NGRAPH_CHECK(vLhs.rank() == 2 && vRhs.rank() == 2 && vRes.rank() == 2,
+                     "MatMul operation is only supported for 2D tensors");
+
+        // It's important to note that MemRefView priovides lb/ub/step info is "reverse order",
+        // i.e., fastest varying dimension is the last one, slowest varying dimension is the first
+        // one.
+        unsigned lhsDim0 = vLhs.fastestVarying() - 1;
+        unsigned lhsDim1 = vLhs.fastestVarying();
+        unsigned rhsDim0 = vRhs.fastestVarying() - 1;
+        unsigned rhsDim1 = vRhs.fastestVarying();
+
+        auto m = lhsShape[lhsDim0];
+        auto k = lhsShape[lhsDim1];
+        auto n = rhsShape[rhsDim1];
+        auto lda = lhsShape[lhsDim1];
+        auto ldb = rhsShape[rhsDim1];
+
+        if (matmul.transpose_a())
+        {
+            m = lhsShape[lhsDim1];
+            k = lhsShape[lhsDim0];
+        }
+        if (matmul.transpose_a())
+        {
+            n = rhsShape[rhsDim0];
+        }
+
+        auto m_arg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), m);
+        auto k_arg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), k);
+        auto n_arg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), n);
+        auto lda_arg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), lda);
+        auto ldb_arg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), ldb);
+        auto transpose_a =
+            matmul.transpose_a()
+                ? rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 1, 1)
+                : rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 0, 1);
+        auto transpose_b =
+            matmul.transpose_b()
+                ? rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 1, 1)
+                : rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 0, 1);
+
+        auto boolTy = rewriter.getI1Type();
+        auto sizeTy = rewriter.getIndexType();
+        auto callBackFunc = pass.getCallDecl("__mlir_cblas_sgemm",
+                                             {lhsTy,
+                                              rhsTy,
+                                              resultTy,
+                                              boolTy,
+                                              boolTy,
+                                              sizeTy,
+                                              sizeTy,
+                                              sizeTy,
+                                              sizeTy,
+                                              sizeTy,
+                                              sizeTy},
+                                             {},
+                                             rewriter);
+
+        SmallVector<mlir::Value*, 4> args = {lhs,
+                                             rhs,
+                                             result,
+                                             transpose_a,
+                                             transpose_b,
+                                             m_arg,
+                                             n_arg,
+                                             k_arg,
+                                             lda_arg,
+                                             ldb_arg,
+                                             n_arg};
+
+        rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
+        rewriter.replaceOp(op, result);
 
         return matchSuccess();
     }

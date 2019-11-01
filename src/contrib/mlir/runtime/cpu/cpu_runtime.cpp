@@ -35,12 +35,47 @@
 #include <mlir/ExecutionEngine/OptUtils.h>
 #include <mlir/IR/Function.h>
 
+#include "ngraph/runtime/cpu/cpu_kernels.hpp"
+
 using llvm::SmallVector;
 using llvm::StringRef;
 using llvm::ArrayRef;
 
 using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
+
+/// Call back for MatMul
+extern "C" NGRAPH_API void __mlir_cblas_sgemm(void* mat_A_ptr,
+                                              void* mat_B_ptr,
+                                              void* mat_C_ptr,
+                                              const bool transpose_A,
+                                              const bool transpose_B,
+                                              const size_t m,
+                                              const size_t n,
+                                              const size_t k,
+                                              const size_t lda,
+                                              const size_t ldb,
+                                              const size_t ldc)
+{
+    auto* mat_A = *(reinterpret_cast<float**>(mat_A_ptr));
+    auto* mat_B = *(reinterpret_cast<float**>(mat_B_ptr));
+    auto* mat_C = *(reinterpret_cast<float**>(mat_C_ptr));
+
+    cblas::cblas_sgemm(cblas::Layout::RowMajor,
+                       transpose_A ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                       transpose_B ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                       m,
+                       n,
+                       k,
+                       1.0f,
+                       mat_A,
+                       std::max<size_t>(1, lda),
+                       mat_B,
+                       std::max<size_t>(1, ldb),
+                       0.0f,
+                       mat_C,
+                       std::max<size_t>(1, ldc));
+}
 
 #define DEBUG_TYPE "mlir-cpu-runtime"
 

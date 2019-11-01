@@ -181,6 +181,18 @@ def NGDotOp : NG_Binary_Op<"dot">
   let verifier = [{ return verifyOp(this); }];
 }
 
+// MatMul
+def NGMatMulOp :
+    NG_OneResult_Op<"matmul", [NoSideEffect]>,
+    Arguments<(ins NG_TensorType:$mat_a, NG_TensorType:$mat_b, BoolAttr:$transpose_a, BoolAttr:$transpose_b)>
+{
+  let summary = "Matrix multiplication";
+
+  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+
+  let verifier = [{ return verifyOp(this); }];
+}
+
 // TODO(amprocte): Might be nice to rebase this on some sort of NG_Variadic_Op
 // class, but I'm not sure how to add concatenation_axis into the args if we
 // do that.

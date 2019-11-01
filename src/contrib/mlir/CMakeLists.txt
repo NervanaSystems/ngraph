@@ -86,7 +86,7 @@ target_link_libraries(
 )
 
 # Link ngraph 
-target_link_libraries(mlir_backend PUBLIC ngraph)
+target_link_libraries(mlir_backend PUBLIC ngraph libmkl)
 
 # table-gen dialect ops
 # include table-gen helpers

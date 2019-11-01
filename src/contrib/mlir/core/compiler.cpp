@@ -35,6 +35,7 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
+#include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/less.hpp"
@@ -357,6 +358,18 @@ namespace ngraph
             mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Dot)
             {
                 return compiler.createGenericOp<mlir::NGDotOp>(ngNode);
+            }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::MatMul)
+            {
+                auto matmul = static_cast<const ngraph::op::MatMul*>(ngNode);
+                auto op = compiler.createGenericOp<mlir::NGMatMulOp>(ngNode);
+                op->setAttr("transpose_a",
+                            compiler.m_builder->getBoolAttr(matmul->get_transpose_a()));
+                op->setAttr("transpose_b",
+                            compiler.m_builder->getBoolAttr(matmul->get_transpose_b()));
+                return op;
             }
 
             template <>
