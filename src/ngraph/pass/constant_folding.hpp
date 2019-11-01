@@ -62,6 +62,8 @@ public:
         : GraphRewrite()
     {
         m_cfmap = cfmap;
+        m_enable_shape_inference = true;
+
         construct_constant_reshape();
         construct_constant_broadcast();
         construct_constant_dyn_broadcast();
