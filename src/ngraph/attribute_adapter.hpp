@@ -21,11 +21,12 @@
 
 namespace ngraph
 {
+    /// ValueAccessor<T> represents values that support get/set through T
     template <typename T>
-    class ValueAdapter
+    class ValueAccessor
     {
     public:
-        virtual ~ValueAdapter() {}
+        virtual ~ValueAccessor() {}
         virtual const DiscreteTypeInfo& get_type_info() const = 0;
         /// Returns the value
         virtual const T& get() = 0;
@@ -37,20 +38,21 @@ namespace ngraph
         bool m_buffer_valid{false};
     };
 
+    /// ValueAccessor<void> is for values that do not provide
     template <>
-    class ValueAdapter<void>
+    class ValueAccessor<void>
     {
     public:
         virtual const DiscreteTypeInfo& get_type_info() const = 0;
     };
 
     template <typename Type>
-    class TypeAdapter
+    class ValueReference
     {
     public:
         operator Type&() const { return m_value; }
     protected:
-        TypeAdapter(Type& value)
+        ValueReference(Type& value)
             : m_value(value)
         {
         }
@@ -58,41 +60,41 @@ namespace ngraph
     };
 
     template <typename Type>
-    class EnumAdapter : public TypeAdapter<Type>, public ValueAdapter<std::string>
+    class AttributeAdapter : public ValueReference<Type>, public ValueAccessor<void>
     {
     public:
-        EnumAdapter(Type& value)
-            : TypeAdapter<Type>(value)
+        AttributeAdapter(Type& value)
+            : ValueReference<Type>(value)
         {
         }
         static const DiscreteTypeInfo type_info;
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-        const std::string& get() override { return as_string(TypeAdapter<Type>::m_value); }
-        void set(const std::string& value) override
-        {
-            TypeAdapter<Type>::m_value = as_enum<Type>(value);
-        }
     };
 
     template <typename Type>
-    class ObjectAdapter : public TypeAdapter<Type>, public ValueAdapter<void>
+    class EnumAdapter : public ValueReference<Type>, public ValueAccessor<std::string>
     {
     public:
-        ObjectAdapter(Type& value)
-            : TypeAdapter<Type>(value)
+        EnumAdapter(Type& value)
+            : ValueReference<Type>(value)
         {
         }
         static const DiscreteTypeInfo type_info;
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::string& get() override { return as_string(ValueReference<Type>::m_value); }
+        void set(const std::string& value) override
+        {
+            ValueReference<Type>::m_value = as_enum<Type>(value);
+        }
     };
 
     template <typename T>
-    class IntegralVectorAdapter : public TypeAdapter<std::vector<T>>,
-                                  public ValueAdapter<std::vector<int64_t>>
+    class IntegralVectorAdapter : public ValueReference<std::vector<T>>,
+                                  public ValueAccessor<std::vector<int64_t>>
     {
     public:
         IntegralVectorAdapter(const std::vector<T>& value)
-            : TypeAdapter<std::vector<T>>(value)
+            : ValueReference<std::vector<T>>(value)
         {
         }
         static const DiscreteTypeInfo type_info;
@@ -103,15 +105,15 @@ namespace ngraph
 
     class Shape;
     template <>
-    class ObjectAdapter<Shape> : public TypeAdapter<Shape>,
-                                 public ValueAdapter<std::vector<int64_t>>
+    class AttributeAdapter<Shape> : public ValueReference<Shape>,
+                                    public ValueAccessor<std::vector<int64_t>>
     {
     public:
-        ObjectAdapter<Shape>(Shape& value)
-            : TypeAdapter<Shape>(value)
+        AttributeAdapter<Shape>(Shape& value)
+            : ValueReference<Shape>(value)
         {
         }
-        static constexpr DiscreteTypeInfo type_info{"ObjectAdapter<Shape>", 0};
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<Shape>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const std::vector<int64_t>& get() override;
         void set(const std::vector<int64_t>& value) override;
@@ -119,15 +121,15 @@ namespace ngraph
 
     class Strides;
     template <>
-    class ObjectAdapter<Strides> : public TypeAdapter<Strides>,
-                                   public ValueAdapter<std::vector<int64_t>>
+    class AttributeAdapter<Strides> : public ValueReference<Strides>,
+                                      public ValueAccessor<std::vector<int64_t>>
     {
     public:
-        ObjectAdapter<Strides>(Strides& value)
-            : TypeAdapter<Strides>(value)
+        AttributeAdapter<Strides>(Strides& value)
+            : ValueReference<Strides>(value)
         {
         }
-        static constexpr DiscreteTypeInfo type_info{"ObjectAdapter<Strides>", 0};
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<Strides>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const std::vector<int64_t>& get() override;
         void set(const std::vector<int64_t>& value) override;
@@ -135,15 +137,15 @@ namespace ngraph
 
     class AxisSet;
     template <>
-    class ObjectAdapter<AxisSet> : public TypeAdapter<AxisSet>,
-                                   public ValueAdapter<std::vector<int64_t>>
+    class AttributeAdapter<AxisSet> : public ValueReference<AxisSet>,
+                                      public ValueAccessor<std::vector<int64_t>>
     {
     public:
-        ObjectAdapter<AxisSet>(AxisSet& value)
-            : TypeAdapter<AxisSet>(value)
+        AttributeAdapter<AxisSet>(AxisSet& value)
+            : ValueReference<AxisSet>(value)
         {
         }
-        static constexpr DiscreteTypeInfo type_info{"ObjectAdapter<AxisSet>", 0};
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<AxisSet>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const std::vector<int64_t>& get() override;
         void set(const std::vector<int64_t>& value) override;
@@ -151,14 +153,15 @@ namespace ngraph
 
     class PartialShape;
     template <>
-    class ObjectAdapter<PartialShape> : public TypeAdapter<PartialShape>, public ValueAdapter<void>
+    class AttributeAdapter<PartialShape> : public ValueReference<PartialShape>,
+                                           public ValueAccessor<void>
     {
     public:
-        ObjectAdapter<PartialShape>(PartialShape& value)
-            : TypeAdapter<PartialShape>(value)
+        AttributeAdapter<PartialShape>(PartialShape& value)
+            : ValueReference<PartialShape>(value)
         {
         }
-        static constexpr DiscreteTypeInfo type_info{"ObjectAdapter<PartialShape>", 0};
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<PartialShape>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
 
@@ -168,15 +171,15 @@ namespace ngraph
     }
 
     template <>
-    class ObjectAdapter<element::Type> : public TypeAdapter<element::Type>,
-                                         public ValueAdapter<void>
+    class AttributeAdapter<element::Type> : public ValueReference<element::Type>,
+                                            public ValueAccessor<void>
     {
     public:
-        ObjectAdapter<element::Type>(element::Type& value)
-            : TypeAdapter<element::Type>(value)
+        AttributeAdapter<element::Type>(element::Type& value)
+            : ValueReference<element::Type>(value)
         {
         }
-        static constexpr DiscreteTypeInfo type_info{"ObjectAdapter<element::Type>", 0};
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<element::Type>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
 }

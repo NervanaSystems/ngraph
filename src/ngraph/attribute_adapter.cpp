@@ -80,9 +80,9 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
-    constexpr DiscreteTypeInfo ObjectAdapter<Shape>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<Shape>::type_info;
 
-    const vector<int64_t>& ObjectAdapter<Shape>::get()
+    const vector<int64_t>& AttributeAdapter<Shape>::get()
     {
         if (!m_buffer_valid)
         {
@@ -92,15 +92,15 @@ namespace ngraph
         return m_buffer;
     }
 
-    void ObjectAdapter<Shape>::set(const vector<int64_t>& value)
+    void AttributeAdapter<Shape>::set(const vector<int64_t>& value)
     {
         m_value = copy_from<Shape>(value);
         m_buffer_valid = false;
     }
 
-    constexpr DiscreteTypeInfo ObjectAdapter<Strides>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<Strides>::type_info;
 
-    const vector<int64_t>& ObjectAdapter<Strides>::get()
+    const vector<int64_t>& AttributeAdapter<Strides>::get()
     {
         if (!m_buffer_valid)
         {
@@ -110,15 +110,15 @@ namespace ngraph
         return m_buffer;
     }
 
-    void ObjectAdapter<Strides>::set(const vector<int64_t>& value)
+    void AttributeAdapter<Strides>::set(const vector<int64_t>& value)
     {
         m_value = copy_from<Strides>(value);
         m_buffer_valid = false;
     }
 
-    constexpr DiscreteTypeInfo ObjectAdapter<AxisSet>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<AxisSet>::type_info;
 
-    const vector<int64_t>& ObjectAdapter<AxisSet>::get()
+    const vector<int64_t>& AttributeAdapter<AxisSet>::get()
     {
         if (!m_buffer_valid)
         {
@@ -130,7 +130,7 @@ namespace ngraph
         return m_buffer;
     }
 
-    void ObjectAdapter<AxisSet>::set(const vector<int64_t>& value)
+    void AttributeAdapter<AxisSet>::set(const vector<int64_t>& value)
     {
         m_value = AxisSet();
         for (auto elt : value)
@@ -140,6 +140,6 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
-    constexpr DiscreteTypeInfo ObjectAdapter<PartialShape>::type_info;
-    constexpr DiscreteTypeInfo ObjectAdapter<element::Type>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<PartialShape>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<element::Type>::type_info;
 }
