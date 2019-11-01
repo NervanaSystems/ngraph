@@ -17,7 +17,9 @@
 #include <chrono>
 #include <iostream>
 
+#ifdef NGRAPH_MLIR_ENABLE
 #include "contrib/mlir/utils.hpp"
+#endif
 #include "gtest/gtest.h"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
