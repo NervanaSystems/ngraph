@@ -564,7 +564,6 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
 endif()
 
 include(cmake/external_gtest.cmake)
-
 if(NGRAPH_JSON_ENABLE)
     include(cmake/external_json.cmake)
 endif()
