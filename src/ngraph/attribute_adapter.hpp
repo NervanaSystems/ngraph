@@ -56,8 +56,8 @@ namespace ngraph
         bool m_buffer_valid{false};
     };
 
-    template <typename Type, typename Base>
-    class TypeAdapter : public Base
+    template <typename Type>
+    class TypeAdapter
     {
     public:
         operator Type&() const { return m_value; }
@@ -70,31 +70,31 @@ namespace ngraph
     };
 
     template <typename Type>
-    class EnumAdapter : public TypeAdapter<Type, StringAdapter>
+    class EnumAdapter : public TypeAdapter<Type>, public StringAdapter
     {
     public:
         EnumAdapter(Type& value)
-            : TypeAdapter<Type, StringAdapter>(value)
+            : TypeAdapter<Type>(value)
         {
         }
         static const DiscreteTypeInfo type_info;
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const std::string& get_string() const override
         {
-            return as_string(TypeAdapter<Type, StringAdapter>::m_value);
+            return as_string(TypeAdapter<Type>::m_value);
         }
         void set_string(const std::string& value) const override
         {
-            TypeAdapter<Type, StringAdapter>::m_value = as_enum<Type>(value);
+            TypeAdapter<Type>::m_value = as_enum<Type>(value);
         }
     };
 
     template <typename Type>
-    class ObjectAdapter : public TypeAdapter<Type, VoidAdapter>
+    class ObjectAdapter : public TypeAdapter<Type>, public VoidAdapter
     {
     public:
         ObjectAdapter(Type& value)
-            : TypeAdapter<Type, VoidAdapter>(value)
+            : TypeAdapter<Type>(value)
         {
         }
         static const DiscreteTypeInfo type_info;
@@ -102,11 +102,11 @@ namespace ngraph
     };
 
     template <typename T>
-    class IntegralVectorAdapter : public TypeAdapter<std::vector<T>, IntegerVectorAdapter>
+    class IntegralVectorAdapter : public TypeAdapter<std::vector<T>>, public IntegerVectorAdapter
     {
     public:
         IntegralVectorAdapter(const std::vector<T>& value)
-            : TypeAdapter<std::vector<T>, IntegerVectorAdapter>(value)
+            : TypeAdapter<std::vector<T>>(value)
         {
         }
         static const DiscreteTypeInfo type_info;
@@ -117,11 +117,11 @@ namespace ngraph
 
     class Shape;
     template <>
-    class ObjectAdapter<Shape> : public TypeAdapter<Shape, IntegerVectorAdapter>
+    class ObjectAdapter<Shape> : public TypeAdapter<Shape>, public IntegerVectorAdapter
     {
     public:
         ObjectAdapter<Shape>(Shape& value)
-            : TypeAdapter<Shape, IntegerVectorAdapter>(value)
+            : TypeAdapter<Shape>(value)
         {
         }
         static constexpr DiscreteTypeInfo type_info{"ObjectAdapter<Shape>", 0};
@@ -132,11 +132,11 @@ namespace ngraph
 
     class Strides;
     template <>
-    class ObjectAdapter<Strides> : public TypeAdapter<Strides, IntegerVectorAdapter>
+    class ObjectAdapter<Strides> : public TypeAdapter<Strides>, public IntegerVectorAdapter
     {
     public:
         ObjectAdapter<Strides>(Strides& value)
-            : TypeAdapter<Strides, IntegerVectorAdapter>(value)
+            : TypeAdapter<Strides>(value)
         {
         }
         static constexpr DiscreteTypeInfo type_info{"ObjectAdapter<Strides>", 0};
@@ -147,11 +147,11 @@ namespace ngraph
 
     class AxisSet;
     template <>
-    class ObjectAdapter<AxisSet> : public TypeAdapter<AxisSet, IntegerVectorAdapter>
+    class ObjectAdapter<AxisSet> : public TypeAdapter<AxisSet>, public IntegerVectorAdapter
     {
     public:
         ObjectAdapter<AxisSet>(AxisSet& value)
-            : TypeAdapter<AxisSet, IntegerVectorAdapter>(value)
+            : TypeAdapter<AxisSet>(value)
         {
         }
         static constexpr DiscreteTypeInfo type_info{"ObjectAdapter<AxisSet>", 0};
@@ -162,11 +162,11 @@ namespace ngraph
 
     class PartialShape;
     template <>
-    class ObjectAdapter<PartialShape> : public TypeAdapter<PartialShape, VoidAdapter>
+    class ObjectAdapter<PartialShape> : public TypeAdapter<PartialShape>, public VoidAdapter
     {
     public:
         ObjectAdapter<PartialShape>(PartialShape& value)
-            : TypeAdapter<PartialShape, VoidAdapter>(value)
+            : TypeAdapter<PartialShape>(value)
         {
         }
         static constexpr DiscreteTypeInfo type_info{"ObjectAdapter<PartialShape>", 0};
@@ -179,11 +179,11 @@ namespace ngraph
     }
 
     template <>
-    class ObjectAdapter<element::Type> : public TypeAdapter<element::Type, VoidAdapter>
+    class ObjectAdapter<element::Type> : public TypeAdapter<element::Type>, public VoidAdapter
     {
     public:
         ObjectAdapter<element::Type>(element::Type& value)
-            : TypeAdapter<element::Type, VoidAdapter>(value)
+            : TypeAdapter<element::Type>(value)
         {
         }
         static constexpr DiscreteTypeInfo type_info{"ObjectAdapter<element::Type>", 0};
