@@ -18,6 +18,7 @@
 #include <memory>
 
 #include "ngraph/axis_vector.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -200,4 +201,9 @@ void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
     auto x_reshaped = make_reshape_axes_to_front(x, I_shape, J_shape);               // JI
     auto x_reshaped_dot_delta = make_shared<Dot>(x_reshaped, delta, I_shape.size()); // JI.IK->JK
     adjoints.add_delta(y, x_reshaped_dot_delta);
+}
+
+shared_ptr<Node> op::Dot::get_default_value() const
+{
+    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
 }
