@@ -36,8 +36,8 @@ op::Split::Split(const Output<Node>& data, const int axis, const std::vector<siz
     : FusedOp({data})
     , m_split_evenly{false}
     , m_axis{axis}
-    , m_splits{splits}
     , m_num_split{0}
+    , m_splits{splits}
 {
     constructor_validate_and_infer_types();
 }
