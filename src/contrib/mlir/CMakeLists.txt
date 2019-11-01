@@ -32,6 +32,8 @@ set(SRC
     core/ngraph_dialect/ops.cpp
     core/pass/mlir_subgraph_extraction.cpp
     core/pass/mlir_subgraph_extraction.hpp
+    core/pass/ngraph_dialect.cpp
+    core/pass/ngraph_dialect.hpp
     runtime/cpu/memory_manager.cpp
     runtime/cpu/cpu_runtime.cpp
     utils.cpp

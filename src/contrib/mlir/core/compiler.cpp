@@ -19,6 +19,7 @@
 
 #include "compiler.hpp"
 
+#include "pass/ngraph_dialect.hpp"
 #include "ngraph_dialect/dialect.hpp"
 #include "ngraph_dialect/ops.hpp"
 #include "ngraph_dialect/type.hpp"
@@ -124,42 +125,17 @@ void MLIRCompiler::buildNgDialectModule()
     // initialize an empty module
     m_module = mlir::ModuleOp::create(mlir::UnknownLoc::get(&m_context));
 
-    TypeList argsTypeList, resultTypeList;
+    mlir::PassManager pm(&m_context);
+    pm.addPass(ngraph::pass::CreateNgDialectConversionPass(m_compiledKernel));
 
-    // Retrieve input and output tensors.
-    const auto& kernelInputs = m_compiledKernel->get_arguments();
-    const auto& kernelOutput = m_compiledKernel->get_kernel_outputs();
-    NGRAPH_CHECK(kernelInputs.size() != 0, "Cannot have empty inputs list");
-    NGRAPH_CHECK(kernelOutput.size() != 0, "Cannot have empty outputs list");
+    // Apply any generic pass manager command line options.
+    mlir::applyPassManagerCLOptions(pm);
 
-    for (auto input : kernelInputs)
+    if (failed(pm.run(m_module)))
     {
-        argsTypeList.push_back(getMlirType(input.get()));
+        NGRAPH_CHECK(false, "MLIR pass manager failed");
     }
 
-    for (auto output : kernelOutput)
-    {
-        resultTypeList.push_back(getMlirType(output.get()));
-    }
-
-    auto funcType = mlir::FunctionType::get(argsTypeList, resultTypeList, &m_context);
-    auto function = mlir::FuncOp::create(mlir::UnknownLoc::get(&m_context), "main", funcType);
-    function.addEntryBlock();
-
-    // populate Tensor->Value maps
-    int i = 0;
-    for (auto input : kernelInputs)
-    {
-        mlir::Value* arg = function.getArgument(i);
-        TensorInfo tensorInfo{arg};
-        m_tensorToValueMap.insert(TensorToInfo(input->get_output_tensor_ptr().get(), tensorInfo));
-        i++;
-    }
-
-    // create builder
-    m_builder = std::unique_ptr<mlir::OpBuilder>(new mlir::OpBuilder(function.getBody()));
-    buildNgDialect();
-    m_module->push_back(function);
     if (failed(m_module->verify()))
     {
         NGRAPH_CHECK(false, "Invalid module after lowering to NG dialect");
