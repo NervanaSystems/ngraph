@@ -45,103 +45,106 @@ namespace
     }
 }
 
-template <>
-const DiscreteTypeInfo IntegralVectorAdapter<int64_t>::type_info{"IntegralVectorAdapter<int64_t>",
-                                                                 0};
-
-template <>
-const vector<int64_t>& IntegralVectorAdapter<int64_t>::get_vector()
+namespace ngraph
 {
-    return m_value;
-}
+    template <>
+    const DiscreteTypeInfo IntegralVectorAdapter<int64_t>::type_info{
+        "IntegralVectorAdapter<int64_t>", 0};
 
-template <>
-void IntegralVectorAdapter<int64_t>::set_vector(const vector<int64_t>& value)
-{
-    m_value = value;
-}
-
-template <>
-const DiscreteTypeInfo IntegralVectorAdapter<uint64_t>::type_info{"IntegralVectorAdapter<uint64_t>",
-                                                                  0};
-
-template <>
-const vector<int64_t>& IntegralVectorAdapter<uint64_t>::get_vector()
-{
-    if (!m_buffer_valid)
+    template <>
+    const vector<int64_t>& IntegralVectorAdapter<int64_t>::get_vector()
     {
-        m_buffer = copy_from<vector<int64_t>>(m_value);
-        m_buffer_valid = true;
+        return m_value;
     }
-    return m_buffer;
-}
 
-template <>
-void IntegralVectorAdapter<uint64_t>::set_vector(const vector<int64_t>& value)
-{
-    m_value = copy_from<vector<uint64_t>>(value);
-    m_buffer_valid = false;
-}
-
-constexpr DiscreteTypeInfo ObjectAdapter<Shape>::type_info;
-
-const vector<int64_t>& ObjectAdapter<Shape>::get_vector()
-{
-    if (!m_buffer_valid)
+    template <>
+    void IntegralVectorAdapter<int64_t>::set_vector(const vector<int64_t>& value)
     {
-        m_buffer = copy_from<vector<int64_t>>(m_value);
-        m_buffer_valid = true;
+        m_value = value;
     }
-    return m_buffer;
-}
 
-void ObjectAdapter<Shape>::set_vector(const vector<int64_t>& value)
-{
-    m_value = copy_from<Shape>(value);
-    m_buffer_valid = false;
-}
+    template <>
+    const DiscreteTypeInfo IntegralVectorAdapter<uint64_t>::type_info{
+        "IntegralVectorAdapter<uint64_t>", 0};
 
-constexpr DiscreteTypeInfo ObjectAdapter<Strides>::type_info;
-
-const vector<int64_t>& ObjectAdapter<Strides>::get_vector()
-{
-    if (!m_buffer_valid)
+    template <>
+    const vector<int64_t>& IntegralVectorAdapter<uint64_t>::get_vector()
     {
-        m_buffer = copy_from<vector<int64_t>>(m_value);
-        m_buffer_valid = true;
-    }
-    return m_buffer;
-}
-
-void ObjectAdapter<Strides>::set_vector(const vector<int64_t>& value)
-{
-    m_value = copy_from<Strides>(value);
-    m_buffer_valid = false;
-}
-
-constexpr DiscreteTypeInfo ObjectAdapter<AxisSet>::type_info;
-
-const vector<int64_t>& ObjectAdapter<AxisSet>::get_vector()
-{
-    if (!m_buffer_valid)
-    {
-        for (auto elt : m_value)
+        if (!m_buffer_valid)
         {
-            m_buffer.push_back(elt);
+            m_buffer = copy_from<vector<int64_t>>(m_value);
+            m_buffer_valid = true;
         }
+        return m_buffer;
     }
-    return m_buffer;
-}
 
-void ObjectAdapter<AxisSet>::set_vector(const vector<int64_t>& value)
-{
-    m_value = AxisSet();
-    for (auto elt : value)
+    template <>
+    void IntegralVectorAdapter<uint64_t>::set_vector(const vector<int64_t>& value)
     {
-        m_value.insert(elt);
+        m_value = copy_from<vector<uint64_t>>(value);
+        m_buffer_valid = false;
     }
-    m_buffer_valid = false;
-}
 
-constexpr DiscreteTypeInfo ObjectAdapter<PartialShape>::type_info;
-constexpr DiscreteTypeInfo ObjectAdapter<element::Type>::type_info;
+    constexpr DiscreteTypeInfo ObjectAdapter<Shape>::type_info;
+
+    const vector<int64_t>& ObjectAdapter<Shape>::get_vector()
+    {
+        if (!m_buffer_valid)
+        {
+            m_buffer = copy_from<vector<int64_t>>(m_value);
+            m_buffer_valid = true;
+        }
+        return m_buffer;
+    }
+
+    void ObjectAdapter<Shape>::set_vector(const vector<int64_t>& value)
+    {
+        m_value = copy_from<Shape>(value);
+        m_buffer_valid = false;
+    }
+
+    constexpr DiscreteTypeInfo ObjectAdapter<Strides>::type_info;
+
+    const vector<int64_t>& ObjectAdapter<Strides>::get_vector()
+    {
+        if (!m_buffer_valid)
+        {
+            m_buffer = copy_from<vector<int64_t>>(m_value);
+            m_buffer_valid = true;
+        }
+        return m_buffer;
+    }
+
+    void ObjectAdapter<Strides>::set_vector(const vector<int64_t>& value)
+    {
+        m_value = copy_from<Strides>(value);
+        m_buffer_valid = false;
+    }
+
+    constexpr DiscreteTypeInfo ObjectAdapter<AxisSet>::type_info;
+
+    const vector<int64_t>& ObjectAdapter<AxisSet>::get_vector()
+    {
+        if (!m_buffer_valid)
+        {
+            for (auto elt : m_value)
+            {
+                m_buffer.push_back(elt);
+            }
+        }
+        return m_buffer;
+    }
+
+    void ObjectAdapter<AxisSet>::set_vector(const vector<int64_t>& value)
+    {
+        m_value = AxisSet();
+        for (auto elt : value)
+        {
+            m_value.insert(elt);
+        }
+        m_buffer_valid = false;
+    }
+
+    constexpr DiscreteTypeInfo ObjectAdapter<PartialShape>::type_info;
+    constexpr DiscreteTypeInfo ObjectAdapter<element::Type>::type_info;
+}
