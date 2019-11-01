@@ -25,9 +25,10 @@
 
 namespace ngraph
 {
+    template <typename T>
+    class ValueAdapter;
     class StringAdapter;
     class PartialShape;
-    class VoidAdapter;
     class IntergerVectorAdapter;
 
     /// \brief Visits the attributes of a node.
@@ -44,9 +45,10 @@ namespace ngraph
         virtual void on_attribute(const std::string& name, double& value) = 0;
         virtual void on_attribute(const std::string& name, int64_t& value) = 0;
         virtual void on_attribute(const std::string& name, uint64_t& value) = 0;
-        virtual void on_adapter(const std::string& name, VoidAdapter& visitor_adapter) = 0;
-        virtual void on_adapter(const std::string& name, StringAdapter& visitor_adapter) = 0;
-        virtual void on_adapter(const std::string& name, IntegerVectorAdapter& visitor_adapter) = 0;
+        virtual void on_adapter(const std::string& name, ValueAdapter<void>& adapter) = 0;
+        virtual void on_adapter(const std::string& name, ValueAdapter<std::string>& adapter) = 0;
+        virtual void on_adapter(const std::string& name,
+                                ValueAdapter<std::vector<int64_t>>& adapter) = 0;
 
         template <typename T>
         typename std::enable_if<std::is_enum<T>::value, void>::type

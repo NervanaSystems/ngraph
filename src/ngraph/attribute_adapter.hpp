@@ -21,39 +21,27 @@
 
 namespace ngraph
 {
-    /// Provides an adapter that doesn't serialize
-    class VoidAdapter
+    template <typename T>
+    class ValueAdapter
     {
     public:
-        virtual ~VoidAdapter() {}
-        static constexpr DiscreteTypeInfo type_info{"VoidAdapter", 0};
-        virtual const DiscreteTypeInfo& get_type_info() const { return type_info; }
-    };
+        virtual ~ValueAdapter() {}
+        virtual const DiscreteTypeInfo& get_type_info() const = 0;
+        /// Returns the value
+        virtual const T& get() = 0;
+        /// Sets the value
+        virtual void set(const T& value) = 0;
 
-    /// Provides a generic way to access attribute values as strings for serialization
-    class StringAdapter
-    {
-    public:
-        virtual ~StringAdapter() {}
-        static constexpr DiscreteTypeInfo type_info{"StringAdapter", 0};
-        virtual const DiscreteTypeInfo& get_type_info() const { return type_info; }
-        /// Returns the value as a string
-        virtual const std::string& get_string() const = 0;
-        ///
-        virtual void set_string(const std::string& value) const = 0;
-    };
-
-    class IntegerVectorAdapter
-    {
-    public:
-        virtual ~IntegerVectorAdapter(){};
-        static constexpr DiscreteTypeInfo type_info{"IntegerVectorAdapter", 0};
-        virtual const DiscreteTypeInfo& get_type_info() const { return type_info; }
-        /// Returns the value as an integer vector
-        virtual const std::vector<int64_t>& get_vector() = 0;
-        virtual void set_vector(const std::vector<int64_t>& value) = 0;
-        std::vector<int64_t> m_buffer;
+    protected:
+        T m_buffer;
         bool m_buffer_valid{false};
+    };
+
+    template <>
+    class ValueAdapter<void>
+    {
+    public:
+        virtual const DiscreteTypeInfo& get_type_info() const = 0;
     };
 
     template <typename Type>
@@ -70,7 +58,7 @@ namespace ngraph
     };
 
     template <typename Type>
-    class EnumAdapter : public TypeAdapter<Type>, public StringAdapter
+    class EnumAdapter : public TypeAdapter<Type>, public ValueAdapter<std::string>
     {
     public:
         EnumAdapter(Type& value)
@@ -79,18 +67,15 @@ namespace ngraph
         }
         static const DiscreteTypeInfo type_info;
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-        const std::string& get_string() const override
-        {
-            return as_string(TypeAdapter<Type>::m_value);
-        }
-        void set_string(const std::string& value) const override
+        const std::string& get() override { return as_string(TypeAdapter<Type>::m_value); }
+        void set(const std::string& value) override
         {
             TypeAdapter<Type>::m_value = as_enum<Type>(value);
         }
     };
 
     template <typename Type>
-    class ObjectAdapter : public TypeAdapter<Type>, public VoidAdapter
+    class ObjectAdapter : public TypeAdapter<Type>, public ValueAdapter<void>
     {
     public:
         ObjectAdapter(Type& value)
@@ -102,7 +87,8 @@ namespace ngraph
     };
 
     template <typename T>
-    class IntegralVectorAdapter : public TypeAdapter<std::vector<T>>, public IntegerVectorAdapter
+    class IntegralVectorAdapter : public TypeAdapter<std::vector<T>>,
+                                  public ValueAdapter<std::vector<int64_t>>
     {
     public:
         IntegralVectorAdapter(const std::vector<T>& value)
@@ -111,13 +97,14 @@ namespace ngraph
         }
         static const DiscreteTypeInfo type_info;
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-        const std::vector<int64_t>& get_vector() override;
-        void set_vector(const std::vector<int64_t>& value) override;
+        const std::vector<int64_t>& get() override;
+        void set(const std::vector<int64_t>& value) override;
     };
 
     class Shape;
     template <>
-    class ObjectAdapter<Shape> : public TypeAdapter<Shape>, public IntegerVectorAdapter
+    class ObjectAdapter<Shape> : public TypeAdapter<Shape>,
+                                 public ValueAdapter<std::vector<int64_t>>
     {
     public:
         ObjectAdapter<Shape>(Shape& value)
@@ -126,13 +113,14 @@ namespace ngraph
         }
         static constexpr DiscreteTypeInfo type_info{"ObjectAdapter<Shape>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-        const std::vector<int64_t>& get_vector() override;
-        void set_vector(const std::vector<int64_t>& value) override;
+        const std::vector<int64_t>& get() override;
+        void set(const std::vector<int64_t>& value) override;
     };
 
     class Strides;
     template <>
-    class ObjectAdapter<Strides> : public TypeAdapter<Strides>, public IntegerVectorAdapter
+    class ObjectAdapter<Strides> : public TypeAdapter<Strides>,
+                                   public ValueAdapter<std::vector<int64_t>>
     {
     public:
         ObjectAdapter<Strides>(Strides& value)
@@ -141,13 +129,14 @@ namespace ngraph
         }
         static constexpr DiscreteTypeInfo type_info{"ObjectAdapter<Strides>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-        const std::vector<int64_t>& get_vector() override;
-        void set_vector(const std::vector<int64_t>& value) override;
+        const std::vector<int64_t>& get() override;
+        void set(const std::vector<int64_t>& value) override;
     };
 
     class AxisSet;
     template <>
-    class ObjectAdapter<AxisSet> : public TypeAdapter<AxisSet>, public IntegerVectorAdapter
+    class ObjectAdapter<AxisSet> : public TypeAdapter<AxisSet>,
+                                   public ValueAdapter<std::vector<int64_t>>
     {
     public:
         ObjectAdapter<AxisSet>(AxisSet& value)
@@ -156,13 +145,13 @@ namespace ngraph
         }
         static constexpr DiscreteTypeInfo type_info{"ObjectAdapter<AxisSet>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-        const std::vector<int64_t>& get_vector() override;
-        void set_vector(const std::vector<int64_t>& value) override;
+        const std::vector<int64_t>& get() override;
+        void set(const std::vector<int64_t>& value) override;
     };
 
     class PartialShape;
     template <>
-    class ObjectAdapter<PartialShape> : public TypeAdapter<PartialShape>, public VoidAdapter
+    class ObjectAdapter<PartialShape> : public TypeAdapter<PartialShape>, public ValueAdapter<void>
     {
     public:
         ObjectAdapter<PartialShape>(PartialShape& value)
@@ -179,7 +168,8 @@ namespace ngraph
     }
 
     template <>
-    class ObjectAdapter<element::Type> : public TypeAdapter<element::Type>, public VoidAdapter
+    class ObjectAdapter<element::Type> : public TypeAdapter<element::Type>,
+                                         public ValueAdapter<void>
     {
     public:
         ObjectAdapter<element::Type>(element::Type& value)

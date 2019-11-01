@@ -26,11 +26,6 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr DiscreteTypeInfo VoidAdapter::type_info;
-constexpr DiscreteTypeInfo StringAdapter::type_info;
-
-constexpr DiscreteTypeInfo IntegerVectorAdapter::type_info;
-
 namespace
 {
     template <typename A, typename B>
@@ -52,13 +47,13 @@ namespace ngraph
         "IntegralVectorAdapter<int64_t>", 0};
 
     template <>
-    const vector<int64_t>& IntegralVectorAdapter<int64_t>::get_vector()
+    const vector<int64_t>& IntegralVectorAdapter<int64_t>::get()
     {
         return m_value;
     }
 
     template <>
-    void IntegralVectorAdapter<int64_t>::set_vector(const vector<int64_t>& value)
+    void IntegralVectorAdapter<int64_t>::set(const vector<int64_t>& value)
     {
         m_value = value;
     }
@@ -68,7 +63,7 @@ namespace ngraph
         "IntegralVectorAdapter<uint64_t>", 0};
 
     template <>
-    const vector<int64_t>& IntegralVectorAdapter<uint64_t>::get_vector()
+    const vector<int64_t>& IntegralVectorAdapter<uint64_t>::get()
     {
         if (!m_buffer_valid)
         {
@@ -79,7 +74,7 @@ namespace ngraph
     }
 
     template <>
-    void IntegralVectorAdapter<uint64_t>::set_vector(const vector<int64_t>& value)
+    void IntegralVectorAdapter<uint64_t>::set(const vector<int64_t>& value)
     {
         m_value = copy_from<vector<uint64_t>>(value);
         m_buffer_valid = false;
@@ -87,7 +82,7 @@ namespace ngraph
 
     constexpr DiscreteTypeInfo ObjectAdapter<Shape>::type_info;
 
-    const vector<int64_t>& ObjectAdapter<Shape>::get_vector()
+    const vector<int64_t>& ObjectAdapter<Shape>::get()
     {
         if (!m_buffer_valid)
         {
@@ -97,7 +92,7 @@ namespace ngraph
         return m_buffer;
     }
 
-    void ObjectAdapter<Shape>::set_vector(const vector<int64_t>& value)
+    void ObjectAdapter<Shape>::set(const vector<int64_t>& value)
     {
         m_value = copy_from<Shape>(value);
         m_buffer_valid = false;
@@ -105,7 +100,7 @@ namespace ngraph
 
     constexpr DiscreteTypeInfo ObjectAdapter<Strides>::type_info;
 
-    const vector<int64_t>& ObjectAdapter<Strides>::get_vector()
+    const vector<int64_t>& ObjectAdapter<Strides>::get()
     {
         if (!m_buffer_valid)
         {
@@ -115,7 +110,7 @@ namespace ngraph
         return m_buffer;
     }
 
-    void ObjectAdapter<Strides>::set_vector(const vector<int64_t>& value)
+    void ObjectAdapter<Strides>::set(const vector<int64_t>& value)
     {
         m_value = copy_from<Strides>(value);
         m_buffer_valid = false;
@@ -123,7 +118,7 @@ namespace ngraph
 
     constexpr DiscreteTypeInfo ObjectAdapter<AxisSet>::type_info;
 
-    const vector<int64_t>& ObjectAdapter<AxisSet>::get_vector()
+    const vector<int64_t>& ObjectAdapter<AxisSet>::get()
     {
         if (!m_buffer_valid)
         {
@@ -135,7 +130,7 @@ namespace ngraph
         return m_buffer;
     }
 
-    void ObjectAdapter<AxisSet>::set_vector(const vector<int64_t>& value)
+    void ObjectAdapter<AxisSet>::set(const vector<int64_t>& value)
     {
         m_value = AxisSet();
         for (auto elt : value)
