@@ -165,7 +165,7 @@ static bool simplify_concat(shared_ptr<Node> n)
     }
 
     auto concat = static_pointer_cast<op::Concat>(n);
-    size_t concat_axis = concat->get_concatenation_axis();
+    auto concat_axis = concat->get_concatenation_axis();
 
     auto slice_shape = branch_tip->get_users(true).at(0)->get_shape();
     size_t slice_axis = numeric_limits<size_t>::max();

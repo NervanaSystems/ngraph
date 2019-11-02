@@ -24,7 +24,7 @@ using namespace ngraph;
 
 template <class T>
 shared_ptr<op::Constant> fold_constant_broadcast(shared_ptr<op::Constant> constant,
-                                                 shared_ptr<op::Broadcast> broadcast,
+                                                 shared_ptr<Node> broadcast,
                                                  NodeExecutorTy func)
 {
     auto out_shape = broadcast->get_shape();
@@ -39,13 +39,33 @@ shared_ptr<op::Constant> fold_constant_broadcast(shared_ptr<op::Constant> consta
 
         func(inputs, outputs);
     }
-    else
+    else if (auto broadcast_v1 = as_type_ptr<op::v1::Broadcast>(broadcast))
+    {
+        auto static_bcast_axes = broadcast_v1->get_broadcast_axes();
+        if (static_bcast_axes.first)
+        {
+            runtime::reference::broadcast<T>(constant->get_data_ptr<T>(),
+                                             out_vec.data(),
+                                             constant->get_shape(),
+                                             out_shape,
+                                             static_bcast_axes.second);
+        }
+        else
+        {
+            throw ngraph_error("Unexpected failure due to inability to obtain broadcast axes.");
+        }
+    }
+    else if (auto broadcast_v0 = as_type_ptr<op::v0::Broadcast>(broadcast))
     {
         runtime::reference::broadcast<T>(constant->get_data_ptr<T>(),
                                          out_vec.data(),
                                          constant->get_shape(),
                                          out_shape,
-                                         broadcast->get_broadcast_axes());
+                                         broadcast_v0->get_broadcast_axes());
+    }
+    else
+    {
+        throw ngraph_error("Unsupported op in broadcast constant folding.");
     }
 
     return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
@@ -56,7 +76,14 @@ void pass::ConstantFolding::construct_constant_broadcast()
     auto constant_label =
         make_shared<pattern::op::Label>(element::f32, Shape{2}, pattern::has_class<op::Constant>());
 
-    auto broadcast = make_shared<op::Broadcast>(constant_label, Shape{2, 4}, AxisSet{1});
+    auto broadcast_v0 = make_shared<op::v0::Broadcast>(constant_label, Shape{2, 4}, AxisSet{1});
+
+    auto constant_shape =
+        make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
+    auto constant_axes =
+        make_shared<pattern::op::Label>(element::i64, Shape{1}, pattern::has_class<op::Constant>());
+    auto broadcast_v1 =
+        make_shared<op::v1::Broadcast>(constant_label, constant_shape, constant_axes);
 
     auto constant_broadcast_callback = [&, constant_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_broadcast_callback against node = "
@@ -65,7 +92,7 @@ void pass::ConstantFolding::construct_constant_broadcast()
         auto pattern_map = m.get_pattern_map();
 
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
-        auto broadcast_match = static_pointer_cast<op::Broadcast>(m.get_match_root());
+        auto broadcast_match = m.get_match_root();
 
         NGRAPH_CHECK(revalidate_and_ensure_static(broadcast_match));
 
@@ -135,8 +162,13 @@ void pass::ConstantFolding::construct_constant_broadcast()
         return true;
     };
 
-    auto broadcast_matcher =
-        make_shared<pattern::Matcher>(broadcast, "ConstantFolding.ConstantBroadcast");
     this->add_matcher(
-        broadcast_matcher, constant_broadcast_callback, PassProperty::CHANGE_DYNAMIC_STATE);
+        make_shared<pattern::Matcher>(broadcast_v0, "ConstantFolding.ConstantBroadcastV0"),
+        constant_broadcast_callback,
+        PassProperty::CHANGE_DYNAMIC_STATE);
+
+    this->add_matcher(
+        make_shared<pattern::Matcher>(broadcast_v1, "ConstantFolding.ConstantBroadcastV1"),
+        constant_broadcast_callback,
+        PassProperty::CHANGE_DYNAMIC_STATE);
 }
