@@ -33,7 +33,7 @@ namespace ngraph
     }
 
     template <>
-    const DiscreteTypeInfo EnumAdapter<op::PadMode>::type_info = {"op::PadMode", 0};
+    const DiscreteTypeInfo AttributeAdapter<op::PadMode>::type_info = {"op::PadMode", 0};
 
     std::ostream& op::operator<<(std::ostream& s, const op::PadMode& type)
     {
@@ -52,7 +52,7 @@ namespace ngraph
     }
 
     template <>
-    const DiscreteTypeInfo EnumAdapter<op::PadType>::type_info = {"op::PadType", 0};
+    const DiscreteTypeInfo AttributeAdapter<op::PadType>::type_info = {"op::PadType", 0};
 
     std::ostream& op::operator<<(std::ostream& s, const op::PadType& type)
     {
@@ -69,7 +69,7 @@ namespace ngraph
     }
 
     template <>
-    const DiscreteTypeInfo EnumAdapter<op::RoundingType>::type_info = {"op::RoundingType", 0};
+    const DiscreteTypeInfo AttributeAdapter<op::RoundingType>::type_info = {"op::RoundingType", 0};
 
     std::ostream& op::operator<<(std::ostream& s, const op::RoundingType& type)
     {
@@ -88,9 +88,10 @@ namespace ngraph
     }
 
     template <>
-    const DiscreteTypeInfo EnumAdapter<op::AutoBroadcastType>::type_info = {"op::AutoBroadcastType",
+    const DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastType>::type_info = {
+        "op::AutoBroadcastType",
 
-                                                                            0};
+        0};
 
     std::ostream& op::operator<<(std::ostream& s, const op::AutoBroadcastType& type)
     {
@@ -106,7 +107,7 @@ namespace ngraph
     }
 
     template <>
-    const DiscreteTypeInfo EnumAdapter<op::EpsMode>::type_info = {"op::EpsMode", 0};
+    const DiscreteTypeInfo AttributeAdapter<op::EpsMode>::type_info = {"op::EpsMode", 0};
 
     std::ostream& op::operator<<(std::ostream& s, const op::EpsMode& type)
     {

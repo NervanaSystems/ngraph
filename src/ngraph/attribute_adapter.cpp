@@ -43,27 +43,27 @@ namespace
 namespace ngraph
 {
     template <>
-    const DiscreteTypeInfo IntegralVectorAdapter<int64_t>::type_info{
-        "IntegralVectorAdapter<int64_t>", 0};
+    const DiscreteTypeInfo AttributeAdapter<vector<int64_t>>::type_info{
+        "AttributeAdapter<vector<int64_t>>", 0};
 
     template <>
-    const vector<int64_t>& IntegralVectorAdapter<int64_t>::get()
+    const vector<int64_t>& AttributeAdapter<vector<int64_t>>::get()
     {
         return m_value;
     }
 
     template <>
-    void IntegralVectorAdapter<int64_t>::set(const vector<int64_t>& value)
+    void AttributeAdapter<vector<int64_t>>::set(const vector<int64_t>& value)
     {
         m_value = value;
     }
 
     template <>
-    const DiscreteTypeInfo IntegralVectorAdapter<uint64_t>::type_info{
-        "IntegralVectorAdapter<uint64_t>", 0};
+    const DiscreteTypeInfo AttributeAdapter<vector<uint64_t>>::type_info{
+        "AttributeAdapter<vector<uint64_t>>", 0};
 
     template <>
-    const vector<int64_t>& IntegralVectorAdapter<uint64_t>::get()
+    const vector<int64_t>& AttributeAdapter<vector<uint64_t>>::get()
     {
         if (!m_buffer_valid)
         {
@@ -74,7 +74,7 @@ namespace ngraph
     }
 
     template <>
-    void IntegralVectorAdapter<uint64_t>::set(const vector<int64_t>& value)
+    void AttributeAdapter<vector<uint64_t>>::set(const vector<int64_t>& value)
     {
         m_value = copy_from<vector<uint64_t>>(value);
         m_buffer_valid = false;

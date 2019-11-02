@@ -37,33 +37,28 @@ namespace ngraph
     {
     public:
         virtual ~AttributeVisitor() {}
+        // Must implement these methods
         virtual void on_attribute(const std::string& name, std::string& value) = 0;
         virtual void on_attribute(const std::string& name, bool& value) = 0;
         virtual void on_attribute(const std::string& name, double& value) = 0;
         virtual void on_attribute(const std::string& name, int64_t& value) = 0;
         virtual void on_attribute(const std::string& name, uint64_t& value) = 0;
         virtual void on_adapter(const std::string& name, ValueAccessor<void>& adapter) = 0;
-        virtual void on_adapter(const std::string& name, ValueAccessor<std::string>& adapter) = 0;
+        // The remaining adapter methods fall back on the void adapter if not implemented
+        virtual void on_adapter(const std::string& name, ValueAccessor<std::string>& adapter)
+        {
+            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
+        };
         virtual void on_adapter(const std::string& name,
-                                ValueAccessor<std::vector<int64_t>>& adapter) = 0;
+                                ValueAccessor<std::vector<int64_t>>& adapter)
+        {
+            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
+        }
 
+        // Use an adapter for non-primitive types
         template <typename T>
-        typename std::enable_if<std::is_enum<T>::value, void>::type
-            on_attribute(const std::string& name, T& value)
-        {
-            EnumAdapter<T> adapter(value);
-            on_adapter(name, adapter);
-        }
-        template <typename T>
-        typename std::enable_if<std::is_integral<T>::value, void>::type
-            on_attribute(const std::string& name, std::vector<T>& value)
-        {
-            IntegralVectorAdapter<T> adapter(value);
-            on_adapter(name, adapter);
-        }
-        template <typename T>
-        typename std::enable_if<std::is_class<T>::value, void>::type
-            on_attribute(const std::string& name, T& value)
+        // typename std::enable_if<std::is_class<T>::value, void>::type
+        void on_attribute(const std::string& name, T& value)
         {
             AttributeAdapter<T> adapter(value);
             on_adapter(name, adapter);

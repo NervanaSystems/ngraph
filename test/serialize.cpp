@@ -500,7 +500,7 @@ namespace ngraph
     }
 
     template <>
-    const DiscreteTypeInfo EnumAdapter<TuringModel>::type_info{"TuringModel", 0};
+    const DiscreteTypeInfo AttributeAdapter<TuringModel>::type_info{"TuringModel", 0};
 }
 
 // Given a Turing machine program and data, return scalar 1 if the program would

@@ -37,7 +37,7 @@ namespace ngraph
     }
 
     template <>
-    const DiscreteTypeInfo EnumAdapter<reduction::Type>::type_info = {"reduction::Type", 0};
+    const DiscreteTypeInfo AttributeAdapter<reduction::Type>::type_info = {"reduction::Type", 0};
 }
 
 std::ostream& reduction::operator<<(std::ostream& out, const reduction::Type& obj)

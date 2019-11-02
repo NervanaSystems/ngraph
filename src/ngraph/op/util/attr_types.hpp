@@ -40,7 +40,7 @@ namespace ngraph
 
     NGRAPH_API
     template <>
-    const DiscreteTypeInfo EnumAdapter<op::PadMode>::type_info;
+    const DiscreteTypeInfo AttributeAdapter<op::PadMode>::type_info;
 
     namespace op
     {
@@ -71,7 +71,7 @@ namespace ngraph
 
     NGRAPH_API
     template <>
-    const DiscreteTypeInfo EnumAdapter<op::PadType>::type_info;
+    const DiscreteTypeInfo AttributeAdapter<op::PadType>::type_info;
 
     namespace op
     {
@@ -87,7 +87,7 @@ namespace ngraph
 
     NGRAPH_API
     template <>
-    const DiscreteTypeInfo EnumAdapter<op::RoundingType>::type_info;
+    const DiscreteTypeInfo AttributeAdapter<op::RoundingType>::type_info;
 
     namespace op
     {
@@ -142,7 +142,7 @@ namespace ngraph
 
     NGRAPH_API
     template <>
-    const DiscreteTypeInfo EnumAdapter<op::AutoBroadcastType>::type_info;
+    const DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastType>::type_info;
     namespace op
     {
         /// \brief Specifies how eps is combined with L2 value
@@ -159,7 +159,7 @@ namespace ngraph
 
     NGRAPH_API
     template <>
-    const DiscreteTypeInfo EnumAdapter<op::EpsMode>::type_info;
+    const DiscreteTypeInfo AttributeAdapter<op::EpsMode>::type_info;
 
     namespace op
     {

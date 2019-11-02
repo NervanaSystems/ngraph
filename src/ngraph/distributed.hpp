@@ -40,7 +40,7 @@ namespace ngraph
     }
 
     template <>
-    const DiscreteTypeInfo EnumAdapter<reduction::Type>::type_info;
+    const DiscreteTypeInfo AttributeAdapter<reduction::Type>::type_info;
 
     class DistributedInterface
     {

@@ -21,9 +21,20 @@
 
 namespace ngraph
 {
+    template <typename Type>
+    class ValueAccessor;
+
+    /// ValueAccessor<void> is for values that do not provide
+    template <>
+    class ValueAccessor<void>
+    {
+    public:
+        virtual const DiscreteTypeInfo& get_type_info() const = 0;
+    };
+
     /// ValueAccessor<T> represents values that support get/set through T
     template <typename T>
-    class ValueAccessor
+    class ValueAccessor : public ValueAccessor<void>
     {
     public:
         virtual ~ValueAccessor() {}
@@ -36,14 +47,6 @@ namespace ngraph
     protected:
         T m_buffer;
         bool m_buffer_valid{false};
-    };
-
-    /// ValueAccessor<void> is for values that do not provide
-    template <>
-    class ValueAccessor<void>
-    {
-    public:
-        virtual const DiscreteTypeInfo& get_type_info() const = 0;
     };
 
     template <typename Type>
@@ -59,7 +62,7 @@ namespace ngraph
         Type& m_value;
     };
 
-    template <typename Type>
+    template <typename Type, typename Enable = void>
     class AttributeAdapter : public ValueReference<Type>, public ValueAccessor<void>
     {
     public:
@@ -72,10 +75,11 @@ namespace ngraph
     };
 
     template <typename Type>
-    class EnumAdapter : public ValueReference<Type>, public ValueAccessor<std::string>
+    class AttributeAdapter<Type, typename std::enable_if<std::is_enum<Type>::value>::type>
+        : public ValueReference<Type>, public ValueAccessor<std::string>
     {
     public:
-        EnumAdapter(Type& value)
+        AttributeAdapter(Type& value)
             : ValueReference<Type>(value)
         {
         }
@@ -88,13 +92,17 @@ namespace ngraph
         }
     };
 
-    template <typename T>
-    class IntegralVectorAdapter : public ValueReference<std::vector<T>>,
-                                  public ValueAccessor<std::vector<int64_t>>
+    template <typename Type>
+    class AttributeAdapter<
+        Type,
+        typename std::enable_if<
+            std::is_convertible<Type, typename std::vector<typename Type::value_type>>::value &&
+            std::is_integral<typename Type::value_type>::value>::type>
+        : public ValueReference<Type>, public ValueAccessor<std::vector<int64_t>>
     {
     public:
-        IntegralVectorAdapter(const std::vector<T>& value)
-            : ValueReference<std::vector<T>>(value)
+        AttributeAdapter(const Type& value)
+            : ValueReference<Type>(value)
         {
         }
         static const DiscreteTypeInfo type_info;
