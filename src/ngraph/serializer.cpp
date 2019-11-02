@@ -19,9 +19,7 @@
 #include <queue>
 #include <stack>
 
-#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/cpio.hpp"
-#include "ngraph/factory.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/abs.hpp"
@@ -166,11 +164,6 @@ using namespace std;
 using json = nlohmann::json;
 using const_data_callback_t = shared_ptr<Node>(const string&, const element::Type&, const Shape&);
 
-static json write_element_type(const ngraph::element::Type& n);
-static element::Type read_element_type(json j);
-static json write_partial_shape(const PartialShape& s);
-static PartialShape read_partial_shape(json j);
-
 static bool s_serialize_output_shapes_enabled =
     (std::getenv("NGRAPH_SERIALIZER_OUTPUT_SHAPES") != nullptr);
 
@@ -229,46 +222,6 @@ T get_or_default(json j, const std::string& key, const T& default_value)
     return has_key(j, key) ? j.at(key).get<T>() : default_value;
 }
 
-class JSONAttributeSerializer : public AttributeVisitor
-{
-public:
-    JSONAttributeSerializer(json& j)
-        : m_json(j)
-    {
-    }
-
-    void on_attribute(const std::string& name, std::string& value) override
-    {
-        m_json[name] = value;
-    }
-    void on_attribute(const std::string& name, bool& value) override { m_json[name] = value; }
-    void on_attribute(const std::string& name, double& value) override { m_json[name] = value; }
-    void on_attribute(const std::string& name, int64_t& value) override { m_json[name] = value; }
-    void on_attribute(const std::string& name, uint64_t& value) override { m_json[name] = value; }
-    void on_adapter(const std::string& name, ValueAccessor<void>& adapter) override
-    {
-        if (auto a = as_type<AttributeAdapter<element::Type>>(&adapter))
-        {
-            m_json[name] = write_element_type(static_cast<element::Type&>(*a));
-        }
-        else if (auto a = as_type<AttributeAdapter<PartialShape>>(&adapter))
-        {
-            m_json[name] = write_partial_shape(static_cast<PartialShape&>(*a));
-        }
-    }
-    void on_adapter(const std::string& name, ValueAccessor<std::string>& adapter) override
-    {
-        m_json[name] = adapter.get();
-    }
-    void on_adapter(const std::string& name, ValueAccessor<std::vector<int64_t>>& adapter) override
-    {
-        m_json[name] = adapter.get();
-    }
-
-protected:
-    json& m_json;
-};
-
 class JSONSerializer
 {
 public:
@@ -300,89 +253,9 @@ protected:
     queue<const Node*> m_nodes_to_serialize;
 };
 
-class JSONAttributeDeserializer : public AttributeVisitor
-{
-public:
-    JSONAttributeDeserializer(json& j)
-        : m_json(j)
-    {
-    }
-    void on_attribute(const std::string& name, std::string& value) override
-    {
-        if (has_key(m_json, name))
-        {
-            value = m_json.at(name).get<std::string>();
-        }
-    }
-    void on_attribute(const std::string& name, bool& value) override
-    {
-        if (has_key(m_json, name))
-        {
-            value = m_json.at(name).get<bool>();
-        }
-    }
-    void on_attribute(const std::string& name, double& value) override
-    {
-        if (has_key(m_json, name))
-        {
-            value = m_json.at(name).get<double>();
-        }
-    }
-    void on_attribute(const std::string& name, int64_t& value) override
-    {
-        if (has_key(m_json, name))
-        {
-            value = m_json.at(name).get<int64_t>();
-        }
-    }
-    void on_attribute(const std::string& name, uint64_t& value) override
-    {
-        if (has_key(m_json, name))
-        {
-            value = m_json.at(name).get<uint64_t>();
-        }
-    }
-    void on_adapter(const std::string& name, ValueAccessor<void>& adapter) override
-    {
-        if (has_key(m_json, name))
-        {
-            if (auto a = as_type<AttributeAdapter<element::Type>>(&adapter))
-            {
-                static_cast<element::Type&>(*a) =
-                    read_element_type(m_json.at(name).get<std::string>());
-            }
-            else if (auto a = as_type<AttributeAdapter<PartialShape>>(&adapter))
-            {
-                static_cast<PartialShape&>(*a) = read_partial_shape(m_json.at(name));
-            }
-        }
-    }
-    void on_adapter(const std::string& name, ValueAccessor<std::string>& adapter) override
-    {
-        if (has_key(m_json, name))
-        {
-            adapter.set(m_json.at(name).get<std::string>());
-        }
-    }
-    void on_adapter(const std::string& name, ValueAccessor<std::vector<int64_t>>& adapter) override
-    {
-        if (has_key(m_json, name))
-        {
-            adapter.set(m_json.at(name).get<std::vector<int64_t>>());
-        }
-    }
-
-protected:
-    json& m_json;
-};
-
 class JSONDeserializer
 {
 public:
-    JSONDeserializer()
-        : m_factory_registry(FactoryRegistry<Node>::get())
-    {
-    }
     void set_const_data_callback(function<const_data_callback_t> const_data_callback)
     {
         m_const_data_callback = const_data_callback;
@@ -400,7 +273,6 @@ protected:
     unordered_map<string, shared_ptr<Node>> m_node_map;
     unordered_map<string, shared_ptr<Function>> m_function_map;
     function<const_data_callback_t> m_const_data_callback;
-    FactoryRegistry<Node>& m_factory_registry;
 };
 
 static string
@@ -414,7 +286,7 @@ static json write_dimension(Dimension d)
     }
     else
     {
-        return static_cast<int64_t>(d);
+        return static_cast<size_t>(d);
     }
 }
 
@@ -426,7 +298,7 @@ static Dimension read_dimension(json j)
     }
     else
     {
-        return Dimension(static_cast<int64_t>(j));
+        return Dimension(static_cast<size_t>(j));
     }
 }
 
@@ -871,44 +743,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         vector<json> control_deps_inputs = get_value<vector<json>>(node_js, "control_deps");
         vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
         OutputVectorHelper args(deserialize_output_vector(node_js["inputs"]));
-        if (has_key(node_js, "type_info"))
-        {
-            json ti = node_js["type_info"];
-            string type_info_name = ti.at("name").get<string>();
-            uint64_t type_info_version = ti.at("version").get<int64_t>();
-            NodeTypeInfo type_info{type_info_name.c_str(), type_info_version};
-            if (m_factory_registry.has_factory(type_info))
-            {
-                node = shared_ptr<Node>(m_factory_registry.create(type_info));
-                JSONAttributeDeserializer visitor(node_js);
-                node->set_arguments(static_cast<OutputVector>(args));
-                node->visit_attributes(visitor);
-                for (auto& control_dep : control_deps_inputs)
-                {
-                    node->add_control_dependency(deserialize_node_reference(control_dep));
-                }
-
-                if (!friendly_name.empty())
-                {
-                    node->set_friendly_name(friendly_name);
-                }
-                else
-                {
-                    node->set_friendly_name(node_name);
-                }
-                if (ngraph::get_provenance_enabled())
-                {
-                    std::vector<json> prov_js = node_js.at("provenance_tags");
-                    for (auto prov_tag : prov_js)
-                    {
-                        node->add_provenance_tag(prov_tag);
-                    }
-                }
-                node->constructor_validate_and_infer_types();
-                m_node_map[node_name] = node;
-                return node;
-            }
-        }
 
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
@@ -2668,11 +2502,6 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         node["provenance_tags"] = provenance_tags;
     }
-    auto type_info = n.get_type_info();
-    json jtype_info = json::object();
-    jtype_info["name"] = type_info.name;
-    jtype_info["version"] = type_info.version;
-    node["type_info"] = jtype_info;
 
     string node_op = n.description();
 #if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
@@ -2681,11 +2510,6 @@ json JSONSerializer::serialize_node(const Node& n)
 #pragma GCC diagnostic error "-Wswitch-enum"
 // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
 #endif
-    JSONAttributeSerializer visitor(node);
-    if (const_cast<Node*>(&n)->visit_attributes(visitor))
-    {
-        return node;
-    }
     switch (get_typeid(node_op))
     {
     case OP_TYPEID::Abs: { break;
