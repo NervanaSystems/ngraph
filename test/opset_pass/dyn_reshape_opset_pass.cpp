@@ -19,8 +19,8 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/op_upgrade_v0tov1.hpp"
 #include "ngraph/pass/op_downgrade_v1tov0.hpp"
+#include "ngraph/pass/op_upgrade_v0tov1.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;

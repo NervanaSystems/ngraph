@@ -176,6 +176,7 @@ namespace ngraph
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
+#include "ngraph/op/passthrough.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"

@@ -24,31 +24,35 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise inverse sine (arcsin) operation.
-        ///
-        class Asin : public util::UnaryElementwiseArithmetic
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Asin", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs an arcsin operation.
-            Asin() = default;
-            /// \brief Constructs an arcsin operation.
+            /// \brief Elementwise inverse sine (arcsin) operation.
             ///
-            /// \param arg Output that produces the input tensor.<br>
-            /// `[d1, ...]`
-            ///
-            /// Output `[d1, ...]`
-            ///
-            Asin(const Output<Node>& arg);
+            class Asin : public util::UnaryElementwiseArithmetic
+            {
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"Asin", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs an arcsin operation.
+                Asin() = default;
+                /// \brief Constructs an arcsin operation.
+                ///
+                /// \param arg Output that produces the input tensor.<br>
+                /// `[d1, ...]`
+                ///
+                /// Output `[d1, ...]`
+                ///
+                Asin(const Output<Node>& arg);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+            };
+        }
+        using v0::Asin;
     }
 }

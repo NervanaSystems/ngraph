@@ -24,24 +24,28 @@ namespace ngraph
 {
     namespace op
     {
-        class BroadcastDistributed : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"BroadcastDistributed", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            BroadcastDistributed() = default;
-            BroadcastDistributed(const Output<Node>& arg, int root_id = 0);
+            class BroadcastDistributed : public Op
+            {
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"BroadcastDistributed", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                BroadcastDistributed() = default;
+                BroadcastDistributed(const Output<Node>& arg, int root_id = 0);
 
-            void validate_and_infer_types() override;
+                void validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-            int get_root_id() const;
-            void set_root_id(int root_id);
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+                int get_root_id() const;
+                void set_root_id(int root_id);
 
-        private:
-            int m_root_id;
-        };
+            private:
+                int m_root_id;
+            };
+        }
+        using v0::BroadcastDistributed;
     }
 }
