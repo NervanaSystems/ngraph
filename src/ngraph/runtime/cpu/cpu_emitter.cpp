@@ -62,6 +62,7 @@
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
@@ -123,6 +124,7 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/dropout.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -3658,6 +3660,61 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Gelu)
+            {
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    size_t gelu_index;
+                    std::vector<std::size_t> deps;
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, gelu_index, deps, scratchpad_size);
+
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << out[0].get_name() << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(gelu_index)
+                           << ", deps, OpType::GELU, " << to_string(scratchpad_size) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("Gelu is only supported with MKLDNN kernel for f32.");
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::GeluBackprop)
+            {
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    size_t gelu_bprop_index;
+                    std::vector<std::size_t> deps;
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, gelu_bprop_index, deps, scratchpad_size);
+
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << args[1].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
+                           << out[0].get_name() << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(gelu_bprop_index)
+                           << ", deps, OpType::GELUBACKPROP, " << to_string(scratchpad_size)
+                           << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("GeluBackprop is only supported with MKLDNN for f32.");
+                }
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Sigmoid)
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
@@ -4513,9 +4570,11 @@ namespace ngraph
                 }
                 else
                 {
+                    auto out_rank = out_shape.size();
+                    arg_shape.insert(arg_shape.begin(), out_rank - arg_rank, 1);
                     writer.block_begin();
                     writer << "cpu::kernel::tile<" << et.c_type_string() << ", "
-                           << std::to_string(arg_rank) << ">(" << args[0].get_name() << ", "
+                           << std::to_string(out_rank) << ">(" << args[0].get_name() << ", "
                            << out[0].get_name() << ", {" << join(arg_shape) << "}, {"
                            << join(out_shape) << "}, 0);\n";
 

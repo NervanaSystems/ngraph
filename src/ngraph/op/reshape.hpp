@@ -117,7 +117,7 @@ namespace ngraph
             {
             public:
                 NGRAPH_API
-                static constexpr NodeTypeInfo type_info{"Reshape", 1};
+                static constexpr NodeTypeInfo type_info{"DynReshape", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Reshape() = default;
                 /// \brief Constructs a dynamic reshape operation. This operation does not perform

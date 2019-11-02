@@ -14,21 +14,17 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+#include "gtest/gtest.h"
 
-#pragma once
+#include "ngraph/ngraph.hpp"
+#include "ngraph/op/util/opset0.hpp"
 
-namespace ngraph
+#include <memory>
+using namespace std;
+using namespace ngraph;
+
+TEST(opset, check_opset0)
 {
-    namespace runtime
-    {
-        namespace ngmlir
-        {
-            /// Common nGraph dialect initialization code. Used by nGraph compiler and tools that
-            /// require nGraph dialect initialization.
-            void initializeNGraphMLIR();
-
-        } // namespace ngmlir
-    }     // namespace runtime
-} // namespace ngraph
+    EXPECT_TRUE(is_type<op::v0::Add>(make_shared<opset0::Add>()));
+    EXPECT_TRUE(is_type<op::v0::Convolution>(make_shared<opset0::Convolution>()));
+}

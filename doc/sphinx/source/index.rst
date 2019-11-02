@@ -37,8 +37,6 @@ nGraph Compiler Stack Documentation
    :maxdepth: 1
 
    introduction.rst
-   features.rst
-   project/release-notes.rst
 
 .. toctree::
    :maxdepth: 2
@@ -58,6 +56,7 @@ nGraph Compiler Stack Documentation
    nGraph Core Ops <ops/index.rst>
    core/constructing-graphs/index.rst
    core/passes/passes.rst
+   provenance/index.rst
 
    
 .. toctree::
