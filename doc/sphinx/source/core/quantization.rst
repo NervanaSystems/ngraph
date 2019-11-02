@@ -7,7 +7,7 @@ Quantization refers the process of reducing the number of bits that represent a
 number. In the context of :abbr:`DL (Deep Learning)`, weights and activations can be
 represented using 8-bit integers (INT8) to compress the model size of a trained
 neural network, without any significant loss in model accuracy. Compared with
-32-bit floating point (FP32), using arithmetic with lower precision such as INT8
+32-bit floating point (FP32), using arithmetic with lower precision such as INT8 (an example of quantization)
 to calculate weights and activation requires less memory.
 
 Implementing a quantized model with nGraph
@@ -50,14 +50,9 @@ values to quantized values
 	+----------------------+------------------------------------------------+
 	| FakeQuantize         | Performs element-wise linear quantization.     |
 	+----------------------+------------------------------------------------+
-	| QuantizedConvolution | Performs quantized convolution;                |
-	|                      | the computation is the same as the             |
-	|                      | non-quantized convolution operator, except     |
-	|                      | the data type it operates on is INT8.          |
+	| QuantizedConvolution | Performs 8-bit convolution.                    |
 	+----------------------+------------------------------------------------+
-	| QuantizedDot         | Performs quantized dot; the computation is     |
-	|                      | the same as the non-quantized dot operator,    |
-	|                      | except the data type it operates is INT8.      |
+	| QuantizedDot         | Performs 8-bit dot.                            |
 	+----------------------+------------------------------------------------+
 
 Some frameworks such as TensorFlow\* have fused ops. nGraph provides optional
@@ -110,8 +105,9 @@ bridge), they are required to provide scale and zero point for quantized ops.
 
 Another advantage of using scale and zero point to express quantization
 parameters is that users can flexibly implement quantized ops into various
-nGraph backends. When implementing quantized ops, nGraph backends can directly
-use scale and zero point instead of min and max.
+nGraph backends. When implementing quantized ops, all current nGraph backends 
+will directly use scale and zero point (and not min and max) to perform 
+the quantized computation.
 
 Quantized Builders
 ~~~~~~~~~~~~~~~~~~
