@@ -23,8 +23,8 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::TensorIterator::type_info;
 
 constexpr DiscreteTypeInfo op::TensorIterator::SliceInputDescription::type_info;
-constexpr DiscreteTypeInfo op::TensorIterator::BodyConnectionInputDescription::type_info;
-constexpr DiscreteTypeInfo op::TensorIterator::ConstantInputDescription::type_info;
+constexpr DiscreteTypeInfo op::TensorIterator::MergedInputDescription::type_info;
+constexpr DiscreteTypeInfo op::TensorIterator::InvariantInputDescription::type_info;
 
 constexpr DiscreteTypeInfo op::TensorIterator::BodyOutputDescription::type_info;
 constexpr DiscreteTypeInfo op::TensorIterator::ConcatOutputDescription::type_info;
@@ -47,7 +47,7 @@ op::TensorIterator::SliceInputDescription::SliceInputDescription(uint64_t input_
                                                                  uint64_t body_parameter_index,
                                                                  int64_t start,
                                                                  int64_t stride,
-                                                                 uint64_t part_size,
+                                                                 int64_t part_size,
                                                                  int64_t end,
                                                                  int64_t axis)
     : InputDescription(input_index, body_parameter_index)
@@ -66,30 +66,31 @@ shared_ptr<op::TensorIterator::InputDescription>
         m_input_index, m_body_parameter_index, m_start, m_stride, m_part_size, m_end, m_axis);
 }
 
-op::TensorIterator::BodyConnectionInputDescription::BodyConnectionInputDescription(
-    uint64_t input_index, uint64_t body_parameter_index, uint64_t body_value_index)
+op::TensorIterator::MergedInputDescription::MergedInputDescription(uint64_t input_index,
+                                                                   uint64_t body_parameter_index,
+                                                                   uint64_t body_value_index)
     : InputDescription(input_index, body_parameter_index)
     , m_body_value_index(body_value_index)
 {
 }
 
 shared_ptr<op::TensorIterator::InputDescription>
-    op::TensorIterator::BodyConnectionInputDescription::copy() const
+    op::TensorIterator::MergedInputDescription::copy() const
 {
-    return make_shared<BodyConnectionInputDescription>(
+    return make_shared<MergedInputDescription>(
         m_input_index, m_body_parameter_index, m_body_value_index);
 }
 
-op::TensorIterator::ConstantInputDescription::ConstantInputDescription(
+op::TensorIterator::InvariantInputDescription::InvariantInputDescription(
     uint64_t input_index, uint64_t body_parameter_index)
     : InputDescription(input_index, body_parameter_index)
 {
 }
 
 shared_ptr<op::TensorIterator::InputDescription>
-    op::TensorIterator::ConstantInputDescription::copy() const
+    op::TensorIterator::InvariantInputDescription::copy() const
 {
-    return make_shared<ConstantInputDescription>(m_input_index, m_body_parameter_index);
+    return make_shared<InvariantInputDescription>(m_input_index, m_body_parameter_index);
 }
 
 op::TensorIterator::OutputDescription::OutputDescription(uint64_t body_value_index,
@@ -103,7 +104,7 @@ op::TensorIterator::ConcatOutputDescription::ConcatOutputDescription(uint64_t bo
                                                                      uint64_t output_index,
                                                                      int64_t start,
                                                                      int64_t stride,
-                                                                     uint64_t part_size,
+                                                                     int64_t part_size,
                                                                      int64_t end,
                                                                      int64_t axis)
     : OutputDescription(body_value_index, output_index)
@@ -168,20 +169,20 @@ void op::TensorIterator::set_sliced_input(const std::shared_ptr<op::Parameter>& 
                                            axis));
 }
 
-void op::TensorIterator::set_initialized_input(const std::shared_ptr<Parameter>& body_parameter,
-                                               const Output<Node>& initial_value,
-                                               const Output<Node>& successive_value)
+void op::TensorIterator::set_merged_input(const std::shared_ptr<Parameter>& body_parameter,
+                                          const Output<Node>& initial_value,
+                                          const Output<Node>& successive_value)
 {
     m_input_descriptions.push_back(
-        make_shared<BodyConnectionInputDescription>(input_for_value(initial_value).get_index(),
-                                                    m_body->get_parameter_index(body_parameter),
-                                                    m_body->get_result_index(successive_value)));
+        make_shared<MergedInputDescription>(input_for_value(initial_value).get_index(),
+                                            m_body->get_parameter_index(body_parameter),
+                                            m_body->get_result_index(successive_value)));
 }
 
-void op::TensorIterator::set_constant_input(const std::shared_ptr<Parameter>& body_parameter,
-                                            const Output<Node>& value)
+void op::TensorIterator::set_invariant_input(const std::shared_ptr<Parameter>& body_parameter,
+                                             const Output<Node>& value)
 {
-    m_input_descriptions.push_back(make_shared<ConstantInputDescription>(
+    m_input_descriptions.push_back(make_shared<InvariantInputDescription>(
         input_for_value(value).get_index(), m_body->get_parameter_index(body_parameter)));
 }
 
@@ -345,17 +346,16 @@ void op::TensorIterator::validate_and_infer_types()
                 }
             }
         }
-        else if (auto body_connection_input_description =
-                     as_type_ptr<BodyConnectionInputDescription>(input_description))
+        else if (auto merged_input_description =
+                     as_type_ptr<MergedInputDescription>(input_description))
         {
-            auto body_value = m_body->get_results()
-                                  .at(body_connection_input_description->m_body_value_index)
-                                  ->input(0);
+            auto body_value =
+                m_body->get_results().at(merged_input_description->m_body_value_index)->input(0);
             ends.push_back(body_value.get_node()->shared_from_this());
 
             auto body_value_partial_shape = body_value.get_partial_shape();
-            auto body_parameter = m_body->get_parameters().at(
-                body_connection_input_description->m_body_parameter_index);
+            auto body_parameter =
+                m_body->get_parameters().at(merged_input_description->m_body_parameter_index);
 
             auto body_param_partial_shape = body_parameter->get_partial_shape();
             auto input_partial_shape = inputs().at(index).get_source_output().get_partial_shape();
@@ -376,11 +376,11 @@ void op::TensorIterator::validate_and_infer_types()
                 }
             }
         }
-        else if (auto constant_input_description =
-                     as_type_ptr<ConstantInputDescription>(input_description))
+        else if (auto invariant_input_description =
+                     as_type_ptr<InvariantInputDescription>(input_description))
         {
             auto body_parameter =
-                m_body->get_parameters().at(constant_input_description->m_body_parameter_index);
+                m_body->get_parameters().at(invariant_input_description->m_body_parameter_index);
 
             auto body_param_partial_shape = body_parameter->get_partial_shape();
             auto input_partial_shape = inputs().at(index).get_source_output().get_partial_shape();

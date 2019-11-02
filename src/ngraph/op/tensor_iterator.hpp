@@ -35,8 +35,8 @@ namespace ngraph
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             // Forward declarations
             class SliceInputDescription;
-            class BodyConnectionInputDescription;
-            class ConstantInputDescription;
+            class MergedInputDescription;
+            class InvariantInputDescription;
 
             TensorIterator() = default;
             TensorIterator(const OutputVector& values);
@@ -91,24 +91,24 @@ namespace ngraph
                                       uint64_t body_parameter_index,
                                       int64_t start,
                                       int64_t stride,
-                                      uint64_t part_size,
+                                      int64_t part_size,
                                       int64_t end,
                                       int64_t axis);
                 std::shared_ptr<InputDescription> copy() const override;
 
                 int64_t m_start;
                 int64_t m_stride;
-                uint64_t m_part_size;
+                int64_t m_part_size;
                 int64_t m_end;
                 int64_t m_axis;
             };
 
             /// \brief Describes a body input initialized from a TensorIterator input on the first
             /// iteration, and then a body output thereafter.
-            class BodyConnectionInputDescription : public InputDescription
+            class MergedInputDescription : public InputDescription
             {
             public:
-                static constexpr DiscreteTypeInfo type_info{"BodyConnectionInputDescription", 0};
+                static constexpr DiscreteTypeInfo type_info{"MergedInputDescription", 0};
                 const DiscreteTypeInfo& get_type_info() const override { return type_info; }
                 /// \param input_index Position of the TensorIterator input supplying a value to
                 /// body_parameter
@@ -116,20 +116,20 @@ namespace ngraph
                 /// \param body_parameter_index Body parameter position to receive input.
                 /// \param body_value_index Body value to supply body_parameter for successive
                 /// iterations.
-                BodyConnectionInputDescription(uint64_t input_index,
-                                               uint64_t body_parameter_index,
-                                               uint64_t body_value_index);
+                MergedInputDescription(uint64_t input_index,
+                                       uint64_t body_parameter_index,
+                                       uint64_t body_value_index);
                 std::shared_ptr<InputDescription> copy() const override;
 
                 uint64_t m_body_value_index;
             };
 
-            class ConstantInputDescription : public InputDescription
+            class InvariantInputDescription : public InputDescription
             {
             public:
-                static constexpr DiscreteTypeInfo type_info{"ConstantInputDescription", 0};
+                static constexpr DiscreteTypeInfo type_info{"InvariantInputDescription", 0};
                 const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-                ConstantInputDescription(uint64_t input_index, uint64_t body_parameter_index);
+                InvariantInputDescription(uint64_t input_index, uint64_t body_parameter_index);
                 std::shared_ptr<InputDescription> copy() const override;
             };
 
@@ -171,7 +171,7 @@ namespace ngraph
                                         uint64_t output_index,
                                         int64_t start,
                                         int64_t stride,
-                                        uint64_t part_size,
+                                        int64_t part_size,
                                         int64_t end,
                                         int64_t axis);
 
@@ -179,7 +179,7 @@ namespace ngraph
 
                 int64_t m_start;
                 int64_t m_stride;
-                uint64_t m_part_size;
+                int64_t m_part_size;
                 int64_t m_end;
                 int64_t m_axis;
             };
@@ -223,15 +223,15 @@ namespace ngraph
             /// as an input to TensorIterator.
             /// \param successive_value Value for the parameter in successive iterations. The
             /// value is what is active in the most recent completed iteration.
-            void set_initialized_input(const std::shared_ptr<Parameter>& body_parameter,
-                                       const Output<Node>& initial_value,
-                                       const Output<Node>& successive_value);
-            /// \brief Indicates that a body parameter has a constant value during iteration that
+            void set_merged_input(const std::shared_ptr<Parameter>& body_parameter,
+                                  const Output<Node>& initial_value,
+                                  const Output<Node>& successive_value);
+            /// \brief Indicates that a body parameter has an invariant value during iteration that
             /// may depend on values computed outside of the iteration
             /// \param body_parameter The body parameter
             /// \param value The value supplied as an input to the block
-            void set_constant_input(const std::shared_ptr<Parameter>& body_parameter,
-                                    const Output<Node>& value);
+            void set_invariant_input(const std::shared_ptr<Parameter>& body_parameter,
+                                     const Output<Node>& value);
             /// \brief Gets a value for a particular iteration point
             /// \param body_value The value
             /// \param iteration The iteration that supplies the value. Negative values are from the

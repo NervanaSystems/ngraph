@@ -663,16 +663,16 @@ json JSONSerializer::serialize_tensor_iterator_input_description(
         result["end"] = slice->m_end;
         result["axis"] = slice->m_axis;
     }
-    else if (auto body_connection =
-                 as_type_ptr<op::TensorIterator::BodyConnectionInputDescription>(input_description))
+    else if (auto merged =
+                 as_type_ptr<op::TensorIterator::MergedInputDescription>(input_description))
     {
-        result["kind"] = "body_connection";
-        result["input_index"] = body_connection->m_input_index;
-        result["body_parameter_index"] = body_connection->m_body_parameter_index;
-        result["body_value_index"] = body_connection->m_body_value_index;
+        result["kind"] = "merged";
+        result["input_index"] = merged->m_input_index;
+        result["body_parameter_index"] = merged->m_body_parameter_index;
+        result["body_value_index"] = merged->m_body_value_index;
     }
     else if (auto constant =
-                 as_type_ptr<op::TensorIterator::ConstantInputDescription>(input_description))
+                 as_type_ptr<op::TensorIterator::InvariantInputDescription>(input_description))
     {
         result["kind"] = "constant";
         result["input_index"] = constant->m_input_index;
@@ -696,26 +696,26 @@ shared_ptr<op::TensorIterator::InputDescription>
         uint64_t body_parameter_index = j["body_parameter_index"].get<uint64_t>();
         int64_t start = j["start"].get<int64_t>();
         int64_t stride = j["stride"].get<int64_t>();
-        uint64_t part_size = j["part_size"].get<uint64_t>();
+        uint64_t part_size = j["part_size"].get<int64_t>();
         int64_t end = j["end"].get<int64_t>();
         int64_t axis = j["axis"].get<int64_t>();
         result = make_shared<op::TensorIterator::SliceInputDescription>(
             input_index, body_parameter_index, start, stride, part_size, end, axis);
     }
-    else if (kind == "body_connection")
+    else if (kind == "merged")
     {
         uint64_t input_index = j["input_index"].get<uint64_t>();
         uint64_t body_parameter_index = j["body_parameter_index"].get<uint64_t>();
         uint64_t body_value_index = j["body_value_index"].get<uint64_t>();
-        result = make_shared<op::TensorIterator::BodyConnectionInputDescription>(
+        result = make_shared<op::TensorIterator::MergedInputDescription>(
             input_index, body_parameter_index, body_value_index);
     }
     else if (kind == "constant")
     {
         uint64_t input_index = j["input_index"].get<uint64_t>();
         uint64_t body_parameter_index = j["body_parameter_index"].get<uint64_t>();
-        result = make_shared<op::TensorIterator::ConstantInputDescription>(input_index,
-                                                                           body_parameter_index);
+        result = make_shared<op::TensorIterator::InvariantInputDescription>(input_index,
+                                                                            body_parameter_index);
     }
     else
     {
@@ -765,7 +765,7 @@ std::shared_ptr<op::TensorIterator::OutputDescription>
         uint64_t output_index = j["output_index"].get<uint64_t>();
         int64_t start = j["start"].get<int64_t>();
         int64_t stride = j["stride"].get<int64_t>();
-        uint64_t part_size = j["part_size"].get<uint64_t>();
+        uint64_t part_size = j["part_size"].get<int64_t>();
         int64_t end = j["end"].get<int64_t>();
         int64_t axis = j["axis"].get<int64_t>();
         result = make_shared<op::TensorIterator::ConcatOutputDescription>(

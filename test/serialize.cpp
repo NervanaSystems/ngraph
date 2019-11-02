@@ -489,12 +489,12 @@ TEST(serialize, tensor_iterator_raw)
     // start=0, stride=1, part_size=1, end=40, axis=1
     tensor_iterator->set_sliced_input(Xi, X, 0, 1, 1, 40, 1);
     // Hi is Hinit on the first iteration, Ho after that
-    tensor_iterator->set_initialized_input(Hi, Hinit, Ho);
-    tensor_iterator->set_constant_input(WH_body, WH);
-    tensor_iterator->set_constant_input(WX_body, WX);
-    tensor_iterator->set_constant_input(WY_body, WY);
-    tensor_iterator->set_constant_input(bH_body, bH);
-    tensor_iterator->set_constant_input(bY_body, bY);
+    tensor_iterator->set_merged_input(Hi, Hinit, Ho);
+    tensor_iterator->set_invariant_input(WH_body, WH);
+    tensor_iterator->set_invariant_input(WX_body, WX);
+    tensor_iterator->set_invariant_input(WY_body, WY);
+    tensor_iterator->set_invariant_input(bH_body, bH);
+    tensor_iterator->set_invariant_input(bY_body, bY);
 
     // Output 0 is last Yo
     auto out0 = tensor_iterator->get_iter_value(Yo, -1);
@@ -546,10 +546,10 @@ TEST(serialize, tensor_iterator_lstm)
     // start=0, stride=1, part_size=1, end=40, axis=1
     tensor_iterator->set_sliced_input(X, SENT, 0, 1, 1, -1, 1);
     // H_t is Hinit on the first iteration, Ho after that
-    tensor_iterator->set_initialized_input(H_t, H_init, H_o);
-    tensor_iterator->set_initialized_input(C_t, C_init, C_o);
-    tensor_iterator->set_constant_input(W_body, W);
-    tensor_iterator->set_constant_input(R_body, R);
+    tensor_iterator->set_merged_input(H_t, H_init, H_o);
+    tensor_iterator->set_merged_input(C_t, C_init, C_o);
+    tensor_iterator->set_invariant_input(W_body, W);
+    tensor_iterator->set_invariant_input(R_body, R);
 
     // Output 0 is last Ho, result 0 of body
     auto out0 = tensor_iterator->get_iter_value(H_o, -1);
@@ -588,7 +588,7 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2)
     // The Yi are the elements of Yseq
     // start=0, stride=2, part_size=2, end=-1, axis=1
     tensor_iterator->set_sliced_input(Yi, Y, 0, 2, 2, -1, 1);
-    tensor_iterator->set_constant_input(M_body, M);
+    tensor_iterator->set_invariant_input(M_body, M);
 
     // Output 0 is last Zo
     auto out0 = tensor_iterator->get_iter_value(Zo, -1);
@@ -636,7 +636,7 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
     // The Yi are the elements of Yseq
     // start=0, stride=2, part_size=2, end=-1, axis=1
     tensor_iterator->set_sliced_input(Yi, Y, 0, 2, 2, -1, 1);
-    tensor_iterator->set_constant_input(M_body, M);
+    tensor_iterator->set_invariant_input(M_body, M);
 
     // Output 0 is last Zo
     auto out0 = tensor_iterator->get_iter_value(Zo, -1);
