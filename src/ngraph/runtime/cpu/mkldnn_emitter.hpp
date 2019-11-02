@@ -38,6 +38,7 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -499,6 +500,10 @@ namespace ngraph
                 mkldnn::eltwise_forward::desc get_leaky_relu_desc(const ngraph::Node* node);
 
                 mkldnn::eltwise_forward::desc get_bounded_relu_desc(const ngraph::Node* node);
+
+                mkldnn::eltwise_forward::desc get_gelu_forward_desc(const ngraph::Node* node);
+
+                mkldnn::eltwise_backward::desc get_gelu_backward_desc(const ngraph::Node* node);
 
                 size_t build_dequantization(const ngraph::Node* node,
                                             const mkldnn::memory::desc& input_desc,
@@ -1172,6 +1177,21 @@ namespace ngraph
                                         const std::vector<size_t>& deps,
                                         size_t bounded_relu_index);
 
+                void build_gelu(std::vector<mkldnn::memory*>& mkldnn_memories,
+                                std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
+                                const mkldnn::eltwise_forward::desc& gelu_desc,
+                                const std::vector<size_t>& deps,
+                                size_t gelu_index);
+
+                void build_gelu_backward(std::vector<mkldnn::memory*>& mkldnn_memories,
+                                         std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                         std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
+                                         const mkldnn::eltwise_backward::desc& bwd_desc,
+                                         const mkldnn::eltwise_forward::desc& fwd_desc,
+                                         const std::vector<size_t>& deps,
+                                         size_t gelu_index);
+
 #if MKLDNN_VERSION_MAJOR >= 1
                 // TODO(jmenon): Get rid of TensorViewWrappers at some point
                 mkldnn::memory::desc
@@ -1201,7 +1221,7 @@ namespace ngraph
 
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    size_t concat_dim = concat->get_concatenation_axis();
+                    auto concat_dim = concat->get_concatenation_axis();
 
                     mkldnn::primitive_attr attr;
                     attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
@@ -1472,7 +1492,7 @@ namespace ngraph
 
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    size_t concat_dim = concat->get_concatenation_axis();
+                    auto concat_dim = concat->get_concatenation_axis();
 
                     // concat primitive descriptor
                     return mkldnn::concat::primitive_desc(

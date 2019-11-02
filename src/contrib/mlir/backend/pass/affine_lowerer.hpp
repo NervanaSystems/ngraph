@@ -17,13 +17,24 @@
 // NOTE: This file follows nGraph format style and MLIR naming convention since it does
 // not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
 
-#include "tools.hpp"
+#pragma once
 
-#include "dialect/dialect.hpp"
+#include "contrib/mlir/core/compiler.hpp"
 
-#include <mlir/IR/Dialect.h>
+#include <mlir/Pass/Pass.h>
 
-void ngraph::runtime::ngmlir::initializeNGraphMLIR()
+namespace ngraph
 {
-    mlir::registerDialect<mlir::NGraphOpsDialect>();
+    namespace runtime
+    {
+        namespace ngmlir
+        {
+            class MLIRCompiler;
+        }
+    }
+}
+
+namespace mlir
+{
+    std::unique_ptr<Pass> createDialectLoweringPass();
 }

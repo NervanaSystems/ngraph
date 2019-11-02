@@ -702,3 +702,154 @@ TEST(batch_fusion, pass_property)
     ASSERT_EQ(true, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
     ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
 }
+
+#ifndef NGRAPH_JSON_DISABLE
+TEST(core_fusion, softmax_crossentropy_fprop_1)
+{
+    const std::string file_name("paddlepaddle/ngraph-paddlepaddle-function3.json");
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
+    test::Uniform<double> rng(-1.0, 1.0);
+    vector<vector<double>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<double> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
+    // during this optimization for numeric stability we will reduce softmax operation to
+    // - summation (labels (input - max(input) - log (summation(exp ^ (input - max(input)))
+    // count_of(softmax) should be equal to zero if fusion is successful
+    size_t softmax = count_ops_of_type<op::Softmax>(cpu_f);
+    ASSERT_EQ(softmax, 0);
+}
+
+TEST(core_fusion, softmax_crossentropy_fprop_2)
+{
+    const std::string file_name("paddlepaddle/ngraph-paddlepaddle-function1.json");
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
+    test::Uniform<double> rng(-1.0, 1.0);
+    vector<vector<double>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<double> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
+    // during this optimization for numeric stability we will reduce softmax operation to
+    // - summation (labels (input - max(input) - log (summation(exp ^ (input - max(input)))
+    // count_of(softmax) should be equal to zero if fusion is successful
+    size_t softmax = count_ops_of_type<op::Softmax>(cpu_f);
+    ASSERT_EQ(softmax, 0);
+}
+
+TEST(core_fusion, softmax_crossentropy_bprop_with_soft_labels)
+{
+    const std::string file_name("paddlepaddle/ngraph-paddlepaddle-bprop0.json");
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
+    test::Uniform<double> rng(-1.0, 1.0);
+    vector<vector<double>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<double> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
+
+    // during this optimization for numeric stability we will eliminate (softmax / softmax)
+    // the number of div operator for cpu_f should be zero if the fusion is valid
+    size_t divide = count_ops_of_type<op::Divide>(cpu_f);
+    ASSERT_EQ(divide, 0);
+}
+
+TEST(core_fusion, softmax_crossentropy_bprop_with_ignore_mask)
+{
+    const std::string file_name("paddlepaddle/ngraph-paddlepaddle-bprop1.json");
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
+    test::Uniform<double> rng(-1.0, 1.0);
+    vector<vector<double>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<double> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
+
+    // during this optimization for numeric stability we will eliminate (softmax / softmax)
+    // the number of div operator for cpu_f should be zero if the fusion is valid
+    size_t divide = count_ops_of_type<op::Divide>(cpu_f);
+    ASSERT_EQ(divide, 0);
+}
+#endif
+
+void test_softmax_crossentropy(Shape input_shape,
+                               Shape label_shape,
+                               bool soft_label,
+                               int64_t ignore_index)
+{
+    auto input = std::make_shared<op::Parameter>(element::f64, input_shape);
+    auto labels = std::make_shared<op::Parameter>(element::i64, label_shape);
+    auto sm_ce = std::make_shared<op::SoftmaxCrossEntropy>(input, labels, soft_label, ignore_index);
+    auto cpu_f = make_shared<Function>(sm_ce, ParameterVector{input, labels});
+
+    test::Uniform<double> rng(-1.0, 1.0);
+    vector<vector<double>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<double> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    // if softlabels = flase, we will have one one hot encoding for labels
+    if (!soft_label)
+    {
+        size_t onehot = count_ops_of_type<op::OneHot>(cpu_f);
+        ASSERT_EQ(onehot, 1);
+    }
+    if (ignore_index >= 0 && !soft_label)
+    // check for the mask
+    {
+        size_t not_equal = count_ops_of_type<op::NotEqual>(cpu_f);
+        ASSERT_EQ(not_equal, 1);
+    }
+}
+
+TEST(core_fusion, softmax_crossentropy)
+{
+    test_softmax_crossentropy(Shape{41, 37}, Shape{41, 37}, true, -1);
+    test_softmax_crossentropy(Shape{41, 37}, Shape{41, 1}, false, 5);
+}
