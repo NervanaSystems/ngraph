@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include "ngraph/enum_names.hpp"
 #include "ngraph/type.hpp"
 
@@ -101,7 +103,7 @@ namespace ngraph
         : public ValueReference<Type>, public ValueAccessor<std::vector<int64_t>>
     {
     public:
-        AttributeAdapter(const Type& value)
+        AttributeAdapter<Type>(Type& value)
             : ValueReference<Type>(value)
         {
         }
@@ -188,6 +190,24 @@ namespace ngraph
         {
         }
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<element::Type>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
+
+    namespace op
+    {
+        struct AutoBroadcastSpec;
+    }
+
+    template <>
+    class AttributeAdapter<op::AutoBroadcastSpec> : public ValueReference<op::AutoBroadcastSpec>,
+                                                    public ValueAccessor<void>
+    {
+    public:
+        AttributeAdapter<op::AutoBroadcastSpec>(op::AutoBroadcastSpec& value)
+            : ValueReference<op::AutoBroadcastSpec>(value)
+        {
+        }
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::AutoBroadcastSpec>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
 }

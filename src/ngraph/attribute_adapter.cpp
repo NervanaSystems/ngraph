@@ -21,6 +21,7 @@
 #include "ngraph/partial_shape.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
+#include "ngraph/type.hpp"
 #include "ngraph/type/element_type.hpp"
 
 using namespace std;
@@ -142,4 +143,5 @@ namespace ngraph
 
     constexpr DiscreteTypeInfo AttributeAdapter<PartialShape>::type_info;
     constexpr DiscreteTypeInfo AttributeAdapter<element::Type>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastSpec>::type_info;
 }

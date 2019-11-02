@@ -48,9 +48,7 @@ op::v1::Broadcast::Broadcast(const Output<Node>& arg,
 
 bool op::v1::Broadcast::visit_attributes(AttributeVisitor& visitor)
 {
-    /// TODO object serialization
-    visitor.on_attribute("broadcast_spec.m_type", m_broadcast_spec.m_type);
-    visitor.on_attribute("broadcast_spec.m_axis", m_broadcast_spec.m_axis);
+    visitor.on_attribute("broadcast_spec", m_broadcast_spec);
     return true;
 }
 
