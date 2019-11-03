@@ -198,5 +198,6 @@ namespace ngraph
                             const std::vector<element::Type>& parameter_element_types,
                             const std::vector<PartialShape>& parameter_shapes,
                             const std::vector<void*>& parameter_values,
-                            bool constant_folding);
+                            bool constant_folding,
+                            bool share_constants);
 }
