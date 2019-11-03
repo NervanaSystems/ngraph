@@ -123,7 +123,7 @@ void MLIRCompiler::compile()
 void MLIRCompiler::buildNgDialectModule()
 {
     // initialize an empty module
-    m_module = mlir::ModuleOp::create(mlir::UnknownLoc::get(&m_context));
+/*    m_module = mlir::ModuleOp::create(mlir::UnknownLoc::get(&m_context));
 
     mlir::PassManager pm(&m_context);
     pm.addPass(ngraph::pass::CreateNgDialectConversionPass(m_compiledKernel));
@@ -142,6 +142,7 @@ void MLIRCompiler::buildNgDialectModule()
     }
 
     dumpMlirModule("nGraph Dialect Construction", m_module.get());
+*/
 }
 
 template <typename T>
