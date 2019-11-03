@@ -48,7 +48,7 @@ NodeVector op::MatMul::decompose_op() const
     if (a_rank < 2)
     {
         A = a_rank == 0 ? make_shared<op::Reshape>(A, AxisVector{}, Shape{1, 1})
-                        : make_shared<op::Reshape>(A, AxisVector{1}, Shape{1, A.get_shape()[0]});
+                        : make_shared<op::Reshape>(A, AxisVector{0}, Shape{1, A.get_shape()[0]});
         a_rank = 2;
     }
 
@@ -56,7 +56,7 @@ NodeVector op::MatMul::decompose_op() const
     if (b_rank < 2)
     {
         B = b_rank == 0 ? make_shared<op::Reshape>(B, AxisVector{}, Shape{1, 1})
-                        : make_shared<op::Reshape>(B, AxisVector{1}, Shape{1, B.get_shape()[0]});
+                        : make_shared<op::Reshape>(B, AxisVector{0}, Shape{1, B.get_shape()[0]});
         b_rank = 2;
     }
 
