@@ -172,6 +172,11 @@ void ngraph::set_serialize_output_shapes(bool enable)
     s_serialize_output_shapes_enabled = enable;
 }
 
+bool ngraph::get_serialize_output_shapes()
+{
+    return s_serialize_output_shapes_enabled;
+}
+
 // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
 // Abs,
 // Acos,

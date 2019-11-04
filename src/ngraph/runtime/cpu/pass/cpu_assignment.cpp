@@ -36,6 +36,7 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
@@ -55,6 +56,7 @@
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -740,6 +742,48 @@ namespace ngraph
                 }
 
                 template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Gelu)
+                {
+                    (void)external_function;
+                    auto gelu = static_cast<ngraph::op::Gelu*>(node);
+
+                    if (node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
+                        if (get_user_count(node->get_argument(0).get()) == 1)
+                        {
+                            // Safe to overwrite input
+                            op_annotations->add_in_place_oi_pair({0, 0, true});
+                        }
+                        gelu->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::GeluBackprop)
+                {
+                    (void)external_function;
+                    auto gelu = static_cast<ngraph::op::GeluBackprop*>(node);
+
+                    if (node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
+                        if (get_user_count(node->get_argument(0).get()) == 1)
+                        {
+                            // Safe to overwrite input
+                            op_annotations->add_in_place_oi_pair({0, 0, true});
+                        }
+                        gelu->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::CPULeakyRelu)
                 {
                     (void)external_function;
@@ -1055,6 +1099,9 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::DeconvolutionBias>},
     {TI(ngraph::op::ScatterAdd),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ScatterAdd>},
+    {TI(ngraph::op::Gelu), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Gelu>},
+    {TI(ngraph::op::GeluBackprop),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::GeluBackprop>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(
