@@ -25,6 +25,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/equal.hpp"
+#include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
@@ -273,6 +274,16 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         const auto autob = tmp->get_autob();
         const bool pydiv = tmp->is_pythondiv();
         auto replacement_node = make_shared<op::v0::Divide>(input_arg0, input_arg1, pydiv, autob);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::DynReshape:
+    {
+        auto tmp = as_type_ptr<op::v1::Reshape>(node);
+        auto replacement_node = make_shared<op::v0::DynReshape>(node->input(0).get_source_output(),
+                                                                node->input(1).get_source_output(),
+                                                                tmp->get_zero_flag());
         replace_node(node, replacement_node);
         modified = true;
         break;

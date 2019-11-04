@@ -188,23 +188,27 @@ void MLIRCPUBackend::lowerNgDialect()
 
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
-    // Lower Standard dialect to LLVM dialect.
-    mlir::LLVMTypeConverter llvmConverter(&m_context);
-    mlir::OwningRewritePatternList patterns;
-    mlir::populateLoopToStdConversionPatterns(patterns, &m_context);
-    mlir::populateStdToLLVMConversionPatterns(llvmConverter, patterns);
+    lowerStandardDialect();
+}
 
-    mlir::ConversionTarget target(m_context);
-    target.addLegalDialect<mlir::LLVM::LLVMDialect>();
-    target.addLegalOp<mlir::ModuleOp, mlir::ModuleTerminatorOp>();
-    target.addDynamicallyLegalOp<mlir::FuncOp>(
-        [&](mlir::FuncOp op) { return llvmConverter.isSignatureLegal(op.getType()); });
+// Lower Standard dialect to LLVM dialect
+void MLIRCPUBackend::lowerStandardDialect()
+{
+    mlir::PassManager pm(&m_context);
+    pm.addPass(mlir::createLowerToLLVMPass());
 
-    auto result =
-        mlir::applyFullConversion(m_module.get(), target, std::move(patterns), &llvmConverter);
-    NGRAPH_CHECK(succeeded(result), "Standard to LLVM dialect conversion failed");
+    // Apply any generic pass manager command line options.
+    mlir::applyPassManagerCLOptions(pm);
 
-    dumpMlirModule("LLVM-IR Dialect Conversion", m_module.get());
+    if (failed(pm.run(m_module.get())))
+    {
+        NGRAPH_CHECK(false, "MLIR pass manager failed");
+    }
+
+    if (failed(m_module->verify()))
+    {
+        NGRAPH_CHECK(false, "Incorrect module after dialect lowering");
+    }
 }
 
 // Receives affine dialect as input and applies affine and standard dialect based optimizations.
