@@ -83,6 +83,7 @@
 #include "ngraph/op/fused/layer_norm.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/matmul.hpp"
+#include "ngraph/op/fused/matmul_pd.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize_l2.hpp"
 #include "ngraph/op/fused/prelu.hpp"
@@ -1557,6 +1558,13 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                              input_forget);
             break;
         }
+        case OP_TYPEID::MatMulPd:
+        {
+            bool transpose_a = node_js.at("transpose_a").get<bool>();
+            bool transpose_b = node_js.at("transpose_b").get<bool>();
+            node = make_shared<op::MatMulPd>(args[0], args[1], transpose_a, transpose_b);
+            break;
+        }
         case OP_TYPEID::MatMul:
         {
             bool transpose_a = node_js.at("transpose_a").get<bool>();
@@ -2957,6 +2965,13 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::MatMul:
     {
         auto tmp = static_cast<const op::MatMul*>(&n);
+        node["transpose_a"] = tmp->get_transpose_a();
+        node["transpose_b"] = tmp->get_transpose_b();
+        break;
+    }
+    case OP_TYPEID::MatMulPd:
+    {
+        auto tmp = static_cast<const op::MatMulPd*>(&n);
         node["transpose_a"] = tmp->get_transpose_a();
         node["transpose_b"] = tmp->get_transpose_b();
         break;

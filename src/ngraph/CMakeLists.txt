@@ -342,6 +342,8 @@ set (SRC
     op/fused/layer_norm.hpp
     op/fused/lstm_cell.cpp
     op/fused/lstm_cell.hpp
+    op/fused/matmul_pd.cpp
+    op/fused/matmul_pd.cpp
     op/fused/matmul.cpp
     op/fused/matmul.hpp
     op/fused/mvn.cpp

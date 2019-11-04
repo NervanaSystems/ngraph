@@ -16,7 +16,7 @@
 #include <memory>
 #include <numeric>
 
-#include "matmul.hpp"
+#include "matmul_pd.hpp"
 #include "ngraph/builder/matmul_factory.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -24,9 +24,8 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::MatMul::type_info;
-#define log_me(x) std::cout << "[logme]: "<<  x << std::endl;
-op::MatMul::MatMul(const Output<Node>& A,
+constexpr NodeTypeInfo op::MatMulPd::type_info;
+op::MatMulPd::MatMulPd(const Output<Node>& A,
                    const Output<Node>& B,
                    const bool& transpose_a,
                    const bool& transpose_b)
@@ -40,6 +39,7 @@ op::MatMul::MatMul(const Output<Node>& A,
 template<class Input>
 void DecomposeLogic(Input& input, bool transpose, bool reverse=false)
 {
+    std::cout << ">> MatMulPDForward << " << std::endl; 
     auto _rank = input.get_shape().size();
     if(_rank < 2)
     {
@@ -69,7 +69,7 @@ void DecomposeLogic(Input& input, bool transpose, bool reverse=false)
     }
 }
 
-NodeVector remove_1(std::shared_ptr<ngraph::Node> input_node)
+inline NodeVector remove_1(std::shared_ptr<ngraph::Node> input_node)
 {
     auto _input_shape = input_node->get_shape();
     AxisVector _axis( _input_shape.size() );
@@ -84,7 +84,7 @@ NodeVector remove_1(std::shared_ptr<ngraph::Node> input_node)
 }
 
 
-NodeVector op::MatMul::decompose_op() const
+NodeVector op::MatMulPd::decompose_op() const
 {
      auto _A = input_value(0);
      auto _B = input_value(1);
@@ -113,8 +113,8 @@ NodeVector op::MatMul::decompose_op() const
 }
 
 
-shared_ptr<Node> op::MatMul::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::MatMulPd::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<MatMul>(new_args.at(0), new_args.at(1), m_transpose_a, m_transpose_b);
+    return make_shared<MatMulPd>(new_args.at(0), new_args.at(1), m_transpose_a, m_transpose_b);
 }
