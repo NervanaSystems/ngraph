@@ -27,9 +27,6 @@ When using :abbr:`QAT (Quantization-Aware Training)` techniques, the
 position in which the Q-DQ ops are placed needs to align with the 
 fusions hardware does for inference.
 
-For more detail on QAT, see the whitepaper: 
-*Quantize Neural Networks to 8-bit integer*.  
-
 
 .. _Distiller guide: https://nervanasystems.github.io/distiller/algo_quantization.html#quantization-aware-training
 

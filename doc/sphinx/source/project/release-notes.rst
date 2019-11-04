@@ -161,6 +161,7 @@ Changelog on Previous Releases
 pre-0.20
 --------
 
+
 + More dynamic shape preparation
 + Distributed interface factored out
 + fp16 and bfloat16 types
@@ -174,8 +175,6 @@ pre-0.20
 + Additional ONNX ops
 + Add graph visualization tools to doc
 + Update doxygen to be friendlier to frontends
-
-.. 0.18
 + Python formatting issue
 + mkl-dnn work-around
 + Event tracing improvements
@@ -183,16 +182,12 @@ pre-0.20
 + Begin tracking framework node names
 + ONNX quantization
 + More fusions
-
-.. 0.17
 + Allow negative padding in more places
 + Add code generation for some quantized ops
 + Preliminary dynamic shape support
 + initial distributed ops
 + Pad op takes CoordinateDiff instead of Shape pad values to allow for negative 
   padding.
-
-.. 0.16
 + NodeInput and NodeOutput classes prepare for simplifications of Node
 + Test improvements
 + Additional quantization ops
