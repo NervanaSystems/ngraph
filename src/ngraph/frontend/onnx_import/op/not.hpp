@@ -30,7 +30,8 @@ namespace ngraph
             {
                 inline NodeVector logical_not(const Node& node)
                 {
-                    return {std::make_shared<ngraph::op::Not>(node.get_ng_inputs().at(0))};
+                    return {
+                        std::make_shared<ngraph::op::v1::LogicalNot>(node.get_ng_inputs().at(0))};
                 }
 
             } // namespace set_1

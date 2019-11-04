@@ -24,7 +24,7 @@
 /// small sequence of passes without running the whole compiler pipeline. Please, refer to
 /// ngraph_repo_path/tests/mlir/ for examples.
 
-#include "contrib/mlir/compiler/tools.hpp"
+#include "contrib/mlir/utils.hpp"
 #include "ngraph/check.hpp"
 
 #include <llvm/Support/CommandLine.h>

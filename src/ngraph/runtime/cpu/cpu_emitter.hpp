@@ -21,21 +21,28 @@
 
 #include "ngraph/code_writer.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/gather.hpp"
+#include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
+#include "ngraph/op/not.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 
 #define EMITTER_DECL(op_name)                                                                      \
     emit<op_name>(CPU_ExternalFunction * external_function,                                        \
@@ -71,7 +78,6 @@ namespace ngraph
         class Greater;
         class GreaterEq;
         class Less;
-        class LessEq;
         class Any;
         class All;
         class LRN;
@@ -86,7 +92,6 @@ namespace ngraph
         class Constant;
         class Reshape;
         class Sign;
-        class Slice;
         class Exp;
         class EmbeddingLookup;
         class Sin;
@@ -125,7 +130,6 @@ namespace ngraph
         class ConvolutionBiasAdd;
         class ConvolutionAdd;
         class ConvolutionBiasBackpropFiltersBias;
-        class Not;
         class QuantizedMaxPool;
         class QuantizedAvgPool;
         class MaxPoolWithIndices;
@@ -141,16 +145,15 @@ namespace ngraph
         class SigmoidMultiply;
         class SigmoidMultiplyBackprop;
         class Result;
-        class And;
-        class Or;
-        class Xor;
         class CompiledKernel;
         class Dropout;
         class Dequantize;
         class Quantize;
         class QuantizedConcat;
         class Tile;
+        class Gelu;
         class RandomUniform;
+        class GeluBackprop;
     }
     namespace runtime
     {
@@ -445,7 +448,11 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Tile);
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Gelu);
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::RandomUniform);
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::GeluBackprop);
         }
     }
 }

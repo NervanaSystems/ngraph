@@ -116,6 +116,8 @@ set (SRC
     op/avg_pool.hpp
     op/batch_norm.cpp
     op/batch_norm.hpp
+    op/binary_convolution.cpp
+    op/binary_convolution.hpp
     op/broadcast.cpp
     op/broadcast_distributed.cpp
     op/ceiling.cpp
@@ -198,6 +200,7 @@ set (SRC
     op/experimental/layers/roi_pooling.cpp
     op/experimental/random_uniform.hpp
     op/experimental/random_uniform.cpp
+    op/strided_slice.hpp
     op/floor.cpp
     op/floor.hpp
     op/gather.cpp
@@ -298,6 +301,8 @@ set (SRC
     op/slice.hpp
     op/softmax.cpp
     op/softmax.hpp
+    op/strided_slice.cpp
+    op/strided_slice.hpp
     op/sqrt.cpp
     op/sqrt.hpp
     op/stop_gradient.cpp
@@ -360,6 +365,8 @@ set (SRC
     op/fused/scale_shift.hpp
     op/fused/shuffle_channels.cpp
     op/fused/shuffle_channels.hpp
+    op/fused/softmax_crossentropy.cpp
+    op/fused/softmax_crossentropy.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
     op/fused/split.cpp
