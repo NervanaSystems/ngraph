@@ -389,6 +389,8 @@ set (SRC
     op/fused/lstm_cell.hpp
     op/fused/lstm_sequence.cpp
     op/fused/lstm_sequence.hpp
+    op/fused/matmul_pd.cpp
+    op/fused/matmul_pd.cpp
     op/fused/matmul.cpp
     op/fused/matmul.hpp
     op/fused/mod.cpp
