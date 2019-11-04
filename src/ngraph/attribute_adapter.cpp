@@ -44,7 +44,7 @@ namespace
 namespace ngraph
 {
     template <>
-    const DiscreteTypeInfo AttributeAdapter<vector<int64_t>>::type_info{
+    NGRAPH_API const DiscreteTypeInfo AttributeAdapter<vector<int64_t>>::type_info{
         "AttributeAdapter<vector<int64_t>>", 0};
 
     template <>
@@ -60,7 +60,7 @@ namespace ngraph
     }
 
     template <>
-    const DiscreteTypeInfo AttributeAdapter<vector<uint64_t>>::type_info{
+    NGRAPH_API const DiscreteTypeInfo AttributeAdapter<vector<uint64_t>>::type_info{
         "AttributeAdapter<vector<uint64_t>>", 0};
 
     template <>

@@ -107,7 +107,7 @@ namespace ngraph
             : ValueReference<Type>(value)
         {
         }
-        static const DiscreteTypeInfo type_info;
+        NGRAPH_API static const DiscreteTypeInfo type_info;
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const std::vector<int64_t>& get() override;
         void set(const std::vector<int64_t>& value) override;

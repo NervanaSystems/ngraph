@@ -38,9 +38,8 @@ namespace ngraph
         std::ostream& operator<<(std::ostream& s, const PadMode& type);
     }
 
-    NGRAPH_API
     template <>
-    const DiscreteTypeInfo AttributeAdapter<op::PadMode>::type_info;
+    NGRAPH_API const DiscreteTypeInfo AttributeAdapter<op::PadMode>::type_info;
 
     namespace op
     {
@@ -69,9 +68,8 @@ namespace ngraph
         std::ostream& operator<<(std::ostream& s, const PadType& type);
     }
 
-    NGRAPH_API
     template <>
-    const DiscreteTypeInfo AttributeAdapter<op::PadType>::type_info;
+    NGRAPH_API const DiscreteTypeInfo AttributeAdapter<op::PadType>::type_info;
 
     namespace op
     {
@@ -85,9 +83,8 @@ namespace ngraph
         std::ostream& operator<<(std::ostream& s, const RoundingType& type);
     }
 
-    NGRAPH_API
     template <>
-    const DiscreteTypeInfo AttributeAdapter<op::RoundingType>::type_info;
+    NGRAPH_API const DiscreteTypeInfo AttributeAdapter<op::RoundingType>::type_info;
 
     namespace op
     {
@@ -140,9 +137,8 @@ namespace ngraph
         std::ostream& operator<<(std::ostream& s, const AutoBroadcastType& type);
     }
 
-    NGRAPH_API
     template <>
-    const DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastType>::type_info;
+    NGRAPH_API const DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastType>::type_info;
     namespace op
     {
         /// \brief Specifies how eps is combined with L2 value
@@ -157,9 +153,8 @@ namespace ngraph
         std::ostream& operator<<(std::ostream& s, const EpsMode& type);
     }
 
-    NGRAPH_API
     template <>
-    const DiscreteTypeInfo AttributeAdapter<op::EpsMode>::type_info;
+    NGRAPH_API const DiscreteTypeInfo AttributeAdapter<op::EpsMode>::type_info;
 
     namespace op
     {
