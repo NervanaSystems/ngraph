@@ -13,32 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+//
+// This is the nGraph Dialect Version 1 operations definition file.
+// All Operations in this file implement OpVersion1 interface.
+//===----------------------------------------------------------------------===//
 
-#pragma once
-
-#include "core/node.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/op/or.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
-
-namespace ngraph
-{
-    namespace onnx_import
-    {
-        namespace op
-        {
-            namespace set_1
-            {
-                inline NodeVector logical_or(const Node& node)
-                {
-                    return {std::make_shared<ngraph::op::v1::LogicalOr>(
-                        node.get_ng_inputs().at(0), node.get_ng_inputs().at(1))};
-                }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+// TODO: Add Version1 Ops definitions here
