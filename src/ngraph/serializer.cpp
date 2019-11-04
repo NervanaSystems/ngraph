@@ -765,13 +765,13 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             if (op_version == 0)
             {
-                node = make_shared<op::Add>(
+                node = make_shared<op::v0::Add>(
                     args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
                 break;
             }
             if (op_version == 1)
             {
-                node = make_shared<op::Add>(
+                node = make_shared<op::v1::Add>(
                     args[0],
                     args[1],
                     read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
@@ -1319,12 +1319,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             if (op_version == 0)
             {
-                node = make_shared<op::Equal>(
+                node = make_shared<op::v0::Equal>(
                     args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             }
             if (op_version == 1)
             {
-                node = make_shared<op::Equal>(
+                node = make_shared<op::v1::Equal>(
                     args[0],
                     args[1],
                     read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
@@ -3034,7 +3034,7 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         if (op_version == 1)
         {
-            tmp = static_cast<const op::v0::Equal*>(&n);
+            tmp = static_cast<const op::v1::Equal*>(&n);
         }
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
@@ -3120,7 +3120,7 @@ json JSONSerializer::serialize_node(const Node& n)
         const op::util::BinaryElementwiseComparison* tmp;
         if (op_version == 0)
         {
-            tmp = static_cast<const op::v1::GreaterEq*>(&n);
+            tmp = static_cast<const op::v0::GreaterEq*>(&n);
         }
         else if (op_version == 1)
         {
