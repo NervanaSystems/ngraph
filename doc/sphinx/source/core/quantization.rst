@@ -1,29 +1,34 @@
+.. core/quantization.rst:
+
+
 .. _quantization:
 
 Quantization
 ============
 
-Quantization refers the process of reducing the number of bits that represent a
-number. In the context of :abbr:`DL (Deep Learning)`, weights and activations can be
-represented using 8-bit integers (INT8) to compress the model size of a trained
-neural network, without any significant loss in model accuracy. Compared with
-32-bit floating point (FP32), using arithmetic with lower precision such as INT8 (an example of quantization)
-to calculate weights and activation requires less memory.
+:term:`Quantization` refers the process of reducing the number of bits that 
+represent a number. In a :abbr:`DL (Deep Learning)` context, weights and 
+activations can be represented using 8-bit integers (INT8) to compress the 
+model size of a trained neural network without any significant loss in model 
+accuracy. INT8 is one kind of quantization. Compared with 32-bit floating point 
+(FP32), using arithmetic with lower precision, such as INT8, to calculate 
+weights and activation requires less memory.
+
 
 Implementing a quantized model with nGraph
 ------------------------------------------
 
 To implement a quantized model with nGraph, provide a partially (or fully)
-quantized FP32 model (e.g., where the convolution layer in the model is replaced
-with a quantized convolution) to the nGraph Library along with quantized
-parameters: weights, activations, scale, and zero point. 
+quantized FP32 model (where the convolution layer in the model is replaced
+with a quantized convolution, for example) to the nGraph Library along with 
+quantized parameters: weights, activations, scale, and zero point. 
 
-.. note:: Currently, nGraph only supports quantization for inference.
+.. note:: As of version |version|, only quantization for inference is supported.
 
 nGraph Quantized Operators (Ops)
 --------------------------------
 
-nGraph uses scale and zero point (also used by ONNX\*) to map real values to
+nGraph uses scale and zero point (also used by ONNX) to map real values to
 quantized values. All quantized ops use scale and zero point
 and can be used just like any other nGraph op. 
 
@@ -34,26 +39,26 @@ and can be used just like any other nGraph op.
 **Round mode**: used in combination with scale and zero point to round real 
 values to quantized values
 
-.. table:: nGraph Quantized Ops
+.. table:: Quantization Ops
 
 
-	+----------------------+------------------------------------------------+
-	| Operator             | Description                                    |
-	+======================+================================================+
-	| Quantize             | Maps real values (r) to quantized values (q)   |
-	|                      | using scale (s), zero point (z),               |
-	|                      | and round mode; produces a quantized tensor.   |
-	+----------------------+------------------------------------------------+
-	| Dequantize           | Maps quantized values (q) to real values (r)   |
-	|                      | using scale (s) and zero point (z); converts   |
-	|                      | a quantized tensor to a floating point tensor. |
-	+----------------------+------------------------------------------------+
-	| FakeQuantize         | Performs element-wise linear quantization.     |
-	+----------------------+------------------------------------------------+
-	| QuantizedConvolution | Performs 8-bit convolution.                    |
-	+----------------------+------------------------------------------------+
-	| QuantizedDot         | Performs 8-bit dot.                            |
-	+----------------------+------------------------------------------------+
+	+-----------------------------------------------------------------+------------------------------------------------+
+	| Op                                                              | Description                                    |
+	+=================================================================+================================================+
+	| :doc:`Quantize <../ops/quantize>`                               | Maps real values (r) to quantized values (q)   |
+	|                                                                 | using scale (s), zero point (z),               |
+	|                                                                 | and round mode; produces a quantized tensor.   |
+	+-----------------------------------------------------------------+------------------------------------------------+
+	| :doc:`Dequantize <../ops/dequantize>`                           | Maps quantized values (q) to real values (r)   |
+	|                                                                 | using scale (s) and zero point (z); converts   |
+	|                                                                 | a quantized tensor to a floating-point tensor. |
+	+-----------------------------------------------------------------+------------------------------------------------+
+	| :mod:`FakeQuantize <ngraph.ops.fake_quantize>`                  | Performs element-wise linear quantization.     |
+	+-----------------------------------------------------------------+------------------------------------------------+
+	| :mod:`QuantizedConvolution <ngraph.ops.quantized_convolution>`  | Performs 8-bit convolution.                    |
+	+-----------------------------------------------------------------+------------------------------------------------+
+	| :mod:`QuantizedDot <ngraph.ops.quantized_dot>`                  | Performs 8-bit dot.                            |
+	+-----------------------------------------------------------------+------------------------------------------------+
 
 Some frameworks such as TensorFlow\* have fused ops. nGraph provides optional
 operations to help users easily translate (map) any quantized model created from
