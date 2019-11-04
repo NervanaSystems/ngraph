@@ -47,19 +47,18 @@ namespace ngraph
                         node.get_attribute_value<double>("gamma", 1.05070102214813232421875);
 
                     std::shared_ptr<ngraph::Node> alpha_node =
-                        std::make_shared<ngraph::op::Constant>(
-                            data->get_element_type(), ngraph::Shape{}, std::vector<double>{alpha});
-                    alpha_node = make_broadcast_node(alpha_node, data->get_shape());
+                        std::make_shared<ngraph::op::Constant>(data->get_element_type(),
+                                                               data->get_shape(),
+                                                               std::vector<double>{alpha});
 
                     std::shared_ptr<ngraph::Node> gamma_node =
-                        std::make_shared<ngraph::op::Constant>(
-                            data->get_element_type(), ngraph::Shape{}, std::vector<double>{gamma});
-                    gamma_node = make_broadcast_node(gamma_node, data->get_shape());
+                        std::make_shared<ngraph::op::Constant>(data->get_element_type(),
+                                                               data->get_shape(),
+                                                               std::vector<double>{gamma});
 
                     std::shared_ptr<ngraph::Node> zero_node =
                         std::make_shared<ngraph::op::Constant>(
-                            data->get_element_type(), ngraph::Shape{}, std::vector<double>{0});
-                    zero_node = make_broadcast_node(zero_node, data->get_shape());
+                            data->get_element_type(), data->get_shape(), std::vector<double>{0});
 
                     return {gamma_node * (std::make_shared<ngraph::op::Maximum>(data, zero_node) +
                                           alpha_node * std::make_shared<ngraph::op::Exp>(
