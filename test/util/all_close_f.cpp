@@ -17,6 +17,7 @@
 #include <climits>
 #include <cmath>
 
+#include "ngraph/util.hpp"
 #include "util/all_close_f.hpp"
 
 using namespace std;
