@@ -36,15 +36,6 @@ op::MVN::MVN(const Output<Node>& data, bool across_channels, bool normalize_vari
     , m_normalize_variance{normalize_variance}
 {
     constructor_validate_and_infer_types();
-
-    // if m_across_channels is true we should calculate mean and variance per batch
-    // else we calculate these per channel
-    m_reduction_axes.insert(0);
-    size_t start_axis = m_across_channels ? 1 : 2;
-    for (size_t i = start_axis; i < data.get_shape().size(); ++i)
-    {
-        m_reduction_axes.insert(i);
-    }
 }
 
 op::MVN::MVN(const Output<Node>& data, AxisSet reduction_axes, bool normalize_variance, double eps)
@@ -55,6 +46,24 @@ op::MVN::MVN(const Output<Node>& data, AxisSet reduction_axes, bool normalize_va
     , m_reduction_axes{reduction_axes}
 {
     constructor_validate_and_infer_types();
+}
+
+void op::MVN::pre_validate_and_infer_types()
+{
+    // if m_across_channels is true we should calculate mean and variance per batch
+    // else we calculate these per channel
+    if (m_reduction_axes.empty())
+    {
+        auto data = input_value(0);
+        AxisSet reduction_axes;
+        reduction_axes.insert(0);
+        size_t start_axis = m_across_channels ? 1 : 2;
+        for (size_t i = start_axis; i < data.get_shape().size(); ++i)
+        {
+            reduction_axes.insert(i);
+        }
+        set_reduction_axes(reduction_axes);
+    }
 }
 
 NodeVector op::MVN::decompose_op() const

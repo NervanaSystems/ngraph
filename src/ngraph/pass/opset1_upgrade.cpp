@@ -15,6 +15,7 @@
 //*****************************************************************************
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
@@ -22,7 +23,10 @@
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/not.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reduce_prod.hpp"
@@ -34,6 +38,7 @@
 #include "ngraph/op/strided_slice.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/xor.hpp"
 
 #include <limits>
 #include <numeric>
@@ -97,6 +102,16 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 #endif
     switch (get_typeid(node))
     {
+    case OP_TYPEID::And:
+    {
+        const auto and_v0 = dynamic_cast<const op::v0::And*>(node.get());
+        auto replacement_node = make_shared<op::v1::LogicalAnd>(node->input(0).get_source_output(),
+                                                                node->input(1).get_source_output(),
+                                                                and_v0->get_autob());
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::AvgPool:
     {
         auto tmp = dynamic_cast<const op::v0::AvgPool*>(node.get());
@@ -290,6 +305,16 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
+    case OP_TYPEID::LessEq:
+    {
+        const auto less_eq_v0 = dynamic_cast<const op::v0::LessEq*>(node.get());
+        auto replacement_node = make_shared<op::v1::LessEqual>(node->input(0).get_source_output(),
+                                                               node->input(1).get_source_output(),
+                                                               less_eq_v0->get_autob());
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::MaxPool:
     {
         auto tmp = dynamic_cast<const op::v0::MaxPool*>(node.get());
@@ -343,6 +368,22 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
                                                      pads_end,
                                                      kernel);
         }
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Not:
+    {
+        replace_node(node, make_shared<op::v1::LogicalNot>(node->input(0).get_source_output()));
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Or:
+    {
+        const auto or_v0 = dynamic_cast<const op::v0::Or*>(node.get());
+        auto replacement_node = make_shared<op::v1::LogicalOr>(node->input(0).get_source_output(),
+                                                               node->input(1).get_source_output(),
+                                                               or_v0->get_autob());
         replace_node(node, replacement_node);
         modified = true;
         break;
@@ -482,6 +523,16 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         auto replacement_node =
             make_shared<op::v1::TopK>(node->input_value(0), k_constant, axis, mode, sort);
 
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Xor:
+    {
+        const auto xor_v0 = dynamic_cast<const op::v0::Xor*>(node.get());
+        auto replacement_node = make_shared<op::v1::LogicalXor>(node->input(0).get_source_output(),
+                                                                node->input(1).get_source_output(),
+                                                                xor_v0->get_autob());
         replace_node(node, replacement_node);
         modified = true;
         break;

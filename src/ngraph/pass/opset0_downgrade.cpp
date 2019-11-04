@@ -18,6 +18,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
@@ -25,7 +26,10 @@
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/not.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reduce_prod.hpp"
@@ -35,6 +39,7 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/strided_slice.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/slice_plan.hpp"
 
@@ -270,6 +275,52 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         auto replacement_node = make_shared<op::v0::GenerateMask>(
             node->input(0).get_source_output(), mask_shape, et, seed, probability, use_seed);
 
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::LessEqual:
+    {
+        auto less_eq_v1 = as_type_ptr<op::v1::LessEqual>(node);
+        auto replacement_node = make_shared<op::v0::LessEq>(node->input(0).get_source_output(),
+                                                            node->input(1).get_source_output(),
+                                                            less_eq_v1->get_autob());
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::LogicalAnd:
+    {
+        auto and_v1 = as_type_ptr<op::v1::LogicalAnd>(node);
+        auto replacement_node = make_shared<op::v0::And>(node->input(0).get_source_output(),
+                                                         node->input(1).get_source_output(),
+                                                         and_v1->get_autob());
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::LogicalNot:
+    {
+        replace_node(node, make_shared<op::v0::Not>(node->input(0).get_source_output()));
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::LogicalOr:
+    {
+        auto or_v1 = as_type_ptr<op::v1::LogicalOr>(node);
+        auto replacement_node = make_shared<op::v0::Or>(node->input(0).get_source_output(),
+                                                        node->input(1).get_source_output(),
+                                                        or_v1->get_autob());
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::LogicalXor:
+    {
+        auto xor_v1 = as_type_ptr<op::v1::LogicalXor>(node);
+        auto replacement_node = make_shared<op::v0::Xor>(node->input(0).get_source_output(),
+                                                         node->input(1).get_source_output(),
+                                                         xor_v1->get_autob());
         replace_node(node, replacement_node);
         modified = true;
         break;
