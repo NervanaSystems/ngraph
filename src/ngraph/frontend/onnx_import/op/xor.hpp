@@ -31,7 +31,7 @@ namespace ngraph
             {
                 inline NodeVector logical_xor(const Node& node)
                 {
-                    return {std::make_shared<ngraph::op::Xor>(
+                    return {std::make_shared<ngraph::op::v1::LogicalXor>(
                         node.get_ng_inputs().at(0),
                         node.get_ng_inputs().at(1),
                         ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY))};
