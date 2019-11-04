@@ -113,16 +113,23 @@ namespace ngraph
         void set(const std::vector<int64_t>& value) override;
     };
 
+    template <>
+    NGRAPH_API const DiscreteTypeInfo AttributeAdapter<std::vector<int64_t>>::type_info;
+
+    template <>
+    NGRAPH_API const DiscreteTypeInfo AttributeAdapter<std::vector<uint64_t>>::type_info;
+
     class Shape;
     template <>
     class AttributeAdapter<Shape> : public ValueReference<Shape>,
                                     public ValueAccessor<std::vector<int64_t>>
     {
     public:
-        AttributeAdapter<Shape>(Shape& value)
+        AttributeAdapter<Shape, void>(Shape& value)
             : ValueReference<Shape>(value)
         {
         }
+        NGRAPH_API
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<Shape>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const std::vector<int64_t>& get() override;
@@ -135,10 +142,11 @@ namespace ngraph
                                       public ValueAccessor<std::vector<int64_t>>
     {
     public:
-        AttributeAdapter<Strides>(Strides& value)
+        AttributeAdapter<Strides, void>(Strides& value)
             : ValueReference<Strides>(value)
         {
         }
+        NGRAPH_API
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<Strides>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const std::vector<int64_t>& get() override;
@@ -151,10 +159,11 @@ namespace ngraph
                                       public ValueAccessor<std::vector<int64_t>>
     {
     public:
-        AttributeAdapter<AxisSet>(AxisSet& value)
+        AttributeAdapter<AxisSet, void>(AxisSet& value)
             : ValueReference<AxisSet>(value)
         {
         }
+        NGRAPH_API
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<AxisSet>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const std::vector<int64_t>& get() override;
@@ -167,10 +176,11 @@ namespace ngraph
                                            public ValueAccessor<void>
     {
     public:
-        AttributeAdapter<PartialShape>(PartialShape& value)
+        AttributeAdapter<PartialShape, void>(PartialShape& value)
             : ValueReference<PartialShape>(value)
         {
         }
+        NGRAPH_API
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<PartialShape>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
@@ -185,7 +195,7 @@ namespace ngraph
                                             public ValueAccessor<void>
     {
     public:
-        AttributeAdapter<element::Type>(element::Type& value)
+        AttributeAdapter<element::Type, void>(element::Type& value)
             : ValueReference<element::Type>(value)
         {
         }
@@ -203,10 +213,11 @@ namespace ngraph
                                                     public ValueAccessor<void>
     {
     public:
-        AttributeAdapter<op::AutoBroadcastSpec>(op::AutoBroadcastSpec& value)
+        AttributeAdapter<op::AutoBroadcastSpec, void>(op::AutoBroadcastSpec& value)
             : ValueReference<op::AutoBroadcastSpec>(value)
         {
         }
+        NGRAPH_API
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::AutoBroadcastSpec>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
