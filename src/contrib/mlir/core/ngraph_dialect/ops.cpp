@@ -338,3 +338,15 @@ namespace mlir
 #define GET_OP_CLASSES
 #include "ops.cpp.inc"
 }
+
+// Fused Ops decompose
+// Stubs for now 
+// TODO: Implement and move to another file
+void mlir::NGSpaceToDepth::decompose()      {}
+void mlir::NGSplitOp::decompose()           {}
+void mlir::NGScaleShift::decompose()        {}
+void mlir::NGUnSqueezeOp::decompose()       {}
+void mlir::NGSquaredDiffOp::decompose()     {}
+void mlir::NGSqueezeOp::decompose()         {}
+void mlir::NGShuffleChannels::decompose()   {}
+void mlir::NGRNNCell::decompose()   {}
