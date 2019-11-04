@@ -122,6 +122,8 @@ set (SRC
     op/avg_pool.hpp
     op/batch_norm.cpp
     op/batch_norm.hpp
+    op/binary_convolution.cpp
+    op/binary_convolution.hpp
     op/broadcast.cpp
     op/broadcast_distributed.cpp
     op/ceiling.cpp
