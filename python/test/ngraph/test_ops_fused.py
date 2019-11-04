@@ -174,7 +174,7 @@ def test_gelu_operator_with_parameters():
     result = computation(data_value)
     expected = np.array([[-1.4901161e-06, 8.4134471e-01], [-4.5500278e-02, 2.9959502]],
                         dtype=np.float32)
-    assert np.allclose(result, expected)
+    assert np.allclose(result, expected, .007, .007)
 
 
 def test_gelu_operator_with_array():
@@ -189,7 +189,7 @@ def test_gelu_operator_with_array():
     expected = np.array([[-1.4901161e-06, 8.4134471e-01], [-4.5500278e-02, 2.9959502]],
                         dtype=np.float32)
 
-    assert np.allclose(result, expected)
+    assert np.allclose(result, expected, .007, .007)
 
 
 def test_clamp_operator():

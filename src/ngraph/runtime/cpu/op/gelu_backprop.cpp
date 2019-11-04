@@ -13,23 +13,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
+#include "ngraph/util.hpp"
 
-#pragma once
+using namespace std;
+using namespace ngraph;
 
-#include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/pass/pass.hpp"
+constexpr NodeTypeInfo op::GeluBackprop::type_info;
 
-namespace ngraph
+op::GeluBackprop::GeluBackprop(const Output<ngraph::Node>& arg, const Output<ngraph::Node>& delta)
+    : BinaryElementwiseArithmetic(arg, delta)
 {
-    namespace pass
-    {
-        NodeVector explicit_broadcast(std::shared_ptr<Node>& node);
-        class ImplicitBroadcastElimination;
-    }
+    constructor_validate_and_infer_types();
+    set_output_size(1);
+    set_output_type(0, get_input_element_type(0), arg.get_shape());
 }
 
-class ngraph::pass::ImplicitBroadcastElimination : public ngraph::pass::NodePass
+shared_ptr<Node> op::GeluBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
-public:
-    bool run_on_node(std::shared_ptr<ngraph::Node> node) override;
-};
+    check_new_args_count(this, new_args);
+    return make_shared<GeluBackprop>(new_args.at(0), new_args.at(1));
+}
