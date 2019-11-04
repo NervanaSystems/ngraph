@@ -87,7 +87,7 @@ static OP_TYPEID get_typeid(shared_ptr<Node> node)
 // END mapping to OP_TYPEID
 
 template <typename OpV0, typename OpV1>
-shared_ptr<Node> downgrade_binary_elementwise_node(const shared_ptr<Node>& node)
+void downgrade_binary_elementwise_node(const shared_ptr<Node>& node)
 {
     const auto tmp = as_type_ptr<OpV1>(node);
     const auto input_arg0 = node->input(0).get_source_output();

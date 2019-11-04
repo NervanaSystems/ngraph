@@ -85,7 +85,7 @@ static OP_TYPEID get_typeid(shared_ptr<Node> node)
 // END mapping to OP_TYPEID
 
 template <typename OpV0, typename OpV1>
-shared_ptr<Node> upgrade_binary_elementwise_node(const shared_ptr<Node>& node)
+void upgrade_binary_elementwise_node(const shared_ptr<Node>& node)
 {
     const auto tmp = dynamic_cast<const OpV0*>(node.get());
     const auto autob = tmp->get_autob();
