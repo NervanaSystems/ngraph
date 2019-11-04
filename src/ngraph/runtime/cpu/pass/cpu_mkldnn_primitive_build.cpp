@@ -30,6 +30,7 @@
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
+#include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -47,6 +48,7 @@
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -2225,6 +2227,111 @@ namespace ngraph
                            << "] = new mkldnn::eltwise_forward(relu_pd);\n";
                     writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
                            << "] = new mkldnn::memory::desc(relu_pd.scratchpad_desc());\n";
+
+                    construct_string = writer.get_code();
+                }
+
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Gelu)
+                {
+                    auto gelu_node = static_cast<const ngraph::op::Gelu*>(node);
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    // query scratchpad size
+                    auto gelu_desc = mkldnn_emitter.get_gelu_forward_desc(node);
+                    scratchpad_size = mkldnn_emitter.query_scratchpad_eltwise_forward(gelu_desc);
+
+                    // Gelu needs 3 primitives: input, result, and eltwise_forward.
+                    index = mkldnn_emitter.reserve_primitive_space(3);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "auto gelu_desc = "
+                              "mkldnn::eltwise_forward::desc(mkldnn::prop_kind::forward, "
+                              "mkldnn::algorithm::eltwise_gelu, "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "], 1.0f, 0.0f);\n";
+
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
+
+                    writer << "\n// create gelu primitive_descriptor\n";
+                    writer << "auto gelu_pd = "
+                              "mkldnn::eltwise_forward::primitive_desc(gelu_desc, attr, "
+                              "cg_ctx->global_cpu_engine);\n";
+
+                    writer << "\n// build primitive\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::eltwise_forward(gelu_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(gelu_pd.scratchpad_desc());\n";
+
+                    construct_string = writer.get_code();
+                }
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(GeluBackprop)
+                {
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    // query scratchpad size
+                    auto fwd_desc = mkldnn_emitter.get_gelu_forward_desc(node);
+                    auto bwd_desc = mkldnn_emitter.get_gelu_backward_desc(node);
+                    scratchpad_size =
+                        mkldnn_emitter.query_scratchpad_eltwise_backward(fwd_desc, bwd_desc);
+
+                    // GeluBackprop needs 4 primitives: input, delta, result, and
+                    // eltwise_backward.
+                    index = mkldnn_emitter.reserve_primitive_space(4);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {input_desc, delta_desc, result_desc};
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "auto fwd_desc = "
+                              "mkldnn::eltwise_forward::desc(mkldnn::prop_kind::forward, "
+                              "mkldnn::algorithm::eltwise_gelu, "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "], 0, 0);\n";
+                    writer << "auto bwd_desc = "
+                              "mkldnn::eltwise_backward::desc(mkldnn::algorithm::eltwise_gelu, "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "], "
+                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "], 0, 0);\n";
+
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
+
+                    writer << "\n// create forward gelu primitive descriptor\n";
+                    writer << "auto gelu_fwd_pd = "
+                              "mkldnn::eltwise_forward::primitive_desc(fwd_desc, "
+                              "cg_ctx->global_cpu_engine);\n";
+
+                    writer << "\n// create backward gelu primitive_descriptor\n";
+                    writer << "auto gelu_bwd_pd = "
+                              "mkldnn::eltwise_backward::primitive_desc(bwd_desc, attr, "
+                              "cg_ctx->global_cpu_engine, gelu_fwd_pd);\n";
+
+                    writer << "\n// build primitive\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::eltwise_backward(gelu_bwd_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(gelu_bwd_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }

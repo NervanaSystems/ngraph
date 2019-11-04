@@ -168,9 +168,9 @@ namespace ngraph
         {
             class GCPUBackend;
             class GCPUExecutable;
-        }
-    }
-}
+        } // namespace gcpu
+    }     // namespace runtime
+} // namespace ngraph
 
 class ngraph::runtime::gcpu::GCPUExecutable : public Executable
 {
@@ -1606,6 +1606,7 @@ private:
             }
             break;
         }
+        case OP_TYPEID::LogicalXor:
         case OP_TYPEID::Xor:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
