@@ -103,7 +103,7 @@ namespace ngraph
         : public ValueReference<Type>, public ValueAccessor<std::vector<int64_t>>
     {
     public:
-        AttributeAdapter<Type>(Type& value)
+        AttributeAdapter(Type& value)
             : ValueReference<Type>(value)
         {
         }
