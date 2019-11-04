@@ -96,6 +96,9 @@ public:
             }
             construct_dropout();
             construct_batch_norm_infer_relu_with_multiply_add();
+#if MKLDNN_VERSION_MAJOR < 1
+            construct_gelubackprop();
+#endif
         }
     }
 
@@ -128,6 +131,9 @@ private:
     void construct_deconvolution_affine_folding();
     void construct_deconvolution_affine_folding_relu();
     void construct_dropout();
+#if MKLDNN_VERSION_MAJOR < 1
+    void construct_gelubackprop();
+#endif
 };
 
 class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUQuantFusion : public ngraph::pass::GraphRewrite

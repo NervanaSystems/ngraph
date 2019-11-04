@@ -32,6 +32,7 @@
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/binary_convolution.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/op/concat.hpp"
@@ -413,6 +414,11 @@ private:
                                    avg_pool->get_padding_below(),
                                    avg_pool->get_padding_above(),
                                    avg_pool->get_include_padding_in_avg_computation());
+            break;
+        }
+        case OP_TYPEID::BinaryConvolution:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() + "'");
             break;
         }
         case OP_TYPEID::GenerateMask:

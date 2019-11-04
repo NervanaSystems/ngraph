@@ -209,7 +209,7 @@ TEST(benchmark, serialize)
     timer.stop();
     cout << "deserialize took " << timer.get_milliseconds() << "ms\n";
 
-    ngraph::set_serialize_output_shapes(true);
+    WithSerializeOutputShapesEnabled serialize_outputs(true);
     ofstream out("test.json");
     out << serialize(f, 4);
 }
@@ -481,6 +481,43 @@ TEST(serialize, opset1_strided_slice)
     EXPECT_EQ(strided_slice_out->get_new_axis_mask(), new_axis_mask);
     EXPECT_EQ(strided_slice_out->get_shrink_axis_mask(), shrink_axis_mask);
     EXPECT_EQ(strided_slice_out->get_ellipsis_mask(), ellipsis_mask);
+}
+
+TEST(serialize, opset1_binary_convolution)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 2, 2});
+    auto filter = make_shared<op::Parameter>(element::f32, Shape{1, 2, 2, 2});
+    const Strides strides{1, 1};
+    const CoordinateDiff pads_begin{0, 0};
+    const CoordinateDiff pads_end{0, 0};
+    const Strides dilations{1, 1};
+    const std::string mode = "xnor-popcount";
+    const float pad_value = 2.1f;
+    const auto auto_pad = op::PadType::NOTSET;
+
+    auto binary_conv_in = make_shared<op::v1::BinaryConvolution>(
+        data, filter, strides, pads_begin, pads_end, dilations, mode, pad_value, auto_pad);
+
+    auto result = make_shared<op::Result>(binary_conv_in);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data, filter});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_binary_conv = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto binary_conv_out = as_type_ptr<op::v1::BinaryConvolution>(g_binary_conv);
+
+    EXPECT_EQ(binary_conv_out->description(), "BinaryConvolution");
+    EXPECT_EQ(binary_conv_out->get_version(), 1);
+
+    EXPECT_EQ(binary_conv_out->get_strides(), strides);
+    EXPECT_EQ(binary_conv_out->get_pads_begin(), pads_begin);
+    EXPECT_EQ(binary_conv_out->get_pads_end(), pads_end);
+    EXPECT_EQ(binary_conv_out->get_dilations(), dilations);
+    EXPECT_EQ(binary_conv_out->get_mode(),
+              op::v1::BinaryConvolution::BinaryConvolutionMode::XNOR_POPCOUNT);
+    EXPECT_EQ(binary_conv_out->get_pad_value(), pad_value);
+    EXPECT_EQ(binary_conv_out->get_auto_pad(), auto_pad);
 }
 
 TEST(serialize, depth_to_space)
