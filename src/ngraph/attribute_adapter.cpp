@@ -81,7 +81,7 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
-    constexpr DiscreteTypeInfo AttributeAdapter<Shape>::type_info;
+    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<Shape>::type_info;
 
     const vector<int64_t>& AttributeAdapter<Shape>::get()
     {
@@ -99,7 +99,7 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
-    constexpr DiscreteTypeInfo AttributeAdapter<Strides>::type_info;
+    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<Strides>::type_info;
 
     const vector<int64_t>& AttributeAdapter<Strides>::get()
     {
@@ -117,7 +117,7 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
-    constexpr DiscreteTypeInfo AttributeAdapter<AxisSet>::type_info;
+    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<AxisSet>::type_info;
 
     const vector<int64_t>& AttributeAdapter<AxisSet>::get()
     {
@@ -141,7 +141,7 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
-    constexpr DiscreteTypeInfo AttributeAdapter<PartialShape>::type_info;
-    constexpr DiscreteTypeInfo AttributeAdapter<element::Type>::type_info;
-    constexpr DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastSpec>::type_info;
+    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<PartialShape>::type_info;
+    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<element::Type>::type_info;
+    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastSpec>::type_info;
 }
