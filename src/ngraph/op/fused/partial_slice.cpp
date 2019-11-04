@@ -228,4 +228,5 @@ void op::PartialSliceBackprop::pre_validate_and_infer_types()
                           "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
                           input_element_type,
                           ").");
+    set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
 }

@@ -77,6 +77,11 @@ op::RNNCell::RNNCell(const Output<Node>& X,
 
 void op::RNNCell::pre_validate_and_infer_types()
 {
+    if (is_dynamic())
+    {
+        return;
+    }
+
     const auto& x_pshape = get_input_partial_shape(0);
     const auto& w_pshape = get_input_partial_shape(1);
     const auto& r_pshape = get_input_partial_shape(2);
