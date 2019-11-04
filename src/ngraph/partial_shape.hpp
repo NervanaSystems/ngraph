@@ -25,6 +25,11 @@
 
 namespace ngraph
 {
+    namespace op
+    {
+        struct AutoBroadcastSpec;
+    }
+
     /// \brief Class representing a shape that may be partially or totally dynamic.
     ///
     /// XXX: THIS CLASS IS EXPERIMENTAL AND THE ENTIRE DESIGN IS SUBJECT TO CHANGE.

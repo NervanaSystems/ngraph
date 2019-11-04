@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include <random>
 #include <string>
+#include "util/random.hpp"
 
 // clang-format off
 #ifdef ${BACKEND_NAME}_FLOAT_TOLERANCE_BITS
@@ -47,25 +48,34 @@ static string s_manifest = "${MANIFEST}";
 
 NGRAPH_TEST(${BACKEND_NAME}, gelu_f32)
 {
-    Shape shape{8};
+    Shape shape{100000};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Gelu>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : f->get_parameters())
+    {
+        auto name = param->get_name();
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
-    vector<float> input{-4.0f, -3.0f, -2.0f, -1.0f, 0.0f, 1.0f, 2.0f, 3.0f};
-    copy_data(a, input);
+    copy_data(a, args[0]);
     auto result = backend->create_tensor(element::f32, shape);
 
-    std::transform(input.begin(), input.end(), input.begin(), [](float x) -> float {
+    std::transform(args[0].begin(), args[0].end(), args[0].begin(), [](float x) -> float {
         return 0.5f * x * (1.0f + erf(x / sqrt(2.0f)));
     });
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(input, read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close(args[0], read_vector<float>(result), .007f, .007f));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gelu_f64)
