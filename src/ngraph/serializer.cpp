@@ -2643,7 +2643,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Add:
     {
-        const op::util::BinaryElementwiseArithmetic* tmp;
+        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
         if (op_version == 0)
         {
             tmp = static_cast<const op::v0::Add*>(&n);
@@ -2652,7 +2652,7 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             tmp = static_cast<const op::v1::Add*>(&n);
         }
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -2959,20 +2959,20 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Divide:
     {
-        const op::util::BinaryElementwiseArithmetic* bea_node;
+        const op::util::BinaryElementwiseArithmetic* bea_node = nullptr;
         if (op_version == 0)
         {
             auto tmp = static_cast<const op::v0::Divide*>(&n);
             bea_node = tmp;
             node["pythondiv"] = tmp->is_pythondiv();
         }
-        if (op_version == 1)
+        else if (op_version == 1)
         {
             auto tmp = static_cast<const op::v1::Divide*>(&n);
             bea_node = tmp;
             node["pythondiv"] = tmp->is_pythondiv();
         }
-        if (bea_node->get_autob().m_type != op::AutoBroadcastType::NONE)
+        if (bea_node != nullptr && bea_node->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(bea_node->get_autob());
         }
@@ -3032,7 +3032,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Equal:
     {
-        const op::util::BinaryElementwiseComparison* tmp;
+        const op::util::BinaryElementwiseComparison* tmp = nullptr;
         if (op_version == 0)
         {
             tmp = static_cast<const op::v0::Equal*>(&n);
@@ -3041,7 +3041,7 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             tmp = static_cast<const op::v1::Equal*>(&n);
         }
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -3105,7 +3105,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Greater:
     {
-        const op::util::BinaryElementwiseComparison* tmp;
+        const op::util::BinaryElementwiseComparison* tmp = nullptr;
         if (op_version == 0)
         {
             tmp = static_cast<const op::v0::Greater*>(&n);
@@ -3114,7 +3114,7 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             tmp = static_cast<const op::v1::Greater*>(&n);
         }
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -3122,7 +3122,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::GreaterEq:
     {
-        const op::util::BinaryElementwiseComparison* tmp;
+        const op::util::BinaryElementwiseComparison* tmp = nullptr;
         if (op_version == 0)
         {
             tmp = static_cast<const op::v0::GreaterEq*>(&n);
@@ -3131,7 +3131,7 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             tmp = static_cast<const op::v1::GreaterEq*>(&n);
         }
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -3206,7 +3206,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Less:
     {
-        const op::util::BinaryElementwiseComparison* tmp;
+        const op::util::BinaryElementwiseComparison* tmp = nullptr;
         if (op_version == 0)
         {
             tmp = static_cast<const op::v0::Less*>(&n);
@@ -3215,7 +3215,7 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             tmp = static_cast<const op::v1::Less*>(&n);
         }
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -3223,7 +3223,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::LessEq:
     {
-        const op::util::BinaryElementwiseComparison* tmp;
+        const op::util::BinaryElementwiseComparison* tmp = nullptr;
         if (op_version == 0)
         {
             tmp = static_cast<const op::v0::LessEq*>(&n);
@@ -3232,7 +3232,7 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             tmp = static_cast<const op::v1::LessEq*>(&n);
         }
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -3330,7 +3330,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Maximum:
     {
-        const op::util::BinaryElementwiseArithmetic* tmp;
+        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
         if (op_version == 0)
         {
             tmp = static_cast<const op::v0::Maximum*>(&n);
@@ -3339,7 +3339,7 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             tmp = static_cast<const op::v1::Maximum*>(&n);
         }
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -3353,7 +3353,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Minimum:
     {
-        const op::util::BinaryElementwiseArithmetic* tmp;
+        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
         if (op_version == 0)
         {
             tmp = static_cast<const op::v0::Minimum*>(&n);
@@ -3362,7 +3362,7 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             tmp = static_cast<const op::v1::Minimum*>(&n);
         }
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -3370,7 +3370,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Multiply:
     {
-        const op::util::BinaryElementwiseArithmetic* tmp;
+        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
         if (op_version == 0)
         {
             tmp = static_cast<const op::v0::Multiply*>(&n);
@@ -3379,7 +3379,7 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             tmp = static_cast<const op::v1::Multiply*>(&n);
         }
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -3404,7 +3404,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::NotEqual:
     {
-        const op::util::BinaryElementwiseComparison* tmp;
+        const op::util::BinaryElementwiseComparison* tmp = nullptr;
         if (op_version == 0)
         {
             tmp = static_cast<const op::v0::NotEqual*>(&n);
@@ -3413,7 +3413,7 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             tmp = static_cast<const op::v1::NotEqual*>(&n);
         }
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -3512,7 +3512,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Power:
     {
-        const op::util::BinaryElementwiseArithmetic* tmp;
+        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
         if (op_version == 0)
         {
             tmp = static_cast<const op::v0::Power*>(&n);
@@ -3521,7 +3521,7 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             tmp = static_cast<const op::v1::Power*>(&n);
         }
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
