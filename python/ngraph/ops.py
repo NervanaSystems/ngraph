@@ -1079,6 +1079,10 @@ def depth_to_space(node, mode, block_size, name=None):  # type: (Node, str, int,
 
     :param node: The node with input tensor data.
     :param mode: Specifies how the input depth dimension is split to block coordinates
+
+                 BLOCKS_FIRST: The input depth is divided to [block_size, ..., block_size, new_depth]
+                 DEPTH_FIRST: The input depth is divided to [new_depth, block_size, ..., block_size]
+
     :param block_size: The size of the spatial block of values describing
                        how the tensor's data is to be rearranged.
     :param name: Optional output node name.
