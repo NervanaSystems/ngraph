@@ -50,7 +50,6 @@ namespace ngraph
 {
     namespace op
     {
-        class Add;
         class AllReduce;
         class BroadcastDistributed;
         class MatmulBias;
@@ -64,24 +63,14 @@ namespace ngraph
         class BatchNormInferenceRelu;
         class BatchNormTrainingBackprop;
         class Dot;
-        class Multiply;
         class GetOutputElement;
         class Abs;
         class Concat;
-        class Divide;
-        class Equal;
-        class Greater;
-        class GreaterEq;
-        class Less;
-        class LessEq;
         class Any;
         class All;
         class LRN;
         class Log;
-        class Maximum;
-        class Minimum;
         class Negative;
-        class NotEqual;
         class Select;
         class Subtract;
         class Convert;
@@ -103,7 +92,6 @@ namespace ngraph
         class GatherND;
         class ScatterAdd;
         class ScatterNDAdd;
-        class Power;
         class UpdateSlice;
         class ReplaceSlice;
         class OneHot;
