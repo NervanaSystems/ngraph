@@ -45,6 +45,7 @@ namespace ngraph
     {
         class Backend;
         class Value;
+        class Tensor;
     }
 
     std::string to_cplusplus_sourcecode_literal(bool val);
@@ -357,5 +358,10 @@ namespace ngraph
     void parse_version_string(
         std::string version, size_t& major, size_t& minor, size_t& patch, std::string& extra);
 } // end namespace ngraph
+
+template <typename T>
+std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv);
+
+std::vector<float> read_float_vector(std::shared_ptr<ngraph::runtime::Tensor> tv);
 
 std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);

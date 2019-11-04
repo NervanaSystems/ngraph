@@ -19,18 +19,34 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::And::type_info;
+constexpr NodeTypeInfo op::v1::LogicalAnd::type_info;
 
-op::And::And(const Output<Node>& arg0,
-             const Output<Node>& arg1,
-             const AutoBroadcastSpec& auto_broadcast)
+op::v1::LogicalAnd::LogicalAnd(const Output<Node>& arg0,
+                               const Output<Node>& arg1,
+                               const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseLogical(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::And::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::LogicalAnd::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<And>(new_args.at(0), new_args.at(1), this->get_autob());
+    return make_shared<v1::LogicalAnd>(new_args.at(0), new_args.at(1), this->get_autob());
+}
+
+constexpr NodeTypeInfo op::v0::And::type_info;
+
+op::v0::And::And(const Output<Node>& arg0,
+                 const Output<Node>& arg1,
+                 const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseLogical(arg0, arg1, auto_broadcast)
+{
+    constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::v0::And::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<v0::And>(new_args.at(0), new_args.at(1), this->get_autob());
 }
