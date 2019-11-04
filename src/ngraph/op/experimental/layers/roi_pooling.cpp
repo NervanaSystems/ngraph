@@ -20,6 +20,8 @@ using namespace std;
 using namespace ngraph;
 
 constexpr NodeTypeInfo op::ROIPooling::type_info;
+constexpr NodeTypeInfo op::ROIPoolingTraining::type_info;
+constexpr NodeTypeInfo op::ROIPoolingTrainingBackprop::type_info;
 
 op::ROIPooling::ROIPooling(const Output<Node>& input,
                            const Output<Node>& coords,
@@ -70,4 +72,112 @@ shared_ptr<Node> op::ROIPooling::copy_with_new_args(const NodeVector& new_args) 
     check_new_args_count(this, new_args);
     return make_shared<ROIPooling>(
         new_args.at(0), new_args.at(1), m_output_size, m_spatial_scale, m_method);
+}
+
+op::ROIPoolingTraining::ROIPoolingTraining(const Output<Node>& input,
+                                           const Output<Node>& coords,
+                                           const Shape& output_size,
+                                           const float spatial_scale,
+                                           const string& method)
+    : Op({input, coords})
+    , m_output_size(output_size)
+    , m_spatial_scale(spatial_scale)
+    , m_method(method)
+{
+    constructor_validate_and_infer_types();
+}
+
+void op::ROIPoolingTraining::validate_and_infer_types()
+{
+    auto input_et = get_input_element_type(0);
+    set_output_size(2);
+    if (get_input_partial_shape(0).is_static() && get_input_partial_shape(1).is_static())
+    {
+        Shape input_shape = get_input_partial_shape(0).to_shape();
+        Shape coords_shape = get_input_partial_shape(1).to_shape();
+        NODE_VALIDATION_CHECK(this,
+                              input_shape.size() >= 3,
+                              "ROIPoolingTraining expects 3 or higher dimensions for input. Got ",
+                              input_shape.size());
+        NODE_VALIDATION_CHECK(this,
+                              coords_shape.size() == 2,
+                              "ROIPoolingTraining expects 2 dimensions for box coordinates. Got ",
+                              coords_shape.size());
+        NODE_VALIDATION_CHECK(this,
+                              input_shape.size() - 2 == m_output_size.size(),
+                              "Spatial dimensions on input: ",
+                              input_shape.size() - 2,
+                              " doesn't match dimensions on requested output_size: ",
+                              m_output_size.size());
+        Shape output_shape{coords_shape[0], input_shape[1]};
+        output_shape.insert(output_shape.end(), m_output_size.begin(), m_output_size.end());
+        set_output_type(0, input_et, output_shape);
+        set_output_type(1, element::i64, output_shape);
+    }
+    else
+    {
+        set_output_type(0, input_et, PartialShape::dynamic());
+        set_output_type(1, element::i64, PartialShape::dynamic());
+    }
+}
+
+shared_ptr<Node> op::ROIPoolingTraining::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<ROIPoolingTraining>(
+        new_args.at(0), new_args.at(1), m_output_size, m_spatial_scale, m_method);
+}
+
+op::ROIPoolingTrainingBackprop::ROIPoolingTrainingBackprop(const Output<Node>& input,
+                                                           const Output<Node>& coords,
+                                                           const Output<Node>& argmax,
+                                                           const Output<Node>& delta,
+                                                           const Shape& output_size,
+                                                           const string& method)
+    : Op({input, coords, argmax, delta})
+    , m_output_size(output_size)
+    , m_method(method)
+{
+    constructor_validate_and_infer_types();
+}
+
+void op::ROIPoolingTrainingBackprop::validate_and_infer_types()
+{
+    auto input_et = get_input_element_type(0);
+    if (get_input_partial_shape(0).is_static() && get_input_partial_shape(1).is_static())
+    {
+        Shape input_shape = get_input_partial_shape(0).to_shape();
+        Shape coords_shape = get_input_partial_shape(1).to_shape();
+        NODE_VALIDATION_CHECK(
+            this,
+            input_shape.size() >= 3,
+            "ROIPoolingTrainingBackprop expects 3 or higher dimensions for input. Got ",
+            input_shape.size());
+        NODE_VALIDATION_CHECK(
+            this,
+            coords_shape.size() == 2,
+            "ROIPoolingTrainingBackprop expects 2 dimensions for box coordinates. Got ",
+            coords_shape.size());
+        NODE_VALIDATION_CHECK(this,
+                              input_shape.size() - 2 == m_output_size.size(),
+                              "Spatial dimensions on input: ",
+                              input_shape.size() - 2,
+                              " doesn't match dimensions on requested output_size: ",
+                              m_output_size.size());
+        Shape output_shape{coords_shape[0], input_shape[1]};
+        output_shape.insert(output_shape.end(), m_output_size.begin(), m_output_size.end());
+        set_output_type(0, input_et, output_shape);
+    }
+    else
+    {
+        set_output_type(0, input_et, PartialShape::dynamic());
+    }
+}
+
+shared_ptr<Node>
+    op::ROIPoolingTrainingBackprop::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<ROIPoolingTrainingBackprop>(
+        new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), m_output_size, m_method);
 }

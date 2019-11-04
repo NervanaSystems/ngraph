@@ -54,5 +54,71 @@ namespace ngraph
             float m_spatial_scale;
             std::string m_method;
         };
+
+        class ROIPoolingTraining : public Op
+        {
+        public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"ROIPoolingTraining", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            /// \brief Constructs a ROIPoolingTraining operation
+            ///
+            /// \param input          Input feature map {N, C, ...}
+            /// \param coords         Coordinates of bounding boxes
+            /// \param output_size    Height/Width of ROI output features
+            /// \param spatial_scale  Ratio of input feature map over input image size
+            /// \param method         Method of pooling - Max or Bilinear
+            ROIPoolingTraining(const Output<Node>& input,
+                               const Output<Node>& coords,
+                               const Shape& output_size,
+                               const float spatial_scale,
+                               const std::string& method);
+
+            void validate_and_infer_types() override;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+            const Shape& get_output_size() const { return m_output_size; }
+            float get_spatial_scale() const { return m_spatial_scale; }
+            const std::string& get_method() const { return m_method; }
+        private:
+            Shape m_output_size;
+            float m_spatial_scale;
+            std::string m_method;
+        };
+
+        class ROIPoolingTrainingBackprop : public Op
+        {
+        public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"ROIPoolingTrainingBackprop", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            /// \brief Constructs a ROIPoolingTrainingBackprop operation
+            ///
+            /// \param input          Input feature map {N, C, ...}
+            /// \param coords         Coordinates of bounding boxes
+            /// \param argmax         Argmax tensor from fprop
+            /// \param delta          Delta tensor
+            /// \param output_size    Height/Width of ROI output features
+            /// \param method         Method of pooling - Max or Bilinear
+            ROIPoolingTrainingBackprop(const Output<Node>& input,
+                                       const Output<Node>& coords,
+                                       const Output<Node>& argmax,
+                                       const Output<Node>& delta,
+                                       const Shape& output_size,
+                                       const std::string& method);
+
+            void validate_and_infer_types() override;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+            const Shape& get_output_size() const { return m_output_size; }
+            const std::string& get_method() const { return m_method; }
+        private:
+            Shape m_output_size;
+            std::string m_method;
+        };
     }
 }
