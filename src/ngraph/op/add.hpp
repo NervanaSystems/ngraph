@@ -54,7 +54,6 @@ namespace ngraph
                 std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
                 virtual bool is_commutative() const override { return true; }
-
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const NodeVector& deltas) override;
@@ -94,7 +93,6 @@ namespace ngraph
 
                 virtual bool is_commutative() const override { return true; }
                 size_t get_version() const override { return 1; }
-
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const NodeVector& deltas) override;
