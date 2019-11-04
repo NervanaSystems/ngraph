@@ -2,6 +2,8 @@
 
 :orphan:
 
+.. _release_notes:
+
 Release Notes
 #############
 
@@ -21,20 +23,34 @@ Core updates for |version|
 
 + All ops support ``Output<Node>`` arguments
 + Additional ops
++ ONNX handling unknown domains
++ Provenance works with builders and fused ops
++ ``RPATH`` for finding openmpi
++ Negative indices/axes fixes
++ Migrate some ``get_argument`` removals
++ Negative indices/axes fixes
++ Better support for MKL-DNN 1.0 (DNNL)
++ Additional constant element types
 
+Latest documentation updates
+----------------------------
 
-Latest documentation updates for |version|
-------------------------------------------
-
-+ Note the only support for nGPU is now through PlaidML; nGraph support for nGPU 
-  (via cuDNN) has been deprecated.  
-+ iGPU works only with nGraph version `0.24`.
++ Add new Sphinx-friendly theme (can be built natively for an alternative to ngraph.ai docs). 
++ Update PaddlePaddle documentation to reflect demo directories instead of example directory.
++ Update doc regarding the validation of ``Sum`` op.
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
 
 
+
 Changelog on Previous Releases
 ==============================
+
+0.26.1
+------
+
++ Performance increase for ``ConstantFolding`` pass
+
 
 0.25.1
 ------
@@ -42,6 +58,12 @@ Changelog on Previous Releases
 + Allow DLLs that link nGraph statically to load backends
 + Add rank id to trace file name
 + Allow provenance merging to be disabled
++ Remove some white-listed compiler warnings
++ Provenance, builders, ops that make ops, and fused op expansions
++ Note the only support for nGPU is now through PlaidML; nGraph support for nGPU
+  (via cuDNN) has been deprecated.
++ iGPU works only with nGraph version `0.24`.
+
 
 
 0.25.0
@@ -136,8 +158,9 @@ Changelog on Previous Releases
 + Provenance improvements
 
 
-0.19
-----
+pre-0.20
+--------
+
 
 + More dynamic shape preparation
 + Distributed interface factored out
@@ -152,12 +175,6 @@ Changelog on Previous Releases
 + Additional ONNX ops
 + Add graph visualization tools to doc
 + Update doxygen to be friendlier to frontends
-
-
-
-0.18
-----
-
 + Python formatting issue
 + mkl-dnn work-around
 + Event tracing improvements
@@ -165,22 +182,12 @@ Changelog on Previous Releases
 + Begin tracking framework node names
 + ONNX quantization
 + More fusions
-
-
-0.17
-----
-
 + Allow negative padding in more places
 + Add code generation for some quantized ops
 + Preliminary dynamic shape support
 + initial distributed ops
 + Pad op takes CoordinateDiff instead of Shape pad values to allow for negative 
   padding.
-
-
-0.16
-----
-
 + NodeInput and NodeOutput classes prepare for simplifications of Node
 + Test improvements
 + Additional quantization ops
