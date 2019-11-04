@@ -46,6 +46,12 @@ Latest documentation updates
 Changelog on Previous Releases
 ==============================
 
+0.26.1
+------
+
++ Performance increase for ``ConstantFolding`` pass
+
+
 0.25.1
 ------
 

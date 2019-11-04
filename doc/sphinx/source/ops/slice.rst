@@ -65,7 +65,7 @@ where :math:`I=I_1, I_2, \ldots, I_n` is a coordinate of the output.
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Slice
+.. doxygenclass:: ngraph::op::v0::Slice
    :project: ngraph
    :members:
 
