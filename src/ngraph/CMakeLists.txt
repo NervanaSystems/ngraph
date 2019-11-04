@@ -361,6 +361,8 @@ set (SRC
     op/fused/rnn_cell.hpp
     op/fused/scale_shift.cpp
     op/fused/scale_shift.hpp
+    op/fused/selu.cpp
+    op/fused/selu.hpp
     op/fused/shuffle_channels.cpp
     op/fused/shuffle_channels.hpp
     op/fused/softmax_crossentropy.cpp
