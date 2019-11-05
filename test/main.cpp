@@ -17,6 +17,9 @@
 #include <chrono>
 #include <iostream>
 
+#ifdef NGRAPH_MLIR_ENABLE
+#include "contrib/mlir/utils.hpp"
+#endif
 #include "gtest/gtest.h"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
@@ -54,6 +57,12 @@ int main(int argc, char** argv)
 #ifdef NGRAPH_INTERPRETER_ENABLE
     ngraph_register_interpreter_backend();
 #endif
+
+#ifdef NGRAPH_MLIR_ENABLE
+    // Initialize MLIR
+    ngraph::runtime::ngmlir::initializeNGraphMLIR();
+#endif
+
     auto start = std::chrono::system_clock::now();
     int rc = RUN_ALL_TESTS();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
