@@ -1706,19 +1706,18 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reverse_sequence_time_and_batch_axis_equ
 
 TEST(onnx_${BACKEND_NAME}, model_conv_resnetv24_conv0_fwd)
 {
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/conv_resnetv24_conv0_fwd.onnx"));
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/conv_resnetv24_conv0_fwd.prototxt"));
 
-    Inputs inputs{};
-    inputs.emplace_back(read_binary_file<float>(
-        file_util::path_join(TEST_FILES, "onnx/conv_resnetv24_conv0_fwd_X.bin")));
-    inputs.emplace_back(read_binary_file<float>(
-        file_util::path_join(TEST_FILES, "onnx/conv_resnetv24_conv0_fwd_W.bin")));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
 
-    Outputs expected_outputs{read_binary_file<float>(
-        file_util::path_join(TEST_FILES, "onnx/conv_resnetv24_conv0_fwd_output.bin"))};
+    test_case.add_input(read_binary_file<float>(
+        file_util::path_join(TEST_FILES, "onnx/conv_resnetv24_conv0_fwd/X.bin")));
+    test_case.add_input(read_binary_file<float>(
+        file_util::path_join(TEST_FILES, "onnx/conv_resnetv24_conv0_fwd/W.bin")));
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    test_case.add_expected_output(Shape{1, 64, 112, 112},
+                                  read_binary_file<float>(file_util::path_join(
+                                      TEST_FILES, "onnx/conv_resnetv24_conv0_fwd/output.bin")));
+    test_case.run();
 }
