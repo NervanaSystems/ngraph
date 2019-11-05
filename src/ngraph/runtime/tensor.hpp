@@ -38,11 +38,9 @@ namespace ngraph
         class Tensor
         {
         protected:
-            Tensor(const std::shared_ptr<ngraph::descriptor::Tensor>& descriptor,
-                   const Backend* parent)
+            Tensor(const std::shared_ptr<ngraph::descriptor::Tensor>& descriptor)
                 : m_descriptor(descriptor)
                 , m_stale(true)
-                , m_parent(parent)
             {
             }
 
@@ -52,23 +50,27 @@ namespace ngraph
 
             /// \brief Get tensor shape
             /// \return const reference to a Shape
-            const ngraph::Shape& get_shape() const;
+            virtual const ngraph::Shape& get_shape() const;
+
+            /// \brief Get tensor partial shape
+            /// \return const reference to a PartialShape
+            const ngraph::PartialShape& get_partial_shape() const;
 
             /// \brief Get tensor strides
             /// \return Strides
-            ngraph::Strides get_strides() const;
+            virtual ngraph::Strides get_strides() const;
 
             /// \brief Get tensor element type
             /// \return element::Type
-            const element::Type& get_element_type() const;
+            virtual const element::Type& get_element_type() const;
 
             /// \brief Get number of elements in the tensor
             /// \return number of elements in the tensor
-            size_t get_element_count() const;
+            virtual size_t get_element_count() const;
 
             /// \brief Get the size in bytes of the tensor
             /// \return number of bytes in tensor's allocation
-            size_t get_size_in_bytes() const;
+            virtual size_t get_size_in_bytes() const;
 
             /// \brief Get tensor's unique name
             /// \return tensor's name
@@ -93,25 +95,21 @@ namespace ngraph
 
             /// \brief Write bytes directly into the tensor
             /// \param p Pointer to source of data
-            /// \param offset Offset into tensor storage to begin writing. Must be element-aligned.
             /// \param n Number of bytes to write, must be integral number of elements.
-            virtual void write(const void* p, size_t offset, size_t n) = 0;
+            virtual void write(const void* p, size_t n) = 0;
 
             /// \brief Read bytes directly from the tensor
             /// \param p Pointer to destination for data
-            /// \param offset Offset into tensor storage to begin writing. Must be element-aligned.
             /// \param n Number of bytes to read, must be integral number of elements.
-            virtual void read(void* p, size_t offset, size_t n) const = 0;
+            virtual void read(void* p, size_t n) const = 0;
 
             /// \brief copy bytes directly from source to this tensor
             /// \param source The source tensor
             virtual void copy_from(const ngraph::runtime::Tensor& source);
 
-            const Backend* get_parent() const { return m_parent; }
         protected:
             std::shared_ptr<ngraph::descriptor::Tensor> m_descriptor;
             bool m_stale;
-            const Backend* m_parent;
         };
 
         using TensorViewPtrs = std::vector<std::shared_ptr<Tensor>>;

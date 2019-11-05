@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include <functional>
-#include <set>
 
 #include "graph.hpp"
 #include "node.hpp"
@@ -105,7 +104,8 @@ namespace ngraph
                 {
                     unknown_operators.emplace(detail::get_op_domain_and_name(node_proto),
                                               node_proto);
-                    // If a node from an unregistered domain is detected, try registering that domain
+                    // If a node from an unregistered domain is detected, try registering that
+                    // domain
                     m_model->enable_opset_domain(detail::get_node_domain(node_proto));
                 }
             }
@@ -124,9 +124,9 @@ namespace ngraph
                 }
             }
 
-            NGRAPH_ASSERT(unknown_operators.empty())
-                << "nGraph does not support the following ONNX operations: "
-                << detail::to_string(unknown_operators);
+            NGRAPH_CHECK(unknown_operators.empty(),
+                         "nGraph does not support the following ONNX operations: ",
+                         detail::to_string(unknown_operators));
 
             // Process ONNX graph nodes, convert to nGraph nodes
             for (const auto& node_proto : m_graph_proto->node())

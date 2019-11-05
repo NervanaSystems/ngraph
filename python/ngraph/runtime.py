@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018-2019 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ class Runtime:
         self.backend = Backend.create(backend_name)
 
     def __repr__(self):  # type: () -> str
-        return '<Runtime: Backend=\'{}\'>'.format(self.backend_name)
+        return "<Runtime: Backend='{}'>".format(self.backend_name)
 
     def computation(self, node_or_function, *inputs):
         # type: (Union[Node, Function], *Node) -> 'Computation'
@@ -120,7 +120,7 @@ class Computation(object):
         # type: (np.ndarray, Tensor) -> None
         tensor_view_dtype = get_dtype(tensor_view.element_type)
         if list(tensor_view.shape) != list(value.shape) and len(value.shape) > 0:
-            raise UserInputError('Provided tensor\'s shape: %s does not match the expected: %s.',
+            raise UserInputError("Provided tensor's shape: %s does not match the expected: %s.",
                                  list(value.shape), list(tensor_view.shape))
         if value.dtype != tensor_view_dtype:
             log.warning(
@@ -133,11 +133,11 @@ class Computation(object):
             tensor_view.element_type, tensor_view.element_count)
 
         nparray = np.ascontiguousarray(value)
-        tensor_view.write(util.numpy_to_c(nparray), 0, buffer_size)
+        tensor_view.write(util.numpy_to_c(nparray), buffer_size)
 
     @staticmethod
     def _read_tensor_view_to_ndarray(tensor_view, output):
         # type: (Tensor, np.ndarray) -> None
         buffer_size = Computation._get_buffer_size(
             tensor_view.element_type, tensor_view.element_count)
-        tensor_view.read(util.numpy_to_c(output), 0, buffer_size)
+        tensor_view.read(util.numpy_to_c(output), buffer_size)

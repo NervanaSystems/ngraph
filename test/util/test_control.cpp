@@ -52,7 +52,9 @@ string ngraph::prepend_disabled(const string& backend_name,
             }
         }
     }
-    if (blacklist.find(test_name) != blacklist.end())
+    string compound_test_name = backend_name + "." + test_name;
+    if (blacklist.find(test_name) != blacklist.end() ||
+        blacklist.find(compound_test_name) != blacklist.end())
     {
         rc = "DISABLED_" + test_name;
     }

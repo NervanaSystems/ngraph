@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include <memory>
-#include <numeric>
 #include <set>
 
 #include "algebraic_simplification.hpp"
@@ -28,7 +27,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/product.hpp"
@@ -52,18 +50,18 @@ static shared_ptr<pattern::Matcher>
 {
     auto bcst = make_shared<pattern::op::Skip>(const_label, pattern::has_class<op::Broadcast>());
     auto bcst_label = make_shared<pattern::op::Label>(bcst, nullptr, NodeVector{bcst});
-    auto matcher = make_shared<pattern::Matcher>(make_shared<T>(label, bcst_label), nullptr);
+    auto matcher = make_shared<pattern::Matcher>(make_shared<T>(label, bcst_label));
     return matcher;
 }
 
 static shared_ptr<pattern::op::Label> get_broadcast_label(shared_ptr<pattern::Matcher> matcher)
 {
-    return dynamic_pointer_cast<pattern::op::Label>(matcher->get_pattern()->get_argument(1));
+    return static_pointer_cast<pattern::op::Label>(matcher->get_pattern()->get_argument(1));
 }
 
 //`simplify_concat` identifies slices-concat sequences
 // that cancel each other. Namely it replaces subgraphs
-//similar to the one below with `arg`
+// similar to the one below with `arg`
 //
 //                 +----------+
 //            +----+slice(n/2..n)---+
@@ -86,7 +84,7 @@ static bool simplify_concat(shared_ptr<Node> n)
 
     auto skip_reshape = make_shared<pattern::op::Skip>(lslice, pattern::has_class<op::Reshape>());
 
-    auto matcher = make_shared<pattern::Matcher>(skip_reshape, nullptr);
+    auto matcher = make_shared<pattern::Matcher>(skip_reshape);
 
     Coordinate prev_lower_bounds;
     Shape prev_slice_shape;
@@ -109,7 +107,8 @@ static bool simplify_concat(shared_ptr<Node> n)
                 return false;
             }
 
-            //slice chunks should be slice in the same order as slice nodes in concat's argument list
+            // slice chunks should be slice in the same order as slice nodes in concat's argument
+            // list
             auto cur_lower_bounds = slice->get_lower_bounds();
             if (cur_lower_bounds < prev_lower_bounds)
             {
@@ -118,7 +117,7 @@ static bool simplify_concat(shared_ptr<Node> n)
             }
             prev_lower_bounds.assign(cur_lower_bounds.begin(), cur_lower_bounds.end());
 
-            //slice shapes need to match
+            // slice shapes need to match
             if (slice->get_shape() != prev_slice_shape)
             {
                 NGRAPH_DEBUG << slice->get_name()
@@ -147,8 +146,8 @@ static bool simplify_concat(shared_ptr<Node> n)
             return false;
         }
 
-        //check that no other node uses slices and reshapes
-        if (auto rcarg = dynamic_pointer_cast<op::Reshape>(carg))
+        // check that no other node uses slices and reshapes
+        if (auto rcarg = as_type_ptr<op::Reshape>(carg))
         {
             auto default_shape = get_default_order(rcarg->get_argument(0)->get_shape());
             if (default_shape != rcarg->get_input_order())
@@ -166,14 +165,14 @@ static bool simplify_concat(shared_ptr<Node> n)
     }
 
     auto concat = static_pointer_cast<op::Concat>(n);
-    size_t concat_axis = concat->get_concatenation_axis();
+    auto concat_axis = concat->get_concatenation_axis();
 
     auto slice_shape = branch_tip->get_users(true).at(0)->get_shape();
     size_t slice_axis = numeric_limits<size_t>::max();
 
     auto btip_shape = branch_tip->get_shape();
 
-    //slices should cover all elements
+    // slices should cover all elements
     if (shape_size(btip_shape) != shape_size(n->get_shape()))
     {
         NGRAPH_DEBUG << "The number of elements in Concat (" << shape_size(n->get_shape())
@@ -244,10 +243,10 @@ static bool simplify_concat(shared_ptr<Node> n)
 //`simplify_multiply` optimizes the following 4 *base* cases
 //(8 cases in total including variants due to commutativity)
 //
-//a * 0 -> 0
-//a * broadcast(0) -> broadcast(0)
-//a * 1 -> a
-//a * broadcast(1) -> a
+// a * 0 -> 0
+// a * broadcast(0) -> broadcast(0)
+// a * 1 -> a
+// a * broadcast(1) -> a
 static bool simplify_multiply(shared_ptr<Node> n)
 {
     NGRAPH_DEBUG << "In simplify_multiply for " << n->get_name();
@@ -282,8 +281,8 @@ static bool simplify_multiply(shared_ptr<Node> n)
 //`simplify_add` optimizes the following 2 *base* cases
 //(4 cases in total including variants due to commutativity)
 //
-//a + 0 -> a
-//a + broadcast(0) -> a
+// a + 0 -> a
+// a + broadcast(0) -> a
 static bool simplify_add(shared_ptr<Node> n)
 {
     NGRAPH_DEBUG << "In simplify_add for " << n->get_name();
@@ -317,9 +316,9 @@ static bool simplify_add(shared_ptr<Node> n)
 //`simplify_log` optimizes `log(exp(x)/y)` into `x - log(y)`
 static bool simplify_log(shared_ptr<Node> n)
 {
-    if (auto div = dynamic_pointer_cast<op::Divide>(n->get_argument(0)))
+    if (auto div = as_type_ptr<op::Divide>(n->input_value(0).get_node_shared_ptr()))
     {
-        if (auto exp = dynamic_pointer_cast<op::Exp>(div->get_argument(0)))
+        if (auto exp = as_type_ptr<op::Exp>(div->input_value(0).get_node_shared_ptr()))
         {
             auto denom = div->get_argument(1);
             auto diff =
@@ -408,24 +407,24 @@ static shared_ptr<Node> get_prod_constant(shared_ptr<op::Constant> cnst, size_t 
 }
 
 //`simplify_reduction` optimizes the following case:
-//sum(broadcast(scalar_constant), reduction_axes = ...) -> constant2 (or scalar constant)
-//where constant2's values are equal to scalar_constant * shape_size(reduction_axes)
-//product(broadcast(scalar_constant), reduction_axes = ...) -> constant2 (or scalar constant)
-//where constant2's values are equal to scalar_constant ^ shape_size(reduction_axes)
+// sum(broadcast(scalar_constant), reduction_axes = ...) -> constant2 (or scalar constant)
+// where constant2's values are equal to scalar_constant * shape_size(reduction_axes)
+// product(broadcast(scalar_constant), reduction_axes = ...) -> constant2 (or scalar constant)
+// where constant2's values are equal to scalar_constant ^ shape_size(reduction_axes)
 template <typename T, shared_ptr<Node> (*F)(shared_ptr<op::Constant> cnst, size_t multiplier)>
 static bool simplify_reduction(shared_ptr<Node> n)
 {
     NGRAPH_DEBUG << "In simplify_reduction for " << n->get_name();
     auto reduction = static_pointer_cast<T>(n);
 
-    auto broadcast = dynamic_pointer_cast<op::Broadcast>(n->get_argument(0));
+    auto broadcast = as_type_ptr<op::Broadcast>(n->input_value(0).get_node_shared_ptr());
     if (!broadcast)
     {
         NGRAPH_DEBUG << n->get_name() << " isn't Broadcast";
         return false;
     }
 
-    auto cnst = dynamic_pointer_cast<op::Constant>(broadcast->get_argument(0));
+    auto cnst = as_type_ptr<op::Constant>(broadcast->input_value(0).get_node_shared_ptr());
     if (!cnst || cnst->get_shape().size() > 0 /*not a scalar*/)
     {
         NGRAPH_DEBUG << broadcast->get_argument(0)->get_name() << " isn't a scalar constant";

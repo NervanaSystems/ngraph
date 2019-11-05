@@ -41,6 +41,30 @@ Function::Function(const ResultVector& results,
     init();
 }
 
+Function::Function(const OutputVector& results,
+                   const ParameterVector& parameters,
+                   const std::string& name)
+    : m_results(results.size())
+    , m_parameters(parameters)
+    , m_temporary_pool_size(0)
+    , m_instance_id(m_next_instance_id.fetch_add(1))
+    , m_name(name)
+    , m_unique_name("Function_" + to_string(m_instance_id))
+{
+    if (std::any_of(results.cbegin(), results.cend(), [](Output<Node> n) {
+            return as_type_ptr<op::Result>(n.get_node_shared_ptr());
+        }))
+    {
+        throw ngraph_error(
+            " Results already contain op::Results. Use a c-tor that takes a ResultVector");
+    }
+
+    std::transform(results.begin(), results.end(), m_results.begin(), [](Output<Node> n) {
+        return std::make_shared<op::Result>(n);
+    });
+    init();
+}
+
 Function::Function(const NodeVector& results,
                    const ParameterVector& parameters,
                    const std::string& name)
@@ -52,7 +76,7 @@ Function::Function(const NodeVector& results,
     , m_unique_name("Function_" + to_string(m_instance_id))
 {
     if (std::any_of(results.cbegin(), results.cend(), [](std::shared_ptr<Node> n) {
-            return std::dynamic_pointer_cast<op::Result>(n);
+            return as_type_ptr<op::Result>(n);
         }))
     {
         throw ngraph_error(
@@ -70,10 +94,6 @@ Function::Function(const std::shared_ptr<Node>& result,
                    const std::string& name)
     : Function(NodeVector{result}, parameters, name)
 {
-    // TODO this does not do anything while infer happens in the constructors
-    // and it will go away after we add shape during a clone; it is here now
-    // to assist development between those two stages.
-    validate_nodes_and_infer_types();
 }
 
 void Function::validate_nodes_and_infer_types()
@@ -101,7 +121,48 @@ void Function::init()
 
 std::list<shared_ptr<Node>> Function::get_ordered_ops(bool include_control_deps) const
 {
-    return topological_sort(get_ops(include_control_deps), include_control_deps);
+    NodeVector nodes;
+    for (auto& r : get_results())
+    {
+        nodes.push_back(r);
+    }
+    for (auto& param : get_parameters())
+    {
+        nodes.push_back(param);
+    }
+
+    return topological_sort(nodes, include_control_deps);
+}
+
+void Function::map_unordered_ops(std::function<void(Node*)> f) const
+{
+    std::unordered_set<Node*> unordered_ops;
+    std::stack<Node*, std::vector<Node*>> remaining_ops;
+    for (auto& r : get_results())
+    {
+        remaining_ops.push(r.get());
+    }
+    for (auto& param : get_parameters())
+    {
+        remaining_ops.push(param.get());
+    }
+    while (remaining_ops.size() > 0)
+    {
+        Node* op = remaining_ops.top();
+        remaining_ops.pop();
+        if (unordered_ops.insert(op).second)
+        {
+            f(op);
+            for (size_t i = 0; i < op->get_input_size(); ++i)
+            {
+                remaining_ops.push(op->input(i).get_source_output().get_node());
+            }
+            for (auto& cdep : op->get_control_dependencies())
+            {
+                remaining_ops.push(cdep.get());
+            }
+        }
+    }
 }
 
 const std::string& Function::get_friendly_name() const
@@ -171,6 +232,11 @@ shared_ptr<Node> Function::get_output_op(size_t i) const
     return m_results.at(i);
 }
 
+Output<Node> Function::output(size_t i) const
+{
+    return m_results.at(i);
+}
+
 shared_ptr<Node> Function::get_result() const
 {
     if (m_results.size() != 1)
@@ -200,15 +266,15 @@ size_t Function::get_graph_size() const
         total_size += sizeof(*node);
         if (node->description() == "Constant")
         {
-            const Shape& shape = node->get_outputs()[0].get_shape();
-            size_t const_size = node->get_outputs()[0].get_element_type().size();
+            const Shape& shape = node->output(0).get_shape();
+            size_t const_size = node->output(0).get_element_type().size();
             if (shape.size() == 0)
             {
                 total_size += const_size;
             }
             else
             {
-                total_size += (const_size * shape_size(node->get_outputs()[0].get_shape()));
+                total_size += (const_size * shape_size(node->output(0).get_shape()));
             }
         }
     }
@@ -223,4 +289,32 @@ size_t Function::get_placement() const
 void Function::set_placement(size_t placement)
 {
     m_placement = placement;
+}
+
+// TODO(pthoreho) this will be expensive, since we will be traversing all the nodes in
+// the graph, figure out if their is a way to cache the result and invalidate/update
+// the result if the function is modified
+bool Function::is_dynamic() const
+{
+    auto list_of_nodes = this->get_ops();
+    for (auto& node : list_of_nodes)
+    {
+        if (node->get_output_partial_shape(0).is_dynamic())
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void Function::replace_parameter(size_t parameter_index, const shared_ptr<op::Parameter>& parameter)
+{
+    NGRAPH_CHECK(parameter_index < m_parameters.size(),
+                 "replace_parameter(): Tried to replace parameter at index ",
+                 parameter_index,
+                 " but the function only has ",
+                 m_parameters.size(),
+                 " parameters.");
+    replace_node(m_parameters[parameter_index], parameter);
+    m_parameters[parameter_index] = parameter;
 }

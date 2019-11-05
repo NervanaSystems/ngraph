@@ -17,7 +17,7 @@
 #pragma once
 
 #include "core/node.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/negative.hpp"
 
 namespace ngraph
@@ -31,7 +31,7 @@ namespace ngraph
                 inline NodeVector neg(const Node& node) { return {-node.get_ng_inputs().at(0)}; }
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

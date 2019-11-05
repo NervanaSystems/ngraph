@@ -16,8 +16,6 @@
 
 #include <algorithm>
 #include <memory>
-#include <typeindex>
-#include <typeinfo>
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
@@ -25,11 +23,13 @@
 using namespace std;
 using namespace ngraph;
 
-op::ReverseSequence::ReverseSequence(const std::shared_ptr<Node> arg,
-                                     const std::shared_ptr<Node> seq_indices,
+constexpr NodeTypeInfo op::ReverseSequence::type_info;
+
+op::ReverseSequence::ReverseSequence(const Output<Node>& arg,
+                                     const Output<Node>& seq_indices,
                                      size_t batch_axis,
                                      size_t seq_axis)
-    : Op("ReverseSequence", check_single_output_args({arg, seq_indices}))
+    : Op({arg, seq_indices})
     , m_batch_axis(batch_axis)
     , m_seq_axis(seq_axis)
 {
@@ -97,13 +97,13 @@ shared_ptr<Node> op::ReverseSequence::copy_with_new_args(const NodeVector& new_a
     check_new_args_count(this, new_args);
     auto res =
         make_shared<ReverseSequence>(new_args.at(0), new_args.at(1), m_batch_axis, m_seq_axis);
-    return res;
+    return move(res);
 }
 
 void op::ReverseSequence::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
-    auto x = get_argument(0);
+    auto x = input_value(0);
     auto rs_delta =
-        make_shared<ReverseSequence>(deltas.at(0), get_argument(1), m_batch_axis, m_seq_axis);
+        make_shared<ReverseSequence>(deltas.at(0), input_value(1), m_batch_axis, m_seq_axis);
     adjoints.add_delta(x, rs_delta);
 }

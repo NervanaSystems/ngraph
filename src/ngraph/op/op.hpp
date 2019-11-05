@@ -19,7 +19,6 @@
 #include <string>
 
 #include "ngraph/node.hpp"
-#include "ngraph/op/util/op_annotations.hpp"
 
 namespace ngraph
 {
@@ -29,21 +28,15 @@ namespace ngraph
         class Op : public Node
         {
         public:
-            void set_op_annotations(std::shared_ptr<ngraph::op::util::OpAnnotations> op_annotations)
-            {
-                m_op_annotations = op_annotations;
-            }
-            std::shared_ptr<ngraph::op::util::OpAnnotations> get_op_annotations() const
-            {
-                return m_op_annotations;
-            }
-
             virtual bool is_op() const override { return true; }
         protected:
+            Op()
+                : Node()
+            {
+            }
+            Op(const NodeVector& arguments);
+            Op(const OutputVector& arguments);
             Op(const std::string& node_type, const NodeVector& arguments);
-
-        private:
-            std::shared_ptr<ngraph::op::util::OpAnnotations> m_op_annotations;
         };
     }
 }

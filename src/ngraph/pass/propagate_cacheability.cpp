@@ -20,7 +20,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/util/op_annotations.hpp"
-#include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -50,14 +49,15 @@ bool pass::PropagateCacheability::run_on_function(shared_ptr<Function> function)
             else
             {
                 bool cacheable = true;
-                for (auto arg : node->get_arguments())
+                for (auto input : node->inputs())
                 {
-                    NGRAPH_DEBUG << "propagate cacheability: arg is " << arg->get_name();
-                    if (arg->is_op())
+                    auto input_value_node = input.get_source_output().get_node_shared_ptr();
+                    NGRAPH_DEBUG << "propagate cacheability: arg is " << *input_value_node;
+                    if (input_value_node->is_op())
                     {
-                        auto arg_op = static_pointer_cast<op::Op>(arg);
+                        auto arg_op = static_pointer_cast<op::Op>(input_value_node);
                         auto arg_op_annotations = arg_op->get_op_annotations();
-                        NGRAPH_ASSERT(arg_op_annotations);
+                        NGRAPH_CHECK(arg_op_annotations);
                         if (!arg_op_annotations->is_cacheable())
                         {
                             cacheable = false;

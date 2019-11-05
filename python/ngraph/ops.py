@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018-2019 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,24 +18,27 @@
 import numpy as np
 
 from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Function, Node, \
-    NodeVector, Shape, Strides
+    Shape, Strides
 
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
-    BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Concat, Constant, Convert, \
-    Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, \
-    GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, \
-    Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, \
-    Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, \
-    Sqrt, Subtract, Sum, Tan, Tanh, TopK
+    BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
+    Convolution, ConvolutionBackpropData, Cos, Cosh, DepthToSpace, Dequantize, Divide, Dot, Elu, \
+    FakeQuantize, Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, \
+    GroupConvolution, HardSigmoid, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, \
+    Multiply, MVN, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, Power, \
+    Quantize, QuantizedConvolution, QuantizedDot, PRelu, Relu, RNNCell, ReplaceSlice, Reshape, \
+    Reverse, ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, Softmax, SpaceToDepth, \
+    Sqrt, SquaredDifference, Squeeze, Subtract, Sum, Tan, Tanh, TopK, Unsqueeze
 
-from typing import Callable, Iterable, List, Union
+
+from typing import Callable, Iterable, List, Set, Union
 
 from ngraph.utils.broadcasting import get_broadcast_axes
 from ngraph.utils.decorators import nameable_op, binary_op, unary_op
 from ngraph.utils.input_validation import assert_list_of_ints
 from ngraph.utils.reduction import get_reduction_axes
 from ngraph.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
-    NodeInput, ScalarData
+    NodeInput, ScalarData, as_node
 from ngraph.utils.types import get_element_type
 
 
@@ -58,6 +61,472 @@ def constant(value, dtype=None, name=None):  # type: (NumericData, NumericType, 
     :return: The Constant node initialized with provided data.
     """
     return make_constant_node(value, dtype)
+
+
+@nameable_op
+def elu(data, alpha, name=None):  # type: (NodeInput, NumericType, str) -> Node
+    """Perform Exponential Linear Unit operation element-wise on data from input node.
+
+    Computes exponential linear: alpha * (exp(data) - 1) if < 0, data otherwise.
+
+    For more information refer to:
+    `Fast and Accurate Deep Network Learning by Exponential Linear Units (ELUs)
+    <http://arxiv.org/abs/1511.07289>`_
+
+    :param data: Input tensor. One of: input node, array or scalar.
+    :param alpha: Scalar multiplier for negative values.
+    :param name: Optional output node name.
+    :return: The new node performing an ELU operation on its input data element-wise.
+    """
+    return Elu(as_node(data), alpha)
+
+
+@nameable_op
+def shuffle_channels(data, axis, groups, name=None):  # type: (Node, int, int, str) -> Node
+    """Perform permutation on data in the channel dimension of the input tensor.
+
+    The operation is the equivalent with the following transformation of the input tensor
+    :code:`data` of shape [N, C, H, W]:
+
+    :code:`data_reshaped` = reshape(:code:`data`, [N, group, C / group, H * W])
+
+    :code:`data_trnasposed` = transpose(:code:`data_reshaped`, [0, 2, 1, 3])
+
+    :code:`output` = reshape(:code:`data_trnasposed`, [N, C, H, W])
+
+    For example:
+
+    .. code-block:: python
+
+        Inputs: tensor of shape [1, 6, 2, 2]
+
+                data = [[[[ 0.,  1.], [ 2.,  3.]],
+                         [[ 4.,  5.], [ 6.,  7.]],
+                         [[ 8.,  9.], [10., 11.]],
+                         [[12., 13.], [14., 15.]],
+                         [[16., 17.], [18., 19.]],
+                         [[20., 21.], [22., 23.]]]]
+
+                axis = 1
+                groups = 3
+
+        Output: tensor of shape [1, 6, 2, 2]
+
+                output = [[[[ 0.,  1.], [ 2.,  3.]],
+                           [[ 8.,  9.], [10., 11.]],
+                           [[16., 17.], [18., 19.]],
+                           [[ 4.,  5.], [ 6.,  7.]],
+                           [[12., 13.], [14., 15.]],
+                           [[20., 21.], [22., 23.]]]]
+
+    :param data: The node with input tensor.
+    :param axis: Channel dimension index in the data tensor.
+                 A negative value means that the index should be calculated
+                 from the back of the input data shape.
+    :param group:The channel dimension specified by the axis parameter
+                 should be split into this number of groups.
+    :param name: Optional output node name.
+    :return: The new node performing a permutation on data in the channel dimension
+             of the input tensor.
+    """
+    return ShuffleChannels(data, axis, groups)
+
+
+@nameable_op
+def squeeze(data, axes, name=None):  # type: (Node, NodeInput, str) -> Node
+    """Perform squeeze operation on input tensor.
+
+    Remove single-dimensional entries from the shape of a tensor.
+    Takes a parameter :code:`axes` with a list of axes to squeeze.
+    If :code:`axes` is not provided, all the single dimensions will be removed from the shape.
+    If an :code:`axis` is selected with shape entry not equal to one, an error is raised.
+
+
+    For example:
+
+       Inputs: tensor with shape [1, 2, 1, 3, 1, 1], axes=[2, 4]
+
+       Result: tensor with shape [1, 2, 3, 1]
+
+    :param data: The node with data tensor.
+    :param axes: List of non-negative integers, indicate the dimensions to squeeze.
+                  One of: input node or array.
+    :param name: Optional new name for output node.
+    :return: The new node performing a squeeze operation on input tensor.
+    """
+    return Squeeze(data, as_node(axes))
+
+
+def unsqueeze(data, axes, name=None):  # type: (Node, NodeInput, str) -> Node
+    """Perform unsqueeze operation on input tensor.
+
+    Insert single-dimensional entries to the shape of a tensor. Takes one required argument axes,
+    a list of dimensions that will be inserted.
+    Dimension indices in axes are as seen in the output tensor.
+
+    For example: Inputs: tensor with shape [3, 4, 5], axes=[0, 4]
+                 Result: tensor with shape [1, 3, 4, 5, 1]
+
+    :param data: The node with data tensor.
+    :param axes: List of non-negative integers, indicate the dimensions to be inserted.
+                  One of: input node or array.
+    :return: The new node performing an unsqueeze operation on input tensor.
+    """
+    return Unsqueeze(data, as_node(axes))
+
+
+def grn(data, bias, name=None):  # type: (Node, float, str) -> Node
+    r"""Perform Global Response Normalization with L2 norm (across channels only).
+
+    Computes GRN operation on channels for input tensor:
+
+    .. math:: output_i = \dfrac{input_i}{\sqrt{\sum_{i}^{C} input_i}}
+
+    :param data: The node with data tensor.
+    :param bias: The bias added to the variance. Scalar value.
+    :param name: Optional output node name.
+    :return: The new node performing a GRN operation on tensor's channels.
+    """
+    return GRN(data, bias)
+
+
+@nameable_op
+def group_convolution(data_batch,                      # type: Node
+                      filters,                         # type: Node
+                      window_movement_strides,         # type: List[int]
+                      window_dilation_strides,         # type: List[int]
+                      padding_below,                   # type: List[int]
+                      padding_above,                   # type: List[int]
+                      data_dilation_strides,           # type: List[int]
+                      groups,                          # type: int
+                      pad_type='EXPLICIT',             # type: str
+                      name=None,                       # type: str
+                      ):
+    # type: (...) -> Node
+    """Perform Group Convolution operation on data from input node.
+
+    :param  data: The node producing input data.
+    :param filters: The node producing filters data.
+    :param window_movement_strides: The strides along each feature axis.
+    :param window_dilation_strides: The dilations along each feature axis.
+    :param padding_below: The padding added below each feature axis.
+    :param padding_above: The padding added above each feature axis.
+    :data_dilation_strides: The dilations along data.
+    :param groups: The number of groups the input channels and output channels
+                   are divided into.
+    :param pad_type: Name describes how to perform padding.
+                     EXPLICITI: Pad dimensions are explicity specified
+
+                     SAME_LOWER: Pad dimensions computed to match input shape
+                                 Ceil(num_dims/2) at the beginning and
+                                 Floor(num_dims/2) at the end
+
+                     SAME_UPPER: Pad dimensions computed to match input shape
+                                 Floor(num_dims/2) at the beginning and
+                                 Ceil(num_dims/2) at the end
+
+                     VALID: No padding
+    :param name: Optional output node name.
+    :return: The new node performing a Group Convolution operation on tensor from input node.
+    """
+    return GroupConvolution(data_batch,
+                            filters,
+                            Strides(window_movement_strides),
+                            Strides(window_dilation_strides),
+                            CoordinateDiff(padding_below),
+                            CoordinateDiff(padding_above),
+                            Strides(data_dilation_strides),
+                            groups,
+                            GroupConvolution.PadType(pad_type))
+
+
+@nameable_op
+def rnn_cell(X,                      # type: Node
+             W,                      # type: Node
+             R,                      # type: Node
+             H_t,                    # type: Node
+             hidden_size,            # type: int
+             B,                      # type: Node
+             activations,            # type: List[str]
+             activation_alpha,       # type: List[float]
+             activation_beta,        # type: List[float]
+             clip,                   # type: float
+             name=None,              # type: str
+             ):
+    # type: (...) -> Node
+    """Perform RNNCell operation on tensor from input node.
+
+    It follows notation and equations defined as in ONNX standard:
+    https://github.com/onnx/onnx/blob/master/docs/Operators.md#RNN
+
+    Note this class represents only single *cell* and not whole RNN *layer*.
+
+    :param X: The input tensor with shape: [batch_size, input_size].
+    :param W: The weight tensor with shape: [hidden_size, input_size].
+    :param R: The recurrence weight tensor with shape: [hidden_size, hidden_size].
+    :param H_t: The hidden state tensor at current time step with
+                shape: [batch_size, hidden_size].
+    :param hidden_size: The number of hidden units for recurrent cell.
+    :param B: The bias tensor for input gate with shape: [2*hidden_size].
+    :param activations: The vector of activation functions used inside recurrent cell.
+    :param activation_alpha: The vector of alpha parameters for activation
+                            functions in order respective to activation list.
+    :param activation_beta: The vector of beta parameters for activation functions
+                            in order respective to activation list.
+    :param clip: The value defining clipping range [-clip, clip] on
+                 input of activation functions.
+    :param name: Optional output node name.
+    :return: The new node performing a RNNCell operation on tensor from input node.
+    """
+    return RNNCell(X,
+                   W,
+                   R,
+                   H_t,
+                   hidden_size,
+                   B,
+                   activations,
+                   activation_alpha,
+                   activation_beta,
+                   clip)
+
+
+@nameable_op
+def scale_shift(data, scale, shift, name=None):  # type: (Node, Node, Node, str) -> Node
+    r"""Perform ScaleShift transformation on input node.
+
+    Computes ScaleShift:
+
+    .. math:: Y = scale\cdot data + shift
+
+
+    :param data: The node with data tensor.
+    :param scale: The node with data tensor that scale input data.
+    :param shift: The node with data tensor that shift input data.
+    :param name: Optional output node name.
+    :return: The new node performing a ScaleShift operation on input tensor.
+    """
+    return ScaleShift(data, scale, shift)
+
+
+@nameable_op
+def space_to_depth(data, block_size, name=None):  # type: (Node, int, str) -> Node
+    """Perform SpaceToDepth operation on the input tensor.
+
+    SpaceToDepth rearranges blocks of spatial data into depth.
+    The operator returns a copy of the input tensor where values from the height
+    and width dimensions are moved to the depth dimension.
+
+    :param data: The node with data tensor.
+    :param block_size: The size of the block of values to be moved. Scalar value.
+    :param name: Optional output node name.
+    :return: The new node performing a SpaceToDepth operation on input tensor.
+    """
+    return SpaceToDepth(data, block_size)
+
+
+@nameable_op
+def mvn(data, axes, normalize_variance, eps, name=None):
+    # type: (Node, Set[int], bool, float, str) -> Node
+    r"""Perform Mean Variance Normalization operation on data from input node.
+
+    Computes MVN on the input tensor :code:`data` (called `X`) using formula:
+
+    .. math:: Y = \dfrac{X-EX}{\sqrt{E(X-EX)^2}}
+
+    :param data: The node with data tensor.
+    :param axes: A list of axes, along which to reduce. Array of integers.
+    :param normalize_variance: Flag that denotes if mean values are shared across channels.
+                               Boolen value.
+    :param eps: The number added to the variance to avoid division by zero
+               when normalizing the value. Scalar value.
+    :param name: Optional output node name.
+    :return: The new node performing a MVN operation on input tensor.
+    """
+    return MVN(data, AxisSet(axes), normalize_variance, eps)
+
+
+@nameable_op
+def quantize(data, scale, zero_point, new_type, axes, round_mode, name=None):
+    # type: (Node, Node, Node, NumericType, Set[int], Quantize.RoundMode, str) -> Node
+    r"""Perform quantize operation on data from input node.
+
+    Computes quantize on the input tensor:
+
+    .. math:: output = ROUND((input / scale) + zero\_point)
+
+    :param data: The node with data tensor.
+    :param scale: Scale used for mapping.
+    :param zero_point: Zero point used for mapping.
+    :param new_type: Output element type.
+    :param round_mode: Number describes how to perform ROUND function.
+
+                 ROUND_NEAREST_TOWARD_INFINITY: Round to nearest integer. In case of two
+                 equidistant integers round away from zero e.g. 2.5 -> 3,  -3.5 -> -4
+
+                 ROUND_NEAREST_TOWARD_ZERO: Round to nearest integer. In case of two equidistant
+                 integers round toward zero e.g. 2.5 -> 2,  -3.5 -> -3
+
+                 ROUND_NEAREST_UPWARD: Round to nearest integer. In case of two equidistant
+                 integers round up e.g. 2.5 -> 2,  -3.5 -> -3
+
+                 ROUND_NEAREST_DOWNWARD: Round to nearest integer. In case of two equidistant
+                 integers round down e.g. 2.5 -> 2,  -3.5 -> -4
+
+                 ROUND_NEAREST_TOWARD_EVEN: Round to nearest integer. In case of two equidistant
+                 integers round down e.g. 2.5 -> 2,  -3.5 -> -4
+
+                 ROUND_TOWARD_INFINITY: Round to nearest integer away from zero.
+
+                 ROUND_TOWARD_ZERO: Round to nearest integer toward zero.
+
+                 ROUND_UP: Round to nearest integer toward infinity (ceiling).
+
+                 ROUND_DOWN: Round to nearest integer toward negative infinity (floor).
+
+    :param name: Optional output node name.
+    :return: The new node performing a quantize operation on input tensor.
+    """
+    new_element_type = get_element_type(new_type)
+    return Quantize(data,
+                    scale,
+                    zero_point,
+                    new_element_type,
+                    AxisSet(axes),
+                    round_mode)
+
+
+@nameable_op
+def dequantize(data, scale, zero_point, element_type, axes, name=None):
+    # type: (Node, Node, Node, NumericType, Set[int], str) -> Node
+    r"""Perform dequantize operation on data from input node.
+
+    Computes dequantize on the input tensor:
+
+    .. math:: output = (input - zero\_point) * scale
+
+    :param data: The node with data tensor.
+    :param scale: Scale used for mapping.
+    :param zero_point: Zero point used for mapping.
+    :param element_type: Output element type.
+    :param name: Optional output node name.
+    :return: The new node performing a dequantize operation on input tensor.
+    """
+    new_element_type = get_element_type(element_type)
+    return Dequantize(data, scale, zero_point, new_element_type, AxisSet(axes))
+
+
+@nameable_op
+def quantized_convolution(data,                      # type: Node
+                          filters,                   # type: Node
+                          window_movement_strides,   # type: List[int]
+                          window_dilation_strides,   # type: List[int]
+                          padding_below,             # type: List[int]
+                          padding_above,             # type: List[int]
+                          data_dilation_strides,     # type: List[int]
+                          input_scale,               # type: Node
+                          input_zero_point,          # type: Node
+                          filter_scale,              # type: Node
+                          filter_zero_point,         # type: Node
+                          output_scale,              # type: Node
+                          output_zero_point,         # type: Node
+                          output_type,               # type: NumericType
+                          input_axes,                # type: Set[int]
+                          filter_axes,               # type: Set[int]
+                          output_axes,               # type: Set[int]
+                          name=None,                 # type: str
+                          ):
+    # type: (...) -> Node
+    r"""Perform quantized convolution operation on data from input node.
+
+    :param data: The node producing the input data batch tensor.
+    :param filters: The node producing the filters tensor.
+    :param window_movement_strides: The window movement strides.
+    :param window_dilation_strides: he window dilation strides.
+    :param padding_below: The padding-below sizes.
+    :param padding_above: The padding-above sizes.
+    :param data_dilation_strides: The data dilation strides.
+    :param input_scale: Scale to transform the input.
+    :param input_zero_point: Zero point used for mapping.
+    :param filter_scale: Scale to transform the filters.
+    :param filter_zero_point: Zero point used for mapping.
+    :param output_scale: Scale to transform the output.
+    :param output_zero_point: Zero point used for mapping.
+    :param output_type: Output element type.
+    :param input_axes: Input axes set for channel wise quantization.
+    :param filter_axes: Filter axes set for channel wise quantization.
+    :param output_type: Output axes set for channel wise quantization.
+    :param name: Optional output node name.
+    :return: The new node performing a quantized convolution operation on input tensor.
+    """
+    new_output_type = get_element_type(output_type)
+    return QuantizedConvolution(data,
+                                filters,
+                                Strides(window_movement_strides),
+                                Strides(window_dilation_strides),
+                                CoordinateDiff(padding_below),
+                                CoordinateDiff(padding_above),
+                                Strides(data_dilation_strides),
+                                input_scale,
+                                input_zero_point,
+                                filter_scale,
+                                filter_zero_point,
+                                output_scale,
+                                output_zero_point,
+                                new_output_type,
+                                AxisSet(input_axes),
+                                AxisSet(filter_axes),
+                                AxisSet(output_axes))
+
+
+@nameable_op
+def quantized_dot(input0,                      # type: Node
+                  input1,                      # type: Node
+                  reduction_axes_count,        # type: int
+                  input0_scale,                # type: Node
+                  input0_zero_point,           # type: Node
+                  input1_scale,                # type: Node
+                  input1_zero_point,           # type: Node
+                  output_scale,                # type: Node
+                  output_zero_point,           # type: Node
+                  output_type,                 # type: NumericType
+                  input0_axes,                 # type: Set[int]
+                  input1_axes,                 # type: Set[int]
+                  output_axes,                 # type: Set[int]
+                  name=None,                   # type: str
+                  ):
+    # type: (...) -> Node
+    r"""Perform quantized dot operation on data from input node.
+
+    :param input0: The node producing the input data batch tensor.
+    :param input1: The node producing the filters tensor.
+    :param reduction_axes_count: Number of reduction axes.
+    :param input0_scale: Scale to transform the input.
+    :param input0_zero_point: Zero point used for mapping.
+    :param input1_scale: Scale to transform the filters.
+    :param input1_zero_point: Zero point used for mapping.
+    :param output_scale: Scale to transform the output.
+    :param output_zero_point: Zero point used for mapping.
+    :param output_type: Output element type.
+    :param input0_axes: Input0 axes set for channel wise quantization
+    :param input1_axes: Input1 axes set for channel wise quantization
+    :param output_axes: Output axes set for channel wise quantization
+    :param name: Optional output node name.
+    :return: The new node performing a quantized dot operation on input tensor.
+    """
+    new_output_type = get_element_type(output_type)
+    return QuantizedDot(input0,
+                        input1,
+                        reduction_axes_count,
+                        input0_scale,
+                        input0_zero_point,
+                        input1_scale,
+                        input1_zero_point,
+                        output_scale,
+                        output_zero_point,
+                        new_output_type,
+                        AxisSet(input0_axes),
+                        AxisSet(input1_axes),
+                        AxisSet(output_axes))
 
 
 # Unary ops
@@ -424,6 +893,20 @@ def logical_not(node, name=None):  # type: (Node, str) -> Node
     return Not(node)
 
 
+@binary_op
+def squared_difference(x1, x2, name=None):  # type: (Node, Node, str) -> Node
+    """Perform an element-wise squared difference between two tensors.
+
+    .. math:: y[i] = (x_1[i] - x_2[i])^2
+
+    :param x1: The node with first input tensor.
+    :param x2: The node with second input tensor.
+    :param name: Optional new name for output node.
+    :return: The new node performing a squared difference between two tensors.
+    """
+    return SquaredDifference(x1, x2)
+
+
 # Extend Node class to support binary operators
 Node.__add__ = add
 Node.__sub__ = subtract
@@ -503,10 +986,126 @@ def broadcast_to(node, new_shape, axis=None, name=None):
 
 
 @nameable_op
+def fake_quantize(data, input_low, input_high, output_low, output_high, levels, name=None):
+    # type: (Node, Node, Node, Node, Node, int, str) -> Node
+    r"""Perform an element-wise linear quantization on input data.
+
+    Input floating point values are quantized into a discrete set of floating point values.
+
+    .. code-block:: python
+        if x <= input_low:
+            output = output_low
+        if x > input_high:
+            output = output_high
+        else:
+            output = fake_quantize(output)
+
+    Fake quantize uses the following logic:
+
+    .. math:: output =
+            \dfrac{round( \dfrac{data - input\_low}{(input\_high - input\_low)\cdot (levels-1)})}
+            {(levels-1)\cdot (output\_high - output\_low)} + output\_low
+
+    :param data:         The node with data tensor.
+    :param input_low:    The node with the minimum for input values.
+    :param input_high:   The node with the maximum for input values.
+    :param output_low:   The node with the minimum quantized value.
+    :param output_high:  The node with the maximum quantized value.
+    :param levels:       The number of quantization levels. Integer value.
+    :return: New node with quantized value.
+    """
+    return FakeQuantize(data, input_low, input_high, output_low, output_high, levels)
+
+
+@nameable_op
+def gemm(A,                      # type: Node
+         B,                      # type: Node
+         C,                      # type: Node
+         alpha,                  # type: ScalarData
+         beta,                   # type: ScalarData
+         transA,                 # type: bool
+         transB,                 # type: bool
+         name=None,              # type: str
+         ):
+    # type: (...) -> Node
+    r"""Perform General matrix-matrix multiplication on input tensors A, B and C.
+
+    Computes:
+
+    .. math:: Y = alpha\cdot A'\cdot B' +  beta\cdot C
+
+    :code:`A'` is the transpose of matrix :code:`A` with shape (M, K),
+    if :code:`transA` is :code:`True`, otherwise :code:`A` with shape (K, N).
+
+    :code:`B'` is the transpose of matrix :code:`B` with shape (K, N),
+    if :code:`transB` is :code:`True`, otherwise :code:`B` with shape (N, K).
+
+    :code:`C`: Matrix broadcastable to shape (M, N).
+
+    :code:`Y`: Matrix with shape (M, N).
+
+    :param A: The node with input tensor A.
+    :param B: The node with input tensor B.
+    :param C: The node with input tensor C.
+    :param alpha: Scalar multiplier for the product of input tensors A * B.
+    :param beta: Scalar multiplier for input tensor C.
+    :param transA: Whether A should be transposed. Boolean value.
+    :param transB: Whether B should be transposed. Boolean value.
+    :param name: Optional name for the output node.
+    :return: Return node with tensor of shape (M, N).
+    """
+    return Gemm(A, B, C, alpha, beta, transA, transB)
+
+
+@nameable_op
 def convert(node, new_type, name=None):  # type: (Node, NumericType, str) -> Node
     """Return node which casts input node values to specified type."""
     new_element_type = get_element_type(new_type)
     return Convert(node, new_element_type)
+
+
+@nameable_op
+def depth_to_space(node, mode, block_size, name=None):  # type: (Node, str, int, str) -> Node
+    """Rearranges input tensor from depth into blocks of spatial data.
+
+    Values from the height and width dimensions are moved to the depth dimension.
+
+    Input tensor has shape [N,C,H,W], where N is the batch axis, C is the channel or depth,
+    H is the height and W is the width.
+
+    Output node produces a tensor with shape:
+
+    [N, C * :code:`block_size` * :code:`block_size`, H / :code:`block_size`, W / :code:`block_size`]
+
+    :param node: The node with input tensor data.
+    :param mode: Specifies how the input depth dimension is split to block coordinates
+
+                 blocks_first: The input is divided to [block_size, ..., block_size, new_depth]
+                 depth_first: The input is divided to [new_depth, block_size, ..., block_size]
+
+    :param block_size: The size of the spatial block of values describing
+                       how the tensor's data is to be rearranged.
+    :param name: Optional output node name.
+    :return: The new node performing an DepthToSpace operation on its input tensor.
+    """
+    return DepthToSpace(node, mode, block_size)
+
+
+def gelu(node, name=None):  # type: (NodeInput, str) -> Node
+    r"""Perform Gaussian Error Linear Unit operation element-wise on data from input node.
+
+    Computes GELU function:
+
+    .. math:: f(x) = 0.5\cdot x\cdot(1 + erf( \dfrac{x}{\sqrt{2}})
+
+    For more information refer to:
+    `Gaussian Error Linear Unit (GELU) <https://arxiv.org/pdf/1606.08415.pdf>`_
+
+    :param node: Input tensor. One of: input node, array or scalar.
+    :param name: Optional output node name.
+    :return: The new node performing a GELU operation on its input data element-wise.
+    """
+    return Gelu(as_node(node))
 
 
 @nameable_op
@@ -535,6 +1134,36 @@ def tanh(node, name=None):  # type: (Node, str) -> Node
     :return: New node with tanh operation applied on it.
     """
     return Tanh(node)
+
+
+@nameable_op
+def clamp(data, min_value, max_value, name=None):
+    # type: (NodeInput, ScalarData, ScalarData, str) -> Node
+    """Perform clamp element-wise on data from input node.
+
+    Performs a clipping operation on an input value between a pair of boundary values.
+
+    For each element in :code:`data`, if the element's value is lower than :code:`min_value`,
+    it will be replaced with :code:`min_value`. If the value is higher than :code:`max_value`,
+    it will be replaced by :code:`max_value`.
+    Intermediate values of :code:`data` are returned without change.
+
+    Clamp uses the following logic:
+
+    .. code-block:: python
+
+        if data < min_value:
+            data=min_value
+        elif data > max_value:
+            data=max_value
+
+    :param data: Input tensor. One of: input node, array or scalar.
+    :param min_value: The lower bound of the <min_value;max_value> range. Scalar value.
+    :param max_value: The upper bound of the <min_value;max_value> range. Scalar value.
+    :param name: Optional output node name.
+    :return: The new node performing a clamp operation on its input data element-wise.
+    """
+    return Clamp(as_node(data), min_value, max_value)
 
 
 # matmul ops
@@ -737,6 +1366,46 @@ def min(node, reduction_axes=None, name=None):
 
 
 @nameable_op
+def prelu(data, slope, name=None):  # type: (Node, Node, str) -> Node
+    """Perform Parametrized Relu operation element-wise on data from input node.
+
+    PRelu uses the following logic:
+
+    .. code-block:: python
+
+        if data < 0:
+            data = data * slope
+        elif data >= 0:
+            data = data
+
+    :param data: The node with data tensor.
+    :param slope: The node with the multipliers for negative values.
+    :param name: Optional output node name.
+    :return: The new node performing a PRelu operation on tensor's channels.
+    """
+    return PRelu(data, slope)
+
+
+@nameable_op
+def hard_sigmoid(data, alpha, beta, name=None):  # type: (Node, float, float, str) -> Node
+    """Perform Hard Sigmoid operation element-wise on data from input node.
+
+    Hard Sigmoid uses the following logic:
+
+    .. code-block:: python
+
+        y = max(0, min(1, alpha * data + beta))
+
+    :param data: The node with data tensor.
+    :param alpha: Alpha parameter. Scalar value.
+    :param beta: Beta parameter. Scalar value.
+    :param name: Optional output node name.
+    :return: The new node performing a Hard Sigmoid element-wise on input tensor.
+    """
+    return HardSigmoid(data, alpha, beta)
+
+
+@nameable_op
 def prod(node, reduction_axes=None, name=None):
     # type: (Node, Iterable[int], str) -> Node
     """Product-reduction operation on input tensor, eliminating the specified reduction axes.
@@ -779,7 +1448,7 @@ def concat(nodes, axis, name=None):  # type: (List[Node], int, str) -> Node
     :param name: The optional new name for output node.
     :return: Return new node that is a concatenation of input nodes.
     """
-    return Concat(NodeVector(nodes), axis)
+    return Concat(nodes, axis)
 
 
 @nameable_op

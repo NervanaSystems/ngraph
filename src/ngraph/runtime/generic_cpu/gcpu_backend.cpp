@@ -14,9 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/generic_cpu/gcpu_backend.hpp"
+#include "ngraph/runtime/generic_cpu/gcpu_backend_visibility.hpp"
+
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/generic_cpu/gcpu_backend.hpp"
 #include "ngraph/runtime/generic_cpu/gcpu_executable.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/util.hpp"
@@ -24,14 +26,11 @@
 using namespace std;
 using namespace ngraph;
 
-extern "C" const char* get_ngraph_version_string()
+extern "C" GCPU_BACKEND_API void ngraph_register_gcpu_backend()
 {
-    return NGRAPH_VERSION;
-}
-
-extern "C" runtime::Backend* new_backend(const char* configuration_string)
-{
-    return new runtime::gcpu::GCPUBackend();
+    runtime::BackendManager::register_backend("GCPU", [](const std::string& config) {
+        return std::make_shared<runtime::gcpu::GCPUBackend>();
+    });
 }
 
 runtime::gcpu::GCPUBackend::GCPUBackend()
@@ -46,14 +45,14 @@ runtime::gcpu::GCPUBackend::GCPUBackend(const vector<string>& unsupported_op_nam
 shared_ptr<runtime::Tensor> runtime::gcpu::GCPUBackend::create_tensor(const element::Type& type,
                                                                       const Shape& shape)
 {
-    return make_shared<runtime::HostTensor>(type, shape, this);
+    return make_shared<runtime::HostTensor>(type, shape);
 }
 
 shared_ptr<runtime::Tensor> runtime::gcpu::GCPUBackend::create_tensor(const element::Type& type,
                                                                       const Shape& shape,
                                                                       void* memory_pointer)
 {
-    return make_shared<runtime::HostTensor>(type, shape, memory_pointer, this);
+    return make_shared<runtime::HostTensor>(type, shape, memory_pointer);
 }
 
 shared_ptr<runtime::Executable>

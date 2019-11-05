@@ -20,14 +20,14 @@
 
 #include "ngraph/frontend/onnx_import/exceptions.hpp"
 #include "ngraph/frontend/onnx_import/op/conv.hpp"
-#include "ngraph/frontend/onnx_import/utils/broadcasting.hpp"
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/slice.hpp"
-#include "op/conv.hpp"
+#include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -46,13 +46,15 @@ namespace ngraph
                                             const ngraph::Strides& dilations,
                                             const ngraph::CoordinateDiff& padding_below,
                                             const ngraph::CoordinateDiff& padding_above,
-                                            int groups)
+                                            int groups,
+                                            const ngraph::op::PadType& auto_pad)
                     {
                         if (groups > 1)
                         {
                             // Split one convolution op to N ops where N is the number of groups
                             // and concat results after computation.
-                            // reference: https://github.com/NervanaSystems/ngraph-mxnet/blob/fdd692/src/ngraph/ngraph_emitter.cc#L822-L856
+                            // reference:
+                            // https://github.com/NervanaSystems/ngraph-mxnet/blob/fdd692/src/ngraph/ngraph_emitter.cc#L822-L856
                             std::size_t n_data_channels{data->get_shape().at(1)};
                             std::size_t n_filters_channels{filters->get_shape().at(0)};
                             std::size_t data_group_size{n_data_channels / groups};
@@ -66,7 +68,7 @@ namespace ngraph
                                 filters->get_shape().size());
                             std::vector<std::size_t> filters_upper_bounds{filters->get_shape()};
 
-                            for (std::size_t group{0}; group < groups; ++group)
+                            for (int64_t group{0}; group < groups; ++group)
                             {
                                 // slice data
                                 data_lower_bounds[1] = group * data_group_size;
@@ -80,12 +82,13 @@ namespace ngraph
                                     filters, filters_lower_bounds, filters_upper_bounds);
 
                                 convolution_nodes.push_back(
-                                    std::make_shared<ngraph::op::Convolution>(sliced_data,
-                                                                              sliced_filters,
-                                                                              strides,
-                                                                              dilations,
-                                                                              padding_below,
-                                                                              padding_above));
+                                    std::make_shared<ngraph::op::v1::Convolution>(sliced_data,
+                                                                                  sliced_filters,
+                                                                                  strides,
+                                                                                  padding_below,
+                                                                                  padding_above,
+                                                                                  dilations,
+                                                                                  auto_pad));
                             }
                             std::size_t concatenation_axis = 1;
                             return std::make_shared<ngraph::op::Concat>(convolution_nodes,
@@ -93,8 +96,13 @@ namespace ngraph
                         }
                         else
                         {
-                            return std::make_shared<ngraph::op::Convolution>(
-                                data, filters, strides, dilations, padding_below, padding_above);
+                            return std::make_shared<ngraph::op::v1::Convolution>(data,
+                                                                                 filters,
+                                                                                 strides,
+                                                                                 padding_below,
+                                                                                 padding_above,
+                                                                                 dilations,
+                                                                                 auto_pad);
                         }
                     }
 
@@ -108,9 +116,11 @@ namespace ngraph
 
                     int64_t groups{node.get_attribute_value<int64_t>("group", 1)};
 
-                    ASSERT_VALID_ARGUMENT(node,
-                                          ((groups >= 0) && (groups <= data->get_shape().at(1)) &&
-                                           (groups <= filters->get_shape().at(0))))
+                    ASSERT_VALID_ARGUMENT(
+                        node,
+                        ((groups >= 0) &&
+                         (groups <= static_cast<int64_t>(data->get_shape().at(1))) &&
+                         (groups <= static_cast<int64_t>(filters->get_shape().at(0)))))
                         << "incorrect value of 'group' attribute: " << groups;
 
                     std::size_t n_data_channels{data->get_shape().at(1)};
@@ -126,11 +136,18 @@ namespace ngraph
                     auto strides = convpool::get_strides(node);
                     auto dilations = convpool::get_dilations(node);
                     auto paddings = convpool::get_pads(node);
+                    ngraph::op::PadType auto_pad_type = convpool::get_auto_pad(node);
                     const auto& padding_below = paddings.first;
                     const auto& padding_above = paddings.second;
 
-                    auto conv_node = make_ng_convolution(
-                        data, filters, strides, dilations, padding_below, padding_above, groups);
+                    auto conv_node = make_ng_convolution(data,
+                                                         filters,
+                                                         strides,
+                                                         dilations,
+                                                         padding_below,
+                                                         padding_above,
+                                                         groups,
+                                                         auto_pad_type);
 
                     // no bias param
                     if (inputs.size() < 3)
@@ -142,13 +159,15 @@ namespace ngraph
                     const Shape& new_shape = conv_node->get_shape();
 
                     auto broadcasted_bias = std::make_shared<ngraph::op::Broadcast>(
-                        bias, new_shape, calculate_broadcast_axes(new_shape, bias->get_shape(), 1));
+                        bias,
+                        new_shape,
+                        ngraph::op::calculate_broadcast_axes(new_shape, bias->get_shape(), 1));
                     return {std::make_shared<ngraph::op::Add>(conv_node, broadcasted_bias)};
                 }
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

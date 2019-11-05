@@ -18,7 +18,7 @@
 
 #include "exceptions.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -27,7 +27,7 @@
 
 #include "core/node.hpp"
 #include "leaky_relu.hpp"
-#include "utils/broadcasting.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -48,13 +48,13 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> alpha_node =
                         std::make_shared<ngraph::op::Constant>(
                             data->get_element_type(), Shape{}, std::vector<double>{alpha});
-                    alpha_node = make_broadcast_node(alpha_node, data->get_shape());
+                    alpha_node = ngraph::op::make_broadcast_node(alpha_node, data->get_shape());
                     return {std::make_shared<ngraph::op::Maximum>(data * alpha_node, data)};
                 }
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

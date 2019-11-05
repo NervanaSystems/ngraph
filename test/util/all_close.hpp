@@ -43,7 +43,10 @@ namespace ngraph
         {
             bool rc = true;
             ::testing::AssertionResult ar_fail = ::testing::AssertionFailure();
-            assert(a.size() == b.size());
+            if (a.size() != b.size())
+            {
+                throw std::invalid_argument("all_close: Argument vectors' sizes do not match");
+            }
             size_t count = 0;
             for (size_t i = 0; i < a.size(); ++i)
             {
@@ -53,13 +56,14 @@ namespace ngraph
                     if (count < 5)
                     {
                         ar_fail << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
-                                << a[i] << " is not close to " << b[i] << " at index " << i << "\n";
+                                << a[i] << " is not close to " << b[i] << " at index " << i
+                                << std::endl;
                     }
                     count++;
                     rc = false;
                 }
             }
-            ar_fail << "diff count: " << count << " out of " << a.size() << "\n";
+            ar_fail << "diff count: " << count << " out of " << a.size() << std::endl;
             return rc ? ::testing::AssertionSuccess() : ar_fail;
         }
 
@@ -78,13 +82,18 @@ namespace ngraph
         {
             bool rc = true;
             ::testing::AssertionResult ar_fail = ::testing::AssertionFailure();
-            assert(a.size() == b.size());
+            if (a.size() != b.size())
+            {
+                throw std::invalid_argument("all_close: Argument vectors' sizes do not match");
+            }
             for (size_t i = 0; i < a.size(); ++i)
             {
                 T abs_diff = (a[i] > b[i]) ? (a[i] - b[i]) : (b[i] - a[i]);
                 if (abs_diff > atol + rtol * b[i])
                 {
-                    ar_fail << a[i] << " is not close to " << b[i] << " at index " << i;
+                    // use unary + operator to force integral values to be displayed as numbers
+                    ar_fail << +a[i] << " is not close to " << +b[i] << " at index " << i
+                            << std::endl;
                     rc = false;
                 }
             }

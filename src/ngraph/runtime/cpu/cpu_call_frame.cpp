@@ -15,16 +15,14 @@
 //*****************************************************************************
 
 #include <algorithm>
+#include <thread>
 
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
-
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-#include <mlsl.hpp>
-#endif
+#include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -32,33 +30,47 @@ using namespace ngraph;
 runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction> external_function,
                                            InitContextFuncCG compiled_init_ctx_func,
                                            DestroyContextFuncCG compiled_destroy_ctx_func,
-                                           EntryPoint compiled_function)
+                                           EntryPoint compiled_function,
+                                           runtime::Allocator* allocator)
     : m_external_function(external_function)
     , m_compiled_init_ctx_func(compiled_init_ctx_func)
     , m_compiled_destroy_ctx_func(compiled_destroy_ctx_func)
     , m_compiled_function(compiled_function)
 {
-    setup_runtime_context();
+    const auto envConcurrency = std::getenv("NGRAPH_CPU_CONCURRENCY");
+    m_num_ctx = envConcurrency == nullptr ? 1 : std::atoi(envConcurrency);
+    if (m_num_ctx > std::thread::hardware_concurrency())
+    {
+        throw ngraph_error(
+            "Unexpected value specified for NGRAPH_CPU_CONCURRENCY "
+            "(" +
+            std::string(envConcurrency) + "). Please specify a value in range [1-" +
+            std::to_string(std::thread::hardware_concurrency()) + "]");
+    }
+
+    setup_runtime_context(allocator);
     if (!m_external_function->is_direct_execution())
     {
         // Invoke codegen runtime context initialization function.
-        NGRAPH_ASSERT(m_compiled_init_ctx_func) << "compiled_init_ctx_func cannot be null.";
+        NGRAPH_CHECK(m_compiled_init_ctx_func, "compiled_init_ctx_func cannot be null.");
         cg_ctx = m_compiled_init_ctx_func();
     }
 }
 
 runtime::cpu::CPU_CallFrame::~CPU_CallFrame()
 {
+    cleanup_runtime_context();
     if (!m_external_function->is_direct_execution())
     {
-        NGRAPH_ASSERT(m_compiled_destroy_ctx_func) << "compiled_destroy_ctx_func cannot be null.";
         m_compiled_destroy_ctx_func(cg_ctx);
     }
 }
 
 void runtime::cpu::CPU_CallFrame::inner_call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
-    const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
+    const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs,
+    const size_t id,
+    const bool disable_caching)
 {
     vector<void*> inputs;
     vector<void*> outputs;
@@ -67,7 +79,15 @@ void runtime::cpu::CPU_CallFrame::inner_call(
     {
         shared_ptr<runtime::cpu::CPUTensorView> tv =
             static_pointer_cast<runtime::cpu::CPUTensorView>(input_tvs[i]);
-        ctx->p_en[i] = tv->get_stale();
+        if (disable_caching)
+        {
+            m_ctx_vec[id]->p_en[i] = true;
+        }
+        else
+        {
+            m_ctx_vec[id]->p_en[i] = tv->get_stale();
+        }
+
         inputs.push_back(tv->get_data_ptr());
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
@@ -80,17 +100,17 @@ void runtime::cpu::CPU_CallFrame::inner_call(
     // Invoke compiled computation
     if (!m_external_function->is_direct_execution())
     {
-        m_compiled_function(inputs.data(), outputs.data(), ctx, cg_ctx);
+        m_compiled_function(inputs.data(), outputs.data(), m_ctx_vec[id], cg_ctx);
     }
     else
     {
-        m_external_function->get_executor()(ctx, inputs, outputs);
+        m_external_function->get_executor()(m_ctx_vec[id], inputs, outputs);
     }
 
     if (runtime::cpu::IsTracingEnabled())
     {
         GenerateTimeline(m_external_function->get_op_attrs(),
-                         ctx->op_durations,
+                         m_ctx_vec[id]->op_durations,
                          m_external_function->get_function_name() + ".timeline.json");
     }
 }
@@ -99,9 +119,44 @@ void runtime::cpu::CPU_CallFrame::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
 {
-    ctx->pc = 0;
+    size_t id = 0;
+    auto disable_caching = false;
+    {
+        std::unique_lock<std::mutex> lck(m_mutex);
+        while (m_num_ctx_available == 0)
+        {
+            m_cv.wait(lck);
+        }
+
+        for (size_t i = 0; i < m_num_ctx; i++)
+        {
+            if (m_id_pool[i])
+            {
+                id = i;
+                break;
+            }
+        }
+        NGRAPH_CHECK(id != m_num_ctx);
+        m_id_pool[id] = false;
+        if (id != m_prev_ctx)
+        {
+            // Disable caching since staleness hints are no longer
+            // applicable to this context
+            disable_caching = true;
+        }
+        m_prev_ctx = id;
+        m_num_ctx_available--;
+    }
+
+    m_ctx_vec[id]->pc = 0;
     propagate_layouts(output_tvs, m_external_function->get_result_layout_descriptors());
-    inner_call(output_tvs, input_tvs);
+    inner_call(output_tvs, input_tvs, id, disable_caching);
+
+    m_mutex.lock();
+    m_id_pool[id] = true;
+    m_num_ctx_available++;
+    m_mutex.unlock();
+    m_cv.notify_one();
 }
 
 void runtime::cpu::CPU_CallFrame::propagate_layouts(
@@ -124,84 +179,130 @@ void runtime::cpu::CPU_CallFrame::propagate_layouts(
     }
 }
 
-void runtime::cpu::CPU_CallFrame::setup_runtime_context()
+void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
 {
-    ctx = new CPURuntimeContext;
-
-    ctx->pc = 0;
-    ctx->op_durations = nullptr;
-    if (runtime::cpu::IsTracingEnabled())
+    for (size_t i = 0; i < m_num_ctx; i++)
     {
-        ctx->op_durations = new int64_t[m_external_function->get_op_attrs().size()];
-    }
-    ctx->p_en = new bool[m_external_function->get_parameter_layout_descriptors().size()];
+        m_id_pool[i] = true;
+        auto ctx = new CPURuntimeContext;
+        m_ctx_vec.push_back(ctx);
 
-    ctx->first_iteration = true;
+        ctx->pc = 0;
+        ctx->op_durations = nullptr;
+        if (runtime::cpu::IsTracingEnabled())
+        {
+            ctx->op_durations = new int64_t[m_external_function->get_op_attrs().size()];
+        }
+        ctx->p_en = new bool[m_external_function->get_parameter_layout_descriptors().size()];
 
-    // Create temporary buffer pools
-    size_t alignment = runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
-    for (auto buffer_size : m_external_function->get_memory_buffer_sizes())
-    {
-        auto buffer = new AlignedBuffer(buffer_size, alignment);
-        ctx->memory_buffers.push_back(buffer);
-    }
-    const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
-    ctx->mkldnn_primitives = mkldnn_emitter->get_mkldnn_primitives().data();
-    ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces().data();
-    ctx->states = m_external_function->m_states.data();
+        ctx->first_iteration = true;
 
-    if (m_external_function->is_direct_execution() && std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
-    {
-        // For codegen mode, graph and global control are now part of the code generated
-        // CPURuntimeContextCG class.
-        ctx->G = new tbb::flow::graph;
-        const auto envParallelism = std::getenv("NGRAPH_INTER_OP_PARALLELISM");
-        const auto parallelism = envParallelism == nullptr ? 1 : std::atoi(envParallelism);
-        ctx->c = new tbb::global_control(tbb::global_control::max_allowed_parallelism, parallelism);
-    }
+        ctx->buffer_data = std::vector<void*>(m_external_function->get_buffer_size());
 
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-    if (MLSL::Environment::GetEnv().IsInitialized())
-    {
-        ctx->mlsl_env = &MLSL::Environment::GetEnv();
-        ctx->mlsl_dist = ctx->mlsl_env->CreateDistribution(ctx->mlsl_env->GetProcessCount(), 1);
-    }
+        // Create temporary buffer pools
+        size_t alignment = runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
+        for (auto buffer_size : m_external_function->get_memory_buffer_sizes())
+        {
+            auto buffer = new AlignedBuffer(buffer_size, alignment, allocator);
+            ctx->memory_buffers.push_back(buffer);
+        }
+        const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
+        // Create scratchpad
+        auto scratchpad_size = mkldnn_emitter->get_max_scratchpad_size();
+        if (m_external_function->is_direct_execution())
+        {
+            ctx->mkldnn_primitives =
+                std::vector<mkldnn::primitive*>(mkldnn_emitter->get_mkldnn_primitives().size());
+            ctx->mkldnn_memories =
+                std::vector<mkldnn::memory*>(mkldnn_emitter->get_mkldnn_memories().size());
+            ctx->mkldnn_scratchpad_mds = std::vector<mkldnn::memory::desc*>(
+                mkldnn_emitter->get_mkldnn_scratchpad_mds().size());
+            if (scratchpad_size > 0)
+            {
+                ctx->scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment, allocator);
+            }
+            else
+            {
+                ctx->scratchpad_buffer = nullptr;
+            }
+        }
+        else
+        {
+            // single thread for codegen
+            NGRAPH_CHECK(m_num_ctx == 1);
+        }
+
+        ctx->states = m_external_function->m_states.data();
+#if defined(NGRAPH_TBB_ENABLE)
+        if (m_external_function->is_direct_execution() &&
+            std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+        {
+            // For codegen mode, graph and global control are now part of the code generated
+            // CPURuntimeContextCG class.
+            ctx->G = new tbb::flow::graph;
+            const auto envParallelism = std::getenv("NGRAPH_INTER_OP_PARALLELISM");
+            const auto parallelism = envParallelism == nullptr ? 1 : std::atoi(envParallelism);
+            ctx->c =
+                new tbb::global_control(tbb::global_control::max_allowed_parallelism, parallelism);
+        }
 #endif
+    }
+    m_num_ctx_available = m_num_ctx;
 }
 
 void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
 {
-    delete[] ctx->op_durations;
-    delete[] ctx->p_en;
-    for (auto buffer : ctx->memory_buffers)
+    for (size_t i = 0; i < m_num_ctx; i++)
     {
-        delete buffer;
-    }
-    if (m_external_function->is_direct_execution() && std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
-    {
-        // For codegen mode, graph and global control are now part of a code generated
-        // CPURuntimeContext class.
+        auto ctx = m_ctx_vec.back();
+        m_ctx_vec.pop_back();
 
-        // delete graph G and nodes in G
-        ctx->G->wait_for_all();
-        std::vector<tbb::flow::graph_node*> to_be_deleted;
-        for (auto it = ctx->G->begin(); it != ctx->G->end(); it++)
+        delete[] ctx->op_durations;
+        delete[] ctx->p_en;
+        for (auto p : ctx->mkldnn_primitives)
         {
-            to_be_deleted.push_back(&(*it));
+            delete p;
         }
-        delete ctx->G;
-        for (auto node : to_be_deleted)
+        for (auto m : ctx->mkldnn_memories)
         {
-            delete node;
+            delete m;
         }
-        delete ctx->c;
-    }
+        for (auto buffer : ctx->memory_buffers)
+        {
+            delete buffer;
+        }
+        for (auto s : ctx->mkldnn_scratchpad_mds)
+        {
+            delete s;
+        }
+        if (m_external_function->is_direct_execution())
+        {
+            delete ctx->scratchpad_buffer;
+        }
 
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-    if (MLSL::Environment::GetEnv().IsInitialized() && ctx->mlsl_dist != nullptr)
-    {
-        ctx->mlsl_env->DeleteDistribution(ctx->mlsl_dist);
-    }
+#if defined(NGRAPH_TBB_ENABLE)
+        if (m_external_function->is_direct_execution() &&
+            std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+        {
+            // For codegen mode, graph and global control are now part of a code generated
+            // CPURuntimeContext class.
+
+            // delete graph G and nodes in G
+            ctx->G->wait_for_all();
+            std::vector<tbb::flow::graph_node*> to_be_deleted;
+            for (auto it = ctx->G->begin(); it != ctx->G->end(); it++)
+            {
+                to_be_deleted.push_back(&(*it));
+            }
+            delete ctx->G;
+            for (auto node : to_be_deleted)
+            {
+                delete node;
+            }
+            delete ctx->c;
+        }
 #endif
-    delete ctx;
+        delete ctx;
+    }
+    m_num_ctx_available = 0;
 }

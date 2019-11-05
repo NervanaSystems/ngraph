@@ -17,9 +17,8 @@
 #pragma once
 
 #include "core/node.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/and.hpp"
-#include "utils/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -31,13 +30,13 @@ namespace ngraph
             {
                 inline NodeVector logical_and(const Node& node)
                 {
-                    NodeVector ng_inputs{numpy_style_broadcast(node.get_ng_inputs())};
-                    return {std::make_shared<ngraph::op::And>(ng_inputs.at(0), ng_inputs.at(1))};
+                    return {std::make_shared<ngraph::op::v1::LogicalAnd>(
+                        node.get_ng_inputs().at(0), node.get_ng_inputs().at(1))};
                 }
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

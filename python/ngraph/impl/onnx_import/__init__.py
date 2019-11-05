@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018-2019 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,5 +32,5 @@ else:
     flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
 sys.setdlopenflags(flags)
 
-from _pyngraph_onnx_import import import_onnx_model
-from _pyngraph_onnx_import import import_onnx_model_file
+from _pyngraph import import_onnx_model
+from _pyngraph import import_onnx_model_file

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ ngraph::runtime::plaidml::pass::ConcatElision::ConcatElision()
             return dynamic_cast<ngraph::op::Concat*>(node.get()) != nullptr;
         });
 
-    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    auto callback = [](pattern::Matcher& m) {
         auto concat = std::static_pointer_cast<ngraph::op::Concat>(m.get_match_root());
         auto args = concat->get_arguments();
 
@@ -114,5 +114,5 @@ ngraph::runtime::plaidml::pass::ConcatElision::ConcatElision()
         return true;
     };
 
-    add_matcher(std::make_shared<pattern::Matcher>(concat_op, callback));
+    add_matcher(std::make_shared<pattern::Matcher>(concat_op), callback);
 }

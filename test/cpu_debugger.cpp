@@ -38,8 +38,29 @@
 using namespace ngraph;
 using namespace std;
 
-TEST(debugger, add_breakpoint)
+bool static is_codegen_mode()
 {
+    static bool codegen_set = false;
+    static bool codegen_mode = false;
+    if (!codegen_set)
+    {
+        const char* ngraph_codegen = std::getenv("NGRAPH_CODEGEN");
+        codegen_mode = (ngraph_codegen != nullptr) && std::string(ngraph_codegen) != "0";
+        codegen_set = true;
+    }
+    return codegen_mode;
+}
+
+// These tests are for DEX mode only.
+TEST(debugger, MLIR_DISABLE_TEST(add_breakpoint))
+{
+    if (is_codegen_mode())
+    {
+        // TODO change to skip when there is a new release of gtest
+        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
+        return;
+    }
+
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -68,14 +89,22 @@ TEST(debugger, add_breakpoint)
 
     dbg.add_breakpoint(neg);
     dbg.call({result}, {a, b});
+
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
     dbg.step();
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
 }
 
-TEST(debugger, stepping)
+TEST(debugger, MLIR_DISABLE_TEST(stepping))
 {
+    if (is_codegen_mode())
+    {
+        // TODO change to skip when there is a new release of gtest
+        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
+        return;
+    }
+
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -104,6 +133,7 @@ TEST(debugger, stepping)
 
     dbg.add_breakpoint(add);
     dbg.call({result}, {a, b});
+
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     dbg.step();
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
@@ -111,8 +141,15 @@ TEST(debugger, stepping)
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
 }
 
-TEST(debugger, delete_breakpoint)
+TEST(debugger, MLIR_DISABLE_TEST(delete_breakpoint))
 {
+    if (is_codegen_mode())
+    {
+        // TODO change to skip when there is new release of gtest
+        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
+        return;
+    }
+
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -146,13 +183,21 @@ TEST(debugger, delete_breakpoint)
     dbg.delete_breakpoint(absn);
     dbg.delete_breakpoint(neg);
     dbg.call({result}, {a, b});
+
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
 }
 
-TEST(debugger, while_stepping)
+TEST(debugger, MLIR_DISABLE_TEST(while_stepping))
 {
+    if (is_codegen_mode())
+    {
+        // TODO change to skip when there is new release of gtest
+        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
+        return;
+    }
+
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -183,14 +228,22 @@ TEST(debugger, while_stepping)
     dbg.add_breakpoint(add);
     while (dbg.step())
     {
-    };
+    }
+
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
 }
 
-TEST(debugger, resume)
+TEST(debugger, MLIR_DISABLE_TEST(resume))
 {
+    if (is_codegen_mode())
+    {
+        // TODO change to skip when there is new release of gtest
+        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
+        return;
+    }
+
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -219,13 +272,14 @@ TEST(debugger, resume)
 
     dbg.add_breakpoint(absn);
     dbg.call({result}, {a, b});
+
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     dbg.resume();
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
 }
 
-TEST(tracer, basic)
+TEST(tracer, MLIR_DISABLE_TEST(basic))
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -254,7 +308,7 @@ TEST(tracer, basic)
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
     int good_or_bad_value = -777;
-    auto add_tracer = [&good_or_bad_value](void** values, const std::string& name) {
+    auto add_tracer = [&good_or_bad_value](void** values, const std::string& /* name */) {
         ASSERT_EQ(static_cast<int*>(values[0])[0], good_or_bad_value);
     };
 
@@ -265,7 +319,7 @@ TEST(tracer, basic)
     dbg.call({result}, {a, b});
 }
 
-TEST(tracer, count_tracepoint)
+TEST(tracer, MLIR_DISABLE_TEST(count_tracepoint))
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -286,11 +340,11 @@ TEST(tracer, count_tracepoint)
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
-    const size_t num_iterations = 10;
-    const size_t offset = 5;
+    size_t num_iterations = 10;
+    size_t offset = 5;
 
     std::function<void(void**, const std::string&)> callback =
-        [num_iterations, offset](void** values, const std::string& name) {
+        [&num_iterations, offset](void** values, const std::string& /* name */) {
             ASSERT_EQ(static_cast<int*>(values[0])[0], num_iterations - 1 + offset);
         };
 
@@ -306,7 +360,7 @@ TEST(tracer, count_tracepoint)
     }
 }
 
-TEST(tracer, conditional_tracepoint)
+TEST(tracer, MLIR_DISABLE_TEST(conditional_tracepoint))
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -327,11 +381,12 @@ TEST(tracer, conditional_tracepoint)
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
-    const size_t num_iterations = 10;
-    const size_t offset = 5;
+    size_t num_iterations = 10;
+    size_t offset = 5;
     int countdown = num_iterations;
 
-    auto add_tracer = [offset, &countdown, num_iterations](void** values, const std::string& name) {
+    auto add_tracer = [&countdown, num_iterations, offset](void** values,
+                                                           const std::string& /* name */) {
         if (countdown-- == 0)
         {
             ASSERT_EQ(static_cast<int*>(values[0])[0], num_iterations - 1 + offset);

@@ -27,7 +27,7 @@ Automating graph construction
 ==============================
 
 In a :abbr:`Machine Learning (ML)` ecosystem, it makes sense to use automation 
-and abstraction whereever possible. nGraph was designed to automatically use 
+and abstraction where possible. nGraph was designed to automatically use 
 the "ops" of tensors provided by a framework when constructing graphs. However, 
 nGraph's graph-construction API operates at a fundamentally lower level than a 
 typical framework's API, and writing a model directly in nGraph would be somewhat 
@@ -143,7 +143,7 @@ update computation for ``N`` will be given by the node
 
 The different update nodes will share intermediate computations. So to
 get the updated values for the weights as computed with the specified 
-:doc:`backend <../../backend-support/index>`:
+:doc:`backend <../../backends/index>`:
 
 .. literalinclude:: ../../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
@@ -167,5 +167,5 @@ compile clones of the nodes.
 
 .. literalinclude:: ../../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
-   :lines: 216-224
+   :lines: 216-226
 

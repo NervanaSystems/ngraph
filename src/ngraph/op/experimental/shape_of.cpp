@@ -19,15 +19,18 @@
 using namespace std;
 using namespace ngraph;
 
-op::ShapeOf::ShapeOf(const shared_ptr<Node>& arg)
-    : Op("ShapeOf", check_single_output_args({arg}))
+constexpr NodeTypeInfo op::ShapeOf::type_info;
+
+op::ShapeOf::ShapeOf(const Output<Node>& arg)
+    : Op({arg})
 {
     constructor_validate_and_infer_types();
 }
 
 void op::ShapeOf::validate_and_infer_types()
 {
-    set_output_type(0, element::u64, PartialShape{get_input_partial_shape(0).rank()});
+    set_input_is_relevant_to_value(0, false);
+    set_output_type(0, element::i64, PartialShape{get_input_partial_shape(0).rank()});
 }
 
 shared_ptr<Node> op::ShapeOf::copy_with_new_args(const NodeVector& new_args) const

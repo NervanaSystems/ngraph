@@ -30,10 +30,11 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Convert)
             {
+                (void)node;
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 auto element_count = out[0].get_size();
 
@@ -42,76 +43,93 @@ namespace ngraph
                 if (out[0].get_element_type() == element::boolean)
                 {
                     SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_i8);
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_bool)
+                }
+                else if (args[0].get_element_type() == element::bf16 &&
+                         out[0].get_element_type() == element::f32)
+                {
+                    kernel = runtime::cpu::kernel::convert_to_float32<bfloat16>;
                 }
                 else if (out[0].get_element_type() == element::f32)
                 {
                     SELECT_KERNEL(kernel,
                                   args[0].get_element_type(),
-                                  runtime::cpu::kernel::convert_to_float32);
+                                  runtime::cpu::kernel::convert_to_float32)
                 }
                 else if (out[0].get_element_type() == element::f64)
                 {
                     SELECT_KERNEL(kernel,
                                   args[0].get_element_type(),
-                                  runtime::cpu::kernel::convert_to_float64);
+                                  runtime::cpu::kernel::convert_to_float64)
                 }
                 else if (out[0].get_element_type() == element::i8)
                 {
                     SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_i8);
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_i8)
                 }
                 else if (out[0].get_element_type() == element::i16)
                 {
                     SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_i16);
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_i16)
                 }
                 else if (out[0].get_element_type() == element::i32)
                 {
                     SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_i32);
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_i32)
                 }
                 else if (out[0].get_element_type() == element::i64)
                 {
                     SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_i64);
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_i64)
                 }
                 else if (out[0].get_element_type() == element::u8)
                 {
                     SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_u8);
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_u8)
                 }
                 else if (out[0].get_element_type() == element::u16)
                 {
                     SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_u16);
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_u16)
                 }
                 else if (out[0].get_element_type() == element::u32)
                 {
                     SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_u32);
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_u32)
                 }
                 else if (out[0].get_element_type() == element::u64)
                 {
                     SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_u64);
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_u64)
+                }
+                else if (args[0].get_element_type() == element::f32 &&
+                         out[0].get_element_type() == element::bf16)
+                {
+                    kernel = runtime::cpu::kernel::convert_to_bf16<float>;
                 }
                 else
                 {
-                    throw ngraph_error("Cannot convert from an invalid input element type");
+                    NGRAPH_CHECK(false,
+                                 "Cannot convert from an invalid input element type : ",
+                                 args[0].get_element_type(),
+                                 " -> ",
+                                 out[0].get_element_type());
                 }
 
-                auto functor = [&, kernel, element_count](CPURuntimeContext* ctx,
-                                                          CPUExecutionContext* ectx) {
-                    if (arg_tensor != out_tensor)
+                auto functor = [&, kernel, element_count, arg_buffer_index, out_buffer_index](
+                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    if (ctx->buffer_data[arg_buffer_index] != ctx->buffer_data[out_buffer_index])
                     {
-                        kernel(arg_tensor, out_tensor, element_count, ectx->arena);
+                        kernel(ctx->buffer_data[arg_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
+                               element_count,
+                               ectx->arena);
                     }
                 };
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(Convert);
+            void register_builders_convert_cpp() { REGISTER_OP_BUILDER(Convert); }
         }
     }
 }

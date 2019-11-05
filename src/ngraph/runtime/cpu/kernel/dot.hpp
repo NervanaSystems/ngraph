@@ -20,6 +20,7 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
+#include "ngraph/runtime/reference/convolution.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
 #include "ngraph/shape.hpp"
 
@@ -50,22 +51,22 @@ namespace ngraph
                     Eigen::array<Eigen::Index, Input1Rank> in1_dims;
                     Eigen::array<Eigen::IndexPair<Eigen::Index>, DotDims> dot_dims;
 
-                    for (int i = 0; i < OutRank; i++)
+                    for (size_t i = 0; i < OutRank; i++)
                     {
                         out_dims[i] = output_shape[i];
                     }
 
-                    for (int i = 0; i < Input0Rank; i++)
+                    for (size_t i = 0; i < Input0Rank; i++)
                     {
                         in0_dims[i] = input0_shape[i];
                     }
 
-                    for (int i = 0; i < Input1Rank; i++)
+                    for (size_t i = 0; i < Input1Rank; i++)
                     {
                         in1_dims[i] = input1_shape[i];
                     }
 
-                    for (int i = 0; i < DotDims; i++)
+                    for (size_t i = 0; i < DotDims; i++)
                     {
                         dot_dims[i].first = Input0Rank - DotDims + i;
                         dot_dims[i].second = i;
@@ -167,22 +168,39 @@ namespace ngraph
                         input0, input1, output, input0_shape, input1_shape, output_shape, arena);
                 }
 
-                template <typename ElementType>
+                template <typename INPUT0,
+                          typename INPUT1,
+                          typename OUTPUT,
+                          typename ACCUMULATION =
+                              typename ngraph::runtime::reference::widen<OUTPUT>::type>
                 void dot_ref(void* arg0,
                              void* arg1,
                              void* out,
                              const Shape& arg0_shape,
                              const Shape& arg1_shape,
                              const Shape& out_shape,
-                             size_t reduction_axes_count)
+                             size_t reduction_axes_count,
+                             void* input0_scale = nullptr,
+                             void* input0_zero_point = nullptr,
+                             void* input1_scale = nullptr,
+                             void* input1_zero_point = nullptr,
+                             void* output_scale = nullptr,
+                             void* output_zero_point = nullptr)
                 {
-                    reference::dot(static_cast<const ElementType*>(arg0),
-                                   static_cast<const ElementType*>(arg1),
-                                   static_cast<ElementType*>(out),
-                                   arg0_shape,
-                                   arg1_shape,
-                                   out_shape,
-                                   reduction_axes_count);
+                    reference::dot<INPUT0, INPUT1, OUTPUT, ACCUMULATION>(
+                        static_cast<const INPUT0*>(arg0),
+                        static_cast<const INPUT1*>(arg1),
+                        static_cast<OUTPUT*>(out),
+                        arg0_shape,
+                        arg1_shape,
+                        out_shape,
+                        reduction_axes_count,
+                        static_cast<const float*>(input0_scale),
+                        static_cast<const INPUT0*>(input0_zero_point),
+                        static_cast<const float*>(input1_scale),
+                        static_cast<const INPUT1*>(input1_zero_point),
+                        static_cast<const float*>(output_scale),
+                        static_cast<const OUTPUT*>(output_zero_point));
                 }
             }
         }

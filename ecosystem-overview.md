@@ -69,7 +69,7 @@ stack, and early adopters will be able test them in 2019.
 
 [Architecture and features]: ./ABOUT.md
 [Upcoming DL accelerators]: https://www.intel.com/content/dam/www/public/us/en/documents/product-briefs/vision-accelerator-design-product-brief.pdf
-[import it]: http://ngraph.nervanasys.com/docs/latest/howto/import.html
+[import it]: https://ngraph.nervanasys.com/docs/latest/core/constructing-graphs/import.html
 [ONNXIFI]: https://github.com/onnx/onnx/blob/master/docs/ONNXIFI.md
 [ONNX Runtime]: https://azure.microsoft.com/en-us/blog/onnx-runtime-is-now-open-source/
 [WinML]: http://docs.microsoft.com/en-us/windows/ai

@@ -31,13 +31,18 @@ namespace ngraph
         // Describes a tensor that is an input to an op, directly or indirectly via a tuple
         class Input
         {
-            friend class Node;
+            friend class ngraph::Node;
 
         public:
             /// \param node The node that owns this input
             /// \param index The position of this this tensor in all input tensors
             /// \param output The output that supplies a value for this input
             Input(Node* node, size_t index, Output& output);
+            /// \brief Create an Input that is not connected to an output
+            /// \param node The node that owns this input
+            /// \param index The position of this this tensor in all input tensors
+            Input(Node* node, size_t index);
+            ~Input();
 
             /// \return the node that this is an input of
             std::shared_ptr<Node> get_node() const;
@@ -50,15 +55,33 @@ namespace ngraph
             const Output& get_output() const { return *m_output; }
             /// \return the connected output
             Output& get_output() { return *m_output; }
+            /// \return true if an output is connected to the input.
+            bool has_output() const { return m_output != nullptr; }
             /// \return the tensor of the connected output
             const Tensor& get_tensor() const;
 
             /// \return the tensor of the connected output
             Tensor& get_tensor();
 
+            /// \brief Replace the current output that supplies a value for this input with output i
+            ///        of node
             void replace_output(std::shared_ptr<Node> node, size_t i);
+            /// \brief Replace the current output that supplies a value for this input with output
             void replace_output(Output& output);
+            /// \brief Remove the output from this input. The node will not be valid until another
+            ///        output is supplied.
+            void remove_output();
 
+            /// \return true if the value of this input is relevant to the output shapes of the
+            ///         corresponding node. (Usually this is false.)
+            ///
+            /// See Node::set_input_is_relevant_to_shape for more details.
+            bool get_is_relevant_to_shape() const { return m_is_relevant_to_shape; }
+            /// \return true if the value of this input is relevant to the output value of the
+            ///         corresponding node. (Usually this is true.)
+            ///
+            /// See Node::set_input_is_relevant_to_value for more details.
+            bool get_is_relevant_to_value() const { return m_is_relevant_to_value; }
         protected:
             /// \return the tensor for the connected output
             std::shared_ptr<const Tensor> get_tensor_ptr() const;
@@ -84,6 +107,8 @@ namespace ngraph
             Output* m_output;
 
         private:
+            bool m_is_relevant_to_shape;
+            bool m_is_relevant_to_value;
             Input(const Input&) = delete;
             Input(Input&&) = delete;
             Input& operator=(const Input&) = delete;

@@ -17,7 +17,7 @@
 #pragma once
 
 #include "core/node.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
@@ -31,8 +31,8 @@ namespace ngraph
                 ///
                 /// \param node   The ONNX node object representing this operation.
                 ///
-                /// \return The vector containing Ngraph nodes producing output of ONNX GlobalMaxPool
-                ///         operation.
+                /// \return The vector containing Ngraph nodes producing output of ONNX
+                ///         GlobalMaxPool operation.
                 NodeVector global_max_pool(const Node& node);
 
             } // namespace set_1

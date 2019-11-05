@@ -14,10 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <istream>
-#include <memory>
+#if defined(NGRAPH_ONNX_IMPORT_ENABLE)
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+#include <istream>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -43,3 +45,4 @@ void regmodule_pyngraph_onnx_import(py::module mod)
     mod.def("import_onnx_model", &import_onnx_model);
     mod.def("import_onnx_model_file", &import_onnx_model_file);
 }
+#endif

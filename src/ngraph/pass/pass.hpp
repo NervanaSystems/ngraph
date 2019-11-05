@@ -23,6 +23,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/pass/manager_state.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -34,14 +35,28 @@ namespace ngraph
         class NodePass;
         class CallGraphPass;
         class Manager;
-        enum FusionType
+        enum class FusionType : uint32_t
         {
             //`DIFFERENTIABLE_FUSIONS` produce ops that support autodiff
             // i.e. implement `generate_adjoints`
             DIFFERENTIABLE_FUSIONS = 0x1,
             REGULAR_FUSIONS = 0x2,
+            //`FOP_FUSIONS` produce ops in the FusedOps category that might
+            // not be supported by all backends
+            FOP_FUSIONS = 0x4,
             ALL_FUSIONS = 0xFFFFFFFF
         };
+        typedef EnumMask<FusionType> FusionTypeMask;
+
+        enum class PassProperty : uint32_t
+        {
+            // Pass requires node shapes to be static
+            REQUIRE_STATIC_SHAPE = 0x1,
+            // Pass transformation will change the function's dynamic state
+            CHANGE_DYNAMIC_STATE = 1 << 1
+        };
+        typedef EnumMask<PassProperty> PassPropertyMask;
+        constexpr PassPropertyMask all_pass_property_off;
     }
 }
 
@@ -50,13 +65,19 @@ class ngraph::pass::PassBase
     friend class Manager;
 
 public:
+    PassBase();
     virtual ~PassBase() {}
+    /// Check if this pass has all the pass properties.
+    bool get_property(const PassPropertyMask& prop_mask) const;
+
 protected:
     ManagerState& get_state();
     void set_state(ManagerState&);
+    void set_property(const PassPropertyMask& prop, bool value);
 
 private:
-    ManagerState* m_state;
+    PassPropertyMask m_property;
+    ManagerState* m_state{nullptr};
 };
 
 class ngraph::pass::ModulePass : public PassBase

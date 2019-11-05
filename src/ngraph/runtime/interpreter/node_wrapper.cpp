@@ -29,7 +29,9 @@ runtime::interpreter::NodeWrapper::NodeWrapper(const shared_ptr<const Node>& nod
 #define NGRAPH_OP(a, b) {#a, runtime::interpreter::OP_TYPEID::a},
     static unordered_map<string, runtime::interpreter::OP_TYPEID> typeid_map{
 #include "ngraph/op/op_tbl.hpp"
+#ifdef INTERPRETER_USE_HYBRID
 #include "ngraph/runtime/hybrid/op/op_tbl.hpp"
+#endif
     };
 #undef NGRAPH_OP
 

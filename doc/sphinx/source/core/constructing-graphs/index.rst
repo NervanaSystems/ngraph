@@ -1,6 +1,9 @@
-.. howto/index: 
+.. core/constructing-graphs/index.rst:
 
-Constructing graphs
+.. _constructing_graphs:
+
+
+Constructing Graphs
 ===================
 
 .. toctree::

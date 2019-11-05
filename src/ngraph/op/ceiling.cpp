@@ -19,8 +19,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Ceiling::Ceiling(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Ceiling", arg)
+constexpr NodeTypeInfo op::Ceiling::type_info;
+
+op::Ceiling::Ceiling(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }

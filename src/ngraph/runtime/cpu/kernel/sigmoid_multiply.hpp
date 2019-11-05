@@ -55,66 +55,63 @@ namespace ngraph
                     auto out_tm = wrap_into_tensor_map<float>(out_tensor, tensor_size);
                     switch (index)
                     {
-                    case 0 /*Logistic|Logistic*/:
+                    case 0: // Logistic|Logistic
                     {
-                        auto c = (in0.exp() * in1.exp()) / ((in0.exp() + 1.f) * (in1.exp() + 1.f));
+                        auto c = 1.f / (((-in0).exp() + 1.f) * ((-in1).exp() + 1.f));
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
-                    case 1 /*Logistic|Tanh*/:
+                    case 1: // Logistic|Tanh
                     {
-                        auto c = (in0.exp() * ((in1 * 2.f).exp() - 1.f)) /
-                                 ((in0.exp() + 1.f) * ((in1 * 2.f).exp() + 1.f));
+                        auto c = in1.tanh() / ((-in0).exp() + 1.f);
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
-                    case 2 /*Logistic|Identity*/:
+                    case 2: // Logistic|Identity
                     {
-                        auto c = (in0.exp() * in1) / (in0.exp() + 1.f);
+                        auto c = in1 / ((-in0).exp() + 1.f);
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
-                    case 3 /*Tanh|Logistic*/:
+                    case 3: // Tanh|Logistic
                     {
-                        auto c = (((in0 * 2.f).exp() - 1.f) * in1.exp()) /
-                                 (((in0 * 2.f).exp() + 1.f) * (in1.exp() + 1.f));
+                        auto c = in0.tanh() / ((-in1).exp() + 1.f);
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
-                    case 4 /*Tanh|Tanh*/:
+                    case 4: // Tanh|Tanh
                     {
-                        auto c = (((in0 * 2.f).exp() - 1.f) * ((in1 * 2.f).exp() - 1.f)) /
-                                 (((in0 * 2.f).exp() + 1.f) * ((in1 * 2.f).exp() + 1.f));
+                        auto c = in0.tanh() * in1.tanh();
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
-                    case 5 /*Tanh|Identity*/:
+                    case 5: // Tanh|Identity
                     {
-                        auto c = (((in0 * 2.f).exp() - 1.f) * in1) / ((in0 * 2.f).exp() + 1.f);
+                        auto c = in0.tanh() * in1;
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
-                    case 6 /*Identity|Logistic*/:
+                    case 6: // Identity|Logistic
                     {
-                        auto c = (in0 * in1.exp()) / (in1.exp() + 1.f);
+                        auto c = in0 / ((-in1).exp() + 1.f);
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
-                    case 7 /*Identity|Tanh*/:
+                    case 7: // Identity|Tanh
                     {
-                        auto c = (in0 * ((in1 * 2.f).exp() - 1.f)) / ((in1 * 2.f).exp() + 1.f);
+                        auto c = in0 * in1.tanh();
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
-                    case 8 /*Identity|Identity*/:
+                    case 8: // Identity|Identity
                     {
                         auto c = (in0 * in1);
                         out_tm.device(
@@ -142,105 +139,137 @@ namespace ngraph
 
                     switch (index)
                     {
-                    case 0 /*Logistic|Logistic*/:
+                    case 0: // Logistic|Logistic
                     {
-                        auto i0 = delta * (in1.exp() * in0.exp()) /
-                                  ((in1.exp() + 1.f) * ((in0.exp() + 1.f) * (in0.exp() + 1.f)));
-                        auto i1 = delta * (in0.exp() * in1.exp()) /
-                                  ((in0.exp() + 1.f) * ((in1.exp() + 1.f) * (in1.exp() + 1.f)));
+                        auto in0_neg_exp = (-in0).exp();
+                        auto in0_log_denominator = in0_neg_exp + 1.f;
+                        auto in1_neg_exp = (-in1).exp();
+                        auto in1_log_denominator = in1_neg_exp + 1.f;
+
+                        auto i0 = delta * in0_neg_exp /
+                                  (in1_log_denominator * in0_log_denominator * in0_log_denominator);
+                        auto i1 = delta * in1_neg_exp /
+                                  (in0_log_denominator * in1_log_denominator * in1_log_denominator);
                         i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
                             arena)) = i0;
                         i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
                             arena)) = i1;
                     }
                     break;
-                    case 1 /*Logistic|Tanh*/:
+                    case 1: // Logistic|Tanh
                     {
+                        auto in0_neg_exp = (-in0).exp();
+                        auto in0_log_denominator = in0_neg_exp + 1.f;
+                        auto in1_2exp = (in1 * 2.f).exp();
+                        auto in1_tanh_denominator = in1_2exp + 1.f;
+
                         auto i0 =
-                            delta * (((in1 * 2.f).exp() - 1.f) * in0.exp()) /
-                            (((in1 * 2.f).exp() + 1.f) * ((in0.exp() + 1.f) * (in0.exp() + 1.f)));
-                        auto i1 = delta * (in0.exp() * (4.f * (in1 * 2.f).exp())) /
-                                  ((in0.exp() + 1.f) *
-                                   (((in1 * 2.f).exp() + 1.f) * ((in1 * 2.f).exp() + 1.f)));
+                            delta * ((in1_2exp - 1.f) * in0_neg_exp) /
+                            (in1_tanh_denominator * in0_log_denominator * in0_log_denominator);
+                        auto i1 =
+                            delta * (4.f * in1_2exp) /
+                            (in0_log_denominator * in1_tanh_denominator * in1_tanh_denominator);
                         i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
                             arena)) = i0;
                         i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
                             arena)) = i1;
                     }
                     break;
-                    case 2 /*Logistic|Identity*/:
+                    case 2: // Logistic|Identity
                     {
+                        auto in0_neg_exp = (-in0).exp();
+                        auto in0_log_denominator = in0_neg_exp + 1.f;
+
+                        auto i0 = delta * (in1 * in0_neg_exp) /
+                                  (in0_log_denominator * in0_log_denominator);
+                        auto i1 = delta / in0_log_denominator;
+                        i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i0;
+                        i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i1;
+                    }
+                    break;
+                    case 3: // Tanh|Logistic
+                    {
+                        auto in0_2exp = (in0 * 2.f).exp();
+                        auto in0_tanh_denominator = in0_2exp + 1.f;
+                        auto in1_neg_exp = (-in1).exp();
+                        auto in1_log_denominator = in1_neg_exp + 1.f;
+
                         auto i0 =
-                            delta * (in1 * in0.exp()) / ((in0.exp() + 1.f) * (in0.exp() + 1.f));
-                        auto i1 = delta * in0.exp() / ((in0.exp() + 1.f));
-                        i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
-                            arena)) = i0;
-                        i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
-                            arena)) = i1;
-                    }
-                    break;
-                    case 3 /*Tanh|Logistic*/:
-                    {
-                        auto i0 = delta * (in1.exp() * (4.f * (in0 * 2.f).exp())) /
-                                  ((in1.exp() + 1.f) * ((in0 * 2.f).exp() + 1.f) *
-                                   ((in0 * 2.f).exp() + 1.f));
+                            delta * (4.f * in0_2exp) /
+                            (in1_log_denominator * in0_tanh_denominator * in0_tanh_denominator);
                         auto i1 =
-                            delta * (((in0 * 2.f).exp() - 1.f) * in1.exp()) /
-                            (((in0 * 2.f).exp() + 1.f) * ((in1.exp() + 1.f) * (in1.exp() + 1.f)));
+                            delta * ((in0_2exp - 1.f) * in1_neg_exp) /
+                            (in0_tanh_denominator * in1_log_denominator * in1_log_denominator);
                         i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
                             arena)) = i0;
                         i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
                             arena)) = i1;
                     }
                     break;
-                    case 4 /*Tanh|Tanh*/:
+                    case 4: // Tanh|Tanh
                     {
-                        auto i0 = delta * (((in1 * 2.f).exp() - 1.f) * (4.f * (in0 * 2.f).exp())) /
-                                  (((in1 * 2.f).exp() + 1.f) *
-                                   (((in0 * 2.f).exp() + 1.f) * ((in0 * 2.f).exp() + 1.f)));
-                        auto i1 = delta * (((in0 * 2.f).exp() - 1.f) * (4.f * (in1 * 2.f).exp())) /
-                                  (((in0 * 2.f).exp() + 1.f) *
-                                   (((in1 * 2.f).exp() + 1.f) * ((in1 * 2.f).exp() + 1.f)));
-                        i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
-                            arena)) = i0;
-                        i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
-                            arena)) = i1;
-                    }
-                    break;
-                    case 5 /*Tanh|Identity*/:
-                    {
-                        auto i0 = delta * (in1 * (4.f * (in0 * 2.f).exp())) /
-                                  (((in0 * 2.f).exp() + 1.f) * ((in0 * 2.f).exp() + 1.f));
-                        auto i1 = delta * ((in0 * 2.f).exp() - 1.f) / ((in0 * 2.f).exp() + 1.f);
-                        i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
-                            arena)) = i0;
-                        i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
-                            arena)) = i1;
-                    }
-                    break;
-                    case 6 /*Identity|Logistic*/:
-                    {
-                        auto i0 = delta * (in1.exp()) / (in1.exp() + 1.f);
+                        auto in0_2exp = (in0 * 2.f).exp();
+                        auto in0_tanh_denominator = in0_2exp + 1.f;
+                        auto in1_2exp = (in1 * 2.f).exp();
+                        auto in1_tanh_denominator = in1_2exp + 1.f;
+
+                        auto i0 =
+                            delta * (in1_2exp - 1.f) * 4.f * in0_2exp /
+                            (in1_tanh_denominator * in0_tanh_denominator * in0_tanh_denominator);
                         auto i1 =
-                            delta * (in0 * in1.exp()) / ((in1.exp() + 1.f) * (in1.exp() + 1.f));
+                            delta * (in0_2exp - 1.f) * 4.f * in1_2exp /
+                            (in0_tanh_denominator * in1_tanh_denominator * in1_tanh_denominator);
                         i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
                             arena)) = i0;
                         i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
                             arena)) = i1;
                     }
                     break;
-                    case 7 /*Identity|Tanh*/:
+                    case 5: // Tanh|Identity
                     {
-                        auto i0 = delta * ((in1 * 2.f).exp() - 1.f) / ((in1 * 2.f).exp() + 1.f);
-                        auto i1 = delta * (in0 * (4.f * (in1 * 2.f).exp())) /
-                                  (((in1 * 2.f).exp() + 1.f) * ((in1 * 2.f).exp() + 1.f));
+                        auto in0_2exp = (in0 * 2.f).exp();
+                        auto in0_tanh_denominator = in0_2exp + 1.f;
+
+                        auto i0 = delta * in1 * 4.f * in0_2exp /
+                                  (in0_tanh_denominator * in0_tanh_denominator);
+                        auto i1 = delta * (in0_2exp - 1.f) / in0_tanh_denominator;
                         i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
                             arena)) = i0;
                         i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
                             arena)) = i1;
                     }
                     break;
-                    case 8 /*Identity|Identity*/:
+                    case 6: // Identity|Logistic
+                    {
+                        auto in1_neg_exp = (-in1).exp();
+                        auto in1_log_denominator = in1_neg_exp + 1.f;
+
+                        auto i0 = delta * 1.f / in1_log_denominator;
+                        auto i1 =
+                            delta * in0 * in1_neg_exp / (in1_log_denominator * in1_log_denominator);
+                        i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i0;
+                        i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i1;
+                    }
+                    break;
+                    case 7: // Identity|Tanh
+                    {
+                        auto in1_2exp = (in1 * 2.f).exp();
+                        auto in1_tanh_denominator = in1_2exp + 1.f;
+
+                        auto i0 = delta * (in1_2exp - 1.f) / in1_tanh_denominator;
+                        auto i1 = delta * (in0 * (4.f * in1_2exp)) /
+                                  (in1_tanh_denominator * in1_tanh_denominator);
+                        i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i0;
+                        i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i1;
+                    }
+                    break;
+                    case 8: // Identity|Identity
                     {
                         auto i0 = delta * in1;
                         auto i1 = delta * in0;

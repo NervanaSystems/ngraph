@@ -41,18 +41,64 @@ TEST(zero_dim_tensor_elimination, zero_sum)
 {
     Shape zero_shape{0};
     auto A = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto sum = std::make_shared<op::Sum>(A, AxisSet{0});
     auto abs_node = std::make_shared<op::Abs>(A);
     auto sum_node = std::make_shared<op::Sum>(abs_node, AxisSet{0});
     auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
     auto f = std::make_shared<Function>(NodeVector{sum_node, constant}, ParameterVector{A});
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    EXPECT_EQ(count_ops_of_type<op::Sum>(f), 1);
     pass_manager.run_passes(f);
-    ASSERT_EQ(count_ops_of_type<op::Sum>(f), 0);
+    EXPECT_EQ(count_ops_of_type<op::Sum>(f), 0);
+}
+
+TEST(zero_dim_tensor_elimination, zero_product)
+{
+    Shape zero_shape{0};
+    auto A = std::make_shared<op::Parameter>(element::i32, zero_shape);
+    auto abs_node = std::make_shared<op::Abs>(A);
+    auto product_node = std::make_shared<op::Product>(abs_node, AxisSet{0});
+    auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
+    auto f = std::make_shared<Function>(NodeVector{product_node, constant}, ParameterVector{A});
+    pass::Manager pass_manager;
+
+    pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
+    EXPECT_EQ(count_ops_of_type<op::Product>(f), 1);
+    pass_manager.run_passes(f);
+    EXPECT_EQ(count_ops_of_type<op::Product>(f), 0);
+}
+
+TEST(zero_dim_tensor_elimination, zero_min)
+{
+    Shape zero_shape{0};
+    auto A = std::make_shared<op::Parameter>(element::i32, zero_shape);
+    auto abs_node = std::make_shared<op::Abs>(A);
+    auto min_node = std::make_shared<op::Min>(abs_node, AxisSet{0});
+    auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
+    auto f = std::make_shared<Function>(NodeVector{min_node, constant}, ParameterVector{A});
+    pass::Manager pass_manager;
+
+    pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
+    EXPECT_EQ(count_ops_of_type<op::Min>(f), 1);
+    pass_manager.run_passes(f);
+    EXPECT_EQ(count_ops_of_type<op::Min>(f), 0);
+}
+
+TEST(zero_dim_tensor_elimination, zero_max)
+{
+    Shape zero_shape{0};
+    auto A = std::make_shared<op::Parameter>(element::i32, zero_shape);
+    auto abs_node = std::make_shared<op::Abs>(A);
+    auto max_node = std::make_shared<op::Max>(abs_node, AxisSet{0});
+    auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
+    auto f = std::make_shared<Function>(NodeVector{max_node, constant}, ParameterVector{A});
+    pass::Manager pass_manager;
+
+    pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
+    EXPECT_EQ(count_ops_of_type<op::Max>(f), 1);
+    pass_manager.run_passes(f);
+    EXPECT_EQ(count_ops_of_type<op::Max>(f), 0);
 }
 
 TEST(zero_dim_tensor_elimination, zero_const_conv)
@@ -68,11 +114,10 @@ TEST(zero_dim_tensor_elimination, zero_const_conv)
         std::make_shared<Function>(NodeVector{abs_node, constant}, ParameterVector{A, weights});
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    EXPECT_EQ(count_ops_of_type<op::Convolution>(f), 1);
     pass_manager.run_passes(f);
-    ASSERT_EQ(count_ops_of_type<op::Convolution>(f), 0);
+    EXPECT_EQ(count_ops_of_type<op::Convolution>(f), 0);
 }
 
 TEST(zero_dim_tensor_elimination, zero_const_avg_pool)
@@ -87,11 +132,10 @@ TEST(zero_dim_tensor_elimination, zero_const_avg_pool)
     auto f = std::make_shared<Function>(NodeVector{abs_node, constant}, ParameterVector{A});
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    EXPECT_EQ(count_ops_of_type<op::AvgPool>(f), 1);
     pass_manager.run_passes(f);
-    ASSERT_EQ(count_ops_of_type<op::AvgPool>(f), 0);
+    EXPECT_EQ(count_ops_of_type<op::AvgPool>(f), 0);
 }
 
 TEST(zero_dim_tensor_elimination, zero_const_pad)
@@ -100,17 +144,16 @@ TEST(zero_dim_tensor_elimination, zero_const_pad)
     auto A = std::make_shared<op::Parameter>(element::f32, zero_shape);
     auto B = std::make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto pad = std::make_shared<op::Pad>(A, B, Shape{2}, Shape{2}, Shape{0});
+    auto pad = std::make_shared<op::Pad>(A, B, CoordinateDiff{2}, CoordinateDiff{2});
     auto abs_node = std::make_shared<op::Abs>(pad);
     auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
     auto f = std::make_shared<Function>(NodeVector{abs_node, constant}, ParameterVector{A, B});
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    EXPECT_EQ(count_ops_of_type<op::Broadcast>(f), 0);
     pass_manager.run_passes(f);
-    ASSERT_EQ(count_ops_of_type<op::Broadcast>(f), 1);
+    EXPECT_EQ(count_ops_of_type<op::Broadcast>(f), 1);
 }
 
 TEST(zero_dim_tensor_elimination, zero_const_slice)
@@ -119,16 +162,51 @@ TEST(zero_dim_tensor_elimination, zero_const_slice)
     auto A = std::make_shared<op::Parameter>(element::f32, zero_shape);
     auto B = std::make_shared<op::Parameter>(element::f32, Shape{});
     auto slice = make_shared<op::Slice>(A, Coordinate{0}, Coordinate{0});
-    auto pad = std::make_shared<op::Pad>(A, B, Shape{2}, Shape{2}, Shape{0});
+    auto pad = std::make_shared<op::Pad>(A, B, CoordinateDiff{2}, CoordinateDiff{2});
     auto abs_node = std::make_shared<op::Abs>(pad);
     auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
     auto f = std::make_shared<Function>(NodeVector{abs_node, constant}, ParameterVector{A, B});
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    EXPECT_EQ(count_ops_of_type<op::Broadcast>(f), 0);
+    EXPECT_EQ(count_ops_of_type<op::Slice>(f), 0);
     pass_manager.run_passes(f);
-    ASSERT_EQ(count_ops_of_type<op::Broadcast>(f), 1);
-    ASSERT_EQ(count_ops_of_type<op::Slice>(f), 0);
+    EXPECT_EQ(count_ops_of_type<op::Broadcast>(f), 1);
+    EXPECT_EQ(count_ops_of_type<op::Slice>(f), 0);
+}
+
+TEST(zero_dim_tensor_elimination, zero_argmax)
+{
+    auto A = std::make_shared<op::Parameter>(element::f32, Shape{0, 2, 3});
+    auto argmax = make_shared<op::ArgMax>(A, 1, element::i32);
+    auto f = std::make_shared<Function>(NodeVector{argmax}, ParameterVector{A});
+    pass::Manager pass_manager;
+
+    pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
+    EXPECT_EQ(count_ops_of_type<op::ArgMax>(f), 1);
+    pass_manager.run_passes(f);
+    EXPECT_EQ(count_ops_of_type<op::ArgMax>(f), 0);
+    EXPECT_EQ(f->get_results().at(0)->get_shape(), (Shape{0, 3}));
+}
+
+TEST(zero_dim_tensor_elimination, zero_argmin)
+{
+    auto A = std::make_shared<op::Parameter>(element::f32, Shape{0, 2, 3});
+    auto argmin = make_shared<op::ArgMin>(A, 1, element::i32);
+    auto f = std::make_shared<Function>(NodeVector{argmin}, ParameterVector{A});
+    pass::Manager pass_manager;
+
+    pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
+    EXPECT_EQ(count_ops_of_type<op::ArgMin>(f), 1);
+    pass_manager.run_passes(f);
+    EXPECT_EQ(count_ops_of_type<op::ArgMin>(f), 0);
+    EXPECT_EQ(f->get_results().at(0)->get_shape(), (Shape{0, 3}));
+}
+
+TEST(zero_dim_tensor_elimination, pass_property)
+{
+    auto pass = std::make_shared<ngraph::pass::ZeroDimTensorElimination>();
+    ASSERT_EQ(true, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+    ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
 }

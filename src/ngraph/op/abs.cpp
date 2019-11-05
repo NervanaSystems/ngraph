@@ -21,8 +21,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Abs::Abs(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Abs", arg)
+constexpr NodeTypeInfo op::Abs::type_info;
+
+op::Abs::Abs(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }
@@ -37,7 +39,7 @@ void op::Abs::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
 {
     auto delta = deltas.at(0);
 
-    auto x = get_inputs().at(0).get_output().get_node();
+    auto x = input_value(0);
 
     adjoints.add_delta(x, delta * make_shared<op::Sign>(x));
 }

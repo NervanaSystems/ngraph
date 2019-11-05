@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include <cstdlib> // std::size_t, std::uintptr_t
-#include <onnxifi.h>
+#include <onnx/onnxifi.h>
 #include <stdexcept> // std::invalid_agrument, std::out_of_rage
 
 #include "backend.hpp"

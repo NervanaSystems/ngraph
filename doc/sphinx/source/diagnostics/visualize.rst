@@ -1,5 +1,0 @@
-.. visualize: 
-
-Visualization
-#############
-

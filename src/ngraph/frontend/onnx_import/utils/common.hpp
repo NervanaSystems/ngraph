@@ -16,16 +16,20 @@
 
 #pragma once
 
+#include <algorithm>   // std::generate
 #include <cmath>       // std::floor, std::min
 #include <cstddef>     // std::size_t
+#include <cstdint>     // std::int64_t
 #include <iterator>    // std::begin, std::end
 #include <memory>      // std::shared_ptr, std::make_shared
-#include <type_traits> // std::enable_if, std::is_floating_point, std::is_integral
+#include <type_traits> // std::enable_if
 #include <vector>
 
+#include "core/node.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
-#include "utils/broadcasting.hpp"
+#include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
@@ -33,59 +37,12 @@ namespace ngraph
     {
         namespace common
         {
-            namespace detail
-            {
-                namespace
-                {
-                    /// \brief      Fill specified range with monotonic sequence.
-                    ///
-                    /// \param[in]  first            The iterator to the beginning of the range.
-                    /// \param[in]  last             The iterator to the past the end of the range.
-                    /// \param[in]  init_value       The initial value for sequence.
-                    /// \param[in]  step             The step value for sequence.
-                    ///
-                    /// \tparam     ForwardIterator  The forward iterator class type.
-                    /// \tparam     T                The sequence value type.
-                    ///
-                    template <typename ForwardIterator, typename T>
-                    void fill_monotonic_range(ForwardIterator first,
-                                              ForwardIterator last,
-                                              T init_value,
-                                              T step)
-                    {
-                        for (; first != last; ++first, init_value += step)
-                        {
-                            *first = init_value;
-                        }
-                    }
+            const ngraph::element::Type& get_ngraph_element_type(std::int64_t onnx_type);
 
-                } // namespace anonymous
-            }     // namespace  detail
-
-            /// \brief      Return the monotonic sequence.
+            /// \brief      Return a monotonic sequence.
             ///
-            /// \note       Specialization for integral types.
-            ///
-            /// \param[in]  start_value  The start value of the sequence.
-            /// \param[in]  end_value    The end value of the sequence.
-            /// \param[in]  step         The step value for the sequence.
-            ///
-            /// \tparam     T            The data value type.
-            ///
-            /// \return     The vector with monotonic sequence.
-            template <typename T,
-                      typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
-            std::vector<T> get_monotonic_range(T end_value, T start_value = T{0}, T step = T{1})
-            {
-                std::size_t value_count = (end_value - start_value) / step;
-                std::vector<T> range(value_count);
-                detail::fill_monotonic_range(std::begin(range), std::end(range), start_value, step);
-                return range;
-            }
-
-            /// \brief      Return the monotonic sequence.
-            ///
-            /// \note       Specialization for floating point types.
+            /// \note       Limitations: this function may not work for very large integer values
+            ///             (near numerical limits).
             ///
             /// \param[in]  start_value  The start value of the sequence.
             /// \param[in]  end_value    The end value of the sequence.
@@ -94,68 +51,117 @@ namespace ngraph
             /// \tparam     T            The data value type.
             ///
             /// \return     The vector with monotonic sequence
-            template <typename T,
-                      typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
-            std::vector<T> get_monotonic_range(T end_value, T start_value = T{0.f}, T step = T{1.f})
+            template <typename T>
+            std::vector<T> get_monotonic_range(T end_value, T start_value = T{0}, T step = T{1})
             {
-                std::size_t value_count =
-                    reinterpret_cast<std::size_t>(std::floor((end_value - start_value) / step));
+                auto value_count =
+                    static_cast<std::size_t>(std::floor((end_value - start_value) / step));
+
                 std::vector<T> range(value_count);
-                detail::fill_monotonic_range(std::begin(range), std::end(range), start_value, step);
+
+                // Calculate initial value (one step below starting value)
+                size_t n = start_value - step;
+                // Generate a vector of values by adding step to previous value
+                std::generate(
+                    std::begin(range), std::end(range), [&n, &step]() -> T { return n += step; });
+
                 return range;
             }
 
-            /// \brief      Makes a Constant Ngraph node.
+            /// \brief      Handle out of range axis.
             ///
-            /// \param[in]  type   The node element type.
-            /// \param[in]  shape  The tensor data shape.
-            /// \param[in]  data   The data to initialize node with.
+            /// \param[in]  node         The node with requested axis.
+            /// \param[in]  axis         The requested axis value.
+            /// \param[in]  tensor_rank  The corresponding tensor rank.
             ///
-            /// \tparam     T      Input data value type.
+            /// \return    Checking if axis is in range [-tensor_rank, tensor_rank-1], otherwise
+            /// returns error.
+            ///            If negative axis, it counts from the last to the first axis, by adding
+            ///            tensor_rank to axis.
             ///
-            /// \return     The Ngraph node representing Constant data.
+            std::size_t validate_axis(const ngraph::onnx_import::Node& node,
+                                      std::int64_t axis,
+                                      std::int64_t tensor_rank);
+
+            /// \brief      Handle out of range axis.
             ///
-            template <typename T>
-            std::shared_ptr<ngraph::Node> make_constant_node(const ngraph::element::Type& type,
-                                                             const ngraph::Shape& shape,
-                                                             const std::vector<T>& data)
+            /// \param[in]  node            The node with requested axis.
+            /// \param[in]  axis            The requested axis value.
+            /// \param[in]  tensor_rank     The corresponding tensor rank.
+            /// \param[in]  axis_range_min  The min value of accepted range for axis.
+            /// \param[in]  axis_range_max  The max value of accepted range for axis.
+            ///
+            /// \return     Checking if axis is in range [axis_range_min, axis_range_max], otherwise
+            /// returns error.
+            ////            If negative axis, it counts from the last to the first axis, by adding
+            /// tensor_rank to axis.
+            ///
+            std::size_t validate_axis(const ngraph::onnx_import::Node& node,
+                                      std::int64_t axis,
+                                      std::int64_t tensor_rank,
+                                      std::int64_t axis_range_min,
+                                      std::int64_t axis_range_max);
+
+            /// \brief      Handle out of range axes in vector.
+            ///
+            /// \param[in]  node         The node with requested axes.
+            /// \param[in]  axes         The requested vector of axes.
+            /// \param[in]  tensor_rank  The corresponding tensor rank.
+            ///
+            /// \return     If any negative axis in vector, it counts from the last to the first
+            /// axis, by adding tensor_rank to axis.
+            ///
+            std::vector<std::size_t> validate_axes(const ngraph::onnx_import::Node& node,
+                                                   std::vector<std::int64_t> axes,
+                                                   std::int64_t tensor_rank);
+
+            /// \brief Creates a shifted square identity matrix.
+            /// \note Shifting in the context of this operator means that
+            ///       the matrix can be created with elements equal to 1 not only in the main
+            ///       diagonal. Shifting adds an offset and moves the diagonal up or down
+            ///
+            /// \param[in] output_shape Shape of the resulting matrix.
+            /// \param[in] output_type Element type of the resulting matrix.
+            /// \param[in] shift Shifting of diagonal.
+            ///
+            /// \return A Constant node representing shifted identity matrix.
+            template <typename T = double>
+            std::shared_ptr<ngraph::op::Constant>
+                shifted_square_identity(const Shape output_shape,
+                                        const element::Type& output_type,
+                                        const std::int64_t shift)
             {
-                std::shared_ptr<ngraph::Node> node;
-                // Make constant node filled with single value.
-                if (data.size() == 1)
+                std::vector<T> identity_matrix(shape_size(output_shape), T{0});
+                std::int64_t rows = output_shape[0];
+                std::int64_t cols = output_shape[1];
+                for (std::int64_t row = 0; row < rows; ++row)
                 {
-                    node = std::make_shared<ngraph::op::Constant>(type, ngraph::Shape{}, data);
-                    node = make_broadcast_node(node, shape);
-                }
-                else
-                {
-                    node = std::make_shared<ngraph::op::Constant>(type, shape, data);
+                    const std::int64_t diagonal_element_idx = (row * cols) + row + shift;
+                    if (row + shift < 0)
+                    {
+                        continue;
+                    }
+                    else if (row + shift >= cols)
+                    {
+                        break;
+                    }
+                    identity_matrix.at(diagonal_element_idx) = T{1};
                 }
 
-                return node;
+                return std::make_shared<ngraph::op::Constant>(
+                    output_type, output_shape, identity_matrix);
             }
 
-            /// \brief      Handle negative axis value.
+            /// \brief Creates a square identity matrix.
             ///
-            /// \param[in]  axis        The requested axis value.
-            /// \param[in]  tensor_dim  The corresponding tensor dimensionality.
+            /// \param[in] n Order of the resulting matrix.
             ///
-            /// \tparam     T           Provided axis value type.
-            ///
-            /// \return     If negative axis, then return sum of tensor dimension and axis.
-            ///
-            template <typename T,
-                      typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
-            std::int64_t convert_negative_axis(T axis, std::size_t tensor_dim)
+            /// \return A Constant node representing identity matrix with shape (n, n).
+            template <typename T = double>
+            std::shared_ptr<ngraph::op::Constant> square_identity(const size_t n,
+                                                                  const element::Type& type)
             {
-                if (axis >= 0)
-                {
-                    return std::min(axis, static_cast<T>(tensor_dim));
-                }
-                else
-                {
-                    return static_cast<std::int64_t>(tensor_dim) + axis;
-                }
+                return shifted_square_identity(Shape{n, n}, type, 0);
             }
 
         } // namespace  common

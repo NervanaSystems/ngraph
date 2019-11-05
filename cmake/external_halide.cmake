@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018-2019 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,6 +52,7 @@ ExternalProject_Add(
     CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
     CMAKE_ARGS
     ${NGRAPH_FORWARD_CMAKE_ARGS}
+    -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
     -DLLVM_DIR=${HALIDE_LLVM_DIR}
     -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/halide
     -DHALIDE_SHARED_LIBRARY=OFF

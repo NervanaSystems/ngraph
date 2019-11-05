@@ -17,20 +17,18 @@
 #include <memory>
 #include <vector>
 
-#include "core/node.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/node_vector.hpp"
 #include "ngraph/op/add.hpp"
-#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 #include "selu.hpp"
-#include "utils/broadcasting.hpp"
+
+using namespace ngraph::op;
 
 namespace ngraph
 {
@@ -72,7 +70,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

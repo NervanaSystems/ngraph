@@ -71,7 +71,7 @@ namespace ngraph
 }
 
 ngraph::runtime::plaidml::Config
-    ngraph::runtime::plaidml::parse_config_string(const char* configuration_string)
+    ngraph::runtime::plaidml::parse_config_string(const std::string& configuration_string)
 {
     bool err = false;
     bool help = false;
@@ -103,7 +103,7 @@ ngraph::runtime::plaidml::Config
     //        oval_begin
     //          oval_end
 
-    const char* c = configuration_string;
+    const char* c = configuration_string.c_str();
     while (*c && *c != ':')
     {
         ++c;
@@ -153,7 +153,7 @@ ngraph::runtime::plaidml::Config
         // Readability definitions
         auto is_opt = [=](const char* opt) {
             auto len = strlen(opt);
-            return (oname_end - oname_begin == len) && !strncmp(oname_begin, opt, len);
+            return (oname_end == oname_begin + len) && !strncmp(oname_begin, opt, len);
         };
 
         std::size_t oval_len = oval_end - oval_begin;
@@ -162,6 +162,12 @@ ngraph::runtime::plaidml::Config
         // N.B. oval_len != 0 => has_oval, but there's no other relationship.
         // So to verify that there is a non-zero-length option value, test oval_len
         // To verify that there is no option value, test has_oval
+
+        if (oname_begin == oname_end && !has_oval)
+        {
+            // An empty option; poor style, but advance to the next.
+            continue;
+        }
 
         // Check for verbosity
         if (is_opt("v"))
@@ -242,6 +248,8 @@ ngraph::runtime::plaidml::Config
         }
 
         // Reject unknown options
+        NGRAPH_ERR << "Unrecognized PlaidML backend option: "
+                   << std::string{oname_begin, static_cast<std::size_t>(oname_end - oname_begin)};
         err = true;
     }
 

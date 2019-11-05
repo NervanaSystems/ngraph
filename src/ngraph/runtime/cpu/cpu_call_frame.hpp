@@ -16,12 +16,15 @@
 
 #pragma once
 
+#include <condition_variable>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
 #include "ngraph/function.hpp"
+#include "ngraph/runtime/allocator.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/tensor.hpp"
@@ -57,7 +60,8 @@ namespace ngraph
                 CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction> external_function,
                               InitContextFuncCG compiled_init_ctx_func,
                               DestroyContextFuncCG compiled_destroy_ctx_func,
-                              EntryPoint compiled_function);
+                              EntryPoint compiled_function,
+                              runtime::Allocator* allocator);
                 ~CPU_CallFrame();
 
                 /// \brief Invoke the function with values matching the signature of the function.
@@ -69,7 +73,7 @@ namespace ngraph
                 void propagate_layouts(const std::vector<std::shared_ptr<runtime::Tensor>>& tvs,
                                        const LayoutDescriptorPtrs& layouts) const;
 
-                void setup_runtime_context();
+                void setup_runtime_context(runtime::Allocator* allocator);
                 void setup_cg_runtime_context();
                 void cleanup_runtime_context();
 
@@ -79,13 +83,21 @@ namespace ngraph
                 CPU_CallFrame& operator=(const CPU_CallFrame&) = delete;
 
                 void inner_call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                                const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+                                const std::vector<std::shared_ptr<runtime::Tensor>>& inputs,
+                                const size_t id,
+                                const bool disable_caching = true);
 
                 std::shared_ptr<CPU_ExternalFunction> m_external_function;
 
-                CPURuntimeContext* ctx = nullptr;
+                std::mutex m_mutex;
+                std::condition_variable m_cv;
+                volatile size_t m_num_ctx_available = 0;
+                size_t m_prev_ctx = 0;
+                size_t m_num_ctx = 1;
+                std::unordered_map<size_t, bool> m_id_pool;
+                std::vector<CPURuntimeContext*> m_ctx_vec;
 
-                /* Codegen specific */
+                // Codegen specific
 
                 /// Function that initializes the context used in codegen mode.
                 InitContextFuncCG m_compiled_init_ctx_func;

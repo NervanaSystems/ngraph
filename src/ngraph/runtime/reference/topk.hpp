@@ -21,6 +21,7 @@
 #include <numeric>
 
 #include "ngraph/coordinate_transform.hpp"
+#include "ngraph/op/topk.hpp"
 
 namespace ngraph
 {
@@ -31,14 +32,41 @@ namespace ngraph
             // Had to split out these two functions. They used to be lambda expressions but
             // MSVC had difficulty compiling. This way is more explicit.
             template <typename T, typename U>
-            static bool compare_max(const std::tuple<T, U>& a, const std::tuple<T, U>& b)
+            inline bool compare_max(const std::tuple<T, U>& a, const std::tuple<T, U>& b)
             {
+// this is intentional to be able to compare floats directly
+// without using relative or absolute tolerance
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
+                if (std::get<0>(a) == std::get<0>(b))
+                {
+                    return std::get<1>(a) < std::get<1>(b);
+                }
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
                 return a > b;
             }
+
             template <typename T, typename U>
-            static bool compare_min(const std::tuple<T, U>& a, const std::tuple<T, U>& b)
+            inline bool compare_min(const std::tuple<T, U>& a, const std::tuple<T, U>& b)
             {
                 return a < b;
+            }
+
+            template <typename T, typename U>
+            inline bool sort_indices_descending(const std::tuple<T, U>& a,
+                                                const std::tuple<T, U>& b)
+            {
+                return std::get<1>(a) < std::get<1>(b);
+            }
+
+            template <typename T, typename U>
+            inline bool sort_indices_ascending(const std::tuple<T, U>& a, const std::tuple<T, U>& b)
+            {
+                return std::get<1>(a) > std::get<1>(b);
             }
 
             template <typename T, typename U>
@@ -49,7 +77,8 @@ namespace ngraph
                       const Shape& out_shape,
                       size_t axis,
                       size_t k,
-                      bool compute_max)
+                      bool compute_max,
+                      op::TopK::SortType sort = op::TopK::SortType::NONE)
             {
                 using namespace std;
                 // reorder source axis visit order and make "axis" inner most
@@ -89,13 +118,49 @@ namespace ngraph
                     // Sort the temp vector
                     if (compute_max)
                     {
-                        sort(workspace.begin(), workspace.end(), compare_max<T, U>);
+                        nth_element(workspace.begin(),
+                                    workspace.begin() + k,
+                                    workspace.end(),
+                                    compare_max<T, U>);
                     }
                     else
                     {
-                        sort(workspace.begin(), workspace.end(), compare_min<T, U>);
+                        nth_element(workspace.begin(),
+                                    workspace.begin() + k,
+                                    workspace.end(),
+                                    compare_min<T, U>);
                     }
                     // Write temp vector to output
+                    if (compute_max)
+                    {
+                        switch (sort)
+                        {
+                        case op::TopK::SortType::NONE: break;
+                        case op::TopK::SortType::SORT_INDICES:
+                            std::sort(workspace.begin(),
+                                      workspace.begin() + k,
+                                      sort_indices_descending<T, U>);
+                            break;
+                        case op::TopK::SortType::SORT_VALUES:
+                            std::sort(workspace.begin(), workspace.begin() + k, compare_max<T, U>);
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        switch (sort)
+                        {
+                        case op::TopK::SortType::NONE: break;
+                        case op::TopK::SortType::SORT_INDICES:
+                            std::sort(workspace.begin(),
+                                      workspace.begin() + k,
+                                      sort_indices_ascending<T, U>);
+                            break;
+                        case op::TopK::SortType::SORT_VALUES:
+                            std::sort(workspace.begin(), workspace.begin() + k, compare_min<T, U>);
+                            break;
+                        }
+                    }
                     for (size_t j = 0; j < k; j++)
                     {
                         tuple<T, U> entry = workspace[j];

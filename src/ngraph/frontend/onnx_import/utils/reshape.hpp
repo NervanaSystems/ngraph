@@ -23,8 +23,6 @@
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/node_vector.hpp"
-#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
@@ -32,141 +30,37 @@ namespace ngraph
     {
         namespace reshape
         {
-            /// \brief Flatten the input tensor into a 2D matrix.
-            ///
-            /// \param node The tensor to be flattened.
-            /// \param axis The axis dividing shape.
-            ///
-            /// \return The new node being a 2D matrix representing flattened input node.
-            std::shared_ptr<ngraph::Node> flatten(const std::shared_ptr<ngraph::Node>& node,
-                                                  int axis);
-
-            /// \brief      Gets the AxisVector filled with monotonic increasing
-            ///             sequence.
-            ///
-            /// \param[in]  data_shape_size  The data shape size.
-            /// \param[in]  start_value      The start_value for sequence. Default equals 0.
-            ///
-            /// \return     The filled AxisVector.
-            ///
-            AxisVector get_default_axis_vector(std::size_t data_shape_size,
-                                               std::size_t start_value = 0);
-
             /// \brief      Infer `output_shape` dimension values.
             ///
-            /// \par Inferention rules
-            ///     \li         The input_shape may consist at most on -1 value. In this case the value
-            ///                 is inferred from the size of the tensor and the remaining dimensions.
-            ///     \li         If a dimension value is equal to 0, then its output value is going to
-            ///                 be copied from the input_shape argument.
+            /// \par Inference rules
+            ///     \li         The input_shape may consist at most on -1 value. In this case the
+            ///                 value is inferred from the size of the tensor and the remaining
+            ///                 dimensions.
+            ///     \li         If a dimension value is equal to 0, then its output value is going
+            ///                 to be copied from the input_shape argument.
             ///
             /// \param[in]  node_name     The node name.
             /// \param[in]  input_shape   The input node shape.
             /// \param[in]  output_shape  The requested output shape for the input node data.
             ///
-            /// \return     A vector containig new, valid node shape.
+            /// \return     A vector containing new, valid node shape.
             ///
             std::vector<std::size_t> infer_dimensions(const std::string& node_name,
                                                       const std::vector<std::size_t>& input_shape,
                                                       const std::vector<std::size_t>& output_shape);
 
-            /// \brief Permute axes according to specified axes_order parameter.
+            /// \brief      Handle a node which represents a scalar value.
             ///
-            /// \param node The node which axes we want to permute.
-            /// \param axes_order The permutation of node tensor axes.
+            /// \note       Some ONNX nodes, which should provide scalar values are given as
+            ///             tensors of shape {1}. This function will provide a reshape of
+            ///             such a node with Shape{1} into a scalar with Shape{}.
             ///
-            /// \return: New node with permuted axes.
-            std::shared_ptr<ngraph::Node> reorder_axes(const std::shared_ptr<ngraph::Node>& node,
-                                                       std::vector<std::size_t> axes_order);
-
-            /// \brief Return transposed tensor (with axes in reversed order).
+            /// \param[in]  node   Node to reshape.
             ///
-            /// \param node Input tensor we want to transpose
+            /// \return     Original node or a node representing a reshape of the original.
             ///
-            /// \return: New node with reversed dimensions.
-            std::shared_ptr<ngraph::Node> transpose(const std::shared_ptr<ngraph::Node>& node);
-
-            /// \brief      Remove empty axes from input tensor.
-            ///
-            /// \param[in]  node  The node to be squeezed.
-            /// \param[in]  axes  The vector defining indexes of axes to be removed.
-            ///
-            /// \return     The squeezed node.
-            ///
-            std::shared_ptr<ngraph::Node> squeeze(const std::shared_ptr<ngraph::Node>& node,
-                                                  std::vector<std::size_t> axes = {0});
-
-            /// \brief      Collapse specified axes into single one.
-            ///
-            /// \note       Collapsed axes create a continuous range starting from outermost axis.
-            ///
-            /// \param[in]  node        The node to be reshaped.
-            /// \param[in]  start_axis  The start axis index.
-            /// \param[in]  end_axis    The end axis (inclusive) index.
-            ///
-            /// \return     The node with collapsed specified axes.
-            ///
-            std::shared_ptr<ngraph::Node> collapse(const std::shared_ptr<ngraph::Node>& node,
-                                                   const std::size_t start_axis,
-                                                   const std::size_t end_axis);
-
-            /// \brief      Change shape of input tensor.
-            ///
-            /// \param[in]  node   The node which shape will be changed.
-            /// \param[in]  shape  The new shape for input tensor.
-            ///
-            /// \return     The node representing reshaped input tensor.
-            ///
-            std::shared_ptr<ngraph::Node> reshape(const std::shared_ptr<ngraph::Node>& node,
-                                                  const AxisVector& axis_order,
-                                                  const Shape& shape);
-
-            inline std::shared_ptr<ngraph::Node> reshape(const std::shared_ptr<ngraph::Node>& node,
-                                                         const Shape& shape)
-            {
-                return reshape(node, get_default_axis_vector(node->get_shape().size()), shape);
-            }
-
-            /// \brief      Expands node tensor shape with empty axis at
-            ///             specified position.
-            ///
-            /// \param[in]  node  The node to be expanded.
-            /// \param[in]  axis  The position in the expanded axes where the
-            ///                   new axis is placed.
-            ///
-            /// \return     The node with added empty axis.
-            ///
-            std::shared_ptr<ngraph::Node> expand_dims(const std::shared_ptr<ngraph::Node>& node,
-                                                      std::size_t axis = 0);
-
-            /// \brief      Split node on specified axis into multiple parts.
-            ///
-            /// \param[in]  node          The input node.
-            /// \param[in]  length_parts  The vector defining the lengts of each splitted part.
-            /// \param[in]  axis          The axis we split input node on. Default value is zero axis.
-            ///
-            /// \return     The vector containing multiple nodes we split input node into.
-            ///
-            NodeVector split(const std::shared_ptr<ngraph::Node>& node,
-                             const std::vector<std::size_t>& length_parts,
-                             std::size_t axis = 0);
-
-            /// \brief      Split node on specified axis into multiple parts.
-            ///
-            /// \param[in]  node          The input node.
-            /// \param[in]  split_parts   The number of parts we want to split input node at given
-            ///                           axis. The length of the axis to split must be divisible by
-            ///                           this value.
-            /// \param[in]  axis          The axis we split input node on. Default value is zero axis.
-            ///
-            /// \note       This implementation supports negative `axis` values (similar to NumPy
-            ///             indexing).
-            ///
-            /// \return     The vector containing multiple nodes we split input node into.
-            ///
-            NodeVector split(const std::shared_ptr<ngraph::Node>& node,
-                             std::size_t split_parts,
-                             int axis = 0);
+            std::shared_ptr<ngraph::Node>
+                interpret_as_scalar(const std::shared_ptr<ngraph::Node>& node);
 
         } // namespace  reshape
     }     // namespace onnx_import

@@ -19,9 +19,9 @@
 #include <memory>
 
 #include "core/node.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/select.hpp"
-#include "utils/broadcasting.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -33,14 +33,14 @@ namespace ngraph
             {
                 inline NodeVector where(const Node& node)
                 {
-                    NodeVector ng_inputs{numpy_style_broadcast(node.get_ng_inputs())};
+                    NodeVector ng_inputs{ngraph::op::numpy_style_broadcast(node.get_ng_inputs())};
 
                     return {std::make_shared<ngraph::op::Select>(
                         ng_inputs.at(0), ng_inputs.at(1), ng_inputs.at(2))};
                 }
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

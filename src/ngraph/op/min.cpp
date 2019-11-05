@@ -15,18 +15,84 @@
 //*****************************************************************************
 
 #include "ngraph/op/min.hpp"
+#include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::Min::Min(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
-    : ArithmeticReduction("Min", arg, reduction_axes)
+constexpr NodeTypeInfo op::v0::Min::type_info;
+
+op::v0::Min::Min(const Output<Node>& arg, const AxisSet& reduction_axes)
+    : ArithmeticReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::Min::copy_with_new_args(const NodeVector& new_args) const
+op::v0::Min::Min(const Output<Node>& arg, const Output<Node>& reduction_axes)
+    : ArithmeticReduction(arg, reduction_axes)
+{
+    constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::v0::Min::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Min>(new_args.at(0), m_reduction_axes);
+    return make_shared<op::v0::Min>(new_args.at(0), get_reduction_axes());
+}
+
+shared_ptr<Node> op::v0::Min::get_default_value() const
+{
+    switch (get_element_type())
+    {
+    case element::Type_t::boolean:
+        return make_constant_from_string("1", get_element_type(), get_shape());
+    case element::Type_t::bf16:
+    case element::Type_t::f16:
+    case element::Type_t::f32:
+    case element::Type_t::f64:
+        return make_constant_from_string("INFINITY", get_element_type(), get_shape());
+    case element::Type_t::i8:
+        return make_constant_from_string(
+            to_string(numeric_limits<int8_t>::max()), get_element_type(), get_shape());
+    case element::Type_t::i16:
+        return make_constant_from_string(
+            to_string(numeric_limits<int16_t>::max()), get_element_type(), get_shape());
+    case element::Type_t::i32:
+        return make_constant_from_string(
+            to_string(numeric_limits<int32_t>::max()), get_element_type(), get_shape());
+    case element::Type_t::i64:
+        return make_constant_from_string(
+            to_string(numeric_limits<int64_t>::max()), get_element_type(), get_shape());
+    case element::Type_t::u8:
+        return make_constant_from_string(
+            to_string(numeric_limits<uint8_t>::max()), get_element_type(), get_shape());
+    case element::Type_t::u16:
+        return make_constant_from_string(
+            to_string(numeric_limits<uint16_t>::max()), get_element_type(), get_shape());
+    case element::Type_t::u32:
+        return make_constant_from_string(
+            to_string(numeric_limits<uint32_t>::max()), get_element_type(), get_shape());
+    case element::Type_t::u64:
+        return make_constant_from_string(
+            to_string(numeric_limits<uint64_t>::max()), get_element_type(), get_shape());
+    case element::Type_t::undefined:
+    case element::Type_t::dynamic:
+    default: throw runtime_error("Min default value not defined for type");
+    }
+}
+
+constexpr NodeTypeInfo op::v1::ReduceMin::type_info;
+
+op::v1::ReduceMin::ReduceMin(const Output<Node>& arg,
+                             const Output<Node>& reduction_axes,
+                             bool keep_dims)
+    : ArithmeticReductionKeepDims(arg, reduction_axes, keep_dims)
+{
+    constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::v1::ReduceMin::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<op::v1::ReduceMin>(new_args.at(0), new_args.at(1), get_keep_dims());
 }

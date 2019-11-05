@@ -22,11 +22,10 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/runtime/tensor.hpp"
+#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
 
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-#include "ngraph/runtime/reference/allreduce.hpp"
-#endif
+#include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/tensor.hpp"
 
 namespace ngraph
 {
@@ -36,6 +35,7 @@ namespace ngraph
         {
             class INTBackend;
             class INTExecutable;
+            class INTBackendConstructor;
         }
     }
 }
@@ -56,8 +56,11 @@ public:
 
     std::shared_ptr<Executable> compile(std::shared_ptr<Function> function,
                                         bool enable_performance_data = false) override;
+    std::shared_ptr<Executable> load(std::istream& input_stream) override;
 
     bool is_supported(const Node& node) const override;
+
+    bool set_config(const std::map<std::string, std::string>& config, std::string& error) override;
 
 private:
     std::set<std::string> m_unsupported_op_name_list;

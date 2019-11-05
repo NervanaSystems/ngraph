@@ -19,6 +19,7 @@
 #include <iostream>
 #include <list>
 #include <memory>
+#include <thread>
 
 #include "gtest/gtest.h"
 #include "misc.hpp"
@@ -28,18 +29,27 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/erf.hpp"
+#include "ngraph/op/experimental/tile.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
+#include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
+#include "ngraph/runtime/cpu/cpu_builder.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-#include "nlohmann/json.hpp"
 #include "util/all_close.hpp"
+#include "util/all_close_f.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
+#include "util/float_util.hpp"
 #include "util/ndarray.hpp"
 #include "util/random.hpp"
 #include "util/test_tools.hpp"
@@ -47,14 +57,22 @@
 using namespace ngraph;
 using namespace std;
 
-class UnhandledOp : public ngraph::op::Abs
+namespace
 {
-public:
-    UnhandledOp(const std::shared_ptr<Node>& arg)
-        : Abs(arg)
+    class UnhandledOp : public ngraph::op::Abs
     {
-    }
-};
+    public:
+        UnhandledOp(const std::shared_ptr<Node>& arg)
+            : Abs(arg)
+        {
+        }
+
+        static constexpr NodeTypeInfo type_info{"UnhandledOp", 0};
+        const NodeTypeInfo& get_type_info() const override { return type_info; }
+    };
+
+    constexpr NodeTypeInfo UnhandledOp::type_info;
+}
 
 static void compare_backends(const std::shared_ptr<Function>& f1,
                              const std::shared_ptr<Function>& f2,
@@ -98,12 +116,12 @@ TEST(cpu_test, trivial_in_place_relu)
     auto f = make_shared<Function>(relu, ParameterVector{A, B});
     auto backend = runtime::Backend::create("CPU");
     (backend->compile(f));
-    ASSERT_EQ(relu->get_outputs().at(0).get_tensor().get_pool_offset(),
-              add->get_outputs().at(0).get_tensor().get_pool_offset());
+    ASSERT_EQ(relu->output(0).get_tensor().get_pool_offset(),
+              add->output(0).get_tensor().get_pool_offset());
 }
 
 #ifndef NGRAPH_HALIDE
-TEST(cpu_test, trivial_in_place_relu_fail)
+TEST(cpu_test, MLIR_DISABLE_TEST(trivial_in_place_relu_fail))
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{16, 1});
     auto B = make_shared<op::Parameter>(element::f32, Shape{16, 1});
@@ -113,8 +131,8 @@ TEST(cpu_test, trivial_in_place_relu_fail)
     auto f = make_shared<Function>(add2, ParameterVector{A, B});
     auto backend = runtime::Backend::create("CPU");
     (backend->compile(f));
-    ASSERT_NE(relu->get_outputs().at(0).get_tensor().get_pool_offset(),
-              add->get_outputs().at(0).get_tensor().get_pool_offset());
+    ASSERT_NE(relu->output(0).get_tensor().get_pool_offset(),
+              add->output(0).get_tensor().get_pool_offset());
 }
 #endif
 
@@ -149,16 +167,16 @@ TEST(cpu_test, abc_tbb)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector()));
 
     handle->call_with_validate({result}, {b, a, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector()));
 
     handle->call_with_validate({result}, {a, c, b});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector()));
 
     if (!use_tbb)
     {
@@ -219,10 +237,10 @@ TEST(cpu_test, mkldnn_layouts)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
 
-    EXPECT_EQ(vector<float>{expected_result}, rv);
+    EXPECT_TRUE(test::all_close_f(vector<float>{expected_result}, rv));
 }
 
-TEST(cpu_test, reshape_layout_optimizations1)
+TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations1))
 {
     // Squeeze outermost dimension
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -261,7 +279,7 @@ TEST(cpu_test, reshape_layout_optimizations1)
     }
 }
 
-TEST(cpu_test, reshape_layout_optimizations2)
+TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations2))
 {
     // ExpandDims - inner most and internal dims
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -300,7 +318,7 @@ TEST(cpu_test, reshape_layout_optimizations2)
     }
 }
 
-TEST(cpu_test, reshape_layout_optimizations3)
+TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations3))
 {
     // Squeeze padded dimension
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -340,7 +358,7 @@ TEST(cpu_test, reshape_layout_optimizations3)
     }
 }
 
-TEST(cpu_test, reshape_layout_optimizations4)
+TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations4))
 {
     // Squeeze and expand dimensions. Ensure no extra conversions downstream
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -389,7 +407,7 @@ TEST(cpu_test, reshape_layout_optimizations4)
     EXPECT_LE(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 4);
 }
 
-TEST(cpu_test, reshape_layout_optimizations5)
+TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations5))
 {
     auto make_function = []() -> std::shared_ptr<Function> {
         auto A = make_shared<op::Parameter>(element::f32, Shape{1, 16, 1, 8});
@@ -776,7 +794,7 @@ TEST(cpu_test, memory_reuse_destructive_oi_relu)
     shared_ptr<runtime::Executable> handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c});
     ASSERT_NE(handle, nullptr);
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected));
 }
 
 TEST(cpu_test, memory_reuse_cacheable_no_destructive_oi_relu)
@@ -805,12 +823,12 @@ TEST(cpu_test, memory_reuse_cacheable_no_destructive_oi_relu)
     shared_ptr<runtime::Executable> handle = backend->compile(f);
     ASSERT_NE(handle, nullptr);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected));
 
     a->set_stale(false);
     b->set_stale(false);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected));
 }
 
 TEST(cpu_test, memory_reuse_in_place_concat_after_in_place_slice)
@@ -833,8 +851,9 @@ TEST(cpu_test, memory_reuse_in_place_concat_after_in_place_slice)
     shared_ptr<runtime::Executable> handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
 
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 5, 6, 7, 8, 9, 10, 11, 12}),
-              read_vector<float>(result));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 5, 6, 7, 8, 9, 10, 11, 12}),
+                          read_vector<float>(result)));
 }
 
 TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_concat)
@@ -868,7 +887,31 @@ TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_concat)
     shared_ptr<runtime::Executable> handle = backend->compile(f);
     ASSERT_NE(handle, nullptr);
     handle->call_with_validate({result}, {a, b, c, d});
-    EXPECT_EQ((vector<float>{3, 7}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{3, 7}), read_vector<float>(result)));
+}
+
+TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_reshape_from_constant)
+{
+    Shape shape_a{2, 1, 2, 2};
+    Shape shape_r{2, 1, 2, 2};
+    vector<float> a_data(shape_size(shape_a));
+    iota(a_data.begin(), a_data.end(), 1);
+
+    auto A = op::Constant::create(element::f32, shape_a, a_data);
+    auto reshape = make_shared<op::Reshape>(A, AxisVector{0, 1, 2, 3}, shape_r);
+    Shape shape{1, 1, 2, 2};
+    auto slice = make_shared<op::Slice>(reshape, Coordinate{1, 0, 0, 0}, Coordinate{2, 1, 2, 2});
+    auto neg = make_shared<op::Negative>(slice);
+    auto f = make_shared<Function>(neg, ParameterVector{});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    auto result = backend->create_tensor(element::f32, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {});
+    EXPECT_TRUE(test::all_close_f(
+        vector<float>{-5., -6., -7., -8.}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(cpu_test, convert_inplace)
@@ -919,3 +962,1263 @@ TEST(cpu_test, rotated_pooling)
     compare_backends(
         make_f(false, false), make_f(false, false), "INTERPRETER", "CPU"); // 5D MaxPool
 }
+
+// for float this will be 18 bits matching
+// for bfloat this will be 6 bits matching
+constexpr int three_quarters_of_available_bits = (MAX_FLOAT_BITS * 3) / 4;
+constexpr int tolerance = FLOAT_MANTISSA_BITS - three_quarters_of_available_bits;
+
+bool static is_codegen_mode()
+{
+    static bool codegen_set = false;
+    static bool codegen_mode = false;
+    if (!codegen_set)
+    {
+        const char* ngraph_codegen = std::getenv("NGRAPH_CODEGEN");
+        codegen_mode = (ngraph_codegen != nullptr) && std::string(ngraph_codegen) != "0";
+        codegen_set = true;
+    }
+    return codegen_mode;
+}
+
+TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
+{
+    if (is_codegen_mode())
+    {
+        // TODO change to skip when there is a new release of gtest
+        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
+        return;
+    }
+
+    set_environment("NGRAPH_CPU_CONCURRENCY", "2", 1);
+
+    Shape shape_a{2, 1, 3, 5};
+    Shape shape_b{2, 1, 2, 2};
+    Shape shape_r{2, 2, 2, 4};
+    auto make_graph = [shape_a, shape_b] {
+        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        auto B = make_shared<op::Parameter>(element::f32, shape_b);
+        return make_shared<Function>(
+            make_shared<op::Convolution>(A,
+                                         B,
+                                         Strides{1, 1},        // move_strides
+                                         Strides{1, 1},        // filter_dilation
+                                         CoordinateDiff{0, 0}, // below_pads
+                                         CoordinateDiff{0, 0}, // above_pads
+                                         Strides{1, 1}),       // data_dilation
+            ParameterVector{A, B});
+    };
+
+    auto backend = runtime::Backend::create("CPU");
+    auto function = make_graph();
+
+    vector<float> expected_result{
+        0.63940430f,  0.04736328f,  -1.37304688f, -0.56201172f, -0.46606445f, 0.48364258f,
+        1.40625000f,  0.15795898f,  -0.55004883f, 0.73339844f,  0.10668945f,  -0.95751953f,
+        -0.96679688f, -0.21215820f, 1.21826172f,  -0.91894531f, 0.12402344f,  0.76953125f,
+        1.20581055f,  0.65917969f,  0.62841797f,  -0.46386719f, -0.68554688f, -0.82348633f,
+        0.22509766f,  -0.60864258f, -0.45166016f, -0.05249023f, 0.99462891f,  -1.09497070f,
+        -0.75244141f, 0.56250000f};
+
+    auto handle = backend->compile(function);
+
+    auto make_call = [&]() {
+        // Create some tensors for input/output
+        auto a = backend->create_tensor(element::f32, shape_a);
+        copy_data(
+            a, vector<float>{0.67187500f,  0.54687500f,  -0.56250000f, -0.35937500f, -0.09375000f,
+                             0.54687500f,  -0.54687500f, 0.89062500f,  0.82812500f,  -0.54687500f,
+                             1.00000000f,  -0.07812500f, -0.89062500f, 0.40625000f,  -0.35937500f,
+                             0.54687500f,  0.60937500f,  0.59375000f,  0.09375000f,  -0.21875000f,
+                             0.76562500f,  0.40625000f,  -0.73437500f, -0.95312500f, -0.50000000f,
+                             -0.29687500f, 0.76562500f,  -0.26562500f, -0.50000000f, 0.53125000f});
+        auto b = backend->create_tensor(element::f32, shape_b);
+        copy_data(b,
+                  vector<float>{0.67187500f,
+                                0.54687500f,
+                                -0.56250000f,
+                                -0.35937500f,
+                                -0.09375000f,
+                                0.54687500f,
+                                -0.54687500f,
+                                0.89062500f});
+        auto result = backend->create_tensor(element::f32, shape_r);
+
+        handle->call_with_validate({result}, {a, b});
+
+        EXPECT_TRUE(test::all_close_f(
+            vector<float>{expected_result}, read_vector<float>(result), tolerance));
+    };
+
+    std::thread call1(make_call);
+    std::thread call2(make_call);
+    std::thread call3(make_call);
+    call1.join();
+    call2.join();
+    call3.join();
+
+    unset_environment("NGRAPH_CPU_CONCURRENCY");
+}
+
+TEST(cpu_test, constant_convertlayout)
+{
+    Shape data_shape{1, 64, 56, 56};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    Shape weights_shape{64, 64, 3, 3};
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<float> values_in(shape_size(weights_shape));
+    rng.initialize(values_in);
+    auto weights = make_shared<op::Constant>(element::f32, weights_shape, values_in);
+    Shape bias_shape{64};
+    auto bias = make_shared<op::Parameter>(element::f32, bias_shape);
+
+    auto conv = std::make_shared<op::Convolution>(data, weights, Strides{1, 1}, Strides{1, 1});
+    auto convbias = make_shared<op::ConvolutionBias>(conv, bias);
+
+    auto f = make_shared<Function>(convbias, ParameterVector{data, bias});
+    auto backend = runtime::Backend::create("CPU");
+    auto handle = backend->compile(f);
+
+    size_t convert_layout = count_ops_of_type<runtime::cpu::op::ConvertLayout>(f);
+    ASSERT_EQ(convert_layout, 1);
+}
+
+TEST(cpu_test, constant_reshape)
+{
+    Shape shape_in{2, 4};
+    Shape shape_out{2, 4, 1};
+
+    const vector<float> values_in{0, 1, 2, 3, 4, 5, 6, 7};
+    auto constant = make_shared<op::Constant>(element::f32, shape_in, values_in);
+    auto reshape = make_shared<op::Reshape>(constant, AxisVector{0, 1}, shape_out);
+    auto f = make_shared<Function>(reshape, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>(
+        ngraph::runtime::cpu::GetGlobalCFDispatcherCPU());
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    const vector<float> values_out = new_const->get_vector<float>();
+
+    EXPECT_TRUE(test::all_close_f(values_in, values_out, MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, constant_reshape_permute)
+{
+    Shape shape_in{2, 4};
+    Shape shape_out{4, 2};
+
+    vector<double> values_in{0, 1, 2, 3, 4, 5, 6, 7};
+    auto constant = make_shared<op::Constant>(element::f64, shape_in, values_in);
+    auto reshape = make_shared<op::Reshape>(constant, AxisVector{1, 0}, shape_out);
+    auto f = make_shared<Function>(reshape, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>(
+        ngraph::runtime::cpu::GetGlobalCFDispatcherCPU());
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    const vector<double> values_out = new_const->get_vector<double>();
+
+    const vector<double> values_permute{0, 4, 1, 5, 2, 6, 3, 7};
+    EXPECT_TRUE(test::all_close_f(values_permute, values_out, MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, constant_broadcast)
+{
+    Shape shape_in{2};
+    Shape shape_out{2, 4};
+
+    vector<int> values_in{0, 1};
+    auto constant = make_shared<op::Constant>(element::i32, shape_in, values_in);
+    auto broadcast = make_shared<op::Broadcast>(constant, shape_out, AxisSet{1});
+    auto f = make_shared<Function>(broadcast, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>(
+        ngraph::runtime::cpu::GetGlobalCFDispatcherCPU());
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Broadcast>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int>();
+
+    vector<int> values_permute{0, 0, 0, 0, 1, 1, 1, 1};
+    ASSERT_EQ(values_permute, values_out);
+}
+
+TEST(cpu_test, constant_pad_exterior)
+{
+    Shape shape_in{2};
+
+    vector<int> values_in{777, 888};
+    auto constant = make_shared<op::Constant>(element::i32, shape_in, values_in);
+    auto pad_value = make_shared<op::Constant>(element::i32, Shape{}, vector<int>{111});
+
+    CoordinateDiff padding_below{1};
+    CoordinateDiff padding_above{2};
+
+    auto broadcast = make_shared<op::Pad>(constant, pad_value, padding_below, padding_above);
+    auto f = make_shared<Function>(broadcast, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>(
+        ngraph::runtime::cpu::GetGlobalCFDispatcherCPU());
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int>();
+
+    vector<int> padded_values{111, 777, 888, 111, 111};
+    ASSERT_EQ(padded_values, values_out);
+}
+
+template <typename T>
+static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t pos)
+{
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(pos)->get_argument(0));
+    return new_const->get_vector<T>();
+}
+
+TEST(cpu_test, constant_unary_binary)
+{
+    Shape shape_in{2, 2};
+    vector<int> values_a{1, 2, 3, 4};
+    vector<int> values_b{1, 2, 3, 4};
+    vector<int> values_c{-1, -1, -1, -1};
+    vector<int> values_d{1, 4, 9, 16};
+    vector<int> values_e{1, -2, -3, 4};
+    vector<int> values_f{3, -1, -3, 0};
+    vector<int> values_g{1, 2, 3, 4};
+    vector<int> values_h{2, 2, 3, 3};
+    vector<char> values_i{0, 0, 1, 1};
+    vector<char> values_j{0, 1, 0, 1};
+    vector<float> values_k{-0.1f, 0.0f, -1.5f, 2.6f};
+    vector<int> values_l{1, 2};
+    auto a = make_shared<op::Constant>(element::i32, shape_in, values_a);
+    auto b = make_shared<op::Constant>(element::i32, shape_in, values_b);
+    auto c = make_shared<op::Constant>(element::i32, shape_in, values_c);
+    auto d = make_shared<op::Constant>(element::i32, shape_in, values_d);
+    auto e = make_shared<op::Constant>(element::i32, shape_in, values_e);
+    auto f = make_shared<op::Constant>(element::i32, shape_in, values_f);
+    auto g = make_shared<op::Constant>(element::i32, shape_in, values_g);
+    auto h = make_shared<op::Constant>(element::i32, shape_in, values_h);
+    auto i = make_shared<op::Constant>(element::boolean, shape_in, values_i);
+    auto j = make_shared<op::Constant>(element::boolean, shape_in, values_j);
+    auto k = make_shared<op::Constant>(element::f32, shape_in, values_k);
+    auto l = make_shared<op::Constant>(element::i32, Shape{2}, values_l);
+
+    auto add = a + b;
+    auto sub = a - b;
+    auto mul = a * b;
+    auto divn = a / b;
+    auto min = make_shared<op::Minimum>(c, a);
+    auto max = make_shared<op::Maximum>(a, c);
+    auto absn = make_shared<op::Abs>(c);
+    auto neg = make_shared<op::Negative>(c);
+    auto sqrt = make_shared<op::Sqrt>(d);
+    auto neg_sqrt = make_shared<op::Sqrt>(c);
+    auto relu = make_shared<op::Relu>(e);
+    auto sign = make_shared<op::Sign>(f);
+    auto equal = make_shared<op::Equal>(g, h);
+    auto not_equal = make_shared<op::NotEqual>(g, h);
+    auto greater = make_shared<op::Greater>(g, h);
+    auto greater_eq = make_shared<op::GreaterEq>(g, h);
+    auto less = make_shared<op::Less>(g, h);
+    auto less_eq = make_shared<op::LessEq>(g, h);
+    auto logical_and = make_shared<op::And>(i, j);
+    auto logical_or = make_shared<op::Or>(i, j);
+    auto logical_xor = make_shared<op::Xor>(i, j);
+    auto ceil = make_shared<op::Ceiling>(k);
+    auto floor = make_shared<op::Floor>(k);
+    auto logical_not = make_shared<op::Not>(j);
+    // Note: The CPU functors do not actually support autobroadcast yet; instead the pass itself
+    // falls back if autobroadcasting is in use. Putting this check here just to make sure the
+    // fallback works as expected, but if direct support for autobroadcast is added to the CPU
+    // folders we should add more comprehensive tests here. --amprocte
+    auto add_autob_numpy = make_shared<op::Add>(a, l, op::AutoBroadcastType::NUMPY);
+
+    auto func = make_shared<Function>(
+        NodeVector{add,        sub,         mul,        divn,  min,         max,
+                   absn,       neg,         sqrt,       relu,  sign,        equal,
+                   not_equal,  greater,     greater_eq, less,  less_eq,     logical_and,
+                   logical_or, logical_xor, ceil,       floor, logical_not, add_autob_numpy},
+        ParameterVector{});
+
+    auto func_error = make_shared<Function>(NodeVector{neg_sqrt}, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>(
+        ngraph::runtime::cpu::GetGlobalCFDispatcherCPU());
+    pass_manager.run_passes(func);
+
+    ASSERT_EQ(count_ops_of_type<op::Add>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Subtract>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Multiply>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Divide>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Minimum>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Maximum>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Abs>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Negative>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Sqrt>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Relu>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Sign>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Equal>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::NotEqual>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Greater>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::GreaterEq>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Less>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::LessEq>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::And>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Or>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Xor>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Ceiling>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Floor>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Not>(func), 0);
+
+    // expected values
+    vector<int> add_expected{2, 4, 6, 8};
+    vector<int> sub_expected{0, 0, 0, 0};
+    vector<int> mul_expected{1, 4, 9, 16};
+    vector<int> div_expected{1, 1, 1, 1};
+    vector<int> min_expected{-1, -1, -1, -1};
+    vector<int> max_expected{1, 2, 3, 4};
+    vector<int> abs_neg_expected{1, 1, 1, 1};
+    vector<int> sqrt_expected{1, 2, 3, 4};
+    vector<int> relu_expected{1, 0, 0, 4};
+    vector<int> sign_expected{1, -1, -1, 0};
+    vector<char> equal_expected{0, 1, 1, 0};
+    vector<char> not_equal_expected{1, 0, 0, 1};
+    vector<char> greater_expected{0, 0, 0, 1};
+    vector<char> greater_eq_expected{0, 1, 1, 1};
+    vector<char> less_expected{1, 0, 0, 0};
+    vector<char> less_eq_expected{1, 1, 1, 0};
+    vector<char> and_expected{0, 0, 0, 1};
+    vector<char> or_expected{0, 1, 1, 1};
+    vector<char> xor_expected{0, 1, 1, 0};
+    vector<float> ceil_expected{0.0f, 0.0f, -1.0f, 3.0f};
+    vector<float> floor_expected{-1.0f, 0.0f, -2.0f, 2.0f};
+    vector<char> not_expected{1, 0, 1, 0};
+    vector<int> add_autob_numpy_expected{2, 4, 4, 6};
+
+    ASSERT_EQ(get_result_constant<int>(func, 0), add_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 1), sub_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 2), mul_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 3), div_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 4), min_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 5), max_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 6), abs_neg_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 7), abs_neg_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 8), sqrt_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 9), relu_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 10), sign_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 11), equal_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 12), not_equal_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 13), greater_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 14), greater_eq_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 15), less_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 16), less_eq_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 17), and_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 18), or_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 19), xor_expected);
+    ASSERT_TRUE(test::all_close_f(
+        get_result_constant<float>(func, 20), ceil_expected, MIN_FLOAT_TOLERANCE_BITS));
+    ASSERT_TRUE(test::all_close_f(
+        get_result_constant<float>(func, 21), floor_expected, MIN_FLOAT_TOLERANCE_BITS));
+    ASSERT_EQ(get_result_constant<char>(func, 22), not_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 23), add_autob_numpy_expected);
+    ASSERT_ANY_THROW(pass_manager.run_passes(func_error));
+}
+
+TEST(cpu_test, conv_test_winograd)
+{
+    // clang-format off
+    // This test checks for the cpu specific graph pass handling for conv_winograd implementation.
+    // On SKX with MKLDNN version >= v0.18.0, mkldnn_verbose should match the following
+    //
+    // mkldnn_verbose,info,Intel(R) MKL-DNN v0.18.0 (Git Hash 863ff6e7042cec7d2e29897fe9f0872e0888b0fc),Intel(R) Advanced Vector Extensions 512 (Intel(R) AVX-512) with AVX512BW, AVX512VL, and AVX512DQ extensions
+    // mkldnn_verbose,create,reorder,simple:any,undef,in:f32_nchw out:f32_OIhw16i16o,num:1,64x3x3x3,0.0129395
+    // mkldnn_verbose,exec,reorder,simple:any,undef,in:f32_nchw out:f32_OIhw16i16o,num:1,64x3x3x3,0.414062
+    // mkldnn_verbose,create,reorder,simple:any,undef,in:f32_nchw out:f32_nChw16c,num:1,64x3x224x224,0.0119629
+    // mkldnn_verbose,exec,reorder,simple:any,undef,in:f32_nchw out:f32_nChw16c,num:1,64x3x224x224,19.302
+    // mkldnn_verbose,create,convolution,jit_wino_4x3:avx512_core,forward_training,fsrc:nChw16c fwei:OIhw16i16o fbia:undef fdst:nChw16c,alg:convolution_winograd,mb64_ic3oc64_ih224oh224kh3sh1dh0ph1_iw224ow224kw3sw1dw0pw1,1.84106
+    // mkldnn_verbose,exec,convolution,jit_wino_4x3:avx512_core,forward_training,fsrc:nChw16c fwei:OIhw16i16o fbia:undef fdst:nChw16c,alg:convolution_winograd,mb64_ic3oc64_ih224oh224kh3sh1dh0ph1_iw224ow224kw3sw1dw0pw1,46.6631
+    // mkldnn_verbose,create,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,0.279053
+    // mkldnn_verbose,exec,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,100.219
+    // clang-format on
+    auto make_function = []() -> std::shared_ptr<Function> {
+        auto input = make_shared<op::Parameter>(element::f32, Shape{64, 3, 224, 224});
+        auto filter = make_shared<op::Parameter>(element::f32, Shape{64, 3, 3, 3});
+        auto conv = make_shared<op::Convolution>(input,
+                                                 filter,
+                                                 Strides{1, 1},
+                                                 Strides{1, 1},
+                                                 CoordinateDiff{1, 1},
+                                                 CoordinateDiff{1, 1},
+                                                 Strides{1, 1});
+        return make_shared<Function>(conv, ParameterVector{input, filter});
+
+    };
+    auto backend = runtime::Backend::create("CPU");
+    auto cpu_f = make_function();
+
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto cpu_results = execute(cpu_f, args, "CPU");
+}
+
+TEST(cpu_test, conv_negative_padding)
+{
+    auto make_f = [&]() {
+        Shape shape_a{1, 16, 2, 2};
+        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        Shape shape_b{32, 16, 1, 1};
+        auto B = make_shared<op::Parameter>(element::f32, shape_b);
+        auto conv1 = make_shared<op::Convolution>(A,
+                                                  B,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{-1, -1},
+                                                  CoordinateDiff{0, 0},
+                                                  Strides{1, 1});
+        return make_shared<Function>(conv1, ParameterVector{A, B});
+
+    };
+    compare_backends(make_f(), make_f(), "CPU", "INTERPRETER");
+}
+
+TEST(cpu_test, gauss_error_function_erf_float32)
+{
+    auto make_function = []() -> std::shared_ptr<Function> {
+        auto A = make_shared<op::Parameter>(element::f32, Shape{1, 4, 10, 6, 10});
+        auto erf = make_shared<op::Erf>(A);
+        return make_shared<Function>(erf, ParameterVector{A});
+    };
+
+    auto backend = runtime::Backend::create("CPU");
+    auto cpu_f = make_function();
+    auto int_f = make_function();
+
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
+}
+
+TEST(cpu_test, gauss_error_function_erf_int32)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto make_function = [&]() -> std::shared_ptr<Function> {
+        auto erf = make_shared<op::Erf>(A);
+        return make_shared<Function>(erf, ParameterVector{A});
+    };
+
+    auto backend = runtime::Backend::create("CPU");
+    auto cpu_f = make_function();
+
+    auto input_nd_array = test::NDArray<int, 2>({{45, 2}, {7, 9}});
+    auto expected_result_nd_array =
+        test::NDArray<int, 2>({{static_cast<int>(std::erf(45)), static_cast<int>(std::erf(2))},
+                               {static_cast<int>(std::erf(7)), static_cast<int>(std::erf(9))}});
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shape);
+
+    copy_data(a, input_nd_array.get_vector());
+
+    auto handle = backend->compile(cpu_f);
+    handle->call_with_validate({result}, {a});
+
+    auto result_values = read_vector<int>(result);
+    auto expected_values = expected_result_nd_array.get_vector();
+    ASSERT_EQ(result_values, expected_values);
+}
+
+TEST(cpu_test, max_pool_with_indices_2d_2channel_2image)
+{
+    Shape shape_a{2, 2, 5, 5};
+    Shape window_shape{2, 3};
+    auto window_movement_strides = Strides{1, 1};
+    Shape padding_below{0, 0};
+    Shape padding_above{0, 0};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto max_pool = make_shared<op::MaxPoolWithIndices>(
+        A, window_shape, window_movement_strides, padding_below, padding_above);
+    Shape shape_r{2, 2, 4, 3};
+    auto data = make_shared<op::Result>(make_shared<op::GetOutputElement>(max_pool, 0));
+    auto indices = make_shared<op::Result>(make_shared<op::GetOutputElement>(max_pool, 1));
+    auto f = make_shared<Function>(ResultVector{data, indices}, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0, 1, 0, 2, 1}, // img 0 chan 0
+                                         {0, 3, 2, 0, 0},
+                                         {2, 0, 0, 0, 1},
+                                         {2, 0, 1, 1, 2},
+                                         {0, 2, 1, 0, 0}},
+
+                                        {{0, 0, 0, 2, 0}, // img 0 chan 1
+                                         {0, 2, 3, 0, 1},
+                                         {2, 0, 1, 0, 2},
+                                         {3, 1, 0, 0, 0},
+                                         {2, 0, 0, 0, 0}}},
+
+                                       {{{0, 2, 1, 1, 0}, // img 1 chan 0
+                                         {0, 0, 2, 0, 1},
+                                         {0, 0, 1, 2, 3},
+                                         {2, 0, 0, 3, 0},
+                                         {0, 0, 0, 0, 0}},
+
+                                        {{2, 1, 0, 0, 1}, // img 1 chan 1
+                                         {0, 2, 0, 0, 0},
+                                         {1, 1, 2, 0, 2},
+                                         {1, 1, 1, 0, 1},
+                                         {1, 0, 0, 0, 2}}}})
+                  .get_vector());
+    auto result_data = backend->create_tensor(element::f32, shape_r);
+    auto result_indices = backend->create_tensor(element::i32, shape_r);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result_data, result_indices}, {a});
+    EXPECT_TRUE(test::all_close_f((test::NDArray<float, 4>({{{{3, 3, 2}, // img 0 chan 0
+                                                              {3, 3, 2},
+                                                              {2, 1, 2},
+                                                              {2, 2, 2}},
+
+                                                             {{3, 3, 3}, // img 0 chan 1
+                                                              {3, 3, 3},
+                                                              {3, 1, 2},
+                                                              {3, 1, 0}}},
+
+                                                            {{{2, 2, 2}, // img 1 chan 0
+                                                              {2, 2, 3},
+                                                              {2, 3, 3},
+                                                              {2, 3, 3}},
+
+                                                             {{2, 2, 1}, // img 1 chan 1
+                                                              {2, 2, 2},
+                                                              {2, 2, 2},
+                                                              {1, 1, 2}}}})
+                                       .get_vector()),
+                                  read_vector<float>(result_data),
+                                  MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, max_pool_with_indices_bprop_2d_2channel_2image)
+{
+    Shape shape_a{2, 2, 5, 5};
+    Shape window_shape{2, 3};
+    auto window_movement_strides = Strides{1, 1};
+    Shape padding_below{0, 0};
+    Shape padding_above{0, 0};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_i{2, 2, 4, 3};
+    auto indices = make_shared<op::Parameter>(element::i32, shape_i);
+    auto delta = make_shared<op::Parameter>(element::f32, shape_i);
+
+    auto max_pool_bprop = make_shared<op::MaxPoolWithIndicesBackprop>(
+        A, delta, indices, window_shape, window_movement_strides, padding_below, padding_above);
+
+    auto f = make_shared<Function>(max_pool_bprop, ParameterVector{A, delta, indices});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0, 1, 0, 2, 1}, // img 0 chan 0
+                                         {0, 3, 2, 0, 0},
+                                         {2, 0, 0, 0, 1},
+                                         {2, 0, 1, 1, 2},
+                                         {0, 2, 1, 0, 0}},
+
+                                        {{0, 0, 0, 2, 0}, // img 0 chan 1
+                                         {0, 2, 3, 0, 1},
+                                         {2, 0, 1, 0, 2},
+                                         {3, 1, 0, 0, 0},
+                                         {2, 0, 0, 0, 0}}},
+
+                                       {{{0, 2, 1, 1, 0}, // img 1 chan 0
+                                         {0, 0, 2, 0, 1},
+                                         {0, 0, 1, 2, 3},
+                                         {2, 0, 0, 3, 0},
+                                         {0, 0, 0, 0, 0}},
+
+                                        {{2, 1, 0, 0, 1}, // img 1 chan 1
+                                         {0, 2, 0, 0, 0},
+                                         {1, 1, 2, 0, 2},
+                                         {1, 1, 1, 0, 1},
+                                         {1, 0, 0, 0, 2}}}})
+                  .get_vector());
+
+    auto i = backend->create_tensor(element::i32, shape_i);
+    copy_data(i,
+              test::NDArray<int, 4>({{{{4, 3, 1}, // img 0 chan 0
+                                       {1, 0, 0},
+                                       {0, 4, 5},
+                                       {0, 3, 2}},
+
+                                      {{5, 4, 3}, // img 0 chan 1
+                                       {2, 1, 0},
+                                       {3, 1, 2},
+                                       {0, 0, 0}}},
+
+                                     {{{1, 0, 3}, // img 1 chan 0
+                                       {2, 1, 5},
+                                       {3, 5, 2},
+                                       {0, 2, 1}},
+
+                                      {{0, 3, 2}, // img 1 chan 1
+                                       {1, 0, 3},
+                                       {2, 1, 0},
+                                       {0, 0, 5}}}})
+                  .get_vector());
+
+    auto d = backend->create_tensor(element::f32, shape_i);
+    copy_data(d,
+              test::NDArray<float, 4>({{{{0.3f, 0.3f, 0.2f}, // img 0 chan 0
+                                         {0.3f, 0.3f, 0.2f},
+                                         {0.2f, 0.1f, 0.2f},
+                                         {0.2f, 0.2f, 0.2f}},
+
+                                        {{0.3f, 0.3f, 0.3f}, // img 0 chan 1
+                                         {0.3f, 0.3f, 0.3f},
+                                         {0.3f, 0.1f, 0.2f},
+                                         {0.3f, 0.1f, 0.4f}}},
+
+                                       {{{0.2f, 0.2f, 0.2f}, // img 1 chan 0
+                                         {0.2f, 0.2f, 0.3f},
+                                         {0.2f, 0.3f, 0.3f},
+                                         {0.2f, 0.3f, 0.3f}},
+
+                                        {{0.2f, 0.2f, 0.1f}, // img 1 chan 1
+                                         {0.2f, 0.2f, 0.2f},
+                                         {0.2f, 0.2f, 0.2f},
+                                         {0.1f, 0.1f, 0.2f}}}})
+                  .get_vector());
+
+    auto result = backend->create_tensor(element::f32, shape_a);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, d, i});
+    EXPECT_TRUE(test::all_close_f((test::NDArray<float, 4>({{{{0, 0, 0, 0.2, 0}, // img 0 chan 0
+                                                              {0, 1.2, 0.2, 0, 0},
+                                                              {0.2, 0, 0, 0, 0},
+                                                              {0.2, 0, 0.1, 0, 0.4},
+                                                              {0, 0.2, 0, 0, 0}},
+
+                                                             {{0, 0, 0, 0, 0}, // img 0 chan 1
+                                                              {0, 0, 1.8, 0, 0},
+                                                              {0, 0, 0.1, 0, 0.2},
+                                                              {0.6, 0.1, 0.4, 0, 0},
+                                                              {0, 0, 0, 0, 0}}},
+
+                                                            {{{0, 0.4, 0, 0, 0}, // img 1 chan 0
+                                                              {0, 0, 0.6, 0, 0},
+                                                              {0, 0, 0, 0, 0.6},
+                                                              {0.4, 0, 0, 0.9, 0},
+                                                              {0, 0, 0, 0, 0}},
+
+                                                             {{0.2, 0, 0, 0, 0.1}, // img 1 chan 1
+                                                              {0, 0.6, 0, 0, 0},
+                                                              {0, 0, 0.8, 0, 0},
+                                                              {0.1, 0.1, 0, 0, 0},
+                                                              {0, 0, 0, 0, 0.2}}}})
+                                       .get_vector()),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, max_pool_bprop_2d_2channel_2image)
+{
+    Shape shape_a{2, 2, 5, 5};
+    Shape window_shape{2, 3};
+    auto window_movement_strides = Strides{1, 1};
+    Shape padding_below{0, 0};
+    Shape padding_above{0, 0};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_i{2, 2, 4, 3};
+    auto delta = make_shared<op::Parameter>(element::f32, shape_i);
+
+    auto max_pool_bprop = make_shared<op::MaxPoolBackprop>(
+        A, delta, window_shape, window_movement_strides, padding_below, padding_above);
+
+    auto f = make_shared<Function>(max_pool_bprop, ParameterVector{A, delta});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0, 1, 0, 2, 1}, // img 0 chan 0
+                                         {0, 3, 2, 0, 0},
+                                         {2, 0, 0, 0, 1},
+                                         {2, 0, 1, 1, 2},
+                                         {0, 2, 1, 0, 0}},
+
+                                        {{0, 0, 0, 2, 0}, // img 0 chan 1
+                                         {0, 2, 3, 0, 1},
+                                         {2, 0, 1, 0, 2},
+                                         {3, 1, 0, 0, 0},
+                                         {2, 0, 0, 0, 0}}},
+
+                                       {{{0, 2, 1, 1, 0}, // img 1 chan 0
+                                         {0, 0, 2, 0, 1},
+                                         {0, 0, 1, 2, 3},
+                                         {2, 0, 0, 3, 0},
+                                         {0, 0, 0, 0, 0}},
+
+                                        {{2, 1, 0, 0, 1}, // img 1 chan 1
+                                         {0, 2, 0, 0, 0},
+                                         {1, 1, 2, 0, 2},
+                                         {1, 1, 1, 0, 1},
+                                         {1, 0, 0, 0, 2}}}})
+                  .get_vector());
+
+    auto d = backend->create_tensor(element::f32, shape_i);
+    copy_data(d,
+              test::NDArray<float, 4>({{{{0.3, 0.3, 0.2}, // img 0 chan 0
+                                         {0.3, 0.3, 0.2},
+                                         {0.2, 0.1, 0.2},
+                                         {0.2, 0.2, 0.2}},
+
+                                        {{0.3, 0.3, 0.3}, // img 0 chan 1
+                                         {0.3, 0.3, 0.3},
+                                         {0.3, 0.1, 0.2},
+                                         {0.3, 0.1, 0.4}}},
+
+                                       {{{0.2, 0.2, 0.2}, // img 1 chan 0
+                                         {0.2, 0.2, 0.3},
+                                         {0.2, 0.3, 0.3},
+                                         {0.2, 0.3, 0.3}},
+
+                                        {{0.2, 0.2, 0.1}, // img 1 chan 1
+                                         {0.2, 0.2, 0.2},
+                                         {0.2, 0.2, 0.2},
+                                         {0.1, 0.1, 0.2}}}})
+                  .get_vector());
+
+    auto result = backend->create_tensor(element::f32, shape_a);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, d});
+    EXPECT_TRUE(test::all_close_f((test::NDArray<float, 4>({{{{0, 0, 0, 0.2, 0}, // img 0 chan 0
+                                                              {0, 1.2, 0.2, 0, 0},
+                                                              {0.2, 0, 0, 0, 0},
+                                                              {0.2, 0, 0.1, 0, 0.4},
+                                                              {0, 0.2, 0, 0, 0}},
+
+                                                             {{0, 0, 0, 0, 0}, // img 0 chan 1
+                                                              {0, 0, 1.8, 0, 0},
+                                                              {0, 0, 0.1, 0, 0.2},
+                                                              {0.6, 0.1, 0.4, 0, 0},
+                                                              {0, 0, 0, 0, 0}}},
+
+                                                            {{{0, 0.4, 0, 0, 0}, // img 1 chan 0
+                                                              {0, 0, 0.6, 0, 0},
+                                                              {0, 0, 0, 0, 0.6},
+                                                              {0.4, 0, 0, 0.9, 0},
+                                                              {0, 0, 0, 0, 0}},
+
+                                                             {{0.2, 0, 0, 0, 0.1}, // img 1 chan 1
+                                                              {0, 0.6, 0, 0, 0},
+                                                              {0, 0, 0.8, 0, 0},
+                                                              {0.1, 0.1, 0, 0, 0},
+                                                              {0, 0, 0, 0, 0.2}}}})
+                                       .get_vector()),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, avg_pool_bprop_2d_2channel_2image)
+{
+    Shape shape_a{2, 2, 3, 3};
+    Shape window_shape{2, 2};
+    auto window_movement_strides = Strides{1, 1};
+    Shape padding_below{0, 0};
+    Shape padding_above{0, 0};
+    Shape shape_d{2, 2, 2, 2};
+    auto delta = make_shared<op::Parameter>(element::f32, shape_d);
+
+    auto avg_pool_bprop = make_shared<op::AvgPoolBackprop>(
+        shape_a, delta, window_shape, window_movement_strides, padding_below, padding_above, false);
+
+    auto f = make_shared<Function>(avg_pool_bprop, ParameterVector{delta});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto d = backend->create_tensor(element::f32, shape_d);
+    copy_data(d,
+              test::NDArray<float, 4>({{{{0.3, 0.3}, // img 0 chan 0
+                                         {0.3, 0.3}},
+
+                                        {{0.2, 0.2}, // img 0 chan 1
+                                         {0.2, 0.2}}},
+
+                                       {{{0.1, 0.1}, // img 1 chan 0
+                                         {0.1, 0.1}},
+
+                                        {{0.4, 0.4}, // img 1 chan 1
+                                         {0.4, 0.4}}}})
+                  .get_vector());
+
+    auto result = backend->create_tensor(element::f32, shape_a);
+
+    float denom = 2 * 2;
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {d});
+    EXPECT_TRUE(test::all_close_f(
+        (test::NDArray<float, 4>({{{{0.3f / denom, 0.6f / denom, 0.3f / denom}, // img 0 chan 0
+                                    {0.6f / denom, 1.2f / denom, 0.6f / denom},
+                                    {0.3f / denom, 0.6f / denom, 0.3f / denom}},
+
+                                   {{0.2f / denom, 0.4f / denom, 0.2f / denom}, // img 0 chan 1
+                                    {0.4f / denom, 0.8f / denom, 0.4f / denom},
+                                    {0.2f / denom, 0.4f / denom, 0.2f / denom}}},
+
+                                  {{{0.1f / denom, 0.2f / denom, 0.1f / denom}, // img 1 chan 0
+                                    {0.2f / denom, 0.4f / denom, 0.2f / denom},
+                                    {0.1f / denom, 0.2f / denom, 0.1f / denom}},
+
+                                   {{0.4f / denom, 0.8f / denom, 0.4f / denom}, // img 1 chan 1
+                                    {0.8f / denom, 1.6f / denom, 0.8f / denom},
+                                    {0.4f / denom, 0.8f / denom, 0.4f / denom}}}})
+             .get_vector()),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, tile_1d_with_zero_repeats)
+{
+    Shape shape_a{2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_re{1};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{0});
+    Shape shape_r{0};
+
+    auto tile = make_shared<op::Tile>(A, repeats);
+
+    auto f = make_shared<Function>(tile, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2});
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(
+        test::all_close_f(vector<float>{}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, tile_1d)
+{
+    Shape shape_a{2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_re{1};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{2});
+    Shape shape_r{4};
+
+    auto tile = make_shared<op::Tile>(A, repeats);
+
+    auto f = make_shared<Function>(tile, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2});
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        vector<float>{1, 2, 1, 2}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, tile_2d_with_zero_repeats)
+{
+    Shape shape_a{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_re{2};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{2, 0});
+    Shape shape_r{4, 0};
+
+    auto tile = make_shared<op::Tile>(A, repeats);
+
+    auto f = make_shared<Function>(tile, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(
+        test::all_close_f(vector<float>{}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, tile_2d_1axis)
+{
+    Shape shape_a{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_re{2};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{3, 1});
+    Shape shape_r{6, 2};
+
+    auto tile = make_shared<op::Tile>(A, repeats);
+
+    auto f = make_shared<Function>(tile, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f(vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4},
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, tile_2d_2axes)
+{
+    Shape shape_a{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_re{2};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{3, 3});
+    Shape shape_r{6, 6};
+
+    auto tile = make_shared<op::Tile>(A, repeats);
+
+    auto f = make_shared<Function>(tile, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(
+        test::all_close_f(vector<float>{1, 2, 1, 2, 1, 2, 3, 4, 3, 4, 3, 4, 1, 2, 1, 2, 1, 2,
+                                        3, 4, 3, 4, 3, 4, 1, 2, 1, 2, 1, 2, 3, 4, 3, 4, 3, 4},
+                          read_vector<float>(result),
+                          MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, tile_3d)
+{
+    Shape shape_a{2, 1, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_re{3};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{2, 2, 1});
+    Shape shape_r{4, 2, 3};
+
+    auto tile = make_shared<op::Tile>(A, repeats);
+
+    auto f = make_shared<Function>(tile, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        vector<float>{1, 2, 3, 1, 2, 3, 4, 5, 6, 4, 5, 6, 1, 2, 3, 1, 2, 3, 4, 5, 6, 4, 5, 6},
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, scatter_add_1d_indices_in_place)
+{
+    Shape ref_shape{2, 3, 3};
+    Shape indices_shape{2};
+    Shape updates_shape{2, 3, 3};
+    Shape out_shape{2, 3, 3};
+    auto R1 = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto R2 = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto R = make_shared<op::Add>(R1, R2);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    auto G = make_shared<op::ScatterAdd>(R, I, U);
+    auto add = make_shared<op::Add>(G, R2);
+    auto f = make_shared<Function>(add, ParameterVector{R1, R2, I, U});
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto r1 = backend->create_tensor(element::f32, ref_shape);
+    copy_data(r1, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 9});
+    auto r2 = backend->create_tensor(element::f32, ref_shape);
+    copy_data(r2, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 9});
+    auto i = backend->create_tensor(element::i32, indices_shape);
+    copy_data(i, vector<int32_t>{1, 0});
+    auto u = backend->create_tensor(element::f32, updates_shape);
+    copy_data(u, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8});
+    auto result = backend->create_tensor(element::f32, out_shape);
+
+    auto c = backend->compile(f);
+    c->call_with_validate({result}, {r1, r2, i, u});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{0, 4, 8, 12, 16, 20, 24, 28, 32, 4, 8, 12, 16, 20, 24, 28, 32, 36}),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, scatter_add_1d_indices_no_in_place)
+{
+    Shape ref_shape{2, 3, 3};
+    Shape indices_shape{2};
+    Shape updates_shape{2, 3, 3};
+    Shape out_shape{2, 3, 3};
+    auto R1 = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto R2 = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto R = make_shared<op::Add>(R1, R2);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    auto G = make_shared<op::ScatterAdd>(R, I, U);
+    auto add = make_shared<op::Add>(G, R);
+    auto f = make_shared<Function>(add, ParameterVector{R1, R2, I, U});
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto r1 = backend->create_tensor(element::f32, ref_shape);
+    copy_data(r1, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 9});
+    auto r2 = backend->create_tensor(element::f32, ref_shape);
+    copy_data(r2, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 9});
+    auto i = backend->create_tensor(element::i32, indices_shape);
+    copy_data(i, vector<int32_t>{1, 0});
+    auto u = backend->create_tensor(element::f32, updates_shape);
+    copy_data(u, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8});
+    auto result = backend->create_tensor(element::f32, out_shape);
+
+    auto c = backend->compile(f);
+    c->call_with_validate({result}, {r1, r2, i, u});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{0, 5, 10, 15, 20, 25, 30, 35, 40, 5, 10, 15, 20, 25, 30, 35, 40, 45}),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, tensor_copy_from_interpreter_to_cpu)
+{
+    // This test the copying of data between the tensor's having
+    // CPUtensorview and no CPUtensorview
+    auto backend = runtime::Backend::create("CPU");
+    auto backend_ref = runtime::Backend::create("INTERPRETER");
+    auto a = backend_ref->create_tensor(element::f32, Shape{2, 3});
+    auto b = backend->create_tensor(element::f32, Shape{2, 3});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    b->copy_from(*a);
+    ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
+}
+
+TEST(cpu_test, tensor_copy_from_different_shape)
+{
+    auto backend = runtime::Backend::create("CPU");
+    auto a = backend->create_tensor(element::f32, Shape{2, 3});
+    auto b = backend->create_tensor(element::f32, Shape{1, 3, 2});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    b->copy_from(*a);
+    ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
+}
+
+TEST(cpu_test, tensor_copy_from_same_native_layouts)
+{
+    // this test copying of data between two tensor having same
+    // layout
+    auto backend = runtime::Backend::create("CPU");
+    auto a = backend->create_tensor(element::f32, Shape{2, 3});
+    auto b = backend->create_tensor(element::f32, Shape{2, 3});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    b->copy_from(*a);
+    ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
+}
+
+TEST(cpu_test, tensor_copy_from_same_rotated_layouts)
+{
+    auto A = make_shared<op::Parameter>(element::u8, Shape{2, 3});
+    auto f1 = make_shared<Function>(make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{3, 2}),
+                                    ParameterVector{A});
+    auto B = make_shared<op::Parameter>(element::u8, Shape{2, 3});
+    auto f2 = make_shared<Function>(make_shared<op::Reshape>(B, AxisVector{1, 0}, Shape{3, 2}),
+                                    ParameterVector{B});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, Shape{2, 3});
+    copy_data(a, vector<uint8_t>{1, 2, 3, 4, 5, 6});
+    auto result1 = backend->create_tensor(element::u8, Shape{3, 2});
+    backend->compile(f1)->call_with_validate({result1}, {a});
+
+    auto b = backend->create_tensor(element::u8, Shape{2, 3});
+    copy_data(a, vector<uint8_t>{1, 1, 1, 1, 1, 1});
+    auto result2 = backend->create_tensor(element::u8, Shape{3, 2});
+    backend->compile(f2)->call_with_validate({result2}, {b});
+    // Both result1 and result2 will be in rotated layouts at this point.
+
+    result2->copy_from(*result1);
+
+    // Check internal values in rotated layout
+    auto result2_internal_buffer = reinterpret_cast<uint8_t*>(
+        static_pointer_cast<runtime::cpu::CPUTensorView>(result2)->get_data_ptr());
+    vector<uint8_t> vec(result2_internal_buffer, result2_internal_buffer + 6);
+    // This check can be removed if the CPU backend stops optimizing reshapes using layout
+    // transformations
+    EXPECT_EQ((vector<uint8_t>{1, 2, 3, 4, 5, 6}), vec);
+
+    // Check native layout
+    EXPECT_EQ((vector<uint8_t>{1, 4, 2, 5, 3, 6}), read_vector<uint8_t>(result2));
+}
+
+TEST(cpu_test, tensor_copy_from_different_layout)
+{
+    auto A = make_shared<op::Parameter>(element::u8, Shape{2, 3});
+    auto f = make_shared<Function>(make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{3, 2}),
+                                   ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, Shape{2, 3});
+    copy_data(a, vector<uint8_t>{1, 2, 3, 4, 5, 6});
+    auto result = backend->create_tensor(element::u8, Shape{3, 2});
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+
+    auto b = backend->create_tensor(element::u8, Shape{3, 2});
+    b->copy_from(*result);
+
+    EXPECT_EQ((vector<uint8_t>{1, 4, 2, 5, 3, 6}), read_vector<uint8_t>(b));
+}
+
+#if MKLDNN_VERSION_MAJOR >= 1
+TEST(cpu_test, max_pool_bf16)
+{
+    Shape shape_a{1, 1, 3, 5};
+    Shape window_shape{2, 3};
+    auto window_movement_strides = Strides{1, 1};
+    Shape padding_below{0, 0};
+    Shape padding_above{0, 0};
+    Shape shape_r{1, 1, 2, 3};
+
+    // input data
+    vector<float> a_data = {
+        0.5f, 1.5f, 0.5f, 2.5f, 1.5f, 0.5f, 3.5f, 2.5f, 0.5f, 0.5f, 2.5f, 0.5f, 0.5f, 0.5f, 1.5f};
+
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A_bf16 = make_shared<op::Convert>(A, element::bf16);
+    auto QMP = make_shared<ngraph::op::MaxPool>(
+        A_bf16, window_shape, window_movement_strides, padding_below, padding_above);
+    auto f = make_shared<Function>(NodeVector{QMP}, ParameterVector{A});
+    auto backend = runtime::Backend::create("CPU");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, a_data);
+    auto result = backend->create_tensor(element::bf16, shape_r);
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ((vector<bfloat16>{3.5, 3.5, 2.5, 3.5, 3.5, 2.5}), read_vector<bfloat16>(result));
+}
+
+TEST(cpu_test, convolution_simple_bf16)
+{
+    Shape shape_a{1, 2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{2, 2, 1, 1};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{1, 2, 2, 2};
+
+    vector<float> input = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
+    vector<float> weights = {3.0f, 3.0f, 3.0f, 3.0f};
+
+    auto A_bf16 = make_shared<op::Convert>(A, element::bf16);
+    auto B_bf16 = make_shared<op::Convert>(B, element::bf16);
+    auto conv1 = make_shared<op::Convolution>(A_bf16,
+                                              B_bf16,
+                                              Strides{1, 1},
+                                              Strides{1, 1},
+                                              CoordinateDiff{0, 0},
+                                              CoordinateDiff{0, 0},
+                                              Strides{1, 1});
+
+    auto f = make_shared<Function>(conv1, ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, input);
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, weights);
+    auto result = backend->create_tensor(element::bf16, shape_r);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    EXPECT_EQ((vector<bfloat16>{18.0, 24.0, 30.0, 36.0, 18.0, 24.0, 30.0, 36.0}),
+              read_vector<bfloat16>(result));
+}
+#endif

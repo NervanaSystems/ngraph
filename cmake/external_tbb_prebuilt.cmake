@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -69,8 +69,8 @@ if (WIN32)
         DEPENDEES download
         )
 
-    install(FILES ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${TBB_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}
-                  ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
+    install(FILES ${NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY}/${TBB_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}
+                  ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
             DESTINATION ${NGRAPH_INSTALL_LIB})
 elseif(APPLE)
     set(TBB_LINK_LIBS
@@ -82,7 +82,7 @@ elseif(APPLE)
         COMMENT "Move tbb libraries to ngraph build directory"
     )
 
-    install(FILES ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
+    install(FILES ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
             DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()
 

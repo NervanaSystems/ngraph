@@ -15,9 +15,11 @@
 //*****************************************************************************
 
 #pragma once
+#if defined(NGRAPH_ONNX_IMPORT_ENABLE)
 
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
 void regmodule_pyngraph_onnx_import(py::module m);
+#endif

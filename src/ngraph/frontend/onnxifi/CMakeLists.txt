@@ -38,4 +38,12 @@ if(NGRAPH_LIB_VERSIONING_ENABLE)
         SOVERSION ${ONNXIFI_ABI_VERSION})
 endif()
 
+if(WIN32)
+    if(MSVC)
+        target_compile_definitions(onnxifi-ngraph PRIVATE "ONNXIFI_PUBLIC=__declspec(dllexport)")
+    else()
+        target_compile_definitions(onnxifi-ngraph PRIVATE "ONNXIFI_PUBLIC=__attribute__((__dllexport__))")
+    endif()
+endif()
+
 install(TARGETS onnxifi-ngraph DESTINATION ${NGRAPH_INSTALL_LIB})

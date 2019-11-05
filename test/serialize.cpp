@@ -22,11 +22,15 @@
 
 #include "ngraph/file_util.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/passthrough.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
+#include "util/all_close_f.hpp"
 #include "util/test_tools.hpp"
 
 using namespace std;
@@ -179,7 +183,7 @@ TEST(serialize, constant)
     bool found = false;
     for (shared_ptr<Node> node : g->get_ops())
     {
-        shared_ptr<op::Constant> c = dynamic_pointer_cast<op::Constant>(node);
+        shared_ptr<op::Constant> c = as_type_ptr<op::Constant>(node);
         if (c)
         {
             found = true;
@@ -204,6 +208,10 @@ TEST(benchmark, serialize)
     shared_ptr<Function> f = ngraph::deserialize(json_string);
     timer.stop();
     cout << "deserialize took " << timer.get_milliseconds() << "ms\n";
+
+    WithSerializeOutputShapesEnabled serialize_outputs(true);
+    ofstream out("test.json");
+    out << serialize(f, 4);
 }
 
 MATCHER_P2(IsOutputShape, type, shape, "")
@@ -237,7 +245,7 @@ TEST(serialize, passthrough)
     std::shared_ptr<op::Passthrough> pt;
     for (const auto& op : g->get_ops())
     {
-        pt = dynamic_pointer_cast<op::Passthrough>(op);
+        pt = as_type_ptr<op::Passthrough>(op);
         if (pt)
         {
             break;
@@ -251,4 +259,285 @@ TEST(serialize, passthrough)
     EXPECT_THAT(pt->output_shapes(),
                 ElementsAre(IsOutputShape(element::f32, Shape{2, 3}),
                             IsOutputShape(element::i8, Shape{4, 5})));
+}
+
+TEST(serialize, constant_infinity_nan)
+{
+    vector<float> a_data{123.f, 456.f, INFINITY, -INFINITY, NAN};
+    vector<float> b_data{5.f, 5.f, 5.f, 5.f, 5.f, 5.f};
+    vector<float> c_data{0.05f, 0.05f, 0.05f, 0.05f, 0.05f, 0.05001f, 0.05f};
+    vector<int64_t> d_data{-100, -10, -1, 0, 50, 5000000000001};
+    auto A = make_shared<op::Constant>(element::f32, Shape{5}, a_data);
+    auto B = make_shared<op::Constant>(element::f32, Shape{6}, b_data);
+    auto C = make_shared<op::Constant>(element::f32, Shape{7}, c_data);
+    auto D = make_shared<op::Constant>(element::i64, Shape{d_data.size()}, d_data);
+    A->set_friendly_name("A");
+    B->set_friendly_name("B");
+    C->set_friendly_name("C");
+    D->set_friendly_name("D");
+    auto f = make_shared<Function>(NodeVector{A, B, C, D}, ParameterVector{});
+
+    string s = serialize(f, 4);
+    shared_ptr<Function> g = deserialize(s);
+
+    shared_ptr<op::Constant> a;
+    shared_ptr<op::Constant> b;
+    shared_ptr<op::Constant> c;
+    shared_ptr<op::Constant> d;
+    for (auto node : g->get_ops())
+    {
+        if (node->get_friendly_name() == "A")
+        {
+            a = static_pointer_cast<op::Constant>(node);
+        }
+        else if (node->get_friendly_name() == "B")
+        {
+            b = static_pointer_cast<op::Constant>(node);
+        }
+        else if (node->get_friendly_name() == "C")
+        {
+            c = static_pointer_cast<op::Constant>(node);
+        }
+        else if (node->get_friendly_name() == "D")
+        {
+            d = static_pointer_cast<op::Constant>(node);
+        }
+    }
+    ASSERT_NE(a, nullptr);
+    ASSERT_NE(b, nullptr);
+    ASSERT_NE(c, nullptr);
+    ASSERT_NE(d, nullptr);
+    EXPECT_TRUE(test::all_close_f(a->get_vector<float>(), a_data));
+    EXPECT_TRUE(test::all_close_f(b->get_vector<float>(), b_data));
+    EXPECT_TRUE(test::all_close_f(c->get_vector<float>(), c_data));
+    EXPECT_EQ(d->get_vector<int64_t>(), d_data);
+
+    string filename = "constant_infinity_nan_test.dot";
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>(filename);
+    pass_manager.run_passes(g);
+    ifstream file(filename);
+    ASSERT_TRUE(file);
+    string str((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+    EXPECT_NE(str.find(R"(label="A)"), string::npos);
+    EXPECT_NE(str.find(R"(label="B)"), string::npos);
+    EXPECT_NE(str.find(R"(label="C)"), string::npos);
+    EXPECT_NE(str.find(R"(label="D)"), string::npos);
+}
+
+TEST(serialize, non_zero_node_output)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{10});
+    auto topk = make_shared<op::TopK>(arg, 0, element::i32, 5, true);
+    auto abs = make_shared<op::Abs>(Output<Node>(topk, 1));
+    auto result = make_shared<op::Result>(abs);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
+    string s = serialize(f);
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_abs = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto topk_out = g_abs->input(0).get_source_output();
+    EXPECT_EQ(topk_out.get_index(), 1);
+    EXPECT_EQ(topk_out.get_node()->description(), "TopK");
+}
+
+TEST(serialize, opset1_softmax)
+{
+    const auto arg = make_shared<op::Parameter>(element::f32, Shape{10});
+    const auto softmax = make_shared<op::v1::Softmax>(arg, 0);
+    const auto result = make_shared<op::Result>(softmax);
+    const auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    const auto g_result = g->get_results().at(0);
+    const auto g_softmax = g_result->input(0).get_source_output().get_node_shared_ptr();
+
+    EXPECT_EQ(g_softmax->description(), "Softmax");
+    EXPECT_EQ(g_softmax->get_version(), 1);
+}
+
+TEST(serialize, opset1_gather)
+{
+    auto params = make_shared<op::Parameter>(element::f32, Shape{5, 6});
+    auto indices = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto axis = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto gather_v1 = make_shared<op::v1::Gather>(params, indices, axis);
+
+    auto result = make_shared<op::Result>(gather_v1);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{params, indices, axis});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_gather = g_result->input(0).get_source_output().get_node_shared_ptr();
+
+    EXPECT_EQ(g_gather->description(), "Gather");
+    EXPECT_EQ(g_gather->get_version(), 1);
+}
+
+TEST(serialize, opset1_product)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto keep_dims = true;
+    auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
+    auto reduce_prod = make_shared<op::v1::ReduceProd>(arg, axes, keep_dims);
+    auto result = make_shared<op::Result>(reduce_prod);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_red_prod = g_result->input(0).get_source_output().get_node_shared_ptr();
+
+    EXPECT_EQ(g_red_prod->description(), "Product");
+    EXPECT_EQ(g_red_prod->get_version(), 1);
+    EXPECT_EQ(dynamic_cast<const op::v1::ReduceProd*>(g_red_prod.get())->get_keep_dims(), 1);
+    EXPECT_EQ(dynamic_cast<const op::v1::ReduceProd*>(g_red_prod.get())->get_reduction_axes(),
+              AxisSet({1, 2}));
+}
+
+TEST(serialize, opset1_sum)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto keep_dims = true;
+    auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
+    auto reduce_sum = make_shared<op::v1::ReduceSum>(arg, axes, keep_dims);
+    auto result = make_shared<op::Result>(reduce_sum);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_red_sum = g_result->input(0).get_source_output().get_node_shared_ptr();
+
+    EXPECT_EQ(g_red_sum->description(), "Sum");
+    EXPECT_EQ(g_red_sum->get_version(), 1);
+    EXPECT_EQ(dynamic_cast<const op::v1::ReduceSum*>(g_red_sum.get())->get_keep_dims(), 1);
+    EXPECT_EQ(dynamic_cast<const op::v1::ReduceSum*>(g_red_sum.get())->get_reduction_axes(),
+              AxisSet({1, 2}));
+}
+
+TEST(serialize, opset1_pad)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{4, 5, 6});
+    auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto pads_end = make_shared<op::Parameter>(element::i64, Shape{2});
+    auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
+    auto pad_mode = op::PadMode::EDGE;
+    auto pad = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value, pad_mode);
+
+    auto result = make_shared<op::Result>(pad);
+    auto f = make_shared<Function>(ResultVector{result},
+                                   ParameterVector{arg, pads_begin, pads_end, arg_pad_value});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_pad = g_result->input(0).get_source_output().get_node_shared_ptr();
+
+    EXPECT_EQ(g_pad->description(), "Pad");
+    EXPECT_EQ(g_pad->get_version(), 1);
+    EXPECT_EQ(dynamic_cast<const op::v1::Pad*>(g_pad.get())->get_pad_mode(), pad_mode);
+}
+
+TEST(serialize, opset1_strided_slice)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto begin = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto end = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    const std::vector<int64_t> begin_mask{1, 0, 1, 0};
+    const std::vector<int64_t> end_mask{1, 1, 1, 0};
+    const std::vector<int64_t> new_axis_mask{0, 0, 1, 1};
+    const std::vector<int64_t> shrink_axis_mask{0, 0, 0, 0};
+    const std::vector<int64_t> ellipsis_mask{1, 1, 1, 1};
+
+    auto strided_slice_in = make_shared<op::v1::StridedSlice>(data,
+                                                              begin,
+                                                              end,
+                                                              strides,
+                                                              begin_mask,
+                                                              end_mask,
+                                                              new_axis_mask,
+                                                              shrink_axis_mask,
+                                                              ellipsis_mask);
+
+    auto result = make_shared<op::Result>(strided_slice_in);
+    auto f =
+        make_shared<Function>(ResultVector{result}, ParameterVector{data, begin, end, strides});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_strided_slice_v1 = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto strided_slice_out = as_type_ptr<op::v1::StridedSlice>(g_strided_slice_v1);
+
+    EXPECT_EQ(strided_slice_out->description(), "Slice");
+    EXPECT_EQ(strided_slice_out->get_version(), 1);
+    EXPECT_EQ(strided_slice_out->get_begin_mask(), begin_mask);
+    EXPECT_EQ(strided_slice_out->get_end_mask(), end_mask);
+    EXPECT_EQ(strided_slice_out->get_new_axis_mask(), new_axis_mask);
+    EXPECT_EQ(strided_slice_out->get_shrink_axis_mask(), shrink_axis_mask);
+    EXPECT_EQ(strided_slice_out->get_ellipsis_mask(), ellipsis_mask);
+}
+
+TEST(serialize, opset1_binary_convolution)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 2, 2});
+    auto filter = make_shared<op::Parameter>(element::f32, Shape{1, 2, 2, 2});
+    const Strides strides{1, 1};
+    const CoordinateDiff pads_begin{0, 0};
+    const CoordinateDiff pads_end{0, 0};
+    const Strides dilations{1, 1};
+    const std::string mode = "xnor-popcount";
+    const float pad_value = 2.1f;
+    const auto auto_pad = op::PadType::NOTSET;
+
+    auto binary_conv_in = make_shared<op::v1::BinaryConvolution>(
+        data, filter, strides, pads_begin, pads_end, dilations, mode, pad_value, auto_pad);
+
+    auto result = make_shared<op::Result>(binary_conv_in);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data, filter});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_binary_conv = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto binary_conv_out = as_type_ptr<op::v1::BinaryConvolution>(g_binary_conv);
+
+    EXPECT_EQ(binary_conv_out->description(), "BinaryConvolution");
+    EXPECT_EQ(binary_conv_out->get_version(), 1);
+
+    EXPECT_EQ(binary_conv_out->get_strides(), strides);
+    EXPECT_EQ(binary_conv_out->get_pads_begin(), pads_begin);
+    EXPECT_EQ(binary_conv_out->get_pads_end(), pads_end);
+    EXPECT_EQ(binary_conv_out->get_dilations(), dilations);
+    EXPECT_EQ(binary_conv_out->get_mode(),
+              op::v1::BinaryConvolution::BinaryConvolutionMode::XNOR_POPCOUNT);
+    EXPECT_EQ(binary_conv_out->get_pad_value(), pad_value);
+    EXPECT_EQ(binary_conv_out->get_auto_pad(), auto_pad);
+}
+
+TEST(serialize, depth_to_space)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{4, 5, 6});
+    auto mode = op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST;
+    size_t block_size = 2;
+    auto depth_to_space_in = make_shared<op::DepthToSpace>(arg, mode, block_size);
+
+    auto result = make_shared<op::Result>(depth_to_space_in);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_depth_to_space = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto depth_to_space_out = as_type_ptr<op::DepthToSpace>(g_depth_to_space);
+
+    EXPECT_EQ(depth_to_space_out->description(), "DepthToSpace");
+    EXPECT_EQ(depth_to_space_out->get_version(), 0);
+    EXPECT_EQ(depth_to_space_out->get_block_size(), block_size);
+    EXPECT_EQ(depth_to_space_out->get_mode(), mode);
 }

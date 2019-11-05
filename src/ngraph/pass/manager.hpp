@@ -24,6 +24,7 @@
 #include "ngraph/pass/manager_state.hpp"
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/pass_config.hpp"
+#include "ngraph/pass/validate.hpp"
 
 namespace ngraph
 {
@@ -40,19 +41,15 @@ public:
     Manager();
     ~Manager();
 
-    void initialize_default_passes();
-
     template <typename T, class... Args>
-    void register_pass(Args&&... args)
+    std::shared_ptr<T> register_pass(Args&&... args)
     {
-        static_assert(std::is_base_of<pass::PassBase, T>::value, "pass not derived from pass base");
-        auto pass = std::make_shared<T>(std::forward<Args>(args)...);
-        auto pass_base = std::static_pointer_cast<PassBase>(pass);
-        m_pass_list.push_back(pass_base);
-        if (m_visualize || m_serialize)
+        auto rc = push_pass<T>(std::forward<Args>(args)...);
+        if (m_per_pass_validation)
         {
-            m_pass_names.push_back(typeid(T).name());
+            push_pass<Validate>();
         }
+        return rc;
     }
 
     void run_passes(std::shared_ptr<Function>, bool transitive = true);
@@ -62,11 +59,36 @@ public:
     void set_pass_config(const PassConfig& pass_config) { m_pass_config = pass_config; }
     void set_pass_visualization(bool new_state) { m_visualize = new_state; }
     void set_pass_serialization(bool new_state) { m_serialize = new_state; }
+    void set_per_pass_validation(bool new_state) { m_per_pass_validation = new_state; }
 private:
+    template <typename T, class... Args>
+    std::shared_ptr<T> push_pass(Args&&... args)
+    {
+        static_assert(std::is_base_of<pass::PassBase, T>::value, "pass not derived from pass base");
+        auto pass = std::make_shared<T>(std::forward<Args>(args)...);
+        auto pass_base = std::static_pointer_cast<PassBase>(pass);
+        m_pass_list.push_back(pass_base);
+        if (m_visualize || m_serialize)
+        {
+#ifdef _WIN32
+            // MSVC produce a human-readable type name like class ngraph::pass::LikeReplacement
+            // by typeid(T).name(). Later ofstream doesn't accept it as a valid file name.
+            //
+            std::string str = typeid(T).name();
+            auto pos = str.find_last_of(":");
+            m_pass_names.push_back(str.substr(pos + 1));
+#elif defined(__linux) || defined(__APPLE__)
+            m_pass_names.push_back(typeid(T).name());
+#endif
+        }
+        return pass;
+    }
+
     std::vector<std::string> m_pass_names;
     std::vector<std::shared_ptr<PassBase>> m_pass_list;
     ManagerState m_state;
     PassConfig m_pass_config;
     bool m_visualize = false;
     bool m_serialize = false;
+    bool m_per_pass_validation = true;
 };

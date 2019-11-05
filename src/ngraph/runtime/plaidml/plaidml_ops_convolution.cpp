@@ -36,12 +36,14 @@ namespace ngraph
     }
 }
 
+constexpr ngraph::NodeTypeInfo ngraph::runtime::plaidml::op::Convolution::type_info;
+
 ngraph::runtime::plaidml::op::Convolution::Convolution(std::shared_ptr<ngraph::op::Convolution> src,
-                                                       const NodeVector& args,
+                                                       const OutputVector& args,
                                                        AxisVector data_axes,
                                                        AxisVector filters_axes,
                                                        AxisVector output_axes)
-    : Op{"PlaidMLConvolution", args}
+    : Op{args}
     , m_src{std::move(src)}
     , m_data_axes{std::move(data_axes)}
     , m_filters_axes{std::move(filters_axes)}
@@ -52,7 +54,13 @@ ngraph::runtime::plaidml::op::Convolution::Convolution(std::shared_ptr<ngraph::o
 
 void ngraph::runtime::plaidml::op::Convolution::validate_and_infer_types()
 {
-    set_output_type(0, m_src->get_element_type(), m_src->get_output_partial_shape(0));
+    auto src_shape = m_src->get_output_shape(0);
+    Shape out_shape(src_shape.size());
+    for (std::size_t idx = 0; idx < src_shape.size(); ++idx)
+    {
+        out_shape[idx] = src_shape.at(m_output_axes.at(idx));
+    }
+    set_output_type(0, m_src->get_element_type(), out_shape);
 }
 
 std::shared_ptr<ngraph::Node>
@@ -63,16 +71,18 @@ std::shared_ptr<ngraph::Node>
         throw ngraph_error{"PlaidMLConvolution requires two inputs (data and filters)"};
     }
     return std::make_shared<Convolution>(
-        m_src, new_args, m_data_axes, m_filters_axes, m_output_axes);
+        m_src, as_output_vector(new_args), m_data_axes, m_filters_axes, m_output_axes);
 }
+
+constexpr ngraph::NodeTypeInfo ngraph::runtime::plaidml::op::ConvolutionBackpropData::type_info;
 
 ngraph::runtime::plaidml::op::ConvolutionBackpropData::ConvolutionBackpropData(
     std::shared_ptr<ngraph::op::ConvolutionBackpropData> src,
-    const NodeVector& args,
+    const OutputVector& args,
     AxisVector filters_axes,
     AxisVector output_axes,
     AxisVector data_axes)
-    : Op{"PlaidMLConvolutionBackpropData", args}
+    : Op{args}
     , m_src{std::move(src)}
     , m_filters_axes{std::move(filters_axes)}
     , m_output_axes{std::move(output_axes)}
@@ -83,7 +93,13 @@ ngraph::runtime::plaidml::op::ConvolutionBackpropData::ConvolutionBackpropData(
 
 void ngraph::runtime::plaidml::op::ConvolutionBackpropData::validate_and_infer_types()
 {
-    set_output_type(0, m_src->get_element_type(), m_src->get_output_partial_shape(0));
+    auto src_shape = m_src->get_output_shape(0);
+    Shape out_shape(src_shape.size());
+    for (std::size_t idx = 0; idx < src_shape.size(); ++idx)
+    {
+        out_shape[idx] = src_shape.at(m_output_axes.at(idx));
+    }
+    set_output_type(0, m_src->get_element_type(), out_shape);
 }
 
 std::shared_ptr<ngraph::Node>
@@ -95,16 +111,18 @@ std::shared_ptr<ngraph::Node>
         throw ngraph_error{"PlaidMLConvolutionBackpropData requires two inputs (data and output)"};
     }
     return std::make_shared<ConvolutionBackpropData>(
-        m_src, new_args, m_filters_axes, m_output_axes, m_data_axes);
+        m_src, as_output_vector(new_args), m_filters_axes, m_output_axes, m_data_axes);
 }
+
+constexpr ngraph::NodeTypeInfo ngraph::runtime::plaidml::op::ConvolutionBackpropFilters::type_info;
 
 ngraph::runtime::plaidml::op::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
     std::shared_ptr<ngraph::op::ConvolutionBackpropFilters> src,
-    const NodeVector& args,
+    const OutputVector& args,
     AxisVector data_axes,
     AxisVector output_axes,
     AxisVector filters_axes)
-    : Op{"PlaidMLConvolutionBackpropFilters", args}
+    : Op{args}
     , m_src{std::move(src)}
     , m_data_axes{std::move(data_axes)}
     , m_output_axes{std::move(output_axes)}
@@ -115,7 +133,13 @@ ngraph::runtime::plaidml::op::ConvolutionBackpropFilters::ConvolutionBackpropFil
 
 void ngraph::runtime::plaidml::op::ConvolutionBackpropFilters::validate_and_infer_types()
 {
-    set_output_type(0, m_src->get_element_type(), m_src->get_output_partial_shape(0));
+    auto src_shape = m_src->get_output_shape(0);
+    Shape out_shape(src_shape.size());
+    for (std::size_t idx = 0; idx < src_shape.size(); ++idx)
+    {
+        out_shape[idx] = src_shape.at(m_output_axes.at(idx));
+    }
+    set_output_type(0, m_src->get_element_type(), out_shape);
 }
 
 std::shared_ptr<ngraph::Node>
@@ -128,7 +152,7 @@ std::shared_ptr<ngraph::Node>
             "PlaidMLConvolutionBackpropFilters requires two inputs (filters and output)"};
     }
     return std::make_shared<ConvolutionBackpropFilters>(
-        m_src, new_args, m_data_axes, m_output_axes, m_filters_axes);
+        m_src, as_output_vector(new_args), m_data_axes, m_output_axes, m_filters_axes);
 }
 
 // Convolution implements a standard ML convolultion, with optional striding, padding, and dilation.

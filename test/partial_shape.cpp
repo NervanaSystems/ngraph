@@ -82,8 +82,7 @@ TEST(partial_shape, dim_conversion_dynamic)
 {
     EXPECT_ANY_THROW({
         size_t s{Dimension::dynamic()};
-
-        s = 0; // Silence compiler warning about unused s
+        (void)s; // Silence compiler warning about unused s
     });
 }
 
@@ -484,6 +483,47 @@ TEST(partial_shape, partial_shape_merge_both_static_different_rank)
     PartialShape s1{1, 2, 3};
     const PartialShape s2{1, 2, 3, 4};
     ASSERT_FALSE(PartialShape::merge_into(s1, s2));
+}
+
+TEST(partial_shape, partial_shape_broadcast_merge_into_fails)
+{
+    PartialShape s1{2, Dimension::dynamic(), 3, 4};
+    ASSERT_FALSE(
+        PartialShape::broadcast_merge_into(s1, PartialShape{3}, op::AutoBroadcastType::NUMPY));
+    ASSERT_FALSE(
+        PartialShape::broadcast_merge_into(s1, PartialShape{4, 4}, op::AutoBroadcastType::NUMPY));
+    ASSERT_FALSE(PartialShape::broadcast_merge_into(
+        s1, PartialShape{2, 5, 3, 3, 4}, op::AutoBroadcastType::NUMPY));
+}
+
+TEST(partial_shape, partial_shape_broadcast_merge_into_dynamic_rank)
+{
+    PartialShape s1{PartialShape::dynamic()};
+    ASSERT_TRUE(PartialShape::broadcast_merge_into(
+        s1, PartialShape{3, 2, 4}, op::AutoBroadcastType::NUMPY));
+    ASSERT_TRUE(s1.same_scheme(PartialShape::dynamic()));
+
+    PartialShape s2{2, Dimension::dynamic()};
+    ASSERT_TRUE(PartialShape::broadcast_merge_into(
+        s2, PartialShape::dynamic(), op::AutoBroadcastType::NUMPY));
+    ASSERT_TRUE(s2.same_scheme(PartialShape::dynamic()));
+}
+
+TEST(partial_shape, partial_shape_broadcast_merge_into)
+{
+    PartialShape s1{5, Dimension::dynamic(), 3, 4};
+    const PartialShape s2{3, 4};
+    ASSERT_TRUE(PartialShape::broadcast_merge_into(s1, s2, op::AutoBroadcastType::NUMPY));
+    ASSERT_TRUE(s1.same_scheme(PartialShape{5, Dimension::dynamic(), 3, 4}));
+
+    PartialShape s3{Dimension::dynamic()};
+    ASSERT_TRUE(PartialShape::broadcast_merge_into(s3, s2, op::AutoBroadcastType::NUMPY));
+    ASSERT_TRUE(s3.same_scheme(PartialShape{3, 4}));
+
+    PartialShape s4{2, 4, 1, 5};
+    ASSERT_TRUE(PartialShape::broadcast_merge_into(
+        s4, PartialShape{2, 1, 3, 5}, op::AutoBroadcastType::NUMPY));
+    ASSERT_TRUE(s4.same_scheme(PartialShape{2, 4, 3, 5}));
 }
 
 TEST(partial_shape, dim_pluseq_left_dynamic)

@@ -52,22 +52,20 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<Function> function)
         {
             auto op = std::static_pointer_cast<op::Op>(node);
             // concat and slice in_place_oi should be treated differently
-            if (!std::dynamic_pointer_cast<op::Concat>(node) &&
-                !std::dynamic_pointer_cast<op::Slice>(node))
+            if (!is_type<op::Concat>(node) && !is_type<op::Slice>(node))
             {
                 if (auto op_annotations = op->get_op_annotations())
                 {
                     for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                     {
-                        auto output = &node->get_outputs().at(oi_pair.output).get_tensor();
-                        auto input = &node->get_inputs().at(oi_pair.input).get_tensor();
-                        auto input_node =
-                            node->get_inputs().at(oi_pair.input).get_output().get_node();
+                        auto output = &node->output(oi_pair.output).get_tensor();
+                        auto input = &node->input(oi_pair.input).get_tensor();
+                        auto input_node = node->input(oi_pair.input).get_source_output().get_node();
 
                         // For destructive kernel, this should be the last use
                         // Non-destructive kernels can pass through if memory sharing is disabled
                         if ((node->liveness_free_list.count(input) != 0 ||
-                             std::dynamic_pointer_cast<op::GetOutputElement>(node) ||
+                             is_type<op::GetOutputElement>(node) ||
                              (m_disable_memory_sharing && !oi_pair.destructive &&
                               !input_node->is_parameter() && !input_node->is_constant())) &&
                             node->liveness_new_list.count(output) != 0)
@@ -127,7 +125,7 @@ pass::MemoryManager::MemoryManager(size_t alignment, bool disable_memory_reuse)
 
 size_t pass::MemoryManager::allocate(size_t size)
 {
-    size_t rc;
+    size_t rc = 0;
     switch (m_scheme)
     {
     case allocation_scheme::FIRST_FIT: rc = first_fit(size); break;

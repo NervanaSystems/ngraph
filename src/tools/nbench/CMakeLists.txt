@@ -17,6 +17,8 @@
 set (SRC
     nbench.cpp
     benchmark.cpp
+    benchmark_pipelined.cpp
+    benchmark_utils.cpp
 )
 
 add_executable(nbench ${SRC})
@@ -28,12 +30,6 @@ target_link_libraries(nbench PRIVATE ngraph)
 if (NGRAPH_CPU_ENABLE)
     target_link_libraries(nbench PRIVATE cpu_backend)
 endif()
-if (NGRAPH_INTELGPU_ENABLE)
-    target_link_libraries(nbench PRIVATE intelgpu_backend)
-endif()
-if (NGRAPH_GPU_ENABLE)
-    target_link_libraries(nbench PRIVATE gpu_backend)
-endif()
 if (NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(nbench PRIVATE interpreter_backend)
 endif()
@@ -42,18 +38,6 @@ if (NGRAPH_PLAIDML_ENABLE)
 endif()
 if (NGRAPH_GENERIC_CPU_ENABLE)
     target_link_libraries(nbench PRIVATE gcpu_backend)
-endif()
-
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-        target_link_libraries(nbench PRIVATE libmlsl)
-    elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
-        find_package(MPI REQUIRED)
-        target_include_directories(nbench SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-        target_link_libraries(nbench  PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-    else()
-            message(FATAL_ERROR "Distributed Library not supported/mentioned")
-    endif()
 endif()
 
 install(TARGETS nbench RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})

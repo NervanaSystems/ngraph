@@ -24,11 +24,14 @@ namespace ngraph
     {
         namespace util
         {
-            /// \brief Abstract base class for elementwise unary arithmetic operations, i.e., operations where the same
-            ///        scalar arithmetic operation is applied to each element.
+            // clang-format off
+            /// \brief Abstract base class for elementwise unary arithmetic operations, i.e.,
+            ///        operations where the same scalar arithmetic operation is applied to each
+            ///        element.
             ///
-            /// For example, if the underlying operation (determined by the subclass) is \f$\mathit{op}(x)\f$, the input tensor
-            /// \f$[[x,y],[z,w]]\f$ will be mapped to \f$[[\mathit{op}(x),\mathit{op}(y)],[\mathit{op}(z),\mathit{op}(w)]]\f$.
+            /// For example, if the underlying operation (determined by the subclass) is
+            /// \f$\mathit{op}(x)\f$, the input tensor \f$[[x,y],[z,w]]\f$ will be mapped to
+            /// \f$[[\mathit{op}(x),\mathit{op}(y)],[\mathit{op}(z),\mathit{op}(w)]]\f$.
             ///
             /// ## Inputs
             ///
@@ -41,16 +44,30 @@ namespace ngraph
             /// | Type                   | Description                                                                                                                                                             |
             /// | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
             /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg}[i_1,\dots,i_n])\f$. This will always have the same shape and element type as the input tensor. |
+            // clang-format on
             class UnaryElementwiseArithmetic : public Op
             {
             protected:
+                /// \brief Constructs a unary elementwise arithmetic operation.
+                UnaryElementwiseArithmetic();
+                /// \brief Constructs a unary elementwise arithmetic operation.
+                ///
+                /// \param arg Node that produces the input tensor.
+                UnaryElementwiseArithmetic(const std::shared_ptr<Node>& arg);
+                /// \brief Constructs a unary elementwise arithmetic operation.
+                ///
+                /// \param arg Output that produces the input tensor.
+                UnaryElementwiseArithmetic(const Output<Node>& arg);
+
                 /// \brief Constructs a unary elementwise arithmetic operation.
                 ///
                 /// \param arg Node that produces the input tensor.
                 UnaryElementwiseArithmetic(const std::string& node_type,
                                            const std::shared_ptr<Node>& arg);
 
+            public:
                 void validate_and_infer_types() override;
+                bool is_unary_elementwise_arithmetic() const override { return true; }
             };
         }
     }

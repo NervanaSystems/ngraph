@@ -21,19 +21,58 @@
 using namespace std;
 using namespace ngraph;
 
+op::util::IndexReduction::IndexReduction()
+{
+}
+
+op::util::IndexReduction::IndexReduction(const Output<Node>& arg,
+                                         size_t axis,
+                                         const element::Type& index_element_type)
+    : Op({arg})
+{
+    set_reduction_axis(axis);
+    set_index_element_type(index_element_type);
+}
+
+op::util::IndexReduction::IndexReduction(const std::shared_ptr<Node>& arg,
+                                         size_t axis,
+                                         const element::Type& index_element_type)
+    : Op(check_single_output_args({arg}))
+{
+    set_reduction_axis(axis);
+    set_index_element_type(index_element_type);
+}
+
 op::util::IndexReduction::IndexReduction(const std::string& node_type,
                                          const std::shared_ptr<Node>& arg,
                                          size_t axis,
                                          const element::Type& index_element_type)
     : Op(node_type, check_single_output_args({arg}))
-    , m_axis(axis)
-    , m_index_element_type(index_element_type)
 {
-    constructor_validate_and_infer_types();
+    set_reduction_axis(axis);
+    set_index_element_type(index_element_type);
+}
+
+size_t op::util::IndexReduction::get_reduction_axis() const
+{
+    return m_axis;
+}
+void op::util::IndexReduction::set_reduction_axis(size_t value)
+{
+    m_axis = value;
+}
+element::Type op::util::IndexReduction::get_index_element_type() const
+{
+    return m_index_element_type;
+}
+void op::util::IndexReduction::set_index_element_type(const element::Type& index_element_type)
+{
+    m_index_element_type = index_element_type;
 }
 
 void op::util::IndexReduction::validate_and_infer_types()
 {
+    // TODO(amprocte): Should reject if size of reduction axis is zero.
     const PartialShape& arg_shape = get_input_partial_shape(0);
     Rank rank = arg_shape.rank();
 
@@ -52,8 +91,17 @@ void op::util::IndexReduction::validate_and_infer_types()
 
     PartialShape output_shape{PartialShape::dynamic()};
 
-    if (!rank.is_dynamic())
+    if (rank.is_static())
     {
+        Dimension d = arg_shape[m_axis];
+        if (d.is_static())
+        {
+            NODE_VALIDATION_CHECK(this,
+                                  0 != size_t(d),
+                                  "Tensor reduction axis can not be empty, shape is: ",
+                                  arg_shape);
+        }
+
         std::vector<Dimension> output_dims(size_t(rank) - 1);
         size_t j = 0;
 
@@ -72,8 +120,8 @@ void op::util::IndexReduction::validate_and_infer_types()
     set_output_type(0, m_index_element_type, output_shape);
 }
 
-void op::util::IndexReduction::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                 const NodeVector& deltas)
+void op::util::IndexReduction::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                                 const NodeVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }

@@ -24,16 +24,16 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/shape.hpp"
 
 #include <string>
-#include <vector>
 
 using namespace std;
 using namespace ngraph;
 
-op::Acos::Acos(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Acos", arg)
+constexpr NodeTypeInfo op::Acos::type_info;
+
+op::Acos::Acos(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }
@@ -48,7 +48,7 @@ void op::Acos::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector&
 {
     auto delta = deltas.at(0);
 
-    auto x = get_inputs().at(0).get_output().get_node();
+    auto x = input_value(0);
 
     auto one = make_shared<op::ScalarConstantLike>(x, 1.0);
     auto ones = make_shared<op::BroadcastLike>(one, x, AxisSet());

@@ -59,6 +59,11 @@ namespace ngraph
             static_cast<std::set<size_t>*>(this)->operator=(v);
             return *this;
         }
+
+        std::vector<int64_t> to_vector() const
+        {
+            return std::vector<int64_t>(this->begin(), this->end());
+        }
     };
 
     std::ostream& operator<<(std::ostream& s, const AxisSet& axis_set);

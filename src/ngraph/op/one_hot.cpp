@@ -15,13 +15,14 @@
 //*****************************************************************************
 
 #include "ngraph/op/one_hot.hpp"
-#include "ngraph/op/sum.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::OneHot::OneHot(const shared_ptr<Node>& arg, const PartialShape& shape, size_t one_hot_axis)
-    : Op("OneHot", check_single_output_args({arg}))
+constexpr NodeTypeInfo op::OneHot::type_info;
+
+op::OneHot::OneHot(const Output<Node>& arg, const PartialShape& shape, size_t one_hot_axis)
+    : Op({arg})
     , m_shape(shape)
     , m_one_hot_axis(one_hot_axis)
 {
@@ -33,6 +34,10 @@ void op::OneHot::validate_and_infer_types()
     element::Type arg_et = get_input_element_type(0);
     PartialShape arg_shape = get_input_partial_shape(0);
     Rank arg_rank = arg_shape.rank();
+
+    NODE_VALIDATION_CHECK(this,
+                          arg_et.is_dynamic() || arg_et.is_integral(),
+                          "Argument does not have integral element type.");
 
     NODE_VALIDATION_CHECK(
         this, m_shape.rank().is_static(), "Requested result shape has dynamic rank.");

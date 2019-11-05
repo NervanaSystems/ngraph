@@ -1,4 +1,4 @@
-.. ops/index.rst
+   .. ops/index.rst
 
 ####################
 List of Core ``ops``
@@ -26,6 +26,7 @@ Not currently a comprehensive list.
    * :doc:`batch_norm_training`
    * :doc:`batch_norm_training_backprop`
    * :doc:`broadcast`
+   * :doc:`broadcast_distributed`
    * :doc:`ceiling`
    * :doc:`concat`
    * :doc:`constant`
@@ -62,6 +63,7 @@ Not currently a comprehensive list.
    * :doc:`power`
    * :doc:`product`
    * :doc:`quantize`
+   * :doc:`random_uniform`
    * :doc:`relu`
    * :doc:`result`
    * :doc:`shape_of`
@@ -76,6 +78,7 @@ Not currently a comprehensive list.
    * :doc:`tan`
    * :doc:`tanh`
    * :doc:`transpose`
+   * :doc:`xor`
 
 
 
@@ -97,6 +100,7 @@ Not currently a comprehensive list.
    batch_norm_training.rst
    batch_norm_training_backprop.rst
    broadcast.rst
+   broadcast_distributed.rst
    ceiling.rst
    concat.rst
    constant.rst
@@ -133,6 +137,7 @@ Not currently a comprehensive list.
    power.rst
    product.rst
    quantize.rst
+   random_uniform.rst
    relu.rst
    result.rst
    shape_of.rst
@@ -147,6 +152,7 @@ Not currently a comprehensive list.
    tan.rst
    tanh.rst
    transpose.rst
+   xor.rst
 
 
 .. _more_about: 
@@ -154,15 +160,30 @@ Not currently a comprehensive list.
 More about Core Ops
 -------------------
 
-An ``Op``'s primary role is to function as a node in a directed acyclic graph 
-dependency computation graph.  
+An ``Op``'s primary role is to function as a node in a ddirected acyclic 
+computation graph.
+
 
 *Core ops* are ops that are available and generally useful to all framework 
 bridges and that can be compiled by all transformers. A framework bridge may 
 define framework-specific ops to simplify graph construction, provided that the 
 bridge can enable every transformer to replace all such ops with equivalent 
-clusters or subgraphs composed of core ops. Similary, transformers may define 
-transformer-specific ops to represent kernels or other intermediate operations. 
+clusters or subgraphs composed of core ops. In a similar manner, transformers 
+may define transformer-specific ops to represent kernels or other intermediate 
+operations. 
+
+The  input and output ports of ops are any of the functions which work with 
+``Output<Node>/Input<Node>``. Previous functions that worked at the level 
+of ops are deprecated, like::
+
+   Node::get_element_type()
+
+as it does not take any input. This function has been replaced with new 
+functions like::
+
+   Node::get_output_element_type(index) 
+
+where there is no ambiguity.
 
 If a framework supports extending the set of ops it offers, a bridge may even 
 expose transformer-specific ops to the framework user.
@@ -179,7 +200,7 @@ expose transformer-specific ops to the framework user.
    running kernels; rather, our compilation will match ``ops`` to appropriate 
    kernels for the backend(s) in use. Thus, we expect that adding of new Core 
    ops should be infrequent and that most functionality instead gets added with 
-   new functions that build sub-graphs from existing core ops.   
+   new functions that build sub-graphs from existing core ops.
 
 It is easiest to define a new op by adapting an existing op. Some of the tasks 
 that must be performed are:

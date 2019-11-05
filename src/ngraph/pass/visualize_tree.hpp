@@ -36,19 +36,26 @@ namespace ngraph
     }
 }
 
+class HeightMap;
+
 class ngraph::pass::VisualizeTree : public ModulePass
 {
 public:
     using node_modifiers_t =
         std::function<void(const Node& node, std::vector<std::string>& attributes)>;
-    VisualizeTree(const std::string& file_name, node_modifiers_t nm = nullptr);
+    VisualizeTree(const std::string& file_name,
+                  node_modifiers_t nm = nullptr,
+                  bool dot_only = false);
     bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;
 
-    static std::string get_file_ext();
     void set_ops_to_details(const visualize_tree_ops_map_t& ops_map) { m_ops_to_details = ops_map; }
 private:
+    void add_node_arguments(std::shared_ptr<Node> node,
+                            std::unordered_map<Node*, HeightMap>& height_maps,
+                            size_t& fake_node_ctr);
     std::string add_attributes(std::shared_ptr<Node> node);
     std::string get_attributes(std::shared_ptr<Node> node);
+    std::string get_node_name(std::shared_ptr<Node> node);
     void render() const;
 
     std::stringstream m_ss;
@@ -57,4 +64,6 @@ private:
     std::unordered_map<std::type_index, std::function<void(const Node&, std::ostream& ss)>>
         m_ops_to_details;
     node_modifiers_t m_node_modifiers = nullptr;
+    bool m_dot_only;
+    static const int max_jump_distance;
 };

@@ -29,27 +29,34 @@ namespace ngraph
         class Add : public util::BinaryElementwiseArithmetic
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"Add", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            /// \brief Constructs an uninitialized addition operation
+            Add() = default;
+
             /// \brief Constructs an addition operation.
             ///
-            /// \param arg0 Node that produces the first input tensor.<br>
+            /// \param arg0 Output that produces the first input tensor.<br>
             /// `[d0, ...]`
-            /// \param arg1 Node that produces the second input tensor.<br>
+            /// \param arg1 Output that produces the second input tensor.<br>
             /// `[d0, ...]`
+            /// \param auto_broadcast Auto broadcast specification
             ///
             /// Output `[d0, ...]`
             ///
-            Add(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+            Add(const Output<Node>& arg0,
+                const Output<Node>& arg1,
+                const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+            std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
+            virtual bool is_commutative() const override { return true; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-            virtual bool is_commutative() override { return true; }
         };
     }
 
-    std::shared_ptr<ngraph::Node> operator+(const std::shared_ptr<ngraph::Node> arg0,
-                                            const std::shared_ptr<ngraph::Node> arg1);
+    std::shared_ptr<Node> operator+(const Output<Node>& arg0, const Output<Node>& arg1);
 }

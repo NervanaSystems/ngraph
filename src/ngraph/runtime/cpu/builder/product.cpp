@@ -37,7 +37,7 @@ namespace ngraph
                 BUILD_REDUCTION_FUNCTOR(Product, product);
             }
 
-            REGISTER_OP_BUILDER(Product);
+            void register_builders_product_cpp() { REGISTER_OP_BUILDER(Product); }
         }
     }
 }

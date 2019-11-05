@@ -19,6 +19,7 @@ from setuptools.command.build_ext import build_ext
 import sys
 import setuptools
 import os
+import re
 import distutils.ccompiler
 
 __version__ = os.environ.get('NGRAPH_VERSION', '0.0.0-dev')
@@ -72,6 +73,11 @@ else:
     print('Cannot find library directory in {}, make sure that nGraph is installed '
           'correctly'.format(NGRAPH_CPP_DIST_DIR))
     sys.exit(1)
+
+NGRAPH_CPP_LIBRARY_NAME = 'ngraph'
+"""For some platforms OpenVINO adds 'd' suffix to library names in debug configuration"""
+if len([fn for fn in os.listdir(NGRAPH_CPP_LIBRARY_DIR) if re.search('ngraphd', fn)]):
+    NGRAPH_CPP_LIBRARY_NAME = 'ngraphd'
 
 
 def parallelCCompile(
@@ -143,17 +149,14 @@ sources = [
     'pyngraph/function.cpp',
     'pyngraph/serializer.cpp',
     'pyngraph/node.cpp',
-    'pyngraph/node_vector.cpp',
     'pyngraph/shape.cpp',
     'pyngraph/strides.cpp',
     'pyngraph/coordinate_diff.cpp',
     'pyngraph/axis_set.cpp',
     'pyngraph/axis_vector.cpp',
     'pyngraph/coordinate.cpp',
-    'pyngraph/parameter_vector.cpp',
     'pyngraph/pyngraph.cpp',
     'pyngraph/util.cpp',
-    'pyngraph/result_vector.cpp',
     'pyngraph/ops/util/arithmetic_reduction.cpp',
     'pyngraph/ops/util/binary_elementwise_comparison.cpp',
     'pyngraph/ops/util/op_annotations.cpp',
@@ -172,6 +175,8 @@ sources = [
     'pyngraph/ops/atan.cpp',
     'pyngraph/ops/avg_pool.cpp',
     'pyngraph/ops/broadcast.cpp',
+    'pyngraph/ops/broadcast_distributed.cpp',
+    'pyngraph/ops/fused/clamp.cpp',
     'pyngraph/ops/concat.cpp',
     'pyngraph/ops/constant.cpp',
     'pyngraph/ops/convert.cpp',
@@ -179,13 +184,22 @@ sources = [
     'pyngraph/ops/cos.cpp',
     'pyngraph/ops/cosh.cpp',
     'pyngraph/ops/ceiling.cpp',
+    'pyngraph/ops/fused/depth_to_space.cpp',
+    'pyngraph/ops/dequantize.cpp',
     'pyngraph/ops/divide.cpp',
     'pyngraph/ops/dot.cpp',
+    'pyngraph/ops/fused/elu.cpp',
     'pyngraph/ops/equal.cpp',
     'pyngraph/ops/exp.cpp',
+    'pyngraph/ops/fused/fake_quantize.cpp',
     'pyngraph/ops/floor.cpp',
+    'pyngraph/ops/fused/gelu.cpp',
+    'pyngraph/ops/fused/gemm.cpp',
     'pyngraph/ops/greater.cpp',
     'pyngraph/ops/greater_eq.cpp',
+    'pyngraph/ops/fused/grn.cpp',
+    'pyngraph/ops/fused/group_conv.cpp',
+    'pyngraph/ops/fused/hard_sigmoid.cpp',
     'pyngraph/ops/less.cpp',
     'pyngraph/ops/less_eq.cpp',
     'pyngraph/ops/log.cpp',
@@ -196,6 +210,7 @@ sources = [
     'pyngraph/ops/max_pool.cpp',
     'pyngraph/ops/minimum.cpp',
     'pyngraph/ops/multiply.cpp',
+    'pyngraph/ops/fused/mvn.cpp',
     'pyngraph/ops/negative.cpp',
     'pyngraph/ops/not.cpp',
     'pyngraph/ops/not_equal.cpp',
@@ -206,17 +221,27 @@ sources = [
     'pyngraph/ops/parameter.cpp',
     'pyngraph/ops/passthrough.cpp',
     'pyngraph/ops/power.cpp',
+    'pyngraph/ops/fused/prelu.cpp',
+    'pyngraph/ops/quantize.cpp',
+    'pyngraph/ops/quantized_convolution.cpp',
+    'pyngraph/ops/quantized_dot.cpp',
     'pyngraph/ops/regmodule_pyngraph_op.cpp',
     'pyngraph/ops/relu.cpp',
     'pyngraph/ops/replace_slice.cpp',
     'pyngraph/ops/reshape.cpp',
     'pyngraph/ops/reverse.cpp',
+    'pyngraph/ops/fused/rnn_cell.cpp',
+    'pyngraph/ops/fused/scale_shift.cpp',
     'pyngraph/ops/select.cpp',
+    'pyngraph/ops/fused/shuffle_channels.cpp',
     'pyngraph/ops/sign.cpp',
     'pyngraph/ops/sin.cpp',
     'pyngraph/ops/sinh.cpp',
     'pyngraph/ops/slice.cpp',
+    'pyngraph/ops/fused/space_to_depth.cpp',
     'pyngraph/ops/sqrt.cpp',
+    'pyngraph/ops/fused/squared_difference.cpp',
+    'pyngraph/ops/fused/squeeze.cpp',
     'pyngraph/ops/subtract.cpp',
     'pyngraph/ops/sum.cpp',
     'pyngraph/ops/tan.cpp',
@@ -228,6 +253,7 @@ sources = [
     'pyngraph/ops/batch_norm.cpp',
     'pyngraph/ops/softmax.cpp',
     'pyngraph/ops/result.cpp',
+    'pyngraph/ops/fused/unsqueeze.cpp',
     'pyngraph/runtime/backend.cpp',
     'pyngraph/runtime/executable.cpp',
     'pyngraph/runtime/regmodule_pyngraph_runtime.cpp',
@@ -263,9 +289,11 @@ include_dirs = [PYNGRAPH_ROOT_DIR, NGRAPH_CPP_INCLUDE_DIR, PYBIND11_INCLUDE_DIR]
 
 library_dirs = [NGRAPH_CPP_LIBRARY_DIR]
 
-libraries = ['ngraph']
+libraries = [NGRAPH_CPP_LIBRARY_NAME]
 
 extra_compile_args = []
+if NGRAPH_ONNX_IMPORT_ENABLE in ['TRUE', 'ON', True]:
+    extra_compile_args.append('-DNGRAPH_ONNX_IMPORT_ENABLE')
 
 extra_link_args = []
 
@@ -290,6 +318,18 @@ data_files = [
     ),
 ]
 
+if NGRAPH_ONNX_IMPORT_ENABLE in ['TRUE', 'ON', True]:
+    onnx_sources = [
+        'pyngraph/onnx_import/onnx_import.cpp',
+    ]
+    onnx_sources = [PYNGRAPH_ROOT_DIR + '/' + source for source in onnx_sources]
+    sources = sources + onnx_sources
+
+    package_dir['ngraph.impl.onnx_import'] = (
+        PYNGRAPH_ROOT_DIR + '/ngraph/impl/onnx_import'
+    )
+    packages.append('ngraph.impl.onnx_import')
+
 ext_modules = [
     Extension(
         '_pyngraph',
@@ -298,35 +338,11 @@ ext_modules = [
         define_macros=[('VERSION_INFO', __version__)],
         library_dirs=library_dirs,
         libraries=libraries,
+        extra_compile_args=extra_compile_args,
         extra_link_args=extra_link_args,
         language='c++',
     ),
 ]
-
-if NGRAPH_ONNX_IMPORT_ENABLE in ['TRUE', 'ON', True]:
-    onnx_sources = [
-        'pyngraph/pyngraph_onnx_import.cpp',
-        'pyngraph/onnx_import/onnx_import.cpp',
-    ]
-    onnx_sources = [PYNGRAPH_ROOT_DIR + '/' + source for source in onnx_sources]
-
-    package_dir['ngraph.impl.onnx_import'] = (
-        PYNGRAPH_ROOT_DIR + '/ngraph/impl/onnx_import'
-    )
-    packages.append('ngraph.impl.onnx_import')
-
-    ext_modules.append(
-        Extension(
-            '_pyngraph_onnx_import',
-            sources=onnx_sources,
-            include_dirs=include_dirs,
-            define_macros=[('VERSION_INFO', __version__)],
-            library_dirs=library_dirs,
-            libraries=libraries,
-            extra_link_args=extra_link_args,
-            language='c++',
-        ),
-    )
 
 
 def add_platform_specific_link_args(link_args):
@@ -338,6 +354,7 @@ def add_platform_specific_link_args(link_args):
         link_args += ['-z', 'now']
     elif sys.platform == 'darwin':
         link_args += ['-Wl,-rpath,@loader_path/../..']
+        link_args += ['-stdlib=libc++']
 
 
 class BuildExt(build_ext):
@@ -372,15 +389,20 @@ class BuildExt(build_ext):
 
             ext.extra_compile_args += ['-Wformat', '-Wformat-security']
             ext.extra_compile_args += ['-O2', '-D_FORTIFY_SOURCE=2']
+            if sys.platform == 'darwin':
+                ext.extra_compile_args += ['-stdlib=libc++']
         build_ext.build_extensions(self)
 
 
 with open(os.path.join(PYNGRAPH_ROOT_DIR, 'requirements.txt')) as req:
     requirements = req.read().splitlines()
+    setup_requires = [
+        item for item in requirements if item.strip().startswith('numpy')
+    ]
 
 setup(
     name='ngraph-core',
-    description='nGraph - Intel\'s graph compiler and runtime for Neural Networks',
+    description="nGraph - Intel's graph compiler and runtime for Neural Networks",
     version=__version__,
     author='Intel Corporation',
     author_email='intelnervana@intel.com',
@@ -393,10 +415,10 @@ setup(
     packages=packages,
     cmdclass={'build_ext': BuildExt},
     data_files=data_files,
-    setup_requires=['numpy'],
+    setup_requires=setup_requires,
     install_requires=requirements,
     zip_safe=False,
     extras_require={
-        'plaidml': ['plaidml>=0.5.0'],
+        'plaidml': ['plaidml>=0.6.3'],
     },
 )

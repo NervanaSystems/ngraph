@@ -19,11 +19,17 @@
 #include <stddef.h>
 
 #include "ngraph/dimension.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/rank.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
 {
+    namespace op
+    {
+        struct AutoBroadcastSpec;
+    }
+
     /// \brief Class representing a shape that may be partially or totally dynamic.
     ///
     /// XXX: THIS CLASS IS EXPERIMENTAL AND THE ENTIRE DESIGN IS SUBJECT TO CHANGE.
@@ -33,7 +39,7 @@ namespace ngraph
     /// \li Dynamic rank. (Informal notation: `?`)
     /// \li Static rank, but dynamic dimensions on some or all axes.
     ///     (Informal notation examples: `{1,2,?,4}`, `{?,?,?}`)
-    /// \li Static rank, and dynamic dimensions on all axes.
+    /// \li Static rank, and static dimensions on all axes.
     ///     (Informal notation examples: `{1,2,3,4}`, `{6}`, `{}`)
     class PartialShape
     {
@@ -46,7 +52,7 @@ namespace ngraph
         /// \code{.cpp}
         /// PartialShape s{2,3,4};                     // rank=3, all dimensions static
         /// PartialShape s{};                          // rank=0
-        /// PartialShape s{2,Dimension::dynamic(),3};  // rank=2, dimension 1 dynamic
+        /// PartialShape s{2,Dimension::dynamic(),3};  // rank=3, dimension 1 dynamic
         /// \endcode
         PartialShape(std::initializer_list<Dimension> init)
             : PartialShape(true, init)
@@ -163,6 +169,10 @@ namespace ngraph
         /// \throws std::invalid_argument If this PartialShape is dynamic.
         Shape to_shape() const;
 
+        /// \brief Returns `true` if all static dimensions of the tensor are non-negative, else
+        ///        `false`.
+        bool all_non_negative() const;
+
         /// \brief Index operator for PartialShape.
         /// \param i The index of the dimension being selected.
         /// \return A reference to the `i`th Dimension of this shape.
@@ -203,6 +213,11 @@ namespace ngraph
         /// successful; if merging is unsuccessful, the function returns `false` and may make
         /// unspecified changes to `dst`.
         static bool merge_into(PartialShape& dst, const PartialShape& src);
+
+        /// \brief Try to merge one shape into another along with implicit broadcasting
+        static bool broadcast_merge_into(PartialShape& dst,
+                                         const PartialShape& src,
+                                         const op::AutoBroadcastSpec& autob);
 
     private:
         // Private constructor for PartialShape::dynamic().

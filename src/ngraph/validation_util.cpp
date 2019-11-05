@@ -20,6 +20,50 @@
 using namespace std;
 using namespace ngraph;
 
+Strides ngraph::conv_default_strides(const Node* /* node */,
+                                     const PartialShape& data_batch_shape,
+                                     const PartialShape& filters_shape)
+{
+    size_t rank;
+
+    if (data_batch_shape.rank().is_static() && static_cast<size_t>(data_batch_shape.rank()) >= 2)
+    {
+        rank = static_cast<size_t>(data_batch_shape.rank()) - 2;
+    }
+    else if (filters_shape.rank().is_static() && static_cast<size_t>(filters_shape.rank()) >= 2)
+    {
+        rank = static_cast<size_t>(filters_shape.rank()) - 2;
+    }
+    else
+    {
+        rank = 0;
+    }
+
+    return Strides(rank, 1);
+}
+
+CoordinateDiff ngraph::conv_default_padding(const Node* /* node */,
+                                            const PartialShape& data_batch_shape,
+                                            const PartialShape& filters_shape)
+{
+    size_t rank;
+
+    if (data_batch_shape.rank().is_static() && static_cast<size_t>(data_batch_shape.rank()) >= 2)
+    {
+        rank = static_cast<size_t>(data_batch_shape.rank()) - 2;
+    }
+    else if (filters_shape.rank().is_static() && static_cast<size_t>(filters_shape.rank()) >= 2)
+    {
+        rank = static_cast<size_t>(filters_shape.rank()) - 2;
+    }
+    else
+    {
+        rank = 0;
+    }
+
+    return CoordinateDiff(rank, 0);
+}
+
 //
 // Infers the output shape of a windowed reduction operation, where the data may be dilated and/or
 // padded, and the reduction window may be strided and/or dilated.
@@ -35,7 +79,8 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
                                                            const PartialShape& window_shape,
                                                            const Strides& window_strides,
                                                            const Strides& window_dilation,
-                                                           bool is_window_all_in_padding_allowed)
+                                                           bool is_window_all_in_padding_allowed,
+                                                           bool ceil_mode)
 {
     PartialShape data_shape_merged{PartialShape::dynamic()};
 
@@ -97,8 +142,8 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
             ptrdiff_t data_padded_dilated_dim = -1;
             if (data_dim_static)
             {
-                data_padded_dilated_dim = (static_cast<ptrdiff_t>(data_dilation[i]) *
-                                           (static_cast<ptrdiff_t>(data_shape[i]) - 1)) +
+                data_padded_dilated_dim = (static_cast<int64_t>(data_dilation[i]) *
+                                           (static_cast<int64_t>(data_shape[i]) - 1)) +
                                           1 + data_padding_below[i] + data_padding_above[i];
                 NODE_VALIDATION_CHECK(
                     node,
@@ -113,8 +158,8 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
             ptrdiff_t window_dilated_dim = -1;
             if (window_dim_static)
             {
-                window_dilated_dim = static_cast<ptrdiff_t>(window_dilation[i]) *
-                                         (static_cast<ptrdiff_t>(window_shape[i]) - 1) +
+                window_dilated_dim = static_cast<int64_t>(window_dilation[i]) *
+                                         (static_cast<int64_t>(window_shape[i]) - 1) +
                                      1;
 
                 NODE_VALIDATION_CHECK(node,
@@ -154,9 +199,20 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
                                       i,
                                       ".");
 
-                output_shape[i] = ceil_div(static_cast<size_t>(data_padded_dilated_dim) -
-                                               static_cast<size_t>(window_dilated_dim) + 1,
-                                           window_strides[i]);
+                if (ceil_mode)
+                {
+                    output_shape[i] = ceil_div(static_cast<size_t>(data_padded_dilated_dim) -
+                                                   static_cast<size_t>(window_dilated_dim),
+                                               window_strides[i]) +
+                                      1;
+                }
+                else
+                {
+                    output_shape[i] = ((static_cast<size_t>(data_padded_dilated_dim) -
+                                        static_cast<size_t>(window_dilated_dim)) /
+                                       window_strides[i]) +
+                                      1;
+                }
             }
         }
     }
@@ -167,29 +223,15 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
 //
 // Infers the output batch shape and element type for convolution fprop.
 //
-std::tuple<element::Type, PartialShape>
-    ngraph::infer_convolution_forward(const Node* node,
-                                      element::Type et_batch,
-                                      element::Type et_filters,
-                                      const PartialShape& data_batch_shape,
-                                      const Strides& data_dilation,
-                                      const CoordinateDiff& data_padding_below,
-                                      const CoordinateDiff& data_padding_above,
-                                      const PartialShape& filters_shape,
-                                      const Strides& filter_strides,
-                                      const Strides& filter_dilation)
+PartialShape ngraph::infer_convolution_forward(const Node* node,
+                                               const PartialShape& data_batch_shape,
+                                               const Strides& data_dilation,
+                                               const CoordinateDiff& data_padding_below,
+                                               const CoordinateDiff& data_padding_above,
+                                               const PartialShape& filters_shape,
+                                               const Strides& filter_strides,
+                                               const Strides& filter_dilation)
 {
-    element::Type et_result;
-
-    NODE_VALIDATION_CHECK(
-        node,
-        element::Type::merge(et_result, et_batch, et_filters),
-        "Element types for data batch and filters do not match (data batch element type: ",
-        et_batch,
-        ", filters element type: ",
-        et_filters,
-        ").");
-
     Rank data_batch_filters_rank{Rank::dynamic()};
 
     NODE_VALIDATION_CHECK(
@@ -314,7 +356,7 @@ std::tuple<element::Type, PartialShape>
         batch_output_shape[i + 2] = data_output_shape[i];
     }
 
-    return std::make_tuple(et_result, batch_output_shape);
+    return batch_output_shape;
 }
 
 //
@@ -326,7 +368,8 @@ PartialShape ngraph::infer_batched_pooling_forward(const Node* node,
                                                    const CoordinateDiff& data_padding_above,
                                                    const PartialShape& window_shape,
                                                    const Strides& window_strides,
-                                                   bool is_window_all_in_padding_allowed)
+                                                   bool is_window_all_in_padding_allowed,
+                                                   bool ceil_mode)
 {
     NODE_VALIDATION_CHECK(node,
                           data_batch_shape.rank().is_dynamic() ||
@@ -394,7 +437,8 @@ PartialShape ngraph::infer_batched_pooling_forward(const Node* node,
                                                   window_shape,
                                                   window_strides,
                                                   window_dilation,
-                                                  is_window_all_in_padding_allowed);
+                                                  is_window_all_in_padding_allowed,
+                                                  ceil_mode);
     }
 
     PartialShape data_batch_output_shape{
@@ -462,7 +506,8 @@ static std::tuple<element::Type, PartialShape, PartialShape> infer_batch_norm_fo
         channel_dim = input_shape[1];
     }
 
-    // Infer gamma/beta/mu/sigma shape, which must be consistent with a vector of size "channel_dim".
+    // Infer gamma/beta/mu/sigma shape, which must be consistent with a vector of size
+    // "channel_dim".
     PartialShape channel_shape{PartialShape::dynamic()};
 
     for (auto& inp : channel_shaped_inputs)
@@ -544,4 +589,208 @@ std::tuple<element::Type, PartialShape, PartialShape>
         input_element_type,
         input_shape,
         {{gamma_element_type, gamma_shape, "gamma"}, {beta_element_type, beta_shape, "beta"}});
+}
+
+void ngraph::infer_auto_padding(const Shape& image_shape,
+                                const Shape& filter_shape,
+                                const Strides& filter_strides,
+                                const Strides& filter_dilations,
+                                const op::PadType pad_type,
+                                CoordinateDiff& padding_above,
+                                CoordinateDiff& padding_below)
+{
+    NGRAPH_CHECK(pad_type == op::PadType::SAME_UPPER || pad_type == op::PadType::SAME_LOWER);
+    for (size_t i = 0; i < static_cast<size_t>(filter_shape.size()); i++)
+    {
+        int64_t image_size = static_cast<int64_t>(image_shape[i + 2]);
+        int64_t filter_size = (static_cast<int64_t>(filter_shape[i]) - 1) * filter_dilations[i] + 1;
+        int64_t filter_stride = static_cast<int64_t>(filter_strides[i]);
+        auto output_size = (image_size + filter_stride - 1) / filter_stride;
+
+        auto padding_needed =
+            std::max(int64_t(0), (output_size - 1) * filter_stride + filter_size - image_size);
+        auto padding_lhs = padding_needed / 2;
+        auto padding_rhs = padding_needed - padding_lhs;
+        padding_below.push_back(pad_type == op::PadType::SAME_UPPER ? padding_lhs : padding_rhs);
+        padding_above.push_back(pad_type == op::PadType::SAME_UPPER ? padding_rhs : padding_lhs);
+    }
+}
+
+PartialShape ngraph::infer_slice_shape(const Node* node,
+                                       const PartialShape& input_shape,
+                                       const std::vector<int64_t>& begin,
+                                       const std::vector<int64_t>& end,
+                                       const std::vector<int64_t>& strides,
+                                       const AxisSet& begin_mask,
+                                       const AxisSet& end_mask,
+                                       const AxisSet& new_axis_mask,
+                                       const AxisSet& shrink_axis_mask,
+                                       const AxisSet& ellipsis_mask)
+{
+    if (begin.size() && end.size())
+    {
+        NODE_VALIDATION_CHECK(node,
+                              begin.size() == end.size(),
+                              "Lower bounds and Upper bounds needs to have same number of values");
+    }
+    if (begin.size() && strides.size())
+    {
+        NODE_VALIDATION_CHECK(node,
+                              begin.size() == strides.size(),
+                              "Lower bounds and strides needs to have same number of values");
+    }
+    if (end.size() && strides.size())
+    {
+        NODE_VALIDATION_CHECK(node,
+                              end.size() == strides.size(),
+                              "Upper bounds and strides needs to have same number of values");
+    }
+
+    if (input_shape.rank().is_dynamic())
+    {
+        return PartialShape::dynamic();
+    }
+
+    std::vector<Dimension> dim;
+
+    size_t input_shape_idx = 0;
+    for (size_t axis = 0; axis < begin.size(); ++axis)
+    {
+        // add all dimensions hidden under the ellipsis mask if ellipsis mask is set
+        if (ellipsis_mask.count(axis))
+        {
+            // only one bit in ellipsis mask is allowed
+            int num_new_axis_after_ellipses = 0;
+            int num_input_axis_before_ellipses = 0;
+            for (size_t i = 0; i < axis; ++i)
+            {
+                if (!new_axis_mask.count(i))
+                {
+                    num_input_axis_before_ellipses++;
+                }
+            }
+            for (size_t i = axis + 1; i < begin.size(); ++i)
+            {
+                if (new_axis_mask.count(i))
+                {
+                    num_new_axis_after_ellipses++;
+                }
+            }
+
+            int64_t num_input_axis_after_ellipses =
+                (begin.size() - axis - num_new_axis_after_ellipses -
+                 1); // -1 because it's a position of ellipses
+            int64_t num_of_hidden_dims = static_cast<size_t>(input_shape.rank()) -
+                                         num_input_axis_after_ellipses -
+                                         num_input_axis_before_ellipses;
+            for (int64_t i = 0; i < num_of_hidden_dims; ++i)
+            {
+                dim.emplace_back(input_shape[input_shape_idx]);
+                input_shape_idx++;
+            }
+        }
+        else
+        {
+            // add new single dimension if new_axis_mask is set
+            if (new_axis_mask.count(axis))
+            {
+                dim.emplace_back(1);
+            }
+            // skip this dimension if shrink_axis_mask is set
+            else if (shrink_axis_mask.count(axis))
+            {
+                input_shape_idx++;
+            }
+            // calculating dimension (begin, end, begin_mask, end_mask, stride)
+            else
+            {
+                // check dynamic dimension
+                if (input_shape[input_shape_idx].is_dynamic())
+                {
+                    input_shape_idx++;
+                    dim.emplace_back(Dimension::dynamic());
+                    continue;
+                }
+
+                int64_t lb = begin[axis];
+                int64_t ub = end[axis];
+
+                // convert negative indexes to positive
+                // take max for this case: if abs(lb) > input_shape[input_shape_idx],then after
+                // conversion lb < 0
+                // so according to tensorflow and numpy we just get 0
+                if (lb < 0)
+                {
+                    lb = std::max(int64_t(input_shape[input_shape_idx]) + lb, int64_t(0));
+                }
+
+                if (ub < 0)
+                {
+                    ub = std::max(int64_t(input_shape[input_shape_idx]) + ub, int64_t(0));
+                }
+
+                // apply restrictions when begin or end values more than max possible values.
+                lb = std::min(int64_t(input_shape[input_shape_idx]), lb);
+                ub = std::min(int64_t(input_shape[input_shape_idx]), ub);
+
+                // set default value for stride or use given value
+                int64_t stride = 1;
+                if (strides.size() > axis)
+                {
+                    stride = strides[axis];
+                }
+
+                NODE_VALIDATION_CHECK(node, stride != 0, "Stride must be non-zero");
+
+                int64_t dimension = 0;
+                if (stride < 0)
+                {
+                    // apply masks
+                    if (begin_mask.count(axis))
+                    {
+                        lb = int64_t(input_shape[input_shape_idx]) - 1;
+                    }
+                    if (end_mask.count(axis))
+                    {
+                        ub = -1;
+                    }
+
+                    lb = std::min(lb, int64_t(input_shape[input_shape_idx]) - 1);
+                    lb -= 1; // we always get 1st element, so we need decrease range
+                    if (ub <= lb)
+                    {
+                        dimension = (ub - lb) / stride + 1;
+                    }
+                }
+                else
+                {
+                    // apply masks
+                    if (begin_mask.count(axis))
+                    {
+                        lb = 0;
+                    }
+                    if (end_mask.count(axis))
+                    {
+                        ub = int64_t(input_shape[input_shape_idx]);
+                    }
+
+                    lb += 1; // we always get 1st element, so we need decrease range
+                    if (ub >= lb)
+                    {
+                        dimension = (ub - lb) / stride + 1;
+                    }
+                }
+
+                dim.emplace_back(dimension);
+                input_shape_idx++;
+            }
+        }
+    }
+    // get remaining values
+    for (; input_shape_idx < static_cast<size_t>(input_shape.rank()); ++input_shape_idx)
+    {
+        dim.emplace_back(input_shape[input_shape_idx]);
+    }
+
+    return dim;
 }

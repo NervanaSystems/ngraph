@@ -32,6 +32,7 @@ public:
     ZeroDimTensorElimination()
         : FunctionPass()
     {
+        set_property(PassProperty::REQUIRE_STATIC_SHAPE, true);
     }
 
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);

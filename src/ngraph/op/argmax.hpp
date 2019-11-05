@@ -16,32 +16,33 @@
 
 #pragma once
 
-#include "ngraph/axis_set.hpp"
-#include "ngraph/graph_util.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        // \brief Computes minimum index along a specified axis for a given tensor
+        /// \brief Computes minimum index along a specified axis for a given tensor
         class ArgMax : public op::util::IndexReduction
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"ArgMax", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            /// \brief Constructs a ArgMax operation.
+            ArgMax() = default;
             /// \brief Constructs a ArgMax operation.
             ///
             /// \param arg The input tensor
             /// \param axis The axis along which to compute an index for maximum
-            /// \param index_element_type produce indices. Currently, only int64 or int32 are supported
-            ArgMax(const std::shared_ptr<Node>& arg,
-                   size_t axis,
-                   const element::Type& index_element_type)
-                : IndexReduction("ArgMax", arg, axis, index_element_type)
-            {
-            }
+            /// \param index_element_type produce indices. Currently, only int64 or int32 are
+            ///                           supported
+            ArgMax(const Output<Node>& arg, size_t axis, const element::Type& index_element_type);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+
+            virtual std::shared_ptr<Node> get_default_value() const override;
         };
     }
 }

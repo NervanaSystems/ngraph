@@ -1,5 +1,4 @@
-.. ---------------------------------------------------------------------------
-.. Copyright 2018-2019 Intel Corporation
+.. Copyright 2017-2019 Intel Corporation
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
@@ -14,82 +13,86 @@
 .. ---------------------------------------------------------------------------
 
 
-.. This documentation is available online at
-.. https://ngraph.nervanasys.com/docs/latest
+nGraph Compiler Stack Documentation 
+###################################
 
-######################
-nGraph Compiler stack 
-######################
+
+.. _ngraph_home:
+
+.. only:: release
+
+   nGraph Compiler stack documentation for version |version|.
+
+.. only:: (development or daily)
+
+   nGraph Compiler stack documentation for the master tree under development 
+   (version |version|).
 
 
 .. toctree::
-   :maxdepth: 1 
-
-   project/introduction.rst
-
+   :name: mastertoctree
+   :titlesonly: 
 
 .. toctree::
    :maxdepth: 1
+
+   introduction.rst
+
+.. toctree::
+   :maxdepth: 2
    :caption: Framework Support
-   
+
    frameworks/index.rst
    frameworks/validated/list.rst
-   frameworks/generic-configs.rst
 
 
 .. toctree::
    :maxdepth: 1
    :caption: nGraph Core
 
+   buildlb.rst
    core/overview.rst
    core/fusion/index.rst
    nGraph Core Ops <ops/index.rst>
    core/constructing-graphs/index.rst
    core/passes/passes.rst
-   buildlb.rst
+   provenance/index.rst
+
    
-   
 .. toctree::
    :maxdepth: 1
-   :caption: Backend Support
+   :caption: APIs 
 
-   backend-support/index.rst
-   backend-support/cpp-api.rst
-
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Distributed training
-
-   distr/index.rst
+   python_api/index.rst
+   backends/index.rst
+   backends/cpp-api.rst
 
 
 .. toctree::
    :maxdepth: 1
-   :caption: Diagnostics and Visualization
+   :caption: Inspecting Graphs
 
-   diagnostics/nbench.rst
-   diagnostics/performance-profile.rst
-   diagnostics/visualize.rst
-   diagnostics/debug.rst 
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Tutorials
-
-   tutorials/index.rst
+   inspection/index.rst
 
 
 .. toctree::
    :maxdepth: 1
-   :caption: Project Metadata
+   :caption: Contributing
+
+   project/contribution-guide.rst
+   glossary.rst
+
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
 
    project/release-notes.rst
-   project/contribution-guide.rst
-   project/governance.rst
-   project/doc-contributor-README.rst
-   project/index.rst 
-   glossary.rst
+   project/index.rst
+   project/extras/index.rst 
+
+
+.. only:: html
 
 Indices and tables
 ==================
