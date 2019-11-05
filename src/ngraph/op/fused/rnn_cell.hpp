@@ -57,22 +57,23 @@ namespace ngraph
             ///
             /// \brief      Constructs RNNCell node.
             ///
-            /// \param[in]  X                 The input tensor with shape: [batch_size, input_size].
-            /// \param[in]  H_t               The hidden state tensor at current time step with
-            ///                               shape: [batch_size, hidden_size].
-            /// \param[in]  W                 The weight tensor with shape: [hidden_size,
-            ///                               input_size].
-            /// \param[in]  R                 The recurrence weight tensor with shape: [hidden_size,
-            ///                               hidden_size].
-            /// \param[in]  hidden_size       The number of hidden units for recurrent cell.
-            /// \param[in]  activations       The vector of activation functions used inside
-            ///                               recurrent cell.
-            /// \param[in]  activation_alpha  The vector of alpha parameters for activation
-            ///                               functions in order respective to activation list.
-            /// \param[in]  activation_beta   The vector of beta parameters for activation functions
-            ///                               in order respective to activation list.
-            /// \param[in]  clip              The value defining clipping range [-clip, clip] on
-            ///                               input of activation functions.
+            /// \param[in]  X                  The input tensor with shape: [batch_size,
+            ///                                input_size].
+            /// \param[in]  H_t                The hidden state tensor at current time step with
+            ///                                shape: [batch_size, hidden_size].
+            /// \param[in]  W                  The weight tensor with shape: [hidden_size,
+            ///                                input_size].
+            /// \param[in]  R                  The recurrence weight tensor with shape:
+            ///                                [hidden_size, hidden_size].
+            /// \param[in]  hidden_size        The number of hidden units for recurrent cell.
+            /// \param[in]  activations        The vector of activation functions used inside
+            ///                                recurrent cell.
+            /// \param[in]  activations_alpha  The vector of alpha parameters for activation
+            ///                                functions in order respective to activation list.
+            /// \param[in]  activations_beta   The vector of beta parameters for activation
+            ///                                functions in order respective to activation list.
+            /// \param[in]  clip               The value defining clipping range [-clip, clip] on
+            ///                                input of activation functions.
             ///
             RNNCell(const Output<Node>& X,
                     const Output<Node>& H_t,
@@ -80,31 +81,32 @@ namespace ngraph
                     const Output<Node>& R,
                     std::size_t hidden_size,
                     const std::vector<std::string>& activations = std::vector<std::string>{"tanh"},
-                    const std::vector<float>& activation_alpha = {},
-                    const std::vector<float>& activation_beta = {},
+                    const std::vector<float>& activations_alpha = {},
+                    const std::vector<float>& activations_beta = {},
                     float clip = 0.f);
 
             ///
             /// \brief      Constructs RNNCell node.
             ///
-            /// \param[in]  X                 The input tensor with shape: [batch_size, input_size].
-            /// \param[in]  H_t               The hidden state tensor at current time step with
-            ///                               shape: [batch_size, hidden_size].
-            /// \param[in]  W                 The weight tensor with shape: [hidden_size,
-            ///                               input_size].
-            /// \param[in]  R                 The recurrence weight tensor with shape: [hidden_size,
-            ///                               hidden_size].
-            /// \param[in]  B                 The bias tensor for input gate with shape:
-            ///                               [hidden_size].
-            /// \param[in]  hidden_size       The number of hidden units for recurrent cell.
-            /// \param[in]  activations       The vector of activation functions used inside
-            ///                               recurrent cell.
-            /// \param[in]  activation_alpha  The vector of alpha parameters for activation
-            ///                               functions in order respective to activation list.
-            /// \param[in]  activation_beta   The vector of beta parameters for activation functions
-            ///                               in order respective to activation list.
-            /// \param[in]  clip              The value defining clipping range [-clip, clip] on
-            ///                               input of activation functions.
+            /// \param[in]  X                  The input tensor with shape: [batch_size,
+            ///                                input_size].
+            /// \param[in]  H_t                The hidden state tensor at current time step with
+            ///                                shape: [batch_size, hidden_size].
+            /// \param[in]  W                  The weight tensor with shape: [hidden_size,
+            ///                                input_size].
+            /// \param[in]  R                  The recurrence weight tensor with shape:
+            ///                                [hidden_size, hidden_size].
+            /// \param[in]  B                  The bias tensor for input gate with shape:
+            ///                                [hidden_size].
+            /// \param[in]  hidden_size        The number of hidden units for recurrent cell.
+            /// \param[in]  activations        The vector of activation functions used inside
+            ///                                recurrent cell.
+            /// \param[in]  activations_alpha  The vector of alpha parameters for activation
+            ///                                functions in order respective to activation list.
+            /// \param[in]  activations_beta   The vector of beta parameters for activation
+            ///                                functions in order respective to activation list.
+            /// \param[in]  clip               The value defining clipping range [-clip, clip] on
+            ///                                input of activation functions.
             ///
             RNNCell(const Output<Node>& X,
                     const Output<Node>& H_t,
@@ -113,8 +115,8 @@ namespace ngraph
                     const Output<Node>& B,
                     std::size_t hidden_size,
                     const std::vector<std::string>& activations = std::vector<std::string>{"tanh"},
-                    const std::vector<float>& activation_alpha = {},
-                    const std::vector<float>& activation_beta = {},
+                    const std::vector<float>& activations_alpha = {},
+                    const std::vector<float>& activations_beta = {},
                     float clip = 0.f);
 
             virtual void pre_validate_and_infer_types() override;
@@ -123,10 +125,6 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         private:
-            // Output<Node> get_bias() const;
-
-            /// brief Add and initialize bias input to all zeros.
-            // void add_default_bias_input();
             ///
             /// \brief      Creates the default bias input initialized with zeros.
             ///
