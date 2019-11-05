@@ -89,6 +89,7 @@
 #include "ngraph/op/fused/normalize_l2.hpp"
 #include "ngraph/op/fused/partial_slice.hpp"
 #include "ngraph/op/fused/prelu.hpp"
+#include "ngraph/op/fused/reciprocal.hpp"
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/shuffle_channels.hpp"
@@ -2053,6 +2054,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Range>(args[0], args[1], args[2]);
             break;
         }
+        case OP_TYPEID::Reciprocal:
+        {
+            node = make_shared<op::v1::Reciprocal>(args[0]);
+            break;
+        }
         case OP_TYPEID::Relu:
         {
             node = make_shared<op::Relu>(args[0]);
@@ -3458,6 +3464,8 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Range: { break;
+    }
+    case OP_TYPEID::Reciprocal: { break;
     }
     case OP_TYPEID::Relu: { break;
     }

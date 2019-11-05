@@ -13,35 +13,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-
-#include <memory>
-#include <vector>
-
 #include "ngraph/op/fused/reciprocal.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/shape.hpp"
 
-#include "reciprocal.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/divide.hpp"
 
-namespace ngraph
+using namespace std;
+using namespace ngraph;
+
+constexpr NodeTypeInfo op::v1::Reciprocal::type_info;
+
+op::v1::Reciprocal::Reciprocal(const Output<Node>& data)
+    : FusedOp({data})
 {
-    namespace onnx_import
-    {
-        namespace op
-        {
-            namespace set_1
-            {
-                NodeVector reciprocal(const Node& node)
-                {
-                    auto data = node.get_ng_inputs().at(0);
+    constructor_validate_and_infer_types();
+}
 
-                    return {std::make_shared<ngraph::op::v1::Reciprocal>(data)};
-                }
+NodeVector op::v1::Reciprocal::decompose_op() const
+{
+    auto data = input_value(0);
+    auto one_node = op::Constant::create(data.get_element_type(), data.get_shape(), {1});
+    return {make_shared<op::Divide>(one_node, data, AutoBroadcastType::NUMPY)};
+}
 
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+shared_ptr<Node> op::v1::Reciprocal::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<v1::Reciprocal>(new_args.at(0));
+}
