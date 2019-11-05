@@ -2,7 +2,7 @@
 
 .. _fw_other: 
 
-Integrating other frameworks
+Integrating Other Frameworks
 ============================
 
 This section details some of the *configuration options* and some of the 
