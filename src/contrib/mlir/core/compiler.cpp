@@ -84,9 +84,6 @@ using llvm::ArrayRef;
 using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
 
-#define COMPILE_OP_DECL(op_name)                                                                   \
-    createOp<op_name>(MLIRCompiler & compiler, const ngraph::Node* ngNode)
-
 bool MLIRCompiler::initialized = false;
 
 void MLIRCompiler::init()
