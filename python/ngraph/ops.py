@@ -1065,7 +1065,7 @@ def convert(node, new_type, name=None):  # type: (Node, NumericType, str) -> Nod
 
 
 @nameable_op
-def depth_to_space(node, block_size, name=None):  # type: (Node, int, str) -> Node
+def depth_to_space(node, mode, block_size, name=None):  # type: (Node, str, int, str) -> Node
     """Rearranges input tensor from depth into blocks of spatial data.
 
     Values from the height and width dimensions are moved to the depth dimension.
@@ -1078,12 +1078,17 @@ def depth_to_space(node, block_size, name=None):  # type: (Node, int, str) -> No
     [N, C * :code:`block_size` * :code:`block_size`, H / :code:`block_size`, W / :code:`block_size`]
 
     :param node: The node with input tensor data.
+    :param mode: Specifies how the input depth dimension is split to block coordinates
+
+                 blocks_first: The input is divided to [block_size, ..., block_size, new_depth]
+                 depth_first: The input is divided to [new_depth, block_size, ..., block_size]
+
     :param block_size: The size of the spatial block of values describing
                        how the tensor's data is to be rearranged.
     :param name: Optional output node name.
     :return: The new node performing an DepthToSpace operation on its input tensor.
     """
-    return DepthToSpace(node, block_size)
+    return DepthToSpace(node, mode, block_size)
 
 
 def gelu(node, name=None):  # type: (NodeInput, str) -> Node
