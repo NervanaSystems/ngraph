@@ -62,7 +62,7 @@ TEST(pass_manager, serialize_with_revalidate_does_not_crash)
     pass::Manager pass_manager;
     pass_manager.set_per_pass_validation(true);
     pass_manager.set_pass_serialization(true);
-    pass_manager.register_pass<DummyPass>();
+    shared_ptr<DummyPass> dummy = pass_manager.register_pass<DummyPass>();
 
     auto graph = make_test_graph();
     pass_manager.run_passes(graph);
