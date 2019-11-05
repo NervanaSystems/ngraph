@@ -2200,7 +2200,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             auto soft_label = node_js.at("soft_label");
             auto ignore_index = node_js.at("ignore_index");
-            node = make_shared<op::SoftmaxCrossEntropy>(args[0], args[1], soft_label, ignore_index);
+            auto reduction_type = node_js.at("reduction_type");
+            node = make_shared<op::SoftmaxCrossEntropy>(
+                args[0], args[1], soft_label, ignore_index, reduction_type);
             break;
         }
         case OP_TYPEID::SoftmaxCrossEntropyBackprop:
@@ -3540,6 +3542,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = static_cast<const op::SoftmaxCrossEntropy*>(&n);
         node["soft_label"] = tmp->get_soft_label();
         node["ignore_index"] = tmp->get_ignore_index();
+        node["reduction_type"] = tmp->get_reduction_type();
         break;
     }
     case OP_TYPEID::SoftmaxCrossEntropyBackprop:

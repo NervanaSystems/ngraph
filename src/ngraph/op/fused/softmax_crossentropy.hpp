@@ -27,6 +27,16 @@ namespace ngraph
         class SoftmaxCrossEntropy : public ngraph::op::util::FusedOp
         {
         public:
+            enum class ReductionType
+            {
+                // The sum of the output will be divided by the batch_size
+                MEAN,
+                // The output will be summed
+                SUM,
+                // The output is the loss for each sample in the batch
+                NONE
+            };
+
             NGRAPH_API
             static constexpr NodeTypeInfo type_info{"SoftmaxCrossEntropy", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
@@ -38,10 +48,12 @@ namespace ngraph
             /// labels
             /// \param ignore_index Specifies a target value that is ignored and does not contribute
             /// to the input gradient Only valid if soft_label is set to False
+            /// \param reduction_type Type of reduction applied to loss
             SoftmaxCrossEntropy(const Output<Node>& arg1,
                                 const Output<Node>& arg2,
                                 bool soft_label = false,
-                                int64_t ignore_index = -100);
+                                int64_t ignore_index = -100,
+                                ReductionType reduction_type = ReductionType::SUM);
 
             virtual NodeVector decompose_op() const override;
 
@@ -50,7 +62,9 @@ namespace ngraph
 
             bool get_soft_label() const { return m_soft_label; }
             int64_t get_ignore_index() const { return m_ignore_index; }
+            const ReductionType& get_reduction_type() const { return m_reduction_type; }
         private:
+            ReductionType m_reduction_type;
             bool m_soft_label;
             int64_t m_ignore_index;
         };

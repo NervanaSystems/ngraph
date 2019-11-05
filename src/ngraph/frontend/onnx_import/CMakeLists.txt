@@ -175,6 +175,8 @@ add_library(onnx_import STATIC
         op/slice.hpp
         op/softmax.cpp
         op/softmax.hpp
+        op/softmax_crossentropy.cpp
+        op/softmax_crossentropy.hpp
         op/softplus.cpp
         op/softplus.hpp
         op/softsign.cpp
@@ -220,7 +222,7 @@ add_dependencies(onnx_import_interface protobuf::libprotobuf onnx::libonnx onnx:
 add_dependencies(onnx_import onnx_import_interface)
 
 set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_include_directories(onnx_import 
+target_include_directories(onnx_import
     SYSTEM PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
     SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
 target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES} ${ONNX_PROTO_LIBRARY})

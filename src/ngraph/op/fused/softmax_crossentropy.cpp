@@ -18,6 +18,7 @@
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
+#include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/max.hpp"
@@ -39,10 +40,12 @@ constexpr NodeTypeInfo op::SoftmaxCrossEntropy::type_info;
 op::SoftmaxCrossEntropy::SoftmaxCrossEntropy(const Output<Node>& arg1,
                                              const Output<Node>& arg2,
                                              bool soft_label,
-                                             int64_t ignore_index)
+                                             int64_t ignore_index,
+                                             ReductionType m_reduction_type)
     : FusedOp({arg1, arg2})
     , m_soft_label(soft_label)
     , m_ignore_index(ignore_index)
+    , m_reduction_type(m_reduction_type)
 {
     constructor_validate_and_infer_types();
 }
@@ -104,9 +107,35 @@ NodeVector op::SoftmaxCrossEntropy::decompose_op() const
         }
         auto multiply = std::make_shared<ngraph::op::Multiply>(
             labels, subtract_max_xj_from_input_from_log_sum_over_j);
-        auto sum_over_k = std::make_shared<ngraph::op::Sum>(
-            multiply, AxisSet{static_cast<size_t>(reduction_axis)});
-        auto negate_summation = std::make_shared<ngraph::op::Negative>(sum_over_k);
+        std::shared_ptr<Node> reduction_over_k;
+        switch (m_reduction_type)
+        {
+        case ReductionType::MEAN:
+        {
+            const auto batch_size = input_to_normalize.get_shape().at(0);
+            const auto batch_size_const = ngraph::op::Constant::create(
+                input_to_normalize.get_element_type(), Shape{}, {batch_size});
+            reduction_over_k = std::make_shared<ngraph::op::Sum>(
+                multiply, AxisSet{static_cast<size_t>(reduction_axis)});
+            reduction_over_k =
+                std::make_shared<ngraph::op::Divide>(reduction_over_k, batch_size_const);
+            break;
+        }
+        case ReductionType::NONE:
+        {
+            // The output is the loss for each sample in the batch
+            reduction_over_k = multiply;
+            break;
+        }
+        case ReductionType::SUM:
+        default:
+        {
+            reduction_over_k = std::make_shared<ngraph::op::Sum>(
+                multiply, AxisSet{static_cast<size_t>(reduction_axis)});
+            break;
+        }
+        }
+        auto negate_summation = std::make_shared<ngraph::op::Negative>(reduction_over_k);
         auto reshape = std::make_shared<ngraph::op::Reshape>(
             negate_summation, AxisVector{0}, Shape{input_to_normalize.get_shape().at(0), 1});
         return {reshape};
@@ -137,7 +166,7 @@ shared_ptr<Node> op::SoftmaxCrossEntropy::copy_with_new_args(const NodeVector& n
 {
     check_new_args_count(this, new_args);
     return make_shared<SoftmaxCrossEntropy>(
-        new_args.at(0), new_args.at(1), m_soft_label, m_ignore_index);
+        new_args.at(0), new_args.at(1), m_soft_label, m_ignore_index, m_reduction_type);
 }
 
 constexpr NodeTypeInfo op::SoftmaxCrossEntropyBackprop::type_info;
