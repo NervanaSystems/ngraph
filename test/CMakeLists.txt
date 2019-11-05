@@ -73,6 +73,11 @@ set(SRC
     opset_pass/broadcast_opset_pass.cpp
     opset_pass/convolution_opset_pass.cpp
     opset_pass/dyn_reshape_opset_pass.cpp
+    opset_pass/logical_and_opset_pass.cpp
+    opset_pass/logical_not_opset_pass.cpp
+    opset_pass/logical_or_opset_pass.cpp
+    opset_pass/logical_less_equal_opset_pass.cpp
+    opset_pass/logical_xor_opset_pass.cpp
     opset_pass/gather_opset_pass.cpp
     opset_pass/generate_mask_opset_pass.cpp
     opset_pass/pad_opset_pass.cpp
@@ -464,6 +469,7 @@ endif()
 
 if (NGRAPH_MLIR_ENABLE)
     list(APPEND MULTI_TEST_SRC backend/mlir.in.cpp)
+    list(APPEND SRC mlir/ops_test.cpp)
 endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
@@ -591,6 +597,10 @@ endif()
 if (NGRAPH_ONNXIFI_ENABLE)
     target_include_directories(unit-test SYSTEM PUBLIC ${ONNX_INCLUDE_DIR})
     target_link_libraries(unit-test PRIVATE onnxifi-ngraph)
+endif()
+
+if (NGRAPH_MLIR_ENABLE)
+    target_include_directories(unit-test PRIVATE ${CMAKE_BINARY_DIR}/src/contrib/mlir)
 endif()
 
 # If all the runtime libraries are installed into one location, that will make life easier.

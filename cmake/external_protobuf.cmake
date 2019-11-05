@@ -121,5 +121,5 @@ if (NOT TARGET protobuf::protoc)
     add_dependencies(protobuf::protoc ext_protobuf)
 endif()
 
-set(Protobuf_FOUND)
-set(PROTOBUF_FOUND)
+set(Protobuf_FOUND TRUE)
+set(PROTOBUF_FOUND TRUE)

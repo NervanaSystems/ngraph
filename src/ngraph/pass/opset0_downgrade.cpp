@@ -19,6 +19,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
@@ -36,7 +37,9 @@
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
+#include "ngraph/op/not.hpp"
 #include "ngraph/op/not_equal.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
@@ -47,6 +50,7 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/strided_slice.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/slice_plan.hpp"
 
@@ -221,6 +225,10 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
     case OP_TYPEID::ConvolutionBackpropData:
     {
         auto tmp = as_type_ptr<op::v1::ConvolutionBackpropData>(node);
+        NGRAPH_CHECK(node->input_value(2).get_node_shared_ptr()->is_constant());
+        auto data_batch_shape =
+            static_pointer_cast<op::Constant>(node->input_value(2).get_node_shared_ptr())
+                ->get_shape_val();
         const auto filters_arg = node->input(0).get_source_output();
         const auto delta_arg = node->input(1).get_source_output();
         const PartialShape& delta_arg_pshape = node->get_input_partial_shape(1);
@@ -230,7 +238,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
                      *node);
         const size_t num_spatial_dims = static_cast<size_t>(delta_arg_pshape.rank()) - 2;
         auto replacement_node =
-            make_shared<op::v0::ConvolutionBackpropData>(tmp->get_data_batch_shape(),
+            make_shared<op::v0::ConvolutionBackpropData>(data_batch_shape,
                                                          filters_arg,
                                                          delta_arg,
                                                          tmp->get_strides(),
@@ -245,6 +253,10 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
     case OP_TYPEID::ConvolutionBackpropFilters:
     {
         auto tmp = as_type_ptr<op::v1::ConvolutionBackpropFilters>(node);
+        NGRAPH_CHECK(node->input_value(2).get_node_shared_ptr()->is_constant());
+        auto filters_shape =
+            static_pointer_cast<op::Constant>(node->input_value(2).get_node_shared_ptr())
+                ->get_shape_val();
         const auto data_arg = node->input(0).get_source_output();
         const auto delta_arg = node->input(1).get_source_output();
         const PartialShape& data_arg_pshape = node->get_input_partial_shape(0);
@@ -255,7 +267,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         const size_t num_spatial_dims = static_cast<size_t>(data_arg_pshape.rank()) - 2;
         auto replacement_node =
             make_shared<op::v0::ConvolutionBackpropFilters>(data_arg,
-                                                            tmp->get_filters_shape(),
+                                                            filters_shape,
                                                             delta_arg,
                                                             tmp->get_strides(),
                                                             tmp->get_dilations(),
@@ -333,7 +345,31 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
     }
     case OP_TYPEID::LessEq:
     {
-        downgrade_binary_elementwise_node<op::v0::LessEq, op::v1::LessEq>(node);
+        downgrade_binary_elementwise_node<op::v0::LessEq, op::v1::LessEqual>(node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::LogicalAnd:
+    {
+        downgrade_binary_elementwise_node<op::v0::And, op::v1::LogicalAnd>(node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::LogicalNot:
+    {
+        replace_node(node, make_shared<op::v0::Not>(node->input(0).get_source_output()));
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::LogicalOr:
+    {
+        downgrade_binary_elementwise_node<op::v0::Or, op::v1::LogicalOr>(node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::LogicalXor:
+    {
+        downgrade_binary_elementwise_node<op::v0::Xor, op::v1::LogicalXor>(node);
         modified = true;
         break;
     }

@@ -19,18 +19,34 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Xor::type_info;
+constexpr NodeTypeInfo op::v1::LogicalXor::type_info;
 
-op::Xor::Xor(const Output<Node>& arg0,
-             const Output<Node>& arg1,
-             const AutoBroadcastSpec& auto_broadcast)
+op::v1::LogicalXor::LogicalXor(const Output<Node>& arg0,
+                               const Output<Node>& arg1,
+                               const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseLogical(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::Xor::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::LogicalXor::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Xor>(new_args.at(0), new_args.at(1), this->get_autob());
+    return make_shared<v1::LogicalXor>(new_args.at(0), new_args.at(1), this->get_autob());
+}
+
+constexpr NodeTypeInfo op::v0::Xor::type_info;
+
+op::v0::Xor::Xor(const Output<Node>& arg0,
+                 const Output<Node>& arg1,
+                 const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseLogical(arg0, arg1, auto_broadcast)
+{
+    constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::v0::Xor::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<v0::Xor>(new_args.at(0), new_args.at(1), this->get_autob());
 }

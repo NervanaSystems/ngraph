@@ -22,6 +22,7 @@
 #include "ngraph/code_writer.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/convolution.hpp"
@@ -39,7 +40,9 @@
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
+#include "ngraph/op/not.hpp"
 #include "ngraph/op/not_equal.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
@@ -47,6 +50,7 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
@@ -126,7 +130,6 @@ namespace ngraph
         class ConvolutionBiasAdd;
         class ConvolutionAdd;
         class ConvolutionBiasBackpropFiltersBias;
-        class Not;
         class QuantizedMaxPool;
         class QuantizedAvgPool;
         class MaxPoolWithIndices;
@@ -142,9 +145,6 @@ namespace ngraph
         class SigmoidMultiply;
         class SigmoidMultiplyBackprop;
         class Result;
-        class And;
-        class Or;
-        class Xor;
         class CompiledKernel;
         class Dropout;
         class Dequantize;

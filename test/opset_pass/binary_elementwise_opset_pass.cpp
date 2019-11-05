@@ -208,12 +208,12 @@ TEST(opset_transform, opset1_less_upgrade_pass)
 
 TEST(opset_transform, opset0_less_eq_downgrade_pass)
 {
-    test_opset0_comparison_downgrade_pass<op::v0::LessEq, op::v1::LessEq>();
+    test_opset0_comparison_downgrade_pass<op::v0::LessEq, op::v1::LessEqual>();
 }
 
 TEST(opset_transform, opset1_less_eq_upgrade_pass)
 {
-    test_opset1_comparison_upgrade_pass<op::v0::LessEq, op::v1::LessEq>();
+    test_opset1_comparison_upgrade_pass<op::v0::LessEq, op::v1::LessEqual>();
 }
 
 TEST(opset_transform, opset0_maximum_downgrade_pass)
