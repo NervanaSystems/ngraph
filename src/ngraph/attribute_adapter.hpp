@@ -85,7 +85,7 @@ namespace ngraph
             : ValueReference<Type>(value)
         {
         }
-        NGRAPH_API
+
         static const DiscreteTypeInfo type_info;
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const std::string& get() override { return as_string(ValueReference<Type>::m_value); }
@@ -108,7 +108,7 @@ namespace ngraph
             : ValueReference<Type>(value)
         {
         }
-        NGRAPH_API static const DiscreteTypeInfo type_info;
+        static const DiscreteTypeInfo type_info;
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const std::vector<int64_t>& get() override;
         void set(const std::vector<int64_t>& value) override;
@@ -200,6 +200,7 @@ namespace ngraph
             : ValueReference<element::Type>(value)
         {
         }
+        NGRAPH_API
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<element::Type>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
