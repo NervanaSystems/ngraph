@@ -59,18 +59,19 @@ nGraph Compiler Stack Documentation
    core/fusion/index.rst
    nGraph Core Ops <ops/index.rst>
    provenance/index.rst
-   backends/cpp-api.rst
+   Graph Execution API <backends/executable-api/index.rst>
    core/quantization.rst
-.. dynamic/index.rst
+   dynamic/index.rst
 
    
 .. toctree::
    :maxdepth: 1
    :caption: Backend Support
 
-   python_api/index.rst   
-   backends/index.rst
-   backends/cpp-api.rst
+   Basic Concepts <backends/index.rst>
+   backends/plaidml-ng-api/index.rst
+   nGraph as a Submodule <backends/ovt.rst>
+   Integrating Other Backends <backends/cpp-api.rst>
 
 
 .. toctree::
