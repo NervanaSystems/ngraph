@@ -64,9 +64,9 @@ namespace ngraph
             int64_t get_ignore_index() const { return m_ignore_index; }
             const ReductionType& get_reduction_type() const { return m_reduction_type; }
         private:
-            ReductionType m_reduction_type;
             bool m_soft_label;
             int64_t m_ignore_index;
+            ReductionType m_reduction_type;
         };
 
         class SoftmaxCrossEntropyBackprop : public util::FusedOp
