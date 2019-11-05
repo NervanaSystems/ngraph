@@ -27,5 +27,6 @@ void regclass_pyngraph_op_DepthToSpace(py::module m)
     py::class_<ngraph::op::DepthToSpace, std::shared_ptr<ngraph::op::DepthToSpace>, ngraph::op::Op>
         depthtospace(m, "DepthToSpace");
     depthtospace.doc() = "ngraph.impl.op.DepthToSpace wraps ngraph::op::DepthToSpace";
-    depthtospace.def(py::init<const std::shared_ptr<ngraph::Node>&, std::size_t&>());
+    depthtospace.def(
+        py::init<const std::shared_ptr<ngraph::Node>&, const std::string&, std::size_t&>());
 }
