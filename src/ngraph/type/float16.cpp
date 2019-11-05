@@ -55,11 +55,7 @@ float16::float16(float value)
     uint32_t raw_frac = (iv & 0x007FFFFF);
     int32_t exp = biased_exp - 127;
     int32_t min_exp = -14 - frac_size;
-    if (biased_exp == 0 && raw_frac == 0)
-    {
-        // 0
-    }
-    else if (biased_exp == 0 || exp < min_exp)
+    if (biased_exp == 0 || exp < min_exp)
     {
         // Goes to 0
         biased_exp = 0;
@@ -83,7 +79,7 @@ float16::float16(float value)
         biased_exp = 0x1F;
         raw_frac = 0;
     }
-    else
+    else if ((biased_exp != 0 || raw_frac != 0))
     {
         raw_frac = (raw_frac + 0x1000) >> (23 - frac_size);
         biased_exp = exp + exp_bias;
