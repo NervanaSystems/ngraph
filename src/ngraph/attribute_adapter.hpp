@@ -64,7 +64,7 @@ namespace ngraph
         Type& m_value;
     };
 
-    template <typename Type, typename Enable = void>
+    template <typename Type>
     class AttributeAdapter
     {
     };
@@ -84,26 +84,7 @@ namespace ngraph
             ValueReference<Type>::m_value = as_enum<Type>(value);
         }
     };
-#if 0
-    template <typename Type>
-    class AttributeAdapter<Type, typename std::enable_if<std::is_enum<Type>::value>::type>
-        : public ValueReference<Type>, public ValueAccessor<std::string>
-    {
-    public:
-        AttributeAdapter(Type& value)
-            : ValueReference<Type>(value)
-        {
-        }
 
-        static const DiscreteTypeInfo type_info;
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-        const std::string& get() override { return as_string(ValueReference<Type>::m_value); }
-        void set(const std::string& value) override
-        {
-            ValueReference<Type>::m_value = as_enum<Type>(value);
-        }
-    };
-#endif
     /// Note: These class bodies cannot be defined with templates because of interactions
     /// between dllexport and templates on Windows.
     template <>
@@ -144,7 +125,7 @@ namespace ngraph
                                     public ValueAccessor<std::vector<int64_t>>
     {
     public:
-        AttributeAdapter<Shape, void>(Shape& value)
+        AttributeAdapter(Shape& value)
             : ValueReference<Shape>(value)
         {
         }
@@ -161,7 +142,7 @@ namespace ngraph
                                       public ValueAccessor<std::vector<int64_t>>
     {
     public:
-        AttributeAdapter<Strides, void>(Strides& value)
+        AttributeAdapter(Strides& value)
             : ValueReference<Strides>(value)
         {
         }
@@ -178,7 +159,7 @@ namespace ngraph
                                       public ValueAccessor<std::vector<int64_t>>
     {
     public:
-        AttributeAdapter<AxisSet, void>(AxisSet& value)
+        AttributeAdapter(AxisSet& value)
             : ValueReference<AxisSet>(value)
         {
         }
@@ -195,7 +176,7 @@ namespace ngraph
                                            public ValueAccessor<void>
     {
     public:
-        AttributeAdapter<PartialShape, void>(PartialShape& value)
+        AttributeAdapter(PartialShape& value)
             : ValueReference<PartialShape>(value)
         {
         }
@@ -214,7 +195,7 @@ namespace ngraph
                                             public ValueAccessor<void>
     {
     public:
-        AttributeAdapter<element::Type, void>(element::Type& value)
+        AttributeAdapter(element::Type& value)
             : ValueReference<element::Type>(value)
         {
         }
@@ -233,7 +214,7 @@ namespace ngraph
                                                     public ValueAccessor<void>
     {
     public:
-        AttributeAdapter<op::AutoBroadcastSpec, void>(op::AutoBroadcastSpec& value)
+        AttributeAdapter(op::AutoBroadcastSpec& value)
             : ValueReference<op::AutoBroadcastSpec>(value)
         {
         }

@@ -46,7 +46,6 @@ namespace ngraph
         {
         }
 
-        NGRAPH_API
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<TuringModel>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
