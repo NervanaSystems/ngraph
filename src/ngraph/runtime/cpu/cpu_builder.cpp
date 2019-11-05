@@ -473,6 +473,12 @@ namespace ngraph
             }
 
             template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Power)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::cwise_pow);
+            }
+
+            template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Divide)
             {
                 const ngraph::op::Divide* divop = static_cast<const ngraph::op::Divide*>(node);
@@ -704,6 +710,7 @@ namespace ngraph
                 REGISTER_CF_BUILDER(Xor);
                 REGISTER_CF_BUILDER(Sign);
                 REGISTER_CF_BUILDER(Not);
+                REGISTER_CF_BUILDER(Power);
             }
         }
     }
