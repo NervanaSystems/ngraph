@@ -26,11 +26,21 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::DepthToSpace::type_info;
 
-op::DepthToSpace::DepthToSpace(const Output<Node>& data, const size_t block_size)
+op::DepthToSpace::DepthToSpace(const Output<Node>& data,
+                               const DepthToSpaceMode& mode,
+                               const size_t block_size)
     : FusedOp({data})
     , m_blocksize(block_size)
+    , m_mode(mode)
 {
     constructor_validate_and_infer_types();
+}
+
+op::DepthToSpace::DepthToSpace(const Output<Node>& data,
+                               const std::string& mode,
+                               const size_t block_size)
+    : DepthToSpace(data, mode_from_string(mode), block_size)
+{
 }
 
 NodeVector op::DepthToSpace::decompose_op() const
@@ -72,8 +82,22 @@ NodeVector op::DepthToSpace::decompose_op() const
     // First we have to disperse the data from depth channel, then rearrange them
     // so as appropriate chunks of data where close to their destination place.
     // Finally squeeze data from respective dimensions.
-    shared_ptr<Node> flat_node = builder::reshape(data, Shape{n, bs, bs, c_flat, h, w});
-    flat_node = builder::reorder_axes(flat_node, {0, 3, 4, 1, 5, 2});
+    shared_ptr<Node> flat_node;
+    switch (m_mode)
+    {
+    case DepthToSpaceMode::DEPTH_FIRST:
+    {
+        flat_node = builder::reshape(data, Shape{n, c_flat, bs, bs, h, w});
+        flat_node = builder::reorder_axes(flat_node, {0, 1, 4, 2, 5, 3});
+        break;
+    }
+    case DepthToSpaceMode::BLOCKS_FIRST:
+    default:
+    {
+        flat_node = builder::reshape(data, Shape{n, bs, bs, c_flat, h, w});
+        flat_node = builder::reorder_axes(flat_node, {0, 3, 4, 1, 5, 2});
+    }
+    }
     return NodeVector{builder::reshape(flat_node, Shape{n, c_flat, h * bs, w * bs})};
 }
 
@@ -83,5 +107,17 @@ shared_ptr<Node> op::DepthToSpace::copy_with_new_args(const NodeVector& new_args
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<DepthToSpace>(new_args.at(0), m_blocksize);
+    return make_shared<DepthToSpace>(new_args.at(0), m_mode, m_blocksize);
+}
+
+op::DepthToSpace::DepthToSpaceMode op::DepthToSpace::mode_from_string(const std::string& mode) const
+{
+    static const std::map<std::string, DepthToSpaceMode> allowed_values = {
+        {"blocks_first", DepthToSpaceMode::BLOCKS_FIRST},
+        {"depth_first", DepthToSpaceMode::DEPTH_FIRST}};
+
+    NODE_VALIDATION_CHECK(
+        this, allowed_values.count(mode) > 0, "Invalid 'depth_to_space_mode' value passed in.");
+
+    return allowed_values.at(mode);
 }
