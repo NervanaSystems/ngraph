@@ -10,6 +10,7 @@
 /.ci/travis/                        @aslepko @postrational
 /.ci/onnx/                          @aslepko @postrational
 /contrib/docker/                    @aslepko
+/contrib/fluid/                     @silee2
 /.travis.yml                        @aslepko @postrational
 
 /.clang-format                      @rkimballn1
