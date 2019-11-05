@@ -248,6 +248,29 @@ namespace ngraph
             }
 
             template <>
+            void Builder::BUILDER_DECL(ngraph::op::v1::LogicalXor)
+            {
+                (void)node;
+                auto& functors = external_function->get_functors();
+
+                auto element_count = out[0].get_size();
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
+
+                auto functor =
+                    [&, element_count, arg0_buffer_index, arg1_buffer_index, out0_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        runtime::cpu::kernel::logical_xor(ctx->buffer_data[arg0_buffer_index],
+                                                          ctx->buffer_data[arg1_buffer_index],
+                                                          ctx->buffer_data[out0_buffer_index],
+                                                          element_count,
+                                                          ectx->arena);
+                    };
+                functors.emplace_back(functor);
+            }
+
+            template <>
             void Builder::BUILDER_DECL(ngraph::op::Xor)
             {
                 (void)node;
