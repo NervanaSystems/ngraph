@@ -22,7 +22,7 @@
 #include "ngraph_dialect/dialect.hpp"
 #include "ngraph_dialect/ops.hpp"
 #include "ngraph_dialect/type.hpp"
-#include "pass/ngraph_dialect.hpp"
+#include "pass/ng_dialect_builder.hpp"
 
 #include "ngraph/check.hpp"
 #include "ngraph/descriptor/tensor.hpp"
@@ -123,7 +123,7 @@ void MLIRCompiler::buildNgDialectModule()
     m_module = mlir::ModuleOp::create(mlir::UnknownLoc::get(&m_context));
 
     mlir::PassManager pm(&m_context);
-    pm.addPass(ngraph::pass::CreateNgDialectConversionPass(
+    pm.addPass(ngraph::pass::createNgDialectConversionPass(
         m_compiledKernel, &m_context, m_builder.get(), this));
 
     // Apply any generic pass manager command line options.

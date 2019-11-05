@@ -147,7 +147,7 @@ namespace ngraph
             static const MLIRCompOpMap opDispatcher;
         };
         std::unique_ptr<mlir::Pass>
-            CreateNgDialectConversionPass(const ngraph::op::CompiledKernel* compiledKernel,
+            createNgDialectConversionPass(const ngraph::op::CompiledKernel* compiledKernel,
                                           mlir::MLIRContext* context,
                                           mlir::OpBuilder* builder,
                                           MLIRCompiler* compiler);

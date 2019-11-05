@@ -17,7 +17,7 @@
 // NOTE: This file follows nGraph format style.
 // Follows nGraph naming convention for public APIs only, else MLIR naming convention.
 
-#include "ngraph_dialect.hpp"
+#include "ng_dialect_builder.hpp"
 #include "contrib/mlir/core/ngraph_dialect/dialect.hpp"
 #include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/ngraph_dialect/type.hpp"
@@ -445,7 +445,7 @@ mlir::Operation* NgDialectConversionPass::createIndexReduction(const ngraph::Nod
 }
 
 std::unique_ptr<mlir::Pass>
-    ngraph::pass::CreateNgDialectConversionPass(const ngraph::op::CompiledKernel* compiledKernel,
+    ngraph::pass::createNgDialectConversionPass(const ngraph::op::CompiledKernel* compiledKernel,
                                                 mlir::MLIRContext* context,
                                                 mlir::OpBuilder* builder,
                                                 MLIRCompiler* compiler)
