@@ -42,13 +42,14 @@ public:
     ~Manager();
 
     template <typename T, class... Args>
-    void register_pass(Args&&... args)
+    std::shared_ptr<T> register_pass(Args&&... args)
     {
-        push_pass<T>(std::forward<Args>(args)...);
+        auto rc = push_pass<T>(std::forward<Args>(args)...);
         if (m_per_pass_validation)
         {
             push_pass<Validate>();
         }
+        return rc;
     }
 
     void run_passes(std::shared_ptr<Function>, bool transitive = true);
@@ -61,7 +62,7 @@ public:
     void set_per_pass_validation(bool new_state) { m_per_pass_validation = new_state; }
 private:
     template <typename T, class... Args>
-    void push_pass(Args&&... args)
+    std::shared_ptr<T> push_pass(Args&&... args)
     {
         static_assert(std::is_base_of<pass::PassBase, T>::value, "pass not derived from pass base");
         auto pass = std::make_shared<T>(std::forward<Args>(args)...);
@@ -80,6 +81,7 @@ private:
             m_pass_names.push_back(typeid(T).name());
 #endif
         }
+        return pass;
     }
 
     std::vector<std::string> m_pass_names;

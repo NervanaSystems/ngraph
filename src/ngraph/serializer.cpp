@@ -1088,13 +1088,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             if (op_version == 1)
             {
-                auto data_batch_shape = node_js.at("data_batch_shape").get<vector<size_t>>();
                 auto strides = node_js.at("strides").get<vector<size_t>>();
                 auto dilations = node_js.at("dilations").get<vector<size_t>>();
                 auto pads_begin = node_js.at("pads_begin").get<vector<std::ptrdiff_t>>();
                 auto pads_end = node_js.at("pads_end").get<vector<std::ptrdiff_t>>();
                 node = make_shared<op::v1::ConvolutionBackpropData>(
-                    data_batch_shape, args[0], args[1], strides, dilations, pads_begin, pads_end);
+                    args[0], args[1], args[2], strides, dilations, pads_begin, pads_end);
             }
             break;
         }
@@ -1131,7 +1130,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 auto pads_begin = node_js.at("pads_begin").get<vector<std::ptrdiff_t>>();
                 auto pads_end = node_js.at("pads_end").get<vector<std::ptrdiff_t>>();
                 node = make_shared<op::v1::ConvolutionBackpropFilters>(
-                    args[0], filters_shape, args[1], strides, dilations, pads_begin, pads_end);
+                    args[0], args[1], args[2], strides, dilations, pads_begin, pads_end);
             }
             break;
         }
@@ -1214,8 +1213,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::DepthToSpace:
         {
+            auto mode = node_js.at("mode").get<op::DepthToSpace::DepthToSpaceMode>();
             auto block_size = node_js.at("block_size").get<size_t>();
-            node = make_shared<op::DepthToSpace>(args[0], block_size);
+            node = make_shared<op::DepthToSpace>(args[0], mode, block_size);
             break;
         }
         case OP_TYPEID::Dequantize:
@@ -2884,6 +2884,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = static_cast<const op::DepthToSpace*>(&n);
         node["type"] = write_element_type(tmp->get_element_type());
+        node["mode"] = tmp->get_mode();
         node["block_size"] = tmp->get_block_size();
         break;
     }

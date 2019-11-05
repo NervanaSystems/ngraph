@@ -2804,3 +2804,39 @@ TEST(type_prop, conv_partial_dynamic_et)
     ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(
         PartialShape{64, 100, 1, Dimension::dynamic()}));
 }
+
+TEST(type_prop, conv_bprop_filter_v1_output_partial_shape_dynamic)
+{
+    Shape shape_data{64, 3, 100};
+    auto data = make_shared<op::Parameter>(element::f32, shape_data);
+    Shape shape_delta{64, 128, 96};
+    auto deltas = make_shared<op::Parameter>(element::f32, shape_delta);
+    auto filters_shape = make_shared<op::Parameter>(element::i64, Shape{128, 3, 10});
+    auto strides = Strides{1};
+    auto dilations = Strides{1};
+    auto padding_begin = CoordinateDiff{2};
+    auto padding_end = CoordinateDiff{3};
+    auto conv1 = make_shared<op::v1::ConvolutionBackpropFilters>(
+        data, deltas, filters_shape, strides, dilations, padding_begin, padding_end);
+
+    ASSERT_TRUE(conv1->get_output_partial_shape(0).is_dynamic());
+}
+
+TEST(type_prop, conv_bprop_data_v1_output_partial_shape_dynamic)
+{
+    Shape shape_filter{6, 3, 3, 3};
+    auto filters = make_shared<op::Parameter>(element::f32, shape_filter);
+    Shape shape_delta{2, 6, 3, 3};
+    auto deltas = make_shared<op::Parameter>(element::f32, shape_delta);
+    Shape shape_data_batch_shape{2, 3, 5, 5};
+    auto data_batch_shape = make_shared<op::Parameter>(element::i64, Shape{2, 3, 5, 5});
+    auto strides = Strides{1, 1};
+    auto dilations = Strides{1, 1};
+    auto padding_begin = CoordinateDiff{0, 0};
+    auto padding_end = CoordinateDiff{0, 0};
+
+    auto conv1 = make_shared<op::v1::ConvolutionBackpropData>(
+        filters, deltas, data_batch_shape, strides, dilations, padding_begin, padding_end);
+
+    ASSERT_TRUE(conv1->get_output_partial_shape(0).is_dynamic());
+}
