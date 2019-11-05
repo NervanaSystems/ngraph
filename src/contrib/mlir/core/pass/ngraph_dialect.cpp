@@ -86,10 +86,20 @@ using namespace ngraph::pass;
 #define COMPILE_OP_DECL(op_name)                                                                   \
     createOp<op_name>(NgDialectConversionPass & NgDialectObj, const ngraph::Node* ngNode)
 
+ngraph::pass::NgDialectConversionPass::NgDialectConversionPass(const NgDialectConversionPass& obj)
+{
+    m_compiledKernel = obj.m_compiledKernel;
+    m_context = obj.m_context;
+    m_builder = obj.m_builder;
+    m_tensorToValueMap = obj.m_tensorToValueMap;
+    m_compiler = obj.m_compiler;
+}
+
 void ngraph::pass::NgDialectConversionPass::runOnModule()
 {
     TypeList argsTypeList, resultTypeList;
 
+    auto& module = m_compiler->get_module();
     // Retrieve input and output tensors.
     const auto& kernelInputs = m_compiledKernel->get_arguments();
     const auto& kernelOutput = m_compiledKernel->get_kernel_outputs();
@@ -121,8 +131,9 @@ void ngraph::pass::NgDialectConversionPass::runOnModule()
     }
 
     // create builder
-    m_builder = std::unique_ptr<mlir::OpBuilder>(new mlir::OpBuilder(function.getBody()));
+    m_builder = new mlir::OpBuilder(function.getBody());
     ngraph::pass::NgDialectConversionPass::buildNgDialect();
+    module->push_back(function);
 }
 
 template <typename T>
@@ -435,7 +446,10 @@ mlir::Operation* NgDialectConversionPass::createIndexReduction(const ngraph::Nod
 
 std::unique_ptr<mlir::Pass>
     ngraph::pass::CreateNgDialectConversionPass(const ngraph::op::CompiledKernel* compiledKernel,
-                                                mlir::MLIRContext* context)
+                                                mlir::MLIRContext* context,
+                                                mlir::OpBuilder* builder,
+                                                MLIRCompiler* compiler)
 {
-    return std::make_unique<ngraph::pass::NgDialectConversionPass>(compiledKernel, context);
+    return std::make_unique<ngraph::pass::NgDialectConversionPass>(
+        compiledKernel, context, builder, compiler);
 }

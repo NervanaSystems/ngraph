@@ -65,13 +65,18 @@ namespace ngraph
             using TypeList = llvm::SmallVector<mlir::Type, 4>;
 
             NgDialectConversionPass(const ngraph::op::CompiledKernel* compiled_kernel,
-                                    mlir::MLIRContext* context)
+                                    mlir::MLIRContext* context,
+                                    mlir::OpBuilder* builder,
+                                    MLIRCompiler* compiler)
                 : m_compiledKernel(compiled_kernel)
                 , m_context(context)
+                , m_builder(builder)
+                , m_compiler(compiler)
             {
             }
 
-            mlir::OwningModuleRef& get_module() { return m_module; }
+            NgDialectConversionPass(const NgDialectConversionPass& obj);
+
         private:
             struct TensorInfo
             {
@@ -123,13 +128,12 @@ namespace ngraph
         private:
             // Sub-graph to be compiled and executed with MLIR.
             const ngraph::op::CompiledKernel* m_compiledKernel;
+            MLIRCompiler* m_compiler;
 
             // MLIR context that holds all the MLIR information related to the sub-graph
             // compilation.
             mlir::MLIRContext* m_context;
-
-            mlir::OwningModuleRef m_module;
-            std::unique_ptr<mlir::OpBuilder> m_builder;
+            mlir::OpBuilder* m_builder;
 
             using TensorToInfo = std::pair<descriptor::Tensor*, TensorInfo>;
             using TensorToInfoMap = std::unordered_map<descriptor::Tensor*, TensorInfo>;
@@ -144,6 +148,8 @@ namespace ngraph
         };
         std::unique_ptr<mlir::Pass>
             CreateNgDialectConversionPass(const ngraph::op::CompiledKernel* compiledKernel,
-                                          mlir::MLIRContext* context);
+                                          mlir::MLIRContext* context,
+                                          mlir::OpBuilder* builder,
+                                          MLIRCompiler* compiler);
     }
 }
