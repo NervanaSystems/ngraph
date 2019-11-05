@@ -39,7 +39,18 @@ namespace ngraph
     }
 
     template <>
-    NGRAPH_API const DiscreteTypeInfo AttributeAdapter<op::PadMode>::type_info;
+    class AttributeAdapter<op::PadMode> : public EnumAttributeAdapterBase<op::PadMode>
+    {
+    public:
+        AttributeAdapter(op::PadMode& value)
+            : EnumAttributeAdapterBase<op::PadMode>(value)
+        {
+        }
+
+        NGRAPH_API
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::PadMode>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 
     namespace op
     {
@@ -69,7 +80,18 @@ namespace ngraph
     }
 
     template <>
-    NGRAPH_API const DiscreteTypeInfo AttributeAdapter<op::PadType>::type_info;
+    class AttributeAdapter<op::PadType> : public EnumAttributeAdapterBase<op::PadType>
+    {
+    public:
+        AttributeAdapter(op::PadType& value)
+            : EnumAttributeAdapterBase<op::PadType>(value)
+        {
+        }
+
+        NGRAPH_API
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::PadType>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 
     namespace op
     {
@@ -84,7 +106,18 @@ namespace ngraph
     }
 
     template <>
-    NGRAPH_API const DiscreteTypeInfo AttributeAdapter<op::RoundingType>::type_info;
+    class AttributeAdapter<op::RoundingType> : public EnumAttributeAdapterBase<op::RoundingType>
+    {
+    public:
+        AttributeAdapter(op::RoundingType& value)
+            : EnumAttributeAdapterBase<op::RoundingType>(value)
+        {
+        }
+
+        NGRAPH_API
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::RoundingType>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 
     namespace op
     {
@@ -138,7 +171,20 @@ namespace ngraph
     }
 
     template <>
-    NGRAPH_API const DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastType>::type_info;
+    class AttributeAdapter<op::AutoBroadcastType>
+        : public EnumAttributeAdapterBase<op::AutoBroadcastType>
+    {
+    public:
+        AttributeAdapter(op::AutoBroadcastType& value)
+            : EnumAttributeAdapterBase<op::AutoBroadcastType>(value)
+        {
+        }
+
+        NGRAPH_API
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::AutoBroadcastType>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
+
     namespace op
     {
         /// \brief Specifies how eps is combined with L2 value
@@ -154,7 +200,18 @@ namespace ngraph
     }
 
     template <>
-    NGRAPH_API const DiscreteTypeInfo AttributeAdapter<op::EpsMode>::type_info;
+    class AttributeAdapter<op::EpsMode> : public EnumAttributeAdapterBase<op::EpsMode>
+    {
+    public:
+        AttributeAdapter(op::EpsMode& value)
+            : EnumAttributeAdapterBase<op::EpsMode>(value)
+        {
+        }
+
+        NGRAPH_API
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::EpsMode>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 
     namespace op
     {

@@ -40,7 +40,18 @@ namespace ngraph
     }
 
     template <>
-    const DiscreteTypeInfo AttributeAdapter<reduction::Type>::type_info;
+    class AttributeAdapter<reduction::Type> : public EnumAttributeAdapterBase<reduction::Type>
+    {
+    public:
+        AttributeAdapter(reduction::Type& value)
+            : EnumAttributeAdapterBase<reduction::Type>(value)
+        {
+        }
+
+        NGRAPH_API
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<reduction::Type>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 
     class DistributedInterface
     {

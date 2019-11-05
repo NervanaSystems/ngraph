@@ -70,6 +70,22 @@ namespace ngraph
     };
 
     template <typename Type>
+    class EnumAttributeAdapterBase : public ValueReference<Type>, public ValueAccessor<std::string>
+    {
+    public:
+        EnumAttributeAdapterBase(Type& value)
+            : ValueReference<Type>(value)
+        {
+        }
+
+        const std::string& get() override { return as_string(ValueReference<Type>::m_value); }
+        void set(const std::string& value) override
+        {
+            ValueReference<Type>::m_value = as_enum<Type>(value);
+        }
+    };
+#if 0
+    template <typename Type>
     class AttributeAdapter<Type, typename std::enable_if<std::is_enum<Type>::value>::type>
         : public ValueReference<Type>, public ValueAccessor<std::string>
     {
@@ -87,33 +103,9 @@ namespace ngraph
             ValueReference<Type>::m_value = as_enum<Type>(value);
         }
     };
-#if 0
-    template <typename Type>
-    class AttributeAdapter<
-        Type,
-        typename std::enable_if<
-            std::is_convertible<Type, typename std::vector<typename Type::value_type>>::value &&
-            std::is_integral<typename Type::value_type>::value>::type>
-        : public ValueReference<Type>, public ValueAccessor<std::vector<int64_t>>
-    {
-    public:
-        AttributeAdapter(Type& value)
-            : ValueReference<Type>(value)
-        {
-        }
-        static const DiscreteTypeInfo type_info;
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-        const std::vector<int64_t>& get() override;
-        void set(const std::vector<int64_t>& value) override;
-    };
-
-    template <>
-    NGRAPH_API const DiscreteTypeInfo AttributeAdapter<std::vector<int64_t>>::type_info;
-
-    template <>
-    NGRAPH_API const DiscreteTypeInfo AttributeAdapter<std::vector<uint64_t>>::type_info;
 #endif
-
+    /// Note: These class bodies cannot be defined with templates because of interactions
+    /// between dllexport and templates on Windows.
     template <>
     class AttributeAdapter<std::vector<int64_t>> : public ValueReference<std::vector<int64_t>>,
                                                    public ValueAccessor<std::vector<int64_t>>

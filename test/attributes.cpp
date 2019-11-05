@@ -38,7 +38,20 @@ namespace ngraph
     }
 
     template <>
-    const DiscreteTypeInfo AttributeAdapter<TuringModel>::type_info{"TuringModel", 0};
+    class AttributeAdapter<TuringModel> : public EnumAttributeAdapterBase<TuringModel>
+    {
+    public:
+        AttributeAdapter(TuringModel& value)
+            : EnumAttributeAdapterBase<TuringModel>(value)
+        {
+        }
+
+        NGRAPH_API
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<TuringModel>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
+
+    constexpr DiscreteTypeInfo AttributeAdapter<TuringModel>::type_info;
 }
 
 // Given a Turing machine program and data, return scalar 1 if the program would
