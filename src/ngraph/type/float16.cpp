@@ -49,12 +49,17 @@ float16::float16(float value)
         uint32_t iv;
     };
     fv = value;
+    uint32_t hidden_one = 0x00800000;
     uint32_t sign = iv & 0x80000000;
     uint32_t biased_exp = (iv & 0x7F800000) >> 23;
     uint32_t raw_frac = (iv & 0x007FFFFF);
     int32_t exp = biased_exp - 127;
     int32_t min_exp = -14 - frac_size;
-    if (biased_exp == 0 || exp < min_exp)
+    if (biased_exp == 0 && raw_frac == 0)
+    {
+        // 0
+    }
+    else if (biased_exp == 0 || exp < min_exp)
     {
         // Goes to 0
         biased_exp = 0;
@@ -67,10 +72,11 @@ float16::float16(float value)
     }
     else if (exp < -14)
     {
-        // denorm or 0
+        // denorm
         biased_exp = 0;
-        raw_frac |= 0x00800000;
-        raw_frac = raw_frac >> (exp + 16);
+        raw_frac |= hidden_one;
+        uint32_t shift = (-15 - exp) + (23 - frac_size) + 1;
+        raw_frac = (raw_frac + (hidden_one >> (shift + 1))) >> shift;
     }
     else if (exp > 15)
     {
@@ -79,7 +85,7 @@ float16::float16(float value)
     }
     else
     {
-        raw_frac = raw_frac >> (23 - frac_size);
+        raw_frac = (raw_frac + 0x1000) >> (23 - frac_size);
         biased_exp = exp + exp_bias;
     }
     m_value = (sign >> 16) | (biased_exp << frac_size) | raw_frac;
