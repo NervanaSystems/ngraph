@@ -81,12 +81,107 @@ using llvm::ArrayRef;
 
 using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
-using namespace ngraph::pass;
 
 #define COMPILE_OP_DECL(op_name)                                                                   \
     createOp<op_name>(NgDialectConversionPass & NgDialectObj, const ngraph::Node* ngNode)
 
-ngraph::pass::NgDialectConversionPass::NgDialectConversionPass(const NgDialectConversionPass& obj)
+namespace
+{
+    /// NgDialectConversionPass is an MLIR ModulePass Given an nGraph sub-graph, represented as
+    /// CompiledKernel node, it
+    /// translates the graph down to nGraph dialect
+
+    class NgDialectConversionPass : public mlir::ModulePass<NgDialectConversionPass>
+    {
+    public:
+        using TensorList = std::vector<descriptor::Tensor*>;
+        using TypeList = llvm::SmallVector<mlir::Type, 4>;
+
+        NgDialectConversionPass(const ngraph::op::CompiledKernel* compiled_kernel,
+                                mlir::MLIRContext* context,
+                                mlir::OpBuilder* builder,
+                                MLIRCompiler* compiler)
+            : m_compiledKernel(compiled_kernel)
+            , m_context(context)
+            , m_builder(builder)
+            , m_compiler(compiler)
+        {
+        }
+
+        NgDialectConversionPass(const NgDialectConversionPass& obj);
+
+    private:
+        struct TensorInfo
+        {
+            // MLIR values this tensor maps to.
+            mlir::Value* m_value;
+        };
+
+    private:
+        // Converts an nGraph sub-graph to MLIR nGraph dialect.
+        void buildNgDialectModule();
+        void buildNgDialect();
+        void runOnModule() override;
+        // Applies any nGraph dialect optimizations
+        void optimizeNgDialect() { /*TODO: Add Core NG dialect optimizations */}
+
+        mlir::Type getMlirType(const descriptor::Tensor* tensor);
+        mlir::Type getMlirType(const element::Type& type);
+        mlir::Type getMlirType(const ngraph::Node* node);
+
+        TensorInfo getTensorValue(descriptor::Tensor* tensor);
+        void updateTensorValue(descriptor::Tensor* tensor, mlir::Value* value);
+
+        template <typename Op>
+        static mlir::Operation* createOp(NgDialectConversionPass& NgDialectObj,
+                                         const ngraph::Node* ngNode)
+        {
+            throw std::runtime_error("Unimplemented op '" + ngNode->description() +
+                                     "' in MLIR Compiler");
+        }
+
+        // Generic op lowerer to ng dialect.
+        // Simply maps ngraph tensors to values and generate an OP. No op-specific logic.
+        template <typename Op>
+        mlir::Operation* createGenericOp(const ngraph::Node* ngNode);
+
+        template <typename RedOp>
+        mlir::Operation* createIndexReduction(const ngraph::Node* ngNode);
+
+        void createReturn();
+
+        /// Converts nGraph shape-like types \p ng_shape to MLIR shape \p mlir_shape.
+        template <typename T>
+        void getMlirShape(T ngShape, llvm::SmallVectorImpl<int64_t>& mlirShape);
+
+        /// Converts an ngraph shape to an I64 array attribute
+        template <typename T>
+        mlir::ArrayAttr getShapeAsAttr(T ngShape);
+
+    private:
+        // Sub-graph to be compiled and executed with MLIR.
+        const ngraph::op::CompiledKernel* m_compiledKernel;
+        MLIRCompiler* m_compiler;
+
+        // MLIR context that holds all the MLIR information related to the sub-graph
+        // compilation.
+        mlir::MLIRContext* m_context;
+        mlir::OpBuilder* m_builder;
+
+        using TensorToInfo = std::pair<descriptor::Tensor*, TensorInfo>;
+        using TensorToInfoMap = std::unordered_map<descriptor::Tensor*, TensorInfo>;
+        using MLIRCompOpFunction = std::function<mlir::Operation*(
+            NgDialectConversionPass& NgDialectObj, const ngraph::Node*)>;
+        using MLIRCompOpMap = std::unordered_map<std::type_index, MLIRCompOpFunction>;
+
+        // Maps tensor to the value it represents in the IR
+        // use for MLIR dialect gen
+        TensorToInfoMap m_tensorToValueMap;
+        static const MLIRCompOpMap opDispatcher;
+    };
+
+} // end of namespace
+NgDialectConversionPass::NgDialectConversionPass(const NgDialectConversionPass& obj)
 {
     m_compiledKernel = obj.m_compiledKernel;
     m_context = obj.m_context;
@@ -95,7 +190,7 @@ ngraph::pass::NgDialectConversionPass::NgDialectConversionPass(const NgDialectCo
     m_compiler = obj.m_compiler;
 }
 
-void ngraph::pass::NgDialectConversionPass::runOnModule()
+void NgDialectConversionPass::runOnModule()
 {
     TypeList argsTypeList, resultTypeList;
 
@@ -132,7 +227,7 @@ void ngraph::pass::NgDialectConversionPass::runOnModule()
 
     // create builder
     m_builder = new mlir::OpBuilder(function.getBody());
-    ngraph::pass::NgDialectConversionPass::buildNgDialect();
+    NgDialectConversionPass::buildNgDialect();
     module->push_back(function);
 }
 
@@ -256,127 +351,119 @@ void NgDialectConversionPass::buildNgDialect()
     createReturn();
 }
 
-namespace ngraph
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Add)
 {
-    namespace pass
-    {
-        template <>
-        mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Add)
-        {
-            return NgDialectObj.createGenericOp<mlir::NGAddOp>(ngNode);
-        }
+    return NgDialectObj.createGenericOp<mlir::NGAddOp>(ngNode);
+}
 
-        template <>
-        mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Subtract)
-        {
-            return NgDialectObj.createGenericOp<mlir::NGSubOp>(ngNode);
-        }
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Subtract)
+{
+    return NgDialectObj.createGenericOp<mlir::NGSubOp>(ngNode);
+}
 
-        template <>
-        mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Multiply)
-        {
-            return NgDialectObj.createGenericOp<mlir::NGMulOp>(ngNode);
-        }
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Multiply)
+{
+    return NgDialectObj.createGenericOp<mlir::NGMulOp>(ngNode);
+}
 
-        template <>
-        mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Divide)
-        {
-            return NgDialectObj.createGenericOp<mlir::NGDivOp>(ngNode);
-        }
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Divide)
+{
+    return NgDialectObj.createGenericOp<mlir::NGDivOp>(ngNode);
+}
 
-        template <>
-        mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Greater)
-        {
-            return NgDialectObj.createGenericOp<mlir::NGGreaterOp>(ngNode);
-        }
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Greater)
+{
+    return NgDialectObj.createGenericOp<mlir::NGGreaterOp>(ngNode);
+}
 
-        template <>
-        mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Less)
-        {
-            return NgDialectObj.createGenericOp<mlir::NGLessOp>(ngNode);
-        }
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Less)
+{
+    return NgDialectObj.createGenericOp<mlir::NGLessOp>(ngNode);
+}
 
-        template <>
-        mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Maximum)
-        {
-            return NgDialectObj.createGenericOp<mlir::NGMaxOp>(ngNode);
-        }
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Maximum)
+{
+    return NgDialectObj.createGenericOp<mlir::NGMaxOp>(ngNode);
+}
 
-        template <>
-        mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Minimum)
-        {
-            return NgDialectObj.createGenericOp<mlir::NGMinOp>(ngNode);
-        }
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Minimum)
+{
+    return NgDialectObj.createGenericOp<mlir::NGMinOp>(ngNode);
+}
 
-        template <>
-        mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::ArgMax)
-        {
-            return NgDialectObj.createIndexReduction<mlir::NGArgMaxRedOp>(ngNode);
-        }
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::ArgMax)
+{
+    return NgDialectObj.createIndexReduction<mlir::NGArgMaxRedOp>(ngNode);
+}
 
-        template <>
-        mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::ArgMin)
-        {
-            return NgDialectObj.createIndexReduction<mlir::NGArgMinRedOp>(ngNode);
-        }
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::ArgMin)
+{
+    return NgDialectObj.createIndexReduction<mlir::NGArgMinRedOp>(ngNode);
+}
 
-        template <>
-        mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Dot)
-        {
-            return NgDialectObj.createGenericOp<mlir::NGDotOp>(ngNode);
-        }
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Dot)
+{
+    return NgDialectObj.createGenericOp<mlir::NGDotOp>(ngNode);
+}
 
-        template <>
-        mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Concat)
-        {
-            auto concat = static_cast<const ngraph::op::Concat*>(ngNode);
-            auto op = NgDialectObj.createGenericOp<mlir::NGConcatOp>(ngNode);
-            op->setAttr(
-                "concatenation_axis",
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Concat)
+{
+    auto concat = static_cast<const ngraph::op::Concat*>(ngNode);
+    auto op = NgDialectObj.createGenericOp<mlir::NGConcatOp>(ngNode);
+    op->setAttr("concatenation_axis",
                 NgDialectObj.m_builder->getI64IntegerAttr(concat->get_concatenation_axis()));
-            return op;
-        }
+    return op;
+}
 
-        template <>
-        mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Gather)
-        {
-            auto gather = static_cast<const ngraph::op::Gather*>(ngNode);
-            auto op = NgDialectObj.createGenericOp<mlir::NGGatherOp>(ngNode);
-            op->setAttr("axis", NgDialectObj.m_builder->getI64IntegerAttr(gather->get_axis()));
-            return op;
-        }
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Gather)
+{
+    auto gather = static_cast<const ngraph::op::Gather*>(ngNode);
+    auto op = NgDialectObj.createGenericOp<mlir::NGGatherOp>(ngNode);
+    op->setAttr("axis", NgDialectObj.m_builder->getI64IntegerAttr(gather->get_axis()));
+    return op;
+}
 
-        template <>
-        mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Relu)
-        {
-            return NgDialectObj.createGenericOp<mlir::NGReluOp>(ngNode);
-        }
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Relu)
+{
+    return NgDialectObj.createGenericOp<mlir::NGReluOp>(ngNode);
+}
 
-        template <>
-        mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Negative)
-        {
-            return NgDialectObj.createGenericOp<mlir::NGNegOp>(ngNode);
-        }
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Negative)
+{
+    return NgDialectObj.createGenericOp<mlir::NGNegOp>(ngNode);
+}
 
-        template <>
-        mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Convolution)
-        {
-            mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGConvolutionOp>(ngNode);
-            auto convNode = static_cast<const ngraph::op::Convolution*>(ngNode);
-            auto convOp = llvm::cast<mlir::NGConvolutionOp>(op);
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Convolution)
+{
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGConvolutionOp>(ngNode);
+    auto convNode = static_cast<const ngraph::op::Convolution*>(ngNode);
+    auto convOp = llvm::cast<mlir::NGConvolutionOp>(op);
 
-            mlir::ArrayAttr attr =
-                NgDialectObj.getShapeAsAttr(convNode->get_window_movement_strides());
-            convOp.setStrides(attr);
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(convNode->get_window_movement_strides());
+    convOp.setStrides(attr);
 
-            attr = NgDialectObj.getShapeAsAttr(convNode->get_padding_below());
-            convOp.setPadBelow(attr);
+    attr = NgDialectObj.getShapeAsAttr(convNode->get_padding_below());
+    convOp.setPadBelow(attr);
 
-            attr = NgDialectObj.getShapeAsAttr(convNode->get_padding_above());
-            convOp.setPadAbove(attr);
-            return op;
-        }
-    }
+    attr = NgDialectObj.getShapeAsAttr(convNode->get_padding_above());
+    convOp.setPadAbove(attr);
+    return op;
 }
 
 template <typename Op>
@@ -450,6 +537,5 @@ std::unique_ptr<mlir::Pass>
                                                 mlir::OpBuilder* builder,
                                                 MLIRCompiler* compiler)
 {
-    return std::make_unique<ngraph::pass::NgDialectConversionPass>(
-        compiledKernel, context, builder, compiler);
+    return std::make_unique<NgDialectConversionPass>(compiledKernel, context, builder, compiler);
 }
