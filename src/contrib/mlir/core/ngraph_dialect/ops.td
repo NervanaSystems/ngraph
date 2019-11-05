@@ -22,7 +22,7 @@
 // not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
 
 include "mlir/IR/OpBase.td"
-
+include "core/ngraph_dialect/ops_interfaces.td"
 // nGraph Dialect operations definitions
 //
 // This files declares nGraph operations that table-gen uses to create C++ code
@@ -38,14 +38,12 @@ include "mlir/IR/OpBase.td"
 //
 // Each def will corresponding to a C++ class
 
-
 def NG_Dialect : Dialect {
   let name = "ng";
   // TODO: Have the dialect under its own mlir::ngraph namespace
   // At mlir top-level for now
   let cppNamespace = "";
 }
-
 
 // nGraph Types
 // This defines records equivalent to nGraph types. It doesn't generate code.
@@ -123,76 +121,6 @@ class NG_Ternary_Op<string mnemonic, list<OpTrait> traits = []> :
 }
 
 
-// Base class for terminator operations.
-class NG_Terminator_Op<string mnemonic, list<OpTrait> traits = []> :
-    NG_Op<mnemonic, !listconcat(traits, [Terminator])>,
-    Arguments<(ins Variadic<NG_TensorType>:$args)>, Results<(outs)> {}
-
-// Unary Operations
-def NGAbsOp      : NG_Unary_Arith_Op<"abs">;
-def NGACosOp     : NG_Unary_Arith_Op<"acos">;
-def NGASinOp     : NG_Unary_Arith_Op<"asin">;
-def NGATanOp     : NG_Unary_Arith_Op<"atan">;
-def NGCeilOp     : NG_Unary_Arith_Op<"ceil">;
-def NGConvertOp  : NG_Unary_Arith_Op<"conv">;
-def NGCosOp      : NG_Unary_Arith_Op<"cos">;
-def NGCoshOp     : NG_Unary_Arith_Op<"cosh">;
-def NGExpOp      : NG_Unary_Arith_Op<"exp">;
-def NGFloorOp    : NG_Unary_Arith_Op<"floor">;
-def NGLogOp      : NG_Unary_Arith_Op<"log">;
-def NGNegOp      : NG_Unary_Arith_Op<"neg">;
-def NGNotOp      : NG_Unary_Arith_Op<"not">;
-def NGSignOp     : NG_Unary_Arith_Op<"sign">;
-def NGSinOp      : NG_Unary_Arith_Op<"sin">;
-def NGSinhOp     : NG_Unary_Arith_Op<"sinh">;
-def NGTanOp      : NG_Unary_Arith_Op<"tan">;
-def NGTanhOp     : NG_Unary_Arith_Op<"tanh">;
-def NGSqrtOp     : NG_Unary_Arith_Op<"sqrt">;
-def NGReluOp     : NG_Unary_Arith_Op<"relu">;
-
-// Binary Operations
-def NGAddOp      : NG_Binary_Arith_Op<"add", [Commutative]>;
-def NGAndOp      : NG_Binary_Arith_Op<"and", [Commutative]>;
-def NGSubOp      : NG_Binary_Arith_Op<"sub">;
-def NGDivOp      : NG_Binary_Arith_Op<"div">;
-def NGMaxOp      : NG_Binary_Arith_Op<"max", [Commutative]>;
-def NGMinOp      : NG_Binary_Arith_Op<"min", [Commutative]>;
-def NGMulOp      : NG_Binary_Arith_Op<"mul", [Commutative]>;
-def NGPowOp      : NG_Binary_Arith_Op<"pow">;
-
-// Comparison
-def NGEqOp        : NG_Cmp_Op<"equal">;
-def NGGreaterOp   : NG_Cmp_Op<"greater">;
-def NGGreaterEqOp : NG_Cmp_Op<"greater.eq">;
-def NGLessOp      : NG_Cmp_Op<"less">;
-def NGLessEqOp    : NG_Cmp_Op<"less.eq">;
-def NGNotEqOp     : NG_Cmp_Op<"not.equal">;
-
-// Other
-def NGSelectOp    : NG_Ternary_Op<"select">
-{
-  let verifier = [{ return verifyOp(this); }];
-}
-
-// Dot Product
-def NGDotOp : NG_Binary_Op<"dot">
-{
-  // TODO: Add reduction axis attribute when needed.
-  let verifier = [{ return verifyOp(this); }];
-}
-
-// TODO(amprocte): Might be nice to rebase this on some sort of NG_Variadic_Op
-// class, but I'm not sure how to add concatenation_axis into the args if we
-// do that.
-def NGConcatOp :
-    NG_OneResult_Op<"concat", [NoSideEffect]>,
-    Arguments<(ins Variadic<NG_TensorType>:$args, I64Attr:$concatenation_axis)>
-{
-  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-
-  let verifier = [{ return verifyOp(this); }];
-}
-
 class NG_Axis_Reduction_Op<string mnemonic, list<OpTrait> traits = []> :
       NG_OneResult_Op<mnemonic, !listconcat([NoSideEffect], traits)>,
       Arguments<(ins NG_TensorType:$operand, I64ArrayAttr:$axes)>
@@ -207,101 +135,24 @@ class NG_Axis_Reduction_Op<string mnemonic, list<OpTrait> traits = []> :
   let verifier = [{ return verifyAxisReductionOp(this); }];
 }
 
-// Axis reduction operations.
-def NGSumRedOp : NG_Axis_Reduction_Op<"sum.red">
-{
-  let summary = "Axis sum reduction of a tensor.";
-  let verifier = [{ return verifyAxisReductionOp(this); }];
-}
+// Base class for terminator operations.
+class NG_Terminator_Op<string mnemonic, list<OpTrait> traits = []> :
+    NG_Op<mnemonic, !listconcat(traits, [Terminator])>,
+    Arguments<(ins Variadic<NG_TensorType>:$args)>, Results<(outs)> {}
 
-def NGProdRedOp : NG_Axis_Reduction_Op<"prod.red">
-{
-  let summary = "Axis product reduction of a tensor.";
-  let verifier = [{ return verifyAxisReductionOp(this); }];
-}
 
-def NGMinRedOp : NG_Axis_Reduction_Op<"min.red">
-{
-  let summary = "Axis minimum reduction of a tensor.";
-  let verifier = [{ return verifyAxisReductionOp(this); }];
-}
-
-def NGMaxRedOp : NG_Axis_Reduction_Op<"max.red">
-{
-  let summary = "Axis maximum reduction of a tensor.";
-  let verifier = [{ return verifyAxisReductionOp(this); }];
-}
-
-def NGArgMinRedOp : NG_Axis_Reduction_Op<"argmin.red">
-{
-  let summary = "Axis minimum index reduction of a tensor.";
-  let verifier = [{ return verifyIndexReductionOp(this); }];
-}
-
-def NGArgMaxRedOp : NG_Axis_Reduction_Op<"argmax.red">
-{
-  let summary = "Axis maximum index reduction of a tensor.";
-  let verifier = [{ return verifyIndexReductionOp(this); }];
-}
-
-def NGAllRedOp : NG_Axis_Reduction_Op<"all.red">
-{
-  let summary = "Axis logical AND reduction of a boolean tensor.";
-  let verifier = [{ return verifyLogicalReductionOp(this); }];
-}
-
-def NGAnyRedOp : NG_Axis_Reduction_Op<"any.red">
-{
-  let summary = "Axis logical OR reduction of a boolean tensor.";
-  let verifier = [{ return verifyLogicalReductionOp(this); }];
-}
-
-// Gather
-def NGGatherOp : 
-    NG_OneResult_Op<"gather", [NoSideEffect]>,
-    Arguments<(ins NG_TensorType:$params, NG_TensorType:$indices, I64Attr:$axis)>
-{
-  let summary = "Gather slices from params along the specified axis according to indices";
-  let description = [{
-    Gather slices from axis of params according to indices
-    params The tensor from which slices are gathered
-    indices Index tensor. Data type must be `element::i32` or `element::i64`
-    axis Axis in params to gather
-  }];
-
-  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-
-  let verifier = [{ return verifyOp(this); }];
-}
-
-// Convolution
-def NGConvolutionOp :
-    NG_OneResult_Op<"convolution", [NoSideEffect]>,
-    Arguments<(ins NG_TensorType:$images, NG_TensorType:$filters, 
-               I64ArrayAttr:$strides,
-               I64ArrayAttr:$padBelow,
-               I64ArrayAttr:$padAbove)>
-{
-  let summary = "Convolution of a tensor of filters over a tensor of images with padding support";
-  let description = [{
-    Convolution operation with padding and stride support. No dilation supported.
-    images        Input image tensor. Shape is [N, C_IN, D1, ... Df]
-    filters       Set of filters to apply. Shape is [C_OUT, C_IN, F1, ... Ff]
-    strides       Window movement strides. Shape is [f]. Attribute.
-    padBelow      The padding-below sizes. Shape is [f]. Attribute.
-    padAbove      The padding-below sizes. Shape is [f]. Attribute.
-   
-    Output is of shape [N, C_OUT, R1, ... Rf]
-  }];
-
-  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return verifyOp(this); }];
-  let extraClassDeclaration = [{
-    void setStrides(ArrayAttr& arrayAttr)  { this->setAttr("strides", arrayAttr);  }
-    void setPadBelow(ArrayAttr& arrayAttr) { this->setAttr("padBelow", arrayAttr); }
-    void setPadAbove(ArrayAttr& arrayAttr) { this->setAttr("padAbove", arrayAttr); }
-  }];
-}
 
 // Terminator Ops
 def NGReturnOp : NG_Terminator_Op<"return">;
+
+// ops attributes
+include "core/ngraph_dialect/ops_attributes.td"
+
+// Version 0 Ops
+include "core/ngraph_dialect/ops_v0.td"
+
+// Version 1 Ops
+include "core/ngraph_dialect/ops_v1.td"
+
+// Fused Ops
+include "core/ngraph_dialect/fused_ops.td"
