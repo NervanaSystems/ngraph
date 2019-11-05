@@ -15,6 +15,7 @@
 //*****************************************************************************
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
@@ -22,16 +23,22 @@
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/not.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reduce_prod.hpp"
 #include "ngraph/op/reduce_sum.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
+#include "ngraph/op/strided_slice.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/xor.hpp"
 
 #include <limits>
 #include <numeric>
@@ -95,6 +102,16 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 #endif
     switch (get_typeid(node))
     {
+    case OP_TYPEID::And:
+    {
+        const auto and_v0 = dynamic_cast<const op::v0::And*>(node.get());
+        auto replacement_node = make_shared<op::v1::LogicalAnd>(node->input(0).get_source_output(),
+                                                                node->input(1).get_source_output(),
+                                                                and_v0->get_autob());
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::AvgPool:
     {
         auto tmp = dynamic_cast<const op::v0::AvgPool*>(node.get());
@@ -130,8 +147,8 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         auto kernel = tmp->get_window_shape();
 
         auto replacement_node =
-            make_shared<op::v1::AvgPoolBackprop>(tmp->get_forward_arg_shape(),
-                                                 node->input(0).get_source_output(),
+            make_shared<op::v1::AvgPoolBackprop>(node->input(0).get_source_output(),
+                                                 node->input(1).get_source_output(),
                                                  strides,
                                                  pads_begin,
                                                  pads_end,
@@ -221,9 +238,9 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
                      *node);
 
         auto replacement_node =
-            make_shared<op::v1::ConvolutionBackpropData>(data_batch_shape,
-                                                         node->input(0).get_source_output(),
+            make_shared<op::v1::ConvolutionBackpropData>(node->input(0).get_source_output(),
                                                          node->input(1).get_source_output(),
+                                                         node->input(2).get_source_output(),
                                                          strides,
                                                          dilations,
                                                          pads_begin,
@@ -257,8 +274,8 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 
         auto replacement_node =
             make_shared<op::v1::ConvolutionBackpropFilters>(node->input(0).get_source_output(),
-                                                            filters_shape,
                                                             node->input(1).get_source_output(),
+                                                            node->input(2).get_source_output(),
                                                             strides,
                                                             dilations,
                                                             pads_begin,
@@ -284,6 +301,16 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         auto axis_node = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{axis});
         auto replacement_node = make_shared<op::v1::Gather>(
             node->input(0).get_source_output(), node->input(1).get_source_output(), axis_node);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::LessEq:
+    {
+        const auto less_eq_v0 = dynamic_cast<const op::v0::LessEq*>(node.get());
+        auto replacement_node = make_shared<op::v1::LessEqual>(node->input(0).get_source_output(),
+                                                               node->input(1).get_source_output(),
+                                                               less_eq_v0->get_autob());
         replace_node(node, replacement_node);
         modified = true;
         break;
@@ -341,6 +368,22 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
                                                      pads_end,
                                                      kernel);
         }
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Not:
+    {
+        replace_node(node, make_shared<op::v1::LogicalNot>(node->input(0).get_source_output()));
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Or:
+    {
+        const auto or_v0 = dynamic_cast<const op::v0::Or*>(node.get());
+        auto replacement_node = make_shared<op::v1::LogicalOr>(node->input(0).get_source_output(),
+                                                               node->input(1).get_source_output(),
+                                                               or_v0->get_autob());
         replace_node(node, replacement_node);
         modified = true;
         break;
@@ -413,6 +456,30 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
+    case OP_TYPEID::Slice:
+    {
+        const auto tmp = as_type_ptr<op::v0::Slice>(node);
+
+        const auto data = node->input(0).get_source_output();
+        const auto begin = op::Constant::create(
+            element::i64, Shape{tmp->get_lower_bounds().size()}, tmp->get_lower_bounds());
+        const auto end = op::Constant::create(
+            element::i64, Shape{tmp->get_upper_bounds().size()}, tmp->get_upper_bounds());
+        const auto strides = op::Constant::create(
+            element::i64, Shape{tmp->get_strides().size()}, tmp->get_strides());
+        int64_t input_size = tmp->get_lower_bounds().size();
+
+        auto replacement_node = make_shared<op::v1::StridedSlice>(data,
+                                                                  begin,
+                                                                  end,
+                                                                  strides,
+                                                                  vector<int64_t>(input_size, 0),
+                                                                  vector<int64_t>(input_size, 0));
+
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::Sum:
     {
         bool keep_dims = false;
@@ -456,6 +523,16 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         auto replacement_node =
             make_shared<op::v1::TopK>(node->input_value(0), k_constant, axis, mode, sort);
 
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Xor:
+    {
+        const auto xor_v0 = dynamic_cast<const op::v0::Xor*>(node.get());
+        auto replacement_node = make_shared<op::v1::LogicalXor>(node->input(0).get_source_output(),
+                                                                node->input(1).get_source_output(),
+                                                                xor_v0->get_autob());
         replace_node(node, replacement_node);
         modified = true;
         break;

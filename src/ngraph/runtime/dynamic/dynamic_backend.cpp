@@ -16,11 +16,14 @@
 
 #include "ngraph/runtime/dynamic/dynamic_backend.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_replace_slice.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
+#include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -88,7 +91,10 @@ bool is_dynamic_op(const std::shared_ptr<Node>& op)
     return is_type<op::Transpose>(op) || is_type<op::DynBroadcast>(op) ||
            is_type<op::DynReplaceSlice>(op) || is_type<op::DynSlice>(op) ||
            is_type<op::v1::Reshape>(op) || is_type<op::DynReshape>(op) || is_type<op::Range>(op) ||
-           is_type<op::v1::Broadcast>(op);
+           is_type<op::v1::ConvolutionBackpropData>(op) ||
+           is_type<op::v1::ConvolutionBackpropFilters>(op) ||
+           is_type<op::v1::AvgPoolBackprop>(op) || is_type<op::v1::Broadcast>(op) ||
+           is_type<op::v1::GenerateMask>(op);
 }
 
 // Helper for a vile hack in DynamicExecutable::call. See body of that function for details.

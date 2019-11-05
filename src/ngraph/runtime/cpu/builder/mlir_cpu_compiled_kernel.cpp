@@ -16,7 +16,9 @@
 
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 
-#include "contrib/mlir/compiler/compiler.hpp"
+#include "contrib/mlir/backend/cpu/cpu_backend.hpp"
+#include "contrib/mlir/core/compiler.hpp"
+#include "contrib/mlir/runtime/cpu/cpu_runtime.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 
@@ -68,22 +70,41 @@ namespace ngraph
                     // Compile nodes within the CompiledKernel op.
                     CompiledKernel* compiled_kernel =
                         static_cast<CompiledKernel*>(const_cast<Node*>(node));
-                    bool is_module_ready = true;
-                    auto it = ctx->mlir_compilers.find(compiled_kernel);
 
-                    if (it == ctx->mlir_compilers.end())
-                    {
-                        // create a new compiler for the CK
-                        ctx->mlir_compilers.emplace(compiled_kernel, compiled_kernel);
-                        is_module_ready = false;
-                    }
+                    auto it = ctx->mlir_runtimes.find(compiled_kernel);
 
-                    MLIRCompiler& mlir_compiler = ctx->mlir_compilers.find(compiled_kernel)->second;
-                    if (!is_module_ready)
+                    if (it == ctx->mlir_runtimes.end())
                     {
+                        // Compile the sub-graph and create a new runtime
+                        // We must create an MLIRContext that out lives the compilation/execution
+                        // The runtime contains the context and gets store in the CK cache
+
+                        // Runtime contains context and must be constructed in-place.
+                        // MLIR contexts cannot be copied over
+                        ctx->mlir_runtimes.emplace(std::piecewise_construct,
+                                                   std::make_tuple(compiled_kernel),
+                                                   std::make_tuple());
+                        MLIRCPURuntime& mlir_runtime =
+                            ctx->mlir_runtimes.find(compiled_kernel)->second;
+                        // Grab the context and initialize a core compiler
+                        mlir::MLIRContext& context = mlir_runtime.get_context();
+                        MLIRCompiler mlir_compiler(compiled_kernel, context);
+                        // Compile to NG dialect
                         mlir_compiler.compile();
+                        // Grab a context and initialize a CPU backend using same context
+                        MLIRCPUBackend mlir_backend(mlir_compiler.get_module(), context);
+                        // Codegen to LLVM dialect
+                        mlir_backend.codegen();
+                        // Store module into runtime, and invoke.
+                        mlir_runtime.set_module(mlir_backend.get_module());
+                        mlir_runtime.run(&ptr_args);
                     }
-                    mlir_compiler.run(ptr_args);
+                    else
+                    {
+                        // We have found a cached runtime, just invoke.
+                        MLIRCPURuntime& mlir_runtime = it->second;
+                        mlir_runtime.run(&ptr_args);
+                    }
                 };
 
                 functors.emplace_back(functor);
