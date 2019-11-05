@@ -42,6 +42,17 @@ namespace ngraph
             ///
             HardSigmoid(const Output<Node>& data, float alpha, float beta);
 
+            /// \brief      Constructs a HardSigmoid operation.
+            ///
+            /// \param      data   Input tensor.
+            /// \param[in]  alpha  1D tensor containing a single value of the alpha parameter.
+            /// \param[in]  beta   1D tensor containing a single value of the beta parameter.
+            ///
+            HardSigmoid(const Output<Node>& data,
+                        const Output<Node>& alpha,
+                        const Output<Node>& beta);
+
+            virtual void pre_validate_and_infer_types() override;
             virtual NodeVector decompose_op() const override;
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -49,8 +60,8 @@ namespace ngraph
             float get_alpha() const { return m_alpha; }
             float get_beta() const { return m_beta; }
         private:
-            float m_alpha;
-            float m_beta;
+            float m_alpha = 0.0f;
+            float m_beta = 0.0f;
         };
     }
 }

@@ -37,23 +37,76 @@ op::HardSigmoid::HardSigmoid(const Output<Node>& data, float alpha, float beta)
     constructor_validate_and_infer_types();
 }
 
+op::HardSigmoid::HardSigmoid(const Output<Node>& data,
+                             const Output<Node>& alpha,
+                             const Output<Node>& beta)
+    : FusedOp({data, alpha, beta})
+{
+    constructor_validate_and_infer_types();
+}
+
+void op::HardSigmoid::pre_validate_and_infer_types()
+{
+    if (get_input_size() > 1)
+    {
+        const auto& alpha_pshape = get_input_partial_shape(1);
+        const auto& beta_pshape = get_input_partial_shape(2);
+        NODE_VALIDATION_CHECK(this,
+                              alpha_pshape.is_static() && beta_pshape.is_static(),
+                              "Both alpha and beta inputs must have static shapes.");
+
+        const Shape alpha_shape = alpha_pshape.to_shape();
+
+        NODE_VALIDATION_CHECK(this,
+                              is_vector(alpha_shape) && alpha_shape[0] == 1,
+                              "A vector with a single element expected for the alpha input. Got: ",
+                              alpha_shape);
+
+        const Shape beta_shape = beta_pshape.to_shape();
+
+        NODE_VALIDATION_CHECK(this,
+                              is_vector(beta_shape) && beta_shape[0] == 1,
+                              "A vector with a single element expected for the beta input. Got: ",
+                              beta_shape);
+
+        const auto& data_et = input(0).get_element_type();
+        const auto& alpha_et = input(1).get_element_type();
+        const auto& beta_et = input(2).get_element_type();
+
+        NODE_VALIDATION_CHECK(
+            this,
+            data_et == alpha_et && data_et == beta_et,
+            "The element types of both alpha and beta inputs must match the data input type.");
+    }
+}
+
 NodeVector op::HardSigmoid::decompose_op() const
 {
-    auto data = input_value(0);
-    auto data_shape = data.get_shape();
-    size_t elem_count = shape_size(data_shape);
-
-    std::shared_ptr<ngraph::Node> alpha_node = ngraph::op::Constant::create<float>(
-        data.get_element_type(), data_shape, std::vector<float>(elem_count, m_alpha));
-
-    std::shared_ptr<ngraph::Node> beta_node = ngraph::op::Constant::create<float>(
-        data.get_element_type(), data_shape, std::vector<float>(elem_count, m_beta));
+    const auto data = input_value(0);
+    const auto data_shape = data.get_shape();
+    const size_t elem_count = shape_size(data_shape);
 
     std::shared_ptr<ngraph::Node> one_node = ngraph::op::Constant::create<float>(
-        data.get_element_type(), data_shape, std::vector<float>(elem_count, 1.0));
+        data.get_element_type(), data_shape, std::vector<float>(elem_count, 1.0f));
 
     std::shared_ptr<ngraph::Node> zero_node = ngraph::op::Constant::create<float>(
-        data.get_element_type(), data_shape, std::vector<float>(elem_count, 0.0));
+        data.get_element_type(), data_shape, std::vector<float>(elem_count, 0.0f));
+
+    std::shared_ptr<ngraph::Node> alpha_node, beta_node;
+
+    if (get_input_size() > 1)
+    {
+        alpha_node = input_value(1).get_node_shared_ptr();
+        beta_node = input_value(2).get_node_shared_ptr();
+    }
+    else
+    {
+        alpha_node = ngraph::op::Constant::create<float>(
+            data.get_element_type(), data_shape, std::vector<float>(elem_count, m_alpha));
+
+        beta_node = ngraph::op::Constant::create<float>(
+            data.get_element_type(), data_shape, std::vector<float>(elem_count, m_beta));
+    }
 
     return {std::make_shared<op::Minimum>(
         std::make_shared<op::Maximum>(alpha_node * data + beta_node, zero_node), one_node)};
