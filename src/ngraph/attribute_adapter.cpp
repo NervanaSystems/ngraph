@@ -43,27 +43,12 @@ namespace
 
 namespace ngraph
 {
-    template <>
-    NGRAPH_API const DiscreteTypeInfo AttributeAdapter<vector<int64_t>>::type_info{
-        "AttributeAdapter<vector<int64_t>>", 0};
+    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<vector<int64_t>>::type_info;
 
-    template <>
-    const vector<int64_t>& AttributeAdapter<vector<int64_t>>::get()
-    {
-        return m_value;
-    }
+    const vector<int64_t>& AttributeAdapter<vector<int64_t>>::get() { return m_value; }
+    void AttributeAdapter<vector<int64_t>>::set(const vector<int64_t>& value) { m_value = value; }
+    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<vector<uint64_t>>::type_info;
 
-    template <>
-    void AttributeAdapter<vector<int64_t>>::set(const vector<int64_t>& value)
-    {
-        m_value = value;
-    }
-
-    template <>
-    NGRAPH_API const DiscreteTypeInfo AttributeAdapter<vector<uint64_t>>::type_info{
-        "AttributeAdapter<vector<uint64_t>>", 0};
-
-    template <>
     const vector<int64_t>& AttributeAdapter<vector<uint64_t>>::get()
     {
         if (!m_buffer_valid)
@@ -74,7 +59,6 @@ namespace ngraph
         return m_buffer;
     }
 
-    template <>
     void AttributeAdapter<vector<uint64_t>>::set(const vector<int64_t>& value)
     {
         m_value = copy_from<vector<uint64_t>>(value);
