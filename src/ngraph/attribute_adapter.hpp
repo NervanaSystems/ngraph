@@ -65,15 +65,8 @@ namespace ngraph
     };
 
     template <typename Type, typename Enable = void>
-    class AttributeAdapter : public ValueReference<Type>, public ValueAccessor<void>
+    class AttributeAdapter
     {
-    public:
-        AttributeAdapter(Type& value)
-            : ValueReference<Type>(value)
-        {
-        }
-        static const DiscreteTypeInfo type_info;
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
 
     template <typename Type>
