@@ -33,23 +33,29 @@ namespace ngraph
             Convert() = default;
             /// \brief Constructs a conversion operation.
             ///
-            /// \param arg          Node that produces the input tensor.
-            /// \param element_type Element type for the output tensor.
-            Convert(const Output<Node>& arg, const ngraph::element::Type& element_type);
+            /// \param arg               Node that produces the input tensor.
+            /// \param destination_type  Element type for the output tensor.
+            Convert(const Output<Node>& arg, const ngraph::element::Type& destination_type);
 
             void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            const element::Type& get_convert_element_type() const { return m_element_type; }
-            void set_convert_element_type(const element::Type& element_type)
+            const element::Type& get_destination_type() const { return m_destination_type; }
+            void set_destination_type(const element::Type& destination_type)
             {
-                m_element_type = element_type;
+                m_destination_type = destination_type;
+            }
+
+            const element::Type& get_convert_element_type() const { return m_destination_type; }
+            void set_convert_element_type(const element::Type& destination_type)
+            {
+                m_destination_type = destination_type;
             }
 
         protected:
-            ngraph::element::Type m_element_type;
+            ngraph::element::Type m_destination_type;
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
         };
