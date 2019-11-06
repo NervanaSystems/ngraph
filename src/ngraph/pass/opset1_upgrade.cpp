@@ -523,7 +523,9 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         auto replacement_node =
             make_shared<op::v1::TopK>(node->input_value(0), k_constant, axis, mode, sort);
 
-        replace_node(node, replacement_node);
+        // indices output will be 0, values 1
+        vector<int64_t> output_order{1, 0};
+        replace_node(node, replacement_node, output_order);
         modified = true;
         break;
     }

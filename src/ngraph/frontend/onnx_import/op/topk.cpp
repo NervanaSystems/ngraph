@@ -51,8 +51,8 @@ static std::shared_ptr<ngraph::Node> get_k(const ngraph::onnx_import::Node& node
 /// \return Return the outputs of the TopK node.
 static ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node)
 {
-    std::shared_ptr<ngraph::Node> indices = std::make_shared<ngraph::op::GetOutputElement>(node, 0);
-    std::shared_ptr<ngraph::Node> values = std::make_shared<ngraph::op::GetOutputElement>(node, 1);
+    std::shared_ptr<ngraph::Node> values = std::make_shared<ngraph::op::GetOutputElement>(node, 0);
+    std::shared_ptr<ngraph::Node> indices = std::make_shared<ngraph::op::GetOutputElement>(node, 1);
 
     return {values, indices};
 }

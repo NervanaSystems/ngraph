@@ -39,8 +39,8 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/strided_slice.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/op/xor.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/slice_plan.hpp"
 
@@ -586,7 +586,9 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         auto replacement_node = make_shared<op::v0::TopK>(
             arg_node, k_node, axis, index_elem_type, comnpute_max, sort_type);
 
-        replace_node(node, replacement_node);
+        // values output will be 0, indices 1
+        vector<int64_t> output_order{1, 0};
+        replace_node(node, replacement_node, output_order);
         modified = true;
         break;
     }
