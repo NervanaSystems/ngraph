@@ -103,6 +103,7 @@ scatter_nd_add_2d_to_3d
 
 # To be triaged -- bad kernels, numerical accuracy, edge conditions,
 # unimplemented functionality, &c
+atan2
 cos
 erf
 sin
