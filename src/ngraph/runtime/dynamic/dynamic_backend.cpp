@@ -117,7 +117,7 @@ bool runtime::dynamic::DynamicExecutable::call(
     // (1) all shapes;
     // (2) all values of shape-relevant input tensors.
 
-    std::vector<size_t> merged_input_shapes;
+    std::vector<int> merged_input_shapes;
     std::ostringstream key;
 
     for (auto& input : inputs)
@@ -126,11 +126,15 @@ bool runtime::dynamic::DynamicExecutable::call(
         {
             merged_input_shapes.emplace_back(input->get_shape()[i]);
         }
+        // -1 is the separator.
+        // So if shape of Input 1 = {2, 2, 3, 3} & Input 2 = {4, 5}
+        // the key would be 2, 2, 3, 3, -1, 4, 5, -1
+        merged_input_shapes.emplace_back(-1);
     }
 
     std::copy(merged_input_shapes.begin(),
               merged_input_shapes.end(),
-              std::ostream_iterator<size_t>(key, ", "));
+              std::ostream_iterator<int>(key, ", "));
 
     if (m_lru->is_cached(merged_input_shapes))
     {

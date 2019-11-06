@@ -41,15 +41,15 @@ namespace ngraph
 
             virtual ~LRUCache();
 
-            void add_entry(Shape, shared_ptr<Executable>);
-            bool is_cached(Shape);
-            shared_ptr<Executable> get_cached_entry(Shape);
-            ostringstream convert_shape_to_string(Shape shape);
+            void add_entry(const vector<int>&, shared_ptr<Executable>);
+            bool is_cached(const vector<int>&);
+            shared_ptr<Executable> get_cached_entry(const vector<int>&);
+            ostringstream convert_shape_to_string(const vector<int>& shape);
 
         private:
             int m_size; // cache size
             GraphCache m_map;
-            list<Shape> m_list;
+            list<vector<int>> m_list;
             mutex m_mutex;
         };
     }
