@@ -216,6 +216,6 @@ TEST(build_graph, validate_function_for_dynamic_shape)
         return f;
     };
 
-    EXPECT_EQ(true, make_function(true)->is_dynamic());
-    EXPECT_EQ(false, make_function(false)->is_dynamic());
+    EXPECT_TRUE(make_function(true)->is_dynamic());
+    EXPECT_FALSE(make_function(false)->is_dynamic());
 }
