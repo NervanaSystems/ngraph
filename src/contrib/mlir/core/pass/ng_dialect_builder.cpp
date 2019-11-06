@@ -98,13 +98,9 @@ namespace
         using TypeList = llvm::SmallVector<mlir::Type, 4>;
 
         NgDialectConversionPass(const ngraph::op::CompiledKernel* compiled_kernel,
-                                mlir::MLIRContext* context,
-                                mlir::OpBuilder* builder,
-                                MLIRCompiler* compiler)
+                                mlir::MLIRContext* context)
             : m_compiledKernel(compiled_kernel)
             , m_context(context)
-            , m_builder(builder)
-            , m_compiler(compiler)
         {
         }
 
@@ -194,7 +190,7 @@ void NgDialectConversionPass::runOnModule()
 {
     TypeList argsTypeList, resultTypeList;
 
-    auto& module = m_compiler->get_module();
+    mlir::ModuleOp module = getModule();
     // Retrieve input and output tensors.
     const auto& kernelInputs = m_compiledKernel->get_arguments();
     const auto& kernelOutput = m_compiledKernel->get_kernel_outputs();
@@ -228,7 +224,13 @@ void NgDialectConversionPass::runOnModule()
     // create builder
     m_builder = new mlir::OpBuilder(function.getBody());
     NgDialectConversionPass::buildNgDialect();
-    module->push_back(function);
+    module.push_back(function);
+
+    // Free MLIR function builder
+    if (m_builder)
+    {
+        free(m_builder);
+    }
 }
 
 template <typename T>
@@ -533,9 +535,7 @@ mlir::Operation* NgDialectConversionPass::createIndexReduction(const ngraph::Nod
 
 std::unique_ptr<mlir::Pass>
     ngraph::pass::createNgDialectConversionPass(const ngraph::op::CompiledKernel* compiledKernel,
-                                                mlir::MLIRContext* context,
-                                                mlir::OpBuilder* builder,
-                                                MLIRCompiler* compiler)
+                                                mlir::MLIRContext* context)
 {
-    return std::make_unique<NgDialectConversionPass>(compiledKernel, context, builder, compiler);
+    return std::make_unique<NgDialectConversionPass>(compiledKernel, context);
 }

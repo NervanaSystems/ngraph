@@ -110,11 +110,6 @@ void MLIRCompiler::init()
 void MLIRCompiler::compile()
 {
     buildNgDialectModule();
-    // Free MLIR function builder.
-    if (m_builder)
-    {
-        m_builder.reset(nullptr);
-    }
 }
 
 // Creates an MLIR module and function with nGraph dialect ops from the input CompiledKernel.
@@ -124,8 +119,7 @@ void MLIRCompiler::buildNgDialectModule()
     m_module = mlir::ModuleOp::create(mlir::UnknownLoc::get(&m_context));
 
     mlir::PassManager pm(&m_context);
-    pm.addPass(ngraph::pass::createNgDialectConversionPass(
-        m_compiledKernel, &m_context, m_builder.get(), this));
+    pm.addPass(ngraph::pass::createNgDialectConversionPass(m_compiledKernel, &m_context));
 
     // Apply any generic pass manager command line options.
     mlir::applyPassManagerCLOptions(pm);

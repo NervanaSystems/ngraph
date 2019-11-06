@@ -18,6 +18,7 @@
 // not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
 
 #include "ops.hpp"
+#include <iostream>
 #include "assertion.hpp"
 #include "llvm/ADT/StringSwitch.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -277,6 +278,8 @@ mlir::LogicalResult verifyOp(NGConvolutionOp* op)
         auto s = std::get<0>(attrs).cast<IntegerAttr>().getInt();
         auto pb = std::get<1>(attrs).cast<IntegerAttr>().getInt();
         auto pa = std::get<2>(attrs).cast<IntegerAttr>().getInt();
+
+        std::cout << "pb : " << pb << "pa : " << pa << std::endl;
         if (s <= 0)
         {
             return op->emitOpError("Window stride must be non-negative");

@@ -89,9 +89,7 @@ namespace ngraph
                 // MLIR context that holds all the MLIR information related to the sub-graph
                 // compilation.
                 mlir::MLIRContext& m_context;
-
                 mlir::OwningModuleRef m_module;
-                std::unique_ptr<mlir::OpBuilder> m_builder;
 
                 // Global initialization for MLIR compiler
                 static bool initialized;
