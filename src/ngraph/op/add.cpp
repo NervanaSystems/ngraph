@@ -35,6 +35,12 @@ shared_ptr<Node> op::Add::copy_with_new_args(const NodeVector& new_args) const
     return make_shared<Add>(new_args.at(0), new_args.at(1), this->get_autob());
 }
 
+bool op::Add::visit_attributes(AttributeVisitor& visitor)
+{
+    BinaryElementwiseArithmetic::visit_attributes(visitor);
+    return true;
+}
+
 void op::Add::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     if (get_autob().m_type != op::AutoBroadcastType::NONE)
