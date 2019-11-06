@@ -42,24 +42,12 @@ op::util::FusedOp::FusedOp(const std::string& node_type, const NodeVector& args)
 
 void op::util::FusedOp::validate_and_infer_types()
 {
-    // Bail out if any of the shapes are unknown since fused op decomposition
-    // typically requires fully-determined static types.
-    //
-    // In the absence of decomposition, we will not know how many outputs this
-    // fused op has, so we conservatively create and set a single output to
-    // facilitate downstream ops that would like to use this op as an argument.
-    // Multi-output fused ops (e.g., split) should create these outputs in their
-    // constructors instead.
-    for (size_t i = 0; i < get_input_size(); i++)
-    {
-        if (!get_input_partial_shape(i).is_static())
-        {
-            set_output_type(0, element::dynamic, PartialShape::dynamic());
-            return;
-        }
-    }
-
     pre_validate_and_infer_types();
+
+    if (!can_decompose_with_partial_shapes() && is_dynamic())
+    {
+        return;
+    }
 
     auto subgraph_outputs = decompose_op();
     auto subgraph = extract_subgraph(subgraph_outputs, get_arguments());

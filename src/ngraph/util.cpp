@@ -30,6 +30,7 @@
 #include "ngraph/op/result.hpp"
 #include "ngraph/partial_shape.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/tensor.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/util.hpp"
 
@@ -611,4 +612,121 @@ void ngraph::parse_version_string(
     {
         throw runtime_error("Error parsing version string '" + version + "'");
     }
+}
+
+template <typename T>
+std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
+{
+    if (ngraph::element::from<T>() != tv->get_element_type())
+    {
+        throw std::invalid_argument("read_vector type must match Tensor type");
+    }
+    size_t element_count = ngraph::shape_size(tv->get_shape());
+    size_t size = element_count * sizeof(T);
+    std::vector<T> rc(element_count);
+    tv->read(rc.data(), size);
+    return rc;
+}
+
+vector<float> read_float_vector(shared_ptr<runtime::Tensor> tv)
+{
+    vector<float> float_vec;
+    element::Type element_type = tv->get_tensor_layout()->get_element_type();
+
+    if (element_type == element::boolean)
+    {
+        vector<char> vec = read_vector<char>(tv);
+        // Changed from vector ctor to explicit for loop to add static_cast
+        // This silences MSVC warnings
+        for (char value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
+    }
+    else if (element_type == element::f32)
+    {
+        vector<float> vec = read_vector<float>(tv);
+        for (float value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
+    }
+    else if (element_type == element::f64)
+    {
+        vector<double> vec = read_vector<double>(tv);
+        for (double value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
+    }
+    else if (element_type == element::i8)
+    {
+        vector<int8_t> vec = read_vector<int8_t>(tv);
+        for (int8_t value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
+    }
+    else if (element_type == element::i16)
+    {
+        vector<int16_t> vec = read_vector<int16_t>(tv);
+        for (int16_t value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
+    }
+    else if (element_type == element::i32)
+    {
+        vector<int32_t> vec = read_vector<int32_t>(tv);
+        for (int32_t value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
+    }
+    else if (element_type == element::i64)
+    {
+        vector<int64_t> vec = read_vector<int64_t>(tv);
+        for (int64_t value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
+    }
+    else if (element_type == element::u8)
+    {
+        vector<uint8_t> vec = read_vector<uint8_t>(tv);
+        for (uint8_t value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
+    }
+    else if (element_type == element::u16)
+    {
+        vector<uint16_t> vec = read_vector<uint16_t>(tv);
+        for (uint16_t value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
+    }
+    else if (element_type == element::u32)
+    {
+        vector<uint32_t> vec = read_vector<uint32_t>(tv);
+        for (uint32_t value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
+    }
+    else if (element_type == element::u64)
+    {
+        vector<uint64_t> vec = read_vector<uint64_t>(tv);
+        for (uint64_t value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
+    }
+    else
+    {
+        throw ngraph_error("Unsupported nGraph element type.");
+    }
+
+    return float_vec;
 }

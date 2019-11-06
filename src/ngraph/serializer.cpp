@@ -35,6 +35,7 @@
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/binary_convolution.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/op/ceiling.hpp"
@@ -90,6 +91,7 @@
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
+#include "ngraph/op/fused/selu.hpp"
 #include "ngraph/op/fused/shuffle_channels.hpp"
 #include "ngraph/op/fused/softmax_crossentropy.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
@@ -344,7 +346,10 @@ static json write_auto_broadcast(const op::AutoBroadcastSpec& autob)
     return j;
 }
 
-static op::AutoBroadcastSpec read_auto_broadcast(json js_node, const std::string& attr)
+static op::AutoBroadcastSpec
+    read_auto_broadcast(json js_node,
+                        const std::string& attr,
+                        const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec())
 {
     if (has_key(js_node, attr))
     {
@@ -354,7 +359,7 @@ static op::AutoBroadcastSpec read_auto_broadcast(json js_node, const std::string
     }
     else
     {
-        return op::AutoBroadcastSpec();
+        return autob;
     }
 }
 
@@ -765,9 +770,20 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Add:
         {
-            node = make_shared<op::Add>(
-                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
-            break;
+            if (op_version == 0)
+            {
+                node = make_shared<op::v0::Add>(
+                    args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+                break;
+            }
+            if (op_version == 1)
+            {
+                node = make_shared<op::v1::Add>(
+                    args[0],
+                    args[1],
+                    read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+                break;
+            }
         }
         case OP_TYPEID::All:
         {
@@ -919,6 +935,27 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[2], args[0], args[1], args[3], args[4], args[5], epsilon);
             break;
         }
+        case OP_TYPEID::BinaryConvolution:
+        {
+            auto strides = node_js.at("strides").get<vector<size_t>>();
+            auto dilations = node_js.at("dilations").get<vector<size_t>>();
+            auto pads_begin = node_js.at("pads_begin").get<vector<std::ptrdiff_t>>();
+            auto pads_end = node_js.at("pads_end").get<vector<std::ptrdiff_t>>();
+            auto mode = node_js.at("mode").get<op::v1::BinaryConvolution::BinaryConvolutionMode>();
+            auto pad_value = node_js.at("pad_value").get<float>();
+            op::PadType auto_pad = read_pad_type(node_js);
+
+            node = make_shared<op::v1::BinaryConvolution>(args[0],
+                                                          args[1],
+                                                          strides,
+                                                          pads_begin,
+                                                          pads_end,
+                                                          dilations,
+                                                          mode,
+                                                          pad_value,
+                                                          auto_pad);
+            break;
+        }
         case OP_TYPEID::Broadcast:
         {
             if (op_version == 0)
@@ -1066,13 +1103,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             if (op_version == 1)
             {
-                auto data_batch_shape = node_js.at("data_batch_shape").get<vector<size_t>>();
                 auto strides = node_js.at("strides").get<vector<size_t>>();
                 auto dilations = node_js.at("dilations").get<vector<size_t>>();
                 auto pads_begin = node_js.at("pads_begin").get<vector<std::ptrdiff_t>>();
                 auto pads_end = node_js.at("pads_end").get<vector<std::ptrdiff_t>>();
                 node = make_shared<op::v1::ConvolutionBackpropData>(
-                    data_batch_shape, args[0], args[1], strides, dilations, pads_begin, pads_end);
+                    args[0], args[1], args[2], strides, dilations, pads_begin, pads_end);
             }
             break;
         }
@@ -1109,7 +1145,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 auto pads_begin = node_js.at("pads_begin").get<vector<std::ptrdiff_t>>();
                 auto pads_end = node_js.at("pads_end").get<vector<std::ptrdiff_t>>();
                 node = make_shared<op::v1::ConvolutionBackpropFilters>(
-                    args[0], filters_shape, args[1], strides, dilations, pads_begin, pads_end);
+                    args[0], args[1], args[2], strides, dilations, pads_begin, pads_end);
             }
             break;
         }
@@ -1192,8 +1228,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::DepthToSpace:
         {
+            auto mode = node_js.at("mode").get<op::DepthToSpace::DepthToSpaceMode>();
             auto block_size = node_js.at("block_size").get<size_t>();
-            node = make_shared<op::DepthToSpace>(args[0], block_size);
+            node = make_shared<op::DepthToSpace>(args[0], mode, block_size);
             break;
         }
         case OP_TYPEID::Dequantize:
@@ -1206,8 +1243,19 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Divide:
         {
             bool pythondiv = get_or_default(node_js, "pythondiv", true);
-            node = make_shared<op::Divide>(
-                args[0], args[1], pythondiv, read_auto_broadcast(node_js, "auto_broadcast"));
+            if (op_version == 0)
+            {
+                node = make_shared<op::v0::Divide>(
+                    args[0], args[1], pythondiv, read_auto_broadcast(node_js, "auto_broadcast"));
+            }
+            if (op_version == 1)
+            {
+                node = make_shared<op::v1::Divide>(
+                    args[0],
+                    args[1],
+                    pythondiv,
+                    read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+            }
             break;
         }
         case OP_TYPEID::Dot:
@@ -1297,8 +1345,18 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Equal:
         {
-            node = make_shared<op::Equal>(
-                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            if (op_version == 0)
+            {
+                node = make_shared<op::v0::Equal>(
+                    args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            }
+            if (op_version == 1)
+            {
+                node = make_shared<op::v1::Equal>(
+                    args[0],
+                    args[1],
+                    read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+            }
             break;
         }
         case OP_TYPEID::Erf:
@@ -1391,14 +1449,34 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Greater:
         {
-            node = make_shared<op::Greater>(
-                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            if (op_version == 0)
+            {
+                node = make_shared<op::v0::Greater>(
+                    args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            }
+            if (op_version == 1)
+            {
+                node = make_shared<op::v1::Greater>(
+                    args[0],
+                    args[1],
+                    read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+            }
             break;
         }
         case OP_TYPEID::GreaterEq:
         {
-            node = make_shared<op::GreaterEq>(
-                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            if (op_version == 0)
+            {
+                node = make_shared<op::v0::GreaterEq>(
+                    args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            }
+            if (op_version == 1)
+            {
+                node = make_shared<op::v1::GreaterEq>(
+                    args[0],
+                    args[1],
+                    read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+            }
             break;
         }
         case OP_TYPEID::GRN:
@@ -1528,19 +1606,60 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Less:
         {
-            node = make_shared<op::Less>(
-                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            if (op_version == 0)
+            {
+                node = make_shared<op::v0::Less>(
+                    args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            }
+            else if (op_version == 1)
+            {
+                node = make_shared<op::v1::Less>(
+                    args[0],
+                    args[1],
+                    read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+            }
             break;
         }
         case OP_TYPEID::LessEq:
         {
-            node = make_shared<op::LessEq>(
+            node = make_shared<op::v0::LessEq>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            break;
+        }
+        case OP_TYPEID::LessEqual:
+        {
+            node = make_shared<op::v1::LessEqual>(
+                args[0],
+                args[1],
+                read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
             break;
         }
         case OP_TYPEID::Log:
         {
             node = make_shared<op::Log>(args[0]);
+            break;
+        }
+        case OP_TYPEID::LogicalAnd:
+        {
+            node = make_shared<op::v1::LogicalAnd>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            break;
+        }
+        case OP_TYPEID::LogicalNot:
+        {
+            node = make_shared<op::v1::LogicalNot>(args[0]);
+            break;
+        }
+        case OP_TYPEID::LogicalOr:
+        {
+            node = make_shared<op::v1::LogicalOr>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            break;
+        }
+        case OP_TYPEID::LogicalXor:
+        {
+            node = make_shared<op::v1::LogicalXor>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::LRN:
@@ -1736,8 +1855,18 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Maximum:
         {
-            node = make_shared<op::Maximum>(
-                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            if (op_version == 0)
+            {
+                node = make_shared<op::v0::Maximum>(
+                    args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            }
+            else if (op_version == 1)
+            {
+                node = make_shared<op::v1::Maximum>(
+                    args[0],
+                    args[1],
+                    read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+            }
             break;
         }
         case OP_TYPEID::Min:
@@ -1748,14 +1877,34 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Minimum:
         {
-            node = make_shared<op::Minimum>(
-                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            if (op_version == 0)
+            {
+                node = make_shared<op::v0::Minimum>(
+                    args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            }
+            else if (op_version == 1)
+            {
+                node = make_shared<op::v1::Minimum>(
+                    args[0],
+                    args[1],
+                    read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+            }
             break;
         }
         case OP_TYPEID::Multiply:
         {
-            node = make_shared<op::Multiply>(
-                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            if (op_version == 0)
+            {
+                node = make_shared<op::v0::Multiply>(
+                    args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            }
+            else if (op_version == 1)
+            {
+                node = make_shared<op::v1::Multiply>(
+                    args[0],
+                    args[1],
+                    read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+            }
             break;
         }
         case OP_TYPEID::MVN:
@@ -1780,8 +1929,18 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::NotEqual:
         {
-            node = make_shared<op::NotEqual>(
-                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            if (op_version == 0)
+            {
+                node = make_shared<op::v0::NotEqual>(
+                    args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            }
+            else if (op_version == 1)
+            {
+                node = make_shared<op::v1::NotEqual>(
+                    args[0],
+                    args[1],
+                    read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+            }
             break;
         }
         case OP_TYPEID::Not:
@@ -1798,7 +1957,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Or:
         {
-            node = make_shared<op::Or>(
+            node = make_shared<op::v0::Or>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
@@ -1884,8 +2043,18 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Power:
         {
-            node = make_shared<op::Power>(
-                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            if (op_version == 0)
+            {
+                node = make_shared<op::v0::Power>(
+                    args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            }
+            else if (op_version == 1)
+            {
+                node = make_shared<op::v1::Power>(
+                    args[0],
+                    args[1],
+                    read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+            }
             break;
         }
         case OP_TYPEID::PRelu:
@@ -2102,6 +2271,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Select:
         {
             node = make_shared<op::Select>(args[0], args[1], args[2]);
+            break;
+        }
+        case OP_TYPEID::Selu:
+        {
+            node = make_shared<op::Selu>(args[0], args[1], args[2]);
             break;
         }
         case OP_TYPEID::Send:
@@ -2333,7 +2507,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Xor:
         {
-            node = make_shared<op::Xor>(
+            node = make_shared<op::v0::Xor>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
@@ -2518,8 +2692,16 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Add:
     {
-        auto tmp = static_cast<const op::Add*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
+        if (op_version == 0)
+        {
+            tmp = static_cast<const op::v0::Add*>(&n);
+        }
+        if (op_version == 1)
+        {
+            tmp = static_cast<const op::v1::Add*>(&n);
+        }
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -2639,6 +2821,18 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = static_cast<const op::BatchNormTrainingBackprop*>(&n);
         node["eps"] = tmp->get_eps_value();
+        break;
+    }
+    case OP_TYPEID::BinaryConvolution:
+    {
+        auto tmp = static_cast<const op::v1::BinaryConvolution*>(&n);
+        node["strides"] = tmp->get_strides();
+        node["dilations"] = tmp->get_dilations();
+        node["pads_begin"] = tmp->get_pads_begin();
+        node["pads_end"] = tmp->get_pads_end();
+        node["mode"] = tmp->get_mode();
+        node["pad_value"] = tmp->get_pad_value();
+        node["auto_pad"] = tmp->get_auto_pad();
         break;
     }
     case OP_TYPEID::Broadcast:
@@ -2821,16 +3015,28 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = static_cast<const op::DepthToSpace*>(&n);
         node["type"] = write_element_type(tmp->get_element_type());
+        node["mode"] = tmp->get_mode();
         node["block_size"] = tmp->get_block_size();
         break;
     }
     case OP_TYPEID::Divide:
     {
-        auto tmp = static_cast<const op::Divide*>(&n);
-        node["pythondiv"] = tmp->is_pythondiv();
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        const op::util::BinaryElementwiseArithmetic* bea_node = nullptr;
+        if (op_version == 0)
         {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+            auto tmp = static_cast<const op::v0::Divide*>(&n);
+            bea_node = tmp;
+            node["pythondiv"] = tmp->is_pythondiv();
+        }
+        else if (op_version == 1)
+        {
+            auto tmp = static_cast<const op::v1::Divide*>(&n);
+            bea_node = tmp;
+            node["pythondiv"] = tmp->is_pythondiv();
+        }
+        if (bea_node != nullptr && bea_node->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(bea_node->get_autob());
         }
         break;
     }
@@ -2888,8 +3094,16 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Equal:
     {
-        auto tmp = static_cast<const op::Equal*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        const op::util::BinaryElementwiseComparison* tmp = nullptr;
+        if (op_version == 0)
+        {
+            tmp = static_cast<const op::v0::Equal*>(&n);
+        }
+        if (op_version == 1)
+        {
+            tmp = static_cast<const op::v1::Equal*>(&n);
+        }
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -2953,8 +3167,16 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Greater:
     {
-        auto tmp = static_cast<const op::Greater*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        const op::util::BinaryElementwiseComparison* tmp = nullptr;
+        if (op_version == 0)
+        {
+            tmp = static_cast<const op::v0::Greater*>(&n);
+        }
+        else if (op_version == 1)
+        {
+            tmp = static_cast<const op::v1::Greater*>(&n);
+        }
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -2962,8 +3184,16 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::GreaterEq:
     {
-        auto tmp = static_cast<const op::GreaterEq*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        const op::util::BinaryElementwiseComparison* tmp = nullptr;
+        if (op_version == 0)
+        {
+            tmp = static_cast<const op::v0::GreaterEq*>(&n);
+        }
+        else if (op_version == 1)
+        {
+            tmp = static_cast<const op::v1::GreaterEq*>(&n);
+        }
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -3038,8 +3268,16 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Less:
     {
-        auto tmp = static_cast<const op::Less*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        const op::util::BinaryElementwiseComparison* tmp = nullptr;
+        if (op_version == 0)
+        {
+            tmp = static_cast<const op::v0::Less*>(&n);
+        }
+        else if (op_version == 1)
+        {
+            tmp = static_cast<const op::v1::Less*>(&n);
+        }
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -3047,7 +3285,16 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::LessEq:
     {
-        auto tmp = static_cast<const op::LessEq*>(&n);
+        auto tmp = static_cast<const op::v0::LessEq*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
+    }
+    case OP_TYPEID::LessEqual:
+    {
+        auto tmp = static_cast<const op::v1::LessEqual*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -3055,6 +3302,35 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Log: { break;
+    }
+    case OP_TYPEID::LogicalAnd:
+    {
+        auto tmp = static_cast<const op::v1::LogicalAnd*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
+    }
+    case OP_TYPEID::LogicalNot: { break;
+    }
+    case OP_TYPEID::LogicalOr:
+    {
+        auto tmp = static_cast<const op::v1::LogicalOr*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
+    }
+    case OP_TYPEID::LogicalXor:
+    {
+        auto tmp = static_cast<const op::v1::LogicalXor*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::LRN:
     {
@@ -3146,8 +3422,16 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Maximum:
     {
-        auto tmp = static_cast<const op::Maximum*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
+        if (op_version == 0)
+        {
+            tmp = static_cast<const op::v0::Maximum*>(&n);
+        }
+        else if (op_version == 1)
+        {
+            tmp = static_cast<const op::v1::Maximum*>(&n);
+        }
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -3161,8 +3445,16 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Minimum:
     {
-        auto tmp = static_cast<const op::Minimum*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
+        if (op_version == 0)
+        {
+            tmp = static_cast<const op::v0::Minimum*>(&n);
+        }
+        else if (op_version == 1)
+        {
+            tmp = static_cast<const op::v1::Minimum*>(&n);
+        }
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -3170,8 +3462,16 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Multiply:
     {
-        auto tmp = static_cast<const op::Multiply*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
+        if (op_version == 0)
+        {
+            tmp = static_cast<const op::v0::Multiply*>(&n);
+        }
+        else if (op_version == 1)
+        {
+            tmp = static_cast<const op::v1::Multiply*>(&n);
+        }
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -3196,8 +3496,16 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::NotEqual:
     {
-        auto tmp = static_cast<const op::NotEqual*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        const op::util::BinaryElementwiseComparison* tmp = nullptr;
+        if (op_version == 0)
+        {
+            tmp = static_cast<const op::v0::NotEqual*>(&n);
+        }
+        else if (op_version == 1)
+        {
+            tmp = static_cast<const op::v1::NotEqual*>(&n);
+        }
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -3214,7 +3522,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Or:
     {
-        auto tmp = static_cast<const op::Or*>(&n);
+        auto tmp = static_cast<const op::v0::Or*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -3296,8 +3604,16 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Power:
     {
-        auto tmp = static_cast<const op::Power*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
+        if (op_version == 0)
+        {
+            tmp = static_cast<const op::v0::Power*>(&n);
+        }
+        else if (op_version == 1)
+        {
+            tmp = static_cast<const op::v1::Power*>(&n);
+        }
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
@@ -3432,6 +3748,8 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::ScatterNDAdd: { break;
     }
     case OP_TYPEID::Select: { break;
+    }
+    case OP_TYPEID::Selu: { break;
     }
     case OP_TYPEID::Send:
     {
@@ -3579,7 +3897,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Xor:
     {
-        auto tmp = static_cast<const op::Xor*>(&n);
+        auto tmp = static_cast<const op::v0::Xor*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
