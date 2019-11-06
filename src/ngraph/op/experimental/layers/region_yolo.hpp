@@ -28,22 +28,27 @@ namespace ngraph
             NGRAPH_API
             static constexpr NodeTypeInfo type_info{"RegionYolo", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a RegionYolo operation
             ///
-            /// \param input          Input
-            /// \param num_coords     Number of coordinates for each region
-            /// \param num_classes    Number of classes for each region
-            /// \param num_regions    Number of regions
-            /// \param do_softmax     Compute softmax
-            /// \param mask           Mask
-            /// \param axis           Axis to begin softmax on
-            /// \param end_axis       Axis to end softmax on
+            /// \brief      Constructs a RegionYolo operation
+            ///
+            /// \param      input        Input
+            /// \param      num_coords   Number of coordinates for each region
+            /// \param      num_classes  Number of classes for each region
+            /// \param      num_regions  Number of regions
+            /// \param      do_softmax   Compute softmax
+            /// \param[in]  mask         Mask
+            /// \param[in]  anchors      A flattened list of pairs `[width, height]` that describes
+            ///                          prior box sizes.
+            /// \param      axis         Axis to begin softmax on
+            /// \param      end_axis     Axis to end softmax on
+            ///
             RegionYolo(const Output<Node>& input,
                        const size_t num_coords,
                        const size_t num_classes,
                        const size_t num_regions,
                        const bool do_softmax,
                        const std::vector<int64_t>& mask,
+                       const std::vector<float>& anchors,
                        const int axis,
                        const int end_axis);
 
@@ -57,6 +62,7 @@ namespace ngraph
             size_t get_num_regions() const { return m_num_regions; }
             bool get_do_softmax() const { return m_do_softmax; }
             const std::vector<int64_t>& get_mask() const { return m_mask; }
+            const std::vector<float>& get_anchors() const { return m_anchors; }
             int get_axis() const { return m_axis; }
             int get_end_axis() const { return m_end_axis; }
         private:
@@ -65,6 +71,7 @@ namespace ngraph
             size_t m_num_regions;
             bool m_do_softmax;
             std::vector<int64_t> m_mask;
+            std::vector<float> m_anchors;
             int m_axis;
             int m_end_axis;
         };
