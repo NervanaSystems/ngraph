@@ -16,9 +16,7 @@
 
 #include <memory>
 
-#include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/fused/softplus.hpp"
-
 #include "softplus.hpp"
 
 namespace ngraph
