@@ -19,12 +19,16 @@
 using namespace ngraph;
 using namespace std;
 
-list<Shape> runtime::LRUCache::m_list = {};
-runtime::LRUCache::GraphCache runtime::LRUCache::m_map = {};
-int runtime::LRUCache::m_size = 1024;
-mutex runtime::LRUCache::m_mutex;
-
+// Constructor
 runtime::LRUCache::LRUCache()
+{
+    m_size = 1024;
+    m_map = {};
+    m_list = {};
+}
+
+// Destructor
+runtime::LRUCache::~LRUCache()
 {
 }
 

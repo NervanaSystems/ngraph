@@ -35,7 +35,11 @@ namespace ngraph
         class LRUCache : public std::enable_shared_from_this<LRUCache>
         {
         public:
+            using GraphCache = unordered_map<string, shared_ptr<Executable>>;
+
             LRUCache();
+
+            virtual ~LRUCache();
 
             void add_entry(Shape, shared_ptr<Executable>);
             bool is_cached(Shape);
@@ -43,11 +47,10 @@ namespace ngraph
             ostringstream convert_shape_to_string(Shape shape);
 
         private:
-            static int m_size; // cache size
-            using GraphCache = unordered_map<string, shared_ptr<Executable>>;
-            static GraphCache m_map;
-            static list<Shape> m_list;
-            static mutex m_mutex;
+            int m_size; // cache size
+            GraphCache m_map;
+            list<Shape> m_list;
+            mutex m_mutex;
         };
     }
 }
