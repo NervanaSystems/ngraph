@@ -31,10 +31,8 @@ namespace ngraph
             {
                 inline NodeVector equal(const Node& node)
                 {
-                    return {std::make_shared<ngraph::op::Equal>(
-                        node.get_ng_inputs().at(0),
-                        node.get_ng_inputs().at(1),
-                        ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY))};
+                    return {std::make_shared<ngraph::op::v1::Equal>(node.get_ng_inputs().at(0),
+                                                                    node.get_ng_inputs().at(1))};
                 }
 
             } // namespace set_1
