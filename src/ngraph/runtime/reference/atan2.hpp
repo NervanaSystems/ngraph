@@ -26,11 +26,11 @@ namespace ngraph
         namespace reference
         {
             template <typename X, typename Y, typename Z>
-            void atan2(const X* px, const Y* py, Z* pout, size_t count)
+            void atan2(const X* py, const Y* px, Z* pout, size_t count)
             {
                 for (size_t i = 0; i < count; i++)
                 {
-                    *pout++ = static_cast<Z>(std::atan2(*px++, *py++));
+                    *pout++ = static_cast<Z>(std::atan2(*py++, *px++));
                 }
             }
         }

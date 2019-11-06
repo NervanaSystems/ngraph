@@ -90,6 +90,44 @@ NGRAPH_TEST(${BACKEND_NAME}, add_overload)
                                   (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector()));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, atan2)
+{
+    Shape shape{30};
+    auto X = make_shared<op::Parameter>(element::f32, shape);
+    auto Y = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Atan2>(Y, X), ParameterVector{X, Y});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::Tensor> x = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> y = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shape);
+
+    std::vector<float> xref;
+    std::vector<float> yref;
+    std::vector<float> zref;
+    int halfelts = shape.at(0) / 2;
+    float scale = 1.0 / (halfelts * 4.0 * std::atan(1.0));
+    for (int i = 0; i < halfelts; ++i)
+    {
+        float theta = i * scale;
+        zref.push_back(theta);
+        xref.push_back(static_cast<float>((i + 1) * std::cos(theta)));
+        yref.push_back(static_cast<float>((i + 1) * std::sin(theta)));
+        zref.push_back(-theta);
+        xref.push_back(static_cast<float>((i + 1) * std::cos(-theta)));
+        yref.push_back(static_cast<float>((i + 1) * std::sin(-theta)));
+    }
+
+    copy_data(x, xref);
+    copy_data(y, yref);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {x, y});
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), (zref)));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, multiply)
 {
     Shape shape{2, 2};
