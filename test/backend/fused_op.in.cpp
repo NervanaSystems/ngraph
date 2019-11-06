@@ -91,11 +91,18 @@ NGRAPH_TEST(${BACKEND_NAME}, prelu)
 
 NGRAPH_TEST(${BACKEND_NAME}, hardsigmoid)
 {
-    Shape shape{2, 7};
-    float alpha = 0.125f;
-    float beta = 0.642f;
+    const Shape shape{2, 7};
+    const float alpha_f = 0.125f;
+    const float beta_f = 0.642f;
 
-    auto A = make_shared<op::Parameter>(element::f32, shape);
+    const auto A = make_shared<op::Parameter>(element::f32, shape);
+
+    const auto alpha =
+        op::Constant::create<float>(A->get_element_type(), Shape{1}, std::vector<float>{alpha_f});
+
+    const auto beta =
+        op::Constant::create<float>(A->get_element_type(), Shape{1}, std::vector<float>{beta_f});
+
     auto hardsigmoid = make_shared<op::HardSigmoid>(A, alpha, beta);
     auto f0 = make_shared<Function>(NodeVector{hardsigmoid}, ParameterVector{A});
 
@@ -117,7 +124,7 @@ NGRAPH_TEST(${BACKEND_NAME}, hardsigmoid)
                              numeric_limits<float>::min() / 16.f,
                              -numeric_limits<float>::min() / 16.f};
 
-    auto impl = [alpha, beta](float val) { return min(max(alpha * val + beta, 0.f), 1.f); };
+    auto impl = [alpha_f, beta_f](float val) { return min(max(alpha_f * val + beta_f, 0.f), 1.f); };
     vector<float> expected_output;
     transform(begin(input_data), end(input_data), back_inserter(expected_output), impl);
 

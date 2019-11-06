@@ -1497,9 +1497,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::HardSigmoid:
         {
-            auto alpha = node_js.at("alpha").get<float>();
-            auto beta = node_js.at("beta").get<float>();
-            node = make_shared<op::HardSigmoid>(args[0], alpha, beta);
+            node = make_shared<op::HardSigmoid>(args[0], args[1], args[2]);
             break;
         }
         case OP_TYPEID::LayerNorm:
@@ -3073,12 +3071,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["output_shape"] = tmp->get_output_shape();
         break;
     }
-    case OP_TYPEID::HardSigmoid:
-    {
-        auto tmp = static_cast<const op::HardSigmoid*>(&n);
-        node["alpha"] = tmp->get_alpha();
-        node["beta"] = tmp->get_beta();
-        break;
+    case OP_TYPEID::HardSigmoid: { break;
     }
     case OP_TYPEID::LayerNorm:
     {
