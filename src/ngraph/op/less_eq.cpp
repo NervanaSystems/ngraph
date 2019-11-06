@@ -19,6 +19,8 @@
 using namespace std;
 using namespace ngraph;
 
+// ---------------------------------- v1 ---------------------------------------
+
 constexpr NodeTypeInfo op::v1::LessEqual::type_info;
 
 op::v1::LessEqual::LessEqual(const Output<Node>& arg0,
@@ -34,6 +36,8 @@ shared_ptr<Node> op::v1::LessEqual::copy_with_new_args(const NodeVector& new_arg
     check_new_args_count(this, new_args);
     return make_shared<v1::LessEqual>(new_args.at(0), new_args.at(1), this->get_autob());
 }
+
+// ---------------------------------- v0 ---------------------------------------
 
 constexpr NodeTypeInfo op::v0::LessEq::type_info;
 

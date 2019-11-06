@@ -24,6 +24,7 @@
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/Debug.h>
 #include <mlir/IR/Dialect.h>
+#include <mlir/IR/MLIRContext.h>
 
 static llvm::cl::opt<bool> clPrintIRAfterAll(
     "ngraph-print-ir-after-all",
@@ -34,7 +35,15 @@ static llvm::cl::opt<bool> clPrintIRAfterAll(
 
 void ngraph::runtime::ngmlir::initializeNGraphMLIR()
 {
-    mlir::registerDialect<mlir::NGraphOpsDialect>();
+    // Initialize a dialect only once.
+    // We currently have no way to query if a dialect is previously
+    // registered. So using a global flag instead.
+    static bool init = false;
+    if (!init)
+    {
+        mlir::registerDialect<mlir::NGraphOpsDialect>();
+        init = true;
+    }
 }
 
 void ngraph::runtime::ngmlir::dumpMlirModule(const std::string msg, mlir::ModuleOp module)
