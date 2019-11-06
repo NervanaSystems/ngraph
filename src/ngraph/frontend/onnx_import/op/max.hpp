@@ -40,7 +40,7 @@ namespace ngraph
             {
                 inline NodeVector max(const Node& node)
                 {
-                    return variadic::make_ng_variadic_op_with_broadcast<ngraph::op::Maximum>(node);
+                    return variadic::make_ng_variadic_op<ngraph::op::v1::Maximum>(node);
                 }
 
             } // namespace set_8

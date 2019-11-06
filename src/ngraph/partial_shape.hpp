@@ -181,6 +181,8 @@ namespace ngraph
         /// \param i The index of the dimension being selected.
         /// \return A reference to the `i`th Dimension of this shape.
         Dimension& operator[](size_t i) { return m_dimensions[i]; }
+        /// \brief Returns a vector of the dimensions. This has no meaning if dynamic.
+        explicit operator std::vector<Dimension>() const { return m_dimensions; }
         friend std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
         friend PartialShape operator+(const PartialShape& s1, const PartialShape& s2);
 
