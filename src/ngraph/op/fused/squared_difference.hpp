@@ -49,7 +49,7 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
             const AutoBroadcastSpec& get_autob() const override { return m_autobroadcast; }
-            void set_autobroadcast(const AutoBroadcastSpec& auto_broadcast)
+            void set_autob(const AutoBroadcastSpec& auto_broadcast)
             {
                 m_autobroadcast = auto_broadcast;
             }
