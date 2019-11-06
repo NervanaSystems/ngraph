@@ -17,13 +17,7 @@
 #include <memory>
 
 #include "ngraph/builder/make_constant.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/exp.hpp"
-#include "ngraph/op/greater.hpp"
-#include "ngraph/op/log.hpp"
-#include "ngraph/op/negative.hpp"
-#include "ngraph/op/select.hpp"
+#include "ngraph/op/fused/softplus.hpp"
 
 #include "softplus.hpp"
 
@@ -37,33 +31,11 @@ namespace ngraph
             {
                 NodeVector softplus(const Node& node)
                 {
-                    auto data = node.get_ng_inputs().at(0);
+                    const auto data = node.get_ng_inputs().at(0);
 
-                    std::shared_ptr<ngraph::Node> zero_node =
-                        builder::make_constant(data->get_element_type(), data->get_shape(), 0.f);
-                    std::shared_ptr<ngraph::Node> one_node =
-                        builder::make_constant(data->get_element_type(), data->get_shape(), 1.f);
+                    const auto fused_softplus = std::make_shared<ngraph::op::Softplus>(data);
 
-                    std::shared_ptr<ngraph::Node> positive_val_node =
-                        data + std::make_shared<ngraph::op::Log>(
-                                   std::make_shared<ngraph::op::Exp>(
-                                       std::make_shared<ngraph::op::Negative>(data)) +
-                                   one_node);
-
-                    std::shared_ptr<ngraph::Node> negative_val_node =
-                        std::make_shared<ngraph::op::Log>(std::make_shared<ngraph::op::Exp>(data) +
-                                                          one_node);
-
-                    std::shared_ptr<ngraph::Node> condition_node =
-                        std::make_shared<ngraph::op::Greater>(data, zero_node);
-
-                    //
-                    // This equation represents:
-                    //     x + log(exp(-x) + 1) - for x > 0; to manage exponent overflow,
-                    //     log(exp(x) + 1)      - elsewhere.
-                    //
-                    return {std::make_shared<ngraph::op::Select>(
-                        condition_node, positive_val_node, negative_val_node)};
+                    return fused_softplus->decompose_op();
                 }
 
             } // namespace set_1

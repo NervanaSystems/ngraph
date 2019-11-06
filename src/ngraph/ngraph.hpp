@@ -150,6 +150,7 @@ namespace ngraph
 #include "ngraph/op/fused/selu.hpp"
 #include "ngraph/op/fused/shuffle_channels.hpp"
 #include "ngraph/op/fused/softmax_crossentropy.hpp"
+#include "ngraph/op/fused/softplus.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/fused/split.hpp"
 #include "ngraph/op/fused/squared_difference.hpp"
