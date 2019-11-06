@@ -47,6 +47,7 @@ namespace ngraph
             using GraphCache = unordered_map<string, shared_ptr<Executable>>;
             static GraphCache m_map;
             static list<Shape> m_list;
+            static mutex m_mutex;
         };
     }
 }

@@ -22,6 +22,7 @@ using namespace std;
 list<Shape> runtime::LRUCache::m_list = {};
 runtime::LRUCache::GraphCache runtime::LRUCache::m_map = {};
 int runtime::LRUCache::m_size = 1024;
+mutex runtime::LRUCache::m_mutex;
 
 runtime::LRUCache::LRUCache()
 {
@@ -40,6 +41,7 @@ ostringstream runtime::LRUCache::convert_shape_to_string(Shape shape)
 
 void runtime::LRUCache::add_entry(Shape shape, shared_ptr<runtime::Executable> exec)
 {
+    std::lock_guard<std::mutex> guard(m_mutex);
     ostringstream key;
     // check if the list is empty
     if (m_list.size() == m_size)
@@ -71,6 +73,7 @@ bool runtime::LRUCache::is_cached(Shape shape)
 
 shared_ptr<runtime::Executable> runtime::LRUCache::get_cached_entry(Shape shape)
 {
+    std::lock_guard<std::mutex> guard(m_mutex);
     // find the entry and return the function
     ostringstream key;
     key = convert_shape_to_string(shape);
@@ -81,7 +84,7 @@ shared_ptr<runtime::Executable> runtime::LRUCache::get_cached_entry(Shape shape)
     {
         if (*itr == shape)
         {
-            m_list.remove(*itr);
+            m_list.remove(shape);
             m_list.push_front(shape);
             break;
         }
