@@ -56,7 +56,8 @@ def PadModeEdge     : I32EnumAttrCase<"EDGE",      1> ;
 def PadModeReflect  : I32EnumAttrCase<"REFLECT",   2> ;
 def PadModeSymmetric: I32EnumAttrCase<"SYMMETRIC", 3> ;
 
-def PadModeEnumAttr : I32EnumAttr<"MLIRPadMode", "Padding modes for pad operator", 
+def PadModeEnumAttr : I32EnumAttr<"MLIRPadMode", 
+                                  "Padding modes for pad operator", 
                                   [PadModeConstant, PadModeEdge, PadModeReflect, PadModeSymmetric]>;
 
 // Sort Types for TopK
@@ -71,7 +72,19 @@ def SortTypeEnumAttr   : I32EnumAttr<"MLIRSortType", "Sort types for topk operat
 def EpsModeAdd          : I32EnumAttrCase<"ADD", 0>;
 def EpsModeMax          : I32EnumAttrCase<"MAX", 1>;
 
-def EpsModeEnumAttr     : I32EnumAttr<"MLIREpsMode", "Specifies how eps is combined with L2 value",
+def EpsModeEnumAttr     : I32EnumAttr<"MLIREpsMode", 
+                                      "Specifies how eps is combined with L2 value",
                                       [EpsModeAdd, EpsModeMax]>;
+
+
+def AutoBroadcastNone       : I32EnumAttrCase<"NONE",       0>;
+def AutoBroadcastExplicit   : I32EnumAttrCase<"EXPLICIT",   1>;
+def AutoBroadcastNumPy      : I32EnumAttrCase<"NUMPY",      2>;
+def AutoBroadcastPDPD       : I32EnumAttrCase<"PDPD",       3>;
+
+def AutoBroadcastEnumAttr   : I32EnumAttr<"MLIRAutoBroadcastMode",
+                                          "Specifies auto-broadcast for an op",
+                                          [AutoBroadcastNone, AutoBroadcastExplicit,
+                                           AutoBroadcastNumPy, AutoBroadcastPDPD]>;
 
 #endif // NG_OP_ATTRIBUTES
