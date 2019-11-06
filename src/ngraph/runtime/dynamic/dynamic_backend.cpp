@@ -117,7 +117,6 @@ bool runtime::dynamic::DynamicExecutable::call(
     // (1) all shapes;
     // (2) all values of shape-relevant input tensors.
 
-    auto lru = std::make_shared<runtime::LRUCache>(4);
     std::vector<size_t> merged_input_shapes;
     std::ostringstream key;
 
@@ -133,7 +132,7 @@ bool runtime::dynamic::DynamicExecutable::call(
               merged_input_shapes.end(),
               std::ostream_iterator<size_t>(key, ", "));
 
-    if (lru->is_cached(merged_input_shapes))
+    if (m_lru->is_cached(merged_input_shapes))
     {
         std::vector<std::shared_ptr<runtime::Tensor>> wrapped_inputs;
         std::vector<std::shared_ptr<runtime::Tensor>> wrapped_outputs;
@@ -166,7 +165,7 @@ bool runtime::dynamic::DynamicExecutable::call(
             }
         }
 
-        return lru->get_cached_entry(merged_input_shapes)->call(wrapped_outputs, wrapped_inputs);
+        return m_lru->get_cached_entry(merged_input_shapes)->call(wrapped_outputs, wrapped_inputs);
     }
     else
     {
@@ -296,7 +295,7 @@ bool runtime::dynamic::DynamicExecutable::call(
         auto compiled_executable =
             m_wrapped_backend->compile(clone, m_enable_performance_collection);
         // Put compiled executable in the cache.
-        lru->add_entry(merged_input_shapes, compiled_executable);
+        m_lru->add_entry(merged_input_shapes, compiled_executable);
         auto result = compiled_executable->call(wrapped_outputs, wrapped_inputs);
 
         return result;

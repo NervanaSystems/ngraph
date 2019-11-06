@@ -21,10 +21,10 @@ using namespace std;
 
 list<Shape> runtime::LRUCache::m_list = {};
 runtime::LRUCache::GraphCache runtime::LRUCache::m_map = {};
+int runtime::LRUCache::m_size = 1024;
 
-runtime::LRUCache::LRUCache(int size)
+runtime::LRUCache::LRUCache()
 {
-    m_size = size;
 }
 
 ostringstream runtime::LRUCache::convert_shape_to_string(Shape shape)
