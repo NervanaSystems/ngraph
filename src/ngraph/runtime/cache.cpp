@@ -82,7 +82,7 @@ shared_ptr<runtime::Executable> runtime::LRUCache::get_cached_entry(Shape shape)
         if (*itr == shape)
         {
             m_list.remove(*itr);
-            m_list.push_front(*itr);
+            m_list.push_front(shape);
             break;
         }
     }

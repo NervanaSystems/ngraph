@@ -130,7 +130,7 @@ bool runtime::dynamic::DynamicExecutable::call(
     }
 
     std::copy(merged_input_shapes.begin(),
-              merged_input_shapes.end() - 1,
+              merged_input_shapes.end(),
               std::ostream_iterator<size_t>(key, ", "));
 
     if (lru->is_cached(merged_input_shapes))
