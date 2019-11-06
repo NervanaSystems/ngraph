@@ -76,6 +76,12 @@ op::v1::Add::Add(const Output<Node>& arg0,
     constructor_validate_and_infer_types();
 }
 
+bool op::v1::Add::visit_attributes(AttributeVisitor& visitor)
+{
+    BinaryElementwiseArithmetic::visit_attributes(visitor);
+    return true;
+}
+
 shared_ptr<Node> op::v1::Add::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
