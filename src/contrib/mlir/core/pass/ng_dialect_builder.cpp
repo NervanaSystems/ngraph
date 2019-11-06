@@ -101,6 +101,7 @@ namespace
                                 mlir::MLIRContext* context)
             : m_compiledKernel(compiled_kernel)
             , m_context(context)
+            , m_builder(context)
         {
         }
 
@@ -157,12 +158,11 @@ namespace
     private:
         // Sub-graph to be compiled and executed with MLIR.
         const ngraph::op::CompiledKernel* m_compiledKernel;
-        MLIRCompiler* m_compiler;
 
         // MLIR context that holds all the MLIR information related to the sub-graph
         // compilation.
         mlir::MLIRContext* m_context;
-        mlir::OpBuilder* m_builder;
+        mlir::OpBuilder m_builder;
 
         using TensorToInfo = std::pair<descriptor::Tensor*, TensorInfo>;
         using TensorToInfoMap = std::unordered_map<descriptor::Tensor*, TensorInfo>;
@@ -178,12 +178,11 @@ namespace
 
 } // end of namespace
 NgDialectConversionPass::NgDialectConversionPass(const NgDialectConversionPass& obj)
+    : m_compiledKernel(obj.m_compiledKernel)
+    , m_context(obj.m_context)
+    , m_builder(obj.m_builder)
+    , m_tensorToValueMap(obj.m_tensorToValueMap)
 {
-    m_compiledKernel = obj.m_compiledKernel;
-    m_context = obj.m_context;
-    m_builder = obj.m_builder;
-    m_tensorToValueMap = obj.m_tensorToValueMap;
-    m_compiler = obj.m_compiler;
 }
 
 void NgDialectConversionPass::runOnModule()
@@ -222,15 +221,13 @@ void NgDialectConversionPass::runOnModule()
     }
 
     // create builder
-    m_builder = new mlir::OpBuilder(function.getBody());
+    auto& region = function.getBody();
+    if (!region.empty())
+    {
+        m_builder.setInsertionPoint(&region.front(), region.front().begin());
+    }
     NgDialectConversionPass::buildNgDialect();
     module.push_back(function);
-
-    // Free MLIR function builder
-    if (m_builder)
-    {
-        free(m_builder);
-    }
 }
 
 template <typename T>
@@ -247,7 +244,7 @@ mlir::ArrayAttr NgDialectConversionPass::getShapeAsAttr(T ngShape)
 {
     SmallVector<int64_t, 4> mlirShape;
     getMlirShape(ngShape, mlirShape);
-    return m_builder->getI64ArrayAttr(mlirShape);
+    return m_builder.getI64ArrayAttr(mlirShape);
 }
 
 // Converts an nGraph Tensor into an MLIR tensor type, including the conversion of the Tensor's
@@ -425,7 +422,7 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Concat)
     auto concat = static_cast<const ngraph::op::Concat*>(ngNode);
     auto op = NgDialectObj.createGenericOp<mlir::NGConcatOp>(ngNode);
     op->setAttr("concatenation_axis",
-                NgDialectObj.m_builder->getI64IntegerAttr(concat->get_concatenation_axis()));
+                NgDialectObj.m_builder.getI64IntegerAttr(concat->get_concatenation_axis()));
     return op;
 }
 
@@ -434,7 +431,7 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Gather)
 {
     auto gather = static_cast<const ngraph::op::Gather*>(ngNode);
     auto op = NgDialectObj.createGenericOp<mlir::NGGatherOp>(ngNode);
-    op->setAttr("axis", NgDialectObj.m_builder->getI64IntegerAttr(gather->get_axis()));
+    op->setAttr("axis", NgDialectObj.m_builder.getI64IntegerAttr(gather->get_axis()));
     return op;
 }
 
@@ -499,10 +496,10 @@ mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ng
         resTypes.push_back(getMlirType(output.get_tensor_ptr().get()));
     }
 
-    return (m_builder->create<Op,
-                              ArrayRef<mlir::Type>,
-                              ArrayRef<mlir::Value*>,
-                              ArrayRef<mlir::NamedAttribute>>(
+    return (m_builder.create<Op,
+                             ArrayRef<mlir::Type>,
+                             ArrayRef<mlir::Value*>,
+                             ArrayRef<mlir::NamedAttribute>>(
                 mlir::UnknownLoc::get(m_context), resTypes, argValues, {/* no attrs */}))
         .getOperation();
 }
@@ -519,7 +516,7 @@ void NgDialectConversionPass::createReturn()
     {
         valueList.push_back(getTensorValue(output->get_output_tensor_ptr().get()).m_value);
     }
-    m_builder->create<mlir::NGReturnOp>(mlir::UnknownLoc::get(m_context), valueList);
+    m_builder.create<mlir::NGReturnOp>(mlir::UnknownLoc::get(m_context), valueList);
 }
 
 template <typename RedOp>
@@ -528,7 +525,7 @@ mlir::Operation* NgDialectConversionPass::createIndexReduction(const ngraph::Nod
     auto* idxRed = static_cast<const ngraph::op::util::IndexReduction*>(ngNode);
     auto op = createGenericOp<RedOp>(ngNode);
     mlir::ArrayAttr redAxesAttr =
-        m_builder->getI64ArrayAttr({(int64_t)idxRed->get_reduction_axis()});
+        m_builder.getI64ArrayAttr({(int64_t)idxRed->get_reduction_axis()});
     op->setAttr("axes", redAxesAttr);
     return op;
 }

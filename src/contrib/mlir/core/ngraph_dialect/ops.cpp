@@ -279,14 +279,9 @@ mlir::LogicalResult verifyOp(NGConvolutionOp* op)
         auto pb = std::get<1>(attrs).cast<IntegerAttr>().getInt();
         auto pa = std::get<2>(attrs).cast<IntegerAttr>().getInt();
 
-        std::cout << "pb : " << pb << "pa : " << pa << std::endl;
         if (s <= 0)
         {
             return op->emitOpError("Window stride must be non-negative");
-        }
-        if (pb < 0 || pa < 0)
-        {
-            return op->emitOpError("Paddings must be positive");
         }
         stridesVal.push_back(s);
         padBelowVal.push_back(pb);
