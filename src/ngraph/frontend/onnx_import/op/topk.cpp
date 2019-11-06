@@ -118,18 +118,15 @@ namespace ngraph
                     const auto sorted = node.get_attribute_value<std::int64_t>("sorted", 1);
 
                     // Map attribute values to nGraph enums
-                    const auto compute_max = static_cast<bool>(largest);
                     const auto sort_type = sorted ? ngraph::op::v1::TopK::SortType::SORT_VALUES
                                                   : ngraph::op::v1::TopK::SortType::NONE;
 
+                    const auto compute_max = static_cast<bool>(largest);
+                    const auto mode = compute_max ? ngraph::op::v1::TopK::Mode::MAX
+                                                  : ngraph::op::v1::TopK::Mode::MIN;
+
                     std::shared_ptr<ngraph::Node> top_k = std::make_shared<ngraph::op::v1::TopK>(
-                        data,
-                        k,
-                        axis,
-                        compute_max ? ngraph::op::v1::TopK::Mode::MAX
-                                    : ngraph::op::v1::TopK::Mode::MIN,
-                        sort_type,
-                        element::i64);
+                        data, k, axis, mode, sort_type, element::i64);
 
                     return get_outputs(top_k);
                 }
