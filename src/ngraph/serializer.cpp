@@ -91,6 +91,7 @@
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
+#include "ngraph/op/fused/selu.hpp"
 #include "ngraph/op/fused/shuffle_channels.hpp"
 #include "ngraph/op/fused/softmax_crossentropy.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
@@ -1213,8 +1214,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::DepthToSpace:
         {
+            auto mode = node_js.at("mode").get<op::DepthToSpace::DepthToSpaceMode>();
             auto block_size = node_js.at("block_size").get<size_t>();
-            node = make_shared<op::DepthToSpace>(args[0], block_size);
+            node = make_shared<op::DepthToSpace>(args[0], mode, block_size);
             break;
         }
         case OP_TYPEID::Dequantize:
@@ -2152,6 +2154,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Select>(args[0], args[1], args[2]);
             break;
         }
+        case OP_TYPEID::Selu:
+        {
+            node = make_shared<op::Selu>(args[0], args[1], args[2]);
+            break;
+        }
         case OP_TYPEID::Send:
         {
             auto dest_id = node_js.at("dest_id").get<size_t>();
@@ -2881,6 +2888,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = static_cast<const op::DepthToSpace*>(&n);
         node["type"] = write_element_type(tmp->get_element_type());
+        node["mode"] = tmp->get_mode();
         node["block_size"] = tmp->get_block_size();
         break;
     }
@@ -3525,6 +3533,8 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::ScatterNDAdd: { break;
     }
     case OP_TYPEID::Select: { break;
+    }
+    case OP_TYPEID::Selu: { break;
     }
     case OP_TYPEID::Send:
     {
