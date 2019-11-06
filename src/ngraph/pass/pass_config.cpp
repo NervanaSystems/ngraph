@@ -87,6 +87,11 @@ void pass::PassConfig::set_pass_enable(const string& name, bool enable)
     m_pass_enables[name] = enable;
 }
 
+bool pass::PassConfig::get_pass(const string& name) const
+{
+    return (m_pass_enables.find(name) != m_pass_enables.end());
+}
+
 bool pass::PassConfig::get_pass_enable(const string& name) const
 {
     auto it = m_pass_enables.find(name);

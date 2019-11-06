@@ -44,6 +44,11 @@ public:
     template <typename T, class... Args>
     std::shared_ptr<T> register_pass(Args&&... args)
     {
+        auto pass = get_pass_name(typeid(T).name());
+        if (m_pass_config.get_pass(pass) && !m_pass_config.get_pass_enable(pass))
+        {
+            return nullptr;
+        }
         auto rc = push_pass<T>(std::forward<Args>(args)...);
         if (m_per_pass_validation)
         {
@@ -61,6 +66,19 @@ public:
     void set_pass_serialization(bool new_state) { m_serialize = new_state; }
     void set_per_pass_validation(bool new_state) { m_per_pass_validation = new_state; }
 private:
+    std::string get_pass_name(const std::string& name)
+    {
+#ifdef _WIN32
+        // MSVC produce a human-readable type name like class ngraph::pass::LikeReplacement
+        // by typeid(T).name(). Later ofstream doesn't accept it as a valid file name.
+        //
+
+        auto pos = name.find_last_of(":");
+        return str.substr(pos + 1);
+#elif defined(__linux) || defined(__APPLE__)
+        return name;
+#endif
+    }
     template <typename T, class... Args>
     std::shared_ptr<T> push_pass(Args&&... args)
     {
@@ -70,16 +88,7 @@ private:
         m_pass_list.push_back(pass_base);
         if (m_visualize || m_serialize)
         {
-#ifdef _WIN32
-            // MSVC produce a human-readable type name like class ngraph::pass::LikeReplacement
-            // by typeid(T).name(). Later ofstream doesn't accept it as a valid file name.
-            //
-            std::string str = typeid(T).name();
-            auto pos = str.find_last_of(":");
-            m_pass_names.push_back(str.substr(pos + 1));
-#elif defined(__linux) || defined(__APPLE__)
-            m_pass_names.push_back(typeid(T).name());
-#endif
+            m_pass_names.push_back(get_pass_name(typeid(T).name()));
         }
         return pass;
     }
