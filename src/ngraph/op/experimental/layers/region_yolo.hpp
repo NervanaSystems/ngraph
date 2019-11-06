@@ -31,16 +31,16 @@ namespace ngraph
             ///
             /// \brief      Constructs a RegionYolo operation
             ///
-            /// \param      input        Input
-            /// \param      num_coords   Number of coordinates for each region
-            /// \param      num_classes  Number of classes for each region
-            /// \param      num_regions  Number of regions
-            /// \param      do_softmax   Compute softmax
+            /// \param[in]  input        Input
+            /// \param[in]  num_coords   Number of coordinates for each region
+            /// \param[in]  num_classes  Number of classes for each region
+            /// \param[in]  num_regions  Number of regions
+            /// \param[in]  do_softmax   Compute softmax
             /// \param[in]  mask         Mask
             /// \param[in]  anchors      A flattened list of pairs `[width, height]` that describes
             ///                          prior box sizes.
-            /// \param      axis         Axis to begin softmax on
-            /// \param      end_axis     Axis to end softmax on
+            /// \param[in]  axis         Axis to begin softmax on
+            /// \param[in]  end_axis     Axis to end softmax on
             ///
             RegionYolo(const Output<Node>& input,
                        const size_t num_coords,
