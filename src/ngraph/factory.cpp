@@ -31,6 +31,8 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/broadcast_distributed.hpp"
+#include "ngraph/op/ceiling.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/parameter.hpp"
 
 using namespace std;
@@ -74,6 +76,9 @@ namespace ngraph
                 registry.register_factory<op::v0::Broadcast>();
                 registry.register_factory<op::v0::BroadcastLike>();
                 registry.register_factory<op::v1::Broadcast>();
+                registry.register_factory<op::Ceiling>();
+                registry.register_factory<op::Concat>();
+                registry.register_factory<op::v1::LogicalAnd>();
                 registry.register_factory<op::Parameter>();
             }
         }
