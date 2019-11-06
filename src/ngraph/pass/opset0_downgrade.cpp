@@ -343,7 +343,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::LessEq:
+    case OP_TYPEID::LessEqual:
     {
         downgrade_binary_elementwise_node<op::v0::LessEq, op::v1::LessEqual>(node);
         modified = true;
