@@ -38,7 +38,6 @@ namespace ngraph
                 /// \brief Constructs a Reciprocal operation.
                 ///
                 /// \param data Input tensor
-                /// \param slope Multipliers for negative values
                 Reciprocal(const Output<Node>& data);
 
                 virtual NodeVector decompose_op() const override;
