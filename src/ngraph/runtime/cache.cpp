@@ -33,7 +33,7 @@ ostringstream runtime::LRUCache::convert_shape_to_string(Shape shape)
 
     if (!shape.empty())
     {
-        std::copy(shape.begin(), shape.end() - 1, std::ostream_iterator<size_t>(key, ", "));
+        std::copy(shape.begin(), shape.end(), std::ostream_iterator<size_t>(key, ", "));
     }
     return key;
 }
@@ -75,17 +75,16 @@ shared_ptr<runtime::Executable> runtime::LRUCache::get_cached_entry(Shape shape)
     ostringstream key;
     key = convert_shape_to_string(shape);
     auto it = m_map.find(key.str());
-    if (it != m_map.end())
+
+    // update list to push this reference to the front
+    for (auto itr = m_list.begin(); itr != m_list.end(); itr++)
     {
-        // update list to push this reference to the front
-        for (auto itr = m_list.begin(); itr != m_list.end(); itr++)
+        if (*itr == shape)
         {
-            if (*itr == shape)
-            {
-                m_list.remove(*itr);
-                m_list.push_front(*itr);
-            }
-            return it->second;
+            m_list.remove(*itr);
+            m_list.push_front(*itr);
+            break;
         }
     }
+    return it->second;
 }
