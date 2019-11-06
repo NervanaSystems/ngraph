@@ -67,4 +67,11 @@ def SortTypeValues     : I32EnumAttrCase<"VALUES",  2>;
 def SortTypeEnumAttr   : I32EnumAttr<"MLIRSortType", "Sort types for topk operator", 
                                      [SortTypeNone, SortTypeIndices, SortTypeValues]>;
 
+// Modes for normalizeL2
+def EpsModeAdd          : I32EnumAttrCase<"ADD", 0>;
+def EpsModeMax          : I32EnumAttrCase<"MAX", 1>;
+
+def EpsModeEnumAttr     : I32EnumAttr<"MLIREpsMode", "Specifies how eps is combined with L2 value",
+                                      [EpsModeAdd, EpsModeMax]>;
+
 #endif // NG_OP_ATTRIBUTES
