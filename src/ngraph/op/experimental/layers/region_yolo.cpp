@@ -27,9 +27,9 @@ op::RegionYolo::RegionYolo(const Output<Node>& input,
                            const size_t num_regions,
                            const bool do_softmax,
                            const vector<int64_t>& mask,
-                           const vector<float>& anchors,
                            const int axis,
-                           const int end_axis)
+                           const int end_axis,
+                           const vector<float>& anchors)
     : Op({input})
     , m_num_coords(num_coords)
     , m_num_classes(num_classes)
@@ -97,7 +97,7 @@ shared_ptr<Node> op::RegionYolo::copy_with_new_args(const NodeVector& new_args) 
                                    m_num_regions,
                                    m_do_softmax,
                                    m_mask,
-                                   m_anchors,
                                    m_axis,
-                                   m_end_axis);
+                                   m_end_axis,
+                                   m_anchors);
 }

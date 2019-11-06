@@ -37,10 +37,10 @@ namespace ngraph
             /// \param[in]  num_regions  Number of regions
             /// \param[in]  do_softmax   Compute softmax
             /// \param[in]  mask         Mask
-            /// \param[in]  anchors      A flattened list of pairs `[width, height]` that describes
-            ///                          prior box sizes.
             /// \param[in]  axis         Axis to begin softmax on
             /// \param[in]  end_axis     Axis to end softmax on
+            /// \param[in]  anchors      A flattened list of pairs `[width, height]` that describes
+            ///                          prior box sizes.
             ///
             RegionYolo(const Output<Node>& input,
                        const size_t num_coords,
@@ -48,9 +48,9 @@ namespace ngraph
                        const size_t num_regions,
                        const bool do_softmax,
                        const std::vector<int64_t>& mask,
-                       const std::vector<float>& anchors,
                        const int axis,
-                       const int end_axis);
+                       const int end_axis,
+                       const std::vector<float>& anchors = std::vector<float>{});
 
             void validate_and_infer_types() override;
 
@@ -71,7 +71,7 @@ namespace ngraph
             size_t m_num_regions;
             bool m_do_softmax;
             std::vector<int64_t> m_mask;
-            std::vector<float> m_anchors;
+            std::vector<float> m_anchors{};
             int m_axis;
             int m_end_axis;
         };
