@@ -84,8 +84,14 @@ NodeVector op::HardSigmoid::decompose_op() const
     const auto alpha_node = input_value(1).get_node_shared_ptr();
     const auto beta_node = input_value(2).get_node_shared_ptr();
 
+    std::shared_ptr<Node> alpha_x_plus_beta =
+        std::make_shared<op::Multiply>(alpha_node, data, AutoBroadcastType::NUMPY);
+
+    alpha_x_plus_beta =
+        std::make_shared<op::Add>(alpha_x_plus_beta, beta_node, AutoBroadcastType::NUMPY);
+
     return {std::make_shared<op::Minimum>(
-        std::make_shared<op::Maximum>(alpha_node * data + beta_node, zero_node), one_node)};
+        std::make_shared<op::Maximum>(alpha_x_plus_beta, zero_node), one_node)};
 }
 
 shared_ptr<Node> op::HardSigmoid::copy_with_new_args(const NodeVector& new_args) const
