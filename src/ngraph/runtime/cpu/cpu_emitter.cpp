@@ -28,12 +28,12 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/all.hpp"
 #include "ngraph/op/allreduce.hpp"
-#include "ngraph/op/and.hpp"
 #include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
+#include "ngraph/op/atan2.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
@@ -62,6 +62,7 @@
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
@@ -69,7 +70,6 @@
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
 #include "ngraph/op/less.hpp"
-#include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
@@ -79,11 +79,9 @@
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
-#include "ngraph/op/not.hpp"
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
@@ -110,7 +108,6 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
-#include "ngraph/op/xor.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
@@ -123,6 +120,7 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/dropout.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -163,7 +161,8 @@ namespace ngraph
                                               const ngraph::Node* node,
                                               CodeWriter& writer,
                                               size_t& index,
-                                              std::vector<std::size_t>& deps)
+                                              std::vector<std::size_t>& deps,
+                                              size_t& scratchpad_size)
             {
                 writer << "if (ctx->first_iteration)\n";
                 writer.block_begin();
@@ -174,6 +173,7 @@ namespace ngraph
 
                 deps = get<1>(external_function->get_primitive_build_tuple(node));
                 index = get<2>(external_function->get_primitive_build_tuple(node));
+                scratchpad_size = get<3>(external_function->get_primitive_build_tuple(node));
             }
 
             template <typename OP>
@@ -182,6 +182,7 @@ namespace ngraph
                                               CodeWriter& writer,
                                               size_t& index,
                                               std::vector<std::size_t>& deps,
+                                              size_t& scratchpad_size,
                                               const std::vector<TensorViewWrapper>& args)
             {
                 writer << "if (ctx->first_iteration)\n";
@@ -235,6 +236,7 @@ namespace ngraph
 
                 deps = get<1>(external_function->get_primitive_build_tuple(node));
                 index = get<2>(external_function->get_primitive_build_tuple(node));
+                scratchpad_size = get<3>(external_function->get_primitive_build_tuple(node));
             }
 
             template <>
@@ -245,7 +247,9 @@ namespace ngraph
                 {
                     size_t add_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, add_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, add_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -256,7 +260,7 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(add_index)
-                           << ", deps, OpType::ADD);\n";
+                           << ", deps, OpType::ADD, " << to_string(scratchpad_size) << ");\n";
                 }
                 else
                 {
@@ -613,7 +617,9 @@ namespace ngraph
 
                 size_t lstm_index;
                 std::vector<std::size_t> deps;
-                emit_build_primitives(external_function, node, writer, lstm_index, deps);
+                size_t scratchpad_size;
+                emit_build_primitives(
+                    external_function, node, writer, lstm_index, deps, scratchpad_size);
 
                 writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                        << args[0].get_name() << ");\n";
@@ -638,7 +644,7 @@ namespace ngraph
 
                 writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                 writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(lstm_index)
-                       << ", deps, OpType::LSTM);\n";
+                       << ", deps, OpType::LSTM, " << to_string(scratchpad_size) << ");\n";
             }
 
             template <>
@@ -646,7 +652,9 @@ namespace ngraph
             {
                 size_t rnn_index;
                 std::vector<std::size_t> deps;
-                emit_build_primitives(external_function, node, writer, rnn_index, deps);
+                size_t scratchpad_size;
+                emit_build_primitives(
+                    external_function, node, writer, rnn_index, deps, scratchpad_size);
 
                 writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                        << args[0].get_name() << ");\n";
@@ -671,7 +679,7 @@ namespace ngraph
 
                 writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                 writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(rnn_index)
-                       << ", deps, OpType::RNN);\n";
+                       << ", deps, OpType::RNN, " << to_string(scratchpad_size) << ");\n";
             }
 
             template <typename T>
@@ -695,7 +703,9 @@ namespace ngraph
 
                 size_t batchnorm_index;
                 std::vector<std::size_t> deps;
-                emit_build_primitives(external_function, node, writer, batchnorm_index, deps);
+                size_t scratchpad_size;
+                emit_build_primitives(
+                    external_function, node, writer, batchnorm_index, deps, scratchpad_size);
 
                 if (training && args.size() == 3)
                 {
@@ -712,7 +722,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(batchnorm_index)
-                           << ", deps, OpType::BATCHNORM3ARGS);\n";
+                           << ", deps, OpType::BATCHNORM3ARGS, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
                 else
                 {
@@ -729,7 +740,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(batchnorm_index)
-                           << ", deps, OpType::BATCHNORM5ARGS);\n";
+                           << ", deps, OpType::BATCHNORM5ARGS, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
                 writer.block_end();
             }
@@ -859,7 +871,9 @@ namespace ngraph
 
                     size_t batchnorm_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, batchnorm_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, batchnorm_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0])
                            << ", bn_weights.data());\n";
@@ -878,7 +892,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(batchnorm_index)
-                           << ", deps, OpType::BATCHNORMBACKPROP);\n";
+                           << ", deps, OpType::BATCHNORMBACKPROP, " << to_string(scratchpad_size)
+                           << ");\n";
 
                     writer << "memcpy(" << out[1].get_name() << ", &bn_dweights[0], "
                            << args[0].get_size() * args[0].get_element_type().size() << ");\n";
@@ -1107,7 +1122,9 @@ namespace ngraph
                 {
                     size_t concat_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, concat_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, concat_index, deps, scratchpad_size);
 
                     size_t i;
                     for (i = 0; i < args.size(); i++)
@@ -1120,7 +1137,7 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(concat_index)
-                           << ", deps, OpType::CONCAT);\n";
+                           << ", deps, OpType::CONCAT, " << to_string(scratchpad_size) << ");\n";
                 }
                 else
                 {
@@ -1304,7 +1321,9 @@ namespace ngraph
                 {
                     size_t lrn_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, lrn_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, lrn_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -1313,7 +1332,7 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(lrn_index)
-                           << ", deps, OpType::LRN);\n";
+                           << ", deps, OpType::LRN, " << to_string(scratchpad_size) << ");\n";
                 }
                 else
                 {
@@ -1614,7 +1633,9 @@ namespace ngraph
                 {
                     size_t slice_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, slice_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, slice_index, deps, scratchpad_size);
 
                     writer.block_begin();
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
@@ -1624,7 +1645,7 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(slice_index)
-                           << ", deps, OpType::SLICE);\n";
+                           << ", deps, OpType::SLICE, " << to_string(scratchpad_size) << ");\n";
                     writer.block_end();
                     return;
                 }
@@ -1868,6 +1889,21 @@ namespace ngraph
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = atan(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Atan2)
+            {
+                (void)external_function;
+                (void)node;
+                writer.block_begin();
+                writer << "#pragma omp parallel for\n";
+                writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = atan2(" << args[0].get_name() << ", "
+                       << args[1].get_name() << "[i]);\n";
                 writer.block_end();
                 writer.block_end();
             }
@@ -2299,7 +2335,9 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, conv_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, conv_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2310,7 +2348,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
-                           << ", deps, OpType::CONVOLUTIONRELU);\n";
+                           << ", deps, OpType::CONVOLUTIONRELU, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
             }
 
@@ -2321,8 +2360,9 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
+                    size_t scratchpad_size;
                     emit_build_primitives<ngraph::op::QuantizedConvolutionRelu>(
-                        external_function, node, writer, conv_index, deps, args);
+                        external_function, node, writer, conv_index, deps, scratchpad_size, args);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2333,7 +2373,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
-                           << ", deps, OpType::QUANTIZEDCONVOLUTIONRELU);\n";
+                           << ", deps, OpType::QUANTIZEDCONVOLUTIONRELU, "
+                           << to_string(scratchpad_size) << ");\n";
                 }
                 else
                 {
@@ -2348,8 +2389,9 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
+                    size_t scratchpad_size;
                     emit_build_primitives<ngraph::op::QuantizedConvolution>(
-                        external_function, node, writer, conv_index, deps, args);
+                        external_function, node, writer, conv_index, deps, scratchpad_size, args);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2360,7 +2402,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
-                           << ", deps, OpType::QUANTIZEDCONVOLUTION);\n";
+                           << ", deps, OpType::QUANTIZEDCONVOLUTION, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
                 else
                 {
@@ -2405,7 +2448,9 @@ namespace ngraph
                     // invoke group convolution
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, conv_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, conv_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2416,7 +2461,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
-                           << ", deps, OpType::GROUPCONVOLUTION);\n";
+                           << ", deps, OpType::GROUPCONVOLUTION, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
                 else
                 {
@@ -2432,7 +2478,9 @@ namespace ngraph
                     // invoke group convolution
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, conv_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, conv_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2445,7 +2493,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
-                           << ", deps, OpType::GROUPCONVOLUTIONBIAS);\n";
+                           << ", deps, OpType::GROUPCONVOLUTIONBIAS, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
                 else
                 {
@@ -2466,7 +2515,9 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, conv_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, conv_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2477,7 +2528,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
-                           << ", deps, OpType::CONVOLUTION);\n";
+                           << ", deps, OpType::CONVOLUTION, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
                 else
                 {
@@ -2514,7 +2566,9 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, conv_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, conv_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2525,7 +2579,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
-                           << ", deps, OpType::CONVOLUTIONBACKPROPWEIGHTS);\n";
+                           << ", deps, OpType::CONVOLUTIONBACKPROPWEIGHTS, "
+                           << to_string(scratchpad_size) << ");\n";
                 }
                 else
                 {
@@ -2561,7 +2616,9 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, conv_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, conv_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2574,7 +2631,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
-                           << ", deps, OpType::DECONVOLUTIONBIAS);\n";
+                           << ", deps, OpType::DECONVOLUTIONBIAS, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
                 else
                 {
@@ -2595,7 +2653,9 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, conv_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, conv_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2606,7 +2666,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
-                           << ", deps, OpType::CONVOLUTIONBACKPROPDATA);\n";
+                           << ", deps, OpType::CONVOLUTIONBACKPROPDATA, "
+                           << to_string(scratchpad_size) << ");\n";
                 }
                 else
                 {
@@ -2638,8 +2699,9 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
+                    size_t scratchpad_size;
                     emit_build_primitives<ngraph::op::QuantizedConvolutionBias>(
-                        external_function, node, writer, conv_index, deps, args);
+                        external_function, node, writer, conv_index, deps, scratchpad_size, args);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2652,7 +2714,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
-                           << ", deps, OpType::QUANTIZEDCONVOLUTIONBIAS);\n";
+                           << ", deps, OpType::QUANTIZEDCONVOLUTIONBIAS, "
+                           << to_string(scratchpad_size) << ");\n";
                 }
                 else
                 {
@@ -2668,8 +2731,9 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
+                    size_t scratchpad_size;
                     emit_build_primitives<ngraph::op::QuantizedConvolutionBiasAdd>(
-                        external_function, node, writer, conv_index, deps, args);
+                        external_function, node, writer, conv_index, deps, scratchpad_size, args);
 
                     writer << "if (" << out[0].get_name() << " != " << args[3].get_name() << ")\n";
                     writer.block_begin();
@@ -2687,7 +2751,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
-                           << ", deps, OpType::QUANTIZEDCONVOLUTIONBIASADD);\n";
+                           << ", deps, OpType::QUANTIZEDCONVOLUTIONBIASADD, "
+                           << to_string(scratchpad_size) << ");\n";
                 }
                 else
                 {
@@ -2704,8 +2769,9 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
+                    size_t scratchpad_size;
                     emit_build_primitives<ngraph::op::QuantizedConvolutionBiasSignedAdd>(
-                        external_function, node, writer, conv_index, deps, args);
+                        external_function, node, writer, conv_index, deps, scratchpad_size, args);
 
                     writer << "if (" << out[0].get_name() << " != " << args[3].get_name() << ")\n";
                     writer.block_begin();
@@ -2723,7 +2789,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
-                           << ", deps, OpType::QUANTIZEDCONVOLUTIONBIASSIGNEDADD);\n";
+                           << ", deps, OpType::QUANTIZEDCONVOLUTIONBIASSIGNEDADD, "
+                           << to_string(scratchpad_size) << ");\n";
                 }
                 else
                 {
@@ -2740,8 +2807,9 @@ namespace ngraph
                 {
                     size_t qip_index;
                     std::vector<std::size_t> deps;
+                    size_t scratchpad_size;
                     emit_build_primitives<ngraph::op::QuantizedDotBias>(
-                        external_function, node, writer, qip_index, deps, args);
+                        external_function, node, writer, qip_index, deps, scratchpad_size, args);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2754,7 +2822,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(qip_index)
-                           << ", deps, OpType::QUANTIZEDDOTBIAS);\n";
+                           << ", deps, OpType::QUANTIZEDDOTBIAS, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
                 else
                 {
@@ -2791,8 +2860,9 @@ namespace ngraph
                 {
                     size_t qip_index;
                     std::vector<std::size_t> deps;
+                    size_t scratchpad_size;
                     emit_build_primitives<ngraph::op::QuantizedMatmul>(
-                        external_function, node, writer, qip_index, deps, args);
+                        external_function, node, writer, qip_index, deps, scratchpad_size, args);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2803,7 +2873,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(qip_index)
-                           << ", deps, OpType::QUANTIZEDMATMUL);\n";
+                           << ", deps, OpType::QUANTIZEDMATMUL, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
                 else
                 {
@@ -2818,7 +2889,9 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, conv_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, conv_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2831,7 +2904,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
-                           << ", deps, OpType::CONVOLUTIONBIAS);\n";
+                           << ", deps, OpType::CONVOLUTIONBIAS, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
                 else
                 {
@@ -2846,7 +2920,9 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, conv_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, conv_index, deps, scratchpad_size);
 
                     writer << "if (" << out[0].get_name() << " != " << args[3].get_name() << ")\n";
                     writer.block_begin();
@@ -2864,7 +2940,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
-                           << ", deps, OpType::CONVOLUTIONBIASADD);\n";
+                           << ", deps, OpType::CONVOLUTIONBIASADD, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
                 else
                 {
@@ -2879,7 +2956,9 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, conv_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, conv_index, deps, scratchpad_size);
 
                     writer << "if (" << out[0].get_name() << " != " << args[2].get_name() << ")\n";
                     writer.block_begin();
@@ -2895,7 +2974,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
-                           << ", deps, OpType::CONVOLUTIONADD);\n";
+                           << ", deps, OpType::CONVOLUTIONADD, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
                 else
                 {
@@ -2910,7 +2990,9 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, conv_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, conv_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2923,7 +3005,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
-                           << ", deps, OpType::CONVOLUTIONBIASBACKPROPWEIGHTSBIAS);\n";
+                           << ", deps, OpType::CONVOLUTIONBIASBACKPROPWEIGHTSBIAS, "
+                           << to_string(scratchpad_size) << ");\n";
                 }
                 else
                 {
@@ -2954,7 +3037,9 @@ namespace ngraph
                 {
                     size_t max_pool_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, max_pool_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, max_pool_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2963,7 +3048,7 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(max_pool_index)
-                           << ", deps, OpType::MAXPOOL);\n";
+                           << ", deps, OpType::MAXPOOL, " << to_string(scratchpad_size) << ");\n";
                 }
                 else
                 {
@@ -2988,7 +3073,9 @@ namespace ngraph
                 {
                     size_t max_pool_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, max_pool_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, max_pool_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2999,7 +3086,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(max_pool_index)
-                           << ", deps, OpType::MAXPOOLWITHINDICES);\n";
+                           << ", deps, OpType::MAXPOOLWITHINDICES, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
                 else
                 {
@@ -3113,7 +3201,9 @@ namespace ngraph
                 {
                     size_t avg_pool_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, avg_pool_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, avg_pool_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -3122,7 +3212,7 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(avg_pool_index)
-                           << ", deps, OpType::AVGPOOL);\n";
+                           << ", deps, OpType::AVGPOOL, " << to_string(scratchpad_size) << ");\n";
                 }
                 else
                 {
@@ -3212,7 +3302,9 @@ namespace ngraph
                 {
                     size_t avg_pool_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, avg_pool_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, avg_pool_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -3221,7 +3313,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(avg_pool_index)
-                           << ", deps, OpType::AVGPOOLBACKPROP);\n";
+                           << ", deps, OpType::AVGPOOLBACKPROP, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
                 else
                 {
@@ -3255,7 +3348,9 @@ namespace ngraph
                 {
                     size_t max_pool_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, max_pool_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, max_pool_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -3266,7 +3361,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(deps[4])
-                           << ",deps, OpType::MAXPOOLBACKPROPFORWARD);\n";
+                           << ",deps, OpType::MAXPOOLBACKPROPFORWARD, "
+                           << to_string(scratchpad_size) << ");\n";
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << args[1].get_name() << ");\n";
@@ -3276,7 +3372,8 @@ namespace ngraph
                            << out[0].get_name() << ");\n";
 
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(max_pool_index)
-                           << ", deps, OpType::MAXPOOLBACKPROPBACKWARD);\n";
+                           << ", deps, OpType::MAXPOOLBACKPROPBACKWARD, "
+                           << to_string(scratchpad_size) << ");\n";
                 }
                 else
                 {
@@ -3302,7 +3399,9 @@ namespace ngraph
                 {
                     size_t max_pool_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, max_pool_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, max_pool_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[1].get_name() << ");\n";
@@ -3313,7 +3412,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(max_pool_index)
-                           << ", deps, OpType::MAXPOOLWITHINDICESBACKPROP);\n";
+                           << ", deps, OpType::MAXPOOLWITHINDICESBACKPROP, "
+                           << to_string(scratchpad_size) << ");\n";
                 }
                 else
                 {
@@ -3415,7 +3515,9 @@ namespace ngraph
                 {
                     size_t reorder_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, reorder_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, reorder_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -3424,7 +3526,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(reorder_index)
-                           << ", deps, OpType::CONVERTLAYOUT);\n";
+                           << ", deps, OpType::CONVERTLAYOUT, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
                 else
                 {
@@ -3439,7 +3542,9 @@ namespace ngraph
                 {
                     size_t relu_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, relu_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, relu_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -3450,7 +3555,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(relu_index)
-                           << ", deps, OpType::RELUBACKPROP);\n";
+                           << ", deps, OpType::RELUBACKPROP, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
                 else
                 {
@@ -3470,7 +3576,9 @@ namespace ngraph
                 {
                     size_t relu_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, relu_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, relu_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -3479,7 +3587,7 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(relu_index)
-                           << ", deps, OpType::RELU);\n";
+                           << ", deps, OpType::RELU, " << to_string(scratchpad_size) << ");\n";
                 }
                 else
                 {
@@ -3499,7 +3607,9 @@ namespace ngraph
                 {
                     size_t leaky_relu_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, leaky_relu_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, leaky_relu_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -3508,7 +3618,7 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(leaky_relu_index)
-                           << ", deps, OpType::LEAKYRELU);\n";
+                           << ", deps, OpType::LEAKYRELU, " << to_string(scratchpad_size) << ");\n";
                 }
                 else
                 {
@@ -3531,8 +3641,9 @@ namespace ngraph
                 {
                     size_t bounded_relu_index;
                     std::vector<std::size_t> deps;
+                    size_t scratchpad_size;
                     emit_build_primitives(
-                        external_function, node, writer, bounded_relu_index, deps);
+                        external_function, node, writer, bounded_relu_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -3541,7 +3652,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(bounded_relu_index)
-                           << ", deps, OpType::BOUNDEDRELU);\n";
+                           << ", deps, OpType::BOUNDEDRELU, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
                 else
                 {
@@ -3559,13 +3671,70 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Gelu)
+            {
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    size_t gelu_index;
+                    std::vector<std::size_t> deps;
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, gelu_index, deps, scratchpad_size);
+
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << out[0].get_name() << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(gelu_index)
+                           << ", deps, OpType::GELU, " << to_string(scratchpad_size) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("Gelu is only supported with MKLDNN kernel for f32.");
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::GeluBackprop)
+            {
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    size_t gelu_bprop_index;
+                    std::vector<std::size_t> deps;
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, gelu_bprop_index, deps, scratchpad_size);
+
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << args[1].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
+                           << out[0].get_name() << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(gelu_bprop_index)
+                           << ", deps, OpType::GELUBACKPROP, " << to_string(scratchpad_size)
+                           << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("GeluBackprop is only supported with MKLDNN for f32.");
+                }
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Sigmoid)
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     size_t sigmoid_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, sigmoid_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, sigmoid_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -3574,7 +3743,7 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(sigmoid_index)
-                           << ", deps, OpType::SIGMOID);\n";
+                           << ", deps, OpType::SIGMOID, " << to_string(scratchpad_size) << ");\n";
                 }
                 else
                 {
@@ -3589,7 +3758,9 @@ namespace ngraph
                 {
                     size_t sigmoid_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, sigmoid_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, sigmoid_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -3600,7 +3771,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(sigmoid_index)
-                           << ", deps, OpType::SIGMOIDBACKPROP);\n";
+                           << ", deps, OpType::SIGMOIDBACKPROP, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
                 else
                 {
@@ -3771,7 +3943,9 @@ namespace ngraph
                 {
                     size_t softmax_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, softmax_index, deps);
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, softmax_index, deps, scratchpad_size);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -3780,7 +3954,7 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(softmax_index)
-                           << ", deps, OpType::SOFTMAX);\n";
+                           << ", deps, OpType::SOFTMAX, " << to_string(scratchpad_size) << ");\n";
                 }
                 else
                 {
@@ -4004,6 +4178,17 @@ namespace ngraph
                        << "                      " << args[1].get_name() << ",\n"
                        << "                      " << out[0].get_name() << ",\n"
                        << "                      " << out[0].get_size() << ");\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::LogicalXor)
+            {
+                (void)external_function;
+                (void)node;
+                writer << "reference::logical_xor(" << args[0].get_name() << ",\n"
+                       << "                       " << args[1].get_name() << ",\n"
+                       << "                       " << out[0].get_name() << ",\n"
+                       << "                       " << out[0].get_size() << ");\n";
             }
 
             template <>
@@ -4310,8 +4495,14 @@ namespace ngraph
                 {
                     size_t dequantize_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives<ngraph::op::Dequantize>(
-                        external_function, node, writer, dequantize_index, deps, args);
+                    size_t scratchpad_size;
+                    emit_build_primitives<ngraph::op::Dequantize>(external_function,
+                                                                  node,
+                                                                  writer,
+                                                                  dequantize_index,
+                                                                  deps,
+                                                                  scratchpad_size,
+                                                                  args);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -4320,7 +4511,8 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(dequantize_index)
-                           << ", deps, OpType::DEQUANTIZE);\n";
+                           << ", deps, OpType::DEQUANTIZE, " << to_string(scratchpad_size)
+                           << ");\n";
                 }
                 else
                 {
@@ -4344,8 +4536,14 @@ namespace ngraph
                 {
                     size_t quantize_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives<ngraph::op::Quantize>(
-                        external_function, node, writer, quantize_index, deps, args);
+                    size_t scratchpad_size;
+                    emit_build_primitives<ngraph::op::Quantize>(external_function,
+                                                                node,
+                                                                writer,
+                                                                quantize_index,
+                                                                deps,
+                                                                scratchpad_size,
+                                                                args);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -4354,7 +4552,7 @@ namespace ngraph
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(quantize_index)
-                           << ", deps, OpType::QUANTIZE);\n";
+                           << ", deps, OpType::QUANTIZE, " << to_string(scratchpad_size) << ");\n";
                 }
                 else
                 {
@@ -4394,9 +4592,11 @@ namespace ngraph
                 }
                 else
                 {
+                    auto out_rank = out_shape.size();
+                    arg_shape.insert(arg_shape.begin(), out_rank - arg_rank, 1);
                     writer.block_begin();
                     writer << "cpu::kernel::tile<" << et.c_type_string() << ", "
-                           << std::to_string(arg_rank) << ">(" << args[0].get_name() << ", "
+                           << std::to_string(out_rank) << ">(" << args[0].get_name() << ", "
                            << out[0].get_name() << ", {" << join(arg_shape) << "}, {"
                            << join(out_shape) << "}, 0);\n";
 

@@ -107,12 +107,13 @@ def test_depth_to_space():
                             [15, 16, 17]],
                             [[18, 19, 20],
                             [21, 22, 23]]]], dtype=np.float32)
+    mode = 'blocks_first'
     block_size = np.float32(2)
 
     data_shape = [1, 4, 2, 3]
     parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
 
-    model = ng.depth_to_space(parameter_data, block_size)
+    model = ng.depth_to_space(parameter_data, mode, block_size)
     computation = runtime.computation(model, parameter_data)
 
     result = computation(data_value)
@@ -174,7 +175,7 @@ def test_gelu_operator_with_parameters():
     result = computation(data_value)
     expected = np.array([[-1.4901161e-06, 8.4134471e-01], [-4.5500278e-02, 2.9959502]],
                         dtype=np.float32)
-    assert np.allclose(result, expected)
+    assert np.allclose(result, expected, .007, .007)
 
 
 def test_gelu_operator_with_array():
@@ -189,7 +190,7 @@ def test_gelu_operator_with_array():
     expected = np.array([[-1.4901161e-06, 8.4134471e-01], [-4.5500278e-02, 2.9959502]],
                         dtype=np.float32)
 
-    assert np.allclose(result, expected)
+    assert np.allclose(result, expected, .007, .007)
 
 
 def test_clamp_operator():

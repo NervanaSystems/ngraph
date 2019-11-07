@@ -70,6 +70,7 @@ public:
 
 protected:
     bool is_enabled(const std::shared_ptr<pattern::Matcher>& m) const;
+    bool m_enable_shape_inference = false;
 
 private:
     struct MatchClosure

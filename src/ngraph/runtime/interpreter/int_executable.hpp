@@ -32,6 +32,7 @@
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/binary_convolution.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/op/concat.hpp"
@@ -102,6 +103,7 @@
 #include "ngraph/runtime/reference/argmin.hpp"
 #include "ngraph/runtime/reference/asin.hpp"
 #include "ngraph/runtime/reference/atan.hpp"
+#include "ngraph/runtime/reference/atan2.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
 #include "ngraph/runtime/reference/batch_mat_mul.hpp"
 #include "ngraph/runtime/reference/batch_norm.hpp"
@@ -400,6 +402,15 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
+        case OP_TYPEID::Atan2:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::atan2<T>(args[0]->get_data_ptr<const T>(),
+                                args[1]->get_data_ptr<const T>(),
+                                out[0]->get_data_ptr<T>(),
+                                element_count);
+            break;
+        }
         case OP_TYPEID::AvgPool:
         {
             const op::AvgPool* avg_pool = static_cast<const op::AvgPool*>(&node);
@@ -413,6 +424,11 @@ private:
                                    avg_pool->get_padding_below(),
                                    avg_pool->get_padding_above(),
                                    avg_pool->get_include_padding_in_avg_computation());
+            break;
+        }
+        case OP_TYPEID::BinaryConvolution:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() + "'");
             break;
         }
         case OP_TYPEID::GenerateMask:
@@ -1000,11 +1016,55 @@ private:
                                   less_eq->get_autob());
             break;
         }
+        case OP_TYPEID::LessEqual:
+        {
+            auto less_eq = static_cast<const op::v1::LessEqual*>(&node);
+            reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
+                                  args[1]->get_data_ptr<const T>(),
+                                  out[0]->get_data_ptr<char>(),
+                                  node.get_input_shape(0),
+                                  node.get_input_shape(1),
+                                  less_eq->get_autob());
+            break;
+        }
         case OP_TYPEID::Log:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::log<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
+        }
+        case OP_TYPEID::LogicalAnd:
+        {
+            auto logical_and = static_cast<const op::v1::LogicalAnd*>(&node);
+            reference::logical_and(args[0]->get_data_ptr<const T>(),
+                                   args[1]->get_data_ptr<const T>(),
+                                   out[0]->get_data_ptr<T>(),
+                                   node.get_input_shape(0),
+                                   node.get_input_shape(1),
+                                   logical_and->get_autob());
+            break;
+        }
+        case OP_TYPEID::LogicalOr:
+        {
+            auto logical_or = static_cast<const op::v1::LogicalOr*>(&node);
+            reference::logical_or(args[0]->get_data_ptr<const T>(),
+                                  args[1]->get_data_ptr<const T>(),
+                                  out[0]->get_data_ptr<T>(),
+                                  node.get_input_shape(0),
+                                  node.get_input_shape(1),
+                                  logical_or->get_autob());
+            break;
+        }
+        case OP_TYPEID::LogicalXor:
+        {
+            auto logical_xor = static_cast<const op::v1::LogicalXor*>(&node);
+            reference::logical_xor(args[0]->get_data_ptr<const T>(),
+                                   args[1]->get_data_ptr<const T>(),
+                                   out[0]->get_data_ptr<T>(),
+                                   node.get_input_shape(0),
+                                   node.get_input_shape(1),
+                                   logical_xor->get_autob());
             break;
         }
         case OP_TYPEID::LRN:
@@ -1110,6 +1170,7 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
+        case OP_TYPEID::LogicalNot:
         case OP_TYPEID::Not:
         {
             size_t element_count = shape_size(node.get_output_shape(0));

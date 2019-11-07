@@ -369,7 +369,7 @@ namespace ngraph
         };
 
         /// \brief A scalar constant whose element type is the same as like.
-        class ScalarConstantLike : public ScalarConstantLikeBase
+        class NGRAPH_API ScalarConstantLike : public ScalarConstantLikeBase
         {
         public:
             /// \brief A scalar constant whose element type is the same as like.

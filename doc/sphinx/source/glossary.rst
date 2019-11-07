@@ -17,6 +17,12 @@ Glossary
       A component of nGraph that acts as a backend for a framework,
       allowing the framework to define and execute computations.
 
+   builder
+
+       A builder is a function that creates a sub-graph and returns 
+       a root node to the bridge. Fused ops are preferred over 
+       builders See also: :doc:`provenance/overview`.
+
    data-flow graph
 
       Data-flow graphs are used to implement deep learning models. In  
@@ -67,16 +73,28 @@ Glossary
       additional constant attributes. Every output of an op
       corresponds to a tensor and has an element type and a shape. The
       element types and shapes of the outputs of an op are determined
-      by the inputs and attributes of the op.
+      by the inputs and attributes of the op.   
 
    parameter
 
       In the context of a function graph, a "parameter" refers to what
       "stands in" for an argument in an ``op`` definition.
 
+   provenance
+   
+      The term provenance refers to the matching of device code to framework 
+      sub-graphs; it is analogous to source code locators in conventional 
+      compilers, which associate regions of object code with source files and 
+      line numbers. 
+   
    quantization
 
-      Quantization refers to the conversion of numerical data into a lower-precision representation. Quantization is often used in deep learning to reduce the time and energy needed to perform computations by reducing the size of data transfers and the number of steps needed to perform a computation. This improvement in speed and energy usage comes at a cost in terms of numerical accuracy, but deep learning models are often able to function well in spite of this reduced accuracy. 
+      Quantization refers to the conversion of numerical data into a lower-precision 
+      representation. Quantization is often used in deep learning to reduce the time and 
+      energy needed to perform computations by reducing the size of data transfers and the 
+      number of steps needed to perform a computation. This improvement in speed and energy 
+      usage comes at a cost in terms of numerical accuracy, but deep learning models are 
+      often able to function well in spite of this reduced accuracy. 
 
    result
 

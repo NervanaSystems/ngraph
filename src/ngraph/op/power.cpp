@@ -22,23 +22,61 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Power::type_info;
+// ------------------------------ v0 -------------------------------------------
 
-op::Power::Power(const Output<Node>& arg0,
-                 const Output<Node>& arg1,
-                 const AutoBroadcastSpec& auto_broadcast)
+constexpr NodeTypeInfo op::v0::Power::type_info;
+
+op::v0::Power::Power(const Output<Node>& arg0,
+                     const Output<Node>& arg1,
+                     const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::Power::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Power::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Power>(new_args.at(0), new_args.at(1), this->get_autob());
+    return make_shared<op::v0::Power>(new_args.at(0), new_args.at(1), this->get_autob());
 }
 
-void op::Power::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::Power::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+{
+    if (get_autob().m_type != op::AutoBroadcastType::NONE)
+    {
+        throw ngraph_error("Autodiff not supported with auto broadcasting");
+    }
+
+    auto delta = deltas.at(0);
+
+    auto x = input_value(0);
+    auto y = input_value(1);
+
+    auto log_x = make_shared<op::Log>(x);
+
+    adjoints.add_delta(x, delta * y * shared_from_this() / x);
+    adjoints.add_delta(y, delta * shared_from_this() * log_x);
+}
+
+// ------------------------------ v1 -------------------------------------------
+
+constexpr NodeTypeInfo op::v1::Power::type_info;
+
+op::v1::Power::Power(const Output<Node>& arg0,
+                     const Output<Node>& arg1,
+                     const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
+{
+    constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::v1::Power::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<op::v1::Power>(new_args.at(0), new_args.at(1), this->get_autob());
+}
+
+void op::v1::Power::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     if (get_autob().m_type != op::AutoBroadcastType::NONE)
     {
