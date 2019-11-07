@@ -95,6 +95,7 @@
 #include "ngraph/op/fused/selu.hpp"
 #include "ngraph/op/fused/shuffle_channels.hpp"
 #include "ngraph/op/fused/softmax_crossentropy.hpp"
+#include "ngraph/op/fused/softsign.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/fused/split.hpp"
 #include "ngraph/op/fused/squared_difference.hpp"
@@ -2539,6 +2540,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], args[2], soft_label, ignore_index);
             break;
         }
+        case OP_TYPEID::Softsign:
+        {
+            node = make_shared<op::Softsign>(args[0]);
+            break;
+        }
         case OP_TYPEID::SpaceToDepth:
         {
             auto block_size = node_js.at("block_size").get<size_t>();
@@ -4073,6 +4079,8 @@ json JSONSerializer::serialize_node(const Node& n)
         node["soft_label"] = tmp->get_soft_label();
         node["ignore_index"] = tmp->get_ignore_index();
         break;
+    }
+    case OP_TYPEID::Softsign: { break;
     }
     case OP_TYPEID::Tan: { break;
     }
