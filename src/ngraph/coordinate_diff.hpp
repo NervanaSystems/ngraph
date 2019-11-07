@@ -20,10 +20,12 @@
 #include <ostream>
 #include <vector>
 
+#include "ngraph/ngraph_visibility.hpp"
+
 namespace ngraph
 {
     /// \brief A difference (signed) of tensor element coordinates.
-    class CoordinateDiff : public std::vector<std::ptrdiff_t>
+    class NGRAPH_API CoordinateDiff : public std::vector<std::ptrdiff_t>
     {
     public:
         CoordinateDiff(const std::initializer_list<std::ptrdiff_t>& diffs)
@@ -58,7 +60,7 @@ namespace ngraph
             static_cast<std::vector<std::ptrdiff_t>*>(this)->operator=(v);
             return *this;
         }
-        CoordinateDiff& operator=(CoordinateDiff&& v)
+        CoordinateDiff& operator=(CoordinateDiff&& v) noexcept
         {
             static_cast<std::vector<std::ptrdiff_t>*>(this)->operator=(v);
             return *this;

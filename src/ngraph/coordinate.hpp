@@ -25,7 +25,7 @@
 namespace ngraph
 {
     /// \brief Coordinates for a tensor element
-    class Coordinate : public std::vector<size_t>
+    class NGRAPH_API Coordinate : public std::vector<size_t>
     {
     public:
         Coordinate() {}
@@ -66,7 +66,7 @@ namespace ngraph
             return *this;
         }
 
-        Coordinate& operator=(Coordinate&& v)
+        Coordinate& operator=(Coordinate&& v) noexcept
         {
             static_cast<std::vector<size_t>*>(this)->operator=(v);
             return *this;

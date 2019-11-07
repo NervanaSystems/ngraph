@@ -21,10 +21,12 @@
 #include <set>
 #include <vector>
 
+#include "ngraph/ngraph_visibility.hpp"
+
 namespace ngraph
 {
     /// \brief A set of axes.
-    class AxisSet : public std::set<size_t>
+    class NGRAPH_API AxisSet : public std::set<size_t>
     {
     public:
         AxisSet() {}
@@ -54,7 +56,7 @@ namespace ngraph
             return *this;
         }
 
-        AxisSet& operator=(AxisSet&& v)
+        AxisSet& operator=(AxisSet&& v) noexcept
         {
             static_cast<std::set<size_t>*>(this)->operator=(v);
             return *this;

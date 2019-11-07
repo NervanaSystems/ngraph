@@ -41,7 +41,7 @@ namespace ngraph
     ///     (Informal notation examples: `{1,2,?,4}`, `{?,?,?}`)
     /// \li Static rank, and static dimensions on all axes.
     ///     (Informal notation examples: `{1,2,3,4}`, `{6}`, `{}`)
-    class PartialShape
+    class NGRAPH_API PartialShape
     {
     public:
         /// \brief Constructs a shape with static rank from an initializer list of Dimension.

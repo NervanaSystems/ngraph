@@ -19,6 +19,8 @@
 #include <cstddef>
 #include <ostream>
 
+#include "ngraph/ngraph_visibility.hpp"
+
 namespace ngraph
 {
     namespace op
@@ -117,7 +119,7 @@ namespace ngraph
         };
 
         /// \brief Implicit broadcast specification
-        struct AutoBroadcastSpec
+        struct NGRAPH_API AutoBroadcastSpec
         {
             AutoBroadcastSpec()
                 : m_type(AutoBroadcastType::NONE)

@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace op
     {
-        struct PriorBoxClusteredAttrs
+        struct NGRAPH_API PriorBoxClusteredAttrs
         {
             // widths         Desired widths of prior boxes
             // heights        Desired heights of prior boxes

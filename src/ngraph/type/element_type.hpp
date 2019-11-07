@@ -55,7 +55,7 @@ namespace ngraph
             u64
         };
 
-        class Type
+        class NGRAPH_API Type
         {
         public:
             Type()

@@ -20,10 +20,12 @@
 #include <ostream>
 #include <vector>
 
+#include "ngraph/ngraph_visibility.hpp"
+
 namespace ngraph
 {
     /// \brief Strides for a tensor.
-    class Strides : public std::vector<size_t>
+    class NGRAPH_API Strides : public std::vector<size_t>
     {
     public:
         Strides(const std::initializer_list<size_t>& axis_strides)
@@ -58,7 +60,7 @@ namespace ngraph
             static_cast<std::vector<size_t>*>(this)->operator=(v);
             return *this;
         }
-        Strides& operator=(Strides&& v)
+        Strides& operator=(Strides&& v) noexcept
         {
             static_cast<std::vector<size_t>*>(this)->operator=(v);
             return *this;

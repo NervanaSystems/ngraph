@@ -74,7 +74,11 @@ if ("${CMAKE_GENERATOR}" MATCHES "^Visual Studio.*$")
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES MSVC)
-    add_definitions(/bigobj)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /bigobj")
+    # C4251 needs to have dll-interface to be used by clients of class
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4251")
+    # C4275 non dll-interface class used as base for dll-interface class
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4275")
 endif()
 
 # APPLE: Set CMAKE_OSX_SYSROOT if not set already.

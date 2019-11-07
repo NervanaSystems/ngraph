@@ -20,10 +20,12 @@
 #include <ostream>
 #include <vector>
 
+#include "ngraph/ngraph_visibility.hpp"
+
 namespace ngraph
 {
     /// \brief A vector of axes.
-    class AxisVector : public std::vector<size_t>
+    class NGRAPH_API AxisVector : public std::vector<size_t>
     {
     public:
         AxisVector(const std::initializer_list<size_t>& axes)
@@ -58,7 +60,7 @@ namespace ngraph
             static_cast<std::vector<size_t>*>(this)->operator=(v);
             return *this;
         }
-        AxisVector& operator=(AxisVector&& v)
+        AxisVector& operator=(AxisVector&& v) noexcept
         {
             static_cast<std::vector<size_t>*>(this)->operator=(v);
             return *this;
