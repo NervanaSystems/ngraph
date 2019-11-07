@@ -58,9 +58,7 @@ NodeVector op::CrossEntropy::decompose_op() const
         auto not_equal = std::make_shared<ngraph::op::NotEqual>(labels, mask_constant);
         auto convert =
             std::make_shared<ngraph::op::Convert>(not_equal, input_to_normalize.get_element_type());
-        auto reshape = std::make_shared<ngraph::op::Reshape>(
-            convert, AxisVector{0, 1}, Shape{convert->get_shape().at(0), 1});
-        return reshape;
+        return convert;
     };
 
     auto create_xe = [&](const Output<Node>& one_hot, const Output<Node>& input) {

@@ -2291,9 +2291,9 @@ NGRAPH_TEST(${BACKEND_NAME}, cross_entropy)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, tensor_shape);
-    copy_data(a, vector<float>{0.25, 0.25, 0.25, 0.25, 0.01, 0.01, 0.01, 0.96});
+    copy_data(a, vector<float>{0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25});
     auto b = backend->create_tensor(element::i32, Shape{2, 1});
-    copy_data(b, vector<int>{0, 1});
+    copy_data(b, vector<int>{0, 0});
     auto result0 = backend->create_tensor(element::f32, Shape{2, 1});
     auto handle = backend->compile(f0);
     handle->call_with_validate({result0}, {a, b});
