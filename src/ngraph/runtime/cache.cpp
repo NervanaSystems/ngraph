@@ -30,6 +30,8 @@ runtime::LRUCache::LRUCache()
 // Destructor
 runtime::LRUCache::~LRUCache()
 {
+    m_list.clear();
+    m_map.clear();
 }
 
 ostringstream runtime::LRUCache::convert_shape_to_string(const vector<int>& shape)
