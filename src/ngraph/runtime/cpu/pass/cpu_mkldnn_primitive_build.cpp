@@ -2234,7 +2234,6 @@ namespace ngraph
                 template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Gelu)
                 {
-                    auto gelu_node = static_cast<const ngraph::op::Gelu*>(node);
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
