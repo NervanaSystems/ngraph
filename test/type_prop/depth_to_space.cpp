@@ -24,8 +24,28 @@ using namespace ngraph;
 TEST(type_prop, depth_to_space)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{1, 128, 8, 8});
-    auto space_to_depth = make_shared<op::DepthToSpace>(A, 8);
+    auto space_to_depth =
+        make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST, 8);
 
     ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
     ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 2, 64, 64}));
+}
+
+TEST(type_prop, depth_to_space_input_rank_not_supported)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 8, 8, 8, 4});
+    try
+    {
+        auto space_to_depth =
+            make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST, 2);
+        FAIL() << "Not supported input shape for DepthToSpace exception not thrown";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "The provided tensor shape: ");
+    }
+    catch (...)
+    {
+        FAIL() << "DepthToSpace decomposition failed for unexpected reason";
+    }
 }

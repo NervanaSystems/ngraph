@@ -817,6 +817,18 @@ NodeVector ngraph::as_node_vector(const OutputVector& values)
     return node_vector;
 }
 
+ResultVector ngraph::as_result_vector(const OutputVector& values)
+{
+    ResultVector result;
+    for (auto value : values)
+    {
+        shared_ptr<Node> node = value.get_node_shared_ptr();
+        result.push_back(is_type<op::Result>(node) ? as_type_ptr<op::Result>(node)
+                                                   : make_shared<op::Result>(value));
+    }
+    return result;
+}
+
 std::tuple<element::Type, PartialShape>
     Node::validate_and_infer_elementwise_args(const op::AutoBroadcastSpec& autob)
 {

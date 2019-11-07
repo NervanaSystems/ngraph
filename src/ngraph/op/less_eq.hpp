@@ -33,6 +33,7 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a less-than-or-equal operation.
                 LessEqual() = default;
+
                 /// \brief Constructs a less-than-or-equal operation.
                 ///
                 /// \param arg0 Node that produces the first input tensor.
@@ -40,12 +41,14 @@ namespace ngraph
                 /// \param auto_broadcast Auto broadcast specification
                 LessEqual(const Output<Node>& arg0,
                           const Output<Node>& arg1,
-                          const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
+                          const AutoBroadcastSpec& auto_broadcast =
+                              AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
             };
         } // namespace v1
+
         namespace v0
         {
             /// \brief Elementwise less-than-or-equal operation.
@@ -57,6 +60,7 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a less-than-or-equal operation.
                 LessEq() = default;
+
                 /// \brief Constructs a less-than-or-equal operation.
                 ///
                 /// \param arg0 Node that produces the first input tensor.

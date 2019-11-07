@@ -107,12 +107,13 @@ def test_depth_to_space():
                             [15, 16, 17]],
                             [[18, 19, 20],
                             [21, 22, 23]]]], dtype=np.float32)
+    mode = 'blocks_first'
     block_size = np.float32(2)
 
     data_shape = [1, 4, 2, 3]
     parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
 
-    model = ng.depth_to_space(parameter_data, block_size)
+    model = ng.depth_to_space(parameter_data, mode, block_size)
     computation = runtime.computation(model, parameter_data)
 
     result = computation(data_value)

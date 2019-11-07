@@ -83,6 +83,8 @@ set (SRC
     function.cpp
     function.hpp
     graph_util.cpp
+    lambda.cpp
+    lambda.hpp
     log.cpp
     log.hpp
     ngraph.cpp
@@ -315,6 +317,8 @@ set (SRC
     op/tan.hpp
     op/tanh.cpp
     op/tanh.hpp
+    op/tensor_iterator.cpp
+    op/tensor_iterator.hpp
     op/topk.cpp
     op/topk.hpp
     op/xor.cpp
@@ -363,6 +367,8 @@ set (SRC
     op/fused/rnn_cell.hpp
     op/fused/scale_shift.cpp
     op/fused/scale_shift.hpp
+    op/fused/selu.cpp
+    op/fused/selu.hpp
     op/fused/shuffle_channels.cpp
     op/fused/shuffle_channels.hpp
     op/fused/softmax_crossentropy.cpp
