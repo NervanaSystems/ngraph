@@ -55,37 +55,43 @@ namespace ngraph
                 {
                     NodeVector inputs{node.get_ng_inputs()};
                     std::shared_ptr<ngraph::Node> data = inputs.at(0);
-                    const ngraph::element::Type data_type = data->get_element_type();
-                    const ngraph::Shape data_shape = data->get_shape();
-                    const double max_value = std::numeric_limits<double>::max();
-                    const double min_value = std::numeric_limits<double>::lowest();
-                    std::shared_ptr<ngraph::Node> min =
-                        builder::make_constant(data_type, data_shape, min_value);
-                    std::shared_ptr<ngraph::Node> max =
-                        builder::make_constant(data_type, data_shape, max_value);
+                    const element::Type data_type = data->get_element_type();
+                    const Shape data_shape = data->get_shape();
+                    std::shared_ptr<ngraph::Node> min;
+                    std::shared_ptr<ngraph::Node> max;
 
-                    if (inputs.size() > 1)
+                    // If second input is provided, assign to min input, otherwise set lowest
+                    // numeric limit of double as min input.
+                    if (inputs.size() > 1 && !inputs.at(1)->is_null())
                     {
-                        if (!inputs.at(1)->is_null())
-                        {
-                            min = inputs.at(1);
-                        }
-
-                        if (inputs.size() == 3)
-                        {
-                            if (!inputs.at(2)->is_null())
-                            {
-                                max = inputs.at(2);
-                            }
-                        }
+                        min = inputs.at(1);
                     }
+                    else
+                    {
+                        min = builder::make_constant(
+                            data_type, data_shape, std::numeric_limits<double>::lowest());
+                    }
+
+                    // If third input is provided, assign to max input, otherwise set maximum
+                    // numeric limit of double as max input.
+                    if (inputs.size() == 3 && !inputs.at(2)->is_null())
+                    {
+                        max = inputs.at(2);
+                    }
+                    else
+                    {
+                        max = builder::make_constant(
+                            data_type, data_shape, std::numeric_limits<double>::max());
+                    }
+
+                    auto max_of_min_and_data = std::make_shared<ngraph::op::Maximum>(
+                        min,
+                        data,
+                        ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY));
 
                     return {std::make_shared<ngraph::op::Minimum>(
                         max,
-                        std::make_shared<ngraph::op::Maximum>(
-                            min,
-                            data,
-                            ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY)),
+                        max_of_min_and_data,
                         ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY))};
                 }
 
