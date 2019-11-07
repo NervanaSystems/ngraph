@@ -28,12 +28,12 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
-#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -384,9 +384,10 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
 #define TI(x) std::type_index(typeid(x))
 
-// Moved set_or_check_if_same and fuse_group_convolution to core pass batch_fusion
+// Moved set_or_check_if_same and fuse_group_convolution, fuse_batch_mat_mul_transpose
+// to core pass batch_fusion
 
-std::shared_ptr<Node> fuse_batch_mat_mul_transpose(const std::shared_ptr<Node>& n)
+/*std::shared_ptr<Node> fuse_batch_mat_mul_transpose(const std::shared_ptr<Node>& n)
 {
     const int num_op_branches = 2;
     std::shared_ptr<pattern::op::Label> input[num_op_branches];
@@ -459,7 +460,7 @@ std::shared_ptr<Node> fuse_batch_mat_mul_transpose(const std::shared_ptr<Node>& 
             fuse_input[0], fuse_input[1], transpose[0], transpose[1]);
     }
     return {nullptr};
-}
+}*/
 
 bool runtime::cpu::pass::CPUBatchFusion::run_on_function(std::shared_ptr<Function> func)
 {
@@ -472,11 +473,11 @@ bool runtime::cpu::pass::CPUBatchFusion::run_on_function(std::shared_ptr<Functio
         {
             if (m_fusion_type.is_set(FusionType::DIFFERENTIABLE_FUSIONS))
             {
-                if (auto fused_node = fuse_batch_mat_mul_transpose(n))
-                {
-                    func->replace_node(n, fused_node);
-                    modified = true;
-                }
+                // if (auto fused_node = fuse_batch_mat_mul_transpose(n))
+                //{
+                //    func->replace_node(n, fused_node);
+                //    modified = true;
+                //}
             }
             if (m_fusion_type.is_set(FusionType::REGULAR_FUSIONS))
             {

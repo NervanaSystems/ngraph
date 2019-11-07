@@ -31,11 +31,29 @@ op::BatchMatMulTranspose::BatchMatMulTranspose(const Output<Node>& arg0,
                                                const Output<Node>& arg1,
                                                bool transpose_arg0,
                                                bool transpose_arg1)
-    : Op({arg0, arg1})
+    : FusedOp({arg0, arg1})
     , m_transpose_arg0(transpose_arg0)
     , m_transpose_arg1(transpose_arg1)
 {
     constructor_validate_and_infer_types();
+}
+
+NodeVector op::BatchMatMulTranspose::decompose_op() const
+{
+    std::cout << "BatchMatMulTranspose::decompose_op() called. NOT doing naything NOW\n";
+    /*auto data = input_value(0);
+
+    shared_ptr<ngraph::Node> half =
+        builder::make_constant(data.get_element_type(), data.get_shape(), 0.5);
+
+    shared_ptr<ngraph::Node> one =
+        builder::make_constant(data.get_element_type(), data.get_shape(), 1.0);
+
+    shared_ptr<ngraph::Node> sqrt_two =
+        builder::make_constant(data.get_element_type(), data.get_shape(), std::sqrt(2.0));*/
+
+    // return {half * data * (one + make_shared<ngraph::op::Erf>(data / sqrt_two))};
+    return {};
 }
 
 shared_ptr<Node> op::BatchMatMulTranspose::copy_with_new_args(const NodeVector& new_args) const

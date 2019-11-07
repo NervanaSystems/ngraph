@@ -70,6 +70,7 @@
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
+#include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
 #include "ngraph/op/fused/clamp.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
@@ -1065,7 +1066,14 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::BatchMatMul>(args[0], args[1]);
             break;
         }
-
+        case OP_TYPEID::BatchMatMulTranspose:
+        {
+            auto transpose_0 = node_js.at("transpose_0").get<bool>();
+            auto transpose_1 = node_js.at("transpose_1").get<bool>();
+            node =
+                make_shared<op::BatchMatMulTranspose>(args[0], args[1], transpose_0, transpose_1);
+            break;
+        }
         case OP_TYPEID::BatchNormTraining:
         {
             auto epsilon = node_js.at("eps").get<double>();
@@ -3011,6 +3019,13 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::BatchMatMul: { break;
+    }
+    case OP_TYPEID::BatchMatMulTranspose:
+    {
+        auto tmp = static_cast<const op::BatchMatMulTranspose*>(&n);
+        node["transpose_0"] = tmp->get_transpose_arg0();
+        node["transpose_1"] = tmp->get_transpose_arg1();
+        break;
     }
     case OP_TYPEID::BatchNormTraining:
     {

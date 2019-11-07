@@ -26,6 +26,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -645,6 +646,45 @@ TEST(core_fusion, DISABLED_conv_bias_bprop)
     {
         EXPECT_TRUE(test::all_close(fused_r.at(i), decomp_r1.at(i)));
         EXPECT_TRUE(test::all_close(fused_r.at(i), decomp_r2.at(i)));
+    }
+}
+
+TEST(batch_fusion, fuse_batch_mat_mul_transpose)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::BatchFusion>();
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/batch_dot_3.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    size_t ccg = count_ops_of_type<op::BatchMatMulTranspose>(func);
+    ASSERT_EQ(ccg, 1);
+}
+
+TEST(batch_fusion, fuse_batch_mat_mul_transpose_forward)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::BatchFusion>();
+
+    const std::string file_name("mxnet/batch_dot_3.json");
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
+    pass_manager.run_passes(cpu_f);
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < int_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
 
