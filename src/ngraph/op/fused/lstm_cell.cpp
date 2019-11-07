@@ -141,7 +141,7 @@ void op::LSTMCell::pre_validate_and_infer_types()
                           ", ",
                           get_hidden_size(),
                           "). Actual shape is:",
-                          w_shape,
+                          r_shape,
                           ".");
     NODE_VALIDATION_CHECK(this,
                           (ht_shape == Shape{batch_size, get_hidden_size()}),
@@ -150,7 +150,7 @@ void op::LSTMCell::pre_validate_and_infer_types()
                           ", ",
                           get_hidden_size(),
                           "). Actual shape is:",
-                          w_shape,
+                          ht_shape,
                           ".");
     NODE_VALIDATION_CHECK(this,
                           (ct_shape == Shape{batch_size, get_hidden_size()}),
@@ -159,7 +159,7 @@ void op::LSTMCell::pre_validate_and_infer_types()
                           ", ",
                           get_hidden_size(),
                           "). Actual shape is:",
-                          w_shape,
+                          ct_shape,
                           ".");
 
     const auto& b_pshape = get_input_partial_shape(5);
