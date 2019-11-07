@@ -128,7 +128,7 @@ bool runtime::dynamic::DynamicExecutable::call(
             void* data_ptr = malloc(input->get_size_in_bytes());
             input->read(data_ptr, input->get_size_in_bytes());
             // assuming that shape relevant inputs are int64_t
-            int64_t* result = (int64_t*)data_ptr;
+            int* result = (int*)data_ptr;
             for (int i = 0; i < input->get_element_count(); i++)
             {
                 merged_input_shapes.emplace_back(result[i]);
@@ -157,7 +157,7 @@ bool runtime::dynamic::DynamicExecutable::call(
     {
         std::vector<std::shared_ptr<runtime::Tensor>> wrapped_inputs;
         std::vector<std::shared_ptr<runtime::Tensor>> wrapped_outputs;
-        std::cout << "Cache Hit " << std::endl;
+        NGRAPH_INFO << "Cache Hit ";
         for (auto& input : inputs)
         {
             if (auto dynamic_tensor =
@@ -190,7 +190,7 @@ bool runtime::dynamic::DynamicExecutable::call(
     }
     else
     {
-        std::cout << "Cache Miss" << std::endl;
+        NGRAPH_INFO << "Cache Miss";
         NGRAPH_CHECK(m_wrapped_function->get_parameters().size() == inputs.size());
 
         std::vector<std::shared_ptr<runtime::Tensor>> wrapped_inputs;

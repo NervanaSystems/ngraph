@@ -41,9 +41,9 @@ namespace ngraph
 
             virtual ~LRUCache();
 
-            void add_entry(const vector<int>&, shared_ptr<Executable>);
-            bool is_cached(const vector<int>&);
-            shared_ptr<Executable> get_cached_entry(const vector<int>&);
+            void add_entry(const vector<int>& shape, shared_ptr<Executable> exec);
+            bool is_cached(const vector<int>& shape);
+            shared_ptr<Executable> get_cached_entry(const vector<int>& shape);
             ostringstream convert_shape_to_string(const vector<int>& shape);
 
         private:

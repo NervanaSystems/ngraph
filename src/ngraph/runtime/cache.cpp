@@ -60,12 +60,12 @@ void runtime::LRUCache::add_entry(const vector<int>& shape, shared_ptr<runtime::
     key = convert_shape_to_string(shape);
     m_map.insert({key.str(), exec});
     m_list.push_front(shape);
-    std::cout << "Key is " << key.str() << std::endl;
+    NGRAPH_INFO << "Key is " << key.str();
 }
 
 bool runtime::LRUCache::is_cached(const vector<int>& shape)
 {
-    std::cout << "List size " << m_list.size() << std::endl;
+    NGRAPH_INFO << "List size " << m_list.size();
     for (auto itr = m_list.begin(); itr != m_list.end(); itr++)
     {
         if (*itr == shape)
