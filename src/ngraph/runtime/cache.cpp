@@ -22,7 +22,18 @@ using namespace std;
 // Constructor
 runtime::LRUCache::LRUCache()
 {
-    m_size = 1024;
+    char* cache_size = getenv("NGRAPH_CACHE_SIZE");
+    if (cache_size == nullptr)
+    {
+        m_size = 1024; // TODO(nbpatel): Figure out a default size for the cache
+        NGRAPH_INFO << "Cache size is " << m_size;
+    }
+    else
+    {
+        m_size = atoi(cache_size);
+        NGRAPH_INFO << "User Defined Cache size is " << m_size;
+    }
+
     m_map = {};
     m_list = {};
 }
