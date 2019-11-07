@@ -24,32 +24,68 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise logical-or operation.
-        ///
-        class Or : public util::BinaryElementwiseLogical
+        namespace v1
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Or", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a logical-or operation.
+            /// \brief Elementwise logical-or operation.
             ///
-            /// \param arg0 Node that produces the first input tensor.<br>
-            /// `[d0, ...]`
-            /// \param arg1 Node that produces the second input tensor.<br>
-            /// `[d0, ...]`
-            /// \param auto_broadcast Auto broadcast specification
-            ///
-            /// Output `[d0, ...]`
-            ///
-            Or(const Output<Node>& arg0,
-               const Output<Node>& arg1,
-               const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
+            class LogicalOr : public util::BinaryElementwiseLogical
+            {
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"LogicalOr", 1};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a logical-or operation.
+                ///
+                /// \param arg0 Node that produces the first input tensor.<br>
+                /// `[d0, ...]`
+                /// \param arg1 Node that produces the second input tensor.<br>
+                /// `[d0, ...]`
+                /// \param auto_broadcast Auto broadcast specification
+                ///
+                /// Output `[d0, ...]`
+                ///
+                LogicalOr(const Output<Node>& arg0,
+                          const Output<Node>& arg1,
+                          const AutoBroadcastSpec& auto_broadcast =
+                              AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            virtual bool is_commutative() const override { return true; }
-        };
-    }
-}
+                virtual bool is_commutative() const override { return true; }
+            };
+        } // namespace v1
+        namespace v0
+        {
+            /// \brief Elementwise logical-or operation.
+            ///
+            class Or : public util::BinaryElementwiseLogical
+            {
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"Or", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a logical-or operation.
+                ///
+                /// \param arg0 Node that produces the first input tensor.<br>
+                /// `[d0, ...]`
+                /// \param arg1 Node that produces the second input tensor.<br>
+                /// `[d0, ...]`
+                /// \param auto_broadcast Auto broadcast specification
+                ///
+                /// Output `[d0, ...]`
+                ///
+                Or(const Output<Node>& arg0,
+                   const Output<Node>& arg1,
+                   const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
+
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+                virtual bool is_commutative() const override { return true; }
+            };
+        } // namespace v0
+
+        using v0::Or;
+    } // namespace op
+} // namespace ngraph

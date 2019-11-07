@@ -35,10 +35,10 @@ if(WIN32)
     )
 endif()
 
-if(LINUX)
+if(UNIX)
     # workaround for compile error
     # related: https://github.com/intel/mkl-dnn/issues/55
-    set(GTEST_CXX_FLAGS "-Wno-unused-result ${CMAKE_CXX_FLAGS}")
+    set(GTEST_CXX_FLAGS "-Wno-unused-result ${CMAKE_CXX_FLAGS} -Wno-undef")
 else()
     set(GTEST_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 endif()

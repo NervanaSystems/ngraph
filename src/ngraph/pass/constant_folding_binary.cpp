@@ -85,6 +85,17 @@ static shared_ptr<op::Constant> fold_constant_binary_logical(shared_ptr<op::Cons
                                                   and_node->get_autob());
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
+        else if (auto logical_xor_node = as_type_ptr<op::v1::LogicalXor>(binary))
+        {
+            vector<char> out_vec(shape_size(out_shape));
+            runtime::reference::logical_xor<char>(a->get_data_ptr<char>(),
+                                                  b->get_data_ptr<char>(),
+                                                  out_vec.data(),
+                                                  a->get_shape(),
+                                                  b->get_shape(),
+                                                  logical_xor_node->get_autob());
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        }
         else if (auto or_node = as_type_ptr<op::Or>(binary))
         {
             vector<char> out_vec(shape_size(out_shape));
@@ -96,7 +107,7 @@ static shared_ptr<op::Constant> fold_constant_binary_logical(shared_ptr<op::Cons
                                                  or_node->get_autob());
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
-        else if (auto xor_node = as_type_ptr<op::Xor>(binary))
+        else if (auto xor_node = as_type_ptr<op::v0::Xor>(binary))
         {
             vector<char> out_vec(shape_size(out_shape));
             runtime::reference::logical_xor<char>(a->get_data_ptr<char>(),

@@ -38,9 +38,9 @@ namespace ngraph
                     double alpha = node.get_attribute_value<double>("alpha", 1.0);
 
                     std::shared_ptr<ngraph::Node> alpha_node =
-                        std::make_shared<ngraph::op::Constant>(
-                            data->get_element_type(), ngraph::Shape{}, std::vector<double>{alpha});
-                    alpha_node = ngraph::op::make_broadcast_node(alpha_node, data->get_shape());
+                        std::make_shared<ngraph::op::Constant>(data->get_element_type(),
+                                                               data->get_shape(),
+                                                               std::vector<double>{alpha});
 
                     auto data_map = std::make_shared<ngraph::op::Convert>(
                         std::make_shared<ngraph::op::Greater>(data, alpha_node),
