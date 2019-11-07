@@ -266,6 +266,7 @@ set(MULTI_TEST_SRC
     backend/arg_reduce.in.cpp
     backend/asin.in.cpp
     backend/atan.in.cpp
+    backend/atan2.in.cpp
     backend/auto_broadcast.in.cpp
     backend/autodiff.in.cpp
     backend/batch_mat_mul.in.cpp
