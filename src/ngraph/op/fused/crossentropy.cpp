@@ -80,20 +80,24 @@ NodeVector op::CrossEntropy::decompose_op() const
             labels = std::make_shared<ngraph::op::Convert>(labels,
                                                            input_to_normalize.get_element_type());
         }
-        auto reshape_labels = std::make_shared<ngraph::op::Reshape>(
-            labels, AxisVector{0, 1}, Shape{labels.get_shape().at(0)});
-        auto broadcast_labels = std::make_shared<ngraph::op::Broadcast>(
-            reshape_labels,
-            input_to_normalize.get_shape(),
-            AxisSet{input_to_normalize.get_shape().size() - 1});
-        auto xe = create_xe(broadcast_labels, input_to_normalize);
+
+        if (labels.get_shape()[reduction_axis] == 1)
+        {
+            auto reshape_labels = std::make_shared<ngraph::op::Reshape>(
+                labels, AxisVector{0, 1}, Shape{labels.get_shape().at(0)});
+            labels = std::make_shared<ngraph::op::Broadcast>(
+                reshape_labels,
+                input_to_normalize.get_shape(),
+                AxisSet{input_to_normalize.get_shape().size() - 1});
+        }
+        auto xe = create_xe(labels, input_to_normalize);
         auto reshape_xe = std::make_shared<ngraph::op::Reshape>(
             xe, AxisVector{0}, Shape{xe->get_shape().at(0), 1});
         return {reshape_xe};
     }
     else
     {
-        // we will have one_hot encoding on labels if softmax_lables = false
+        // we will have one_hot encoding on labels if softmax_labels = false
         size_t one_hot_axis = input_to_normalize.get_shape().size() - 1;
         size_t softmax_axis = input_to_normalize.get_shape().size() - 1;
         auto reshape_labels =
@@ -189,11 +193,14 @@ NodeVector op::CrossEntropyBackprop::decompose_op() const
             mask = std::make_shared<ngraph::op::Broadcast>(
                 reshape, input.get_shape(), AxisSet{rank - 1});
         }
+        if (labels.get_shape()[reduction_axis] == 1)
+        {
+            labels =
+                make_shared<op::Reshape>(labels, AxisVector{0, 1}, Shape{labels.get_shape().at(0)});
+        }
         // one hot encoding of labels
-        auto reshape_labels =
-            make_shared<op::Reshape>(labels, AxisVector{0, 1}, Shape{labels.get_shape().at(0)});
         auto one_hot =
-            std::make_shared<ngraph::op::OneHot>(reshape_labels, input.get_shape(), one_hot_axis);
+            std::make_shared<ngraph::op::OneHot>(labels, input.get_shape(), one_hot_axis);
         labels = std::make_shared<ngraph::op::Convert>(one_hot, input.get_element_type());
     }
 
