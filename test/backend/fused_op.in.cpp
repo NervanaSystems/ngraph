@@ -567,10 +567,11 @@ NGRAPH_TEST(${BACKEND_NAME}, group_conv_groups_included_in_shape)
     EXPECT_EQ(expected, read_vector<float>(result0));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, space_to_depth)
+NGRAPH_TEST(${BACKEND_NAME}, space_to_depth_block_first)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{1, 2, 4, 4});
-    auto space_to_depth = make_shared<op::SpaceToDepth>(A, 2);
+    const auto mode = ngraph::op::SpaceToDepth::SpaceToDepthMode::BLOCKS_FIRST;
+    auto space_to_depth = make_shared<op::SpaceToDepth>(A, mode, 2);
     auto function = make_shared<Function>(NodeVector{space_to_depth}, ParameterVector{A});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");

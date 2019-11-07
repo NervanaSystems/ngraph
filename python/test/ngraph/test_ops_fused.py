@@ -429,11 +429,12 @@ def test_space_to_depth_operator():
 
     data_shape = [1, 2, 4, 4]
     data_value = np.arange(start=0, stop=32, step=1.0, dtype=np.float32).reshape(data_shape)
+    mode = 'blocks_first'
     block_size = 2
 
     parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
 
-    model = ng.space_to_depth(parameter_data, block_size)
+    model = ng.space_to_depth(parameter_data, mode, block_size)
     computation = runtime.computation(model, parameter_data)
 
     result = computation(data_value)

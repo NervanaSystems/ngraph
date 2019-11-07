@@ -24,7 +24,8 @@ using namespace ngraph;
 TEST(type_prop, space_to_depth)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{1, 2, 64, 64});
-    auto space_to_depth = make_shared<op::SpaceToDepth>(A, 8);
+    const auto mode = ngraph::op::SpaceToDepth::SpaceToDepthMode::BLOCKS_FIRST;
+    auto space_to_depth = make_shared<op::SpaceToDepth>(A, mode, 8);
 
     ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
     ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 128, 8, 8}));
