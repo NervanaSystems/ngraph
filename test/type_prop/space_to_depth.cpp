@@ -33,7 +33,7 @@ TEST(type_prop, space_to_depth)
 
 TEST(type_prop, space_to_depth_input_rank_not_supported)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{ 1, 8, 8, 8, 4 });
+    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 8, 8, 8, 4});
     try
     {
         auto space_to_depth =
