@@ -2329,7 +2329,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Reciprocal:
         {
-            node = make_shared<op::v1::Reciprocal>(args[0]);
+            node = make_shared<op::Reciprocal>(args[0]);
             break;
         }
         case OP_TYPEID::Relu:
