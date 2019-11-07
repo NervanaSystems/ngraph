@@ -2050,6 +2050,7 @@ shared_ptr<runtime::Executable>
             break;
         }
         case OP_TYPEID::AllReduce:
+        case OP_TYPEID::Atan2:
         case OP_TYPEID::BatchMatMul:
         case OP_TYPEID::BroadcastDistributed:
         case OP_TYPEID::BroadcastLike:
