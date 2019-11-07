@@ -72,14 +72,12 @@ void op::HardSigmoid::pre_validate_and_infer_types()
 NodeVector op::HardSigmoid::decompose_op() const
 {
     const auto data = input_value(0);
-    const auto data_shape = data.get_shape();
-    const size_t elem_count = shape_size(data_shape);
 
-    const auto one_node = ngraph::op::Constant::create<float>(
-        data.get_element_type(), data_shape, std::vector<float>(elem_count, 1.0f));
+    const auto one_node =
+        ngraph::op::Constant::create<float>(data.get_element_type(), data.get_shape(), {1.0f});
 
-    const auto zero_node = ngraph::op::Constant::create<float>(
-        data.get_element_type(), data_shape, std::vector<float>(elem_count, 0.0f));
+    const auto zero_node =
+        ngraph::op::Constant::create<float>(data.get_element_type(), data.get_shape(), {0.0f});
 
     const auto alpha_node = input_value(1).get_node_shared_ptr();
     const auto beta_node = input_value(2).get_node_shared_ptr();
