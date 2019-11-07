@@ -114,6 +114,8 @@ set (SRC
     op/asin.hpp
     op/atan.cpp
     op/atan.hpp
+    op/atan2.cpp
+    op/atan2.hpp
     op/avg_pool.cpp
     op/avg_pool.hpp
     op/batch_norm.cpp
