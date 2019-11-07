@@ -52,6 +52,28 @@ op::LSTMCell::LSTMCell(const Output<Node>& X,
 }
 
 op::LSTMCell::LSTMCell(const Output<Node>& X,
+                       const Output<Node>& H_t,
+                       const Output<Node>& C_t,
+                       const Output<Node>& W,
+                       const Output<Node>& R,
+                       const Output<Node>& B,
+                       size_t hidden_size,
+                       const vector<string>& activations,
+                       const vector<float>& activation_alpha,
+                       const vector<float>& activation_beta,
+                       float clip)
+    : FusedOp({X, W, R, H_t, C_t, B})
+    , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
+    , m_activation_f{get_activation_function(0)}
+    , m_activation_g{get_activation_function(1)}
+    , m_activation_h{get_activation_function(2)}
+    , m_input_forget{false}
+{
+    add_default_peepholes_input();
+    constructor_validate_and_infer_types();
+}
+
+op::LSTMCell::LSTMCell(const Output<Node>& X,
                        const Output<Node>& W,
                        const Output<Node>& R,
                        const Output<Node>& H_t,
