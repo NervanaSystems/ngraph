@@ -15,13 +15,13 @@
 //*****************************************************************************
 
 #include "ngraph/op/fused/softsign.hpp"
+#include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
-#include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
-#include "ngraph/op/constant.hpp"
 
 using namespace ngraph;
 
@@ -37,7 +37,6 @@ NodeVector op::Softsign::decompose_op() const
 {
     const auto data = input_value(0);
     const auto data_shape = data.get_shape();
-
     const auto one_node = op::Constant::create(data.get_element_type(), data_shape, {1});
 
     return {data / (std::make_shared<op::Abs>(data) + one_node)};
