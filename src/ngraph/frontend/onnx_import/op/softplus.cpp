@@ -31,9 +31,7 @@ namespace ngraph
                 {
                     const auto data = node.get_ng_inputs().at(0);
 
-                    const auto fused_softplus = std::make_shared<ngraph::op::Softplus>(data);
-
-                    return fused_softplus->decompose_op();
+                    return {std::make_shared<ngraph::op::Softplus>(data)};
                 }
 
             } // namespace set_1
