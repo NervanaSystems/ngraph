@@ -134,7 +134,7 @@ NodeVector ngraph::find_common_args(std::shared_ptr<Node> node1, std::shared_ptr
 
 void ngraph::replace_node(std::shared_ptr<Node> target,
                           std::shared_ptr<Node> replacement,
-                          std::vector<int64_t> output_order)
+                          const std::vector<int64_t>& output_order)
 {
     if (target->is_output())
     {

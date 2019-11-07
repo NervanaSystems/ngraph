@@ -212,7 +212,7 @@ namespace ngraph
     ///        replace_node(N, M);
     void replace_node(std::shared_ptr<Node> target,
                       std::shared_ptr<Node> replacement,
-                      std::vector<int64_t> output_order);
+                      const std::vector<int64_t>& output_order);
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
     /// \brief Replace multiple nodes in a function.
