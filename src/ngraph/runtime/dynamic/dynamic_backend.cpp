@@ -119,17 +119,34 @@ bool runtime::dynamic::DynamicExecutable::call(
 
     std::vector<int> merged_input_shapes;
     std::ostringstream key;
-
+    size_t loop_count = 0;
     for (auto& input : inputs)
     {
-        for (int i = 0; i < input->get_shape().size(); i++)
+        if (m_wrapped_function->get_parameters()[loop_count]->is_relevant_to_shapes())
         {
-            merged_input_shapes.emplace_back(input->get_shape()[i]);
+            // Caching on values of Shape relevant inputs
+            void* data_ptr = malloc(input->get_size_in_bytes());
+            input->read(data_ptr, input->get_size_in_bytes());
+            // assuming that shape relevant inputs are int64_t
+            int64_t* result = (int64_t*)data_ptr;
+            for (int i = 0; i < input->get_element_count(); i++)
+            {
+                merged_input_shapes.emplace_back(result[i]);
+            }
+        }
+        else
+        {
+            // Caching on all remaining shapes
+            for (int i = 0; i < input->get_shape().size(); i++)
+            {
+                merged_input_shapes.emplace_back(input->get_shape()[i]);
+            }
         }
         // -1 is the separator.
         // So if shape of Input 1 = {2, 2, 3, 3} & Input 2 = {4, 5}
         // the key would be 2, 2, 3, 3, -1, 4, 5, -1
         merged_input_shapes.emplace_back(-1);
+        loop_count++;
     }
 
     std::copy(merged_input_shapes.begin(),
