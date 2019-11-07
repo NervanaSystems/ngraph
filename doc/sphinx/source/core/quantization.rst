@@ -19,7 +19,7 @@ Implementing a quantized model with nGraph
 ------------------------------------------
 
 To implement a quantized model with nGraph, provide a partially (or fully)
-quantized FP32 model (where the convolution layer in the model is replaced
+quantized model (where the convolution layer in the model is replaced
 with a quantized convolution, for example) to the nGraph Library along with 
 quantized parameters: weights, activations, scale, and zero point. 
 

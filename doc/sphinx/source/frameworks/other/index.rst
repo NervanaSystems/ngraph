@@ -94,10 +94,10 @@ Training Deep Neural Networks
 -----------------------------
 
 Before tweaking various environment variables, be aware that how the computation 
-gets executed depends upon the ordering of the data format that the model is 
-using. ``NHWC`` and ``NCHW`` are the two more common layouts in Deep Learning 
-models. Your ultimate runtime can vary greatly -- even when all other factors 
-are exactly the same -- when this detail is overlooked.
+gets executed depends  on the data layout that the model is using. ``NHWC`` and 
+``NCHW`` are common layouts in Deep Learning models. Your ultimate 
+runtime can vary greatly -- even when all other factors are exactly the same -- 
+when this detail is overlooked.
 
 For CPU (and most cuDNN) backends, the preferred layout is currently ``NCHW``.
 
