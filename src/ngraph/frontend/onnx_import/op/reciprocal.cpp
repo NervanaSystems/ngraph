@@ -35,7 +35,7 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
 
-                    return {std::make_shared<ngraph::op::v1::Reciprocal>(data)};
+                    return {std::make_shared<ngraph::op::Reciprocal>(data)};
                 }
 
             } // namespace set_1

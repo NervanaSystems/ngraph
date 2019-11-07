@@ -24,29 +24,24 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v1
+        /// \brief Reciprocal operation
+        /// f(x) = 1 / x
+        class Reciprocal : public ngraph::op::util::FusedOp
         {
-            /// \brief Reciprocal operation
-            /// f(x) = 1 / x
-            class Reciprocal : public ngraph::op::util::FusedOp
-            {
-            public:
-                NGRAPH_API
-                static constexpr NodeTypeInfo type_info{"Reciprocal", 1};
-                const NodeTypeInfo& get_type_info() const override { return type_info; }
-                Reciprocal() = default;
-                /// \brief Constructs a Reciprocal operation.
-                ///
-                /// \param data Input tensor
-                Reciprocal(const Output<Node>& data);
+        public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"Reciprocal", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            Reciprocal() = default;
+            /// \brief Constructs a Reciprocal operation.
+            ///
+            /// \param data Input tensor
+            Reciprocal(const Output<Node>& data);
 
-                virtual NodeVector decompose_op() const override;
+            virtual NodeVector decompose_op() const override;
 
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
-            };
-        }
-
-        using v1::Reciprocal;
-    }
-}
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+        };
+    } // namespace op
+} // namespace ngraph
