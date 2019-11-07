@@ -81,7 +81,7 @@ namespace
         bool m_needsTransitiveClosure;
     };
 
-    class Liveness
+    class LivenessAnalysis
     {
     public:
         bool isLive(Value* v);
@@ -118,7 +118,7 @@ namespace
         void processConcat(mlir::Operation* op);
         bool isSafeInPlace(mlir::Operation* op);
         bool isInputOrOutputValue(mlir::Value* value);
-        Liveness m_liveness;
+        LivenessAnalysis m_liveness;
         AliasRelation m_aliasRelation;
         std::unordered_map<std::string, bool> m_inplaceOps;
         unsigned m_bufferId;
@@ -559,14 +559,14 @@ namespace
     }
 #endif
 
-    void Liveness::reset()
+    void LivenessAnalysis::reset()
     {
         m_valueToIdx.clear();
         m_liveness.clear();
         m_maxIdx = 0;
     }
 
-    void Liveness::getLiveValues(llvm::SmallVectorImpl<Value*>& values)
+    void LivenessAnalysis::getLiveValues(llvm::SmallVectorImpl<Value*>& values)
     {
         for (auto& entry : m_valueToIdx)
         {
@@ -577,7 +577,7 @@ namespace
         }
     }
 
-    bool Liveness::isLive(Value* v)
+    bool LivenessAnalysis::isLive(Value* v)
     {
         auto it = m_valueToIdx.find(v);
         if (it == m_valueToIdx.end())
@@ -587,7 +587,7 @@ namespace
         return m_liveness[it->second];
     }
 
-    void Liveness::setLive(Value* v)
+    void LivenessAnalysis::setLive(Value* v)
     {
         auto it = m_valueToIdx.find(v);
         if (it == m_valueToIdx.end())
@@ -602,7 +602,7 @@ namespace
         }
     }
 
-    void Liveness::kill(Value* v)
+    void LivenessAnalysis::kill(Value* v)
     {
         auto it = m_valueToIdx.find(v);
         if (it == m_valueToIdx.end())
