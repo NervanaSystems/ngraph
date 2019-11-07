@@ -38,8 +38,8 @@ namespace ngraph
             /// \brief      Constructs a HardSigmoid operation.
             ///
             /// \param      data   Input tensor.
-            /// \param[in]  alpha  1D tensor containing a single value of the alpha parameter.
-            /// \param[in]  beta   1D tensor containing a single value of the beta parameter.
+            /// \param[in]  alpha  A scalar value representing the alpha parameter.
+            /// \param[in]  beta   A scalar value representing the beta parameter.
             ///
             HardSigmoid(const Output<Node>& data,
                         const Output<Node>& alpha,

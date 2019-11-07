@@ -46,11 +46,8 @@ static shared_ptr<Node> relu(const shared_ptr<Node>& arg, float /* alpha */, flo
 
 static shared_ptr<Node> hardsigmoid(const shared_ptr<Node>& arg, float alpha, float beta)
 {
-    const auto alpha_node =
-        op::Constant::create<float>(arg->get_element_type(), Shape{1}, std::vector<float>{alpha});
-
-    const auto beta_node =
-        op::Constant::create<float>(arg->get_element_type(), Shape{1}, std::vector<float>{beta});
+    const auto alpha_node = op::Constant::create<float>(arg->get_element_type(), Shape{}, {alpha});
+    const auto beta_node = op::Constant::create<float>(arg->get_element_type(), Shape{}, {beta});
 
     return make_shared<op::HardSigmoid>(arg, alpha_node, beta_node);
 }

@@ -36,12 +36,12 @@ namespace ngraph
 
                     const auto alpha = Constant::create<double>(
                         data->get_element_type(),
-                        Shape{1},
+                        Shape{},
                         std::vector<double>{node.get_attribute_value<double>("alpha", 0.2)});
 
                     const auto beta = Constant::create<double>(
                         data->get_element_type(),
-                        Shape{1},
+                        Shape{},
                         std::vector<double>{node.get_attribute_value<double>("beta", 0.5)});
 
                     return {std::make_shared<ngraph::op::HardSigmoid>(data, alpha, beta)};

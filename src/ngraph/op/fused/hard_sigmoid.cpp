@@ -48,16 +48,14 @@ void op::HardSigmoid::pre_validate_and_infer_types()
     const Shape alpha_shape = alpha_pshape.to_shape();
 
     NODE_VALIDATION_CHECK(this,
-                          is_vector(alpha_shape) && alpha_shape[0] == 1,
-                          "A vector with a single element expected for the alpha input. Got: ",
+                          is_scalar(alpha_shape),
+                          "A scalar is expected for the alpha input. Got: ",
                           alpha_shape);
 
     const Shape beta_shape = beta_pshape.to_shape();
 
-    NODE_VALIDATION_CHECK(this,
-                          is_vector(beta_shape) && beta_shape[0] == 1,
-                          "A vector with a single element expected for the beta input. Got: ",
-                          beta_shape);
+    NODE_VALIDATION_CHECK(
+        this, is_scalar(beta_shape), "A scalar is expected for the beta input. Got: ", beta_shape);
 
     const auto& data_et = input(0).get_element_type();
     const auto& alpha_et = input(1).get_element_type();

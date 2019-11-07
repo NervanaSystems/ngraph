@@ -97,11 +97,8 @@ NGRAPH_TEST(${BACKEND_NAME}, hardsigmoid)
 
     const auto A = make_shared<op::Parameter>(element::f32, shape);
 
-    const auto alpha =
-        op::Constant::create<float>(A->get_element_type(), Shape{1}, std::vector<float>{alpha_f});
-
-    const auto beta =
-        op::Constant::create<float>(A->get_element_type(), Shape{1}, std::vector<float>{beta_f});
+    const auto alpha = op::Constant::create<float>(A->get_element_type(), Shape{}, {alpha_f});
+    const auto beta = op::Constant::create<float>(A->get_element_type(), Shape{}, {beta_f});
 
     auto hardsigmoid = make_shared<op::HardSigmoid>(A, alpha, beta);
     auto f0 = make_shared<Function>(NodeVector{hardsigmoid}, ParameterVector{A});
