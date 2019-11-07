@@ -165,8 +165,8 @@ def NGRNNCellOp :
       tblgen_state.addOperands({X, W, R, H_t});
       tblgen_state.addAttribute("hiddenSize", hiddenSize);
       tblgen_state.addAttribute("activations", activations);
-      tblgen_state.addAttribute("activationsAlpha", activationsAlpha);
-      tblgen_state.addAttribute("activationsBeta", activationsBeta);
+      tblgen_state.addAttribute("activationAlpha", activationAlpha);
+      tblgen_state.addAttribute("activationBeta", activationBeta);
       tblgen_state.addAttribute("clip", clip);
       tblgen_state.addTypes(res);
     }]>
@@ -175,8 +175,8 @@ def NGRNNCellOp :
   let extraClassDeclaration = [{
     void setHiddenSize(const Attribute& attr)       { this->setAttr("hiddenSize", attr);  }
     void setActivations(const ArrayAttr& attr)      { this->setAttr("activations", attr); }
-    void setActivationsAlpha(const ArrayAttr& attr) { this->setAttr("activationsAlpha", attr); }
-    void setActivationsBeta(const ArrayAttr& attr)  { this->setAttr("activationsBeta", attr);  }
+    void setActivationAlpha(const ArrayAttr& attr) { this->setAttr("activationAlpha", attr); }
+    void setActivationBeta(const ArrayAttr& attr)  { this->setAttr("activationBeta", attr);  }
     void setClip(const Attribute& attr)             { this->setAttr("clip", attr); }
   }];
 }
@@ -290,7 +290,7 @@ def NGLSTMCellOp :
                NG_TensorType:$H_t, NG_TensorType:$C_t,
                NG_TensorType:$B, NG_TensorType:$P,
                I64Attr:$hiddenSize,
-               DefaultValuedAttr<StrArrayAttr, "\"sigmoid\",\"tanh\",\"tanh\"">:$activations,
+               DefaultValuedAttr<StrArrayAttr, "{\"sigmoid\",\"tanh\",\"tanh\"}">:$activations,
                DefaultValuedAttr<F32ArrayAttr, "{}">:$activationAlpha,
                DefaultValuedAttr<F32ArrayAttr, "{}">:$activationBeta,
                DefaultValuedAttr<F32Attr, "0.0">:$clip,
@@ -314,8 +314,8 @@ def NGLSTMCellOp :
         tblgen_state.addOperands({X, W, R, H_t, C_t});
         tblgen_state.addAttribute("hiddenSize", hiddenSize);
         tblgen_state.addAttribute("activations", activations);
-        tblgen_state.addAttribute("activationsAlpha", activationsAlpha);
-        tblgen_state.addAttribute("activationsBeta", activationsBeta);
+        tblgen_state.addAttribute("activationAlpha", activationAlpha);
+        tblgen_state.addAttribute("activationBeta", activationBeta);
         tblgen_state.addAttribute("clip", clip);
         tblgen_state.addAttribute("inputForget", inputForget);
         tblgen_state.addTypes(res);
@@ -335,8 +335,8 @@ def NGLSTMCellOp :
   let extraClassDeclaration = [{
     void setHiddenSize  (const Attribute& attr)       { this->setAttr("hiddenSize", attr); }
     void setActivations (const ArrayAttr& attr)       { this->setAttr("activation", attr); }
-    void setActivationsAlpha (const ArrayAttr& attr)  { this->setAttr("activationsAlpha", attr); }
-    void setActivationsBeta (const ArrayAttr& attr)   { this->setAttr("activationsBeta", attr); }
+    void setActivationsAlpha (const ArrayAttr& attr)  { this->setAttr("activatiAlpha", attr); }
+    void setActivationsBeta (const ArrayAttr& attr)   { this->setAttr("activatiBeta", attr); }
     void setClip(const Attribute& attr)               { this->setAttr("clip", attr); }
   }];
 }
@@ -345,9 +345,9 @@ def NGLSTMCellOp :
 def NGGRUCellOp : 
     NG_OneResult_Op<"gruCell", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$X, NG_TensorType:$W, NG_TensorType:$R,
-               NG_TensorType:$H_t, NG_TensorType:$B
+               NG_TensorType:$H_t, NG_TensorType:$B,
                I64Attr:$hiddenSize,
-               DefaultValuedAttr<StrArrayAttr, "\"sigmoid\",\"tanh\"">:$activations,
+               DefaultValuedAttr<StrArrayAttr, "{\"sigmoid\",\"tanh\"}">:$activations,
                DefaultValuedAttr<F32ArrayAttr, "{}">:$activationAlpha,
                DefaultValuedAttr<F32ArrayAttr, "{}">:$activationBeta,
                DefaultValuedAttr<F32Attr, "0.0">:$clip,
@@ -388,8 +388,8 @@ def NGGRUCellOp :
         tblgen_state.addOperands({X, W, R, H_t});
         tblgen_state.addAttribute("hiddenSize", hiddenSize);
         tblgen_state.addAttribute("activations", activations);
-        tblgen_state.addAttribute("activationsAlpha", activationsAlpha);
-        tblgen_state.addAttribute("activationsBeta", activationsBeta);
+        tblgen_state.addAttribute("activationAlpha", activationAlpha);
+        tblgen_state.addAttribute("activationBeta", activationBeta);
         tblgen_state.addAttribute("linearBeforeReset", linearBeforeReset);
         tblgen_state.addTypes(res);
       }]>,
@@ -408,8 +408,8 @@ def NGGRUCellOp :
     let extraClassDeclaration = [{
       void setHiddenSize  (const Attribute& attr)       { this->setAttr("hiddenSize", attr); }
       void setActivations (const ArrayAttr& attr)       { this->setAttr("activation", attr); }
-      void setActivationsAlpha (const ArrayAttr& attr)  { this->setAttr("activationsAlpha", attr); }
-      void setActivationsBeta (const ArrayAttr& attr)   { this->setAttr("activationsBeta", attr); }
+      void setActivationsAlpha (const ArrayAttr& attr)  { this->setAttr("activatiAlpha", attr); }
+      void setActivationsBeta (const ArrayAttr& attr)   { this->setAttr("activatiBeta", attr); }
       void setLinearBeforeReset(const Attribute& attr)  { this->setAttr("linearBeforeReset", attr); }
 
     }];
@@ -417,14 +417,14 @@ def NGGRUCellOp :
 
 // LayerNorm Op
 def NGLayerNormOp : 
-    NG_OneResult_Op<"layernorm", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>],
+    NG_OneResult_Op<"layernorm", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data, NG_TensorType:$scale, NG_TensorType:$bias,
                DefaultValuedAttr<BoolAttr, "true">:$keepStats,
                DefaultValuedAttr<I64Attr, "1">:$beginNormAxis,
                DefaultValuedAttr<F64Attr, "1e-5">:$epsilon)>
 {
   let summary = "LayerNorm Op";
-  let description = "Constructs an LayerNorm operation."
+  let description = "Constructs an LayerNorm operation.";
     
   let builders = [
     OpBuilder<
@@ -442,21 +442,20 @@ def NGLayerNormOp :
     void setKeepstats(const Attribute& attr)      { this->setAttr("keepStats", attr);    }
     void setBeginNormAxis(const Attribute& attr)  { this->setAttr("beginNormAxis", attr);}
     void setEpsilonAxis(const Attribute& attr)    { this->setAttr("epsilon", attr);      }
-  }]
-
+  }];
 }
 
 
 // LayerNormBackProp Op
 def NGLayerNormBackPropOp : 
-    NG_OneResult_Op<"layernorm", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>],
+    NG_OneResult_Op<"layernorm", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data, NG_TensorType:$delta, 
                NG_TensorType:$mean, NG_TensorType:$variance, NG_TensorType:$scale,
                DefaultValuedAttr<I64Attr, "1">:$beginNormAxis,
                DefaultValuedAttr<F64Attr, "1e-5">:$epsilon)>
 {
   let summary = "LayerNorm Op";
-  let description = "Constructs an LayerNorm operation."
+  let description = "Constructs an LayerNorm operation.";
     
   let builders = [
     OpBuilder<
@@ -493,12 +492,12 @@ def NGLayerNormBackPropOp :
   let extraClassDeclaration = [{
     void setBeginNormAxis(const Attribute& attr)  { this->setAttr("beginNormAxis", attr);}
     void setEpsilonAxis(const Attribute& attr)    { this->setAttr("epsilon", attr);      }
-  }]
+  }];
 }
 
 // HardSigmoid Op
 def NGHardSigmoid : 
-    NG_OneResult_Op<"hardsigmoid", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>],
+    NG_OneResult_Op<"hardsigmoid", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data,
                F64Attr:$alpha, F64Attr:$beta)>
 {
@@ -516,7 +515,7 @@ def NGHardSigmoid :
 
 // Gemm Op
 def NGGemmOp : 
-    NG_OneResult_Op<"gemm", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>],
+    NG_OneResult_Op<"gemm", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$A, NG_TensorType:$B, NG_TensorType:$C,
               DefaultValuedAttr<F64Attr, "1.0">:$alpha,
               DefaultValuedAttr<F64Attr, "1.0">:$beta,
@@ -534,21 +533,21 @@ def NGGemmOp :
       void setAlpha(const Attribute& attr)   { this->setAttr("alpha", attr);}
       void setBeta(const Attribute& attr)    { this->setAttr("beta", attr); }
 
-      void setTransA(const Attribute& attr)  { this->setATtr("transA", attr); }
-      void setTransB(const Attribute& attr)  { this->setATtr("transB", attr); }
+      void setTransA(const Attribute& attr)  { this->setAttr("transA", attr); }
+      void setTransB(const Attribute& attr)  { this->setAttr("transB", attr); }
     }];
 }
                   
 // GroupConv Op
 def NGGroupConvOp : 
-    NG_OneResult_Op<"groupConv", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>],
-    Arguments<(ins ins NG_TensorType:$images, NG_TensorType:$filters, 
+    NG_OneResult_Op<"groupConv", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    Arguments<(ins NG_TensorType:$images, NG_TensorType:$filters, 
                I64ArrayAttr:$strides,
                I64ArrayAttr:$padBelow,
                I64ArrayAttr:$padAbove,
                I64Attr:$groups,
                DefaultValuedAttr<PadTypeEnumAttr, 
-                                "static_cast<int64_t>(MLIRPadType::EXPLICIT)"> :$padType,)>
+                                "static_cast<int64_t>(MLIRPadType::EXPLICIT)">:$padType)>
 {
   let summary = "Group Convolution Op";
   let description = [{
@@ -561,7 +560,7 @@ def NGGroupConvOp :
       "Value *filters, ArrayAttr strides, ArrayAttr padBelow, ArrayAttr padAbove,"
       "Attribute groups, Attribute padType",
       [{
-        tblgen_state.addOperands({data, images});
+        tblgen_state.addOperands({images, filters});
         tblgen_state.addAttribute("strides", strides);
         tblgen_state.addAttribute("padBelow", padBelow);
         tblgen_state.addAttribute("padAbove", padAbove);
@@ -575,7 +574,7 @@ def NGGroupConvOp :
       "Value *filters, ArrayAttr strides, ArrayAttr padBelow, ArrayAttr padAbove,"
       "Attribute groups",
       [{
-        tblgen_state.addOperands({data, images});
+        tblgen_state.addOperands({images, filters});
         tblgen_state.addAttribute("strides", strides);
         tblgen_state.addAttribute("padBelow", padBelow);
         tblgen_state.addAttribute("padAbove", padAbove);
@@ -594,8 +593,8 @@ def NGGroupConvOp :
 
 // GroupConvTranspose Op
 def NGGroupConvTransposeOp :
-  NG_OneResult_Op<"GroupConvTranspose", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>,
-  Arguments<(ins NG_TensorType:$images, NG_TensorType:$filters
+  NG_OneResult_Op<"GroupConvTranspose", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+  Arguments<(ins NG_TensorType:$images, NG_TensorType:$filters,
              I64ArrayAttr:$strides, I64ArrayAttr:$padBelow, I64ArrayAttr:$padAbove, 
              I64ArrayAttr:$outputPad, 
              DefaultValuedAttr<I64Attr, "1UL">:$groups, 
@@ -603,252 +602,252 @@ def NGGroupConvTransposeOp :
                                "static_cast<int64_t>(MLIRPadType::EXPLICIT)">:$padType,
              I64ArrayAttr:$outputShape)>
 {
-    let summary = "Group Transpose Convolution (Deconvolution)";
-    let description = [{
-      images          The node producing input images data.
-      filters         The node producing filters data.
-      strides         The strides along each feature axis.
-      padBelow        The padding added at the beggining of each feature axis.
-      padAbove        The padding added at the end of each feature axis.
-      outputPad       The zero-padding (adjustment) added to one side of the
-                      output.
-      groups          The number of groups the input channels and output
-                      channels are divided into.
-      padType        The provided padding type.
-      outputShape    The output shape. When provided padding values are
-                      automatically inferred.
-    }];
+  let summary = "Group Transpose Convolution (Deconvolution)";
+  let description = [{
+    images          The node producing input images data.
+    filters         The node producing filters data.
+    strides         The strides along each feature axis.
+    padBelow        The padding added at the beggining of each feature axis.
+    padAbove        The padding added at the end of each feature axis.
+    outputPad       The zero-padding (adjustment) added to one side of the
+                    output.
+    groups          The number of groups the input channels and output
+                    channels are divided into.
+    padType        The provided padding type.
+    outputShape    The output shape. When provided padding values are
+                    automatically inferred.
+  }];
 
-    let builders = [
-      OpBuilder<"Builder *builder, OperationState &tblgen_state, Type res,"
-      "Value *images, Value *filters, Attribute groups"
-      [{
-        tblgen_state.addOperands({images,, filters});
-        tblgen_state.addAttribute("groups", groups);
-        tblgen_state.addTypes(res);
-      }]]>,
-      OpBuilder<"Builder *builder, OperationState &tblgen_state, Type res,"
-      "Value *images, Value *filters"
-      [{
-        tblgen_state.addOperands({images,, filters});
-        tblgen_state.addAttribute("groups", groups);
-        tblgen_state.addTypes(res);
-      }]]>,
-      OpBuilder<"Builder *builder, OperationState &tblgen_state, Type res,"
-      "Value *images, Value *filters, ArrayAttr strides, ArrayAttr outputPad,"
-      "ArrayAttr outputShape, Attribute groups", [{
-        tblgen_state.addOperands({images, filters});
-        tblgen_state.addAttribute("strides", strides);
-        tblgen_state.addAttribute("outputPad", outputPad);
-      }],
+  let builders = [
     OpBuilder<"Builder *builder, OperationState &tblgen_state, Type res,"
-      "Value *images, Value *filters,"
-      "ArrayAttr outputShape, Attribute groups", [{
-        tblgen_state.addOperands({images, filters});
-        tblgen_state.addAttribute("strides", strides);
-        tblgen_state.addAttribute("outputPad", outputPad);
-      }]
-    ];
+              "Value *images, Value *filters, Attribute groups", [{
+      tblgen_state.addOperands({images, filters});
+      tblgen_state.addAttribute("groups", groups);
+      tblgen_state.addTypes(res);
+    }]>,
+    OpBuilder<"Builder *builder, OperationState &tblgen_state, Type res,"
+              "Value *images, Value *filters", [{
+      tblgen_state.addOperands({images, filters});
+      tblgen_state.addTypes(res);
+    }]>,
+    OpBuilder<"Builder *builder, OperationState &tblgen_state, Type res,"
+              "Value *images, Value *filters, ArrayAttr strides,"
+              "ArrayAttr outputPad, ArrayAttr outputShape,"
+              "Attribute groups", [{
+      tblgen_state.addOperands({images, filters});
+      tblgen_state.addAttribute("strides", strides);
+      tblgen_state.addAttribute("outputPad", outputPad);
+      tblgen_state.addAttribute("outputShape", outputShape);
+      tblgen_state.addAttribute("groups", groups);
+    }]>,
+    OpBuilder<"Builder *builder, OperationState &tblgen_state, Type res,"
+              "Value *images, Value *filters,"
+              "ArrayAttr outputShape, Attribute groups", [{
+      tblgen_state.addOperands({images, filters});
+      tblgen_state.addAttribute("outputShape", outputShape);
+      tblgen_state.addAttribute("groups", groups);
+    }]>
+  ];
 
-    let extraClassDeclaration = [{
+  let extraClassDeclaration = [{
     void setStrides(const ArrayAttr& attr)    { this->setAttr("strides", attr);  }
     void setPadAbove(const ArrayAttr& attr)   { this->setAttr("padAbove", attr); }
     void setPadBelow(const ArrayAttr& attr)   { this->setAttr("padBelow", attr); }
     void setPadType(const Attribute& attr)    { this->setAttr("padType", attr);  }
     void setOutputPad(const ArrayAttr& attr)  { this->setAttr("outputPad", attr);}
     void setOutputShape(const ArrayAttr& attr){ this->setAttr("outputShape", attr);}
-    }];
+  }];
 }
                       
 
 // GRN Op
 def NGGRNOp :
-    NG_OneResult_Op<"grn", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>],
+    NG_OneResult_Op<"grn", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data, I64Attr:$bias)>
 {
-    let summary = "GRN Op";
-    let description = [{
-      Global Response Normalization with L2 norm (across channels only)
-      data  - Node producing the input tensor
-      bias  - The bias added to the variance.
-    }];
+  let summary = "GRN Op";
+  let description = [{
+    Global Response Normalization with L2 norm (across channels only)
+    data  - Node producing the input tensor
+    bias  - The bias added to the variance.
+  }];
 
-    let extraClassDeclaration = [{
-      void setBias(const Attribute& attr) { this->setAttr("bias", attr); }
-    }];
+  let extraClassDeclaration = [{
+    void setBias(const Attribute& attr) { this->setAttr("bias", attr); }
+  }];
 }
 
 // Clamp Op
 def NGClampOp :
-    NG_OneResult_Op<"clamp", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>],
+    NG_OneResult_Op<"clamp", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data, I64Attr:$min, I64Attr:$max)>
 {
-    let summary = "Clamp Op";
-    let description = [{
-      Performs a clipping operation on all elements of the input node
-      
-      All input values that are outside of the <min;max> range are set to 'min' or 'max'
-      depending on which side of the <min;max> range they are. The values that fall into
-      this range remain unchanged.
-    }];
+  let summary = "Clamp Op";
+  let description = [{
+    Performs a clipping operation on all elements of the input node
+    
+    All input values that are outside of the <min;max> range are set to 'min' or 'max'
+    depending on which side of the <min;max> range they are. The values that fall into
+    this range remain unchanged.
+  }];
 
-    let extraClassDeclaration = [{
-      void setMin(const Attribute& attr) { this->setAttr("min", attr); }
-      void setMax(const Attribute& attr) { this->setAttr("max", attr); }
-    }];
+  let extraClassDeclaration = [{
+    void setMin(const Attribute& attr) { this->setAttr("min", attr); }
+    void setMax(const Attribute& attr) { this->setAttr("max", attr); }
+  }];
 }
 
 // Gelu Op
 def NGGeluOp :
-    NG_OneResult_Op<"gelu", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>],
+    NG_OneResult_Op<"gelu", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data)>
 {
-    let summary = "Gelu Op";
-    let description = [{
-      Gaussian Error Linear Unit
-      f(x) = 0.5 * x * (1 + erf( x / sqrt(2) )
-    }];
+  let summary = "Gelu Op";
+  let description = [{
+    Gaussian Error Linear Unit
+    f(x) = 0.5 * x * (1 + erf( x / sqrt(2) )
+  }];
 }
 
 // GeluBackPropFactor Op
 def NGGeluBackPropFactorOp :
-    NG_OneResult_Op<"geluBackpropFactor", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>],
+    NG_OneResult_Op<"geluBackpropFactor", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data)>
 {
-    let summary = "Gelu Backprop Op";
-    let description = [{
-      Backprop for Gelu(x) is GeluBackprop(x) * delta
-    }];
+  let summary = "Gelu Backprop Op";
+  let description = [{
+    Backprop for Gelu(x) is GeluBackprop(x) * delta
+  }];
 }
 
 // Elu Op
 def NGEluOp :
-    NG_OneResult_Op<"elu", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>],
+    NG_OneResult_Op<"elu", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data, I64Attr:$alpha)>
 {
-    let summary = "Elu Op";
-    let description = [{
-      Exponential Linear Unit
-      x <  0 => f(x) = alpha * (exp(x) - 1.)
-      x >= 0 => f(x) = x
-    }];
+  let summary = "Elu Op";
+  let description = [{
+    Exponential Linear Unit
+    x <  0 => f(x) = alpha * (exp(x) - 1.)
+    x >= 0 => f(x) = x
+  }];
 
-    let extraClassDeclaration = [{
-      void setAlpha(const Attribute& attr) { this->setAttr("alpha", attr); }
-    }];
+  let extraClassDeclaration = [{
+    void setAlpha(const Attribute& attr) { this->setAttr("alpha", attr); }
+  }];
 }
 
 // FakeQuant Op
 def NGFakeQuantOp :
-    NG_OneResult_Op<"fakeQuant", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>],
+    NG_OneResult_Op<"fakeQuant", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data, NG_TensorType:$inputLow, NG_TensorType:$inputHigh, 
                NG_TensorType:$outputLow, NG_TensorType:$outputHigh, 
                I64Attr:$levels,
                DefaultValuedAttr<AutoBroadcastEnumAttr,
                                 "static_cast<int64_t>(MLIRPadType::EXPLICIT)">:$autoBroadcast)>
 {
-    let summary = "Op performing element-wise linear quantization.";
-    let description = [{
-      Input floating point values are quantized into a discrete
-      set of floating point values.
-      
-      Implementation This class creates a node which performs the following
-      operation:
-          round((data - input_low) / (input_high - input_low) * (levels-1)) /
-          (levels-1) * (output_high - output_low) + output_low
-    }];
+  let summary = "Op performing element-wise linear quantization.";
+  let description = [{
+    Input floating point values are quantized into a discrete
+    set of floating point values.
+    
+    Implementation This class creates a node which performs the following
+    operation:
+      round((data - input_low) / (input_high - input_low) * (levels-1)) /
+      (levels-1) * (output_high - output_low) + output_low
+  }];
 
-    let extraClassDeclaration = [{
-      void setLevels(const Attribute& attr) { this->setAttr("levels", attr); }
-    }]
+  let extraClassDeclaration = [{
+    void setLevels(const Attribute& attr) { this->setAttr("levels", attr); }
+  }];
 }
 
 // DepthToSpace Op
 def NGDepthToSpaceOp : 
-    NG_OneResult_Op<"depthToSpace", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>],
+    NG_OneResult_Op<"depthToSpace", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data, I64Attr:$blockSize)>
 {
-    let summary = "DepthToSpace Op";
-    let description = [{
-      DepthToSpace permutes data from the depth dimension of the input blob into
-      spatial dimensions.
-      Values from the depth dimension (assuming NCHW layout) are moved in
-      spatial blocks to the height and width dimensions.
-      Output node produces a tensor with shape:
-      [N, C/(blocksize * blocksize), H * blocksize, W * blocksize]
-    }];
+  let summary = "DepthToSpace Op";
+  let description = [{
+    DepthToSpace permutes data from the depth dimension of the input blob into
+    spatial dimensions.
+    Values from the depth dimension (assuming NCHW layout) are moved in
+    spatial blocks to the height and width dimensions.
+    Output node produces a tensor with shape:
+    [N, C/(blocksize * blocksize), H * blocksize, W * blocksize]
+  }];
 
-    let extraClassDeclaration = [{
-      void setBlockSize(const Attribute& attr) { this->setAttr("blockSize", attr); }
-    }];
+  let extraClassDeclaration = [{
+    void setBlockSize(const Attribute& attr) { this->setAttr("blockSize", attr); }
+  }];
 }
 
 // ConvolutionBias Op
 def NGConvBiasOp :
-    NG_OneResult_Op<"convBias", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>
+    NG_OneResult_Op<"convBias", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$images, NG_TensorType:$filters, NG_TensorType:$bias,
                I64ArrayAttr:$strides, I64ArrayAttr:$padBelow, I64ArrayAttr:$padAbove,
                DefaultValuedAttr<BoolAttr, "false">:$withRelu)>
 {
-    let summary = "Convolution Bias Op";
-    let description = "Convolution + bias forward prop for batched convolution operation.";
+  let summary = "Convolution Bias Op";
+  let description = "Convolution + bias forward prop for batched convolution operation.";
 
-    let builders = [
-      OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res,"
-      "Value *images, Value *filters, Value *bias, Attribute withRelu", [{
-         tblgen_state.addOperands({images, filters, bias});
-         tblgen_state.addAttribute("withRelu", withRelu);
-         tblgen_state.addTypes(res);
-       }]>,
+  let builders = [
+    OpBuilder<
+    "Builder *builder, OperationState &tblgen_state, Type res,"
+    "Value *images, Value *filters, Value *bias, Attribute withRelu", [{
+       tblgen_state.addOperands({images, filters, bias});
+       tblgen_state.addAttribute("withRelu", withRelu);
+       tblgen_state.addTypes(res);
+     }]>,
 
-      OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res,"
-      "Value *images, Value *filters, Value *bias", [{
-         tblgen_state.addOperands({images, filters, bias});
-         tblgen_state.addTypes(res);
-       }]>
+    OpBuilder<
+    "Builder *builder, OperationState &tblgen_state, Type res,"
+    "Value *images, Value *filters, Value *bias", [{
+       tblgen_state.addOperands({images, filters, bias});
+       tblgen_state.addTypes(res);
+     }]>
     ];
 
-    let extraClassDeclaration = [{
-      void setStrides(const ArrayAttr& attr)  { this->setAttr("strides", attr);  }
-      void setPadAbove(const ArrayAttr& attr) { this->setAttr("padAbove", attr); }
-      void setPadBelow(const ArrayAttr& attr) { this->setAttr("padBelow", attr); }
-      void setWithRelu(const Attribute& attr)  {this->setAttr("withRelu", attr); }
-    }];
+  let extraClassDeclaration = [{
+    void setStrides(const ArrayAttr& attr)  { this->setAttr("strides", attr);  }
+    void setPadAbove(const ArrayAttr& attr) { this->setAttr("padAbove", attr); }
+    void setPadBelow(const ArrayAttr& attr) { this->setAttr("padBelow", attr); }
+    void setWithRelu(const Attribute& attr)  {this->setAttr("withRelu", attr); }
+  }];
 }
 
 // ConvBiasBackpropFiltersBias Op
-def ConvBiasBackpropFiltersBias
-    NG_OneResult_Op<"convBiasBackPropFiltersBias", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>
+def NGConvBiasBackpropFiltersBias :
+    NG_OneResult_Op<"convBiasBackPropFiltersBias", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$images, NG_TensorType:$outputDelta,
                I64ArrayAttr:$biasShape, I64ArrayAttr:$strides, 
                I64ArrayAttr:$padBelow, I64ArrayAttr:$padAbove)>
 {
-    let extraClassDeclaration = [{
-      void setStrides(const ArrayAttr& attr)  { this->setAttr("strides", attr);  }
-      void setPadAbove(const ArrayAttr& attr) { this->setAttr("padAbove", attr); }
-      void setPadBelow(const ArrayAttr& attr) { this->setAttr("padBelow", attr); }
-    }];
+  let extraClassDeclaration = [{
+    void setStrides(const ArrayAttr& attr)  { this->setAttr("strides", attr);  }
+    void setPadAbove(const ArrayAttr& attr) { this->setAttr("padAbove", attr); }
+    void setPadBelow(const ArrayAttr& attr) { this->setAttr("padBelow", attr); }
+  }];
 }
 
 // ConvBiasAdd Op
 def NGConvBiasAddOp :
-    NG_OneResult_Op<"convBiasAdd", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>
+    NG_OneResult_Op<"convBiasAdd", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$images, NG_TensorType:$filters, 
                NG_TensorType:$bias, NG_TensorType:$sumInput,
                I64ArrayAttr:$strides, I64ArrayAttr:$padBelow, I64ArrayAttr:$padAbove,
                DefaultValuedAttr<BoolAttr, "false">:$withRelu)>
 {
-    let summary = "Convolution Bias Add Op";
-    let description = "Convolution + bias + add forward prop for batched convolution operation.";
+  let summary = "Convolution Bias Add Op";
+  let description = "Convolution + bias + add forward prop for batched convolution operation.";
 
-    let extraClassDeclaration = [{
-      void setStrides(const ArrayAttr& attr)  { this->setAttr("strides", attr);  }
-      void setPadAbove(const ArrayAttr& attr) { this->setAttr("padAbove", attr); }
-      void setPadBelow(const ArrayAttr& attr) { this->setAttr("padBelow", attr); }
-      void setWithRelu(const Attribute& attr)  {this->setAttr("withRelu", attr); }
-    }];
+  let extraClassDeclaration = [{
+    void setStrides(const ArrayAttr& attr)  { this->setAttr("strides", attr);  }
+    void setPadAbove(const ArrayAttr& attr) { this->setAttr("padAbove", attr); }
+    void setPadBelow(const ArrayAttr& attr) { this->setAttr("padBelow", attr); }
+    void setWithRelu(const Attribute& attr)  {this->setAttr("withRelu", attr); }
+  }];
 }
 
 

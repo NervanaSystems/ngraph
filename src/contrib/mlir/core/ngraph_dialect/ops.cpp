@@ -340,13 +340,95 @@ namespace mlir
 }
 
 // Fused Ops decompose
-// Stubs for now 
+// Stubs for now
 // TODO: Implement and move to another file
-void mlir::NGSpaceToDepth::decompose()      {}
-void mlir::NGSplitOp::decompose()           {}
-void mlir::NGScaleShift::decompose()        {}
-void mlir::NGUnSqueezeOp::decompose()       {}
-void mlir::NGSquaredDiffOp::decompose()     {}
-void mlir::NGSqueezeOp::decompose()         {}
-void mlir::NGShuffleChannels::decompose()   {}
-void mlir::NGRNNCell::decompose()   {}
+void mlir::NGSpaceToDepthOp::decompose()
+{
+}
+void mlir::NGSplitOp::decompose()
+{
+}
+void mlir::NGScaleShiftOp::decompose()
+{
+}
+void mlir::NGUnSqueezeOp::decompose()
+{
+}
+void mlir::NGSquaredDiffOp::decompose()
+{
+}
+void mlir::NGSqueezeOp::decompose()
+{
+}
+void mlir::NGShuffleChannelsOp::decompose()
+{
+}
+void mlir::NGRNNCellOp::decompose()
+{
+}
+void mlir::NGFakeQuantOp::decompose()
+{
+}
+void mlir::NGMVN::decompose()
+{
+}
+void mlir::NGHardSigmoid::decompose()
+{
+}
+void mlir::NGGRNOp::decompose()
+{
+}
+void mlir::NGNormalizeL2Op::decompose()
+{
+}
+void mlir::NGConvBiasBackpropFiltersBias::decompose()
+{
+}
+void mlir::NGPrelu::decompose()
+{
+}
+void mlir::NGLayerNormBackPropOp::decompose()
+{
+}
+void mlir::NGGemmOp::decompose()
+{
+}
+void mlir::NGClampOp::decompose()
+{
+}
+void mlir::NGGroupConvTransposeOp::decompose()
+{
+}
+void mlir::NGConvBiasOp::decompose()
+{
+}
+void mlir::NGConvBiasAddOp::decompose()
+{
+}
+void mlir::NGGRUCellOp::decompose()
+{
+}
+void mlir::NGGroupConvOp::decompose()
+{
+}
+void mlir::NGGeluOp::decompose()
+{
+}
+void mlir::NGGeluBackPropFactorOp::decompose()
+{
+}
+void mlir::NGLSTMCellOp::decompose()
+{
+}
+void mlir::NGMatMul::decompose()
+{
+}
+void mlir::NGLayerNormOp::decompose()
+{
+}
+void mlir::NGDepthToSpaceOp::decompose()
+{
+}
+void mlir::NGEluOp::decompose()
+{
+}
