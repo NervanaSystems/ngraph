@@ -55,10 +55,17 @@ namespace ngraph
             // Pass transformation will change the function's dynamic state
             CHANGE_DYNAMIC_STATE = 1 << 1
         };
-        extern template class NGRAPH_API EnumMask<PassProperty>;
+    }
+}
 
+template class NGRAPH_API ngraph::EnumMask<ngraph::pass::PassProperty>;
+
+namespace ngraph
+{
+    namespace pass
+    {
         typedef EnumMask<PassProperty> PassPropertyMask;
-        constexpr PassPropertyMask all_pass_property_off;
+        const PassPropertyMask all_pass_property_off;
     }
 }
 
