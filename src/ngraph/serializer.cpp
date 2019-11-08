@@ -83,6 +83,7 @@
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/layer_norm.hpp"
+#include "ngraph/op/fused/log_softmax.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/lstm_sequence.hpp"
 #include "ngraph/op/fused/matmul.hpp"
@@ -1816,6 +1817,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
+        case OP_TYPEID::LogSoftmax:
+        {
+            auto axis = node_js.at("axis").get<int64_t>();
+            node = make_shared<op::LogSoftmax>(args[0], axis);
+            break;
+        }
         case OP_TYPEID::LRN:
         {
             auto alpha = node_js.at("alpha").get<double>();
@@ -3537,6 +3544,12 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
+        break;
+    }
+    case OP_TYPEID::LogSoftmax:
+    {
+        auto tmp = static_cast<const op::LogSoftmax*>(&n);
+        node["axis"] = tmp->get_axis();
         break;
     }
     case OP_TYPEID::LRN:

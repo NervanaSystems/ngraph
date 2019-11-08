@@ -36,7 +36,7 @@ namespace ngraph
                     auto data_shape = data->get_shape();
 
                     int axis = node.get_attribute_value<int64_t>("axis", 1);
-                    std::size_t valid_axis = common::validate_axis(node, axis, data_shape.size());
+                    int64_t valid_axis = common::validate_axis(node, axis, data_shape.size());
 
                     return {std::make_shared<ngraph::op::LogSoftmax>(data, valid_axis)};
                 }
