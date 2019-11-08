@@ -33,8 +33,8 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::LSTMCell::type_info;
 
 op::LSTMCell::LSTMCell(const Output<Node>& X,
-                       const Output<Node>& H_t,
-                       const Output<Node>& C_t,
+                       const Output<Node>& initial_hidden_state,
+                       const Output<Node>& initial_cell_state,
                        const Output<Node>& W,
                        const Output<Node>& R,
                        size_t hidden_size,
@@ -44,7 +44,7 @@ op::LSTMCell::LSTMCell(const Output<Node>& X,
                        const vector<float>& activations_beta,
                        float clip,
                        bool input_forget)
-    : FusedOp({X, H_t, C_t, W, R})
+    : FusedOp({X, initial_hidden_state, initial_cell_state, W, R})
     , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
     , m_activation_g{get_activation_function(1)}
@@ -58,8 +58,8 @@ op::LSTMCell::LSTMCell(const Output<Node>& X,
 }
 
 op::LSTMCell::LSTMCell(const Output<Node>& X,
-                       const Output<Node>& H_t,
-                       const Output<Node>& C_t,
+                       const Output<Node>& initial_hidden_state,
+                       const Output<Node>& initial_cell_state,
                        const Output<Node>& W,
                        const Output<Node>& R,
                        const Output<Node>& B,
@@ -70,7 +70,7 @@ op::LSTMCell::LSTMCell(const Output<Node>& X,
                        const vector<float>& activations_beta,
                        float clip,
                        bool input_forget)
-    : FusedOp({X, H_t, C_t, W, R, B})
+    : FusedOp({X, initial_hidden_state, initial_cell_state, W, R, B})
     , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
     , m_activation_g{get_activation_function(1)}
@@ -83,8 +83,8 @@ op::LSTMCell::LSTMCell(const Output<Node>& X,
 }
 
 op::LSTMCell::LSTMCell(const Output<Node>& X,
-                       const Output<Node>& H_t,
-                       const Output<Node>& C_t,
+                       const Output<Node>& initial_hidden_state,
+                       const Output<Node>& initial_cell_state,
                        const Output<Node>& W,
                        const Output<Node>& R,
                        const Output<Node>& B,
@@ -96,7 +96,7 @@ op::LSTMCell::LSTMCell(const Output<Node>& X,
                        const vector<float>& activations_beta,
                        float clip,
                        bool input_forget)
-    : FusedOp({X, H_t, C_t, W, R, B, P})
+    : FusedOp({X, initial_hidden_state, initial_cell_state, W, R, B, P})
     , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
     , m_activation_g{get_activation_function(1)}
@@ -155,7 +155,7 @@ void op::LSTMCell::pre_validate_and_infer_types()
                           ".");
     NODE_VALIDATION_CHECK(this,
                           (ht_shape == Shape{batch_size, get_hidden_size()}),
-                          "Input tensor H_t must have shape (",
+                          "Input tensor initial_hidden_state must have shape (",
                           batch_size,
                           ", ",
                           get_hidden_size(),
@@ -164,7 +164,7 @@ void op::LSTMCell::pre_validate_and_infer_types()
                           ".");
     NODE_VALIDATION_CHECK(this,
                           (ct_shape == Shape{batch_size, get_hidden_size()}),
-                          "Input tensor C_t must have shape (",
+                          "Input tensor initial_cell_state must have shape (",
                           batch_size,
                           ", ",
                           get_hidden_size(),

@@ -32,7 +32,7 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::RNNCell::type_info;
 
 op::RNNCell::RNNCell(const Output<Node>& X,
-                     const Output<Node>& H_t,
+                     const Output<Node>& initial_hidden_state,
                      const Output<Node>& W,
                      const Output<Node>& R,
                      size_t hidden_size,
@@ -40,7 +40,7 @@ op::RNNCell::RNNCell(const Output<Node>& X,
                      const vector<float>& activations_alpha,
                      const vector<float>& activations_beta,
                      float clip)
-    : FusedOp({X, H_t, W, R})
+    : FusedOp({X, initial_hidden_state, W, R})
     , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
 {
@@ -49,7 +49,7 @@ op::RNNCell::RNNCell(const Output<Node>& X,
 }
 
 op::RNNCell::RNNCell(const Output<Node>& X,
-                     const Output<Node>& H_t,
+                     const Output<Node>& initial_hidden_state,
                      const Output<Node>& W,
                      const Output<Node>& R,
                      const Output<Node>& B,
@@ -58,7 +58,7 @@ op::RNNCell::RNNCell(const Output<Node>& X,
                      const vector<float>& activations_alpha,
                      const vector<float>& activations_beta,
                      float clip)
-    : FusedOp({X, H_t, W, R, B})
+    : FusedOp({X, initial_hidden_state, W, R, B})
     , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
 {
@@ -111,7 +111,7 @@ void op::RNNCell::pre_validate_and_infer_types()
                           ".");
     NODE_VALIDATION_CHECK(this,
                           (ht_shape == Shape{batch_size, get_hidden_size()}),
-                          "Input tensor H_t must have shape (",
+                          "Input tensor initial_hidden_state must have shape (",
                           batch_size,
                           ", ",
                           get_hidden_size(),

@@ -75,32 +75,33 @@ namespace ngraph
             ///
             /// \brief      Constructs LSTMCell node.
             ///
-            /// \param[in]  X                  The input tensor with shape: [batch_size,
-            ///                                input_size].
-            /// \param[in]  H_t                The hidden state tensor at current time step with
-            ///                                shape: [batch_size, hidden_size].
-            /// \param[in]  C_t                The cell state tensor at current time step with
-            ///                                shape: [batch_size, hidden_size].
-            /// \param[in]  W                  The gate weights tensor with shape: [4*hidden_size,
-            ///                                input_size].
-            /// \param[in]  R                  The recurrence weights tensor with shape:
-            ///                                [4*hidden_size, hidden_size].
-            /// \param[in]  hidden_size        The number of hidden units for recurrent cell.
-            /// \param[in]  weights_format     The order of gates in weights tensors. The default
-            ///                                format is IFCO since it is used by DNNL.
-            /// \param[in]  activations        The vector of activation functions used inside
-            ///                                recurrent cell.
-            /// \param[in]  activations_alpha  The vector of alpha parameters for activation
-            ///                                functions in order respective to activation list.
-            /// \param[in]  activations_beta   The vector of beta parameters for activation
-            ///                                functions in order respective to activation list.
-            /// \param[in]  clip               The value defining clipping range [-clip, clip] on
-            ///                                input of activation functions.
-            /// \param[in]  input_forget       Controls coupling input and forget gates.
+            /// \param[in]  X                     The input tensor with shape: [batch_size,
+            ///                                   input_size].
+            /// \param[in]  initial_hidden_state  The hidden state tensor at current time step with
+            ///                                   shape: [batch_size, hidden_size].
+            /// \param[in]  initial_cell_state    The cell state tensor at current time step with
+            ///                                   shape: [batch_size, hidden_size].
+            /// \param[in]  W                     The gate weights tensor with shape:
+            /// [4*hidden_size,
+            ///                                   input_size].
+            /// \param[in]  R                     The recurrence weights tensor with shape:
+            ///                                   [4*hidden_size, hidden_size].
+            /// \param[in]  hidden_size           The number of hidden units for recurrent cell.
+            /// \param[in]  weights_format        The order of gates in weights tensors. The default
+            ///                                   format is IFCO since it is used by DNNL.
+            /// \param[in]  activations           The vector of activation functions used inside
+            ///                                   recurrent cell.
+            /// \param[in]  activations_alpha     The vector of alpha parameters for activation
+            ///                                   functions in order respective to activation list.
+            /// \param[in]  activations_beta      The vector of beta parameters for activation
+            ///                                   functions in order respective to activation list.
+            /// \param[in]  clip                  The value defining clipping range [-clip, clip] on
+            ///                                   input of activation functions.
+            /// \param[in]  input_forget          Controls coupling input and forget gates.
             ///
             LSTMCell(const Output<Node>& X,
-                     const Output<Node>& H_t,
-                     const Output<Node>& C_t,
+                     const Output<Node>& initial_hidden_state,
+                     const Output<Node>& initial_cell_state,
                      const Output<Node>& W,
                      const Output<Node>& R,
                      std::size_t hidden_size,
@@ -115,34 +116,34 @@ namespace ngraph
             ///
             /// \brief      Constructs LSTMCell node.
             ///
-            /// \param[in]  X                  The input tensor with shape: [batch_size,
-            ///                                input_size].
-            /// \param[in]  H_t                The hidden state tensor at current time step with
-            ///                                shape: [batch_size, hidden_size].
-            /// \param[in]  C_t                The cell state tensor at current time step with
-            ///                                shape: [batch_size, hidden_size].
-            /// \param[in]  W                  The weight tensor with shape: [4*hidden_size,
-            ///                                input_size].
-            /// \param[in]  R                  The recurrence weight tensor with shape:
-            ///                                [4*hidden_size, hidden_size].
-            /// \param[in]  B                  The bias tensor for gates with shape:
-            ///                                [4*hidden_size].
-            /// \param[in]  hidden_size        The number of hidden units for recurrent cell.
-            /// \param[in]  weights_format     The order of gates in weights tensors. The default
-            ///                                format is IFCO since it is used by DNNL.
-            /// \param[in]  activations        The vector of activation functions used inside
-            ///                                recurrent cell.
-            /// \param[in]  activations_alpha  The vector of alpha parameters for activation
-            ///                                functions in order respective to activation list.
-            /// \param[in]  activations_beta   The vector of beta parameters for activation
-            ///                                functions in order respective to activation list.
-            /// \param[in]  clip               The value defining clipping range [-clip, clip] on
-            ///                                input of activation functions.
-            /// \param[in]  input_forget       Controls coupling input and forget gates.
+            /// \param[in]  X                     The input tensor with shape: [batch_size,
+            ///                                   input_size].
+            /// \param[in]  initial_hidden_state  The hidden state tensor at current time step with
+            ///                                   shape: [batch_size, hidden_size].
+            /// \param[in]  initial_cell_state    The cell state tensor at current time step with
+            ///                                   shape: [batch_size, hidden_size].
+            /// \param[in]  W                     The weight tensor with shape: [4*hidden_size,
+            ///                                   input_size].
+            /// \param[in]  R                     The recurrence weight tensor with shape:
+            ///                                   [4*hidden_size, hidden_size].
+            /// \param[in]  B                     The bias tensor for gates with shape:
+            ///                                   [4*hidden_size].
+            /// \param[in]  hidden_size           The number of hidden units for recurrent cell.
+            /// \param[in]  weights_format        The order of gates in weights tensors. The default
+            ///                                   format is IFCO since it is used by DNNL.
+            /// \param[in]  activations           The vector of activation functions used inside
+            ///                                   recurrent cell.
+            /// \param[in]  activations_alpha     The vector of alpha parameters for activation
+            ///                                   functions in order respective to activation list.
+            /// \param[in]  activations_beta      The vector of beta parameters for activation
+            ///                                   functions in order respective to activation list.
+            /// \param[in]  clip                  The value defining clipping range [-clip, clip] on
+            ///                                   input of activation functions.
+            /// \param[in]  input_forget          Controls coupling input and forget gates.
             ///
             LSTMCell(const Output<Node>& X,
-                     const Output<Node>& H_t,
-                     const Output<Node>& C_t,
+                     const Output<Node>& initial_hidden_state,
+                     const Output<Node>& initial_cell_state,
                      const Output<Node>& W,
                      const Output<Node>& R,
                      const Output<Node>& B,
@@ -158,37 +159,37 @@ namespace ngraph
             ///
             /// \brief      Constructs LSTMCell node.
             ///
-            /// \param[in]  X                  The input tensor with shape: [batch_size,
-            ///                                input_size].
-            /// \param[in]  H_t                The hidden state tensor at current time step with
-            ///                                shape: [batch_size, hidden_size].
-            /// \param[in]  C_t                The cell state tensor at current time step with
-            ///                                shape: [batch_size, hidden_size].
-            /// \param[in]  W                  The weight tensor with shape: [4*hidden_size,
-            ///                                input_size].
-            /// \param[in]  R                  The recurrence weight tensor with shape:
-            ///                                [4*hidden_size, hidden_size].
-            /// \param[in]  B                  The bias tensor for gates with shape:
-            ///                                [4*hidden_size].
-            /// \param[in]  P                  The weight tensor for peepholes with shape:
-            ///                                [3*hidden_size] - 3 equals to only iof gates.
-            ///                                The order is: input, output, forget gates.
-            /// \param[in]  hidden_size        The number of hidden units for recurrent cell.
-            /// \param[in]  weights_format     The order of gates in weights tensors. The default
-            ///                                format is IFCO since it is used by DNNL.
-            /// \param[in]  activations        The vector of activation functions used inside
-            ///                                recurrent cell.
-            /// \param[in]  activations_alpha  The vector of alpha parameters for activation
-            ///                                functions in order respective to activation list.
-            /// \param[in]  activations_beta   The vector of beta parameters for activation
-            ///                                functions in order respective to activation list.
-            /// \param[in]  clip               The value defining clipping range [-clip, clip] on
-            ///                                input of activation functions.
-            /// \param[in]  input_forget       Controls coupling input and forget gates.
+            /// \param[in]  X                     The input tensor with shape: [batch_size,
+            /// input_size].
+            /// \param[in]  initial_hidden_state  The hidden state tensor at current time step with
+            ///                                   shape: [batch_size, hidden_size].
+            /// \param[in]  initial_cell_state    The cell state tensor at current time step with
+            ///                                   shape: [batch_size, hidden_size].
+            /// \param[in]  W                     The weight tensor with shape: [4*hidden_size,
+            ///                                   input_size].
+            /// \param[in]  R                     The recurrence weight tensor with shape:
+            ///                                   [4*hidden_size, hidden_size].
+            /// \param[in]  B                     The bias tensor for gates with shape:
+            ///                                   [4*hidden_size].
+            /// \param[in]  P                     The weight tensor for peepholes with shape:
+            ///                                   [3*hidden_size] - 3 equals to only iof gates.
+            ///                                   The order is: input, output, forget gates.
+            /// \param[in]  hidden_size           The number of hidden units for recurrent cell.
+            /// \param[in]  weights_format        The order of gates in weights tensors. The default
+            ///                                   format is IFCO since it is used by DNNL.
+            /// \param[in]  activations           The vector of activation functions used inside
+            ///                                   recurrent cell.
+            /// \param[in]  activations_alpha     The vector of alpha parameters for activation
+            ///                                   functions in order respective to activation list.
+            /// \param[in]  activations_beta      The vector of beta parameters for activation
+            ///                                   functions in order respective to activation list.
+            /// \param[in]  clip                  The value defining clipping range [-clip, clip] on
+            ///                                   input of activation functions.
+            /// \param[in]  input_forget          Controls coupling input and forget gates.
             ///
             LSTMCell(const Output<Node>& X,
-                     const Output<Node>& H_t,
-                     const Output<Node>& C_t,
+                     const Output<Node>& initial_hidden_state,
+                     const Output<Node>& initial_cell_state,
                      const Output<Node>& W,
                      const Output<Node>& R,
                      const Output<Node>& B,

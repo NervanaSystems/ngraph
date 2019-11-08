@@ -33,12 +33,12 @@ constexpr NodeTypeInfo op::GRUCell::type_info;
 op::GRUCell::GRUCell(const Output<Node>& X,
                      const Output<Node>& W,
                      const Output<Node>& R,
-                     const Output<Node>& H_t,
+                     const Output<Node>& initial_hidden_state,
                      size_t hidden_size)
     : GRUCell(X,
               W,
               R,
-              H_t,
+              initial_hidden_state,
               hidden_size,
               vector<string>{"sigmoid", "tanh"},
               vector<float>{},
@@ -51,14 +51,14 @@ op::GRUCell::GRUCell(const Output<Node>& X,
 op::GRUCell::GRUCell(const Output<Node>& X,
                      const Output<Node>& W,
                      const Output<Node>& R,
-                     const Output<Node>& H_t,
+                     const Output<Node>& initial_hidden_state,
                      size_t hidden_size,
                      const vector<string>& activations,
                      const vector<float>& activations_alpha,
                      const vector<float>& activations_beta,
                      float clip,
                      bool linear_before_reset)
-    : FusedOp({X, W, R, H_t})
+    : FusedOp({X, W, R, initial_hidden_state})
     , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
     , m_activation_g{get_activation_function(1)}
@@ -71,7 +71,7 @@ op::GRUCell::GRUCell(const Output<Node>& X,
 op::GRUCell::GRUCell(const Output<Node>& X,
                      const Output<Node>& W,
                      const Output<Node>& R,
-                     const Output<Node>& H_t,
+                     const Output<Node>& initial_hidden_state,
                      size_t hidden_size,
                      const Output<Node>& B,
                      const vector<string>& activations,
@@ -79,7 +79,7 @@ op::GRUCell::GRUCell(const Output<Node>& X,
                      const vector<float>& activations_beta,
                      float clip,
                      bool linear_before_reset)
-    : FusedOp({X, W, R, H_t, B})
+    : FusedOp({X, W, R, initial_hidden_state, B})
     , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
     , m_activation_g{get_activation_function(1)}
@@ -129,7 +129,7 @@ void op::GRUCell::pre_validate_and_infer_types()
                           ".");
     NODE_VALIDATION_CHECK(this,
                           (ht_shape == Shape{batch_size, get_hidden_size()}),
-                          "Input tensor H_t must have shape (",
+                          "Input tensor initial_hidden_state must have shape (",
                           batch_size,
                           ", ",
                           get_hidden_size(),
