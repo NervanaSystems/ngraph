@@ -214,6 +214,7 @@ namespace ngraph
 #include "ngraph/op/tensor_iterator.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/op/variadic_split.hpp"
 #include "ngraph/op/xor.hpp"
 #include "ngraph/partial_shape.hpp"
 #include "ngraph/runtime/backend.hpp"
