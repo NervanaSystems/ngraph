@@ -100,7 +100,8 @@ TEST(type_prop, lstm_cell_invalid_input)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor H_t must have shape"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input tensor initial_hidden_state must have shape"));
     }
 
     // Invalid C_t tensor shape.
@@ -113,7 +114,8 @@ TEST(type_prop, lstm_cell_invalid_input)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor C_t must have shape"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input tensor initial_cell_state must have shape"));
     }
 
     // Invalid B tensor shape.
