@@ -25,32 +25,38 @@ std::ostream& ngraph::operator<<(std::ostream& s, const Shape& shape)
     return s;
 }
 
-Shape::Shape() : std::vector<size_t>(axis_lengths)
+ngraph::Shape::Shape()
+    : std::vector<size_t>()
 {
 }
 
-Shape::Shape(const std::vector<size_t>& axis_lengths)
+ngraph::Shape::Shape(const std::initializer_list<size_t>& axis_lengths)
     : std::vector<size_t>(axis_lengths)
 {
 }
 
-Shape::Shape(const Shape& axis_lengths)
+ngraph::Shape::Shape(const std::vector<size_t>& axis_lengths)
     : std::vector<size_t>(axis_lengths)
 {
 }
 
-Shape::Shape(size_t n, size_t initial_value)
+ngraph::Shape::Shape(const Shape& axis_lengths)
+    : std::vector<size_t>(axis_lengths)
+{
+}
+
+ngraph::Shape::Shape(size_t n, size_t initial_value)
     : std::vector<size_t>(n, initial_value)
 {
 }
 
-Shape& Shape::operator=(const Shape& v)
+ngraph::Shape& ngraph::Shape::operator=(const Shape& v)
 {
     static_cast<std::vector<size_t>*>(this)->operator=(v);
     return *this;
 }
 
-Shape& ngraph::Shape::operator=(Shape&& v) noexcept
+ngraph::Shape& ngraph::Shape::operator=(Shape&& v) noexcept
 {
     static_cast<std::vector<size_t>*>(this)->operator=(v);
     return *this;

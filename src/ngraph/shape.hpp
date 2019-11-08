@@ -29,6 +29,8 @@ namespace ngraph
     class NGRAPH_API Shape : public std::vector<size_t>
     {
     public:
+        Shape();
+
         Shape(const std::initializer_list<size_t>& axis_lengths);
 
         Shape(const std::vector<size_t>& axis_lengths);
