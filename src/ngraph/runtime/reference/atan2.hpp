@@ -16,37 +16,23 @@
 
 #pragma once
 
-#include "core/node.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/op/add.hpp"
-#include "utils/variadic.hpp"
+#include <cmath>
+#include <cstddef>
 
 namespace ngraph
 {
-    namespace onnx_import
+    namespace runtime
     {
-        namespace op
+        namespace reference
         {
-            namespace set_1
+            template <typename X, typename Y, typename Z>
+            void atan2(const X* py, const Y* px, Z* pout, size_t count)
             {
-                inline NodeVector sum(const Node& node)
+                for (size_t i = 0; i < count; i++)
                 {
-                    return variadic::make_ng_variadic_op<ngraph::op::Add>(node);
+                    *pout++ = static_cast<Z>(std::atan2(*py++, *px++));
                 }
-
-            } // namespace set_1
-
-            namespace set_8
-            {
-                inline NodeVector sum(const Node& node)
-                {
-                    return variadic::make_ng_variadic_op<ngraph::op::v1::Add>(node);
-                }
-
-            } // namespace set_8
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

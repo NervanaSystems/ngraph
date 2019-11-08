@@ -87,7 +87,8 @@ TEST(type_prop, gru_cell_invalid_input)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor H_t must have shape"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input tensor initial_hidden_state must have shape"));
     }
 
     // Invalid B tensor shape.
