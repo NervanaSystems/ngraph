@@ -24,7 +24,6 @@
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 namespace ngraph
 {
