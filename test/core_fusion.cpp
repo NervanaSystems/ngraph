@@ -853,3 +853,26 @@ TEST(core_fusion, softmax_crossentropy)
     test_softmax_crossentropy(Shape{41, 37}, Shape{41, 37}, true, -1);
     test_softmax_crossentropy(Shape{41, 37}, Shape{41, 1}, false, 5);
 }
+
+TEST(core_fusion, ce)
+{
+    Shape input_shape{10, 2, 4, 10};
+    Shape label_shape{10, 2, 4, 1};
+    bool soft_label = true;
+    int ignore_index = -100;
+    auto input = std::make_shared<op::Parameter>(element::f64, input_shape);
+    auto labels = std::make_shared<op::Parameter>(element::i64, label_shape);
+    auto sm_ce = std::make_shared<op::CrossEntropy>(input, labels, soft_label, ignore_index);
+    auto cpu_f = make_shared<Function>(sm_ce, ParameterVector{input, labels});
+
+    test::Uniform<double> rng(-1.0, 1.0);
+    vector<vector<double>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<double> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto cpu_results = execute(cpu_f, args, "CPU");
+}

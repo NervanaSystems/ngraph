@@ -45,12 +45,38 @@ op::CrossEntropy::CrossEntropy(const Output<Node>& arg1,
     constructor_validate_and_infer_types();
 }
 
+static Output<Node> get_2d_tensor(Output<Node> node)
+{
+    if (node.get_shape().size() == 2)
+    {
+        return node;
+    }
+
+    Shape node_shape = node.get_shape();
+    size_t rank = node_shape.size();
+    Shape result_shape{(shape_size(node_shape) / node_shape[rank - 1]), node_shape[rank - 1]};
+
+    auto get_axis_vector = [&, rank]() {
+        AxisVector axis_vector;
+
+        for (size_t i = 0; i < rank; i++)
+        {
+            axis_vector.push_back(i);
+        }
+        return axis_vector;
+    };
+
+    auto reshape = std::make_shared<ngraph::op::Reshape>(node, get_axis_vector(), result_shape);
+    return reshape;
+}
+
 NodeVector op::CrossEntropy::decompose_op() const
 {
-    auto input_to_normalize = input_value(0);
-    auto labels = input_value(1);
+    auto input_to_normalize = get_2d_tensor(input_value(0));
+    auto labels = get_2d_tensor(input_value(1));
     auto reduction_axis = input_to_normalize.get_shape().size() - 1;
 
+    // we will reshape the labels and input tensor to 2d
     auto create_mask = [&]() -> std::shared_ptr<ngraph::Node> {
         // ignore mask
         auto mask_constant = ngraph::op::Constant::create(
@@ -159,9 +185,9 @@ shared_ptr<Node> op::CrossEntropyBackprop::copy_with_new_args(const NodeVector& 
 
 NodeVector op::CrossEntropyBackprop::decompose_op() const
 {
-    auto input = input_value(0);
-    auto labels = input_value(1);
-    auto delta = input_value(2);
+    auto input = get_2d_tensor(input_value(0));
+    auto labels = get_2d_tensor(input_value(1));
+    auto delta = get_2d_tensor(input_value(2));
     auto rank = input.get_shape().size();
 
     size_t one_hot_axis = delta.get_shape().size() - 1;
