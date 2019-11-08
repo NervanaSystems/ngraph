@@ -127,6 +127,49 @@ namespace ngraph
             ///                                [4*hidden_size, hidden_size].
             /// \param[in]  B                  The bias tensor for gates with shape:
             ///                                [4*hidden_size].
+            /// \param[in]  hidden_size        The number of hidden units for recurrent cell.
+            /// \param[in]  weights_format     The order of gates in weights tensors. The default
+            ///                                format is IFCO since it is used by DNNL.
+            /// \param[in]  activations        The vector of activation functions used inside
+            ///                                recurrent cell.
+            /// \param[in]  activations_alpha  The vector of alpha parameters for activation
+            ///                                functions in order respective to activation list.
+            /// \param[in]  activations_beta   The vector of beta parameters for activation
+            ///                                functions in order respective to activation list.
+            /// \param[in]  clip               The value defining clipping range [-clip, clip] on
+            ///                                input of activation functions.
+            /// \param[in]  input_forget       Controls coupling input and forget gates.
+            ///
+            LSTMCell(const Output<Node>& X,
+                     const Output<Node>& H_t,
+                     const Output<Node>& C_t,
+                     const Output<Node>& W,
+                     const Output<Node>& R,
+                     const Output<Node>& B,
+                     std::size_t hidden_size,
+                     LSTMWeightsFormat weights_format = LSTMWeightsFormat::IFCO,
+                     const std::vector<std::string>& activations =
+                         std::vector<std::string>{"sigmoid", "tanh", "tanh"},
+                     const std::vector<float>& activations_alpha = {},
+                     const std::vector<float>& activations_beta = {},
+                     float clip = 0.f,
+                     bool input_forget = false);
+
+            ///
+            /// \brief      Constructs LSTMCell node.
+            ///
+            /// \param[in]  X                  The input tensor with shape: [batch_size,
+            ///                                input_size].
+            /// \param[in]  H_t                The hidden state tensor at current time step with
+            ///                                shape: [batch_size, hidden_size].
+            /// \param[in]  C_t                The cell state tensor at current time step with
+            ///                                shape: [batch_size, hidden_size].
+            /// \param[in]  W                  The weight tensor with shape: [4*hidden_size,
+            ///                                input_size].
+            /// \param[in]  R                  The recurrence weight tensor with shape:
+            ///                                [4*hidden_size, hidden_size].
+            /// \param[in]  B                  The bias tensor for gates with shape:
+            ///                                [4*hidden_size].
             /// \param[in]  P                  The weight tensor for peepholes with shape:
             ///                                [3*hidden_size] - 3 equals to only iof gates.
             ///                                The order is: input, output, forget gates.

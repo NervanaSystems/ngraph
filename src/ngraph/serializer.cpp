@@ -1637,6 +1637,22 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                  clip,
                                                  input_forget);
             }
+            if (args.size() == 6)
+            {
+                node = make_shared<op::LSTMCell>(args[0],
+                                                 args[1],
+                                                 args[2],
+                                                 args[3],
+                                                 args[4],
+                                                 args[5],
+                                                 hidden_size,
+                                                 weights_format,
+                                                 activations,
+                                                 activations_alpha,
+                                                 activations_beta,
+                                                 clip,
+                                                 input_forget);
+            }
             else
             {
                 node = make_shared<op::LSTMCell>(args[0],

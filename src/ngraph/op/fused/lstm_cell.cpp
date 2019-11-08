@@ -63,6 +63,31 @@ op::LSTMCell::LSTMCell(const Output<Node>& X,
                        const Output<Node>& W,
                        const Output<Node>& R,
                        const Output<Node>& B,
+                       size_t hidden_size,
+                       op::LSTMWeightsFormat weights_format,
+                       const vector<string>& activations,
+                       const vector<float>& activations_alpha,
+                       const vector<float>& activations_beta,
+                       float clip,
+                       bool input_forget)
+    : FusedOp({X, H_t, C_t, W, R, B})
+    , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
+    , m_activation_f{get_activation_function(0)}
+    , m_activation_g{get_activation_function(1)}
+    , m_activation_h{get_activation_function(2)}
+    , m_input_forget{input_forget}
+    , m_weights_format{weights_format}
+{
+    set_argument(6, get_default_peepholes_input());
+    constructor_validate_and_infer_types();
+}
+
+op::LSTMCell::LSTMCell(const Output<Node>& X,
+                       const Output<Node>& H_t,
+                       const Output<Node>& C_t,
+                       const Output<Node>& W,
+                       const Output<Node>& R,
+                       const Output<Node>& B,
                        const Output<Node>& P,
                        size_t hidden_size,
                        op::LSTMWeightsFormat weights_format,
@@ -314,6 +339,22 @@ shared_ptr<Node> op::LSTMCell::copy_with_new_args(const NodeVector& new_args) co
                                      new_args.at(2),
                                      new_args.at(3),
                                      new_args.at(4),
+                                     get_hidden_size(),
+                                     get_weights_format(),
+                                     get_activations(),
+                                     get_activations_alpha(),
+                                     get_activations_beta(),
+                                     get_clip(),
+                                     m_input_forget);
+    }
+    else if (new_args.size() == 6)
+    {
+        return make_shared<LSTMCell>(new_args.at(0),
+                                     new_args.at(1),
+                                     new_args.at(2),
+                                     new_args.at(3),
+                                     new_args.at(4),
+                                     new_args.at(5),
                                      get_hidden_size(),
                                      get_weights_format(),
                                      get_activations(),
