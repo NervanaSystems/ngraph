@@ -29,25 +29,13 @@ namespace ngraph
     class NGRAPH_API Shape : public std::vector<size_t>
     {
     public:
-        Shape(const std::initializer_list<size_t>& axis_lengths)
-            : std::vector<size_t>(axis_lengths)
-        {
-        }
+        Shape(const std::initializer_list<size_t>& axis_lengths);
 
-        Shape(const std::vector<size_t>& axis_lengths)
-            : std::vector<size_t>(axis_lengths)
-        {
-        }
+        Shape(const std::vector<size_t>& axis_lengths);
 
-        Shape(const Shape& axis_lengths)
-            : std::vector<size_t>(axis_lengths)
-        {
-        }
+        Shape(const Shape& axis_lengths);
 
-        explicit Shape(size_t n, size_t initial_value = 0)
-            : std::vector<size_t>(n, initial_value)
-        {
-        }
+        explicit Shape(size_t n, size_t initial_value = 0);
 
         template <class InputIterator>
         Shape(InputIterator first, InputIterator last)
@@ -55,17 +43,8 @@ namespace ngraph
         {
         }
 
-        Shape() {}
-        Shape& operator=(const Shape& v)
-        {
-            static_cast<std::vector<size_t>*>(this)->operator=(v);
-            return *this;
-        }
-        Shape& operator=(Shape&& v) noexcept
-        {
-            static_cast<std::vector<size_t>*>(this)->operator=(v);
-            return *this;
-        }
+        Shape& operator=(const Shape& v);
+        Shape& operator=(Shape&& v) noexcept;
     };
 
     /// Number of elements in spanned by a shape
