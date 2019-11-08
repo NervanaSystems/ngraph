@@ -45,28 +45,61 @@ op::CrossEntropy::CrossEntropy(const Output<Node>& arg1,
     constructor_validate_and_infer_types();
 }
 
+static AxisVector get_axis_vector(size_t rank)
+{
+    AxisVector axis_vector;
+
+    for (size_t i = 0; i < rank; i++)
+    {
+        axis_vector.push_back(i);
+    }
+    return axis_vector;
+}
+
+static Shape get_result_shape(Shape& target_shape, int start, int end)
+{
+    Shape result;
+    for (size_t i = start; i < end; i++)
+    {
+        result.push_back(target_shape[i]);
+    }
+    // keep dims = 1 , in the last axis
+    result.push_back(1);
+    return result;
+}
+
 static Output<Node> get_2d_tensor(Output<Node> node)
 {
     if (node.get_shape().size() == 2)
     {
         return node;
     }
-
     Shape node_shape = node.get_shape();
     size_t rank = node_shape.size();
     Shape result_shape{(shape_size(node_shape) / node_shape[rank - 1]), node_shape[rank - 1]};
 
-    auto get_axis_vector = [&, rank]() {
-        AxisVector axis_vector;
+    auto reshape = std::make_shared<ngraph::op::Reshape>(node, get_axis_vector(rank), result_shape);
+    return reshape;
+}
 
-        for (size_t i = 0; i < rank; i++)
-        {
-            axis_vector.push_back(i);
-        }
-        return axis_vector;
-    };
+static std::shared_ptr<Node> expand_shape(std::shared_ptr<Node> input, Output<Node> target)
+{
+    Shape input_shape = input->get_shape();
+    Shape target_shape = target.get_shape();
 
-    auto reshape = std::make_shared<ngraph::op::Reshape>(node, get_axis_vector(), result_shape);
+    if (input_shape == target_shape && input_shape.size() == 2)
+    {
+        return input;
+    }
+    size_t rank = target_shape.size();
+
+    Shape result_shape = get_result_shape(target_shape, 0, rank - 1);
+    if (result_shape.size() != target_shape.size())
+    {
+        throw ngraph_error(
+            "CrossEntropy shape size mismatch in restoring the original tensor shape");
+    }
+    auto reshape = std::make_shared<ngraph::op::Reshape>(input, AxisVector{0, 1}, result_shape);
     return reshape;
 }
 
@@ -119,7 +152,7 @@ NodeVector op::CrossEntropy::decompose_op() const
         auto xe = create_xe(labels, input_to_normalize);
         auto reshape_xe = std::make_shared<ngraph::op::Reshape>(
             xe, AxisVector{0}, Shape{xe->get_shape().at(0), 1});
-        return {reshape_xe};
+        return {expand_shape(reshape_xe, input_value(0))};
     }
     else
     {
@@ -141,7 +174,7 @@ NodeVector op::CrossEntropy::decompose_op() const
         {
             return {reshape_xe * mask};
         }
-        return {reshape_xe};
+        return {expand_shape(reshape_xe, input_value(0))};
     }
 }
 
@@ -237,5 +270,5 @@ NodeVector op::CrossEntropyBackprop::decompose_op() const
     {
         xe_grad = xe_grad * mask;
     }
-    return {xe_grad};
+    return {expand_shape(xe_grad, input_value(0))};
 }

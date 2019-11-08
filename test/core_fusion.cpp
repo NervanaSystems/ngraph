@@ -858,7 +858,7 @@ TEST(core_fusion, ce)
 {
     Shape input_shape{10, 2, 4, 10};
     Shape label_shape{10, 2, 4, 1};
-    bool soft_label = true;
+    bool soft_label = false;
     int ignore_index = -100;
     auto input = std::make_shared<op::Parameter>(element::f64, input_shape);
     auto labels = std::make_shared<op::Parameter>(element::i64, label_shape);
