@@ -389,6 +389,8 @@ set (SRC
     pass/implicit_broadcast_elimination.cpp
     pass/batch_fusion.hpp
     pass/batch_fusion.cpp
+    pass/collapse_dims.cpp
+    pass/collapse_dims.hpp
     pass/common_function_collection.cpp
     pass/common_function_collection.hpp
     pass/constant_folding.cpp

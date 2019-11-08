@@ -143,6 +143,7 @@
 #include "ngraph/pass/common_function_collection.hpp"
 #include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/core_fusion.hpp"
+#include "ngraph/pass/collapse_dims.hpp"
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
@@ -190,7 +191,6 @@
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_collapse_dims.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_horizontal_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
@@ -1224,7 +1224,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     }
     REGISTER_KNOBBED_PASS(CPUQuantFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUHorizontalFusion, true, runtime::cpu::pass)
-    REGISTER_KNOBBED_PASS(CPUCollapseDims, true, runtime::cpu::pass)
+    REGISTER_KNOBBED_PASS(CollapseDims, true, ngraph::pass)
 #if defined(NGRAPH_HALIDE)
     REGISTER_KNOBBED_PASS(HalideSubgraphExtraction, true, ngraph::runtime::cpu::pass)
 #endif

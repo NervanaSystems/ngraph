@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "cpu_collapse_dims.hpp"
+#include "collapse_dims.hpp"
 #include <algorithm>
 #include <iostream>
 #include <numeric>
@@ -239,7 +239,7 @@ static bool collapse_dot(std::shared_ptr<Node> n)
     return replaced;
 }
 
-bool runtime::cpu::pass::CPUCollapseDims::run_on_function(std::shared_ptr<ngraph::Function> f)
+bool ngraph::pass::CollapseDims::run_on_function(std::shared_ptr<ngraph::Function> f)
 {
     bool replaced = false;
     for (auto n : f->get_ordered_ops())

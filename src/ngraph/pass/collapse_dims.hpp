@@ -20,18 +20,12 @@
 
 namespace ngraph
 {
-    namespace runtime
-    {
-        namespace cpu
-        {
             namespace pass
             {
-                class CPUCollapseDims : public ngraph::pass::FunctionPass
+                class CollapseDims : public ngraph::pass::FunctionPass
                 {
                 public:
                     bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
                 };
             }
-        }
-    }
 }
