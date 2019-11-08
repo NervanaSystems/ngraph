@@ -112,7 +112,7 @@ add_library(onnx_import STATIC
         op/leaky_relu.hpp
         op/less.hpp
         op/log.hpp
-		op/log_softmax.cpp
+        op/log_softmax.cpp
         op/log_softmax.hpp
         op/lp_norm.cpp
         op/lp_norm.hpp
