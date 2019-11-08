@@ -74,7 +74,7 @@ private:
         //
 
         auto pos = name.find_last_of(":");
-        return str.substr(pos + 1);
+        return name.substr(pos + 1);
 #elif defined(__linux) || defined(__APPLE__)
         return name;
 #endif
