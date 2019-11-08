@@ -445,39 +445,39 @@ TEST(util, enum_mask_set_clear)
     EXPECT_EQ(0, m.value());
     m.set(Type::d);
     m.set(Type::b);
-    EXPECT_EQ(true, m.is_set(Type::d));
-    EXPECT_EQ(false, m.is_set(Type::a));
-    EXPECT_EQ(true, m.is_set(Type::b));
-    EXPECT_EQ(false, m.is_set(Type::c));
-    EXPECT_EQ(false, m.is_set({Type::a, Type::b}));
-    EXPECT_EQ(false, m.is_set({Type::c, Type::d}));
-    EXPECT_EQ(false, m.is_set({Type::a, Type::c}));
-    EXPECT_EQ(true, m.is_set({Type::b, Type::d}));
-    EXPECT_EQ(false, m.is_clear(Type::d));
-    EXPECT_EQ(true, m.is_clear(Type::a));
-    EXPECT_EQ(false, m.is_clear(Type::b));
-    EXPECT_EQ(true, m.is_clear(Type::c));
-    EXPECT_EQ(false, m.is_clear({Type::c, Type::d}));
-    EXPECT_EQ(false, m.is_clear({Type::a, Type::b}));
-    EXPECT_EQ(true, m.is_clear({Type::a, Type::c}));
-    EXPECT_EQ(false, m.is_clear({Type::b, Type::d}));
+    EXPECT_TRUE(m.is_set(Type::d));
+    EXPECT_FALSE(m.is_set(Type::a));
+    EXPECT_TRUE(m.is_set(Type::b));
+    EXPECT_FALSE(m.is_set(Type::c));
+    EXPECT_FALSE(m.is_set({Type::a, Type::b}));
+    EXPECT_FALSE(m.is_set({Type::c, Type::d}));
+    EXPECT_FALSE(m.is_set({Type::a, Type::c}));
+    EXPECT_TRUE(m.is_set({Type::b, Type::d}));
+    EXPECT_FALSE(m.is_clear(Type::d));
+    EXPECT_TRUE(m.is_clear(Type::a));
+    EXPECT_FALSE(m.is_clear(Type::b));
+    EXPECT_TRUE(m.is_clear(Type::c));
+    EXPECT_FALSE(m.is_clear({Type::c, Type::d}));
+    EXPECT_FALSE(m.is_clear({Type::a, Type::b}));
+    EXPECT_TRUE(m.is_clear({Type::a, Type::c}));
+    EXPECT_FALSE(m.is_clear({Type::b, Type::d}));
 
-    EXPECT_EQ(true, m.is_any_set({Type::a, Type::b}));
-    EXPECT_EQ(true, m.is_any_set({Type::a, Type::d}));
-    EXPECT_EQ(true, m.is_any_set({Type::b, Type::c}));
-    EXPECT_EQ(true, m.is_any_set({Type::c, Type::d}));
-    EXPECT_EQ(false, m.is_any_set({Type::a, Type::c}));
-    EXPECT_EQ(true, m.is_any_clear({Type::c, Type::d}));
-    EXPECT_EQ(true, m.is_any_clear({Type::a, Type::b}));
-    EXPECT_EQ(true, m.is_any_clear({Type::a, Type::c}));
-    EXPECT_EQ(true, m.is_any_clear({Type::b, Type::c}));
-    EXPECT_EQ(false, m.is_any_clear({Type::b, Type::d}));
+    EXPECT_TRUE(m.is_any_set({Type::a, Type::b}));
+    EXPECT_TRUE(m.is_any_set({Type::a, Type::d}));
+    EXPECT_TRUE(m.is_any_set({Type::b, Type::c}));
+    EXPECT_TRUE(m.is_any_set({Type::c, Type::d}));
+    EXPECT_FALSE(m.is_any_set({Type::a, Type::c}));
+    EXPECT_TRUE(m.is_any_clear({Type::c, Type::d}));
+    EXPECT_TRUE(m.is_any_clear({Type::a, Type::b}));
+    EXPECT_TRUE(m.is_any_clear({Type::a, Type::c}));
+    EXPECT_TRUE(m.is_any_clear({Type::b, Type::c}));
+    EXPECT_FALSE(m.is_any_clear({Type::b, Type::d}));
 
     m.set(Type::a);
-    EXPECT_EQ(false, m.is_clear(Type::a));
-    EXPECT_EQ(false, m.is_clear(Type::b));
-    EXPECT_EQ(true, m.is_clear(Type::c));
-    EXPECT_EQ(false, m.is_clear(Type::d));
+    EXPECT_FALSE(m.is_clear(Type::a));
+    EXPECT_FALSE(m.is_clear(Type::b));
+    EXPECT_TRUE(m.is_clear(Type::c));
+    EXPECT_FALSE(m.is_clear(Type::d));
 }
 
 TEST(util, enum_mask_operators)
@@ -492,9 +492,9 @@ TEST(util, enum_mask_operators)
     EnumMask<Type> m;
     m = Type::b;
     EXPECT_EQ(static_cast<uint32_t>(Type::b), m.value());
-    EXPECT_EQ(true, m[Type::b]);
-    EXPECT_EQ(false, m[Type::a]);
-    EXPECT_EQ(false, m[Type::c]);
+    EXPECT_TRUE(m[Type::b]);
+    EXPECT_FALSE(m[Type::a]);
+    EXPECT_FALSE(m[Type::c]);
     m |= Type::c;
     EXPECT_EQ(static_cast<uint32_t>(Type::b) | static_cast<uint32_t>(Type::c), m.value());
     m &= Type::d;
@@ -502,16 +502,16 @@ TEST(util, enum_mask_operators)
 
     m |= Type::a;
     m |= Type::c;
-    EXPECT_EQ(true, m.is_set(Type::a));
-    EXPECT_EQ(false, m.is_set(Type::b));
-    EXPECT_EQ(true, m.is_set(Type::c));
-    EXPECT_EQ(false, m.is_set(Type::d));
-    EXPECT_EQ(true, m.is_any_set(Type::a));
-    EXPECT_EQ(false, m.is_any_set(Type::b));
-    EXPECT_EQ(true, m.is_any_set(Type::c));
-    EXPECT_EQ(false, m.is_any_set(Type::d));
-    EXPECT_EQ(true, m.is_any_set({Type::a, Type::c}));
-    EXPECT_EQ(false, m.is_any_set({Type::b, Type::d}));
+    EXPECT_TRUE(m.is_set(Type::a));
+    EXPECT_FALSE(m.is_set(Type::b));
+    EXPECT_TRUE(m.is_set(Type::c));
+    EXPECT_FALSE(m.is_set(Type::d));
+    EXPECT_TRUE(m.is_any_set(Type::a));
+    EXPECT_FALSE(m.is_any_set(Type::b));
+    EXPECT_TRUE(m.is_any_set(Type::c));
+    EXPECT_FALSE(m.is_any_set(Type::d));
+    EXPECT_TRUE(m.is_any_set({Type::a, Type::c}));
+    EXPECT_FALSE(m.is_any_set({Type::b, Type::d}));
 
     EnumMask<Type> n;
     n = m | n;
@@ -519,24 +519,24 @@ TEST(util, enum_mask_operators)
     n = m & n;
     EXPECT_EQ(m, n);
     bool r = (n == m);
-    EXPECT_EQ(true, r);
+    EXPECT_TRUE(r);
     r = (n != m);
-    EXPECT_EQ(false, r);
+    EXPECT_FALSE(r);
     n.clear_all();
     n = {Type::a, Type::b};
     r = (n == m);
-    EXPECT_EQ(false, r);
+    EXPECT_FALSE(r);
     r = (n != m);
-    EXPECT_EQ(true, r);
+    EXPECT_TRUE(r);
     n = m & n;
     EXPECT_EQ(static_cast<uint32_t>(Type::a), n.value());
     n = m | Type::b;
-    EXPECT_EQ(true, n.is_set(Type::a));
-    EXPECT_EQ(true, n.is_set(Type::b));
-    EXPECT_EQ(true, n.is_set(Type::c));
-    EXPECT_EQ(false, n.is_set(Type::d));
-    EXPECT_EQ(false, n[Type::d]);
-    EXPECT_EQ(true, n[Type::b]);
+    EXPECT_TRUE(n.is_set(Type::a));
+    EXPECT_TRUE(n.is_set(Type::b));
+    EXPECT_TRUE(n.is_set(Type::c));
+    EXPECT_FALSE(n.is_set(Type::d));
+    EXPECT_FALSE(n[Type::d]);
+    EXPECT_TRUE(n[Type::b]);
 }
 
 TEST(graph, huge)

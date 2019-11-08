@@ -31,6 +31,7 @@
 #include "ngraph/op/and.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
+#include "ngraph/op/atan2.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/cos.hpp"
@@ -75,6 +76,7 @@
 #include "ngraph/runtime/cpu/kernel/and.hpp"
 #include "ngraph/runtime/cpu/kernel/asin.hpp"
 #include "ngraph/runtime/cpu/kernel/atan.hpp"
+#include "ngraph/runtime/cpu/kernel/atan2.hpp"
 #include "ngraph/runtime/cpu/kernel/broadcast.hpp"
 #include "ngraph/runtime/cpu/kernel/ceil.hpp"
 #include "ngraph/runtime/cpu/kernel/cos.hpp"
@@ -332,6 +334,12 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::Atan)
             {
                 BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::atan);
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Atan2)
+            {
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::atan2);
             }
 
             template <>
@@ -683,6 +691,7 @@ namespace ngraph
                 REGISTER_OP_BUILDER(Acos);
                 REGISTER_OP_BUILDER(Asin);
                 REGISTER_OP_BUILDER(Atan);
+                REGISTER_OP_BUILDER(Atan2);
                 REGISTER_OP_BUILDER(Ceiling);
                 REGISTER_OP_BUILDER(Cos);
                 REGISTER_OP_BUILDER(Cosh);
