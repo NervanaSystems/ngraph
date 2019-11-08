@@ -63,8 +63,6 @@ static Shape get_result_shape(Shape& target_shape, int start, int end)
     {
         result.push_back(target_shape[i]);
     }
-    // keep dims = 1 , in the last axis
-    result.push_back(1);
     return result;
 }
 
@@ -82,24 +80,30 @@ static Output<Node> get_2d_tensor(Output<Node> node)
     return reshape;
 }
 
-static std::shared_ptr<Node> expand_shape(std::shared_ptr<Node> input, Output<Node> target)
+static std::shared_ptr<Node> expand_shape(std::shared_ptr<Node> result, Output<Node> original)
 {
-    Shape input_shape = input->get_shape();
-    Shape target_shape = target.get_shape();
+    Shape result_shape = result->get_shape();
+    Shape original_shape = original.get_shape();
 
-    if (input_shape == target_shape && input_shape.size() == 2)
+    if (result_shape == original_shape && result_shape.size() == 2)
     {
-        return input;
+        return result;
     }
-    size_t rank = target_shape.size();
+    size_t original_rank = original_shape.size();
+    size_t result_rank = result_shape.size();
 
-    Shape result_shape = get_result_shape(target_shape, 0, rank - 1);
-    if (result_shape.size() != target_shape.size())
+    // expand the first dimension of the computed result to match the original tensor shape
+    Shape new_shape = get_result_shape(original_shape, 0, original_rank - 1);
+
+    // restore the last dimension of computed result
+    new_shape.push_back(result_shape[result_rank - 1]);
+
+    if (new_shape.size() != original_shape.size())
     {
         throw ngraph_error(
             "CrossEntropy shape size mismatch in restoring the original tensor shape");
     }
-    auto reshape = std::make_shared<ngraph::op::Reshape>(input, AxisVector{0, 1}, result_shape);
+    auto reshape = std::make_shared<ngraph::op::Reshape>(result, AxisVector{0, 1}, new_shape);
     return reshape;
 }
 
