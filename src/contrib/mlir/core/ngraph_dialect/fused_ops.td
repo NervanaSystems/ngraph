@@ -448,7 +448,7 @@ def NGLayerNormOp :
 
 // LayerNormBackProp Op
 def NGLayerNormBackPropOp : 
-    NG_OneResult_Op<"layernorm", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"layernormBackProp", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data, NG_TensorType:$delta, 
                NG_TensorType:$mean, NG_TensorType:$variance, NG_TensorType:$scale,
                DefaultValuedAttr<I64Attr, "1">:$beginNormAxis,
