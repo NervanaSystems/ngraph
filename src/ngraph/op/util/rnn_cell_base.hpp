@@ -40,30 +40,34 @@ namespace ngraph
                 ///
                 /// \brief      Constructs a RNNCellBase class.
                 ///
-                /// \param[in]  hidden_size       The number of hidden units for recurrent cell.
-                /// \param[in]  clip              The value defining clipping range [-clip, clip] on
-                ///                               input of activation functions.
-                /// \param[in]  activations       The vector of activation functions used inside
-                ///                               recurrent cell.
-                /// \param[in]  activation_alpha  The vector of alpha parameters for activation
-                ///                               functions in order respective to activation list.
-                /// \param[in]  activation_beta   The vector of beta parameters for activation
-                ///                               functions in order respective to activation list.
+                /// \param[in]  hidden_size        The number of hidden units for recurrent cell.
+                /// \param[in]  clip               The value defining clipping range [-clip, clip]
+                ///                                on input of activation functions.
+                /// \param[in]  activations        The vector of activation functions used inside
+                ///                                recurrent cell.
+                /// \param[in]  activations_alpha  The vector of alpha parameters for activation
+                ///                                functions in order respective to activation list.
+                /// \param[in]  activations_beta   The vector of beta parameters for activation
+                ///                                functions in order respective to activation list.
                 ///
                 RNNCellBase(std::size_t hidden_size,
                             float clip,
                             const std::vector<std::string>& activations,
-                            const std::vector<float>& activation_alpha,
-                            const std::vector<float>& activation_beta);
+                            const std::vector<float>& activations_alpha,
+                            const std::vector<float>& activations_beta);
 
                 std::size_t get_hidden_size() const { return m_hidden_size; }
                 float get_clip() const { return m_clip; }
                 const std::vector<std::string>& get_activations() const { return m_activations; }
-                const std::vector<float>& get_activation_alpha() const
+                const std::vector<float>& get_activations_alpha() const
                 {
-                    return m_activation_alpha;
+                    return m_activations_alpha;
                 }
-                const std::vector<float>& get_activation_beta() const { return m_activation_beta; }
+                const std::vector<float>& get_activations_beta() const
+                {
+                    return m_activations_beta;
+                }
+
             protected:
                 ///
                 /// \brief      Constructs activation function object.
@@ -117,9 +121,9 @@ namespace ngraph
                 const std::size_t m_hidden_size;
                 const float m_clip;
                 const std::vector<std::string> m_activations;
-                const std::vector<float> m_activation_alpha;
-                const std::vector<float> m_activation_beta;
+                const std::vector<float> m_activations_alpha;
+                const std::vector<float> m_activations_beta;
             };
-        }
-    }
-}
+        } // namespace util
+    }     // namespace op
+} // namespace ngraph
