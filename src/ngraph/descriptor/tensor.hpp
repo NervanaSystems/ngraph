@@ -19,7 +19,6 @@
 #include <memory>
 #include <string>
 
-#include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/partial_shape.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
