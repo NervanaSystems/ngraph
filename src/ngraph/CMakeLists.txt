@@ -259,6 +259,8 @@ set (SRC
     op/power.hpp
     op/product.cpp
     op/product.hpp
+    op/reduce_logical_and.cpp
+    op/reduce_logical_and.hpp
     op/reduce_prod.cpp
     op/reduce_prod.hpp
     op/reduce_mean.cpp

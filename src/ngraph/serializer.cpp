@@ -129,6 +129,7 @@
 #include "ngraph/op/quantized_convolution.hpp"
 #include "ngraph/op/quantized_dot.hpp"
 #include "ngraph/op/recv.hpp"
+#include "ngraph/op/reduce_logical_and.hpp"
 #include "ngraph/op/reduce_prod.hpp"
 #include "ngraph/op/reduce_sum.hpp"
 #include "ngraph/op/relu.hpp"
@@ -2372,6 +2373,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Range>(args[0], args[1], args[2]);
             break;
         }
+        case OP_TYPEID::ReduceLogicalAnd:
+        {
+            const auto keep_dims = node_js.at("keep_dims").get<bool>();
+            node = make_shared<op::v1::ReduceLogicalAnd>(args[0], args[1], keep_dims);
+            break;
+        }
         case OP_TYPEID::Relu:
         {
             node = make_shared<op::Relu>(args[0]);
@@ -3916,12 +3923,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["output_axes"] = tmp->get_output_axes();
         break;
     }
-    case OP_TYPEID::Recv:
-    {
-        auto tmp = static_cast<const op::Recv*>(&n);
-        node["source_id"] = tmp->get_src_id();
-        break;
-    }
     case OP_TYPEID::RandomUniform:
     {
         auto tmp = static_cast<const op::RandomUniform*>(&n);
@@ -3929,6 +3930,18 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Range: { break;
+    }
+    case OP_TYPEID::Recv:
+    {
+        auto tmp = static_cast<const op::Recv*>(&n);
+        node["source_id"] = tmp->get_src_id();
+        break;
+    }
+    case OP_TYPEID::ReduceLogicalAnd:
+    {
+        const auto tmp = static_cast<const op::v1::ReduceLogicalAnd*>(&n);
+        node["keep_dims"] = tmp->get_keep_dims();
+        break;
     }
     case OP_TYPEID::Relu: { break;
     }

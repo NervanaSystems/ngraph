@@ -73,6 +73,7 @@
 #include "ngraph/op/quantized_convolution.hpp"
 #include "ngraph/op/quantized_dot.hpp"
 #include "ngraph/op/recv.hpp"
+#include "ngraph/op/reduce_logical_and.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
@@ -1867,6 +1868,7 @@ private:
         case OP_TYPEID::DynPad:
         case OP_TYPEID::Tile:
         case OP_TYPEID::DynReplaceSlice:
+        case OP_TYPEID::ReduceLogicalAnd:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
