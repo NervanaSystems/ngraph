@@ -35,7 +35,7 @@ namespace ngraph
         }
 
         /// \brief Compile-time descriptor of a first-class value that is a tensor.
-        class Tensor
+        class NGRAPH_API Tensor
         {
             Tensor(const Tensor&) = delete;
             Tensor& operator=(const Tensor&) = delete;
