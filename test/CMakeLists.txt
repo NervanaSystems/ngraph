@@ -69,13 +69,13 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
+    opset_pass/binary_elementwise_opset_pass.cpp
     opset_pass/broadcast_opset_pass.cpp
     opset_pass/convolution_opset_pass.cpp
     opset_pass/dyn_reshape_opset_pass.cpp
     opset_pass/logical_and_opset_pass.cpp
     opset_pass/logical_not_opset_pass.cpp
     opset_pass/logical_or_opset_pass.cpp
-    opset_pass/logical_less_equal_opset_pass.cpp
     opset_pass/logical_xor_opset_pass.cpp
     opset_pass/gather_opset_pass.cpp
     opset_pass/generate_mask_opset_pass.cpp
@@ -266,6 +266,7 @@ set(MULTI_TEST_SRC
     backend/arg_reduce.in.cpp
     backend/asin.in.cpp
     backend/atan.in.cpp
+    backend/atan2.in.cpp
     backend/auto_broadcast.in.cpp
     backend/autodiff.in.cpp
     backend/batch_mat_mul.in.cpp
@@ -527,11 +528,7 @@ if(NGRAPH_ADDRESS_SANITIZER)
 endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
-if(NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
-    target_link_libraries(unit-test PRIVATE ngraph gtest)
-else()
-    target_link_libraries(unit-test PRIVATE ngraph libgtest)
-endif()
+target_link_libraries(unit-test PRIVATE ngraph libgtest)
 
 target_compile_definitions(unit-test PRIVATE NGRAPH_VERSION_LABEL="${NGRAPH_VERSION_LABEL}")
 if (NGRAPH_JSON_ENABLE)
@@ -602,22 +599,24 @@ if (NGRAPH_MLIR_ENABLE)
     target_include_directories(unit-test PRIVATE ${CMAKE_BINARY_DIR}/src/contrib/mlir)
 endif()
 
-# If all the runtime libraries are installed into one location, that will make life easier.
-if (MSVS)
-    add_custom_target(unit-test-check
-        COMMAND set "PATH=${EXTERNAL_PROJECTS_ROOT}/src/ngraph/Release;${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/;${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/;${EXTERNAL_PROJECTS_ROOT}/ext_tbb-prefix/src/ext_tbb/tbb2019_20181203oss/bin/intel64/vc14;%PATH%"
-        COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
-        DEPENDS unit-test
-    )
-else()
-    add_custom_target(unit-test-check
-        COMMAND ${PROJECT_BINARY_DIR}/test/unit-test --cpath ${EXTERNAL_PROJECTS_ROOT}/src/ngraph/ \${ARGS}
-        DEPENDS unit-test
+if (NOT NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
+    # If all the runtime libraries are installed into one location, that will make life easier.
+    if (MSVS)
+        add_custom_target(unit-test-check
+            COMMAND set "PATH=${EXTERNAL_PROJECTS_ROOT}/src/ngraph/Release;${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/;${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/;${EXTERNAL_PROJECTS_ROOT}/ext_tbb-prefix/src/ext_tbb/tbb2019_20181203oss/bin/intel64/vc14;%PATH%"
+            COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
+            DEPENDS unit-test
+        )
+    else()
+        add_custom_target(unit-test-check
+            COMMAND ${PROJECT_BINARY_DIR}/test/unit-test --cpath ${EXTERNAL_PROJECTS_ROOT}/src/ngraph/ \${ARGS}
+            DEPENDS unit-test
+        )
+    endif()
+
+    add_custom_target(check
+        DEPENDS
+        style-check
+        unit-test-check
     )
 endif()
-
-add_custom_target(check
-    DEPENDS
-    style-check
-    unit-test-check
-)

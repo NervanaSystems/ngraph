@@ -31,10 +31,8 @@ namespace ngraph
             {
                 inline NodeVector pow(const Node& node)
                 {
-                    return {std::make_shared<ngraph::op::Power>(
-                        node.get_ng_inputs().at(0),
-                        node.get_ng_inputs().at(1),
-                        ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY))};
+                    return {std::make_shared<ngraph::op::v1::Power>(node.get_ng_inputs().at(0),
+                                                                    node.get_ng_inputs().at(1))};
                 }
 
             } // namespace set_1
