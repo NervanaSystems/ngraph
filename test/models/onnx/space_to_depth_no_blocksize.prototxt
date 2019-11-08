@@ -5,12 +5,7 @@ graph {
     input: "A"
     output: "B"
     op_type: "SpaceToDepth"
-    attribute {
-      name: "mode"
-      s: "blocks_first"
-      type: STRING
-      }
-    }
+  }
   name: "compute_graph"
   input {
     name: "A"
