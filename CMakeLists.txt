@@ -69,14 +69,6 @@ if (UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
 
-if (CMAKE_CXX_COMPILER_ID MATCHES MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /bigobj")
-    # C4251 needs to have dll-interface to be used by clients of class
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4251")
-    # C4275 non dll-interface class used as base for dll-interface class
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4275")
-endif()
-
 # APPLE: Set CMAKE_OSX_SYSROOT if not set already.
 if (APPLE)
     execute_process(COMMAND sw_vers -productVersion
@@ -361,7 +353,15 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$" AND NOT NGRAPH_BUILD_DI
 endif()
 
 if (WIN32)
-    set(CMAKE_CXX_FLAGS "/W0 /EHsc /MP")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W0 /EHsc /MP")
+
+    if (CMAKE_CXX_COMPILER_ID MATCHES MSVC)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+        # C4251 needs to have dll-interface to be used by clients of class
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4251")
+        # C4275 non dll-interface class used as base for dll-interface class
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4275")
+    endif()
 else()
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
     set(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
