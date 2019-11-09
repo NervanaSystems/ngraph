@@ -107,22 +107,23 @@ static std::shared_ptr<Node> expand_shape(std::shared_ptr<Node> result, Output<N
     return reshape;
 }
 
+// create mask based on ignore_index
+static std::shared_ptr<ngraph::Node>
+    create_mask(Output<Node> labels, Output<Node> input, int64_t ignore_index)
+{
+    auto mask_constant =
+        ngraph::op::Constant::create(labels.get_element_type(), labels.get_shape(), {ignore_index});
+    auto not_equal = std::make_shared<ngraph::op::NotEqual>(labels, mask_constant);
+    auto convert = std::make_shared<ngraph::op::Convert>(not_equal, input.get_element_type());
+    return convert;
+}
+
 NodeVector op::CrossEntropy::decompose_op() const
 {
+    // we will reshape the labels and input tensor to 2d
     auto input_to_normalize = get_2d_tensor(input_value(0));
     auto labels = get_2d_tensor(input_value(1));
     auto reduction_axis = input_to_normalize.get_shape().size() - 1;
-
-    // we will reshape the labels and input tensor to 2d
-    auto create_mask = [&]() -> std::shared_ptr<ngraph::Node> {
-        // ignore mask
-        auto mask_constant = ngraph::op::Constant::create(
-            labels.get_element_type(), labels.get_shape(), {m_ignore_index});
-        auto not_equal = std::make_shared<ngraph::op::NotEqual>(labels, mask_constant);
-        auto convert =
-            std::make_shared<ngraph::op::Convert>(not_equal, input_to_normalize.get_element_type());
-        return convert;
-    };
 
     auto create_xe = [&](const Output<Node>& one_hot, const Output<Node>& input) {
         auto node_log = std::make_shared<ngraph::op::Log>(input);
@@ -133,7 +134,7 @@ NodeVector op::CrossEntropy::decompose_op() const
     };
 
     // mask
-    std::shared_ptr<ngraph::Node> mask = create_mask();
+    std::shared_ptr<ngraph::Node> mask = create_mask(labels, input_to_normalize, m_ignore_index);
 
     if (m_soft_label)
     {
@@ -246,15 +247,11 @@ NodeVector op::CrossEntropyBackprop::decompose_op() const
         // ignore mask
         if (m_ignore_index > 0)
         {
-            auto mask_constant =
-                ngraph::op::Constant::create(element::i64, labels.get_shape(), {m_ignore_index});
-            auto not_equal = std::make_shared<ngraph::op::NotEqual>(labels, mask_constant);
-            auto convert =
-                std::make_shared<ngraph::op::Convert>(not_equal, input.get_element_type());
-            auto reshape = std::make_shared<ngraph::op::Reshape>(
-                convert, AxisVector{0, 1}, Shape{convert->get_shape().at(0)});
-            mask = std::make_shared<ngraph::op::Broadcast>(
-                reshape, input.get_shape(), AxisSet{rank - 1});
+            mask = create_mask(labels, input, m_ignore_index);
+            mask = std::make_shared<ngraph::op::Reshape>(
+                mask, AxisVector{0, 1}, Shape{mask->get_shape().at(0)});
+            mask =
+                std::make_shared<ngraph::op::Broadcast>(mask, input.get_shape(), AxisSet{rank - 1});
         }
         if (labels.get_shape()[reduction_axis] == 1)
         {

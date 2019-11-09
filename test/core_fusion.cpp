@@ -854,12 +854,8 @@ TEST(core_fusion, softmax_crossentropy)
     test_softmax_crossentropy(Shape{41, 37}, Shape{41, 1}, false, 5);
 }
 
-TEST(core_fusion, ce)
+void test_crossentropy(Shape input_shape, Shape label_shape, bool soft_label, int64_t ignore_index)
 {
-    Shape input_shape{10, 2, 4, 10};
-    Shape label_shape{10, 2, 4, 1};
-    bool soft_label = false;
-    int ignore_index = -100;
     auto input = std::make_shared<op::Parameter>(element::f64, input_shape);
     auto labels = std::make_shared<op::Parameter>(element::i64, label_shape);
     auto sm_ce = std::make_shared<op::CrossEntropy>(input, labels, soft_label, ignore_index);
@@ -875,4 +871,24 @@ TEST(core_fusion, ce)
     }
 
     auto cpu_results = execute(cpu_f, args, "CPU");
+    // if softlabels = flase, we will have one one hot encoding for labels
+    if (!soft_label)
+    {
+        size_t onehot = count_ops_of_type<op::OneHot>(cpu_f);
+        ASSERT_EQ(onehot, 1);
+    }
+    if (ignore_index >= 0 && !soft_label)
+    // check for the mask
+    {
+        size_t not_equal = count_ops_of_type<op::NotEqual>(cpu_f);
+        ASSERT_EQ(not_equal, 1);
+    }
+}
+
+TEST(core_fusion, crossentropy)
+{
+    test_crossentropy(Shape{41, 37}, Shape{41, 37}, true, -1);
+    test_crossentropy(Shape{41, 37}, Shape{41, 1}, false, 5);
+    test_crossentropy(Shape{10, 2, 4, 10}, Shape{10, 2, 4, 1}, false, 5);
+    test_crossentropy(Shape{4, 3, 2, 4}, Shape{4, 3, 2, 4}, true, -1);
 }
