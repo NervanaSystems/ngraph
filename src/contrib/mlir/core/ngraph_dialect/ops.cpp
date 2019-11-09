@@ -18,7 +18,6 @@
 // not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
 
 #include "ops.hpp"
-#include <iostream>
 #include "assertion.hpp"
 #include "llvm/ADT/StringSwitch.h"
 #include "llvm/Support/ErrorHandling.h"

@@ -117,7 +117,7 @@ namespace
     private:
         // Converts an nGraph sub-graph to MLIR nGraph dialect.
         void buildNgDialectModule();
-        void buildNgDialect();
+        void buildNgDialect(mlir::FuncOp function);
         void runOnModule() override;
         // Applies any nGraph dialect optimizations
         void optimizeNgDialect() { /*TODO: Add Core NG dialect optimizations */}
@@ -221,12 +221,7 @@ void NgDialectConversionPass::runOnModule()
     }
 
     // create builder
-    auto& region = function.getBody();
-    if (!region.empty())
-    {
-        m_builder.setInsertionPoint(&region.front(), region.front().begin());
-    }
-    NgDialectConversionPass::buildNgDialect();
+    buildNgDialect(function);
     module.push_back(function);
 }
 
@@ -319,8 +314,10 @@ NgDialectConversionPass::TensorInfo
 // MLIR builders
 #define TI(x) std::type_index(typeid(x))
 
-void NgDialectConversionPass::buildNgDialect()
+void NgDialectConversionPass::buildNgDialect(mlir::FuncOp function)
 {
+    auto& region = function.getBody();
+    m_builder.setInsertionPoint(&region.front(), region.front().begin());
     const NodeVector& subGraph = m_compiledKernel->get_node_list();
 
     for (auto np : subGraph)
