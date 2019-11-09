@@ -306,50 +306,6 @@ mlir::LogicalResult verifyOp(NGConvolutionOp* op)
     return mlir::success();
 }
 
-static std::string getBufferIdAttrName()
-{
-    return "ng.buffer_id";
-}
-
-void setBufferId(mlir::Operation* op, mlir::IntegerAttr attr)
-{
-    op->setAttr(getBufferIdAttrName(), attr);
-}
-
-mlir::IntegerAttr setBufferId(mlir::Operation* op, unsigned val)
-{
-    auto attr = mlir::IntegerAttr::get(IntegerType::get(32, op->getContext()), val);
-    setBufferId(op, attr);
-    return attr;
-}
-
-mlir::IntegerAttr getBufferId(mlir::Operation* op)
-{
-    return op->getAttrOfType<mlir::IntegerAttr>(getBufferIdAttrName());
-}
-
-static std::string getBufferOffsetAttrName()
-{
-    return "ng.buffer_offset";
-}
-
-void setBufferOffset(mlir::Operation* op, mlir::IntegerAttr attr)
-{
-    op->setAttr(getBufferOffsetAttrName(), attr);
-}
-
-mlir::IntegerAttr setBufferOffset(mlir::Operation* op, unsigned val)
-{
-    auto attr = mlir::IntegerAttr::get(IntegerType::get(32, op->getContext()), val);
-    setBufferOffset(op, attr);
-    return attr;
-}
-
-mlir::IntegerAttr getBufferOffset(mlir::Operation* op)
-{
-    return op->getAttrOfType<mlir::IntegerAttr>(getBufferOffsetAttrName());
-}
-
 namespace mlir
 {
 #define GET_OP_CLASSES

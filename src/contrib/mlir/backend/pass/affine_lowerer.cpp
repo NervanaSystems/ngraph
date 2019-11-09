@@ -21,6 +21,7 @@
 
 #include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/ngraph_dialect/type.hpp"
+#include "contrib/mlir/backend/analysis/memory_analysis.hpp"
 #include "ngraph/assertion.hpp"
 
 #include <llvm/ADT/DenseSet.h>
@@ -180,6 +181,11 @@ namespace
     class DialectLoweringPass : public ModulePass<DialectLoweringPass>
     {
     public:
+        DialectLoweringPass()
+        : m_memAnalysis(getAnalysis<MemoryAnalysis>())
+        {
+            
+        }
         void runOnModule() override;
 
         SmallVector<Value*, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
@@ -205,7 +211,7 @@ namespace
         // Track pre-assigned buffers  for each Value and re-use it if one is available.
         using IdToMemRefMap = std::unordered_map<unsigned, Value*>;
         IdToMemRefMap m_id_to_memref;
-
+        MemoryAnalysis& m_memAnalysis;
         // TODO: Workaround for findOutputValues and buildOutputDefs. See NGCPU-470.
         std::string funcName;
     };
@@ -315,15 +321,17 @@ namespace
             {
                 auto tensorType = origResult->getType().cast<NGTensorType>();
                 Value* newResult;
-                Attribute bufferIdAttr = getBufferId(op);
-                if (!bufferIdAttr)
+                auto bufferInfo = m_memAnalysis.getBufferInfo(op);
+                
+                if (!bufferInfo.isValid())
                 {
                     // Allocate new memref
                     newResult = createTempTensor(typeConverter.convertType(tensorType), rewriter);
                 }
                 else
                 {
-                    unsigned bufferId = bufferIdAttr.cast<IntegerAttr>().getInt();
+                    unsigned bufferId = bufferInfo.m_bufferId;
+                    NGRAPH_CHECK(bufferInfo.m_offset == 0, "Only elt-wise ops are supported for now.");
                     // Re-use a memref if it exist, else create a new one and update map
                     IdToMemRefMap::iterator it = m_id_to_memref.find(bufferId);
                     if (it == m_id_to_memref.end())

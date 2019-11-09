@@ -17,6 +17,7 @@
 // NOTE: This file follows nGraph format style and MLIR naming convention since it does
 // not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
 
+#include "memory_analysis.hpp"
 #include "contrib/mlir/core/compiler.hpp"
 #include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/ngraph_dialect/type.hpp"
@@ -35,8 +36,11 @@
 #include <mlir/Pass/Pass.h>
 #include <mlir/Transforms/DialectConversion.h>
 
-#define PASS_NAME "ng-memory-opt"
-#define DEBUG_TYPE PASS_NAME
+
+static llvm::cl::opt<bool> clEnableNgInPlaceMemory(
+    "ngraph-memory-opt",
+    llvm::cl::init(false),
+    llvm::cl::desc("Enable ngraph dialect in-place memory optimization pass"));
 
 static llvm::cl::opt<bool>
     clEnableNgInPlaceConcat("ngraph-memory-opt-concat",
@@ -96,14 +100,14 @@ namespace
         std::unordered_map<Value*, unsigned> m_valueToIdx;
     };
 
-    /// Memory Optimization pass
+    /// Memory Assignment pass
     /// - Tries to perform operations in place where applicable by assigning a virtual buffer ID
     ///    to values. Those are used later in affine lowering pass to create or re-use memrefs
-    class MemoryOptimizationPass : public mlir::FunctionPass<MemoryOptimizationPass>
+    class MemoryAssignment
     {
     public:
-        MemoryOptimizationPass()
-
+        MemoryAssignment(MemoryAnalysis* memAnalysis) 
+        : m_memAnalysis(memAnalysis)
         {
             m_inplaceOps = {
 #define MLIR_OP(OP, INPLACE) {OP::getOperationName().str(), INPLACE},
@@ -111,7 +115,7 @@ namespace
             };
             m_bufferId = 0;
         }
-        void runOnFunction() override;
+        void run(ModuleOp* module);
 
     private:
         void processDestructiveInPlace(mlir::Operation* op);
@@ -121,7 +125,8 @@ namespace
         LivenessAnalysis m_liveness;
         AliasRelation m_aliasRelation;
         std::unordered_map<std::string, bool> m_inplaceOps;
-        unsigned m_bufferId;
+        int m_bufferId;
+        MemoryAnalysis* m_memAnalysis;
     };
 
     // Go backwards over instructions
@@ -151,10 +156,21 @@ namespace
     //
     // Update liveness info
 
-    void MemoryOptimizationPass::runOnFunction()
+    void MemoryAssignment::run(ModuleOp *module)
     {
-        auto f = getFunction();
-
+        if (!clEnableNgInPlaceMemory)
+        {
+            // Optimization disabled
+            return;
+        }
+        SmallVector<FuncOp, 2> funcOps(module->getOps<FuncOp>());
+        
+        if (funcOps.size() > 1)
+        {
+            // single func for now
+            return; 
+        }
+        auto f = funcOps.back();
         auto& blocks = f.getBlocks();
         if (blocks.size() != 1)
         {
@@ -193,7 +209,7 @@ namespace
         }
     }
 
-    void MemoryOptimizationPass::processConcat(mlir::Operation* op)
+    void MemoryAssignment::processConcat(mlir::Operation* op)
     {
         auto concat = cast<mlir::NGConcatOp>(op);
         {
@@ -202,7 +218,7 @@ namespace
             auto result = concat.getResult();
             auto shape = (result->getType().cast<NGTensorType>()).getShape();
             std::vector<int> opndOffsets;
-            IntegerAttr attr;
+            BufferInfo bufferInfo;
             int bufferId = -1, baseOffset = 0;
 
             if (isInputOrOutputValue(op->getResult(0)))
@@ -253,12 +269,13 @@ namespace
             // check for consistent pre-existing buffer assignments
 
             // dest has an assignment
-            attr = getBufferId(op);
-            if (attr)
+            bufferInfo = m_memAnalysis->getBufferInfo(op);
+
+            if (bufferInfo.isValid())
             {
                 // set buffer ID and base offset to that of dest's
-                bufferId = attr.getInt();
-                baseOffset = getBufferOffset(op).getInt();
+                bufferId = bufferInfo.m_bufferId;
+                baseOffset = bufferInfo.m_offset;
 
                 // check if we can re-use it for all src operands
                 int bufferOffset = 0;
@@ -266,14 +283,15 @@ namespace
                 {
                     auto opnd = op->getOperand(i);
                     auto defOp = opnd->getDefiningOp();
+                    NGRAPH_CHECK(defOp != nullptr, "Defining operation expected");
                     // expected absolute offset in the buffer
                     bufferOffset = baseOffset + opndOffsets[i];
 
-                    attr = getBufferId(defOp);
-                    if (attr)
+                    bufferInfo = m_memAnalysis->getBufferInfo(defOp);
+                    if (bufferInfo.isValid())
                     {
-                        if (attr.getInt() != bufferId ||
-                            bufferOffset != getBufferOffset(defOp).getInt())
+                        if (bufferInfo.m_bufferId != bufferId ||
+                            bufferInfo.m_offset != bufferOffset)
                         {
                             // buffer ID or offset mismatch, bailout
                             return;
@@ -308,9 +326,9 @@ namespace
                 // On the other hand, the following is invalid
                 // Example:
                 // R0   = ...
-                // V1   = Concat    S0, S1, S2
+                // V1   = Concat    S0(?), S1(0,16), S2(?)
                 // R2   = ...
-                // V2   = Concat    R0, S1, R2
+                // V2   = Concat    R0, S1{0,16}, R2
                 // Reusing assignment of S1 in the first concat will cause S0 anr R0 to alias. And
                 // since R0 is alive
                 // the write to R0 will overwrite S0.
@@ -318,7 +336,7 @@ namespace
                 // For now, assign only if all srcs have no prior assignments
                 for (auto opnd : op->getOperands())
                 {
-                    if (getBufferId(opnd->getDefiningOp()))
+                    if (m_memAnalysis->getBufferInfo(opnd->getDefiningOp()).isValid())
                     {
                         return;
                     }
@@ -330,20 +348,21 @@ namespace
                 bufferId = m_bufferId++;
                 baseOffset = 0;
             }
-            // Write annotations now. No need to check if we are over-writing since they
-            // should all match.
-            setBufferId(op, bufferId);
-            setBufferOffset(op, baseOffset);
+            // Update analysis map. No need to check if we are over-writing previous entries 
+            // since they should all match.
+            m_memAnalysis->setBufferInfo(op, {bufferId, baseOffset}); 
+
             for (auto i = 0; i < op->getNumOperands(); i++)
             {
                 auto opnd = op->getOperand(i);
-                setBufferId(opnd->getDefiningOp(), bufferId);
-                setBufferOffset(opnd->getDefiningOp(), baseOffset + opndOffsets[i]);
+                auto defOp = opnd->getDefiningOp();
+                NGRAPH_CHECK(defOp != nullptr, "Defining operation expected");
+                m_memAnalysis->setBufferInfo(defOp, {bufferId, baseOffset + opndOffsets[i]});
             }
         }
     }
 
-    void MemoryOptimizationPass::processDestructiveInPlace(mlir::Operation* op)
+    void MemoryAssignment::processDestructiveInPlace(mlir::Operation* op)
     {
         NGRAPH_CHECK(op->getNumResults() == 1, "Destructive in-place with multi-def ?");
         Value* use = nullptr;
@@ -378,21 +397,19 @@ namespace
         }
 
         // assign new buffer or copy buffer info from dst
-        IntegerAttr attr = getBufferId(op);
-        if (!attr)
+        auto bufferInfo = m_memAnalysis->getBufferInfo(op);
+
+        if (!bufferInfo.isValid())
         {
             // attach a new buffer id, and 0 offset on obth src and result
-            attr = setBufferId(op, m_bufferId++);
-            setBufferId(use->getDefiningOp(), attr);
-            attr = setBufferOffset(op, 0);
-            setBufferOffset(use->getDefiningOp(), 0);
+            m_memAnalysis->setBufferInfo(op, {m_bufferId, 0});
+            m_memAnalysis->setBufferInfo(use->getDefiningOp(), {m_bufferId, 0});
+            m_bufferId++;
         }
         else
         {
             // copy result buffer id and offset to src
-            setBufferId(use->getDefiningOp(), attr);
-            attr = getBufferOffset(op);
-            setBufferOffset(use->getDefiningOp(), attr);
+            m_memAnalysis->setBufferInfo(use->getDefiningOp(), bufferInfo);
         }
 
         // update aliasing info
@@ -404,7 +421,7 @@ namespace
             m_aliasRelation.insertNoAlias(use, value);
         }
     }
-    bool MemoryOptimizationPass::isInputOrOutputValue(mlir::Value* value)
+    bool MemoryAssignment::isInputOrOutputValue(mlir::Value* value)
     {
         auto defOp = value->getDefiningOp();
         // If no defining op, then this is a block arg, skip operand
@@ -433,7 +450,7 @@ namespace
         return false;
     }
     // TODO Change this to use interfaces.
-    bool MemoryOptimizationPass::isSafeInPlace(mlir::Operation* op)
+    bool MemoryAssignment::isSafeInPlace(mlir::Operation* op)
     {
         auto it = m_inplaceOps.find(op->getName().getStringRef().str());
 
@@ -614,13 +631,14 @@ namespace
     }
 }
 
-static PassRegistration<MemoryOptimizationPass> pass(PASS_NAME,
-                                                     "Convert nGraph dialect to affine dialect");
-
 namespace mlir
 {
-    std::unique_ptr<Pass> createMemoryOptimizationPass()
+    MemoryAnalysis::MemoryAnalysis(Operation* op)
     {
-        return std::make_unique<MemoryOptimizationPass>();
+        MemoryAssignment memoryAssignment(this);
+        auto moduleOp = dyn_cast<ModuleOp>(op);
+        NGRAPH_CHECK(moduleOp != nullptr, "Expecting FuncOp for anaylsis");
+        memoryAssignment.run(&moduleOp);
+
     }
 } // namespace mlir
