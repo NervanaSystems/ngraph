@@ -24,7 +24,7 @@
 
 namespace ngraph
 {
-    class CoordinateTransform
+    class NGRAPH_API CoordinateTransform
     {
     public:
         CoordinateTransform(const Shape& source_shape,
