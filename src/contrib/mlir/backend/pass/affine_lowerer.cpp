@@ -181,11 +181,6 @@ namespace
     class DialectLoweringPass : public ModulePass<DialectLoweringPass>
     {
     public:
-        DialectLoweringPass()
-        : m_memAnalysis(getAnalysis<MemoryAnalysis>())
-        {
-            
-        }
         void runOnModule() override;
 
         SmallVector<Value*, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
@@ -211,7 +206,7 @@ namespace
         // Track pre-assigned buffers  for each Value and re-use it if one is available.
         using IdToMemRefMap = std::unordered_map<unsigned, Value*>;
         IdToMemRefMap m_id_to_memref;
-        MemoryAnalysis& m_memAnalysis;
+        MemoryAnalysis* m_memAnalysis;
         // TODO: Workaround for findOutputValues and buildOutputDefs. See NGCPU-470.
         std::string funcName;
     };
@@ -223,6 +218,9 @@ namespace
         OwningRewritePatternList patterns;
 
         populateNGraphToAffineConversionPatterns(patterns);
+        
+        // Get Memory analysis for in-place memory optimizations
+        m_memAnalysis = &getAnalysis<MemoryAnalysis>();
 
         // Create target that defines legal ops for nGraph dialect to be lowered to.
         ConversionTarget target(getContext());
@@ -321,7 +319,7 @@ namespace
             {
                 auto tensorType = origResult->getType().cast<NGTensorType>();
                 Value* newResult;
-                auto bufferInfo = m_memAnalysis.getBufferInfo(op);
+                auto bufferInfo = m_memAnalysis->getBufferInfo(op);
                 
                 if (!bufferInfo.isValid())
                 {

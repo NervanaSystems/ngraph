@@ -187,13 +187,15 @@ namespace
             if (isSafeInPlace(op))
             {
                 // TODO: replace with Op Interface check
-                if (clEnableNgInPlaceConcat && dyn_cast<NGConcatOp>(op))
+                if (dyn_cast<NGConcatOp>(op))
                 {
-                    processConcat(op);
+                    if (clEnableNgInPlaceConcat)
+                        processConcat(op);
                 }
-                else if (clEnableNgInPlaceEltWise)
+                else
                 {
-                    processDestructiveInPlace(op);
+                    if (clEnableNgInPlaceEltWise)
+                        processDestructiveInPlace(op);
                 }
             }
             // update liveness info
