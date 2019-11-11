@@ -24,34 +24,72 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise logical-and operation.
-        ///
-        class And : public util::BinaryElementwiseLogical
+        namespace v1
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"And", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a logical-and operation.
-            And() = default;
-
-            /// \brief Constructs a logical-and operation.
+            /// \brief Elementwise logical-and operation.
             ///
-            /// \param arg0 Output that produces the first input tensor.<br>
-            /// `[d0, ...]`
-            /// \param arg1 Output that produces the second input tensor.<br>
-            /// `[d0, ...]`
-            /// \param auto_broadcast Auto broadcast specification
-            ///
-            /// Output `[d0, ...]`
-            ///
-            And(const Output<Node>& arg0,
-                const Output<Node>& arg1,
-                const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
+            class LogicalAnd : public util::BinaryElementwiseLogical
+            {
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"LogicalAnd", 1};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a logical-and operation.
+                LogicalAnd() = default;
 
-            std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+                /// \brief Constructs a logical-and operation.
+                ///
+                /// \param arg0 Output that produces the first input tensor.<br>
+                /// `[d0, ...]`
+                /// \param arg1 Output that produces the second input tensor.<br>
+                /// `[d0, ...]`
+                /// \param auto_broadcast Auto broadcast specification
+                ///
+                /// Output `[d0, ...]`
+                ///
+                LogicalAnd(const Output<Node>& arg0,
+                           const Output<Node>& arg1,
+                           const AutoBroadcastSpec& auto_broadcast =
+                               AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 
-            virtual bool is_commutative() const override { return true; }
-        };
+                std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+
+                virtual bool is_commutative() const override { return true; }
+            };
+        } // namespace v0
+        namespace v0
+        {
+            /// \brief Elementwise logical-and operation.
+            ///
+            class And : public util::BinaryElementwiseLogical
+            {
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"And", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a logical-and operation.
+                And() = default;
+
+                /// \brief Constructs a logical-and operation.
+                ///
+                /// \param arg0 Output that produces the first input tensor.<br>
+                /// `[d0, ...]`
+                /// \param arg1 Output that produces the second input tensor.<br>
+                /// `[d0, ...]`
+                /// \param auto_broadcast Auto broadcast specification
+                ///
+                /// Output `[d0, ...]`
+                ///
+                And(const Output<Node>& arg0,
+                    const Output<Node>& arg1,
+                    const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
+
+                std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+
+                virtual bool is_commutative() const override { return true; }
+            };
+        }
+
+        using v0::And;
     }
 }

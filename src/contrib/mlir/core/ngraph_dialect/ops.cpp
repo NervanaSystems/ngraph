@@ -19,6 +19,7 @@
 
 #include "ops.hpp"
 #include "assertion.hpp"
+#include "llvm/ADT/StringSwitch.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Regex.h"
 #include "llvm/Support/raw_ostream.h"
@@ -31,6 +32,8 @@ using llvm::SmallVector;
 using llvm::StringRef;
 using llvm::Twine;
 using namespace mlir;
+
+#include "ops_attributes.cpp.inc"
 // TODO:
 // - Move verifiers and other OP helpers (e.g. getSomeAttribute()) to separate files
 //
@@ -308,6 +311,8 @@ mlir::LogicalResult verifyOp(NGConvolutionOp* op)
 
 namespace mlir
 {
+#include "ops_interfaces.cpp.inc"
+
 #define GET_OP_CLASSES
 #include "ops.cpp.inc"
 }

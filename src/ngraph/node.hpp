@@ -61,7 +61,10 @@ namespace ngraph
     {
         struct AutoBroadcastSpec;
         class Constant;
+        class Result;
     } // namespace op
+
+    using ResultVector = std::vector<std::shared_ptr<op::Result>>;
 
     namespace autodiff
     {
@@ -80,6 +83,8 @@ namespace ngraph
 
     OutputVector as_output_vector(const NodeVector& args);
     NodeVector as_node_vector(const OutputVector& values);
+    /// Returns a ResultVector referencing values.
+    ResultVector as_result_vector(const OutputVector& values);
 
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
@@ -450,7 +455,7 @@ namespace ngraph
         NodeVector get_users(bool check_is_used = false) const;
 
         /// \return Version of this node
-        virtual size_t get_version() const { return 0; }
+        virtual size_t get_version() const { return get_type_info().version; }
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
         /// Use instance ids for comparison instead of memory addresses to improve determinism
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
