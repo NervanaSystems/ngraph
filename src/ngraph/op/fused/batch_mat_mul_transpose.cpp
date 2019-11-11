@@ -17,9 +17,12 @@
 #include "batch_mat_mul_transpose.hpp"
 #include "ngraph/dimension.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/op/concat.hpp"
+#include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -40,20 +43,55 @@ op::BatchMatMulTranspose::BatchMatMulTranspose(const Output<Node>& arg0,
 
 NodeVector op::BatchMatMulTranspose::decompose_op() const
 {
-    std::cout << "BatchMatMulTranspose::decompose_op() called. NOT doing naything NOW\n";
-    /*auto data = input_value(0);
+    const PartialShape& arg0_pshape = get_input_partial_shape(0);
+    if (arg0_pshape.is_dynamic())
+    {
+        throw ngraph_error("Arg0 needs to have static shape to decompose");
+    }
+    const PartialShape& arg1_pshape = get_input_partial_shape(1);
+    if (arg1_pshape.is_dynamic())
+    {
+        throw ngraph_error("Arg1 needs to have static shape to decompose");
+    }
 
-    shared_ptr<ngraph::Node> half =
-        builder::make_constant(data.get_element_type(), data.get_shape(), 0.5);
+    const auto arg0_shape = get_input_shape(0);
+    const auto num_batches = arg0_shape.at(0);
+    std::shared_ptr<op::Reshape> dot_inputs[2 * num_batches];
 
-    shared_ptr<ngraph::Node> one =
-        builder::make_constant(data.get_element_type(), data.get_shape(), 1.0);
+    for (size_t i = 0; i < 2; i++)
+    {
+        const auto arg_shape = get_input_shape(i);
+        const auto arg_shape_res = Shape{arg_shape.at(1), arg_shape.at(2)};
+        const auto arg_shape_res_trans = Shape{arg_shape.at(2), arg_shape.at(1)};
 
-    shared_ptr<ngraph::Node> sqrt_two =
-        builder::make_constant(data.get_element_type(), data.get_shape(), std::sqrt(2.0));*/
+        const bool transpose = i == 0 ? m_transpose_arg0 : m_transpose_arg1;
+        for (size_t j = 0; j < num_batches; j++)
+        {
+            auto slice =
+                std::make_shared<op::Slice>(input_value(i),
+                                            Coordinate{j, 0, 0},
+                                            Coordinate{j + 1, arg_shape.at(1), arg_shape.at(2)});
+            auto reshape_slice =
+                std::make_shared<op::Reshape>(slice, AxisVector{0, 1, 2}, arg_shape_res);
 
-    // return {half * data * (one + make_shared<ngraph::op::Erf>(data / sqrt_two))};
-    return {};
+            dot_inputs[i * num_batches + j] =
+                transpose ? std::make_shared<op::Reshape>(
+                                reshape_slice, AxisVector{1, 0}, arg_shape_res_trans)
+                          : reshape_slice;
+        }
+    }
+    NodeVector concat_inputs;
+    for (size_t i = 0; i < num_batches; i++)
+    {
+        auto dot = std::make_shared<op::Dot>(dot_inputs[i], dot_inputs[i + num_batches]);
+        auto dot_shape = dot->get_shape();
+        auto dot_reshape = std::make_shared<op::Reshape>(
+            dot, AxisVector{0, 1}, Shape{1, dot_shape.at(0), dot_shape.at(1)});
+        concat_inputs.push_back(dot_reshape);
+    }
+
+    auto concat_result = std::make_shared<op::Concat>(concat_inputs, 0);
+    return {concat_result};
 }
 
 shared_ptr<Node> op::BatchMatMulTranspose::copy_with_new_args(const NodeVector& new_args) const
