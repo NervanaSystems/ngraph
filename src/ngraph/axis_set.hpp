@@ -29,7 +29,7 @@ namespace ngraph
     class NGRAPH_API AxisSet : public std::set<size_t>
     {
     public:
-        AxisSet() {}
+        AxisSet();
         AxisSet(const std::initializer_list<size_t>& axes)
             : std::set<size_t>(axes)
         {

@@ -17,6 +17,10 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/util.hpp"
 
+ngraph::AxisSet::AxisSet() : std::set<size_t>()
+{
+}
+
 std::ostream& ngraph::operator<<(std::ostream& s, const AxisSet& axis_set)
 {
     s << "AxisSet{";
