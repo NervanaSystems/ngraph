@@ -3685,7 +3685,6 @@ TEST(cpu_fusion, sigmoid_multiply_fusion)
     ASSERT_EQ(ccg, 18);
 }
 
-
 TEST(cpu_fusion, fuse_batch_dot_backward)
 {
     const std::string file_name("mxnet/batch_dot_3.json");

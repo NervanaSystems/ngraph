@@ -347,10 +347,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_transpose)
     Shape shape1 = Shape{2, 3, 4};
     auto arg0 = make_shared<op::Parameter>(element::f32, shape0);
     auto arg1 = make_shared<op::Parameter>(element::f32, shape1);
-    auto bmmt = make_shared<op::BatchMatMulTranspose>(arg0,
-                                                    arg1,
-                                                    false,
-                                                    false);
+    auto bmmt = make_shared<op::BatchMatMulTranspose>(arg0, arg1, false, false);
     auto f0 = make_shared<Function>(NodeVector{bmmt}, ParameterVector{arg0, arg1});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -359,7 +356,8 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_transpose)
     auto a = backend->create_tensor(element::f32, shape0);
     copy_data(a, vector<float>{1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4});
     auto b = backend->create_tensor(element::f32, shape1);
-    copy_data(b, vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3});
+    copy_data(
+        b, vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3});
     auto result0 = backend->create_tensor(element::f32, Shape{2, 2, 4});
 
     auto handle = backend->compile(f0);
@@ -374,10 +372,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_transpose_with_transpose)
     Shape shape1 = Shape{2, 3, 4};
     auto arg0 = make_shared<op::Parameter>(element::f32, shape0);
     auto arg1 = make_shared<op::Parameter>(element::f32, shape1);
-    auto bmmt = make_shared<op::BatchMatMulTranspose>(arg0,
-                                                    arg1,
-                                                    true,
-                                                    false);
+    auto bmmt = make_shared<op::BatchMatMulTranspose>(arg0, arg1, true, false);
     auto f0 = make_shared<Function>(NodeVector{bmmt}, ParameterVector{arg0, arg1});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -386,7 +381,8 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_transpose_with_transpose)
     auto a = backend->create_tensor(element::f32, shape0);
     copy_data(a, vector<float>{1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4});
     auto b = backend->create_tensor(element::f32, shape1);
-    copy_data(b, vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3});
+    copy_data(
+        b, vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3});
     auto result0 = backend->create_tensor(element::f32, Shape{2, 2, 4});
 
     auto handle = backend->compile(f0);
