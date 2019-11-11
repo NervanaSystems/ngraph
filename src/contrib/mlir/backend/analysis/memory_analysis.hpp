@@ -29,16 +29,17 @@ namespace mlir
         // Buffer Id. If -1 then invalid buffer.
         int m_bufferId;
         // Offset into the buffer
-        int m_offset; 
+        int m_offset;
         bool isValid() const { return m_bufferId != -1; }
     };
 
-    struct MemoryAnalysis {
+    struct MemoryAnalysis
+    {
         using BufferInfoMap = std::unordered_map<Operation*, BufferInfo>;
         // Compute this analysis with the provided operation.
-        MemoryAnalysis(Operation *op);
-        
-        BufferInfo getBufferInfo(Operation *op)
+        MemoryAnalysis(Operation* op);
+
+        BufferInfo getBufferInfo(Operation* op)
         {
             auto it = m_bufferInfo.find(op);
             if (it == m_bufferInfo.end())
@@ -47,11 +48,8 @@ namespace mlir
             }
             return it->second;
         }
-        void setBufferInfo(Operation *op, BufferInfo bufferInfo)
-        {
-            m_bufferInfo[op] = bufferInfo;
-        }
-        private:
+        void setBufferInfo(Operation* op, BufferInfo bufferInfo) { m_bufferInfo[op] = bufferInfo; }
+    private:
         BufferInfoMap m_bufferInfo;
     };
 }

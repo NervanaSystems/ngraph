@@ -36,7 +36,6 @@
 #include <mlir/Pass/Pass.h>
 #include <mlir/Transforms/DialectConversion.h>
 
-
 static llvm::cl::opt<bool> clEnableNgInPlaceMemory(
     "ngraph-memory-opt",
     llvm::cl::init(false),
@@ -106,8 +105,8 @@ namespace
     class MemoryAssignment
     {
     public:
-        MemoryAssignment(MemoryAnalysis* memAnalysis) 
-        : m_memAnalysis(memAnalysis)
+        MemoryAssignment(MemoryAnalysis* memAnalysis)
+            : m_memAnalysis(memAnalysis)
         {
             m_inplaceOps = {
 #define MLIR_OP(OP, INPLACE) {OP::getOperationName().str(), INPLACE},
@@ -156,7 +155,7 @@ namespace
     //
     // Update liveness info
 
-    void MemoryAssignment::run(ModuleOp *module)
+    void MemoryAssignment::run(ModuleOp* module)
     {
         if (!clEnableNgInPlaceMemory)
         {
@@ -164,11 +163,11 @@ namespace
             return;
         }
         SmallVector<FuncOp, 2> funcOps(module->getOps<FuncOp>());
-        
+
         if (funcOps.size() > 1)
         {
             // single func for now
-            return; 
+            return;
         }
         auto f = funcOps.back();
         auto& blocks = f.getBlocks();
@@ -350,9 +349,9 @@ namespace
                 bufferId = m_bufferId++;
                 baseOffset = 0;
             }
-            // Update analysis map. No need to check if we are over-writing previous entries 
+            // Update analysis map. No need to check if we are over-writing previous entries
             // since they should all match.
-            m_memAnalysis->setBufferInfo(op, {bufferId, baseOffset}); 
+            m_memAnalysis->setBufferInfo(op, {bufferId, baseOffset});
 
             for (auto i = 0; i < op->getNumOperands(); i++)
             {
@@ -641,6 +640,5 @@ namespace mlir
         auto moduleOp = dyn_cast<ModuleOp>(op);
         NGRAPH_CHECK(moduleOp != nullptr, "Expecting FuncOp for anaylsis");
         memoryAssignment.run(&moduleOp);
-
     }
 } // namespace mlir

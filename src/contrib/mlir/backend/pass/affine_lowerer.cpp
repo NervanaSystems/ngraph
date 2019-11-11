@@ -19,9 +19,9 @@
 
 #include "affine_lowerer.hpp"
 
+#include "contrib/mlir/backend/analysis/memory_analysis.hpp"
 #include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/ngraph_dialect/type.hpp"
-#include "contrib/mlir/backend/analysis/memory_analysis.hpp"
 #include "ngraph/assertion.hpp"
 
 #include <llvm/ADT/DenseSet.h>
@@ -218,7 +218,7 @@ namespace
         OwningRewritePatternList patterns;
 
         populateNGraphToAffineConversionPatterns(patterns);
-        
+
         // Get Memory analysis for in-place memory optimizations
         m_memAnalysis = &getAnalysis<MemoryAnalysis>();
 
@@ -320,7 +320,7 @@ namespace
                 auto tensorType = origResult->getType().cast<NGTensorType>();
                 Value* newResult;
                 auto bufferInfo = m_memAnalysis->getBufferInfo(op);
-                
+
                 if (!bufferInfo.isValid())
                 {
                     // Allocate new memref
@@ -329,7 +329,8 @@ namespace
                 else
                 {
                     unsigned bufferId = bufferInfo.m_bufferId;
-                    NGRAPH_CHECK(bufferInfo.m_offset == 0, "Only elt-wise ops are supported for now.");
+                    NGRAPH_CHECK(bufferInfo.m_offset == 0,
+                                 "Only elt-wise ops are supported for now.");
                     // Re-use a memref if it exist, else create a new one and update map
                     IdToMemRefMap::iterator it = m_id_to_memref.find(bufferId);
                     if (it == m_id_to_memref.end())
