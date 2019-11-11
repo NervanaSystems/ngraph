@@ -60,6 +60,8 @@ namespace ngraph
 
             void validate_and_infer_types() override;
 
+            virtual std::shared_ptr<Node> get_default_value() const override;
+
             size_t get_reduction_axes_count() const { return m_reduction_axes_count; }
             void set_reduction_axes_count(size_t reduction_axes_count)
             {

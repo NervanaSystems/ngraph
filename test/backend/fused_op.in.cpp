@@ -23,6 +23,12 @@
 #include <random>
 #include <string>
 
+// clang-format off
+#ifdef ${BACKEND_NAME}_FLOAT_TOLERANCE_BITS
+#define DEFAULT_FLOAT_TOLERANCE_BITS ${BACKEND_NAME}_FLOAT_TOLERANCE_BITS
+#endif
+// clang-format on
+
 #include "gtest/gtest.h"
 #include "ngraph/check.hpp"
 #include "ngraph/ngraph.hpp"
@@ -587,10 +593,11 @@ NGRAPH_TEST(${BACKEND_NAME}, space_to_depth)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, depth_to_space)
+NGRAPH_TEST(${BACKEND_NAME}, depth_to_space_block_first)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{1, 8, 2, 2});
-    auto depth_to_space = make_shared<op::DepthToSpace>(A, 2);
+    auto depth_to_space =
+        make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST, 2);
     auto function = make_shared<Function>(NodeVector{depth_to_space}, ParameterVector{A});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -602,6 +609,25 @@ NGRAPH_TEST(${BACKEND_NAME}, depth_to_space)
         Shape{1, 2, 4, 4}, {0.f,  1.f,  2.f,  3.f,  4.f,  5.f,  6.f,  7.f,  8.f,  9.f,  10.f,
                             11.f, 12.f, 13.f, 14.f, 15.f, 16.f, 17.f, 18.f, 19.f, 20.f, 21.f,
                             22.f, 23.f, 24.f, 25.f, 26.f, 27.f, 28.f, 29.f, 30.f, 31.f});
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, depth_to_space_depth_first)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 8, 2, 2});
+    auto depth_to_space =
+        make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST, 2);
+    auto function = make_shared<Function>(NodeVector{depth_to_space}, ParameterVector{A});
+
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({
+        0.f, 2.f, 8.f,  10.f, 16.f, 18.f, 24.f, 26.f, 1.f, 3.f, 9.f,  11.f, 17.f, 19.f, 25.f, 27.f,
+        4.f, 6.f, 12.f, 14.f, 20.f, 22.f, 28.f, 30.f, 5.f, 7.f, 13.f, 15.f, 21.f, 23.f, 29.f, 31.f,
+    });
+    test_case.add_expected_output<float>(
+        Shape{1, 2, 4, 4}, {0.f,  16.f, 2.f,  18.f, 1.f,  17.f, 3.f,  19.f, 8.f,  24.f, 10.f,
+                            26.f, 9.f,  25.f, 11.f, 27.f, 4.f,  20.f, 6.f,  22.f, 5.f,  21.f,
+                            7.f,  23.f, 12.f, 28.f, 14.f, 30.f, 13.f, 29.f, 15.f, 31.f});
     test_case.run();
 }
 
@@ -1291,10 +1317,11 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_no_bias_no_peepholes)
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
     const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
 
-    const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+    const auto lstm_cell =
+        make_shared<op::LSTMCell>(X, H_t, C_t, W, R, hidden_size, op::LSTMWeightsFormat::IOFC);
 
     auto ht_function = make_shared<Function>(make_shared<op::GetOutputElement>(lstm_cell, 0),
-                                             ParameterVector{X, W, R, H_t, C_t});
+                                             ParameterVector{X, H_t, C_t, W, R});
     auto ht_test_case = ngraph::test::NgraphTestCase(ht_function, "${BACKEND_NAME}");
     // X
     vector<float> in_X{0.81342685f, 0.84108883f, 0.8152282f, 0.46893653f, 0.0901856f, 0.37088776f};
@@ -1321,23 +1348,23 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_no_bias_no_peepholes)
     // Ct
     vector<float> in_Ct{0.8488452f, 0.18851636f, 0.5020695f, 0.29716516f, 0.06740791f, 0.45384037f};
 
-    ht_test_case.add_multiple_inputs(vector<vector<float>>{in_X, in_W, in_R, in_Ht, in_Ct});
+    ht_test_case.add_multiple_inputs(vector<vector<float>>{in_X, in_Ht, in_Ct, in_W, in_R});
     ht_test_case.add_expected_output<float>(
         Shape{batch_size, hidden_size},
         {0.81457126f, 0.61109227f, 0.769522f, 0.52239674f, 0.4324641f, 0.63183f});
     ht_test_case.run();
 
     auto ct_function = make_shared<Function>(make_shared<op::GetOutputElement>(lstm_cell, 1),
-                                             ParameterVector{X, W, R, H_t, C_t});
+                                             ParameterVector{X, H_t, C_t, W, R});
     auto ct_test_case = ngraph::test::NgraphTestCase(ct_function, "${BACKEND_NAME}");
-    ct_test_case.add_multiple_inputs(vector<vector<float>>{in_X, in_W, in_R, in_Ht, in_Ct});
+    ct_test_case.add_multiple_inputs(vector<vector<float>>{in_X, in_Ht, in_Ct, in_W, in_R});
     ct_test_case.add_expected_output<float>(
         Shape{batch_size, hidden_size},
         {1.4444952f, 0.9635685f, 1.2875274f, 0.8053419f, 0.7184521f, 0.95803297f});
     ct_test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_bias_peepholes)
+NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_zero_bias_peepholes)
 {
     const size_t batch_size = 2;
     const size_t input_size = 3;
@@ -1351,13 +1378,14 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_bias_peepholes)
         make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
     const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{2 * gates_count * hidden_size});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
     const auto P = make_shared<op::Parameter>(element::f32, Shape{3 * hidden_size});
 
-    const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size, B, P);
+    const auto lstm_cell = make_shared<op::LSTMCell>(
+        X, H_t, C_t, W, R, B, P, hidden_size, op::LSTMWeightsFormat::IOFC);
 
     auto ht_function = make_shared<Function>(make_shared<op::GetOutputElement>(lstm_cell, 0),
-                                             ParameterVector{X, W, R, H_t, C_t, B, P});
+                                             ParameterVector{X, H_t, C_t, W, R, B, P});
     auto ht_test_case = ngraph::test::NgraphTestCase(ht_function, "${BACKEND_NAME}");
 
     // X
@@ -1385,11 +1413,205 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_bias_peepholes)
     // Ct
     vector<float> in_Ct{0.8488452f, 0.18851636f, 0.5020695f, 0.29716516f, 0.06740791f, 0.45384037f};
     // B
-    vector<float> in_B{0.81130236f, 0.31332242f, 0.6423671f,  0.09981899f, 0.7847627f,
-                       0.8405669f,  0.0330242f,  0.45014873f, 0.5599519f,  0.31807426f,
-                       0.7356558f,  0.6298691f,  0.26263478f, 0.8391581f,  0.52434635f,
-                       0.11468413f, 0.4533051f,  0.67632145f, 0.43415946f, 0.46795473f,
-                       0.5674715f,  0.19214648f, 0.37824264f, 0.11187395f};
+    vector<float> in_B(gates_count * hidden_size, 0.f);
+    // P
+    vector<float> in_P(3 * hidden_size, 0.f);
+
+    ht_test_case.add_multiple_inputs(
+        vector<vector<float>>{in_X, in_Ht, in_Ct, in_W, in_R, in_B, in_P});
+    ht_test_case.add_expected_output<float>(
+        Shape{batch_size, hidden_size},
+        {0.81457126f, 0.61109227f, 0.769522f, 0.52239674f, 0.4324641f, 0.63183f});
+    ht_test_case.run();
+
+    auto ct_function = make_shared<Function>(make_shared<op::GetOutputElement>(lstm_cell, 1),
+                                             ParameterVector{X, H_t, C_t, W, R, B, P});
+    auto ct_test_case = ngraph::test::NgraphTestCase(ct_function, "${BACKEND_NAME}");
+    ct_test_case.add_multiple_inputs(
+        vector<vector<float>>{in_X, in_Ht, in_Ct, in_W, in_R, in_B, in_P});
+    ct_test_case.add_expected_output<float>(
+        Shape{batch_size, hidden_size},
+        {1.4444952f, 0.9635685f, 1.2875274f, 0.8053419f, 0.7184521f, 0.95803297f});
+    ct_test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_zero_bias_peepholes_constant)
+{
+    const size_t batch_size = 2;
+    const size_t input_size = 3;
+    const size_t hidden_size = 3;
+    const size_t gates_count = 4;
+
+    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto W =
+        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+    const auto R =
+        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto B = make_shared<op::Constant>(
+        element::f32, Shape{gates_count * hidden_size}, std::vector<float>{0.f});
+    const auto P =
+        make_shared<op::Constant>(element::f32, Shape{3 * hidden_size}, std::vector<float>{0.f});
+
+    const auto lstm_cell = make_shared<op::LSTMCell>(
+        X, H_t, C_t, W, R, B, P, hidden_size, op::LSTMWeightsFormat::IOFC);
+
+    auto ht_function = make_shared<Function>(make_shared<op::GetOutputElement>(lstm_cell, 0),
+                                             ParameterVector{X, H_t, C_t, W, R});
+    auto ht_test_case = ngraph::test::NgraphTestCase(ht_function, "${BACKEND_NAME}");
+
+    // X
+    vector<float> in_X{0.81342685f, 0.84108883f, 0.8152282f, 0.46893653f, 0.0901856f, 0.37088776f};
+    // W
+    vector<float> in_W{3.3330739e-01f, 3.6229487e-04f, 4.6773660e-01f, 4.3046016e-01f,
+                       7.3950343e-02f, 3.8063636e-01f, 9.6921772e-01f, 9.6897459e-01f,
+                       6.2964785e-01f, 3.1134409e-01f, 8.4709978e-01f, 9.4928098e-01f,
+                       6.1676943e-01f, 6.6020679e-01f, 1.9072217e-01f, 8.8032126e-02f,
+                       4.0472135e-01f, 6.8342745e-01f, 8.3432144e-01f, 4.4928190e-01f,
+                       7.9524308e-01f, 5.3966165e-01f, 8.5936421e-01f, 8.3136767e-01f,
+                       5.5125546e-02f, 4.7791195e-01f, 3.5788772e-01f, 6.7507404e-01f,
+                       2.1716513e-01f, 2.7473119e-01f, 3.3999152e-02f, 9.6835363e-01f,
+                       3.7581277e-01f, 2.4026000e-01f, 6.7418844e-01f, 3.4199652e-01f};
+    // R
+    vector<float> in_R{
+        0.0987983f,  0.52032113f, 0.5848073f,  0.5356095f,  0.74497133f, 0.73260087f,
+        0.1700787f,  0.45684233f, 0.1495722f,  0.42734373f, 0.4433832f,  0.25906256f,
+        0.03854987f, 0.47480518f, 0.37215272f, 0.99890584f, 0.74019486f, 0.3518967f,
+        0.6881257f,  0.8170279f,  0.54088944f, 0.81225616f, 0.14619833f, 0.42941234f,
+        0.86843914f, 0.45967972f, 0.6237719f,  0.11074839f, 0.6029616f,  0.3149305f,
+        0.46504205f, 0.5843412f,  0.8733427f,  0.7687243f,  0.07074859f, 0.39188156f};
+    // Ht
+    vector<float> in_Ht{0.77956f, 0.5331557f, 0.04297554f, 0.7962175f, 0.7635707f, 0.11989366f};
+    // Ct
+    vector<float> in_Ct{0.8488452f, 0.18851636f, 0.5020695f, 0.29716516f, 0.06740791f, 0.45384037f};
+
+    ht_test_case.add_multiple_inputs(vector<vector<float>>{in_X, in_Ht, in_Ct, in_W, in_R});
+    ht_test_case.add_expected_output<float>(
+        Shape{batch_size, hidden_size},
+        {0.81457126f, 0.61109227f, 0.769522f, 0.52239674f, 0.4324641f, 0.63183f});
+    ht_test_case.run();
+
+    auto ct_function = make_shared<Function>(make_shared<op::GetOutputElement>(lstm_cell, 1),
+                                             ParameterVector{X, H_t, C_t, W, R});
+    auto ct_test_case = ngraph::test::NgraphTestCase(ct_function, "${BACKEND_NAME}");
+    ct_test_case.add_multiple_inputs(vector<vector<float>>{in_X, in_Ht, in_Ct, in_W, in_R});
+    ct_test_case.add_expected_output<float>(
+        Shape{batch_size, hidden_size},
+        {1.4444952f, 0.9635685f, 1.2875274f, 0.8053419f, 0.7184521f, 0.95803297f});
+    ct_test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_fixed_no_bias_no_peepholes)
+{
+    const size_t batch_size = 2;
+    const size_t input_size = 3;
+    const size_t hidden_size = 3;
+    const size_t gates_count = 4;
+
+    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto W =
+        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+    const auto R =
+        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+
+    const auto lstm_cell =
+        make_shared<op::LSTMCell>(X, H_t, C_t, W, R, hidden_size, op::LSTMWeightsFormat::IOFC);
+
+    auto ht_function = make_shared<Function>(make_shared<op::GetOutputElement>(lstm_cell, 0),
+                                             ParameterVector{X, H_t, C_t, W, R});
+    auto ht_test_case = ngraph::test::NgraphTestCase(ht_function, "${BACKEND_NAME}");
+
+    // X
+    vector<float> in_X(batch_size * input_size, 0.5f);
+    // W
+    vector<float> in_W(gates_count * hidden_size * input_size, 0.25f);
+    // R
+    vector<float> in_R(gates_count * hidden_size * hidden_size, 0.25f);
+    // Ht
+    vector<float> in_Ht(batch_size * hidden_size, 0.75f);
+    // Ct
+    vector<float> in_Ct(batch_size * hidden_size, 0.75f);
+
+    ht_test_case.add_multiple_inputs(vector<vector<float>>{in_X, in_Ht, in_Ct, in_W, in_R});
+    ht_test_case.add_expected_output<float>(
+        Shape{batch_size, hidden_size},
+        {0.56633735f, 0.56633735f, 0.56633735f, 0.56633735f, 0.56633735f, 0.56633735f});
+    ht_test_case.run();
+
+    auto ct_function = make_shared<Function>(make_shared<op::GetOutputElement>(lstm_cell, 1),
+                                             ParameterVector{X, H_t, C_t, W, R});
+    auto ct_test_case = ngraph::test::NgraphTestCase(ct_function, "${BACKEND_NAME}");
+    ct_test_case.add_multiple_inputs(vector<vector<float>>{in_X, in_Ht, in_Ct, in_W, in_R});
+    ct_test_case.add_expected_output<float>(
+        Shape{batch_size, hidden_size},
+        {1.0664454f, 1.0664454f, 1.0664454f, 1.0664454f, 1.0664454f, 1.0664454f});
+    ct_test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_bias_peepholes)
+{
+    const size_t batch_size = 2;
+    const size_t input_size = 3;
+    const size_t hidden_size = 3;
+    const size_t gates_count = 4;
+
+    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto W =
+        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+    const auto R =
+        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
+    const auto P = make_shared<op::Parameter>(element::f32, Shape{3 * hidden_size});
+
+    const auto lstm_cell = make_shared<op::LSTMCell>(
+        X, H_t, C_t, W, R, B, P, hidden_size, op::LSTMWeightsFormat::IOFC);
+
+    auto ht_function = make_shared<Function>(make_shared<op::GetOutputElement>(lstm_cell, 0),
+                                             ParameterVector{X, H_t, C_t, W, R, B, P});
+    auto ht_test_case = ngraph::test::NgraphTestCase(ht_function, "${BACKEND_NAME}");
+
+    // X
+    vector<float> in_X{0.81342685f, 0.84108883f, 0.8152282f, 0.46893653f, 0.0901856f, 0.37088776f};
+    // W
+    vector<float> in_W{3.3330739e-01f, 3.6229487e-04f, 4.6773660e-01f, 4.3046016e-01f,
+                       7.3950343e-02f, 3.8063636e-01f, 9.6921772e-01f, 9.6897459e-01f,
+                       6.2964785e-01f, 3.1134409e-01f, 8.4709978e-01f, 9.4928098e-01f,
+                       6.1676943e-01f, 6.6020679e-01f, 1.9072217e-01f, 8.8032126e-02f,
+                       4.0472135e-01f, 6.8342745e-01f, 8.3432144e-01f, 4.4928190e-01f,
+                       7.9524308e-01f, 5.3966165e-01f, 8.5936421e-01f, 8.3136767e-01f,
+                       5.5125546e-02f, 4.7791195e-01f, 3.5788772e-01f, 6.7507404e-01f,
+                       2.1716513e-01f, 2.7473119e-01f, 3.3999152e-02f, 9.6835363e-01f,
+                       3.7581277e-01f, 2.4026000e-01f, 6.7418844e-01f, 3.4199652e-01f};
+    // R
+    vector<float> in_R{
+        0.0987983f,  0.52032113f, 0.5848073f,  0.5356095f,  0.74497133f, 0.73260087f,
+        0.1700787f,  0.45684233f, 0.1495722f,  0.42734373f, 0.4433832f,  0.25906256f,
+        0.03854987f, 0.47480518f, 0.37215272f, 0.99890584f, 0.74019486f, 0.3518967f,
+        0.6881257f,  0.8170279f,  0.54088944f, 0.81225616f, 0.14619833f, 0.42941234f,
+        0.86843914f, 0.45967972f, 0.6237719f,  0.11074839f, 0.6029616f,  0.3149305f,
+        0.46504205f, 0.5843412f,  0.8733427f,  0.7687243f,  0.07074859f, 0.39188156f};
+    // Ht
+    vector<float> in_Ht{0.77956f, 0.5331557f, 0.04297554f, 0.7962175f, 0.7635707f, 0.11989366f};
+    // Ct
+    vector<float> in_Ct{0.8488452f, 0.18851636f, 0.5020695f, 0.29716516f, 0.06740791f, 0.45384037f};
+    // B
+    vector<float> in_B{1.07393714f,
+                       1.15248052f,
+                       1.16671345f,
+                       0.21450312f,
+                       1.2380678f,
+                       1.51688835f,
+                       0.46718366f,
+                       0.91810346f,
+                       1.1274234f,
+                       0.51022074f,
+                       1.11389844f,
+                       0.74174305f};
     // P
     vector<float> in_P{0.38557124f,
                        0.9482306f,
@@ -1402,17 +1624,17 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_bias_peepholes)
                        0.24175227f};
 
     ht_test_case.add_multiple_inputs(
-        vector<vector<float>>{in_X, in_W, in_R, in_Ht, in_Ct, in_B, in_P});
+        vector<vector<float>>{in_X, in_Ht, in_Ct, in_W, in_R, in_B, in_P});
     ht_test_case.add_expected_output<float>(
         Shape{batch_size, hidden_size},
         {0.9218244f, 0.78787273f, 0.8754273f, 0.7361462f, 0.70927656f, 0.83522964f});
     ht_test_case.run();
 
     auto ct_function = make_shared<Function>(make_shared<op::GetOutputElement>(lstm_cell, 1),
-                                             ParameterVector{X, W, R, H_t, C_t, B, P});
+                                             ParameterVector{X, H_t, C_t, W, R, B, P});
     auto ct_test_case = ngraph::test::NgraphTestCase(ct_function, "${BACKEND_NAME}");
     ct_test_case.add_multiple_inputs(
-        vector<vector<float>>{in_X, in_W, in_R, in_Ht, in_Ct, in_B, in_P});
+        vector<vector<float>>{in_X, in_Ht, in_Ct, in_W, in_R, in_B, in_P});
     ct_test_case.add_expected_output<float>(
         Shape{batch_size, hidden_size},
         {1.7094649f, 1.1259761f, 1.444019f, 1.086587f, 0.9762144f, 1.3066899f});
@@ -1435,24 +1657,25 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_bias_peepholes_clip_input_forget)
         make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
     const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{2 * gates_count * hidden_size});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
     const auto P = make_shared<op::Parameter>(element::f32, Shape{3 * hidden_size});
 
     const auto lstm_cell = make_shared<op::LSTMCell>(X,
-                                                     W,
-                                                     R,
                                                      H_t,
                                                      C_t,
-                                                     hidden_size,
+                                                     W,
+                                                     R,
                                                      B,
                                                      P,
+                                                     hidden_size,
+                                                     op::LSTMWeightsFormat::IOFC,
                                                      vector<string>{"sigmoid", "tanh", "tanh"},
                                                      vector<float>{},
                                                      vector<float>{},
                                                      clip_threshold,
                                                      input_forget);
     auto ht_function = make_shared<Function>(make_shared<op::GetOutputElement>(lstm_cell, 0),
-                                             ParameterVector{X, W, R, H_t, C_t, B, P});
+                                             ParameterVector{X, H_t, C_t, W, R, B, P});
     auto ht_test_case = ngraph::test::NgraphTestCase(ht_function, "${BACKEND_NAME}");
 
     // X
@@ -1480,11 +1703,18 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_bias_peepholes_clip_input_forget)
     // Ct
     vector<float> in_Ct{0.8488452f, 0.18851636f, 0.5020695f, 0.29716516f, 0.06740791f, 0.45384037f};
     // B
-    vector<float> in_B{0.81130236f, 0.31332242f, 0.6423671f,  0.09981899f, 0.7847627f,
-                       0.8405669f,  0.0330242f,  0.45014873f, 0.5599519f,  0.31807426f,
-                       0.7356558f,  0.6298691f,  0.26263478f, 0.8391581f,  0.52434635f,
-                       0.11468413f, 0.4533051f,  0.67632145f, 0.43415946f, 0.46795473f,
-                       0.5674715f,  0.19214648f, 0.37824264f, 0.11187395f};
+    vector<float> in_B{1.07393714f,
+                       1.15248052f,
+                       1.16671345f,
+                       0.21450312f,
+                       1.2380678f,
+                       1.51688835f,
+                       0.46718366f,
+                       0.91810346f,
+                       1.1274234f,
+                       0.51022074f,
+                       1.11389844f,
+                       0.74174305f};
     // P
     vector<float> in_P{0.38557124f,
                        0.9482306f,
@@ -1497,17 +1727,17 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_bias_peepholes_clip_input_forget)
                        0.24175227f};
 
     ht_test_case.add_multiple_inputs(
-        vector<vector<float>>{in_X, in_W, in_R, in_Ht, in_Ct, in_B, in_P});
+        vector<vector<float>>{in_X, in_Ht, in_Ct, in_W, in_R, in_B, in_P});
     ht_test_case.add_expected_output<float>(
         Shape{batch_size, hidden_size},
         {0.71485436f, 0.71844107f, 0.72704613f, 0.6235602f, 0.68306124f, 0.6978715f});
     ht_test_case.run();
 
     auto ct_function = make_shared<Function>(make_shared<op::GetOutputElement>(lstm_cell, 1),
-                                             ParameterVector{X, W, R, H_t, C_t, B, P});
+                                             ParameterVector{X, H_t, C_t, W, R, B, P});
     auto ct_test_case = ngraph::test::NgraphTestCase(ct_function, "${BACKEND_NAME}");
     ct_test_case.add_multiple_inputs(
-        vector<vector<float>>{in_X, in_W, in_R, in_Ht, in_Ct, in_B, in_P});
+        vector<vector<float>>{in_X, in_Ht, in_Ct, in_W, in_R, in_B, in_P});
     ct_test_case.add_expected_output<float>(
         Shape{batch_size, hidden_size},
         {0.94656503f, 0.9527454f, 0.9706756f, 0.84206575f, 0.91898793f, 0.9127192f});
@@ -1533,24 +1763,25 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_activaction_functions)
         make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
     const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{2 * gates_count * hidden_size});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
     const auto P = make_shared<op::Parameter>(element::f32, Shape{3 * hidden_size});
 
     const auto lstm_cell = make_shared<op::LSTMCell>(X,
-                                                     W,
-                                                     R,
                                                      H_t,
                                                      C_t,
-                                                     hidden_size,
+                                                     W,
+                                                     R,
                                                      B,
                                                      P,
+                                                     hidden_size,
+                                                     op::LSTMWeightsFormat::IOFC,
                                                      activations,
                                                      activation_alpha,
                                                      activation_beta,
                                                      clip_threshold,
                                                      input_forget);
     auto ht_function = make_shared<Function>(make_shared<op::GetOutputElement>(lstm_cell, 0),
-                                             ParameterVector{X, W, R, H_t, C_t, B, P});
+                                             ParameterVector{X, H_t, C_t, W, R, B, P});
     auto ht_test_case = ngraph::test::NgraphTestCase(ht_function, "${BACKEND_NAME}");
 
     // X
@@ -1578,11 +1809,18 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_activaction_functions)
     // Ct
     vector<float> in_Ct{0.8488452f, 0.18851636f, 0.5020695f, 0.29716516f, 0.06740791f, 0.45384037f};
     // B
-    vector<float> in_B{0.81130236f, 0.31332242f, 0.6423671f,  0.09981899f, 0.7847627f,
-                       0.8405669f,  0.0330242f,  0.45014873f, 0.5599519f,  0.31807426f,
-                       0.7356558f,  0.6298691f,  0.26263478f, 0.8391581f,  0.52434635f,
-                       0.11468413f, 0.4533051f,  0.67632145f, 0.43415946f, 0.46795473f,
-                       0.5674715f,  0.19214648f, 0.37824264f, 0.11187395f};
+    vector<float> in_B{1.07393714f,
+                       1.15248052f,
+                       1.16671345f,
+                       0.21450312f,
+                       1.2380678f,
+                       1.51688835f,
+                       0.46718366f,
+                       0.91810346f,
+                       1.1274234f,
+                       0.51022074f,
+                       1.11389844f,
+                       0.74174305f};
     // P
     vector<float> in_P{0.38557124f,
                        0.9482306f,
@@ -1595,17 +1833,17 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_activaction_functions)
                        0.24175227f};
 
     ht_test_case.add_multiple_inputs(
-        vector<vector<float>>{in_X, in_W, in_R, in_Ht, in_Ct, in_B, in_P});
+        vector<vector<float>>{in_X, in_Ht, in_Ct, in_W, in_R, in_B, in_P});
     ht_test_case.add_expected_output<float>(
         Shape{batch_size, hidden_size},
         {0.96834344f, 0.9695254f, 0.97068775f, 0.9077866f, 0.94161016f, 0.96599925f});
     ht_test_case.run();
 
     auto ct_function = make_shared<Function>(make_shared<op::GetOutputElement>(lstm_cell, 1),
-                                             ParameterVector{X, W, R, H_t, C_t, B, P});
+                                             ParameterVector{X, H_t, C_t, W, R, B, P});
     auto ct_test_case = ngraph::test::NgraphTestCase(ct_function, "${BACKEND_NAME}");
     ct_test_case.add_multiple_inputs(
-        vector<vector<float>>{in_X, in_W, in_R, in_Ht, in_Ct, in_B, in_P});
+        vector<vector<float>>{in_X, in_Ht, in_Ct, in_W, in_R, in_B, in_P});
     ct_test_case.add_expected_output<float>(
         Shape{batch_size, hidden_size},
         {0.94656503f, 0.9527454f, 0.9706756f, 0.84206575f, 0.91898793f, 0.9127192f});
@@ -1884,17 +2122,20 @@ NGRAPH_TEST(${BACKEND_NAME}, rnn_cell_no_bias)
     const size_t hidden_size = 3;
 
     const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
     const auto W = make_shared<op::Parameter>(element::f32, Shape{hidden_size, input_size});
     const auto R = make_shared<op::Parameter>(element::f32, Shape{hidden_size, hidden_size});
-    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
 
-    const auto rnn_cell = make_shared<op::RNNCell>(X, W, R, H_t, hidden_size);
-    auto function = make_shared<Function>(rnn_cell, ParameterVector{X, W, R, H_t});
+    const auto rnn_cell = make_shared<op::RNNCell>(X, H_t, W, R, hidden_size);
+    auto function = make_shared<Function>(rnn_cell, ParameterVector{X, H_t, W, R});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     // X
     test_case.add_input<float>(
         {0.3432185f, 0.612268f, 0.20272376f, 0.9513413f, 0.30585995f, 0.7265472f});
+    // Ht
+    test_case.add_input<float>(
+        {0.12444675f, 0.52055854f, 0.46489045f, 0.4983964f, 0.7730452f, 0.28439692f});
     // W
     test_case.add_input<float>({0.41930267f,
                                 0.7872176f,
@@ -1915,9 +2156,6 @@ NGRAPH_TEST(${BACKEND_NAME}, rnn_cell_no_bias)
                                 0.25392973f,
                                 0.38301638f,
                                 0.85531586f});
-    // Ht
-    test_case.add_input<float>(
-        {0.12444675f, 0.52055854f, 0.46489045f, 0.4983964f, 0.7730452f, 0.28439692f});
 
     test_case.add_expected_output<float>(
         Shape{batch_size, hidden_size},
@@ -1934,27 +2172,30 @@ NGRAPH_TEST(${BACKEND_NAME}, rnn_cell_bias_clip)
     float clip = 2.88f;
 
     const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
     const auto W = make_shared<op::Parameter>(element::f32, Shape{hidden_size, input_size});
     const auto R = make_shared<op::Parameter>(element::f32, Shape{hidden_size, hidden_size});
-    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{2 * hidden_size});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{hidden_size});
 
     const auto rnn_cell = make_shared<op::RNNCell>(X,
+                                                   H_t,
                                                    W,
                                                    R,
-                                                   H_t,
-                                                   hidden_size,
                                                    B,
+                                                   hidden_size,
                                                    vector<string>{"tanh"},
                                                    vector<float>{},
                                                    vector<float>{},
                                                    clip);
-    auto function = make_shared<Function>(rnn_cell, ParameterVector{X, W, R, H_t, B});
+    auto function = make_shared<Function>(rnn_cell, ParameterVector{X, H_t, W, R, B});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     // X
     test_case.add_input<float>(
         {0.3432185f, 0.612268f, 0.20272376f, 0.9513413f, 0.30585995f, 0.7265472f});
+    // Ht
+    test_case.add_input<float>(
+        {0.12444675f, 0.52055854f, 0.46489045f, 0.4983964f, 0.7730452f, 0.28439692f});
     // W
     test_case.add_input<float>({0.41930267f,
                                 0.7872176f,
@@ -1975,12 +2216,8 @@ NGRAPH_TEST(${BACKEND_NAME}, rnn_cell_bias_clip)
                                 0.25392973f,
                                 0.38301638f,
                                 0.85531586f});
-    // Ht
-    test_case.add_input<float>(
-        {0.12444675f, 0.52055854f, 0.46489045f, 0.4983964f, 0.7730452f, 0.28439692f});
     // B
-    test_case.add_input<float>(
-        {0.45513555f, 0.96227735f, 0.24737759f, 0.57380486f, 0.67398053f, 0.18968852f});
+    test_case.add_input<float>({1.0289404f, 1.6362579f, 0.4370661f});
 
     test_case.add_expected_output<float>(
         Shape{batch_size, hidden_size},
@@ -1997,27 +2234,30 @@ NGRAPH_TEST(${BACKEND_NAME}, rnn_cell_activation_function)
     float clip = 2.88f;
 
     const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
     const auto W = make_shared<op::Parameter>(element::f32, Shape{hidden_size, input_size});
     const auto R = make_shared<op::Parameter>(element::f32, Shape{hidden_size, hidden_size});
-    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{2 * hidden_size});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{hidden_size});
 
     const auto rnn_cell = make_shared<op::RNNCell>(X,
+                                                   H_t,
                                                    W,
                                                    R,
-                                                   H_t,
-                                                   hidden_size,
                                                    B,
+                                                   hidden_size,
                                                    vector<string>{"sigmoid"},
                                                    vector<float>{},
                                                    vector<float>{},
                                                    clip);
-    auto function = make_shared<Function>(rnn_cell, ParameterVector{X, W, R, H_t, B});
+    auto function = make_shared<Function>(rnn_cell, ParameterVector{X, H_t, W, R, B});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     // X
     test_case.add_input<float>(
         {0.3432185f, 0.612268f, 0.20272376f, 0.9513413f, 0.30585995f, 0.7265472f});
+    // Ht
+    test_case.add_input<float>(
+        {0.12444675f, 0.52055854f, 0.46489045f, 0.4983964f, 0.7730452f, 0.28439692f});
     // W
     test_case.add_input<float>({0.41930267f,
                                 0.7872176f,
@@ -2038,12 +2278,8 @@ NGRAPH_TEST(${BACKEND_NAME}, rnn_cell_activation_function)
                                 0.25392973f,
                                 0.38301638f,
                                 0.85531586f});
-    // Ht
-    test_case.add_input<float>(
-        {0.12444675f, 0.52055854f, 0.46489045f, 0.4983964f, 0.7730452f, 0.28439692f});
     // B
-    test_case.add_input<float>(
-        {0.45513555f, 0.96227735f, 0.24737759f, 0.57380486f, 0.67398053f, 0.18968852f});
+    test_case.add_input<float>({1.0289404f, 1.6362579f, 0.4370661f});
 
     test_case.add_expected_output<float>(
         Shape{batch_size, hidden_size},

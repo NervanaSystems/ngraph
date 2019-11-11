@@ -69,14 +69,21 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
+    opset_pass/binary_elementwise_opset_pass.cpp
     opset_pass/broadcast_opset_pass.cpp
     opset_pass/convolution_opset_pass.cpp
-    opset_pass/generate_mask_opset_pass.cpp
+    opset_pass/dyn_reshape_opset_pass.cpp
+    opset_pass/logical_and_opset_pass.cpp
+    opset_pass/logical_not_opset_pass.cpp
+    opset_pass/logical_or_opset_pass.cpp
+    opset_pass/logical_xor_opset_pass.cpp
     opset_pass/gather_opset_pass.cpp
+    opset_pass/generate_mask_opset_pass.cpp
     opset_pass/pad_opset_pass.cpp
     opset_pass/poolings_opset_pass.cpp
     opset_pass/product_opset_pass.cpp
     opset_pass/reverse_opset_pass.cpp
+    opset_pass/slice_opset_pass.cpp
     opset_pass/softmax_opset_pass.cpp
     opset_pass/sum_opset_pass.cpp
     opset_pass/topk_opset_pass.cpp
@@ -115,6 +122,7 @@ set(SRC
     type_prop/dyn_replace_slice.cpp
     type_prop/dyn_reshape.cpp
     type_prop/dyn_slice.cpp
+    type_prop/strided_slice.cpp
     type_prop/elu.cpp
     type_prop/embedding_lookup.cpp
     type_prop/fake_quantize.cpp
@@ -258,6 +266,7 @@ set(MULTI_TEST_SRC
     backend/arg_reduce.in.cpp
     backend/asin.in.cpp
     backend/atan.in.cpp
+    backend/atan2.in.cpp
     backend/auto_broadcast.in.cpp
     backend/autodiff.in.cpp
     backend/batch_mat_mul.in.cpp
@@ -280,6 +289,7 @@ set(MULTI_TEST_SRC
     backend/dyn_replace_slice_reference.in.cpp
     backend/dyn_reshape.in.cpp
     backend/dyn_slice_reference.in.cpp
+    backend/strided_slice.in.cpp
     backend/dynamic.in.cpp
     backend/embedding_lookup.in.cpp
     backend/erf.in.cpp
@@ -339,6 +349,7 @@ set(MULTI_TEST_SRC
     backend/tan.in.cpp
     backend/tanh.in.cpp
     backend/tensorview_custom_mem.in.cpp
+    backend/tile.in.cpp
     backend/topk.in.cpp
     backend/transpose.in.cpp
     backend/unhandled_op.in.cpp
@@ -458,6 +469,7 @@ endif()
 
 if (NGRAPH_MLIR_ENABLE)
     list(APPEND MULTI_TEST_SRC backend/mlir.in.cpp)
+    list(APPEND SRC mlir/ops_test.cpp)
 endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
@@ -516,11 +528,7 @@ if(NGRAPH_ADDRESS_SANITIZER)
 endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
-if(NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
-    target_link_libraries(unit-test PRIVATE ngraph gtest)
-else()
-    target_link_libraries(unit-test PRIVATE ngraph libgtest)
-endif()
+target_link_libraries(unit-test PRIVATE ngraph libgtest)
 
 target_compile_definitions(unit-test PRIVATE NGRAPH_VERSION_LABEL="${NGRAPH_VERSION_LABEL}")
 if (NGRAPH_JSON_ENABLE)
@@ -587,22 +595,28 @@ if (NGRAPH_ONNXIFI_ENABLE)
     target_link_libraries(unit-test PRIVATE onnxifi-ngraph)
 endif()
 
-# If all the runtime libraries are installed into one location, that will make life easier.
-if (MSVS)
-    add_custom_target(unit-test-check
-        COMMAND set "PATH=${EXTERNAL_PROJECTS_ROOT}/src/ngraph/Release;${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/;${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/;${EXTERNAL_PROJECTS_ROOT}/ext_tbb-prefix/src/ext_tbb/tbb2019_20181203oss/bin/intel64/vc14;%PATH%"
-        COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
-        DEPENDS unit-test
-    )
-else()
-    add_custom_target(unit-test-check
-        COMMAND ${PROJECT_BINARY_DIR}/test/unit-test --cpath ${EXTERNAL_PROJECTS_ROOT}/src/ngraph/ \${ARGS}
-        DEPENDS unit-test
-    )
+if (NGRAPH_MLIR_ENABLE)
+    target_include_directories(unit-test PRIVATE ${CMAKE_BINARY_DIR}/src/contrib/mlir)
 endif()
 
-add_custom_target(check
-    DEPENDS
-    style-check
-    unit-test-check
-)
+if (NOT NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
+    # If all the runtime libraries are installed into one location, that will make life easier.
+    if (MSVS)
+        add_custom_target(unit-test-check
+            COMMAND set "PATH=${EXTERNAL_PROJECTS_ROOT}/src/ngraph/Release;${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/;${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/;${EXTERNAL_PROJECTS_ROOT}/ext_tbb-prefix/src/ext_tbb/tbb2019_20181203oss/bin/intel64/vc14;%PATH%"
+            COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
+            DEPENDS unit-test
+        )
+    else()
+        add_custom_target(unit-test-check
+            COMMAND ${PROJECT_BINARY_DIR}/test/unit-test --cpath ${EXTERNAL_PROJECTS_ROOT}/src/ngraph/ \${ARGS}
+            DEPENDS unit-test
+        )
+    endif()
+
+    add_custom_target(check
+        DEPENDS
+        style-check
+        unit-test-check
+    )
+endif()

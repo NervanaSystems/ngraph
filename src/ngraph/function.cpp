@@ -26,13 +26,14 @@
 using namespace std;
 using namespace ngraph;
 
+constexpr DiscreteTypeInfo Function::type_info;
+
 atomic<size_t> Function::m_next_instance_id(0);
 
 Function::Function(const ResultVector& results,
                    const ParameterVector& parameters,
                    const std::string& name)
-    : m_results(results)
-    , m_parameters(parameters)
+    : Lambda(results, parameters)
     , m_temporary_pool_size(0)
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
@@ -44,48 +45,24 @@ Function::Function(const ResultVector& results,
 Function::Function(const OutputVector& results,
                    const ParameterVector& parameters,
                    const std::string& name)
-    : m_results(results.size())
-    , m_parameters(parameters)
+    : Lambda(results, parameters)
     , m_temporary_pool_size(0)
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
 {
-    if (std::any_of(results.cbegin(), results.cend(), [](Output<Node> n) {
-            return as_type_ptr<op::Result>(n.get_node_shared_ptr());
-        }))
-    {
-        throw ngraph_error(
-            " Results already contain op::Results. Use a c-tor that takes a ResultVector");
-    }
-
-    std::transform(results.begin(), results.end(), m_results.begin(), [](Output<Node> n) {
-        return std::make_shared<op::Result>(n);
-    });
     init();
 }
 
 Function::Function(const NodeVector& results,
                    const ParameterVector& parameters,
                    const std::string& name)
-    : m_results(results.size())
-    , m_parameters(parameters)
+    : Lambda(as_output_vector(results), parameters)
     , m_temporary_pool_size(0)
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
 {
-    if (std::any_of(results.cbegin(), results.cend(), [](std::shared_ptr<Node> n) {
-            return as_type_ptr<op::Result>(n);
-        }))
-    {
-        throw ngraph_error(
-            " Results already contain op::Results. Use a c-tor that takes a ResultVector");
-    }
-
-    std::transform(results.begin(), results.end(), m_results.begin(), [](std::shared_ptr<Node> n) {
-        return std::make_shared<op::Result>(n);
-    });
     init();
 }
 

@@ -36,7 +36,7 @@
 #endif
 
 #ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/compiler/pass/mlir_subgraph_extraction.hpp"
+#include "contrib/mlir/core/pass/mlir_subgraph_extraction.hpp"
 #endif
 
 #include "ngraph/descriptor/input.hpp"
@@ -56,6 +56,7 @@
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
+#include "ngraph/op/atan2.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
@@ -84,6 +85,7 @@
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/softmax_crossentropy.hpp"
@@ -180,6 +182,7 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/dropout.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -366,6 +369,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::ArgMax), &runtime::cpu::CPU_Emitter::emit<op::ArgMax>},
     {TI(ngraph::op::Acos), &runtime::cpu::CPU_Emitter::emit<op::Acos>},
     {TI(ngraph::op::Atan), &runtime::cpu::CPU_Emitter::emit<op::Atan>},
+    {TI(ngraph::op::Atan2), &runtime::cpu::CPU_Emitter::emit<op::Atan2>},
     {TI(ngraph::op::ReplaceSlice), &runtime::cpu::CPU_Emitter::emit<op::ReplaceSlice>},
     {TI(ngraph::op::UpdateSlice), &runtime::cpu::CPU_Emitter::emit<op::UpdateSlice>},
     {TI(ngraph::op::OneHot), &runtime::cpu::CPU_Emitter::emit<op::OneHot>},
@@ -449,6 +453,8 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<ngraph::op::DeconvolutionBias>},
     {TI(ngraph::op::Dropout), &runtime::cpu::CPU_Emitter::emit<op::Dropout>},
     {TI(ngraph::op::Tile), &runtime::cpu::CPU_Emitter::emit<op::Tile>},
+    {TI(ngraph::op::Gelu), &runtime::cpu::CPU_Emitter::emit<op::Gelu>},
+    {TI(ngraph::op::GeluBackprop), &runtime::cpu::CPU_Emitter::emit<op::GeluBackprop>},
 };
 
 static void
@@ -1201,6 +1207,25 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
                 return false;
             }
         }
+        else if (typeid(ngraph::op::GeluBackpropFactor) == typeid(node))
+        {
+#if MKLDNN_VERSION_MAJOR < 1
+            return ((node.input(0).get_element_type() == element::f32) ? true : false);
+#else
+            // TODO: will be supported in mkldnn v1.1
+            return false;
+#endif
+        }
+        else if (typeid(ngraph::op::Gelu) == typeid(node))
+        {
+#if MKLDNN_VERSION_MAJOR < 1
+            return ((node.input(0).get_element_type() == element::f32) ? true : false);
+#else
+            // TODO: will be supported in mkldnn v1.1
+            return false;
+#endif
+        }
+
         if (dex)
         {
             auto handler = GetGlobalBuildDispatcher().find(type_index(typeid(node)));
@@ -1411,6 +1436,11 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     static StaticInitializers s_static_initializers(s_debug_dir);
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
     ngraph::pass::Manager pass_manager;
+    if (std::getenv("NGRAPH_ENABLE_VISUALIZE_TRACING"))
+    {
+        // Enable per_pass_validation if required for debug purpose
+        pass_manager.set_per_pass_validation(false);
+    }
     register_common_passes(pass_manager, pass_config);
     pass_manager.run_passes(m_function, false);
 

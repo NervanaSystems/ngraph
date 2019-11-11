@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/lambda.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
@@ -30,9 +31,11 @@
 namespace ngraph
 {
     /// A user-defined function.
-    class Function
+    class Function : public Lambda
     {
     public:
+        static constexpr DiscreteTypeInfo type_info{"Function", 0};
+        const DiscreteTypeInfo& get_type_info() const { return type_info; }
         Function(const NodeVector& results,
                  const ParameterVector& parameters,
                  const std::string& name = "");
@@ -70,10 +73,6 @@ namespace ngraph
         /// Return the partial shape of element i
         const PartialShape& get_output_partial_shape(size_t i) const;
 
-        /// Return the function parameters
-        const ParameterVector& get_parameters() const { return m_parameters; }
-        /// Return a list of function's outputs
-        const ResultVector& get_results() const { return m_results; }
         /// Check that there is a single result and return it.
         std::shared_ptr<Node> get_result() const;
 
@@ -128,8 +127,6 @@ namespace ngraph
                                const std::shared_ptr<op::Parameter>& parameter);
 
     protected:
-        ResultVector m_results;
-        ParameterVector m_parameters;
         size_t m_temporary_pool_size;
 
     private:

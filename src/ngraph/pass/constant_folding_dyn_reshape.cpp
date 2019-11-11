@@ -17,7 +17,7 @@
 #include <numeric>
 
 #include "constant_folding.hpp"
-#include "ngraph/op/experimental/dyn_reshape.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -26,7 +26,7 @@ using namespace ngraph;
 
 template <class T>
 shared_ptr<op::Constant> fold_constant_dyn_reshape(shared_ptr<op::Constant> constant_data,
-                                                   shared_ptr<op::DynReshape> dyn_reshape)
+                                                   shared_ptr<op::v1::Reshape> dyn_reshape)
 {
     auto out_shape = dyn_reshape->get_shape();
 
@@ -50,7 +50,7 @@ void pass::ConstantFolding::construct_constant_dyn_reshape()
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
     auto constant_shape_label =
         make_shared<pattern::op::Label>(element::i64, Shape{1}, pattern::has_class<op::Constant>());
-    auto dyn_reshape = make_shared<op::DynReshape>(constant_data_label, constant_shape_label);
+    auto dyn_reshape = make_shared<op::v1::Reshape>(constant_data_label, constant_shape_label);
 
     // Note: No need to capture or consider constant_shape_label, because
     // shape propagation will have transferred the info to dyn_reshape's
@@ -63,7 +63,7 @@ void pass::ConstantFolding::construct_constant_dyn_reshape()
 
         auto constant_data_match =
             static_pointer_cast<op::Constant>(pattern_map[constant_data_label]);
-        auto dyn_reshape_match = static_pointer_cast<op::DynReshape>(m.get_match_root());
+        auto dyn_reshape_match = static_pointer_cast<op::v1::Reshape>(m.get_match_root());
 
         NGRAPH_CHECK(revalidate_and_ensure_static(dyn_reshape_match));
 
