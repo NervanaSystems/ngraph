@@ -98,7 +98,7 @@ namespace ngraph
                 const BinaryConvolutionMode& get_mode() const { return m_mode; }
                 void set_mode(const BinaryConvolutionMode& mode) { m_mode = mode; }
                 /// \return The pad value.
-                const float get_pad_value() const { return m_pad_value; }
+                float get_pad_value() const { return m_pad_value; }
                 void set_pad_value(float pad_value) { m_pad_value = pad_value; }
             protected:
                 BinaryConvolutionMode mode_from_string(const std::string& mode) const;

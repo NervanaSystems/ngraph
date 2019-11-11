@@ -34,7 +34,7 @@ namespace ngraph
     namespace descriptor
     {
         // Describes an output tensor of an op
-        class Output
+        class NGRAPH_API Output
         {
         public:
             /// \param node Node that owns this output.

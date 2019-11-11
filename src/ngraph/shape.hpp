@@ -88,5 +88,6 @@ namespace ngraph
         return 1 == shape.size();
     }
 
+    NGRAPH_API
     std::ostream& operator<<(std::ostream& s, const Shape& shape);
 }

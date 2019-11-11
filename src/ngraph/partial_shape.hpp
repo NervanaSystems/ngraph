@@ -281,5 +281,6 @@ namespace ngraph
     /// {1,?,2,3}
     /// {2,3,4}
     /// \endcode
+    NGRAPH_API
     std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
 }
