@@ -467,6 +467,30 @@ namespace
         return matchSuccess();
     }
 
+    REWRITER(NGGreaterEqOp)
+    {
+        lowerBinaryElementwise<mlir::NGGreaterEqOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGLessEqOp)
+    {
+        lowerBinaryElementwise<mlir::NGLessEqOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGEqOp)
+    {
+        lowerBinaryElementwise<mlir::NGEqOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGNotEqOp)
+    {
+        lowerBinaryElementwise<mlir::NGNotEqOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
     REWRITER(NGMaxOp)
     {
         lowerBinaryElementwise<mlir::NGMaxOp>(op, operands, rewriter, pass);
@@ -1199,6 +1223,22 @@ namespace
                 else if (isa<NGLessOp>(op))
                 {
                     iRes(ivs) = ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs));
+                }
+                else if (isa<NGGreaterEqOp>(op))
+                {
+                    iRes(ivs) = ValueHandle(iLHS(ivs)) >= ValueHandle(iRHS(ivs));
+                }
+                else if (isa<NGLessEqOp>(op))
+                {
+                    iRes(ivs) = ValueHandle(iLHS(ivs)) <= ValueHandle(iRHS(ivs));
+                }
+                else if (isa<NGEqOp>(op))
+                {
+                    iRes(ivs) = ValueHandle(iLHS(ivs)) == ValueHandle(iRHS(ivs));
+                }
+                else if (isa<NGNotEqOp>(op))
+                {
+                    iRes(ivs) = ValueHandle(iLHS(ivs)) != ValueHandle(iRHS(ivs));
                 }
                 else if (isa<NGMaxOp>(op))
                 {
