@@ -56,7 +56,8 @@ NodeVector op::BatchMatMulTranspose::decompose_op() const
 
     const auto arg0_shape = get_input_shape(0);
     const auto num_batches = arg0_shape.at(0);
-    std::shared_ptr<op::Reshape> dot_inputs[2 * num_batches];
+
+    OutputVector dot_inputs;
 
     for (size_t i = 0; i < 2; i++)
     {
@@ -74,10 +75,10 @@ NodeVector op::BatchMatMulTranspose::decompose_op() const
             auto reshape_slice =
                 std::make_shared<op::Reshape>(slice, AxisVector{0, 1, 2}, arg_shape_res);
 
-            dot_inputs[i * num_batches + j] =
-                transpose ? std::make_shared<op::Reshape>(
-                                reshape_slice, AxisVector{1, 0}, arg_shape_res_trans)
-                          : reshape_slice;
+            dot_inputs.push_back(transpose ? std::make_shared<op::Reshape>(reshape_slice,
+                                                                           AxisVector{1, 0},
+                                                                           arg_shape_res_trans)
+                                           : reshape_slice);
         }
     }
     NodeVector concat_inputs;
