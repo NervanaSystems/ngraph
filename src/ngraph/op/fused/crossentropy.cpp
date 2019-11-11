@@ -163,7 +163,6 @@ NodeVector op::CrossEntropy::decompose_op() const
     {
         // we will have one_hot encoding on labels if softmax_labels = false
         size_t one_hot_axis = input_to_normalize.get_shape().size() - 1;
-        size_t softmax_axis = input_to_normalize.get_shape().size() - 1;
         auto reshape_labels =
             make_shared<op::Reshape>(labels, AxisVector{0, 1}, Shape{labels.get_shape().at(0)});
         auto one_hot_labels = std::make_shared<ngraph::op::OneHot>(
