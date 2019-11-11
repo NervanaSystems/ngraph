@@ -183,7 +183,7 @@ namespace ngraph
         Dimension& operator[](size_t i) { return m_dimensions[i]; }
         /// \brief Returns a vector of the dimensions. This has no meaning if dynamic.
         explicit operator std::vector<Dimension>() const { return m_dimensions; }
-        friend std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
+        friend NGRAPH_API std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
         friend PartialShape operator+(const PartialShape& s1, const PartialShape& s2);
 
         /// \brief Try to merge one shape into another.
