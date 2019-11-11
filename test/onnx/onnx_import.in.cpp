@@ -1703,3 +1703,14 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reverse_sequence_time_and_batch_axis_equ
                  ngraph_error)
         << "ReverseSequence 'time_axis' and 'batch_axis' can't be equal.";
 }
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, matmul_float_type)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/matmul_float.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>(std::vector<float>{0,1,2,3,4,5});
+    test_case.add_input<float>(std::vector<float>{0,1});
+    test_case.add_expected_output<float>(Shape{3,1}, std::vector<float>{1,3,5});
+    test_case.run();
+}
