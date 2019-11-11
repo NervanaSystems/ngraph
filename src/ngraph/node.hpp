@@ -81,7 +81,6 @@ namespace ngraph
 
     const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
                                                          size_t i);
-    const NodeVector& check_single_output_args(const NodeVector& args);
 
     OutputVector as_output_vector(const NodeVector& args);
     NodeVector as_node_vector(const OutputVector& values);
