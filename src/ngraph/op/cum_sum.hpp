@@ -18,7 +18,6 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/op/util/arithmetic_reduction.hpp"
 
 namespace ngraph
 {
@@ -60,7 +59,7 @@ namespace ngraph
             /// | Output tensor of the same type as `arg` with cumulative sums of the arg's elements  |
 	    //
 	    // clang-format off
-            class CumSum : public util::ArithmeticReduction
+            class CumSum : public Op 
             {
             public:
                 NGRAPH_API
@@ -68,19 +67,25 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a cumulative summation operation.
                 CumSum() = default;
-                
+               
 		/// \brief Constructs a cumulative summation operation.
                 ///
                 /// \param arg The tensor to be summed.
                 /// \param axis The axis position along which cumulative sum must be performed.
-                CumSum(const Output<Node>& arg, const Output<Node>& axis, int exclusive, int reverse);
+                CumSum(const Output<Node>& arg, const int64_t axis = 0, int exclusive = 0, int reverse = 0); 
+	
+		/// \brief Constructs a cumulative summation operation.
+                ///
+                /// \param arg The tensor to be summed.
+                /// \param axis The axis position along which cumulative sum must be performed.
+                CumSum(const Output<Node>& arg, const Output<Node>& axis, int exclusive = 0, int reverse = 0);
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 /// \return The default value for CumSum.
                 virtual std::shared_ptr<Node> get_default_value() const override;
-
+		int64_t get_axis() { return m_axis; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                     const NodeVector& deltas) override;
@@ -88,6 +93,7 @@ namespace ngraph
 	    private:
 		int m_exclusive;
 		int m_reverse;
+		int64_t m_axis;
             };
         }
         // default opset version

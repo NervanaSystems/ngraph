@@ -138,6 +138,8 @@ set (SRC
     op/cos.hpp
     op/cosh.cpp
     op/cosh.hpp
+    op/cum_sum.cpp
+    op/cum_sum.hpp
     op/dequantize.cpp
     op/dequantize.hpp
     op/divide.cpp

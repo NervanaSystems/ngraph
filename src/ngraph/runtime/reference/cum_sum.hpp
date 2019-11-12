@@ -58,8 +58,8 @@ namespace ngraph
                         const Shape& in_shape,
                         const Shape& out_shape,
                         const T axis,
-		        const int exclusive,
-			const int reverse)
+                        const int exclusive,
+                        const int reverse)
             {
                 CoordinateTransform output_transform(out_shape);
                 std::vector<T> cs(shape_size(out_shape));
@@ -74,7 +74,7 @@ namespace ngraph
 
                 for (const Coordinate& input_coord : input_transform)
                 {
-	 	    output_transform = reduce(input_transform, AxisSet{axis});
+                    output_transform = reduce(input_transform, AxisSet{axis});
                     T x = arg[input_transform.index(input_coord)];
                     T& z = out[output_transform.index(output_coord)];
 
@@ -88,7 +88,7 @@ namespace ngraph
                     else
                     {
                         T t = z + x;
-			z = z + t;
+                        z = z + t;
                     }
                 }
             }
