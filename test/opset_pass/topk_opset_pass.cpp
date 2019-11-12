@@ -19,6 +19,7 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "util/type_prop.hpp"
 
@@ -30,7 +31,7 @@ TEST(opset_transform, opset1_topk_upgrade_pass)
     const size_t axis = 2;
     const size_t k = 10;
     const auto data = make_shared<op::Parameter>(element::i32, Shape{5, 10, 15});
-    const auto topk_v0 = make_shared<op::TopK>(data, axis, element::i32, k);
+    const auto topk_v0 = make_shared<op::v0::TopK>(data, axis, element::i32, k);
     const auto result = make_shared<op::Result>(topk_v0);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
@@ -50,4 +51,35 @@ TEST(opset_transform, opset1_topk_upgrade_pass)
 
     const auto values_out_element_type = topk_v1->output(0).get_element_type();
     EXPECT_EQ(values_out_element_type, data->get_element_type());
+}
+
+TEST(opset_transform, opset1_topk_downgrade_pass)
+{
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{5, 10, 15});
+    const int32_t k = 10;
+    const auto k_node = op::Constant::create(element::i64, Shape{}, {k});
+    const size_t axis = 2;
+    const auto mode = op::v1::TopK::Mode::MAX;
+    const auto sort = op::v1::TopK::SortType::SORT_INDICES;
+    const auto elem_type = element::i64;
+
+    const auto topk_v1 = make_shared<op::v1::TopK>(data, k_node, axis, mode, sort, elem_type);
+    const auto result = make_shared<op::Result>(topk_v1);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.run_passes(f);
+
+    const auto pass_replacement_node =
+        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto topk_v0 = as_type_ptr<op::v0::TopK>(pass_replacement_node);
+
+    EXPECT_EQ(topk_v0->description(), "TopK");
+    EXPECT_EQ(topk_v0->get_version(), 0);
+    EXPECT_EQ(topk_v0->get_k(), k);
+    EXPECT_EQ(topk_v0->get_top_k_axis(), axis);
+    EXPECT_EQ(topk_v0->get_compute_max(), true);
+    EXPECT_EQ(topk_v0->get_sort(), op::v0::TopK::SortType::SORT_INDICES);
+    EXPECT_EQ(topk_v0->get_index_element_type(), elem_type);
 }

@@ -129,7 +129,7 @@ TEST(type_prop_layers, proposal)
     attrs.base_size = 1;
     attrs.pre_nms_topn = 20;
     attrs.post_nms_topn = 200;
-    const uint64_t batch_size = 7;
+    const size_t batch_size = 7;
 
     auto class_probs = make_shared<op::Parameter>(element::f32, Shape{batch_size, 12, 34, 62});
     auto class_logits = make_shared<op::Parameter>(element::f32, Shape{batch_size, 24, 34, 62});

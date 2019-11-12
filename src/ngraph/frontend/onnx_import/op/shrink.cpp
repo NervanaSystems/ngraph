@@ -70,7 +70,7 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> values_below_neg_lambd =
                         std::make_shared<ngraph::op::Less>(input, negative_lambd);
                     std::shared_ptr<ngraph::Node> values_above_pos_lambd =
-                        std::make_shared<ngraph::op::Greater>(input, positive_lambd);
+                        std::make_shared<ngraph::op::v1::Greater>(input, positive_lambd);
 
                     // Convert from bool to the input type to be able to multiply adjusted inputs
                     // by the created masks
