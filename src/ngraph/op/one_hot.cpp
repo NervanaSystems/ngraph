@@ -97,3 +97,84 @@ shared_ptr<Node> op::v0::OneHot::copy_with_new_args(const NodeVector& new_args) 
     check_new_args_count(this, new_args);
     return make_shared<v0::OneHot>(new_args.at(0), m_shape, m_one_hot_axis);
 }
+
+constexpr NodeTypeInfo op::v1::OneHot::type_info;
+
+op::v1::OneHot::OneHot(const Output<Node>& indices,
+                       const Output<Node>& depth,
+                       const Output<Node>& values,
+                       int64_t axis)
+    : Op({indices, depth, values})
+    , m_axis(axis)
+{
+    constructor_validate_and_infer_types();
+}
+
+void op::v1::OneHot::validate_and_infer_types()
+{
+    element::Type arg_et = get_input_element_type(0);
+    PartialShape arg_shape = get_input_partial_shape(0);
+    Rank arg_rank = arg_shape.rank();
+
+    NODE_VALIDATION_CHECK(this,
+                          arg_et.is_dynamic() || arg_et.is_integral(),
+                          "Argument does not have integral element type.");
+
+    NODE_VALIDATION_CHECK(
+        this, m_shape.rank().is_static(), "Requested result shape has dynamic rank.");
+
+    NODE_VALIDATION_CHECK(this,
+                          m_one_hot_axis < static_cast<size_t>(m_shape.rank()),
+                          "One-hot axis (",
+                          m_one_hot_axis,
+                          ") is out of bounds (requested result shape: ",
+                          m_shape,
+                          ").");
+
+    NODE_VALIDATION_CHECK(this,
+                          m_shape[m_one_hot_axis].is_static(),
+                          "Requested result shape (",
+                          m_shape,
+                          ") has dynamic dimension at the one-hot axis ",
+                          "(",
+                          m_one_hot_axis,
+                          ").");
+
+    PartialShape result_shape{m_shape};
+
+    if (arg_rank.is_static())
+    {
+        std::vector<Dimension> expected_input_dims(static_cast<size_t>(m_shape.rank()));
+        for (size_t i = 0; i < static_cast<size_t>(m_shape.rank()); i++)
+        {
+            expected_input_dims[i] = m_shape[i];
+        }
+        expected_input_dims.erase(expected_input_dims.begin() + m_one_hot_axis);
+        PartialShape expected_input_shape{expected_input_dims};
+
+        PartialShape merged_input_shape{expected_input_shape};
+        NODE_VALIDATION_CHECK(this,
+                              PartialShape::merge_into(merged_input_shape, arg_shape),
+                              "Argument shape ",
+                              arg_shape,
+                              " does not match the expected shape of ",
+                              expected_input_shape,
+                              ".");
+
+        std::vector<Dimension> output_dims(static_cast<size_t>(merged_input_shape.rank()));
+        for (size_t i = 0; i < static_cast<size_t>(merged_input_shape.rank()); i++)
+        {
+            output_dims[i] = merged_input_shape[i];
+        }
+        output_dims.insert(output_dims.begin() + m_one_hot_axis, m_shape[m_one_hot_axis]);
+        result_shape = PartialShape{output_dims};
+    }
+
+    set_output_type(0, arg_et, result_shape);
+}
+
+shared_ptr<Node> op::v1::OneHot::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<v1::OneHot>(new_args.at(0), new_args.at(1), new_args.at(2), m_axis);
+}

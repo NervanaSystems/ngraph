@@ -50,14 +50,15 @@ namespace ngraph
             {
             public:
                 NGRAPH_API
-                    static constexpr NodeTypeInfo type_info{ "OneHot", 0 };
+                static constexpr NodeTypeInfo type_info{"OneHot", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a one-hot operation.
                 OneHot() = default;
                 /// \brief Constructs a one-hot operation.
                 ///
                 /// \param arg          Node that produces the input tensor to be one-hot encoded.
-                /// \param shape        The shape of the output tensor, including the new one-hot axis.
+                /// \param shape        The shape of the output tensor, including the new one-hot
+                /// axis.
                 /// \param one_hot_axis The index within the output shape of the new one-hot axis.
                 OneHot(const Output<Node>& arg, const PartialShape& shape, size_t one_hot_axis);
 
@@ -71,6 +72,39 @@ namespace ngraph
             protected:
                 PartialShape m_shape;
                 size_t m_one_hot_axis;
+            };
+        }
+        namespace v1
+        {
+            class OneHot : public Op
+            {
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"OneHot", 1};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a one-hot operation.
+                OneHot() = default;
+                /// \brief Constructs a one-hot operation.
+                ///
+                /// \param arg          Node that produces the input tensor to be one-hot encoded.
+                /// \param shape        The shape of the output tensor, including the new one-hot
+                /// axis.
+                /// \param one_hot_axis The index within the output shape of the new one-hot axis.
+                // TODO
+                OneHot(const Output<Node>& indices,
+                       const Output<Node>& depth,
+                       const Output<Node>& values,
+                       int64_t axis);
+
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+                void validate_and_infer_types() override;
+
+                /// \return The index of the one-hot axis.
+                int64_t get_axis() const { return m_axis; }
+                void set_one_hot_axis(int64_t axis) { m_axis = axis; }
+            protected:
+                int64_t m_axis;
             };
         }
         // default opset version
