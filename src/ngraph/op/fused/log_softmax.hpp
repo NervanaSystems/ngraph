@@ -29,7 +29,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Selu", 1};
+            static constexpr NodeTypeInfo type_info{"LogSoftmax", 0};
+            LogSoftmax() = default;
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a LogSoftmax node.
             ///

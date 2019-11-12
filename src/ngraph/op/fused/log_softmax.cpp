@@ -18,6 +18,7 @@
 #include "ngraph/op/fused/log_softmax.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/softmax.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -36,8 +37,10 @@ NodeVector op::LogSoftmax::decompose_op() const
     const auto data = input_value(0);
     const auto data_shape = data.get_shape();
 
-    std::vector<size_t> axes(data_shape.size() - m_axis);
-    std::iota(std::begin(axes), std::end(axes), m_axis);
+    auto valid_axis = ngraph::validate_axis(this, m_axis, data_shape.size());
+
+    std::vector<size_t> axes(data_shape.size() - valid_axis);
+    std::iota(std::begin(axes), std::end(axes), valid_axis);
 
     auto softmax = std::make_shared<ngraph::op::Softmax>(data, axes);
 
