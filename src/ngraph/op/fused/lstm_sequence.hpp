@@ -24,6 +24,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
@@ -35,6 +36,9 @@ namespace ngraph
         ///
         /// \note       It follows notation and equations defined as in ONNX standard:
         ///             https://github.com/onnx/onnx/blob/master/docs/Operators.md#LSTM
+        ///
+        /// \sa         LSTMCell, RNNCell, GRUCell
+        ///
         ///
         class LSTMSequence : public util::FusedOp
         {
@@ -61,6 +65,7 @@ namespace ngraph
                                   const Output<Node>& P,
                                   const std::int64_t hidden_size,
                                   const direction lstm_direction,
+                                  LSTMWeightsFormat weights_format = LSTMWeightsFormat::IFCO,
                                   const std::vector<float> activations_alpha = {},
                                   const std::vector<float> activations_beta = {},
                                   const std::vector<std::string> activations = {"sigmoid",
@@ -77,6 +82,7 @@ namespace ngraph
                 , m_direction(lstm_direction)
                 , m_hidden_size(hidden_size)
                 , m_input_forget(input_forget)
+                , m_weights_format(weights_format)
             {
                 constructor_validate_and_infer_types();
             }
@@ -90,6 +96,7 @@ namespace ngraph
                                   const Output<Node>& B,
                                   const std::int64_t hidden_size,
                                   const direction lstm_direction,
+                                  LSTMWeightsFormat weights_format = LSTMWeightsFormat::IFCO,
                                   const std::vector<float> activations_alpha = {},
                                   const std::vector<float> activations_beta = {},
                                   const std::vector<std::string> activations = {"sigmoid",
@@ -111,6 +118,7 @@ namespace ngraph
                                    std::vector<float>{0.f}),
                                hidden_size,
                                lstm_direction,
+                               weights_format,
                                activations_alpha,
                                activations_beta,
                                activations,
@@ -131,6 +139,7 @@ namespace ngraph
             direction get_direction() const { return m_direction; }
             std::int64_t get_hidden_size() const { return m_hidden_size; }
             bool get_input_forget() const { return m_input_forget; }
+            LSTMWeightsFormat get_weights_format() const { return m_weights_format; }
         private:
             ///
             /// \brief      Gets the masked value according to sequence lenght in a batch.
@@ -163,6 +172,7 @@ namespace ngraph
             direction m_direction;
             std::int64_t m_hidden_size;
             bool m_input_forget;
+            LSTMWeightsFormat m_weights_format;
         };
     } // namespace op
 } // namespace ngraph

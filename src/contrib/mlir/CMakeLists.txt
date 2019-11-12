@@ -32,6 +32,8 @@ set(SRC
     core/ngraph_dialect/ops.cpp
     core/pass/mlir_subgraph_extraction.cpp
     core/pass/mlir_subgraph_extraction.hpp
+    core/pass/ng_dialect_builder.cpp
+    core/pass/ng_dialect_builder.hpp
     runtime/cpu/memory_manager.cpp
     runtime/cpu/cpu_runtime.cpp
     utils.cpp
@@ -97,14 +99,29 @@ function(ngraph_tablegen ofn)
     set(TABLEGEN_OUTPUT ${TABLEGEN_OUTPUT} ${CMAKE_CURRENT_BINARY_DIR}/${ofn} PARENT_SCOPE)
 endfunction()
 
-set(MLIR_TABLEGEN_EXE mlir-tblgen)
-set(LLVM_TARGET_DEFINITIONS core/ngraph_dialect/ops.td)
 
+set(MLIR_TABLEGEN_EXE mlir-tblgen)
+
+# table-gen ops.td
+set(LLVM_TARGET_DEFINITIONS core/ngraph_dialect/ops.td)
 ngraph_tablegen(ops.h.inc -gen-op-decls)
 ngraph_tablegen(ops.cpp.inc -gen-op-defs)
-
 add_public_tablegen_target(ngraph_ops_gen)
-add_dependencies(mlir_backend ngraph_ops_gen)
+
+# table-gen ops_interfaces.td
+set(LLVM_TARGET_DEFINITIONS core/ngraph_dialect/ops_interfaces.td)
+ngraph_tablegen(ops_interfaces.h.inc -gen-op-interface-decls)
+ngraph_tablegen(ops_interfaces.cpp.inc -gen-op-interface-defs)
+add_public_tablegen_target(ngraph_ops_interfaces_gen)
+
+# tabel-gen ops attributes.td
+set(LLVM_TARGET_DEFINITIONS core/ngraph_dialect/ops_attributes.td)
+ngraph_tablegen(ops_attributes.h.inc -gen-enum-decls)
+ngraph_tablegen(ops_attributes.cpp.inc -gen-enum-defs)
+add_public_tablegen_target(ngraph_ops_attributes_gen)
+
+add_dependencies(mlir_backend ngraph_ops_gen ngraph_ops_interfaces_gen ngraph_ops_attributes_gen)
+
 target_include_directories(mlir_backend PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 install(TARGETS mlir_backend DESTINATION ${NGRAPH_INSTALL_LIB})

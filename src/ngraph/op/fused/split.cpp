@@ -29,11 +29,6 @@ op::Split::Split(const Output<Node>& data, const int axis, const size_t num_spli
     , m_axis{axis}
     , m_num_split{num_split}
 {
-    // Create dynamic-typed outputs. Actual shape/type will be computed during shape inference
-    for (size_t i = 0; i < num_split; i++)
-    {
-        set_output_type(i, element::dynamic, PartialShape::dynamic());
-    }
     constructor_validate_and_infer_types();
 }
 
@@ -41,18 +36,25 @@ op::Split::Split(const Output<Node>& data, const int axis, const std::vector<siz
     : FusedOp({data})
     , m_split_evenly{false}
     , m_axis{axis}
+    , m_num_split{0}
     , m_splits{splits}
 {
-    // Create dynamic-typed outputs. Actual shape/type will be computed during shape inference
-    for (size_t i = 0; i < splits.size(); i++)
-    {
-        set_output_type(i, element::dynamic, PartialShape::dynamic());
-    }
     constructor_validate_and_infer_types();
 }
 
 void op::Split::pre_validate_and_infer_types()
 {
+    // Create dynamic-typed outputs. Actual shape/type will be computed during shape inference
+    for (size_t i = 0; i < std::max(m_splits.size(), m_num_split); i++)
+    {
+        set_output_type(i, input(0).get_element_type(), PartialShape::dynamic());
+    }
+
+    if (is_dynamic())
+    {
+        return;
+    }
+
     const auto shape = input(0).get_shape();
 
     m_axis = adjust_axis_value(m_axis, shape.size());
