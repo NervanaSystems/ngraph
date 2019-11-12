@@ -58,7 +58,8 @@ namespace ngraph
             {
                 registry.register_factory<op::Abs>();
                 registry.register_factory<op::Acos>();
-                registry.register_factory<op::Add>();
+                registry.register_factory<op::v0::Add>();
+                registry.register_factory<op::v1::Add>();
                 registry.register_factory<op::All>();
                 registry.register_factory<op::AllReduce>();
                 registry.register_factory<op::And>();

@@ -62,6 +62,7 @@ public:
            const Output<Node>& data,
            TuringModel turing_model,
            uint64_t model_version,
+           uint8_t rev,
            const string& serial_number,
            bool enable_turbo,
            const std::vector<uint64_t>& hyper_parameters,
@@ -69,6 +70,7 @@ public:
         : Op({program, data})
         , m_turing_model(turing_model)
         , m_model_version(model_version)
+        , m_rev(rev)
         , m_serial_number(serial_number)
         , m_enable_turbo(enable_turbo)
         , m_hyper_parameters(hyper_parameters)
@@ -92,6 +94,7 @@ public:
                                    args[1],
                                    m_turing_model,
                                    m_model_version,
+                                   m_rev,
                                    m_serial_number,
                                    m_enable_turbo,
                                    m_hyper_parameters,
@@ -103,6 +106,7 @@ public:
     {
         visitor.on_attribute("turing_model", m_turing_model);
         visitor.on_attribute("model_version", m_model_version);
+        visitor.on_attribute("rev", m_rev);
         visitor.on_attribute("serial_number", m_serial_number);
         visitor.on_attribute("enable_turbo", m_enable_turbo);
         visitor.on_attribute("hyper_parameters", m_hyper_parameters);
@@ -113,6 +117,7 @@ public:
 protected:
     TuringModel m_turing_model;
     uint64_t m_model_version;
+    int8_t m_rev;
     string m_serial_number;
     bool m_enable_turbo;
     vector<uint64_t> m_hyper_parameters;
@@ -148,9 +153,6 @@ public:
 
     void on_attribute(const string& name, string& value) override { set_string(name, value); };
     void on_attribute(const string& name, bool& value) override { set_bool(name, value); }
-    void on_attribute(const string& name, double& value) override { set_double(name, value); }
-    void on_attribute(const string& name, int64_t& value) override { set_signed(name, value); }
-    void on_attribute(const string& name, uint64_t& value) override { set_unsigned(name, value); }
     void on_adapter(const string& name, ValueAccessor<void>& adapter) override
     {
         NGRAPH_CHECK(false, "name cannot be marshalled");
@@ -163,6 +165,14 @@ public:
     void on_adapter(const string& name, ValueAccessor<vector<int64_t>>& adapter) override
     {
         set_signed_vector(name, adapter.get());
+    }
+    void on_adapter(const string& name, ValueAccessor<int64_t>& adapter) override
+    {
+        set_signed(name, adapter.get());
+    }
+    void on_adapter(const string& name, ValueAccessor<double>& adapter) override
+    {
+        set_double(name, adapter.get());
     }
 
 protected:
@@ -196,18 +206,6 @@ public:
         value = m_values.get_string(name);
     };
     void on_attribute(const string& name, bool& value) override { value = m_values.get_bool(name); }
-    void on_attribute(const string& name, double& value) override
-    {
-        value = m_values.get_double(name);
-    }
-    void on_attribute(const string& name, int64_t& value) override
-    {
-        value = m_values.get_signed(name);
-    }
-    void on_attribute(const string& name, uint64_t& value) override
-    {
-        value = m_values.get_unsigned(name);
-    }
     void on_adapter(const string& name, ValueAccessor<void>& adapter) override
     {
         NGRAPH_CHECK(false, "name cannot be marshalled");
@@ -220,6 +218,14 @@ public:
     void on_adapter(const string& name, ValueAccessor<vector<int64_t>>& adapter) override
     {
         adapter.set(m_values.get_signed_vector(name));
+    }
+    void on_adapter(const string& name, ValueAccessor<int64_t>& adapter) override
+    {
+        adapter.set(m_values.get_signed(name));
+    }
+    void on_adapter(const string& name, ValueAccessor<double>& adapter) override
+    {
+        adapter.set(m_values.get_double(name));
     }
 
 protected:
@@ -235,6 +241,7 @@ TEST(attributes, user_op)
                                       data,
                                       TuringModel::XL1200,
                                       2,
+                                      4,
                                       "12AU7",
                                       true,
                                       vector<uint64_t>{1, 2, 4, 8},
