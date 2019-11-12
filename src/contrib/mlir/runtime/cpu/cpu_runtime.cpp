@@ -89,7 +89,7 @@ void MLIRCPURuntime::bindArguments(std::vector<void*>& externalTensors)
     // Create list with a type-erased double pointer for each invocation arguments.
     // We currently use 'allocateMemrefArgs', which creates the arguments list per call ABI (see
     // comment below).
-    // StaticFloatMemref is just a struct with the actual pointer to the data.
+    // StaticMemRef is just a struct with the actual pointer to the data.
 
     auto expectedArguments = allocateMemrefArgs();
     NGRAPH_CHECK(expectedArguments.size(), "Arguments can't be created");
@@ -101,7 +101,7 @@ void MLIRCPURuntime::bindArguments(std::vector<void*>& externalTensors)
     // Assign external tensor pointers to invocation arguments.
     for (size_t i = 0, numArgs = m_invokeArgs.size(); i < numArgs; ++i)
     {
-        auto* memRefArg = *(reinterpret_cast<mlir::StaticFloatMemRef**>(m_invokeArgs[i]));
+        auto* memRefArg = *(reinterpret_cast<StaticMemRef**>(m_invokeArgs[i]));
         memRefArg->data = reinterpret_cast<float*>((*m_externalTensors)[i]);
     }
 }
@@ -128,18 +128,18 @@ void MLIRCPURuntime::cleanup()
     // Free void double pointer arguments without freeing external tensor data.
     for (auto* arg : m_invokeArgs)
     {
-        auto* memRefArg = *(reinterpret_cast<mlir::StaticFloatMemRef**>(arg));
+        auto* memRefArg = *(reinterpret_cast<StaticMemRef**>(arg));
         free(memRefArg);
         free(arg);
     }
 }
 
 // The current call ABI takes a single arg pointer (argPtr) pointing to a list of args.
-// Each arg is a  pointer to a StaticFloatMemRef which contains a data pointer
+// Each arg is a  pointer to a StaticMemRef which contains a data pointer
 //
 // The args are laid out as follows
-// argPtr-> arg[0]-> StaticFloatMemRef -> <data>
-//          arg[1]-> StaticFloatMemRef -> <data>
+// argPtr-> arg[0]-> StaticMemRef -> <data>
+//          arg[1]-> StaticMemRef -> <data>
 //          ...
 SmallVector<void*, 8> MLIRCPURuntime::allocateMemrefArgs()
 {
@@ -147,20 +147,20 @@ SmallVector<void*, 8> MLIRCPURuntime::allocateMemrefArgs()
     for (auto i = 0; i < m_externalTensors->size(); i++)
     {
         auto descriptor = allocateMemrefDescriptor();
-        mlir::StaticFloatMemRef** arg =
-            reinterpret_cast<mlir::StaticFloatMemRef**>(malloc(sizeof(mlir::StaticFloatMemRef*)));
+        StaticMemRef** arg =
+            reinterpret_cast<StaticMemRef**>(malloc(sizeof(StaticMemRef*)));
         *arg = descriptor;
         args.push_back(arg);
     }
     return args;
 }
 
-mlir::StaticFloatMemRef* MLIRCPURuntime::allocateMemrefDescriptor()
+StaticMemRef* MLIRCPURuntime::allocateMemrefDescriptor()
 {
-    // We only use StaticFloatMemRef because that's what MLIR currently offers.
+    // We only use StaticMemRef because that's what MLIR currently offers.
     // We should expand this with different types and dynamic MemRefs
     auto* descriptor =
-        reinterpret_cast<mlir::StaticFloatMemRef*>(malloc(sizeof(mlir::StaticFloatMemRef)));
+        reinterpret_cast<StaticMemRef*>(malloc(sizeof(StaticMemRef)));
     NGRAPH_CHECK(descriptor != nullptr, "NULL MemRef descriptor");
     descriptor->data = nullptr;
     return descriptor;

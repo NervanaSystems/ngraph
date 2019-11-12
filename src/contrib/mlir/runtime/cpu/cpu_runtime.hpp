@@ -33,6 +33,10 @@ namespace ngraph
     {
         namespace ngmlir
         {
+            struct StaticMemRef
+            {
+                void* data;
+            };
             /// A CPU Runtime is an MLIR runtime that owns an MLIR context and a module
             /// The module should be in LLVM dialect and ready to be lowered via an MLIR
             /// ExecutionEngine. The runtime owns the context and must out-live any MLIR
@@ -56,7 +60,7 @@ namespace ngraph
                 llvm::SmallVector<void*, 8> allocateMemrefArgs();
 
                 /// Helper to allocate a mem ref object. Handles static shapes only for now.
-                mlir::StaticFloatMemRef* allocateMemrefDescriptor();
+                StaticMemRef* allocateMemrefDescriptor();
 
             private:
                 // Pointers to externally allocated memory for sub-graph's input and output tensors.

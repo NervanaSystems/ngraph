@@ -41,5 +41,7 @@ namespace mlir
             mlir::DialectAsmPrinter &printer) const override;
 
         static StringRef getDialectNamespace() { return "ng"; }
+    private:
+        mlir::Type parseEltType(mlir::DialectAsmParser &parser) const;        
     };
 }
