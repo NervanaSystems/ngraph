@@ -32,17 +32,17 @@ namespace ngraph
             {
             public:
                 NGRAPH_API
-                static constexpr NodeTypeInfo type_info{"VariadicSplit", 0};
+                static constexpr NodeTypeInfo type_info{"VariadicSplit", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a variadic split operation.
                 VariadicSplit() = default;
                 /// \brief Constructs a variadic split operation.
                 ///
                 /// \param data           The tensor to be split.
-                /// \param axis           An axis along "data" to split.
+                /// \param axis           The index of an axis in "data" along which to perform the split.
                 /// \param split_lengths  A list containing the sizes of each output tensor along
                 /// the split "axis". Size of "split_lengths" should be equal to the number of
-                /// inputs. The sum of sizes must match data.shape[axis]
+                /// outputs. The sum of split_lengths must match data.shape[axis]
                 VariadicSplit(const Output<Node>& data,
                               const Output<Node>& axis,
                               const Output<Node>& split_lengths);
