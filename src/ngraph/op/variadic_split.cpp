@@ -19,18 +19,18 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::VariadicSplit::type_info;
+constexpr NodeTypeInfo op::v1::VariadicSplit::type_info;
 
-op::VariadicSplit::VariadicSplit(const Output<Node>& data,
-                                 const Output<Node>& axis,
-                                 const Output<Node>& split_lengths)
+op::v1::VariadicSplit::VariadicSplit(const Output<Node>& data,
+                                     const Output<Node>& axis,
+                                     const Output<Node>& split_lengths)
     : Op({data, axis, split_lengths})
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::VariadicSplit::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::VariadicSplit::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<VariadicSplit>(new_args.at(0), new_args.at(1), new_args.at(2));
+    return make_shared<v1::VariadicSplit>(new_args.at(0), new_args.at(1), new_args.at(2));
 }

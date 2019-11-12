@@ -24,29 +24,34 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief VariadicSplit operation splits an input tensor into pieces along some axis. The
-        /// pieces may have variadic lengths depending on "split_lengths" attribute.
-        class VariadicSplit : public Op
+        namespace v1
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"VariadicSplit", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a variadic split operation.
-            VariadicSplit() = default;
-            /// \brief Constructs a variadic split operation.
-            ///
-            /// \param data           The tensor to be splited.
-            /// \param axis           An axis along "data" to split.
-            /// \param split_lengths  A list containing the sizes of each output tensor along the
-            /// split "axis". Size of "split_lengths" should be equal to the number of inputs. The
-            /// sum of sizes must match data.shape[axis]
-            VariadicSplit(const Output<Node>& data,
-                          const Output<Node>& axis,
-                          const Output<Node>& split_lengths);
+            /// \brief VariadicSplit operation splits an input tensor into pieces along some axis.
+            /// The pieces may have variadic lengths depending on "split_lengths" attribute.
+            class VariadicSplit : public Op
+            {
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"VariadicSplit", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a variadic split operation.
+                VariadicSplit() = default;
+                /// \brief Constructs a variadic split operation.
+                ///
+                /// \param data           The tensor to be split.
+                /// \param axis           An axis along "data" to split.
+                /// \param split_lengths  A list containing the sizes of each output tensor along
+                /// the split "axis". Size of "split_lengths" should be equal to the number of
+                /// inputs. The sum of sizes must match data.shape[axis]
+                VariadicSplit(const Output<Node>& data,
+                              const Output<Node>& axis,
+                              const Output<Node>& split_lengths);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        } // namespace v1
+
+        using v1::VariadicSplit;
     } // namespace op
 } // namespace ngraph

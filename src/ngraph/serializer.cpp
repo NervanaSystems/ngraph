@@ -2752,7 +2752,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::VariadicSplit:
         {
-            node = make_shared<op::VariadicSplit>(args[0], args[1], args[2]);
+            node = make_shared<op::v1::VariadicSplit>(args[0], args[1], args[2]);
             break;
         }
         case OP_TYPEID::Xor:
