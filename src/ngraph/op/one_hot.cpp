@@ -19,9 +19,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::OneHot::type_info;
+constexpr NodeTypeInfo op::v0::OneHot::type_info;
 
-op::OneHot::OneHot(const Output<Node>& arg, const PartialShape& shape, size_t one_hot_axis)
+op::v0::OneHot::OneHot(const Output<Node>& arg, const PartialShape& shape, size_t one_hot_axis)
     : Op({arg})
     , m_shape(shape)
     , m_one_hot_axis(one_hot_axis)
@@ -29,7 +29,7 @@ op::OneHot::OneHot(const Output<Node>& arg, const PartialShape& shape, size_t on
     constructor_validate_and_infer_types();
 }
 
-void op::OneHot::validate_and_infer_types()
+void op::v0::OneHot::validate_and_infer_types()
 {
     element::Type arg_et = get_input_element_type(0);
     PartialShape arg_shape = get_input_partial_shape(0);
@@ -92,8 +92,8 @@ void op::OneHot::validate_and_infer_types()
     set_output_type(0, arg_et, result_shape);
 }
 
-shared_ptr<Node> op::OneHot::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::OneHot::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<OneHot>(new_args.at(0), m_shape, m_one_hot_axis);
+    return make_shared<v0::OneHot>(new_args.at(0), m_shape, m_one_hot_axis);
 }
