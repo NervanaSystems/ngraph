@@ -39,13 +39,13 @@ static vector<string> to_lower_case(const vector<string>& vs)
 op::util::RNNCellBase::RNNCellBase(size_t hidden_size,
                                    float clip,
                                    const vector<string>& activations,
-                                   const vector<float>& activation_alpha,
-                                   const vector<float>& activation_beta)
+                                   const vector<float>& activations_alpha,
+                                   const vector<float>& activations_beta)
     : m_hidden_size(hidden_size)
     , m_clip(clip)
     , m_activations(to_lower_case(activations))
-    , m_activation_alpha(activation_alpha)
-    , m_activation_beta(activation_beta)
+    , m_activations_alpha(activations_alpha)
+    , m_activations_beta(activations_beta)
 {
 }
 
@@ -54,13 +54,13 @@ op::util::ActivationFunction op::util::RNNCellBase::get_activation_function(size
     op::util::ActivationFunction afunc = get_activation_func_by_name(m_activations.at(idx));
 
     // Set activation functions parameters (if any)
-    if (m_activation_alpha.size() > idx)
+    if (m_activations_alpha.size() > idx)
     {
-        afunc.set_alpha(m_activation_alpha.at(idx));
+        afunc.set_alpha(m_activations_alpha.at(idx));
     }
-    if (m_activation_beta.size() > idx)
+    if (m_activations_beta.size() > idx)
     {
-        afunc.set_beta(m_activation_beta.at(idx));
+        afunc.set_beta(m_activations_beta.at(idx));
     }
 
     return afunc;
