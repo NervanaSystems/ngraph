@@ -33,7 +33,6 @@ namespace ngraph
                     virtual bool
                         run_on_function(std::shared_ptr<ngraph::Function> function) override;
                 };
-                // Check : do we even this class anymore
                 class CPU_BACKEND_API CPUBatchFusion : public ngraph::pass::FunctionPass
                 {
                 public:

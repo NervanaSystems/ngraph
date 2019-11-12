@@ -59,10 +59,6 @@ namespace ngraph
 
             virtual NodeVector decompose_op() const override;
 
-            // Keep if required
-            // virtual void pre_validate_and_infer_types() override;
-            // virtual void post_validate_and_infer_types() override;
-
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
