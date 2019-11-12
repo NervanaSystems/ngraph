@@ -3967,12 +3967,14 @@ TEST(cpu_fusion, lstm_cell)
         const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
         const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
 
-        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, H_t, C_t, W, R, hidden_size);
         auto ht = make_shared<op::GetOutputElement>(lstm_cell, 0);
         auto ct = make_shared<op::GetOutputElement>(lstm_cell, 1);
 
-        auto lstm_function =
-            make_shared<Function>(NodeVector{ht, ct}, ParameterVector{X, W, R, H_t, C_t});
+        auto lstm_function = make_shared<Function>(NodeVector{ht, ct},
+                                                   ParameterVector{
+                                                       X, H_t, C_t, W, R,
+                                                   });
         return lstm_function;
     };
     auto lstm_function_cpu = make_function();

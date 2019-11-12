@@ -32,44 +32,34 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::RNNCell::type_info;
 
 op::RNNCell::RNNCell(const Output<Node>& X,
+                     const Output<Node>& initial_hidden_state,
                      const Output<Node>& W,
                      const Output<Node>& R,
-                     const Output<Node>& H_t,
-                     size_t hidden_size)
-    : RNNCell(
-          X, W, R, H_t, hidden_size, vector<string>{"tanh"}, vector<float>{}, vector<float>{}, 0.f)
-{
-}
-
-op::RNNCell::RNNCell(const Output<Node>& X,
-                     const Output<Node>& W,
-                     const Output<Node>& R,
-                     const Output<Node>& H_t,
                      size_t hidden_size,
                      const vector<string>& activations,
-                     const vector<float>& activation_alpha,
-                     const vector<float>& activation_beta,
+                     const vector<float>& activations_alpha,
+                     const vector<float>& activations_beta,
                      float clip)
-    : FusedOp({X, W, R, H_t})
-    , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
+    : FusedOp({X, initial_hidden_state, W, R})
+    , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
 {
-    add_default_bias_input();
+    set_argument(4, get_default_bias_input());
     constructor_validate_and_infer_types();
 }
 
 op::RNNCell::RNNCell(const Output<Node>& X,
+                     const Output<Node>& initial_hidden_state,
                      const Output<Node>& W,
                      const Output<Node>& R,
-                     const Output<Node>& H_t,
-                     size_t hidden_size,
                      const Output<Node>& B,
+                     size_t hidden_size,
                      const vector<string>& activations,
-                     const vector<float>& activation_alpha,
-                     const vector<float>& activation_beta,
+                     const vector<float>& activations_alpha,
+                     const vector<float>& activations_beta,
                      float clip)
-    : FusedOp({X, W, R, H_t, B})
-    , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
+    : FusedOp({X, initial_hidden_state, W, R, B})
+    , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
 {
     constructor_validate_and_infer_types();
@@ -77,10 +67,15 @@ op::RNNCell::RNNCell(const Output<Node>& X,
 
 void op::RNNCell::pre_validate_and_infer_types()
 {
+    if (is_dynamic())
+    {
+        return;
+    }
+
     const auto& x_pshape = get_input_partial_shape(0);
-    const auto& w_pshape = get_input_partial_shape(1);
-    const auto& r_pshape = get_input_partial_shape(2);
-    const auto& ht_pshape = get_input_partial_shape(3);
+    const auto& ht_pshape = get_input_partial_shape(1);
+    const auto& w_pshape = get_input_partial_shape(2);
+    const auto& r_pshape = get_input_partial_shape(3);
 
     NODE_VALIDATION_CHECK(this,
                           (x_pshape.is_static() || w_pshape.is_static() || r_pshape.is_static() ||
@@ -116,7 +111,7 @@ void op::RNNCell::pre_validate_and_infer_types()
                           ".");
     NODE_VALIDATION_CHECK(this,
                           (ht_shape == Shape{batch_size, get_hidden_size()}),
-                          "Input tensor H_t must have shape (",
+                          "Input tensor initial_hidden_state must have shape (",
                           batch_size,
                           ", ",
                           get_hidden_size(),
@@ -132,9 +127,9 @@ void op::RNNCell::pre_validate_and_infer_types()
     const Shape& b_shape{b_pshape.to_shape()};
 
     NODE_VALIDATION_CHECK(this,
-                          (b_shape == Shape{2 * get_hidden_size()}),
+                          (b_shape == Shape{get_hidden_size()}),
                           "Input tensor B must have shape (",
-                          2 * get_hidden_size(),
+                          get_hidden_size(),
                           "). Actual shape is:",
                           b_shape,
                           ".");
@@ -152,8 +147,7 @@ NodeVector op::RNNCell::decompose_op() const
     // W   - The weight tensor for input gate. Shape: [hidden_size, input_size].
     // R   - The recurrence weight tensor for input gate. Shape: [hidden_size, hidden_size].
     // H_t - The hidden state tensor at current time step. Shape: [batch_size, hidden_size].
-    // B   - The bias tensor for the input gate. Shape: [2 * hidden_size].
-    //       Concatenation of `[Wb, Rb]`.
+    // B   - The bias tensor for the input gate. Shape: [hidden_size].
     // Wb  - W bias vectors for input gate.
     // Rb  - R bias vectors for input gate.
     // ------ VARIABLE NAMES ------
@@ -169,10 +163,10 @@ NodeVector op::RNNCell::decompose_op() const
     // --------------------
 
     Output<Node> X = input_value(0);
-    Output<Node> W = input_value(1);
-    Output<Node> R = input_value(2);
-    Output<Node> H_t = input_value(3);
-    Output<Node> bias = get_bias();
+    Output<Node> H_t = input_value(1);
+    Output<Node> W = input_value(2);
+    Output<Node> R = input_value(3);
+    Output<Node> bias = input_value(4);
 
     // Xt*(W^T)
     auto Xt_W = std::make_shared<op::Dot>(X, builder::transpose(W));
@@ -187,22 +181,12 @@ NodeVector op::RNNCell::decompose_op() const
     return {i_t};
 }
 
-Output<Node> op::RNNCell::get_bias() const
+Output<Node> op::RNNCell::get_default_bias_input() const
 {
-    Output<Node> bias;
-    // Split B onto Wb an Rb and add them.
-    NodeVector b_W_R = builder::split(input_value(4), 2);
-    bias = b_W_R.at(0) + b_W_R.at(1);
-    return bias;
-}
-
-void op::RNNCell::add_default_bias_input()
-{
-    Output<Node> B =
+    return Output<Node>{
         op::Constant::create(input(0).get_element_type(),
-                             Shape{2 * s_gates_count * get_hidden_size()},
-                             vector<float>(2 * s_gates_count * get_hidden_size(), 0.f));
-    set_argument(4, B);
+                             Shape{s_gates_count * get_hidden_size()},
+                             vector<float>(s_gates_count * get_hidden_size(), 0.f))};
 }
 
 shared_ptr<Node> op::RNNCell::copy_with_new_args(const NodeVector& new_args) const
@@ -216,8 +200,8 @@ shared_ptr<Node> op::RNNCell::copy_with_new_args(const NodeVector& new_args) con
                                     new_args.at(3),
                                     get_hidden_size(),
                                     get_activations(),
-                                    get_activation_alpha(),
-                                    get_activation_beta(),
+                                    get_activations_alpha(),
+                                    get_activations_beta(),
                                     get_clip());
     }
     else if (new_args.size() == 5)
@@ -226,11 +210,11 @@ shared_ptr<Node> op::RNNCell::copy_with_new_args(const NodeVector& new_args) con
                                     new_args.at(1),
                                     new_args.at(2),
                                     new_args.at(3),
-                                    get_hidden_size(),
                                     new_args.at(4),
+                                    get_hidden_size(),
                                     get_activations(),
-                                    get_activation_alpha(),
-                                    get_activation_beta(),
+                                    get_activations_alpha(),
+                                    get_activations_beta(),
                                     get_clip());
     }
     else

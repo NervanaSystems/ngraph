@@ -441,6 +441,225 @@ TEST(serialize, opset1_pad)
     EXPECT_EQ(dynamic_cast<const op::v1::Pad*>(g_pad.get())->get_pad_mode(), pad_mode);
 }
 
+TEST(serialize, tensor_iterator_raw)
+{
+    // That which we iterate over
+    auto X = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
+
+    // Common to all cells
+    auto WH = make_shared<op::Parameter>(element::f32, Shape{20, 20});
+    auto WX = make_shared<op::Parameter>(element::f32, Shape{10, 20});
+    auto bH = make_shared<op::Parameter>(element::f32, Shape{20});
+    auto WY = make_shared<op::Parameter>(element::f32, Shape{20, 5});
+    auto bY = make_shared<op::Parameter>(element::f32, Shape{5});
+
+    // Initial values
+    auto Hinit = make_shared<op::Parameter>(element::f32, Shape{32, 1, 20});
+
+    // Set up the cell body, a function from (Hi, Xi) -> (Ho, Yo)
+    // Cell parameters
+    auto Hi = make_shared<op::Parameter>(element::f32, Shape{32, 1, 20});
+    auto Xi = make_shared<op::Parameter>(element::f32, Shape{32, 1, 10});
+    auto WH_body = make_shared<op::Parameter>(element::f32, Shape{20, 20});
+    auto WX_body = make_shared<op::Parameter>(element::f32, Shape{10, 20});
+    auto bH_body = make_shared<op::Parameter>(element::f32, Shape{20});
+    auto WY_body = make_shared<op::Parameter>(element::f32, Shape{20, 5});
+    auto bY_body = make_shared<op::Parameter>(element::f32, Shape{5});
+
+    // Body
+    auto Ho = make_shared<op::Reshape>(
+        make_shared<op::Relu>(
+            make_shared<op::Dot>(make_shared<op::Reshape>(Xi, AxisVector{0, 1, 2}, Shape{32, 10}),
+                                 WX_body) +
+            make_shared<op::Dot>(make_shared<op::Reshape>(Hi, AxisVector{0, 1, 2}, Shape{32, 20}),
+                                 WH_body) +
+            make_shared<op::Broadcast>(bH_body, Shape{32, 20}, AxisSet{0})),
+        AxisVector{0, 1},
+        Shape{32, 1, 20});
+    auto Yo = make_shared<op::Relu>(
+        make_shared<op::Dot>(make_shared<op::Reshape>(Ho, AxisVector{0, 1, 2}, Shape{32, 20}),
+                             WY_body) +
+        make_shared<op::Broadcast>(bY_body, Shape{32, 5}, AxisSet{0}));
+    auto body = make_shared<op::TensorIterator::BodyLambda>(
+        OutputVector{Yo, Ho}, ParameterVector{Xi, Hi, WH_body, WX_body, WY_body, bH_body, bY_body});
+
+    auto tensor_iterator = make_shared<op::TensorIterator>();
+    tensor_iterator->set_body(body);
+    // The Xi are the elements of Xseq
+    // start=0, stride=1, part_size=1, end=40, axis=1
+    tensor_iterator->set_sliced_input(Xi, X, 0, 1, 1, 40, 1);
+    // Hi is Hinit on the first iteration, Ho after that
+    tensor_iterator->set_merged_input(Hi, Hinit, Ho);
+    tensor_iterator->set_invariant_input(WH_body, WH);
+    tensor_iterator->set_invariant_input(WX_body, WX);
+    tensor_iterator->set_invariant_input(WY_body, WY);
+    tensor_iterator->set_invariant_input(bH_body, bH);
+    tensor_iterator->set_invariant_input(bY_body, bY);
+
+    // Output 0 is last Yo
+    auto out0 = tensor_iterator->get_iter_value(Yo, -1);
+    // Output 1 is concat of hidden states
+    // start=0, stride=1, part_size=1, end=40, axis=1
+    auto out1 = tensor_iterator->get_concatenated_slices(Ho, 0, 1, 1, 40, 1);
+
+    auto results = ResultVector{make_shared<op::Result>(out0), make_shared<op::Result>(out1)};
+    auto f = make_shared<Function>(results, ParameterVector{X, Hinit, WH, WX, bH, WY, bY});
+    string s = serialize(f);
+    shared_ptr<Function> g = deserialize(s);
+}
+
+TEST(serialize, tensor_iterator_lstm)
+{
+    // That which we iterate over
+    const size_t N = 32; // Batch size
+    const size_t L = 10; // Sequence length
+    const size_t I = 8;  // Input size
+    const size_t H = 32; // Hidden size
+    auto SENT = make_shared<op::Parameter>(element::f32, Shape{N, L, I});
+
+    auto H_init = make_shared<op::Parameter>(element::f32, Shape{N, 1, H});
+    auto C_init = make_shared<op::Parameter>(element::f32, Shape{N, 1, H});
+
+    auto W = make_shared<op::Parameter>(element::f32, Shape{4 * H, I});
+    auto R = make_shared<op::Parameter>(element::f32, Shape{4 * H, H});
+    auto H_t = make_shared<op::Parameter>(element::f32, Shape{N, 1, H});
+    auto C_t = make_shared<op::Parameter>(element::f32, Shape{N, 1, H});
+
+    // Body
+    auto X = make_shared<op::Parameter>(element::f32, Shape{N, 1, I});
+    auto W_body = make_shared<op::Parameter>(element::f32, Shape{4 * H, I});
+    auto R_body = make_shared<op::Parameter>(element::f32, Shape{4 * H, H});
+    auto LSTM_cell =
+        make_shared<op::LSTMCell>(make_shared<op::Reshape>(X, AxisVector{0, 1, 2}, Shape{N, I}),
+                                  make_shared<op::Reshape>(H_t, AxisVector{0, 1, 2}, Shape{N, H}),
+                                  make_shared<op::Reshape>(C_t, AxisVector{0, 1, 2}, Shape{N, H}),
+                                  W_body,
+                                  R_body,
+                                  H);
+    auto H_o = make_shared<op::Reshape>(LSTM_cell->output(0), AxisVector{0, 1}, Shape{N, 1, H});
+    auto C_o = make_shared<op::Reshape>(LSTM_cell->output(1), AxisVector{0, 1}, Shape{N, 1, H});
+    auto body = make_shared<op::TensorIterator::BodyLambda>(
+        OutputVector{H_o, C_o}, ParameterVector{X, H_t, C_t, W_body, R_body});
+
+    auto tensor_iterator = make_shared<op::TensorIterator>();
+    tensor_iterator->set_body(body);
+    // start=0, stride=1, part_size=1, end=40, axis=1
+    tensor_iterator->set_sliced_input(X, SENT, 0, 1, 1, -1, 1);
+    // H_t is Hinit on the first iteration, Ho after that
+    tensor_iterator->set_merged_input(H_t, H_init, H_o);
+    tensor_iterator->set_merged_input(C_t, C_init, C_o);
+    tensor_iterator->set_invariant_input(W_body, W);
+    tensor_iterator->set_invariant_input(R_body, R);
+
+    // Output 0 is last Ho, result 0 of body
+    auto out0 = tensor_iterator->get_iter_value(H_o, -1);
+    // Output 1 is last Co, result 1 of body
+    auto out1 = tensor_iterator->get_iter_value(C_o, -1);
+
+    auto results = ResultVector{make_shared<op::Result>(out0), make_shared<op::Result>(out1)};
+    auto f = make_shared<Function>(results, ParameterVector{SENT, H_init, C_init, W, R});
+    string s = serialize(f);
+    shared_ptr<Function> g = deserialize(s);
+}
+
+TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2)
+{
+    // That which we iterate over
+    auto X = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
+    auto Y = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
+    auto M = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
+
+    // Set up the cell body, a function from (Xi, Yi) -> (Zo)
+    // Body parameters
+    auto Xi = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
+    auto Yi = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
+    auto M_body = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
+
+    // Body
+    auto Zo = (Xi + Yi) * M_body;
+    auto body = make_shared<op::TensorIterator::BodyLambda>(OutputVector{Zo},
+                                                            ParameterVector{Xi, Yi, M_body});
+
+    auto tensor_iterator = make_shared<op::TensorIterator>();
+    tensor_iterator->set_body(body);
+    // The Xi are the elements of Xseq
+    // start=0, stride=2, part_size=2, end=20, axis=1
+    tensor_iterator->set_sliced_input(Xi, X, 0, 2, 2, 20, 1);
+    // The Yi are the elements of Yseq
+    // start=0, stride=2, part_size=2, end=-1, axis=1
+    tensor_iterator->set_sliced_input(Yi, Y, 0, 2, 2, -1, 1);
+    tensor_iterator->set_invariant_input(M_body, M);
+
+    // Output 0 is last Zo
+    auto out0 = tensor_iterator->get_iter_value(Zo, -1);
+    // Output 1 is concat of Zos
+    // start=0, stride=2, part_size=2, end=20, axis=1
+    auto out1 = tensor_iterator->get_concatenated_slices(Zo, 0, 2, 2, 20, 1);
+
+    auto result0 = make_shared<op::Result>(out0);
+    auto result1 = make_shared<op::Result>(out1);
+    Shape out0_shape{32, 2, 10};
+    Shape out1_shape{32, 40, 10};
+
+    auto results = ResultVector{result0, result1};
+    auto f = make_shared<Function>(results, ParameterVector{X, Y, M});
+    EXPECT_EQ(result0->output(0).get_shape(), out0_shape);
+    EXPECT_EQ(result1->output(0).get_shape(), out1_shape);
+
+    string s = serialize(f);
+    shared_ptr<Function> g = deserialize(s);
+}
+
+TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
+{
+    // That which we iterate over
+    auto X = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
+    auto Y = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
+    auto M = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
+
+    // Set up the cell body, a function from (Xi, Yi) -> (Zo)
+    // Body parameters
+    auto Xi = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto Yi = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto M_body = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+
+    // Body
+    auto Zo = (Xi + Yi) * M_body;
+    auto body = make_shared<op::TensorIterator::BodyLambda>(OutputVector{Zo},
+                                                            ParameterVector{Xi, Yi, M_body});
+
+    auto tensor_iterator = make_shared<op::TensorIterator>();
+    tensor_iterator->set_body(body);
+    // The Xi are the elements of Xseq
+    // start=0, stride=2, part_size=2, end=20, axis=1
+    tensor_iterator->set_sliced_input(Xi, X, 0, 2, 2, 20, 1);
+    // The Yi are the elements of Yseq
+    // start=0, stride=2, part_size=2, end=-1, axis=1
+    tensor_iterator->set_sliced_input(Yi, Y, 0, 2, 2, -1, 1);
+    tensor_iterator->set_invariant_input(M_body, M);
+
+    // Output 0 is last Zo
+    auto out0 = tensor_iterator->get_iter_value(Zo, -1);
+    // Output 1 is concat of Zos
+    // start=0, stride=2, part_size=2, end=20, axis=1
+    auto out1 = tensor_iterator->get_concatenated_slices(Zo, 0, 2, 2, 20, 1);
+
+    auto result0 = make_shared<op::Result>(out0);
+    auto result1 = make_shared<op::Result>(out1);
+    Shape out0_shape{32, 2, 10};
+    Shape out1_shape{32, 40, 10};
+
+    auto results = ResultVector{result0, result1};
+    auto f = make_shared<Function>(results, ParameterVector{X, Y, M});
+    EXPECT_EQ(result0->output(0).get_shape(), out0_shape);
+    EXPECT_EQ(result1->output(0).get_shape(), out1_shape);
+
+    EXPECT_EQ(body->get_results()[0]->output(0).get_shape(), out0_shape);
+
+    string s = serialize(f);
+    shared_ptr<Function> g = deserialize(s);
+}
+
 TEST(serialize, opset1_strided_slice)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
@@ -481,4 +700,63 @@ TEST(serialize, opset1_strided_slice)
     EXPECT_EQ(strided_slice_out->get_new_axis_mask(), new_axis_mask);
     EXPECT_EQ(strided_slice_out->get_shrink_axis_mask(), shrink_axis_mask);
     EXPECT_EQ(strided_slice_out->get_ellipsis_mask(), ellipsis_mask);
+}
+
+TEST(serialize, opset1_binary_convolution)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 2, 2});
+    auto filter = make_shared<op::Parameter>(element::f32, Shape{1, 2, 2, 2});
+    const Strides strides{1, 1};
+    const CoordinateDiff pads_begin{0, 0};
+    const CoordinateDiff pads_end{0, 0};
+    const Strides dilations{1, 1};
+    const std::string mode = "xnor-popcount";
+    const float pad_value = 2.1f;
+    const auto auto_pad = op::PadType::NOTSET;
+
+    auto binary_conv_in = make_shared<op::v1::BinaryConvolution>(
+        data, filter, strides, pads_begin, pads_end, dilations, mode, pad_value, auto_pad);
+
+    auto result = make_shared<op::Result>(binary_conv_in);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data, filter});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_binary_conv = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto binary_conv_out = as_type_ptr<op::v1::BinaryConvolution>(g_binary_conv);
+
+    EXPECT_EQ(binary_conv_out->description(), "BinaryConvolution");
+    EXPECT_EQ(binary_conv_out->get_version(), 1);
+
+    EXPECT_EQ(binary_conv_out->get_strides(), strides);
+    EXPECT_EQ(binary_conv_out->get_pads_begin(), pads_begin);
+    EXPECT_EQ(binary_conv_out->get_pads_end(), pads_end);
+    EXPECT_EQ(binary_conv_out->get_dilations(), dilations);
+    EXPECT_EQ(binary_conv_out->get_mode(),
+              op::v1::BinaryConvolution::BinaryConvolutionMode::XNOR_POPCOUNT);
+    EXPECT_EQ(binary_conv_out->get_pad_value(), pad_value);
+    EXPECT_EQ(binary_conv_out->get_auto_pad(), auto_pad);
+}
+
+TEST(serialize, depth_to_space)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{4, 5, 6});
+    auto mode = op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST;
+    size_t block_size = 2;
+    auto depth_to_space_in = make_shared<op::DepthToSpace>(arg, mode, block_size);
+
+    auto result = make_shared<op::Result>(depth_to_space_in);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_depth_to_space = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto depth_to_space_out = as_type_ptr<op::DepthToSpace>(g_depth_to_space);
+
+    EXPECT_EQ(depth_to_space_out->description(), "DepthToSpace");
+    EXPECT_EQ(depth_to_space_out->get_version(), 0);
+    EXPECT_EQ(depth_to_space_out->get_block_size(), block_size);
+    EXPECT_EQ(depth_to_space_out->get_mode(), mode);
 }

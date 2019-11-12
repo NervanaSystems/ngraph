@@ -87,6 +87,7 @@
 #include "ngraph/runtime/reference/argmin.hpp"
 #include "ngraph/runtime/reference/asin.hpp"
 #include "ngraph/runtime/reference/atan.hpp"
+#include "ngraph/runtime/reference/atan2.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
 #include "ngraph/runtime/reference/batch_mat_mul.hpp"
 #include "ngraph/runtime/reference/batch_norm.hpp"
@@ -168,9 +169,9 @@ namespace ngraph
         {
             class GCPUBackend;
             class GCPUExecutable;
-        }
-    }
-}
+        } // namespace gcpu
+    }     // namespace runtime
+} // namespace ngraph
 
 class ngraph::runtime::gcpu::GCPUExecutable : public Executable
 {
@@ -355,6 +356,15 @@ private:
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::atan<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
+        }
+        case OP_TYPEID::Atan2:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::atan2<T>(args[0]->get_data_ptr<const T>(),
+                                args[1]->get_data_ptr<const T>(),
+                                out[0]->get_data_ptr<T>(),
+                                element_count);
             break;
         }
         case OP_TYPEID::AvgPool:
@@ -1606,6 +1616,7 @@ private:
             }
             break;
         }
+        case OP_TYPEID::LogicalXor:
         case OP_TYPEID::Xor:
         {
             size_t element_count = shape_size(node.get_output_shape(0));

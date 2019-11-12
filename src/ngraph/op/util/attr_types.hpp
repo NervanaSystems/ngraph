@@ -116,6 +116,16 @@ namespace ngraph
             MAX
         };
 
+        enum class TopKSortType
+        {
+            // Returned values are not sorted
+            NONE,
+            // Sort result based on element indices
+            SORT_INDICES,
+            // Sort result based on element values
+            SORT_VALUES,
+        };
+
         /// \brief Implicit broadcast specification
         struct AutoBroadcastSpec
         {
