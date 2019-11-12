@@ -23,8 +23,10 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::CumSum::type_info;
 
-op::v0::CumSum::CumSum(const Output<Node>& arg, const Output<Node>& axis)
+op::v0::CumSum::CumSum(const Output<Node>& arg, const Output<Node>& axis, int exclusive, int reverse)
     : ArithmeticReduction(arg, axis)
+    , m_exclusive(exclusive)
+    , m_reverse(reverse)
 {
     constructor_validate_and_infer_types();
 }
@@ -32,7 +34,7 @@ op::v0::CumSum::CumSum(const Output<Node>& arg, const Output<Node>& axis)
 shared_ptr<Node> op::CumSum::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<op::v0::CumSum>(new_args.at(0), new_args.at(1));
+    return make_shared<op::v0::CumSum>(new_args.at(0), new_args.at(1), m_exclusive, m_reverse);
 }
 
 void op::v0::CumSum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

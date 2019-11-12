@@ -73,7 +73,7 @@ namespace ngraph
                 ///
                 /// \param arg The tensor to be summed.
                 /// \param axis The axis position along which cumulative sum must be performed.
-                CumSum(const Output<Node>& arg, const Output<Node>& axis);
+                CumSum(const Output<Node>& arg, const Output<Node>& axis, int exclusive, int reverse);
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
@@ -84,6 +84,10 @@ namespace ngraph
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                     const NodeVector& deltas) override;
+	
+	    private:
+		int m_exclusive;
+		int m_reverse;
             };
         }
         // default opset version
