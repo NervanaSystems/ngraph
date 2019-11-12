@@ -93,7 +93,8 @@ namespace ngraph
                 // TODO
                 OneHot(const Output<Node>& indices,
                        const Output<Node>& depth,
-                       const Output<Node>& values,
+                       const Output<Node>& on_value,
+                       const Output<Node>& off_value,
                        int64_t axis);
 
                 virtual std::shared_ptr<Node>
