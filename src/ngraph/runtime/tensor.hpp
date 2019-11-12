@@ -35,7 +35,7 @@ namespace ngraph
 
     namespace runtime
     {
-        class Tensor
+        class NGRAPH_API Tensor
         {
         protected:
             Tensor(const std::shared_ptr<ngraph::descriptor::Tensor>& descriptor)

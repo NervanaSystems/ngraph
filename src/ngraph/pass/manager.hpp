@@ -35,7 +35,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::Manager
+class NGRAPH_API ngraph::pass::Manager
 {
 public:
     Manager();
