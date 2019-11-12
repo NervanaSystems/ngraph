@@ -33,6 +33,7 @@
 #include <mlir/ExecutionEngine/ExecutionEngine.h>
 #include <mlir/ExecutionEngine/OptUtils.h>
 #include <mlir/IR/Function.h>
+#include <mlir/Dialect/LLVMIR/LLVMDialect.h>
 
 using llvm::SmallVector;
 using llvm::StringRef;
@@ -80,7 +81,7 @@ void MLIRCPURuntime::bindArguments(std::vector<void*>& externalTensors)
 {
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
-    mlir::FuncOp func = m_module->lookupSymbol<mlir::FuncOp>("main");
+    auto func = m_module->lookupSymbol<mlir::LLVM::LLVMFuncOp>("main");
     NGRAPH_CHECK(func && !func.getBlocks().empty(), "Function not found");
 
     // Set external arguments
