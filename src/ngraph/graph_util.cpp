@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <numeric>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -131,12 +132,20 @@ NodeVector ngraph::find_common_args(std::shared_ptr<Node> node1, std::shared_ptr
     return common_args;
 }
 
-void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)
+void ngraph::replace_node(std::shared_ptr<Node> target,
+                          std::shared_ptr<Node> replacement,
+                          const std::vector<int64_t>& output_order)
 {
     if (target->is_output())
     {
         throw ngraph_error("Result nodes cannot be replaced.");
     }
+
+    NGRAPH_CHECK(target->get_output_size() == output_order.size(),
+                 "Target output size: ",
+                 target->get_output_size(),
+                 " must be equal output_order size: ",
+                 output_order.size());
 
     NGRAPH_CHECK(!target->get_users().empty(),
                  "Attempted to replace unreachable node '",
@@ -178,12 +187,19 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     {
         for (auto& input : target->output(i).get_target_inputs())
         {
-            input.replace_source_output(replacement->output(i));
+            input.replace_source_output(replacement->output(output_order[i]));
         }
     }
 
     replacement->add_node_control_dependents(target);
     target->clear_control_dependents();
+}
+
+void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)
+{
+    auto default_output_order = vector<int64_t>(target->get_output_size());
+    std::iota(default_output_order.begin(), default_output_order.end(), 0);
+    replace_node(target, replacement, default_output_order);
 }
 
 void ngraph::replace_nodes(

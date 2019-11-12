@@ -54,6 +54,7 @@ top_k_opset_11_const_k_smallest         # No plans to implement TopK
 
 # unsupported op: `Atan2`
 atan2
+backwards_atan2
 
 # unsupported op: `Erf`
 erf
