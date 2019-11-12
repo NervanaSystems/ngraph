@@ -39,15 +39,16 @@ NGraphOpsDialect::NGraphOpsDialect(mlir::MLIRContext* ctx)
         >();
 }
 
-mlir::Type NGraphOpsDialect::parseType(llvm::StringRef tyData, mlir::Location loc) const
+mlir::Type NGraphOpsDialect::parseType(mlir::DialectAsmParser &parser) const
 {
     StringRef origTypeStr = tyData;
     MLIRContext* context = getContext();
 
     // Process nGraph tensor type.
-    if (tyData.consume_front("tensor"))
+    if (parser.parseKeyword("tensor"))
     {
-        if (!tyData.consume_front("<") || !tyData.consume_back(">"))
+        llvm::SMLoc typeLoc = parser.getCurrentLocation();
+        if (!parser.parseLess("<"))
         {
             return (emitError(loc, "expected '<' and '>' enclosing the tensor shape: " + tyData),
                     Type());

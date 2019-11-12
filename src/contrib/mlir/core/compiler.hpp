@@ -24,7 +24,6 @@
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/node.hpp"
 
-#include <mlir/ExecutionEngine/MemRefUtils.h>
 #include <mlir/IR/Builders.h>
 #include <mlir/IR/Module.h>
 #include <mlir/IR/Types.h>
