@@ -152,6 +152,9 @@ namespace ngraph
             {
                 return a.m_type == m_type && a.m_axis == m_axis;
             }
+
+            static const AutoBroadcastSpec NUMPY;
+            static const AutoBroadcastSpec NONE;
         };
 
         std::ostream& operator<<(std::ostream& s, const AutoBroadcastType& type);

@@ -18,6 +18,9 @@
 
 using namespace ngraph;
 
+const op::AutoBroadcastSpec op::AutoBroadcastSpec::NUMPY(AutoBroadcastType::NUMPY, 0);
+const op::AutoBroadcastSpec op::AutoBroadcastSpec::NONE{AutoBroadcastType::NONE, 0};
+
 std::ostream& op::operator<<(std::ostream& s, const op::AutoBroadcastType& type)
 {
     switch (type)
