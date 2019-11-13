@@ -64,14 +64,14 @@ using namespace ngraph;
 enum class OP_TYPEID
 {
 #include "ngraph/op/fused_op_tbl.hpp"
-#include "ngraph/op/op_tbl.hpp"
+#include "ngraph/op/op_v1_tbl.hpp"
 };
 #undef NGRAPH_OP
 
 #define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
 static unordered_map<string, OP_TYPEID> typeid_map{
 #include "ngraph/op/fused_op_tbl.hpp"
-#include "ngraph/op/op_tbl.hpp"
+#include "ngraph/op/op_v1_tbl.hpp"
 };
 #undef NGRAPH_OP
 
