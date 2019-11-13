@@ -62,7 +62,11 @@ mlir::Type NGraphOpsDialect::parseType(mlir::DialectAsmParser& parser) const
         Type eltType;
 
         parser.parseType(eltType);
-
+        if (!eltType)
+        {
+            typeLoc = parser.getCurrentLocation();
+            parser.emitError(typeLoc, "Invalid tensor element type");
+        }
         parser.parseGreater();
         return NGTensorType::get(context, eltType, shape);
     }
