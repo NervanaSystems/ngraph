@@ -52,6 +52,10 @@ top_k_opset_10                          # No plans to implement TopK
 top_k_opset_10_const_k                  # No plans to implement TopK
 top_k_opset_11_const_k_smallest         # No plans to implement TopK
 
+# unsupported op: `Atan2`
+atan2
+backwards_atan2
+
 # unsupported op: `Erf`
 erf
 gelu_f32

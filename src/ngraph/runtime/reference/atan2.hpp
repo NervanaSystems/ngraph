@@ -16,29 +16,23 @@
 
 #pragma once
 
-#include "core/node.hpp"
-#include "ngraph/node.hpp"
+#include <cmath>
+#include <cstddef>
 
 namespace ngraph
 {
-    namespace onnx_import
+    namespace runtime
     {
-        namespace op
+        namespace reference
         {
-            namespace set_1
+            template <typename X, typename Y, typename Z>
+            void atan2(const X* py, const Y* px, Z* pout, size_t count)
             {
-                NodeVector clip(const Node& node);
-
-            } // namespace set_1
-
-            namespace set_11
-            {
-                NodeVector clip(const Node& node);
-
-            } // namespace set_11
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+                for (size_t i = 0; i < count; i++)
+                {
+                    *pout++ = static_cast<Z>(std::atan2(*py++, *px++));
+                }
+            }
+        }
+    }
+}
