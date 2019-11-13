@@ -161,7 +161,7 @@ void op::v1::OneHot::validate_and_infer_types()
             out_dims[i] = indices_shape[i];
         }
         m_axis =
-            ngraph::validate_axis(this, m_axis, indices_rank + 1, -indices_rank - 1, indices_rank);
+            ngraph::normalize_axis(this, m_axis, indices_rank + 1, -indices_rank - 1, indices_rank);
         int64_t depth_val = as_type_ptr<op::Constant>(depth)->get_vector<int64_t>()[0];
         out_dims.insert(out_dims.begin() + m_axis, Dimension(depth_val));
         result_shape = out_dims;
