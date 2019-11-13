@@ -249,6 +249,7 @@ namespace ngraph
             REGISTER_OPERATOR("Cast", 1, cast);
             REGISTER_OPERATOR("Ceil", 1, ceil);
             REGISTER_OPERATOR("Clip", 1, clip);
+            REGISTER_OPERATOR("Clip", 11, clip);
             REGISTER_OPERATOR("Concat", 1, concat);
             REGISTER_OPERATOR("Constant", 1, constant);
             REGISTER_OPERATOR("Conv", 1, conv);

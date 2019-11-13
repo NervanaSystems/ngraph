@@ -531,10 +531,10 @@ TEST(serialize, tensor_iterator_lstm)
     auto R_body = make_shared<op::Parameter>(element::f32, Shape{4 * H, H});
     auto LSTM_cell =
         make_shared<op::LSTMCell>(make_shared<op::Reshape>(X, AxisVector{0, 1, 2}, Shape{N, I}),
-                                  W_body,
-                                  R_body,
                                   make_shared<op::Reshape>(H_t, AxisVector{0, 1, 2}, Shape{N, H}),
                                   make_shared<op::Reshape>(C_t, AxisVector{0, 1, 2}, Shape{N, H}),
+                                  W_body,
+                                  R_body,
                                   H);
     auto H_o = make_shared<op::Reshape>(LSTM_cell->output(0), AxisVector{0, 1}, Shape{N, 1, H});
     auto C_o = make_shared<op::Reshape>(LSTM_cell->output(1), AxisVector{0, 1}, Shape{N, 1, H});
