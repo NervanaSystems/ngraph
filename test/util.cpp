@@ -678,8 +678,14 @@ TEST(util, clone_function_op_annotations)
     {
         if (auto op_annotation = parameter->get_op_annotations())
         {
-            found_A |= op_annotation->is_cacheable();
-            found_B |= !op_annotation->is_cacheable();
+            if (op_annotation->is_cacheable())
+            {
+                found_A = true;
+            }
+            else
+            {
+                found_B = true;
+            }
         }
     }
     EXPECT_TRUE(found_A);
