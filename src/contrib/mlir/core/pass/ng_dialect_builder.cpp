@@ -418,8 +418,8 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Concat)
 {
     auto concat = static_cast<const ngraph::op::Concat*>(ngNode);
     auto op = NgDialectObj.createGenericOp<mlir::NGConcatOp>(ngNode);
-    op->setAttr("concatenation_axis",
-                NgDialectObj.m_builder.getI64IntegerAttr(concat->get_concatenation_axis()));
+    op->setAttr("normalized_axis",
+                NgDialectObj.m_builder.getI64IntegerAttr(concat->get_normalized_axis()));
     return op;
 }
 
