@@ -104,8 +104,8 @@ namespace ngraph
                                    const AxisSet& ellipsis_mask);
 
     std::size_t validate_axis(const Node* node,
-        std::int64_t axis,
-        std::int64_t tensor_rank,
-        std::int64_t axis_range_min,
-        std::int64_t axis_range_max);
+                              std::int64_t axis,
+                              std::int64_t tensor_rank,
+                              std::int64_t axis_range_min,
+                              std::int64_t axis_range_max);
 }
