@@ -44,10 +44,11 @@ mlir::Type NGraphOpsDialect::parseType(mlir::DialectAsmParser &parser) const
     MLIRContext* context = getContext();
 
     // Process nGraph tensor type.
-    if (parser.parseOptionalKeyword("ntensor"))
+    // failure is true
+    if (!parser.parseOptionalKeyword("tensor"))
     {
         llvm::SMLoc typeLoc = parser.getCurrentLocation();
-        if (!parser.parseLess())
+        if (parser.parseLess())
         {
             parser.emitError(typeLoc, "expected '<' and '>' enclosing the tensor shape");
             return Type();
@@ -57,18 +58,18 @@ mlir::Type NGraphOpsDialect::parseType(mlir::DialectAsmParser &parser) const
         SmallVector<int64_t, 4> shape;
         parser.parseDimensionList(shape);
 
-        // Parse the current element type.
-        Type eltType;
-        if (parser.parseOptionalKeyword("ng."))
-        {
-            // ng element type
-            eltType = parseEltType(parser);
-        } 
-        else
-        {
+       // Parse the current element type.
+       Type eltType;
+       //if (!parser.parseOptionalKeyword("ng."))
+       //{
+       //    // ng element type
+       //    eltType = parseEltType(parser);
+       //} 
+       //else
+       //{
             // std type
             parser.parseType(eltType); 
-        }
+        //}
         
         parser.parseGreater();
         return NGTensorType::get(context, eltType, shape);
@@ -87,40 +88,46 @@ mlir::Type NGraphOpsDialect::parseEltType(mlir::DialectAsmParser &parser) const
     int width = 0;
     bool isSigned = false;
     llvm::SMLoc loc = parser.getCurrentLocation();
-    if (parser.parseOptionalKeyword("i"))
+
+    StringRef tyData = parser.getFullSymbolSpec();
+    StringRef origTypeStr = tyData;
+
+    if (tyData.startswith("i") || tyData.startswith("u"))
     {
-        parser.parseInteger(width);
-        isSigned = true;
+        bool isSigned = tyData.consume_front("i");
+        bool isUnsigned = tyData.consume_front("u");
+        NGRAPH_CHECK(isSigned != isUnsigned, "nGraph integer cannot be signed and unsigned");
+
+        unsigned width = 0;
+        // NOTE: `consumeInteger` returns false if an integer was parsed successfully.
+        if (tyData.consumeInteger(/*Radix=*/10, width) || width == 0 || !tyData.empty())
+        {
+            parser.emitError(loc, "Unexpected nGraph integer type: " + origTypeStr);
+        }
+
+        switch (width)
+        {
+        case 8:
+            return isSigned ? NGIntegerType::getInt8(context) : NGIntegerType::getUInt8(context);
+        case 16:
+            return isSigned ? NGIntegerType::getInt16(context) : NGIntegerType::getUInt16(context);
+        case 32:
+            return isSigned ? NGIntegerType::getInt32(context) : NGIntegerType::getUInt32(context);
+        case 64:
+            return isSigned ? NGIntegerType::getInt64(context) : NGIntegerType::getUInt64(context);
+        default:
+            parser.emitError(loc, "Unexpected width for nGraph integer type: " + origTypeStr);
+        }
     }
-    else if (parser.parseOptionalKeyword("u"))
-    {
-        parser.parseInteger(width);
-        isSigned = true;
-    }
-    else if (parser.parseOptionalKeyword("bool"))
-    {
-        return NGBoolType::get(context);
-    }
-    else
-    {
-        parser.emitError(loc, "Invalid nGraph dialect scalar type");
-        return Type();
-    }
-   
-    switch (width)
-    {
-    case 8:
-        return isSigned ? NGIntegerType::getInt8(context) : NGIntegerType::getUInt8(context);
-    case 16:
-        return isSigned ? NGIntegerType::getInt16(context) : NGIntegerType::getUInt16(context);
-    case 32:
-        return isSigned ? NGIntegerType::getInt32(context) : NGIntegerType::getUInt32(context);
-    case 64:
-        return isSigned ? NGIntegerType::getInt64(context) : NGIntegerType::getUInt64(context);
-    default:
-        parser.emitError(loc, "Invalid bit-width for nGraph dialect scalar type");
-        return Type();
-    }
+
+    // nGraph reuses standard dialect floating point element types.
+    NGRAPH_CHECK(!tyData.startswith("f"),
+                 "Floating point types should be processed by standard parser");
+
+    // NOTE: We may hit this error if the nGraph type is not yet supported in parser.
+    parser.emitError(loc, "Unknown nGraph type: " + origTypeStr);
+
+    return Type();
 }
 
 
