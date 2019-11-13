@@ -61,7 +61,10 @@ namespace ngraph
     {
         struct AutoBroadcastSpec;
         class Constant;
+        class Result;
     } // namespace op
+
+    using ResultVector = std::vector<std::shared_ptr<op::Result>>;
 
     namespace autodiff
     {
@@ -80,6 +83,8 @@ namespace ngraph
 
     OutputVector as_output_vector(const NodeVector& args);
     NodeVector as_node_vector(const OutputVector& values);
+    /// Returns a ResultVector referencing values.
+    ResultVector as_result_vector(const OutputVector& values);
 
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
