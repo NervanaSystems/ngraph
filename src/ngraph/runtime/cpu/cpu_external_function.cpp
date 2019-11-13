@@ -1262,7 +1262,6 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(BiDirectionalRnn, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPURnnMatFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(BatchFusion, true, ngraph::pass)
-    REGISTER_KNOBBED_PASS(CPUBatchFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(ReshapeSinking, false, ngraph::pass)
     REGISTER_KNOBBED_PASS(ReshapeElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(RecurrentReshapeElimination, false, ngraph::pass)

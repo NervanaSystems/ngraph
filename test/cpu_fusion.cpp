@@ -1092,7 +1092,7 @@ static double gelu_backprop_factor(double x)
 
 TEST(cpu_fusion, fuse_gelu_backprop_f32)
 {
-    Shape shape_a{2, 1, 60, 60};
+    Shape shape_a{2, 1, 600, 600};
 
     auto make_function = [shape_a]() {
         auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
@@ -3685,14 +3685,14 @@ TEST(cpu_fusion, sigmoid_multiply_fusion)
     ASSERT_EQ(ccg, 18);
 }
 
-TEST(cpu_fusion, fuse_batch_dot_backward)
+TEST(batch_fusion, fuse_batch_dot_backward)
 {
     const std::string file_name("mxnet/batch_dot_3.json");
     auto cpu_f = make_function_from_file(file_name);
     auto int_f = make_function_from_file(file_name);
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+    pass_manager.register_pass<ngraph::pass::BatchFusion>();
     pass_manager.run_passes(cpu_f);
 
     auto int_df = autodiff::backprop_function(int_f);
@@ -4005,7 +4005,7 @@ TEST(cpu_fusion, validate_fuse_gru_inputs)
 }
 
 #if defined(AUTODIFF_BACKEND_CPU) && !defined(NGRAPH_JSON_DISABLE)
-NGRAPH_TEST(cpu_fusion, backwards_batchmatmultranspose_tensor2_tensor2)
+TEST(batch_fusion, backwards_batchmatmultranspose_tensor2_tensor2)
 {
     auto backend = runtime::Backend::create("CPU");
 
@@ -4021,7 +4021,7 @@ NGRAPH_TEST(cpu_fusion, backwards_batchmatmultranspose_tensor2_tensor2)
 
     auto g = make_function_from_file(file_name);
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+    pass_manager.register_pass<ngraph::pass::BatchFusion>();
     pass_manager.run_passes(g);
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), f, g, args, .01f, .01f));
 }

@@ -386,28 +386,3 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
 // Moved set_or_check_if_same and fuse_group_convolution, fuse_batch_mat_mul_transpose
 // to core pass batch_fusion
-
-bool runtime::cpu::pass::CPUBatchFusion::run_on_function(std::shared_ptr<Function> func)
-{
-    bool modified = false;
-
-    for (auto n : func->get_ordered_ops())
-    {
-        const Node& node = *n;
-        if (TI(node) == TI(op::Concat))
-        {
-            if (m_fusion_type.is_set(FusionType::DIFFERENTIABLE_FUSIONS))
-            {
-            }
-            if (m_fusion_type.is_set(FusionType::REGULAR_FUSIONS))
-            {
-                // if (auto fused_conv = fuse_group_convolution(n))
-                // {
-                //     func->replace_node(n, fused_conv);
-                //     modified = true;
-                // }
-            }
-        }
-    }
-    return modified;
-}
