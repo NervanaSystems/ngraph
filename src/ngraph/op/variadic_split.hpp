@@ -39,9 +39,11 @@ namespace ngraph
                 /// \brief Constructs a variadic split operation.
                 ///
                 /// \param data           The tensor to be split.
-                /// \param axis           The index of an axis in "data" along which to perform the split.
-                /// \param split_lengths  A list containing the sizes of each output tensor along
-                /// the split "axis". Size of "split_lengths" should be equal to the number of
+                /// \param axis           The index of an axis in "data" along which to perform the
+                /// split.
+                /// \param split_lengths  A list containing the sizes of each output tensor
+                /// along the split "axis". Size of "split_lengths" should be equal to the number of
+                ///
                 /// outputs. The sum of split_lengths must match data.shape[axis]
                 VariadicSplit(const Output<Node>& data,
                               const Output<Node>& axis,
