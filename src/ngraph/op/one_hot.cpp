@@ -146,7 +146,7 @@ void op::v1::OneHot::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(this,
                           off_value_shape.is_dynamic() || is_scalar(off_value_shape.to_shape()),
-                          "on_value input must be scalar.");
+                          "off_value input must be scalar.");
 
     const auto& depth = input_value(1).get_node_shared_ptr();
     PartialShape result_shape{PartialShape::dynamic()};

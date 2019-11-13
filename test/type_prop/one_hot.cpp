@@ -467,3 +467,78 @@ TEST(type_prop, one_hot_v1_on_off_values_not_compatible)
         FAIL() << "Incompatible on/off element types not detected for unexpected reason";
     }
 }
+
+TEST(type_prop, one_hot_v1_depth_not_scalar)
+{
+    auto indices = make_shared<op::Parameter>(element::i64, Shape{ 2, 2 });
+    auto depth = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto on_value = make_shared<op::Parameter>(element::bf16, Shape{});
+    auto off_value = make_shared<op::Parameter>(element::bf16, Shape{});
+    int64_t axis = -1;
+    try
+    {
+        auto ont_hot = make_shared<op::v1::OneHot>(indices, depth, on_value, off_value, axis);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Not scalar depth input not detected.";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("depth input must be scalar."));
+    }
+    catch (...)
+    {
+        FAIL() << "Not scalar depth input not detected for unexpected reason";
+    }
+}
+
+TEST(type_prop, one_hot_v1_on_value_not_scalar)
+{
+    auto indices = make_shared<op::Parameter>(element::i64, Shape{ 2, 2 });
+    auto depth = make_shared<op::Parameter>(element::i64, Shape{});
+    auto on_value = make_shared<op::Parameter>(element::bf16, Shape{2});
+    auto off_value = make_shared<op::Parameter>(element::bf16, Shape{});
+    int64_t axis = -1;
+    try
+    {
+        auto ont_hot = make_shared<op::v1::OneHot>(indices, depth, on_value, off_value, axis);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Not scalar on_value input not detected.";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("on_value input must be scalar."));
+    }
+    catch (...)
+    {
+        FAIL() << "Not scalar on_value input not detected for unexpected reason";
+    }
+}
+
+TEST(type_prop, one_hot_v1_off_value_not_scalar)
+{
+    auto indices = make_shared<op::Parameter>(element::i64, Shape{ 2, 2 });
+    auto depth = make_shared<op::Parameter>(element::i64, Shape{});
+    auto on_value = make_shared<op::Parameter>(element::bf16, Shape{});
+    auto off_value = make_shared<op::Parameter>(element::bf16, Shape{ 3 });
+    int64_t axis = -1;
+    try
+    {
+        auto ont_hot = make_shared<op::v1::OneHot>(indices, depth, on_value, off_value, axis);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Not scalar off_value input not detected.";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("off_value input must be scalar."));
+    }
+    catch (...)
+    {
+        FAIL() << "Not scalar off_value input not detected for unexpected reason";
+    }
+}
