@@ -22,6 +22,7 @@
 #include "ngraph/op/slice.hpp"
 #include "onehot.hpp"
 #include "utils/common.hpp"
+#include "utils/reshape.hpp"
 
 namespace ngraph
 {
@@ -36,12 +37,16 @@ namespace ngraph
                     NodeVector inputs{node.get_ng_inputs()};
                     auto indices =
                         std::make_shared<ngraph::op::Convert>(inputs.at(0), element::i64);
-                    auto depth = inputs.at(1);
+                    auto depth = reshape::interpret_as_scalar(inputs.at(1));
+
                     auto values = inputs.at(2);
                     std::shared_ptr<ngraph::Node> off_value =
-                        std::make_shared<ngraph::op::Slice>(values, Coordinate{0}, Coordinate{1});
+                        reshape::interpret_as_scalar(
+                            std::make_shared<ngraph::op::Slice>(values, Coordinate{0}, Coordinate{1}));
                     std::shared_ptr<ngraph::Node> on_value =
-                        std::make_shared<ngraph::op::Slice>(values, Coordinate{1}, Coordinate{2});
+                        reshape::interpret_as_scalar(
+                            std::make_shared<ngraph::op::Slice>(values, Coordinate{1}, Coordinate{2}));
+
                     auto axis = node.get_attribute_value<std::int64_t>("axis", -1);
 
                     return {std::make_shared<ngraph::op::v1::OneHot>(
