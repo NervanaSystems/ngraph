@@ -60,16 +60,8 @@ mlir::Type NGraphOpsDialect::parseType(mlir::DialectAsmParser& parser) const
 
         // Parse the current element type.
         Type eltType;
-        // if (!parser.parseOptionalKeyword("ng."))
-        //{
-        //    // ng element type
-        //    eltType = parseEltType(parser);
-        //}
-        // else
-        //{
-        // std type
+
         parser.parseType(eltType);
-        //}
 
         parser.parseGreater();
         return NGTensorType::get(context, eltType, shape);
@@ -94,10 +86,8 @@ mlir::Type NGraphOpsDialect::parseEltType(mlir::DialectAsmParser& parser) const
 
     if (tyData.startswith("i") || tyData.startswith("u"))
     {
-        bool isSigned = tyData.consume_front("i");
-        bool isUnsigned = tyData.consume_front("u");
-        NGRAPH_CHECK(isSigned != isUnsigned, "nGraph integer cannot be signed and unsigned");
-
+        isSigned = tyData.consume_front("i");
+        tyData.consume_front("u");
         unsigned width = 0;
         // NOTE: `consumeInteger` returns false if an integer was parsed successfully.
         if (tyData.consumeInteger(/*Radix=*/10, width) || width == 0 || !tyData.empty())
@@ -164,7 +154,6 @@ void NGraphOpsDialect::printType(mlir::Type type, mlir::DialectAsmPrinter& print
     }
     case NG_BOOL_TYPE_ID:
     {
-        auto intTy = type.cast<NGBoolType>();
         printer << "bool";
         return;
     }
