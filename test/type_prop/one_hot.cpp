@@ -470,7 +470,7 @@ TEST(type_prop, one_hot_v1_on_off_values_not_compatible)
 
 TEST(type_prop, one_hot_v1_depth_not_scalar)
 {
-    auto indices = make_shared<op::Parameter>(element::i64, Shape{ 2, 2 });
+    auto indices = make_shared<op::Parameter>(element::i64, Shape{2, 2});
     auto depth = make_shared<op::Parameter>(element::i64, Shape{1});
     auto on_value = make_shared<op::Parameter>(element::bf16, Shape{});
     auto off_value = make_shared<op::Parameter>(element::bf16, Shape{});
@@ -483,9 +483,7 @@ TEST(type_prop, one_hot_v1_depth_not_scalar)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("depth input must be scalar."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("depth input must be scalar."));
     }
     catch (...)
     {
@@ -495,7 +493,7 @@ TEST(type_prop, one_hot_v1_depth_not_scalar)
 
 TEST(type_prop, one_hot_v1_on_value_not_scalar)
 {
-    auto indices = make_shared<op::Parameter>(element::i64, Shape{ 2, 2 });
+    auto indices = make_shared<op::Parameter>(element::i64, Shape{2, 2});
     auto depth = make_shared<op::Parameter>(element::i64, Shape{});
     auto on_value = make_shared<op::Parameter>(element::bf16, Shape{2});
     auto off_value = make_shared<op::Parameter>(element::bf16, Shape{});
@@ -508,9 +506,7 @@ TEST(type_prop, one_hot_v1_on_value_not_scalar)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("on_value input must be scalar."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("on_value input must be scalar."));
     }
     catch (...)
     {
@@ -520,10 +516,10 @@ TEST(type_prop, one_hot_v1_on_value_not_scalar)
 
 TEST(type_prop, one_hot_v1_off_value_not_scalar)
 {
-    auto indices = make_shared<op::Parameter>(element::i64, Shape{ 2, 2 });
+    auto indices = make_shared<op::Parameter>(element::i64, Shape{2, 2});
     auto depth = make_shared<op::Parameter>(element::i64, Shape{});
     auto on_value = make_shared<op::Parameter>(element::bf16, Shape{});
-    auto off_value = make_shared<op::Parameter>(element::bf16, Shape{ 3 });
+    auto off_value = make_shared<op::Parameter>(element::bf16, Shape{3});
     int64_t axis = -1;
     try
     {
@@ -533,9 +529,7 @@ TEST(type_prop, one_hot_v1_off_value_not_scalar)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("off_value input must be scalar."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("off_value input must be scalar."));
     }
     catch (...)
     {

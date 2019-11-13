@@ -86,11 +86,14 @@ namespace ngraph
                 OneHot() = default;
                 /// \brief Constructs a one-hot operation.
                 ///
-                /// \param arg          Node that produces the input tensor to be one-hot encoded.
-                /// \param shape        The shape of the output tensor, including the new one-hot
-                /// axis.
-                /// \param one_hot_axis The index within the output shape of the new one-hot axis.
-                // TODO
+                /// \param indices   Input tensor containing indices.
+                /// \param depth     Specifies number of classes and the size of one-hot dimension.
+                /// \param on_value  Specifies value that the locations in output tensor represented
+                ///                  by indices in input take.
+                /// \param off_value Specifies value that the locations in output tensor not
+                /// represented
+                ///                  by indices in input take.
+                /// \param axis      Axis along which one-hot representation in added.
                 OneHot(const Output<Node>& indices,
                        const Output<Node>& depth,
                        const Output<Node>& on_value,
@@ -103,7 +106,7 @@ namespace ngraph
 
                 /// \return The index of the one-hot axis.
                 int64_t get_axis() const { return m_axis; }
-                void set_one_hot_axis(int64_t axis) { m_axis = axis; }
+                void set_axis(int64_t axis) { m_axis = axis; }
             protected:
                 int64_t m_axis;
             };
