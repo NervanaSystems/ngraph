@@ -77,6 +77,7 @@ set(SRC
     opset_pass/logical_not_opset_pass.cpp
     opset_pass/logical_or_opset_pass.cpp
     opset_pass/logical_xor_opset_pass.cpp
+    opset_pass/one_hot_opset_pass.cpp
     opset_pass/gather_opset_pass.cpp
     opset_pass/generate_mask_opset_pass.cpp
     opset_pass/pad_opset_pass.cpp
