@@ -30,10 +30,10 @@
 #include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Target/TargetMachine.h>
+#include <mlir/Dialect/LLVMIR/LLVMDialect.h>
 #include <mlir/ExecutionEngine/ExecutionEngine.h>
 #include <mlir/ExecutionEngine/OptUtils.h>
 #include <mlir/IR/Function.h>
-#include <mlir/Dialect/LLVMIR/LLVMDialect.h>
 
 using llvm::SmallVector;
 using llvm::StringRef;
@@ -148,8 +148,7 @@ SmallVector<void*, 8> MLIRCPURuntime::allocateMemrefArgs()
     for (auto i = 0; i < m_externalTensors->size(); i++)
     {
         auto descriptor = allocateMemrefDescriptor();
-        StaticMemRef** arg =
-            reinterpret_cast<StaticMemRef**>(malloc(sizeof(StaticMemRef*)));
+        StaticMemRef** arg = reinterpret_cast<StaticMemRef**>(malloc(sizeof(StaticMemRef*)));
         *arg = descriptor;
         args.push_back(arg);
     }
@@ -160,8 +159,7 @@ StaticMemRef* MLIRCPURuntime::allocateMemrefDescriptor()
 {
     // We only use StaticMemRef because that's what MLIR currently offers.
     // We should expand this with different types and dynamic MemRefs
-    auto* descriptor =
-        reinterpret_cast<StaticMemRef*>(malloc(sizeof(StaticMemRef)));
+    auto* descriptor = reinterpret_cast<StaticMemRef*>(malloc(sizeof(StaticMemRef)));
     NGRAPH_CHECK(descriptor != nullptr, "NULL MemRef descriptor");
     descriptor->data = nullptr;
     return descriptor;

@@ -35,13 +35,12 @@ namespace mlir
     public:
         explicit NGraphOpsDialect(mlir::MLIRContext* ctx);
 
-        mlir::Type parseType(mlir::DialectAsmParser &parser) const override;
+        mlir::Type parseType(mlir::DialectAsmParser& parser) const override;
 
-        void printType(mlir::Type type,
-            mlir::DialectAsmPrinter &printer) const override;
+        void printType(mlir::Type type, mlir::DialectAsmPrinter& printer) const override;
 
         static StringRef getDialectNamespace() { return "ng"; }
     private:
-        mlir::Type parseEltType(mlir::DialectAsmParser &parser) const;        
+        mlir::Type parseEltType(mlir::DialectAsmParser& parser) const;
     };
 }

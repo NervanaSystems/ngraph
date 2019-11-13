@@ -18,11 +18,11 @@
 // not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
 
 #include "dialect.hpp"
+#include <mlir/IR/DialectImplementation.h>
+#include <mlir/Parser.h>
 #include "ngraph/check.hpp"
 #include "ops.hpp"
 #include "type.hpp"
-#include <mlir/IR/DialectImplementation.h>
-#include <mlir/Parser.h>
 
 using namespace mlir;
 
@@ -39,7 +39,7 @@ NGraphOpsDialect::NGraphOpsDialect(mlir::MLIRContext* ctx)
         >();
 }
 
-mlir::Type NGraphOpsDialect::parseType(mlir::DialectAsmParser &parser) const
+mlir::Type NGraphOpsDialect::parseType(mlir::DialectAsmParser& parser) const
 {
     MLIRContext* context = getContext();
 
@@ -58,30 +58,30 @@ mlir::Type NGraphOpsDialect::parseType(mlir::DialectAsmParser &parser) const
         SmallVector<int64_t, 4> shape;
         parser.parseDimensionList(shape);
 
-       // Parse the current element type.
-       Type eltType;
-       //if (!parser.parseOptionalKeyword("ng."))
-       //{
-       //    // ng element type
-       //    eltType = parseEltType(parser);
-       //} 
-       //else
-       //{
-            // std type
-            parser.parseType(eltType); 
+        // Parse the current element type.
+        Type eltType;
+        // if (!parser.parseOptionalKeyword("ng."))
+        //{
+        //    // ng element type
+        //    eltType = parseEltType(parser);
         //}
-        
+        // else
+        //{
+        // std type
+        parser.parseType(eltType);
+        //}
+
         parser.parseGreater();
         return NGTensorType::get(context, eltType, shape);
-    } 
-    else 
+    }
+    else
     {
         // parse nGraph scalar type
         return parseEltType(parser);
     }
 }
 
-mlir::Type NGraphOpsDialect::parseEltType(mlir::DialectAsmParser &parser) const
+mlir::Type NGraphOpsDialect::parseEltType(mlir::DialectAsmParser& parser) const
 {
     // Process nGraph integer element types.
     MLIRContext* context = getContext();
@@ -115,8 +115,7 @@ mlir::Type NGraphOpsDialect::parseEltType(mlir::DialectAsmParser &parser) const
             return isSigned ? NGIntegerType::getInt32(context) : NGIntegerType::getUInt32(context);
         case 64:
             return isSigned ? NGIntegerType::getInt64(context) : NGIntegerType::getUInt64(context);
-        default:
-            parser.emitError(loc, "Unexpected width for nGraph integer type: " + origTypeStr);
+        default: parser.emitError(loc, "Unexpected width for nGraph integer type: " + origTypeStr);
         }
     }
 
@@ -130,8 +129,7 @@ mlir::Type NGraphOpsDialect::parseEltType(mlir::DialectAsmParser &parser) const
     return Type();
 }
 
-
-void NGraphOpsDialect::printType(mlir::Type type, mlir::DialectAsmPrinter &printer) const
+void NGraphOpsDialect::printType(mlir::Type type, mlir::DialectAsmPrinter& printer) const
 {
     switch (type.getKind())
     {
@@ -170,8 +168,6 @@ void NGraphOpsDialect::printType(mlir::Type type, mlir::DialectAsmPrinter &print
         printer << "bool";
         return;
     }
-    default:
-        NGRAPH_UNREACHABLE("Incorrect type to print?");
+    default: NGRAPH_UNREACHABLE("Incorrect type to print?");
     }
-    
 }

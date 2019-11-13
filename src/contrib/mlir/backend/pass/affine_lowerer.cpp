@@ -591,12 +591,14 @@ namespace
 
         {
             IndexHandle n, k;
-            LoopBuilder::makeAffine(&n, nLb, nUb, nStep)(
-                [&] { LoopBuilder::makeAffine(&k, kLb, kUb, kStep)([&] { iRes(n, k) = zeroInit; }); });
+            LoopBuilder::makeAffine(&n, nLb, nUb, nStep)([&] {
+                LoopBuilder::makeAffine(&k, kLb, kUb, kStep)([&] { iRes(n, k) = zeroInit; });
+            });
         }
         LoopBuilder::makeAffine(&n, nLb, nUb, nStep)([&] {
             LoopBuilder::makeAffine(&m, mLb, mUb, mStep)([&] {
-                LoopBuilder::makeAffine(&k, kLb, kUb, kStep)([&] { iRes(n, k) += iLhs(n, m) * iRhs(m, k); });
+                LoopBuilder::makeAffine(&k, kLb, kUb, kStep)(
+                    [&] { iRes(n, k) += iLhs(n, m) * iRhs(m, k); });
             });
         });
 
@@ -965,8 +967,7 @@ namespace
 
             NGRAPH_CHECK(affineExprs.size() == isEq.size() && isEq.size() == 2 * spatialRank,
                          "Invalid number of expressions in the IntegerSet");
-            nonPaddedRange =
-                IntegerSet::get(spatialRank, 2 * spatialRank, affineExprs, isEq);
+            nonPaddedRange = IntegerSet::get(spatialRank, 2 * spatialRank, affineExprs, isEq);
         }
 
         // Initialize output to zero
@@ -1018,9 +1019,9 @@ namespace
                             resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
                         // Filters spatial loop
                         AffineLoopNestBuilder(filtersSpatialIndicesPtrs,
-                                        filtersSpatialLbs,
-                                        filtersSpatialUbs,
-                                        filtersSteps)([&] {
+                                              filtersSpatialLbs,
+                                              filtersSpatialUbs,
+                                              filtersSteps)([&] {
                             SmallVector<IndexHandle, 4> imgIndices, filtersIndices;
                             // Image indices
                             // Here we compute the virtual start index into the padded image.
