@@ -19,6 +19,8 @@
 #include <cstddef>
 #include <ostream>
 
+#include "ngraph/ngraph_visibility.hpp"
+
 namespace ngraph
 {
     namespace op
@@ -153,7 +155,9 @@ namespace ngraph
                 return a.m_type == m_type && a.m_axis == m_axis;
             }
 
+            NGRAPH_API
             static const AutoBroadcastSpec NUMPY;
+            NGRAPH_API
             static const AutoBroadcastSpec NONE;
         };
 
