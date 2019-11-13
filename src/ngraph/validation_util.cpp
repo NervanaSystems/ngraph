@@ -795,7 +795,7 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
     return dim;
 }
 
-std::size_t ngraph::validate_axis(const Node* node, std::int64_t axis, std::int64_t tensor_rank)
+std::size_t ngraph::normalize_axis(const Node* node, std::int64_t axis, std::int64_t tensor_rank)
 {
     const auto axis_range_min = -tensor_rank;
     const auto axis_range_max = tensor_rank - 1;
