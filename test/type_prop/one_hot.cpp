@@ -372,3 +372,75 @@ TEST(type_prop, one_hot_partial_rank_static_dynamic_rank_static_dynamic_one_hot_
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, one_hot_v1_indices_elem_not_integral)
+{
+    auto indices = make_shared<op::Parameter>(element::f16, Shape{2,2});
+    auto depth = make_shared<op::Parameter>(element::i64, Shape{});
+    auto on_value = make_shared<op::Parameter>(element::u32, Shape{});
+    auto off_value = make_shared<op::Parameter>(element::u32, Shape{});
+    int64_t axis = -1;
+    try
+    {
+        auto ont_hot = make_shared<op::v1::OneHot>(indices, depth, on_value, off_value, axis);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect indices element type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+            std::string("Indices must be integral element type."));
+    }
+    catch (...)
+    {
+        FAIL() << "Incorrect indices element type not detected for unexpected reason";
+    }
+}
+
+TEST(type_prop, one_hot_v1_depth_elem_not_integral)
+{
+    auto indices = make_shared<op::Parameter>(element::i64, Shape{ 2,2 });
+    auto depth = make_shared<op::Parameter>(element::f16, Shape{});
+    auto on_value = make_shared<op::Parameter>(element::u32, Shape{});
+    auto off_value = make_shared<op::Parameter>(element::u32, Shape{});
+    int64_t axis = -1;
+    try
+    {
+        auto ont_hot = make_shared<op::v1::OneHot>(indices, depth, on_value, off_value, axis);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect depth element type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+            std::string("Depth must be integral element type."));
+    }
+    catch (...)
+    {
+        FAIL() << "Incorrect depth element type not detected for unexpected reason";
+    }
+}
+
+TEST(type_prop, one_hot_v1_on_off_values_not_compatible)
+{
+    auto indices = make_shared<op::Parameter>(element::i64, Shape{ 2,2 });
+    auto depth = make_shared<op::Parameter>(element::i64, Shape{});
+    auto on_value = make_shared<op::Parameter>(element::bf16, Shape{});
+    auto off_value = make_shared<op::Parameter>(element::f16, Shape{});
+    int64_t axis = -1;
+    try
+    {
+        auto ont_hot = make_shared<op::v1::OneHot>(indices, depth, on_value, off_value, axis);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incompatible on/off element types not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+            std::string("on_value element type must be compatible with off_value element type."));
+    }
+    catch (...)
+    {
+        FAIL() << "Incompatible on/off element types not detected for unexpected reason";
+    }
+}

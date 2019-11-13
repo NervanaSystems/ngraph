@@ -36,8 +36,6 @@ void op::v0::OneHot::validate_and_infer_types()
     PartialShape arg_shape = get_input_partial_shape(0);
     Rank arg_rank = arg_shape.rank();
 
-    // TODO CHECK ON/OFF value types
-
     NODE_VALIDATION_CHECK(this,
                           arg_et.is_dynamic() || arg_et.is_integral(),
                           "Argument does not have integral element type.");
@@ -116,16 +114,41 @@ op::v1::OneHot::OneHot(const Output<Node>& indices,
 
 void op::v1::OneHot::validate_and_infer_types()
 {
-    element::Type indices_et = get_input_element_type(0);
+    const auto& indices_et = get_input_element_type(0);
+    const auto& depth_et = get_input_element_type(1);
+    const auto& on_value_et = get_input_element_type(2);
+    const auto& off_value_et = get_input_element_type(3);
 
     NODE_VALIDATION_CHECK(this,
                           indices_et.is_dynamic() || indices_et.is_integral(),
-                          "Argument does not have integral element type.");
+                          "Indices must be integral element type.");
 
-    const auto indices_shape = get_input_partial_shape(0);
-    const auto depth_shape = get_input_partial_shape(1);
-    const auto depth = input_value(2).get_node_shared_ptr();
+    NODE_VALIDATION_CHECK(this,
+        depth_et.is_dynamic() || depth_et.is_integral(),
+        "Depth must be integral element type.");
 
+    NODE_VALIDATION_CHECK(this,
+        on_value_et.compatible(off_value_et),
+        "on_value element type must be compatible with off_value element type.");
+
+    const auto& indices_shape = get_input_partial_shape(0);
+    const auto& depth_shape = get_input_partial_shape(1);
+    const auto& on_value_shape = get_input_partial_shape(2);
+    const auto& off_value_shape = get_input_partial_shape(3);
+
+    NODE_VALIDATION_CHECK(this,
+        depth_shape.is_dynamic() || is_scalar(depth_shape.to_shape()),
+        "depth input must be scalar.");
+
+    NODE_VALIDATION_CHECK(this,
+        on_value_shape.is_dynamic() || is_scalar(on_value_shape.to_shape()),
+        "on_value input must be scalar.");
+
+    NODE_VALIDATION_CHECK(this,
+        off_value_shape.is_dynamic() || is_scalar(off_value_shape.to_shape()),
+        "on_value input must be scalar.");
+
+    const auto& depth = input_value(2).get_node_shared_ptr();
     PartialShape result_shape{PartialShape::dynamic()};
 
     if (indices_shape.is_static()
@@ -138,7 +161,7 @@ void op::v1::OneHot::validate_and_infer_types()
         std::vector<Dimension> out_dims(indices_rank);
         for (auto i = 0; i < indices_rank; i++)
         {
-                out_dims[i] = indices_shape[i];
+             out_dims[i] = indices_shape[i];
         }
         m_axis = ngraph::validate_axis(this, m_axis, indices_rank + 1, -indices_rank - 1, indices_rank);
         int64_t depth_val = as_type_ptr<op::Constant>(depth)->get_vector<int64_t>()[0];
