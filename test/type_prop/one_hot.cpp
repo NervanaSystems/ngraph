@@ -416,7 +416,7 @@ TEST(type_prop, one_hot_v1_indices_elem_not_integral)
     }
     catch (...)
     {
-        FAIL() << "Incorrect indices element type not detected for unexpected reason";
+        FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
 
@@ -439,7 +439,7 @@ TEST(type_prop, one_hot_v1_depth_elem_not_integral)
     }
     catch (...)
     {
-        FAIL() << "Incorrect depth element type not detected for unexpected reason";
+        FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
 
@@ -464,7 +464,7 @@ TEST(type_prop, one_hot_v1_on_off_values_not_compatible)
     }
     catch (...)
     {
-        FAIL() << "Incompatible on/off element types not detected for unexpected reason";
+        FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
 
@@ -487,7 +487,7 @@ TEST(type_prop, one_hot_v1_depth_not_scalar)
     }
     catch (...)
     {
-        FAIL() << "Not scalar depth input not detected for unexpected reason";
+        FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
 
@@ -510,7 +510,7 @@ TEST(type_prop, one_hot_v1_on_value_not_scalar)
     }
     catch (...)
     {
-        FAIL() << "Not scalar on_value input not detected for unexpected reason";
+        FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
 
@@ -533,6 +533,6 @@ TEST(type_prop, one_hot_v1_off_value_not_scalar)
     }
     catch (...)
     {
-        FAIL() << "Not scalar off_value input not detected for unexpected reason";
+        FAIL() << "Deduced type check failed for unexpected reason";
     }
 }

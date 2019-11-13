@@ -10,7 +10,43 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(opset_transform, opset1_ont_hot_downgrade_pass)
+TEST(opset_transform, opset1_one_hot_upgrade_pass)
+{
+    auto indices = make_shared<op::Parameter>(element::i64, Shape{1, 3, 2, 3});
+    const auto depth = 4;
+    PartialShape shape{1, 3, 2, depth, 3};
+    size_t one_hot_axis = 3;
+    auto ont_hot_v0 = make_shared<op::v0::OneHot>(indices, shape, one_hot_axis);
+
+    auto result = make_shared<op::Result>(ont_hot_v0);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{indices});
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Opset1Upgrade>();
+    pass_manager.run_passes(f);
+
+    const auto pass_replacement_node =
+        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto one_hot_v1 = static_pointer_cast<op::v1::OneHot>(pass_replacement_node);
+
+    EXPECT_EQ(one_hot_v1->description(), "OneHot");
+    EXPECT_EQ(one_hot_v1->get_version(), 1);
+    EXPECT_EQ(one_hot_v1->get_axis(), one_hot_axis);
+
+    auto one_hot_v1_depth =
+        as_type_ptr<op::Constant>(one_hot_v1->input_value(1).get_node_shared_ptr());
+    EXPECT_EQ(one_hot_v1_depth->get_vector<int64_t>()[0], depth);
+
+    auto one_hot_v1_on_value =
+        as_type_ptr<op::Constant>(one_hot_v1->input_value(2).get_node_shared_ptr());
+    EXPECT_EQ(one_hot_v1_on_value->get_vector<int64_t>()[0], 1);
+
+    auto one_hot_v1_off_value =
+        as_type_ptr<op::Constant>(one_hot_v1->input_value(3).get_node_shared_ptr());
+    EXPECT_EQ(one_hot_v1_off_value->get_vector<int64_t>()[0], 0);
+}
+
+TEST(opset_transform, opset1_one_hot_downgrade_pass)
 {
     auto indices = make_shared<op::Parameter>(element::i64, Shape{1, 3, 2, 3});
     auto depth = op::Constant::create(element::i64, Shape{}, {4});
@@ -33,7 +69,7 @@ TEST(opset_transform, opset1_ont_hot_downgrade_pass)
     EXPECT_EQ(one_hot_v0->get_shape(), (Shape{1, 3, 2, 4, 3}));
 }
 
-TEST(opset_transform, opset1_ont_hot_downgrade_pass_depth_not_constant)
+TEST(opset_transform, opset1_one_hot_downgrade_pass_depth_not_constant)
 {
     auto indices = make_shared<op::Parameter>(element::i64, Shape{1, 3, 2, 3});
     auto depth = make_shared<op::Parameter>(element::i64, Shape{});
@@ -60,11 +96,11 @@ TEST(opset_transform, opset1_ont_hot_downgrade_pass_depth_not_constant)
     }
     catch (...)
     {
-        FAIL() << "Not constant depth not detected for unexpected reason";
+        FAIL() << "OneHot downgrade failed for unexpected reason";
     }
 }
 
-TEST(opset_transform, opset1_ont_hot_downgrade_pass_indices_shape_not_static)
+TEST(opset_transform, opset1_one_hot_downgrade_pass_indices_shape_not_static)
 {
     auto indices = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
     auto depth = op::Constant::create(element::i64, Shape{}, {4});
@@ -91,6 +127,6 @@ TEST(opset_transform, opset1_ont_hot_downgrade_pass_indices_shape_not_static)
     }
     catch (...)
     {
-        FAIL() << "Not static indices shape not detected for unexpected reason";
+        FAIL() << "OneHot downgrade failed for unexpected reason";
     }
 }

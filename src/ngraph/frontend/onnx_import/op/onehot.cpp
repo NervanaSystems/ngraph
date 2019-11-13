@@ -17,11 +17,11 @@
 #include <cstdint>
 #include <memory>
 
+#include "ngraph/op/convert.hpp"
+#include "ngraph/op/one_hot.hpp"
+#include "ngraph/op/slice.hpp"
 #include "onehot.hpp"
 #include "utils/common.hpp"
-#include "ngraph/op/one_hot.hpp"
-#include "ngraph/op/convert.hpp"
-#include "ngraph/op/slice.hpp"
 
 namespace ngraph
 {
@@ -44,7 +44,8 @@ namespace ngraph
                         std::make_shared<ngraph::op::Slice>(values, Coordinate{1}, Coordinate{2});
                     auto axis = node.get_attribute_value<std::int64_t>("axis", -1);
 
-                    return { std::make_shared<ngraph::op::v1::OneHot>(indices, depth, on_value, off_value, axis) };
+                    return {std::make_shared<ngraph::op::v1::OneHot>(
+                        indices, depth, on_value, off_value, axis)};
                 }
 
             } // namespace set_1
