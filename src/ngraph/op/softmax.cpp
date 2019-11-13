@@ -162,25 +162,19 @@ op::v1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
     , m_axis(axis)
 {
     constructor_validate_and_infer_types();
-
-    const PartialShape& input_shape = get_input_partial_shape(0);
-    NODE_VALIDATION_CHECK(this,
-                          input_shape.rank().is_static(),
-                          "Input node rank must be static (input_shape=",
-                          input_shape,
-                          ").");
-    NODE_VALIDATION_CHECK(this,
-                          axis < static_cast<size_t>(input_shape.rank()),
-                          "Reduction axis (",
-                          axis,
-                          ") is out of bounds (argument shape: ",
-                          input_shape,
-                          ").");
 }
 
 void op::v1::Softmax::validate_and_infer_types()
 {
     const PartialShape& input_shape = get_input_partial_shape(0);
+    if (input_shape.rank().is_static())
+        NODE_VALIDATION_CHECK(this,
+                              m_axis < static_cast<size_t>(input_shape.rank()),
+                              "Reduction axis (",
+                              m_axis,
+                              ") is out of bounds (argument shape: ",
+                              input_shape,
+                              ").");
     if (input_shape.is_static())
         set_output_type(0, get_input_element_type(0), input_shape.to_shape());
     else
