@@ -426,11 +426,11 @@ private:
                                    avg_pool->get_include_padding_in_avg_computation());
             break;
         }
-        case OP_TYPEID::BinaryConvolution:
-        {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
-            break;
-        }
+        // case OP_TYPEID::BinaryConvolution:
+        // {
+        //     throw unsupported_op("Unsupported op '" + node.description() + "'");
+        //     break;
+        // }
         case OP_TYPEID::GenerateMask:
         {
             bool use_seed = static_cast<bool>(args[2]->get_data_ptr<const int32_t>()[0]);
@@ -1016,17 +1016,17 @@ private:
                                   less_eq->get_autob());
             break;
         }
-        case OP_TYPEID::LessEqual:
-        {
-            auto less_eq = static_cast<const op::v1::LessEqual*>(&node);
-            reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
-                                  args[1]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<char>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
-                                  less_eq->get_autob());
-            break;
-        }
+        // case OP_TYPEID::LessEqual:
+        // {
+        //     auto less_eq = static_cast<const op::v1::LessEqual*>(&node);
+        //     reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
+        //                           args[1]->get_data_ptr<const T>(),
+        //                           out[0]->get_data_ptr<char>(),
+        //                           node.get_input_shape(0),
+        //                           node.get_input_shape(1),
+        //                           less_eq->get_autob());
+        //     break;
+        // }
         case OP_TYPEID::Log:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1034,39 +1034,39 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::LogicalAnd:
-        {
-            auto logical_and = static_cast<const op::v1::LogicalAnd*>(&node);
-            reference::logical_and(args[0]->get_data_ptr<const T>(),
-                                   args[1]->get_data_ptr<const T>(),
-                                   out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_input_shape(1),
-                                   logical_and->get_autob());
-            break;
-        }
-        case OP_TYPEID::LogicalOr:
-        {
-            auto logical_or = static_cast<const op::v1::LogicalOr*>(&node);
-            reference::logical_or(args[0]->get_data_ptr<const T>(),
-                                  args[1]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<T>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
-                                  logical_or->get_autob());
-            break;
-        }
-        case OP_TYPEID::LogicalXor:
-        {
-            auto logical_xor = static_cast<const op::v1::LogicalXor*>(&node);
-            reference::logical_xor(args[0]->get_data_ptr<const T>(),
-                                   args[1]->get_data_ptr<const T>(),
-                                   out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_input_shape(1),
-                                   logical_xor->get_autob());
-            break;
-        }
+        // case OP_TYPEID::LogicalAnd:
+        // {
+        //     auto logical_and = static_cast<const op::v1::LogicalAnd*>(&node);
+        //     reference::logical_and(args[0]->get_data_ptr<const T>(),
+        //                            args[1]->get_data_ptr<const T>(),
+        //                            out[0]->get_data_ptr<T>(),
+        //                            node.get_input_shape(0),
+        //                            node.get_input_shape(1),
+        //                            logical_and->get_autob());
+        //     break;
+        // }
+        // case OP_TYPEID::LogicalOr:
+        // {
+        //     auto logical_or = static_cast<const op::v1::LogicalOr*>(&node);
+        //     reference::logical_or(args[0]->get_data_ptr<const T>(),
+        //                           args[1]->get_data_ptr<const T>(),
+        //                           out[0]->get_data_ptr<T>(),
+        //                           node.get_input_shape(0),
+        //                           node.get_input_shape(1),
+        //                           logical_or->get_autob());
+        //     break;
+        // }
+        // case OP_TYPEID::LogicalXor:
+        // {
+        //     auto logical_xor = static_cast<const op::v1::LogicalXor*>(&node);
+        //     reference::logical_xor(args[0]->get_data_ptr<const T>(),
+        //                            args[1]->get_data_ptr<const T>(),
+        //                            out[0]->get_data_ptr<T>(),
+        //                            node.get_input_shape(0),
+        //                            node.get_input_shape(1),
+        //                            logical_xor->get_autob());
+        //     break;
+        // }
         case OP_TYPEID::LRN:
         {
             const op::LRN* lrn = static_cast<const op::LRN*>(&node);
@@ -1170,7 +1170,7 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::LogicalNot:
+        // case OP_TYPEID::LogicalNot:
         case OP_TYPEID::Not:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1513,38 +1513,38 @@ private:
             memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
             break;
         }
-        case OP_TYPEID::RandomUniform:
-        {
-            const op::RandomUniform* ru = static_cast<const op::RandomUniform*>(&node);
+        // case OP_TYPEID::RandomUniform:
+        // {
+        //     const op::RandomUniform* ru = static_cast<const op::RandomUniform*>(&node);
 
-            T min_val = args[0]->get_data_ptr<const T>()[0];
-            T max_val = args[1]->get_data_ptr<const T>()[0];
-            // In INTERPRETER we can ignore arg 2 (output_shape) for now because we only work on
-            // static output shapes anyway.
-            bool use_fixed_seed = static_cast<bool>(args[3]->get_data_ptr<const char>()[0]);
+        //     T min_val = args[0]->get_data_ptr<const T>()[0];
+        //     T max_val = args[1]->get_data_ptr<const T>()[0];
+        //     // In INTERPRETER we can ignore arg 2 (output_shape) for now because we only work on
+        //     // static output shapes anyway.
+        //     bool use_fixed_seed = static_cast<bool>(args[3]->get_data_ptr<const char>()[0]);
 
-            if (m_states.count(&node) == 0)
-            {
-                m_states[&node] = std::unique_ptr<UniformRNGState>(new UniformRNGState());
-            }
+        //     if (m_states.count(&node) == 0)
+        //     {
+        //         m_states[&node] = std::unique_ptr<UniformRNGState>(new UniformRNGState());
+        //     }
 
-            auto state = static_cast<UniformRNGState*>(m_states.at(&node).get());
-            size_t element_count = shape_size(node.get_output_shape(0));
-            if (!use_fixed_seed)
-            {
-                reference::random_uniform<T>(
-                    out[0]->get_data_ptr<T>(), min_val, max_val, element_count, state);
-            }
-            else
-            {
-                reference::random_uniform_with_fixed_seed<T>(out[0]->get_data_ptr<T>(),
-                                                             min_val,
-                                                             max_val,
-                                                             element_count,
-                                                             ru->get_fixed_seed());
-            }
-            break;
-        }
+        //     auto state = static_cast<UniformRNGState*>(m_states.at(&node).get());
+        //     size_t element_count = shape_size(node.get_output_shape(0));
+        //     if (!use_fixed_seed)
+        //     {
+        //         reference::random_uniform<T>(
+        //             out[0]->get_data_ptr<T>(), min_val, max_val, element_count, state);
+        //     }
+        //     else
+        //     {
+        //         reference::random_uniform_with_fixed_seed<T>(out[0]->get_data_ptr<T>(),
+        //                                                      min_val,
+        //                                                      max_val,
+        //                                                      element_count,
+        //                                                      ru->get_fixed_seed());
+        //     }
+        //     break;
+        // }
         case OP_TYPEID::Range:
         {
             throw unsupported_op("Unsupported op '" + node.description() + "'");
