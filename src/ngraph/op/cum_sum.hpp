@@ -23,80 +23,77 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v0
-        {
-            // clang-format off
-            /// \brief Tensor cumulative sum operation.
-            ///
-            /// Compute the cumulative sum of the input tensor along the axis specified.
-            ///
-            /// ## Parameters
-            ///
-            /// |                      | Description                              							   |
-            /// | -------------------- | --------------------------------------------------------------------------------------------------|		
-            /// | `exclusive`          | If set to 1 will return exclusive sum in which the top element is not included. 		   |
-	    ///	|		       | In other terms, if set to 1, the j-th output element would be the sum of the first (j-1) elements.|. 
-	    ///	|		       | Otherwise, it would be the sum of the first j elements.  					   |
-            ///
-            /// |                      | Description                                        |
-            /// | -------------------- | -------------------------------------------------- |
-            /// | `reverse`            | if set to 1, performs the sum in reverse direction |
-            ///
-            /// ## Inputs
-            ///
-            /// |       | Description                                            |
-            /// | ----- | ------------------------------------------------------ |
-            /// | `arg` | An input tensor of any shape and numeric element type. |
-            ///
-            /// |       | Description                                                     |
-            /// | ----- | --------------------------------------------------------------- |
-            /// | `axis`| An axis position along which cumulative sum must be performed.  |
-            ///
-	    /// ## Output
-            ///
-            /// | Description                                                                         |
-            /// | ------------------------------------------------------------------------------------|
-            /// | Output tensor of the same type as `arg` with cumulative sums of the arg's elements  |
-	    //
-	    // clang-format off
-            class CumSum : public Op 
-            {
-            public:
-                NGRAPH_API
-                static constexpr NodeTypeInfo type_info{ "CumSum", 0 };
-                const NodeTypeInfo& get_type_info() const override { return type_info; }
-                /// \brief Constructs a cumulative summation operation.
-                CumSum() = default;
-               
-		/// \brief Constructs a cumulative summation operation.
-                ///
-                /// \param arg The tensor to be summed.
-                /// \param axis The axis position along which cumulative sum must be performed.
-                CumSum(const Output<Node>& arg, const int64_t axis = 0, int exclusive = 0, int reverse = 0); 
-	
-		/// \brief Constructs a cumulative summation operation.
-                ///
-                /// \param arg The tensor to be summed.
-                /// \param axis The axis position along which cumulative sum must be performed.
-                CumSum(const Output<Node>& arg, const Output<Node>& axis, int exclusive = 0, int reverse = 0);
+        // clang-format off
+       /// \brief Tensor cumulative sum operation.
+       ///
+       /// Compute the cumulative sum of the input tensor along the axis specified.
+       ///
+       /// ## Parameters
+       ///
+       /// |                      | Description                              							   |
+       /// | -------------------- | --------------------------------------------------------------------------------------------------|		
+       /// | `exclusive`          | If set to 1 will return exclusive sum in which the top element is not included. 		   |
+       ///	|		       | In other terms, if set to 1, the j-th output element would be the sum of the first (j-1) elements.|. 
+       ///	|		       | Otherwise, it would be the sum of the first j elements.  					   |
+       ///
+       /// |                      | Description                                        |
+       /// | -------------------- | -------------------------------------------------- |
+       /// | `reverse`            | if set to 1, performs the sum in reverse direction |
+       ///
+       /// ## Inputs
+       ///
+       /// |       | Description                                            |
+       /// | ----- | ------------------------------------------------------ |
+       /// | `arg` | An input tensor of any shape and numeric element type. |
+       ///
+       /// |       | Description                                                     |
+       /// | ----- | --------------------------------------------------------------- |
+       /// | `axis`| An axis position along which cumulative sum must be performed.  |
+       ///
+       /// ## Output
+       ///
+       /// | Description                                                                         |
+       /// | ------------------------------------------------------------------------------------|
+       /// | Output tensor of the same type as `arg` with cumulative sums of the arg's elements  |
+       //
+       // clang-format off
+       class CumSum : public Op 
+       {
+       public:
+           NGRAPH_API
+           static constexpr NodeTypeInfo type_info{ "CumSum", 0 };
+           const NodeTypeInfo& get_type_info() const override { return type_info; }
+           /// \brief Constructs a cumulative summation operation.
+           CumSum() = default;
+          
+           /// \brief Constructs a cumulative summation operation.
+           ///
+           /// \param arg The tensor to be summed.
+           /// \param axis The axis position along which cumulative sum must be performed.
+           CumSum(const Output<Node>& arg, const int64_t axis = 0, const int exclusive = 0, const int reverse = 0); 
+    
+           /// \brief Constructs a cumulative summation operation.
+           ///
+           /// \param arg The tensor to be summed.
+           /// \param axis The axis position along which cumulative sum must be performed.
+           CumSum(const Output<Node>& arg, const Output<Node>& axis, const int exclusive = 0, const int reverse = 0);
 
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+           virtual std::shared_ptr<Node>
+               copy_with_new_args(const NodeVector& new_args) const override;
 
-                /// \return The default value for CumSum.
-                virtual std::shared_ptr<Node> get_default_value() const override;
-		int64_t get_axis() { return m_axis; }
-            protected:
-                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                    const NodeVector& deltas) override;
-	
-	    private:
-		int m_exclusive;
-		int m_reverse;
-		int64_t m_axis;
-            };
-        }
-        // default opset version
-        using v0::CumSum;
+           /// \return The default value for CumSum.
+           virtual std::shared_ptr<Node> get_default_value() const override;
+           int64_t get_axis() const { return m_axis; }
+           int is_exclusive() const { return m_exclusive; }
+           int is_reverse() const { return m_reverse; }
+       protected:
+           virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+               const NodeVector& deltas) override;
+    
+       private:
+	   int m_exclusive;
+	   int m_reverse;
+	   int64_t m_axis;
+       };
     }
 }

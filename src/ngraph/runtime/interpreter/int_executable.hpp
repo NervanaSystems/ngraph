@@ -38,6 +38,7 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/cum_sum.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
@@ -117,6 +118,7 @@
 #include "ngraph/runtime/reference/copy.hpp"
 #include "ngraph/runtime/reference/cos.hpp"
 #include "ngraph/runtime/reference/cosh.hpp"
+#include "ngraph/runtime/reference/cum_sum.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/divide.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
@@ -744,6 +746,18 @@ private:
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::cosh<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
+        }
+        case OP_TYPEID::CumSum:
+        {
+            const op::CumSum* cumsum = static_cast<const op::CumSum*>(&node);
+            reference::cumsum<T>(args[0]->get_data_ptr<const T>(),
+                                 out[0]->get_data_ptr<T>(),
+                                 node.get_input_shape(0),
+                                 node.get_output_shape(0),
+                                 cumsum->get_axis(),
+                                 cumsum->is_exclusive(),
+                                 cumsum->is_reverse());
             break;
         }
         case OP_TYPEID::Dequantize:

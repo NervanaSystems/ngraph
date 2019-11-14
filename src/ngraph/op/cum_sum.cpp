@@ -22,32 +22,36 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::v0::CumSum::type_info;
+constexpr NodeTypeInfo op::CumSum::type_info;
 
-op::v0::CumSum::CumSum(const Output<Node>& arg,
-                       const Output<Node>& axis,
-                       int exclusive,
-                       int reverse)
+op::CumSum::CumSum(const Output<Node>& arg,
+                   const Output<Node>& axis,
+                   const int exclusive,
+                   const int reverse)
     : Op({arg, axis})
     , m_exclusive(exclusive)
     , m_reverse(reverse)
     , m_axis(1)
 {
-    constructor_validate_and_infer_types();
+    set_output_type(0, arg.get_element_type(), arg.get_shape());
 }
 
-op::v0::CumSum::CumSum(const Output<Node>& arg, const int64_t axis, int exclusive, int reverse)
+op::CumSum::CumSum(const Output<Node>& arg,
+                   const int64_t axis,
+                   const int exclusive,
+                   const int reverse)
     : CumSum(arg, op::Constant::create(element::i64, Shape{}, {axis}), exclusive, reverse)
 {
+    set_output_type(0, arg.get_element_type(), arg.get_shape());
 }
 
 shared_ptr<Node> op::CumSum::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<op::v0::CumSum>(new_args.at(0), new_args.at(1), m_exclusive, m_reverse);
+    return make_shared<op::CumSum>(new_args.at(0), new_args.at(1), m_exclusive, m_reverse);
 }
 
-void op::v0::CumSum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::CumSum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -58,7 +62,7 @@ void op::v0::CumSum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeV
         x, make_shared<op::Broadcast>(delta, x_shape, AxisSet{static_cast<size_t>(get_axis())}));
 }
 
-shared_ptr<Node> op::v0::CumSum::get_default_value() const
+shared_ptr<Node> op::CumSum::get_default_value() const
 {
     return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
 }

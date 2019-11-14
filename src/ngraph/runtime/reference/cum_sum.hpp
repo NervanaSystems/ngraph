@@ -29,67 +29,39 @@ namespace ngraph
     {
         namespace reference
         {
-            // Windows doesn't seem to like it if we directly use std::isfinite on integer types,
-            // so we will roll our own thing here.
-            template <typename T>
-            typename std::enable_if<std::is_floating_point<T>::value, bool>::type is_finite(T x)
-            {
-                return std::isfinite(x);
-            }
-
-            template <typename T>
-            typename std::enable_if<std::is_same<T, bfloat16>::value ||
-                                        std::is_same<T, float16>::value,
-                                    bool>::type
-                is_finite(T x)
-            {
-                return std::isfinite(static_cast<float>(x));
-            }
-
-            template <typename T>
-            typename std::enable_if<std::is_integral<T>::value, bool>::type is_finite(T /* x */)
-            {
-                return true;
-            }
-
             template <typename T>
             void cumsum(const T* arg,
                         T* out,
                         const Shape& in_shape,
                         const Shape& out_shape,
-                        const T axis,
+                        const int64_t axis,
                         const int exclusive,
                         const int reverse)
             {
-                CoordinateTransform output_transform(out_shape);
-                std::vector<T> cs(shape_size(out_shape));
+                auto temp_shape = reduce(out_shape, AxisSet{static_cast<size_t>(axis)});
+                CoordinateTransform temp_transform(temp_shape);
+                std::vector<T> cs(shape_size(temp_shape));
 
-                for (const Coordinate& output_coord : output_transform)
+                for (const Coordinate& output_coord : temp_transform)
                 {
-                    out[output_transform.index(output_coord)] = 0;
-                    cs[output_transform.index(output_coord)] = 0;
+                    out[temp_transform.index(output_coord)] = 0;
+                    cs[temp_transform.index(output_coord)] = 0;
                 }
 
                 CoordinateTransform input_transform(in_shape);
-
+                T prev = 0;
                 for (const Coordinate& input_coord : input_transform)
                 {
-                    output_transform = reduce(input_transform, AxisSet{axis});
-                    T x = arg[input_transform.index(input_coord)];
-                    T& z = out[output_transform.index(output_coord)];
+                    // TODO (pthoreho): Add support for exclsuive and reverse mode
 
-                    if (is_finite(x) && is_finite(z))
-                    {
-                        T& c = cs[output_transform.index(output_coord)];
-                        T t = z + (x - c);
-                        c = (t - z) - (x - c);
-                        z = z + t;
-                    }
-                    else
-                    {
-                        T t = z + x;
-                        z = z + t;
-                    }
+                    // points to the current element in the input tensor
+                    T current = arg[input_transform.index(input_coord)];
+                    // holds the reference of the output corrosponding to the given input tensor
+                    T& z = out[input_transform.index(input_coord)];
+                    z = prev + current;
+                    // captures the result of the current output for cummulative sum in the
+                    // subsequent sum
+                    prev = z;
                 }
             }
         }
