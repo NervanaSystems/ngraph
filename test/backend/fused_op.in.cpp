@@ -1850,7 +1850,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_activaction_functions)
     ct_test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, fake_quantize)
+NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_opv1)
 {
     const Shape data_shape{1, 2, 3, 4};
     const size_t levels = 4;
@@ -1893,7 +1893,7 @@ NGRAPH_TEST(${BACKEND_NAME}, fake_quantize)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_with_clip)
+NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_with_clip_opv1)
 {
     const Shape data_shape{1, 2, 3, 4};
     const size_t levels = 5;
@@ -1933,7 +1933,7 @@ NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_with_clip)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_with_clip_across_channels)
+NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_with_clip_across_channels_opv1)
 {
     Shape data_shape{1, 2, 5, 5};
     size_t levels = 5;
@@ -1976,7 +1976,7 @@ NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_with_clip_across_channels)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_pdpd)
+NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_pdpd_opv1)
 {
     Shape data_shape{1, 2, 5, 5};
     size_t levels = 5;

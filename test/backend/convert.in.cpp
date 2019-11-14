@@ -27,7 +27,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, convert_int32_float32)
+NGRAPH_TEST(${BACKEND_NAME}, convert_int32_float32_opv1)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -45,7 +45,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_int32_float32)
     EXPECT_TRUE(test::all_close_f((vector<float>{281, 2, 3, 4}), read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, convert_uint16_float32)
+NGRAPH_TEST(${BACKEND_NAME}, convert_uint16_float32_opv1)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::u16, shape);
@@ -64,7 +64,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_uint16_float32)
         (vector<float>{1, 2, 3, 4}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, convert_int32_bool)
+NGRAPH_TEST(${BACKEND_NAME}, convert_int32_bool_opv1)
 {
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -86,7 +86,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_int32_bool)
     EXPECT_EQ((vector<char>{0, 1, 1, 0, 1, 1}), read_vector<char>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, convert_float32_bool)
+NGRAPH_TEST(${BACKEND_NAME}, convert_float32_bool_opv1)
 {
     Shape shape{3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -111,7 +111,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_float32_bool)
     EXPECT_EQ((vector<char>{0, 1, 1, 0, 1, 1, 1, 1, 1}), read_vector<char>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, convert_float32_bf16)
+NGRAPH_TEST(${BACKEND_NAME}, convert_float32_bf16_opv1)
 {
     Shape shape_a{1, 1, 3, 5};
 
@@ -134,7 +134,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_float32_bf16)
               read_vector<bfloat16>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, convert_bf16_float32)
+NGRAPH_TEST(${BACKEND_NAME}, convert_bf16_float32_opv1)
 {
     Shape shape_a{1, 1, 3, 5};
 

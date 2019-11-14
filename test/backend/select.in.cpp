@@ -27,7 +27,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, select)
+NGRAPH_TEST(${BACKEND_NAME}, select_opv1)
 {
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
@@ -53,7 +53,7 @@ NGRAPH_TEST(${BACKEND_NAME}, select)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, select_double)
+NGRAPH_TEST(${BACKEND_NAME}, select_double_opv1)
 {
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);

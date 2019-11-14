@@ -116,7 +116,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_reshape_opv1)
     }
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, reshape_v1)
+NGRAPH_TEST(${BACKEND_NAME}, reshape_v1_opv1)
 {
     auto arg = std::make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
     auto pattern = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));

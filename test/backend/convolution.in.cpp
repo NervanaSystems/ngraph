@@ -139,7 +139,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convolution_simple_padding)
 
 // The purpose of this test is to check if we can allow
 // data_batch_shape as a node rather than argument
-NGRAPH_TEST(${BACKEND_NAME}, dyn_convolution_backprop_data)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_convolution_backprop_data_opv1)
 {
     Shape shape_filter{6, 3, 3, 3};
     auto filters = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());

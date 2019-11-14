@@ -25,7 +25,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, dyn_broadcast)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_broadcast_opv1)
 {
     // Create a graph for
     //   f(x,shape:i32,axes:32) = Broadcast(x,Convert<i64>(shape),Convert<i64>(axes)).
@@ -74,7 +74,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_broadcast)
     }
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, broadcast_v1)
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_v1_opv1)
 {
     // Create a graph for
     //   f(x,shape:i32,axes:32) = Broadcast(x,Convert<i64>(shape),Convert<i64>(axes)).

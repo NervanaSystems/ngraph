@@ -44,7 +44,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, floor)
+NGRAPH_TEST(${BACKEND_NAME}, floor_opv1)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -64,7 +64,7 @@ NGRAPH_TEST(${BACKEND_NAME}, floor)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, floor_int32)
+NGRAPH_TEST(${BACKEND_NAME}, floor_int32_opv1)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);

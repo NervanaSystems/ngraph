@@ -25,7 +25,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, transpose)
+NGRAPH_TEST(${BACKEND_NAME}, transpose_opv1)
 {
     //
     // Create a graph for f(x,perm) = Transpose(x,Convert<i64>(perm)). We'll do the permutation in

@@ -44,7 +44,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, subtract)
+NGRAPH_TEST(${BACKEND_NAME}, subtract_opv1)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -65,7 +65,7 @@ NGRAPH_TEST(${BACKEND_NAME}, subtract)
     EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 4, 8}), read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, subtract_overload)
+NGRAPH_TEST(${BACKEND_NAME}, subtract_overload_opv1)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);

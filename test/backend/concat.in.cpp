@@ -27,7 +27,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, concat_negative_axis)
+NGRAPH_TEST(${BACKEND_NAME}, concat_negative_axis_opv1)
 {
     auto pshape_a = PartialShape::dynamic();
     auto A = make_shared<op::Parameter>(element::f32, pshape_a);
@@ -283,7 +283,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_2d_tensor_opv1)
         (vector<float>{1, 2, 3}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_2d_tensor)
+NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_2d_tensor_opv1)
 {
     Shape shape{1, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -316,7 +316,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_2d_tensor)
         (vector<float>{3, 7, 2}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_propagate_2d_tensor)
+NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_propagate_2d_tensor_opv1)
 {
     Shape shape{1, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
