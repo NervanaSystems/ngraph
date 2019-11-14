@@ -733,7 +733,7 @@ def NGGeluBackpropFactorOp :
 // Elu Op
 def NGEluOp :
     NG_OneResult_Op<"elu", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
-    Arguments<(ins NG_TensorType:$data, I64Attr:$alpha)>
+    Arguments<(ins NG_TensorType:$data, F64Attr:$alpha)>
 {
   let summary = "Elu Op";
   let description = [{

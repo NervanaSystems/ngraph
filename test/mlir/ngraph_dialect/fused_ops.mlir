@@ -208,3 +208,22 @@ func @geluBackpropFactor(%arg0: !ng.tensor<4x4xf32>) -> !ng.tensor<4x4xf32>
   "ng.return"(%0) : (!ng.tensor<4x4xf32>) -> ()
 }
 
+// -----
+
+//CHECK-LABEL: func @elu
+func @elu(%arg0: !ng.tensor<4x4xf32>) -> !ng.tensor<4x4xf32>
+{
+  //CHECK: %{{[0-9]+}} = "ng.elu"({{.*}}) {alpha = {{.*}} : f64} : (!ng.tensor<4x4xf32>) -> !ng.tensor<4x4xf32>
+  %0 = "ng.elu"(%arg0) {alpha = 0.001 : f64}: (!ng.tensor<4x4xf32>) -> !ng.tensor<4x4xf32>
+  "ng.return"(%0) : (!ng.tensor<4x4xf32>) -> ()
+}
+
+// -----
+//CHECK-LABEL: func @fakeQuant
+func @fakeQuant(%arg0: !ng.tensor<1x2x3x4xf32>, %arg1: !ng.tensor<1xf32>,
+                %arg2: !ng.tensor<1xf32>, %arg3: !ng.tensor<1xf32>, %arg4: !ng.tensor<1xf32>) -> !ng.tensor<1x2x3x4xf32>
+{
+  //CHECK: %{{[0-9]+}} = "ng.fakeQuant"(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) {levels = 4 : i64} : (!ng.tensor<1x2x3x4xf32>, !ng.tensor<1xf32>, !ng.tensor<1xf32>, !ng.tensor<1xf32>, !ng.tensor<1xf32>) -> !ng.tensor<1x2x3x4xf32>
+  %0 = "ng.fakeQuant"(%arg0, %arg1, %arg2, %arg3, %arg4) {levels = 4 : i64} : (!ng.tensor<1x2x3x4xf32>, !ng.tensor<1xf32>, !ng.tensor<1xf32>, !ng.tensor<1xf32>, !ng.tensor<1xf32>) -> !ng.tensor<1x2x3x4xf32>
+  "ng.return"(%0) : (!ng.tensor<1x2x3x4xf32>) -> ()
+}
