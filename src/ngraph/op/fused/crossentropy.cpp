@@ -188,6 +188,23 @@ shared_ptr<Node> op::CrossEntropy::copy_with_new_args(const NodeVector& new_args
     return make_shared<CrossEntropy>(new_args.at(0), new_args.at(1), m_soft_label, m_ignore_index);
 }
 
+void op::CrossEntropy::pre_validate_and_infer_types()
+{
+    element::Type input_element_type = get_input_element_type(0);
+
+    NODE_VALIDATION_CHECK(this,
+                          input_element_type.is_dynamic() || input_element_type.is_real(),
+                          "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
+                          input_element_type,
+                          ").");
+    set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
+
+    if (is_dynamic())
+    {
+        return;
+    }
+}
+
 constexpr NodeTypeInfo op::CrossEntropyBackprop::type_info;
 
 op::CrossEntropyBackprop::CrossEntropyBackprop(const Output<Node>& input,
@@ -211,6 +228,7 @@ void op::CrossEntropyBackprop::pre_validate_and_infer_types()
                           "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
                           input_element_type,
                           ").");
+    set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
 }
 
 shared_ptr<Node> op::CrossEntropyBackprop::copy_with_new_args(const NodeVector& new_args) const
