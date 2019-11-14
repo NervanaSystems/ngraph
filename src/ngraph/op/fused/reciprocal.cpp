@@ -33,7 +33,7 @@ NodeVector op::Reciprocal::decompose_op() const
 {
     auto data = input_value(0);
     auto one_node = op::Constant::create(data.get_element_type(), data.get_shape(), {1});
-    return {make_shared<op::Divide>(one_node, data, AutoBroadcastType::NUMPY)};
+    return {make_shared<op::v1::Divide>(one_node, data)};
 }
 
 shared_ptr<Node> op::Reciprocal::copy_with_new_args(const NodeVector& new_args) const
