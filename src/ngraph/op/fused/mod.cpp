@@ -1,0 +1,53 @@
+//*****************************************************************************
+// Copyright 2017-2019 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
+#include "ngraph/op/fused/mod.hpp"
+#include "ngraph/builder/make_constant.hpp"
+#include "ngraph/op/divide.hpp"
+#include "ngraph/op/floor.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/subtract.hpp"
+
+using namespace std;
+using namespace ngraph;
+
+constexpr NodeTypeInfo op::Mod::type_info;
+
+op::Mod::Mod(const Output<Node>& A, const Output<Node>& B, const AutoBroadcastSpec& auto_broadcast)
+    : FusedOp({A, B})
+    , m_auto_broadcast(auto_broadcast)
+{
+}
+
+NodeVector op::Mod::decompose_op() const
+{
+    const auto dividend = input_value(0);
+    const auto divisor = input_value(1);
+
+    // floor(a / b)
+    const auto division =
+        make_shared<op::Floor>(make_shared<op::Divide>(dividend, divisor, m_auto_broadcast));
+    // floor(a / b) * b
+    const auto multiplication = make_shared<op::Multiply>(division, divisor, m_auto_broadcast);
+    // a mod b = a - floor(a / b) * b
+    const auto mod = make_shared<op::Multiply>(dividend, multiplication, m_auto_broadcast);
+
+    return {mod};
+}
+
+shared_ptr<Node> op::Mod::copy_with_new_args(const NodeVector& new_args) const
+{
+    return make_shared<Mod>(new_args.at(0), new_args.at(1), m_auto_broadcast);
+}

@@ -357,6 +357,8 @@ set (SRC
     op/fused/lstm_sequence.hpp
     op/fused/matmul.cpp
     op/fused/matmul.hpp
+    op/fused/mod.cpp
+    op/fused/mod.hpp
     op/fused/mvn.cpp
     op/fused/mvn.hpp
     op/fused/normalize_l2.cpp
