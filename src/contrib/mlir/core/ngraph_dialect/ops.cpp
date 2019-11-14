@@ -387,7 +387,7 @@ void mlir::NGConvBiasBackpropFiltersBias::decompose()
 void mlir::NGPrelu::decompose()
 {
 }
-void mlir::NGLayerNormBackPropOp::decompose()
+void mlir::NGLayerNormBackpropOp::decompose()
 {
 }
 void mlir::NGGemmOp::decompose()
@@ -414,7 +414,7 @@ void mlir::NGGroupConvOp::decompose()
 void mlir::NGGeluOp::decompose()
 {
 }
-void mlir::NGGeluBackPropFactorOp::decompose()
+void mlir::NGGeluBackpropFactorOp::decompose()
 {
 }
 void mlir::NGLSTMCellOp::decompose()

@@ -33,7 +33,7 @@ def NGSqueezeOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return verifyOp(this); }];
+  let verifier = [{ return mlir::success(); /* TBD */ }];
 }
 
 // Unsqueeze Op
@@ -47,12 +47,12 @@ def NGUnSqueezeOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return verifyOp(this); }];
+  let verifier = [{ return mlir::success(); /* TBD */ }];
 }
 
 // Squared Difference Op
 def NGSquaredDiffOp : 
-    NG_Binary_Op<"sqrtdiff", [DeclareOpInterfaceMethods<FusedOp>]>
+    NG_Binary_Op<"sqrdDiff", [DeclareOpInterfaceMethods<FusedOp>]>
 {
   let summary = "Squared Difference Op";
   let description = [{
@@ -60,13 +60,13 @@ def NGSquaredDiffOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return verifyOp(this); }];
+  let verifier = [{ return mlir::success(); /* TBD */ }];
 }
 
 // Split Op
 def NGSplitOp : 
     NG_Variadic_Result_Op<"split", [DeclareOpInterfaceMethods<FusedOp>]>,
-    Arguments<(ins NG_TensorType:$data, NG_TensorType:$axis, I64ArrayAttr:$numSplits)>
+    Arguments<(ins NG_TensorType:$data, I64Attr:$axis, I64ArrayAttr:$numSplits)>
 {
   let summary = "Split op";
   let description = [{ 
@@ -74,7 +74,7 @@ def NGSplitOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return verifyOp(this); }];
+  let verifier = [{ return mlir::success(); /* TBD */ }];
 
   let extraClassDeclaration = [{
     void setAxis(const Attribute& attr)                 { this->setAttr("axis", attr);            }
@@ -94,10 +94,13 @@ def NGSpaceToDepthOp :
     Values from the height and width dimensions are moved to the depth dimension.
     Output node produces a tensor with shape:
       [N, C * blocksize * blocksize, H / blocksize, W / blocksize]
+
+    data       Node producing the input tensor
+    blockSize  The size of the block of values to be moved
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return verifyOp(this); }];
+  let verifier = [{ return mlir::success(); /* TBD */ }];
 
   let extraClassDeclaration = [{
     void setBlockSize(const Attribute& attr) { this->setAttr("blockSize", attr); }
@@ -112,16 +115,16 @@ def NGShuffleChannelsOp :
   let summary = "Shuffle Channels op";
   let description = [{
     Constructs a ShuffleChannels node.
-    data - Node producing the input tensor
-    axis - channel dimension index in the data tensor. A negative value means
-           that the index should be calculated from the back of the input data
-           shape.
-    groups - number of groups the channel dimension specified by axis should be
-           split into
+    data    Node producing the input tensor
+    axis    channel dimension index in the data tensor. A negative value means
+            that the index should be calculated from the back of the input data
+            shape.
+    groups  number of groups the channel dimension specified by axis should be
+            split into
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return verifyOp(this); }];
+  let verifier = [{ return mlir::success(); /* TBD */ }];
 
   let extraClassDeclaration = [{
     void setAxis(const Attribute& axis)     { this->setAttr("axis", axis); }
@@ -140,7 +143,7 @@ def NGScaleShiftOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return verifyOp(this); }];
+  let verifier = [{ return mlir::success(); /* TBD */ }];
 }
 
 // RNN Cell Op
@@ -154,7 +157,7 @@ def NGRNNCellOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return verifyOp(this); }];  
+  let verifier = [{ return mlir::success(); /* TBD */ }];  
 
   let builders = [
     OpBuilder<
@@ -175,8 +178,8 @@ def NGRNNCellOp :
   let extraClassDeclaration = [{
     void setHiddenSize(const Attribute& attr)       { this->setAttr("hiddenSize", attr);  }
     void setActivations(const ArrayAttr& attr)      { this->setAttr("activations", attr); }
-    void setActivationAlpha(const ArrayAttr& attr) { this->setAttr("activationAlpha", attr); }
-    void setActivationBeta(const ArrayAttr& attr)  { this->setAttr("activationBeta", attr);  }
+    void setActivationAlpha(const ArrayAttr& attr)  { this->setAttr("activationAlpha", attr); }
+    void setActivationBeta(const ArrayAttr& attr)   { this->setAttr("activationBeta", attr);  }
     void setClip(const Attribute& attr)             { this->setAttr("clip", attr); }
   }];
 }
@@ -194,7 +197,7 @@ def NGPrelu :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return verifyOp(this); }];  
+  let verifier = [{ return mlir::success(); /* TBD */ }];  
 }
 
 // Normalize L2 Op
@@ -214,7 +217,7 @@ def NGNormalizeL2Op :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return verifyOp(this); }];  
+  let verifier = [{ return mlir::success(); /* TBD */ }];  
 
   let extraClassDeclaration = [{
     void setEpsMode(const Attribute& epsMode) { this->setAttr("epsMOde", epsMode); }
@@ -302,7 +305,7 @@ def NGLSTMCellOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return verifyOp(this); }];  
+  let verifier = [{ return mlir::success(); /* TBD */ }];  
 
   let builders = [
     OpBuilder<
@@ -376,7 +379,7 @@ def NGGRUCellOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return verifyOp(this); }];  
+  let verifier = [{ return mlir::success(); /* TBD */ }];  
 
   let builders = [
     OpBuilder<
@@ -416,19 +419,24 @@ def NGGRUCellOp :
 }
 
 // LayerNorm Op
+
+// Op produces 3 results when keepStats is true
+// Op is defined with 3 results, 2 of which are invalid/dead if keepStats is false
+
 def NGLayerNormOp : 
-    NG_OneResult_Op<"layernorm", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_Op<"layernorm", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    Results<(outs NG_TensorType:$res, NG_TensorType:$mean, NG_TensorType:$var)>,
     Arguments<(ins NG_TensorType:$data, NG_TensorType:$scale, NG_TensorType:$bias,
                DefaultValuedAttr<BoolAttr, "true">:$keepStats,
-               DefaultValuedAttr<I64Attr, "1">:$beginNormAxis,
-               DefaultValuedAttr<F64Attr, "1e-5">:$epsilon)>
+               DefaultValuedAttr<I64Attr, "1">    :$beginNormAxis,
+               DefaultValuedAttr<F32Attr, "1e-5"> :$epsilon)>
 {
   let summary = "LayerNorm Op";
   let description = "Constructs an LayerNorm operation.";
     
   let builders = [
     OpBuilder<
-    "Builder *builder, OperationState &tblgen_state, Type res,"
+    "Builder *builder, OperationState &tblgen_state, ArrayRef<Type> res,"
     "Value *data, Attribute keepStats, Attribute beginNormAxis, Attribute epsilon", [{
        tblgen_state.addOperands(data);
        tblgen_state.addAttribute("keepStats", keepStats);
@@ -447,19 +455,20 @@ def NGLayerNormOp :
 
 
 // LayerNormBackProp Op
-def NGLayerNormBackPropOp : 
-    NG_OneResult_Op<"layernormBackProp", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+def NGLayerNormBackpropOp : 
+    NG_Op<"layernormBackprop", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    Results<(outs NG_TensorType:$d_data, NG_TensorType:$d_scale, NG_TensorType:$d_bias)>,
     Arguments<(ins NG_TensorType:$data, NG_TensorType:$delta, 
                NG_TensorType:$mean, NG_TensorType:$variance, NG_TensorType:$scale,
                DefaultValuedAttr<I64Attr, "1">:$beginNormAxis,
-               DefaultValuedAttr<F64Attr, "1e-5">:$epsilon)>
+               DefaultValuedAttr<F32Attr, "1e-5">:$epsilon)>
 {
   let summary = "LayerNorm Op";
   let description = "Constructs an LayerNorm operation.";
     
   let builders = [
     OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res,"
+      "Builder *builder, OperationState &tblgen_state, ArrayRef<Type> res,"
       "Value *data, Value *delta, Value *mean, Value *variance,"
       "Attribute beginNormAxis, Attribute epsilon", [{
         tblgen_state.addOperands({data, delta, mean, variance});
@@ -469,7 +478,7 @@ def NGLayerNormBackPropOp :
       }]>,
 
     OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res,"
+      "Builder *builder, OperationState &tblgen_state, ArrayRef<Type> res,"
       "Value *data, Value *delta, Value *scale,"
       "Attribute beginNormAxis, Attribute epsilon", [{
         tblgen_state.addOperands({data, delta, scale});
@@ -479,7 +488,7 @@ def NGLayerNormBackPropOp :
       }]>,
 
     OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res,"
+      "Builder *builder, OperationState &tblgen_state, ArrayRef<Type> res,"
       "Value *data, Value *delta,"
       "Attribute beginNormAxis, Attribute epsilon", [{
         tblgen_state.addOperands({data, delta});
@@ -497,9 +506,9 @@ def NGLayerNormBackPropOp :
 
 // HardSigmoid Op
 def NGHardSigmoid : 
-    NG_OneResult_Op<"hardsigmoid", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"hardSigmoid", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data,
-               F64Attr:$alpha, F64Attr:$beta)>
+               F32Attr:$alpha, F32Attr:$beta)>
 {
     let summary = "Hard sigmoid op";
     let description = [{
@@ -517,8 +526,8 @@ def NGHardSigmoid :
 def NGGemmOp : 
     NG_OneResult_Op<"gemm", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$A, NG_TensorType:$B, NG_TensorType:$C,
-              DefaultValuedAttr<F64Attr, "1.0">:$alpha,
-              DefaultValuedAttr<F64Attr, "1.0">:$beta,
+              DefaultValuedAttr<F32Attr, "1.0">:$alpha,
+              DefaultValuedAttr<F32Attr, "1.0">:$beta,
               DefaultValuedAttr<BoolAttr, "false">:$transA,
               DefaultValuedAttr<BoolAttr, "false">:$transB)>
 {
@@ -593,7 +602,7 @@ def NGGroupConvOp :
 
 // GroupConvTranspose Op
 def NGGroupConvTransposeOp :
-  NG_OneResult_Op<"GroupConvTranspose", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+  NG_OneResult_Op<"groupConvTranspose", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
   Arguments<(ins NG_TensorType:$images, NG_TensorType:$filters,
              I64ArrayAttr:$strides, I64ArrayAttr:$padBelow, I64ArrayAttr:$padAbove, 
              I64ArrayAttr:$outputPad, 
@@ -663,7 +672,8 @@ def NGGroupConvTransposeOp :
 // GRN Op
 def NGGRNOp :
     NG_OneResult_Op<"grn", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
-    Arguments<(ins NG_TensorType:$data, I64Attr:$bias)>
+    Arguments<(ins NG_TensorType:$data, 
+               DefaultValuedAttr<F32Attr, "1.0">:$bias)>
 {
   let summary = "GRN Op";
   let description = [{
@@ -680,7 +690,7 @@ def NGGRNOp :
 // Clamp Op
 def NGClampOp :
     NG_OneResult_Op<"clamp", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
-    Arguments<(ins NG_TensorType:$data, I64Attr:$min, I64Attr:$max)>
+    Arguments<(ins NG_TensorType:$data, F64Attr:$min, F64Attr:$max)>
 {
   let summary = "Clamp Op";
   let description = [{
@@ -709,8 +719,8 @@ def NGGeluOp :
   }];
 }
 
-// GeluBackPropFactor Op
-def NGGeluBackPropFactorOp :
+// GeluBackpropFactor Op
+def NGGeluBackpropFactorOp :
     NG_OneResult_Op<"geluBackpropFactor", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data)>
 {
