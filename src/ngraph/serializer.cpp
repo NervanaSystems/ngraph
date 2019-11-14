@@ -1132,11 +1132,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             break;
         }
-        // case OP_TYPEID::BroadcastDistributed:
-        // {
-        //     node = make_shared<op::BroadcastDistributed>(args[0]);
-        //     break;
-        // }
+        case OP_TYPEID::BroadcastDistributed:
+        {
+            node = make_shared<op::BroadcastDistributed>(args[0]);
+            break;
+        }
         case OP_TYPEID::BroadcastLike:
         {
             auto initial_axes = deserialize_axis_set(node_js.at("initial_axes"));
@@ -3106,8 +3106,8 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    // case OP_TYPEID::BroadcastDistributed: { break;
-    // }
+    case OP_TYPEID::BroadcastDistributed: { break;
+    }
     case OP_TYPEID::BroadcastLike:
     {
         auto tmp = static_cast<const op::BroadcastLike*>(&n);
