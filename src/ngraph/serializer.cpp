@@ -1095,27 +1095,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[2], args[0], args[1], args[3], args[4], args[5], epsilon);
             break;
         }
-        // case OP_TYPEID::BinaryConvolution:
-        // {
-        //     auto strides = node_js.at("strides").get<vector<size_t>>();
-        //     auto dilations = node_js.at("dilations").get<vector<size_t>>();
-        //     auto pads_begin = node_js.at("pads_begin").get<vector<std::ptrdiff_t>>();
-        //     auto pads_end = node_js.at("pads_end").get<vector<std::ptrdiff_t>>();
-        //     auto mode = node_js.at("mode").get<op::v1::BinaryConvolution::BinaryConvolutionMode>();
-        //     auto pad_value = node_js.at("pad_value").get<float>();
-        //     op::PadType auto_pad = read_pad_type(node_js);
-
-        //     node = make_shared<op::v1::BinaryConvolution>(args[0],
-        //                                                   args[1],
-        //                                                   strides,
-        //                                                   pads_begin,
-        //                                                   pads_end,
-        //                                                   dilations,
-        //                                                   mode,
-        //                                                   pad_value,
-        //                                                   auto_pad);
-        //     break;
-        // }
         case OP_TYPEID::Broadcast:
         {
             if (op_version == 0)
@@ -1786,42 +1765,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
-        // case OP_TYPEID::LessEqual:
-        // {
-        //     node = make_shared<op::v1::LessEqual>(
-        //         args[0],
-        //         args[1],
-        //         read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
-        //     break;
-        // }
         case OP_TYPEID::Log:
         {
             node = make_shared<op::Log>(args[0]);
             break;
         }
-        // case OP_TYPEID::LogicalAnd:
-        // {
-        //     node = make_shared<op::v1::LogicalAnd>(
-        //         args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
-        //     break;
-        // }
-        // case OP_TYPEID::LogicalNot:
-        // {
-        //     node = make_shared<op::v1::LogicalNot>(args[0]);
-        //     break;
-        // }
-        // case OP_TYPEID::LogicalOr:
-        // {
-        //     node = make_shared<op::v1::LogicalOr>(
-        //         args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
-        //     break;
-        // }
-        // case OP_TYPEID::LogicalXor:
-        // {
-        //     node = make_shared<op::v1::LogicalXor>(
-        //         args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
-        //     break;
-        // }
         case OP_TYPEID::LRN:
         {
             auto alpha = node_js.at("alpha").get<double>();
@@ -3075,18 +3023,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["eps"] = tmp->get_eps_value();
         break;
     }
-    // case OP_TYPEID::BinaryConvolution:
-    // {
-    //     auto tmp = static_cast<const op::v1::BinaryConvolution*>(&n);
-    //     node["strides"] = tmp->get_strides();
-    //     node["dilations"] = tmp->get_dilations();
-    //     node["pads_begin"] = tmp->get_pads_begin();
-    //     node["pads_end"] = tmp->get_pads_end();
-    //     node["mode"] = tmp->get_mode();
-    //     node["pad_value"] = tmp->get_pad_value();
-    //     node["auto_pad"] = tmp->get_auto_pad();
-    //     break;
-    // }
     case OP_TYPEID::Broadcast:
     {
         if (op_version == 0)
@@ -3544,46 +3480,8 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    // case OP_TYPEID::LessEqual:
-    // {
-    //     auto tmp = static_cast<const op::v1::LessEqual*>(&n);
-    //     if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-    //     {
-    //         node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-    //     }
-    //     break;
-    // }
     case OP_TYPEID::Log: { break;
     }
-    // case OP_TYPEID::LogicalAnd:
-    // {
-    //     auto tmp = static_cast<const op::v1::LogicalAnd*>(&n);
-    //     if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-    //     {
-    //         node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-    //     }
-    //     break;
-    // }
-    // case OP_TYPEID::LogicalNot: { break;
-    // }
-    // case OP_TYPEID::LogicalOr:
-    // {
-    //     auto tmp = static_cast<const op::v1::LogicalOr*>(&n);
-    //     if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-    //     {
-    //         node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-    //     }
-    //     break;
-    // }
-    // case OP_TYPEID::LogicalXor:
-    // {
-    //     auto tmp = static_cast<const op::v1::LogicalXor*>(&n);
-    //     if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-    //     {
-    //         node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-    //     }
-    //     break;
-    // }
     case OP_TYPEID::LRN:
     {
         auto tmp = static_cast<const op::LRN*>(&n);
