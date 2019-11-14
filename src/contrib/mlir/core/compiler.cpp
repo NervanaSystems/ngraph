@@ -35,6 +35,7 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
+#include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/greater.hpp"
@@ -365,10 +366,22 @@ namespace ngraph
             {
                 auto matmul = static_cast<const ngraph::op::MatMul*>(ngNode);
                 auto op = compiler.createGenericOp<mlir::NGMatMulOp>(ngNode);
-                op->setAttr("transpose_a",
+                op->setAttr("transposeA",
                             compiler.m_builder->getBoolAttr(matmul->get_transpose_a()));
-                op->setAttr("transpose_b",
+                op->setAttr("transposeB",
                             compiler.m_builder->getBoolAttr(matmul->get_transpose_b()));
+                return op;
+            }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Gemm)
+            {
+                auto gemm = static_cast<const ngraph::op::Gemm*>(ngNode);
+                auto op = compiler.createGenericOp<mlir::NGGemmOp>(ngNode);
+                op->setAttr("transposeA", compiler.m_builder->getBoolAttr(gemm->get_transA()));
+                op->setAttr("transposeB", compiler.m_builder->getBoolAttr(gemm->get_transB()));
+                op->setAttr("alpha", compiler.m_builder->getF32FloatAttr(gemm->get_alpha()));
+                op->setAttr("beta", compiler.m_builder->getF32FloatAttr(gemm->get_beta()));
                 return op;
             }
 

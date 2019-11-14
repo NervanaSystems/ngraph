@@ -34,6 +34,7 @@
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
 #include <mlir/Dialect/LLVMIR/LLVMDialect.h>
+#include <mlir/IR/StandardTypes.h>
 #include <mlir/Pass/PassManager.h>
 #include <mlir/Target/LLVMIR.h>
 #include <mlir/Transforms/DialectConversion.h>
@@ -174,6 +175,13 @@ void MLIRCPUBackend::lowerNgDialect()
     // Apply any generic pass manager command line options.
     mlir::applyPassManagerCLOptions(pm);
 
+#if 0
+    pm.enableTiming();
+    std::function<bool(mlir::Pass *)> shouldPrintBeforePass, shouldPrintAfterPass;
+    shouldPrintBeforePass = [](mlir::Pass *) { return true; };
+    shouldPrintAfterPass = [](mlir::Pass *) { return true; };
+    pm.enableIRPrinting(shouldPrintBeforePass, shouldPrintAfterPass, true, llvm::errs());
+#endif
     if (failed(pm.run(m_module.get())))
     {
         NGRAPH_CHECK(false, "MLIR pass manager failed");
@@ -197,6 +205,11 @@ void MLIRCPUBackend::lowerNgDialect()
     mlir::ConversionTarget target(m_context);
     target.addLegalDialect<mlir::LLVM::LLVMDialect>();
     target.addLegalOp<mlir::ModuleOp, mlir::ModuleTerminatorOp>();
+    target.addDynamicallyLegalOp<mlir::LLVM::CallOp>([&](mlir::LLVM::CallOp op) {
+        return llvm::none_of(op.getOperandTypes(), [](mlir::Type type) {
+            return type.getKind() == mlir::StandardTypes::MemRef;
+        });
+    });
     target.addDynamicallyLegalOp<mlir::FuncOp>(
         [&](mlir::FuncOp op) { return llvmConverter.isSignatureLegal(op.getType()); });
 

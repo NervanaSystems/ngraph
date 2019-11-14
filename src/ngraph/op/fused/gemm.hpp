@@ -53,8 +53,8 @@ namespace ngraph
             Gemm(const Output<Node>& A,
                  const Output<Node>& B,
                  const Output<Node>& C,
-                 double alpha = 1.0,
-                 double beta = 1.0,
+                 float alpha = 1.0,
+                 float beta = 1.0,
                  bool transA = false,
                  bool transB = false);
 
@@ -63,13 +63,13 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            double get_alpha() const { return m_alpha; }
-            double get_beta() const { return m_beta; }
+            float get_alpha() const { return m_alpha; }
+            float get_beta() const { return m_beta; }
             bool get_transA() const { return m_transA; }
             bool get_transB() const { return m_transB; }
         private:
-            double m_alpha;
-            double m_beta;
+            float m_alpha;
+            float m_beta;
             bool m_transA;
             bool m_transB;
         };

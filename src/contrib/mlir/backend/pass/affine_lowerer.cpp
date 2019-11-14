@@ -34,6 +34,8 @@
 #include <mlir/IR/StandardTypes.h>
 #include <mlir/Transforms/DialectConversion.h>
 
+#include <mlir/Dialect/LLVMIR/LLVMDialect.h>
+
 #include <map>
 
 #define PASS_NAME "convert-ngraph-to-affine"
@@ -190,10 +192,15 @@ namespace
         void insertDeallocs(PatternRewriter& rewriter);
 
         NGraphTypeConverter& getTypeConverter() { return typeConverter; }
-        mlir::FuncOp getCallDecl(StringRef name,
-                                 ArrayRef<Type> args,
-                                 ArrayRef<Type> output,
-                                 PatternRewriter& rewriter);
+        FuncOp getCallDecl(StringRef name,
+                           ArrayRef<Type> args,
+                           ArrayRef<Type> output,
+                           PatternRewriter& rewriter);
+
+        LLVM::LLVMFuncOp getLLVMCallDecl(StringRef name,
+                                         ArrayRef<LLVM::LLVMType> args,
+                                         LLVM::LLVMType output,
+                                         PatternRewriter& rewriter);
 
     private:
         /// Collect a set of patterns to convert from the nGraph dialect to Affine dialect.
@@ -227,7 +234,7 @@ namespace
         // Create target that defines legal ops for nGraph dialect to be lowered to.
         ConversionTarget target(getContext());
 
-        target.addLegalDialect<AffineOpsDialect, StandardOpsDialect>();
+        target.addLegalDialect<AffineOpsDialect, StandardOpsDialect, LLVM::LLVMDialect>();
         target.addLegalOp<ModuleOp, ModuleTerminatorOp>();
         target.addDynamicallyLegalOp<FuncOp>([&](FuncOp op) {
             // FuncOp is legal only if types have been converted to Std types.
@@ -417,6 +424,29 @@ namespace
             SmallVector<NamedAttribute, 4> attributes;
             rewriter.create<mlir::FuncOp>(rewriter.getUnknownLoc(), name, callBackType, attributes);
             callBackFunc = module.lookupSymbol<mlir::FuncOp>(name);
+        }
+        return callBackFunc;
+    }
+
+    LLVM::LLVMFuncOp DialectLoweringPass::getLLVMCallDecl(StringRef name,
+                                                          ArrayRef<LLVM::LLVMType> args,
+                                                          LLVM::LLVMType output,
+                                                          PatternRewriter& rewriter)
+    {
+        auto module = getModule();
+        auto* context = module.getContext();
+
+        auto callBackFunc = module.lookupSymbol<LLVM::LLVMFuncOp>(name);
+        if (!callBackFunc)
+        {
+            // Create a function declaration and insert to the module.
+            auto callBackType = LLVM::LLVMType::getFunctionTy(output, args, false);
+            PatternRewriter::InsertionGuard insertGuard(rewriter);
+            rewriter.setInsertionPointToStart(module.getBody());
+            SmallVector<NamedAttribute, 4> attributes;
+            rewriter.create<LLVM::LLVMFuncOp>(
+                rewriter.getUnknownLoc(), name, callBackType, attributes);
+            callBackFunc = module.lookupSymbol<LLVM::LLVMFuncOp>(name);
         }
         return callBackFunc;
     }
@@ -677,27 +707,27 @@ namespace
         auto lda = lhsShape[lhsDim1];
         auto ldb = rhsShape[rhsDim1];
 
-        if (matmul.transpose_a())
+        if (matmul.transposeA())
         {
             m = lhsShape[lhsDim1];
             k = lhsShape[lhsDim0];
         }
-        if (matmul.transpose_a())
+        if (matmul.transposeB())
         {
             n = rhsShape[rhsDim0];
         }
 
-        auto m_arg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), m);
-        auto k_arg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), k);
-        auto n_arg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), n);
-        auto lda_arg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), lda);
-        auto ldb_arg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), ldb);
-        auto transpose_a =
-            matmul.transpose_a()
+        auto mArg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), m);
+        auto kArg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), k);
+        auto nArg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), n);
+        auto ldaArg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), lda);
+        auto ldbArg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), ldb);
+        auto transposeA =
+            matmul.transposeA()
                 ? rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 1, 1)
                 : rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 0, 1);
-        auto transpose_b =
-            matmul.transpose_b()
+        auto transposeB =
+            matmul.transposeB()
                 ? rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 1, 1)
                 : rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 0, 1);
 
@@ -718,19 +748,201 @@ namespace
                                              {},
                                              rewriter);
 
-        SmallVector<mlir::Value*, 4> args = {lhs,
-                                             rhs,
-                                             result,
-                                             transpose_a,
-                                             transpose_b,
-                                             m_arg,
-                                             n_arg,
-                                             k_arg,
-                                             lda_arg,
-                                             ldb_arg,
-                                             n_arg};
+        SmallVector<mlir::Value*, 11> args = {
+            lhs, rhs, result, transposeA, transposeB, mArg, nArg, kArg, ldaArg, ldbArg, nArg};
 
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
+        rewriter.replaceOp(op, result);
+
+        return matchSuccess();
+    }
+
+    REWRITER(NGGemmOp)
+    {
+        auto gemm = cast<NGGemmOp>(op);
+        auto loc = gemm.getLoc();
+
+        // Retrieve/generate Values for operands and result.
+        ScopedContext scope(rewriter, loc);
+        Value* lhs = operands[0];
+        Value* rhs = operands[1];
+        Value* bias = operands[2];
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(lhs && rhs && bias && result, "Unexpected null values in GemmOp");
+
+        auto resultTy = result->getType().dyn_cast<MemRefType>();
+        auto lhsTy = lhs->getType().dyn_cast<MemRefType>();
+        auto lhsShape = lhsTy.getShape();
+        auto rhsTy = rhs->getType().dyn_cast<MemRefType>();
+        auto rhsShape = rhsTy.getShape();
+        auto biasTy = bias->getType().dyn_cast<MemRefType>();
+        auto biasShape = biasTy.getShape();
+        NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
+        NGRAPH_CHECK(lhsTy, "Unexpected non-memref LHS type");
+        NGRAPH_CHECK(rhsTy, "Unexpected non-memref RHS type");
+        NGRAPH_CHECK(biasTy, "Unexpected non-memref bias type");
+
+        Type elemTy = resultTy.getElementType();
+        NGRAPH_CHECK(elemTy == lhsTy.getElementType() && elemTy == rhsTy.getElementType() &&
+                         elemTy == biasTy.getElementType(),
+                     "Types mismatch in GemmOp");
+
+        MemRefView vRes(result), vLhs(lhs), vRhs(rhs), vBias(bias);
+
+        NGRAPH_CHECK(vLhs.rank() == 2 && vRhs.rank() == 2 && vRes.rank() == 2 && vBias.rank() <= 2,
+                     "Gemm operation is only supported for 2D tensors");
+
+        // It's important to note that MemRefView priovides lb/ub/step info is "reverse order",
+        // i.e., fastest varying dimension is the last one, slowest varying dimension is the first
+        // one.
+        unsigned lhsDim0 = vLhs.fastestVarying() - 1;
+        unsigned lhsDim1 = vLhs.fastestVarying();
+        unsigned rhsDim0 = vRhs.fastestVarying() - 1;
+        unsigned rhsDim1 = vRhs.fastestVarying();
+
+        auto m = lhsShape[lhsDim0];
+        auto k = lhsShape[lhsDim1];
+        auto n = rhsShape[rhsDim1];
+        auto lda = lhsShape[lhsDim1];
+        auto ldb = rhsShape[rhsDim1];
+
+        if (gemm.transposeA())
+        {
+            m = lhsShape[lhsDim1];
+            k = lhsShape[lhsDim0];
+        }
+        if (gemm.transposeB())
+        {
+            n = rhsShape[rhsDim0];
+        }
+
+        int broadcastHint;
+        if (vBias.rank() == 0)
+        {
+            // Scalar
+            broadcastHint = 2;
+        }
+        else if (vBias.rank() == 2)
+        {
+            if (biasShape[0] == m && biasShape[1] == 1)
+            {
+                broadcastHint = 1;
+            }
+            else if (biasShape[0] == 1 && biasShape[1] == n)
+            {
+                broadcastHint = 0;
+            }
+            else
+            {
+                broadcastHint = -1;
+            }
+        }
+        else
+        {
+            if (biasShape[0] == m)
+            {
+                broadcastHint = 1;
+            }
+            else if (biasShape[0] == n)
+            {
+                broadcastHint = 0;
+            }
+        }
+
+        auto mArg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), m);
+        auto kArg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), k);
+        auto nArg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), n);
+        auto ldaArg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), lda);
+        auto ldbArg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), ldb);
+        auto transposeA =
+            gemm.transposeA()
+                ? rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 1, 1)
+                : rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 0, 1);
+        auto transposeB =
+            gemm.transposeB()
+                ? rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 1, 1)
+                : rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 0, 1);
+        auto broadcastHintArg =
+            rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), broadcastHint, 32);
+
+        auto floatTy = rewriter.getF32Type();
+        auto alpha =
+            rewriter.create<mlir::ConstantFloatOp>(rewriter.getUnknownLoc(), gemm.alpha(), floatTy);
+        auto beta =
+            rewriter.create<mlir::ConstantFloatOp>(rewriter.getUnknownLoc(), gemm.beta(), floatTy);
+
+        auto boolTy = rewriter.getI1Type();
+        auto sizeTy = rewriter.getIndexType();
+        auto intTy = rewriter.getIntegerType(32);
+
+        auto module = pass.getModule();
+        auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
+        auto llvmF32Ty = LLVM::LLVMType::getFloatTy(llvmDialect);
+        auto llvmF32PtrTy = llvmF32Ty.getPointerTo();
+        auto llvmI1Ty = LLVM::LLVMType::getInt1Ty(llvmDialect);
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto llvmI32Ty = LLVM::LLVMType::getInt32Ty(llvmDialect);
+        auto llvmArrayTy = LLVM::LLVMType::getArrayTy(llvmI64Ty, 2);
+        auto llvmStructPtrTy = LLVM::LLVMType::getStructTy(
+                                   llvmDialect, {llvmF32PtrTy, llvmI64Ty, llvmArrayTy, llvmArrayTy})
+                                   .getPointerTo();
+        auto llvmVoidTy = LLVM::LLVMType::getVoidTy(llvmDialect);
+
+        LLVM::LLVMType llvmBiasTy;
+        if (vBias.rank() == 0)
+        {
+            llvmBiasTy =
+                LLVM::LLVMType::getStructTy(llvmDialect, {llvmF32PtrTy, llvmI64Ty}).getPointerTo();
+        }
+        else if (vBias.rank() == 1)
+        {
+            auto llvmArray1Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 1);
+            llvmBiasTy = LLVM::LLVMType::getStructTy(
+                             llvmDialect, {llvmF32PtrTy, llvmI64Ty, llvmArray1Ty, llvmArray1Ty})
+                             .getPointerTo();
+        }
+        else
+        {
+            llvmBiasTy = llvmStructPtrTy;
+        }
+
+        auto callBackFunc = pass.getCallDecl("__mlir_cblas_sgemm_1",
+                                             {llvmStructPtrTy,
+                                              llvmStructPtrTy,
+                                              llvmBiasTy,
+                                              llvmStructPtrTy,
+                                              llvmI1Ty,
+                                              llvmI1Ty,
+                                              llvmI64Ty,
+                                              llvmI64Ty,
+                                              llvmI64Ty,
+                                              llvmI64Ty,
+                                              llvmI64Ty,
+                                              llvmI64Ty,
+                                              llvmF32Ty,
+                                              llvmF32Ty,
+                                              llvmI32Ty},
+                                             llvmVoidTy,
+                                             rewriter);
+
+        SmallVector<mlir::Value*, 12> args = {lhs,
+                                              rhs,
+                                              bias,
+                                              result,
+                                              transposeA,
+                                              transposeB,
+                                              mArg,
+                                              nArg,
+                                              kArg,
+                                              ldaArg,
+                                              ldbArg,
+                                              nArg,
+                                              alpha,
+                                              beta,
+                                              broadcastHintArg};
+
+        rewriter.create<mlir::LLVM::CallOp>(
+            rewriter.getUnknownLoc(), llvmVoidTy, rewriter.getSymbolRefAttr(callBackFunc), args);
         rewriter.replaceOp(op, result);
 
         return matchSuccess();

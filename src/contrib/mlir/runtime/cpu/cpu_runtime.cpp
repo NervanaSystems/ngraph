@@ -35,6 +35,8 @@
 #include <mlir/ExecutionEngine/OptUtils.h>
 #include <mlir/IR/Function.h>
 
+#include <mlir/Dialect/LLVMIR/LLVMDialect.h>
+
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 
 using llvm::SmallVector;
@@ -45,11 +47,11 @@ using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
 
 /// Call back for MatMul
-extern "C" NGRAPH_API void __mlir_cblas_sgemm(void* mat_A_ptr,
-                                              void* mat_B_ptr,
-                                              void* mat_C_ptr,
-                                              const bool transpose_A,
-                                              const bool transpose_B,
+extern "C" NGRAPH_API void __mlir_cblas_sgemm(void* matAPtr,
+                                              void* matBPtr,
+                                              void* matCPtr,
+                                              const bool transposeA,
+                                              const bool transposeB,
                                               const size_t m,
                                               const size_t n,
                                               const size_t k,
@@ -57,24 +59,140 @@ extern "C" NGRAPH_API void __mlir_cblas_sgemm(void* mat_A_ptr,
                                               const size_t ldb,
                                               const size_t ldc)
 {
-    auto* mat_A = *(reinterpret_cast<float**>(mat_A_ptr));
-    auto* mat_B = *(reinterpret_cast<float**>(mat_B_ptr));
-    auto* mat_C = *(reinterpret_cast<float**>(mat_C_ptr));
+    auto* matA = *(reinterpret_cast<float**>(matAPtr));
+    auto* matB = *(reinterpret_cast<float**>(matBPtr));
+    auto* matC = *(reinterpret_cast<float**>(matCPtr));
 
     cblas::cblas_sgemm(cblas::Layout::RowMajor,
-                       transpose_A ? cblas::Transpose::Transpose : cblas::Transpose::None,
-                       transpose_B ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                       transposeA ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                       transposeB ? cblas::Transpose::Transpose : cblas::Transpose::None,
                        m,
                        n,
                        k,
                        1.0f,
-                       mat_A,
+                       matA,
                        std::max<size_t>(1, lda),
-                       mat_B,
+                       matB,
                        std::max<size_t>(1, ldb),
                        0.0f,
-                       mat_C,
+                       matC,
                        std::max<size_t>(1, ldc));
+}
+
+/// Call back for Gemm
+extern "C" NGRAPH_API void __mlir_cblas_sgemm_1(void* matAPtr,
+                                                void* matBPtr,
+                                                void* matCPtr,
+                                                void* matOutPtr,
+                                                const bool transposeA,
+                                                const bool transposeB,
+                                                const size_t m,
+                                                const size_t n,
+                                                const size_t k,
+                                                const size_t lda,
+                                                const size_t ldb,
+                                                const size_t ldc,
+                                                const float alpha,
+                                                const float beta,
+                                                const int broadcastHint)
+{
+    auto* matA = *(reinterpret_cast<float**>(matAPtr));
+    auto* matB = *(reinterpret_cast<float**>(matBPtr));
+    auto* matC = *(reinterpret_cast<float**>(matCPtr));
+    auto* matOut = *(reinterpret_cast<float**>(matOutPtr));
+
+    cblas::cblas_sgemm(cblas::Layout::RowMajor,
+                       transposeA ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                       transposeB ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                       m,
+                       n,
+                       k,
+                       alpha,
+                       matA,
+                       std::max<size_t>(1, lda),
+                       matB,
+                       std::max<size_t>(1, ldb),
+                       0.0f,
+                       matOut,
+                       std::max<size_t>(1, ldc));
+
+    if (broadcastHint == 0)
+    {
+        std::vector<float> ones(m, 1.0f);
+        cblas::cblas_sgemm(cblas::Layout::RowMajor,
+                           cblas::Transpose::None,
+                           cblas::Transpose::None,
+                           m,
+                           n,
+                           1,
+                           beta,
+                           ones.data(),
+                           1,
+                           matC,
+                           std::max<size_t>(1, n),
+                           1.0f,
+                           matOut,
+                           std::max<size_t>(1, ldc));
+    }
+    else if (broadcastHint == 1)
+    {
+        std::vector<float> ones(n, 1.0f);
+        cblas::cblas_sgemm(cblas::Layout::RowMajor,
+                           cblas::Transpose::None,
+                           cblas::Transpose::None,
+                           m,
+                           n,
+                           1,
+                           beta,
+                           matC,
+                           1,
+                           ones.data(),
+                           std::max<size_t>(1, n),
+                           1.0f,
+                           matOut,
+                           std::max<size_t>(1, ldc));
+    }
+    else if (broadcastHint == 2)
+    {
+        std::vector<float> ones(m, 1.0f);
+        std::vector<float> bias(n, *matC);
+        cblas::cblas_sgemm(cblas::Layout::RowMajor,
+                           cblas::Transpose::None,
+                           cblas::Transpose::None,
+                           m,
+                           n,
+                           1,
+                           beta,
+                           ones.data(),
+                           1,
+                           bias.data(),
+                           std::max<size_t>(1, n),
+                           1.0f,
+                           matOut,
+                           std::max<size_t>(1, ldc));
+    }
+    else
+    {
+        std::vector<float> identity(n * n, 0.0f);
+        for (auto i = 0; i < n * n; i += n + 1)
+        {
+            identity[i] = 1.0;
+        }
+        cblas::cblas_sgemm(cblas::Layout::RowMajor,
+                           cblas::Transpose::None,
+                           cblas::Transpose::None,
+                           m,
+                           n,
+                           n,
+                           beta,
+                           matC,
+                           std::max<size_t>(1, n),
+                           identity.data(),
+                           std::max<size_t>(1, n),
+                           1.0f,
+                           matOut,
+                           std::max<size_t>(1, ldc));
+    }
 }
 
 #define DEBUG_TYPE "mlir-cpu-runtime"
