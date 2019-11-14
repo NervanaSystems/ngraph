@@ -1463,6 +1463,38 @@ private:
             memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
             break;
         }
+        case OP_TYPEID::RandomUniform:
+        {
+            const op::RandomUniform* ru = static_cast<const op::RandomUniform*>(&node);
+
+            T min_val = args[0]->get_data_ptr<const T>()[0];
+            T max_val = args[1]->get_data_ptr<const T>()[0];
+            // In INTERPRETER we can ignore arg 2 (output_shape) for now because we only work on
+            // static output shapes anyway.
+            bool use_fixed_seed = static_cast<bool>(args[3]->get_data_ptr<const char>()[0]);
+
+            if (m_states.count(&node) == 0)
+            {
+                m_states[&node] = std::unique_ptr<UniformRNGState>(new UniformRNGState());
+            }
+
+            auto state = static_cast<UniformRNGState*>(m_states.at(&node).get());
+            size_t element_count = shape_size(node.get_output_shape(0));
+            if (!use_fixed_seed)
+            {
+                reference::random_uniform<T>(
+                    out[0]->get_data_ptr<T>(), min_val, max_val, element_count, state);
+            }
+            else
+            {
+                reference::random_uniform_with_fixed_seed<T>(out[0]->get_data_ptr<T>(),
+                                                             min_val,
+                                                             max_val,
+                                                             element_count,
+                                                             ru->get_fixed_seed());
+            }
+            break;
+        }
         case OP_TYPEID::Range:
         {
             throw unsupported_op("Unsupported op '" + node.description() + "'");
