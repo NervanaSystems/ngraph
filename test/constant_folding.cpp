@@ -1225,3 +1225,17 @@ TEST(constant_folding, pass_property)
     ASSERT_EQ(false, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
     ASSERT_EQ(true, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
 }
+
+TEST(constant_folding, mobilenet)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mobilenetv2_bs300.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    size_t count_before = count_ops_of_type<op::Reshape>(func);
+    pass_manager.run_passes(func);
+    size_t count_after = count_ops_of_type<op::Reshape>(func);
+    ASSERT_TRUE(count_after < count_before);
+}
