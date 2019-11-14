@@ -39,6 +39,7 @@ namespace ngraph
             NGRAPH_API
             static constexpr NodeTypeInfo type_info{"BatchMatMulTranspose", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            BatchMatMulTranspose() = default;
             /// \brief Constructs a batch of matmul product operation.
             ///
             /// \param arg0 The node producing the first argument.

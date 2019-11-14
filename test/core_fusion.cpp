@@ -649,6 +649,7 @@ TEST(core_fusion, DISABLED_conv_bias_bprop)
     }
 }
 
+#ifndef NGRAPH_JSON_DISABLE
 TEST(batch_fusion, fuse_batch_mat_mul_transpose)
 {
     pass::Manager pass_manager;
@@ -687,6 +688,8 @@ TEST(batch_fusion, fuse_batch_mat_mul_transpose_forward)
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
+
+#endif
 
 TEST(batch_fusion, group_convolution_fusion)
 {
