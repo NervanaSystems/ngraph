@@ -2414,11 +2414,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Select>(args[0], args[1], args[2]);
             break;
         }
-        // case OP_TYPEID::Selu:
-        // {
-        //     node = make_shared<op::Selu>(args[0], args[1], args[2]);
-        //     break;
-        // }
         case OP_TYPEID::Send:
         {
             auto dest_id = node_js.at("dest_id").get<size_t>();
@@ -3813,12 +3808,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["source_id"] = tmp->get_src_id();
         break;
     }
-    // case OP_TYPEID::RandomUniform:
-    // {
-    //     auto tmp = static_cast<const op::RandomUniform*>(&n);
-    //     node["fixed_seed"] = tmp->get_fixed_seed();
-    //     break;
-    // }
     case OP_TYPEID::Range: { break;
     }
     case OP_TYPEID::Relu: { break;
@@ -3895,8 +3884,6 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Select: { break;
     }
-    // case OP_TYPEID::Selu: { break;
-    // }
     case OP_TYPEID::Send:
     {
         auto tmp = static_cast<const op::Send*>(&n);
