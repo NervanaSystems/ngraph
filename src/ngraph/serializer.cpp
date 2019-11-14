@@ -2308,12 +2308,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Recv>(args[0], src_id);
             break;
         }
-        // case OP_TYPEID::RandomUniform:
-        // {
-        //     auto fixed_seed = node_js.at("fixed_seed").get<uint64_t>();
-        //     node = make_shared<op::RandomUniform>(args[0], args[1], args[2], args[3], fixed_seed);
-        //     break;
-        // }
         case OP_TYPEID::Range:
         {
             node = make_shared<op::Range>(args[0], args[1], args[2]);
