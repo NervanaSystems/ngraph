@@ -21,34 +21,36 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Divide::type_info;
+// ------------------------------ v0 -------------------------------------------
 
-op::Divide::Divide(const Output<Node>& arg0,
-                   const Output<Node>& arg1,
-                   const AutoBroadcastSpec& auto_broadcast)
+constexpr NodeTypeInfo op::v0::Divide::type_info;
+
+op::v0::Divide::Divide(const Output<Node>& arg0,
+                       const Output<Node>& arg1,
+                       const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }
 
-op::Divide::Divide(const Output<Node>& arg0,
-                   const Output<Node>& arg1,
-                   bool pythondiv,
-                   const AutoBroadcastSpec& auto_broadcast)
+op::v0::Divide::Divide(const Output<Node>& arg0,
+                       const Output<Node>& arg1,
+                       bool pythondiv,
+                       const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
     , m_pythondiv(pythondiv)
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::Divide::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Divide::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Divide>(
+    return make_shared<op::v0::Divide>(
         new_args.at(0), new_args.at(1), this->is_pythondiv(), this->get_autob());
 }
 
-void op::Divide::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::Divide::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     if (get_autob().m_type != op::AutoBroadcastType::NONE)
     {
@@ -66,5 +68,50 @@ void op::Divide::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVecto
 
 shared_ptr<Node> ngraph::operator/(const Output<Node>& arg0, const Output<Node>& arg1)
 {
-    return make_shared<op::Divide>(arg0, arg1);
+    return make_shared<op::v0::Divide>(arg0, arg1);
+}
+
+// ------------------------------ v1 -------------------------------------------
+
+constexpr NodeTypeInfo op::v1::Divide::type_info;
+
+op::v1::Divide::Divide(const Output<Node>& arg0,
+                       const Output<Node>& arg1,
+                       const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
+{
+    constructor_validate_and_infer_types();
+}
+
+op::v1::Divide::Divide(const Output<Node>& arg0,
+                       const Output<Node>& arg1,
+                       bool pythondiv,
+                       const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
+    , m_pythondiv(pythondiv)
+{
+    constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::v1::Divide::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<op::v1::Divide>(
+        new_args.at(0), new_args.at(1), this->is_pythondiv(), this->get_autob());
+}
+
+void op::v1::Divide::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+{
+    if (get_autob().m_type != op::AutoBroadcastType::NONE)
+    {
+        throw ngraph_error("Autodiff not supported with auto broadcasting");
+    }
+
+    auto delta = deltas.at(0);
+
+    auto x = input_value(0);
+    auto y = input_value(1);
+
+    adjoints.add_delta(x, delta / y);
+    adjoints.add_delta(y, -delta * shared_from_this() / y);
 }
