@@ -75,7 +75,7 @@ float16::float16(float value)
         uint32_t shift = exp_shift + (23 - frac_size);
         raw_frac = (raw_frac + (hidden_one >> (frac_size - exp_shift + 1))) >> shift;
     }
-    else if (exp > 15)
+    else if (exp > 15 || (exp == 15 && raw_frac > 0x7fef00 /* numpy overflow value */))
     {
         biased_exp = 0x1F;
         raw_frac = 0;
