@@ -190,6 +190,15 @@ void codegen::CompilerCore::initialize()
     // Prevent Eigen from using any LGPL3 code
     args.push_back("-DEIGEN_MPL2_ONLY");
 
+#if defined(NGRAPH_TBB_ENABLE)
+    // Enable TBB
+    args.push_back("-DNGRAPH_TBB_ENABLE");
+#endif
+
+#if defined(NGRAPH_USE_LEGACY_MKLDNN)
+    args.push_back("-DNGRAPH_USE_LEGACY_MKLDNN");
+#endif
+
     // Prepare DiagnosticEngine
     IntrusiveRefCntPtr<DiagnosticOptions> diag_options = new DiagnosticOptions();
     diag_options->ErrorLimit = 20;
@@ -216,7 +225,8 @@ void codegen::CompilerCore::initialize()
     {
         diag_consumer = new IgnoringDiagConsumer();
     }
-    // Create diagnostics after compiler invocation is created, otherwise report outputs do not get generated.
+    // Create diagnostics after compiler invocation is created, otherwise report outputs do not get
+    // generated.
     m_compiler->createDiagnostics(diag_consumer);
 
     configure_search_path();
@@ -343,7 +353,7 @@ std::unique_ptr<codegen::Module>
     preprocessor_options.RemappedFileBuffers.push_back({m_source_name, buffer.get()});
 
     // Create and execute action
-    m_compiler_action.reset(new EmitCodeGenOnlyAction());
+    m_compiler_action.reset(new EmitLLVMOnlyAction());
     std::unique_ptr<llvm::Module> rc;
     bool reinitialize = false;
     if (m_compiler->ExecuteAction(*m_compiler_action) == true)

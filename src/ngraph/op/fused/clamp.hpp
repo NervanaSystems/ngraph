@@ -32,12 +32,15 @@ namespace ngraph
         class Clamp : public ngraph::op::util::FusedOp
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"Clamp", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a Clamp node.
             ///
             /// \param data - Node producing the input tensor
             /// \param min - the lower bound of the <min;max> range
             /// \param max - the upper bound of the <min;max> range
-            Clamp(const std::shared_ptr<ngraph::Node>& data, const double min, const double max);
+            Clamp(const Output<Node>& data, const double min, const double max);
 
             void pre_validate_and_infer_types() override;
 

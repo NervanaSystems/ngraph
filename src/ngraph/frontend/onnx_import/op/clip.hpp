@@ -31,7 +31,13 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+            namespace set_11
+            {
+                NodeVector clip(const Node& node);
+
+            } // namespace set_11
+
+        } // namespace op
 
     } // namespace onnx_import
 

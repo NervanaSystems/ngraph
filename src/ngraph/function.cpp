@@ -26,13 +26,26 @@
 using namespace std;
 using namespace ngraph;
 
+constexpr DiscreteTypeInfo Function::type_info;
+
 atomic<size_t> Function::m_next_instance_id(0);
 
 Function::Function(const ResultVector& results,
                    const ParameterVector& parameters,
                    const std::string& name)
-    : m_results(results)
-    , m_parameters(parameters)
+    : Lambda(results, parameters)
+    , m_temporary_pool_size(0)
+    , m_instance_id(m_next_instance_id.fetch_add(1))
+    , m_name(name)
+    , m_unique_name("Function_" + to_string(m_instance_id))
+{
+    init();
+}
+
+Function::Function(const OutputVector& results,
+                   const ParameterVector& parameters,
+                   const std::string& name)
+    : Lambda(results, parameters)
     , m_temporary_pool_size(0)
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
@@ -44,24 +57,12 @@ Function::Function(const ResultVector& results,
 Function::Function(const NodeVector& results,
                    const ParameterVector& parameters,
                    const std::string& name)
-    : m_results(results.size())
-    , m_parameters(parameters)
+    : Lambda(as_output_vector(results), parameters)
     , m_temporary_pool_size(0)
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
 {
-    if (std::any_of(results.cbegin(), results.cend(), [](std::shared_ptr<Node> n) {
-            return std::dynamic_pointer_cast<op::Result>(n);
-        }))
-    {
-        throw ngraph_error(
-            " Results already contain op::Results. Use a c-tor that takes a ResultVector");
-    }
-
-    std::transform(results.begin(), results.end(), m_results.begin(), [](std::shared_ptr<Node> n) {
-        return std::make_shared<op::Result>(n);
-    });
     init();
 }
 
@@ -97,7 +98,48 @@ void Function::init()
 
 std::list<shared_ptr<Node>> Function::get_ordered_ops(bool include_control_deps) const
 {
-    return topological_sort(get_ops(include_control_deps), include_control_deps);
+    NodeVector nodes;
+    for (auto& r : get_results())
+    {
+        nodes.push_back(r);
+    }
+    for (auto& param : get_parameters())
+    {
+        nodes.push_back(param);
+    }
+
+    return topological_sort(nodes, include_control_deps);
+}
+
+void Function::map_unordered_ops(std::function<void(Node*)> f) const
+{
+    std::unordered_set<Node*> unordered_ops;
+    std::stack<Node*, std::vector<Node*>> remaining_ops;
+    for (auto& r : get_results())
+    {
+        remaining_ops.push(r.get());
+    }
+    for (auto& param : get_parameters())
+    {
+        remaining_ops.push(param.get());
+    }
+    while (remaining_ops.size() > 0)
+    {
+        Node* op = remaining_ops.top();
+        remaining_ops.pop();
+        if (unordered_ops.insert(op).second)
+        {
+            f(op);
+            for (size_t i = 0; i < op->get_input_size(); ++i)
+            {
+                remaining_ops.push(op->input(i).get_source_output().get_node());
+            }
+            for (auto& cdep : op->get_control_dependencies())
+            {
+                remaining_ops.push(cdep.get());
+            }
+        }
+    }
 }
 
 const std::string& Function::get_friendly_name() const
@@ -163,6 +205,11 @@ const PartialShape& Function::get_output_partial_shape(size_t i) const
 }
 
 shared_ptr<Node> Function::get_output_op(size_t i) const
+{
+    return m_results.at(i);
+}
+
+Output<Node> Function::output(size_t i) const
 {
     return m_results.at(i);
 }
@@ -235,4 +282,16 @@ bool Function::is_dynamic() const
         }
     }
     return false;
+}
+
+void Function::replace_parameter(size_t parameter_index, const shared_ptr<op::Parameter>& parameter)
+{
+    NGRAPH_CHECK(parameter_index < m_parameters.size(),
+                 "replace_parameter(): Tried to replace parameter at index ",
+                 parameter_index,
+                 " but the function only has ",
+                 m_parameters.size(),
+                 " parameters.");
+    replace_node(m_parameters[parameter_index], parameter);
+    m_parameters[parameter_index] = parameter;
 }

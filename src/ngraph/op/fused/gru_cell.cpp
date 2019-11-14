@@ -14,32 +14,31 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <algorithm>
 #include <cmath>
 #include <functional>
 
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
-#include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
-#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::GRUCell::GRUCell(const shared_ptr<Node>& X,
-                     const shared_ptr<Node>& W,
-                     const shared_ptr<Node>& R,
-                     const shared_ptr<Node>& H_t,
+constexpr NodeTypeInfo op::GRUCell::type_info;
+
+op::GRUCell::GRUCell(const Output<Node>& X,
+                     const Output<Node>& W,
+                     const Output<Node>& R,
+                     const Output<Node>& initial_hidden_state,
                      size_t hidden_size)
     : GRUCell(X,
               W,
               R,
-              H_t,
+              initial_hidden_state,
               hidden_size,
               vector<string>{"sigmoid", "tanh"},
               vector<float>{},
@@ -49,18 +48,18 @@ op::GRUCell::GRUCell(const shared_ptr<Node>& X,
 {
 }
 
-op::GRUCell::GRUCell(const shared_ptr<Node>& X,
-                     const shared_ptr<Node>& W,
-                     const shared_ptr<Node>& R,
-                     const shared_ptr<Node>& H_t,
+op::GRUCell::GRUCell(const Output<Node>& X,
+                     const Output<Node>& W,
+                     const Output<Node>& R,
+                     const Output<Node>& initial_hidden_state,
                      size_t hidden_size,
                      const vector<string>& activations,
-                     const vector<float>& activation_alpha,
-                     const vector<float>& activation_beta,
+                     const vector<float>& activations_alpha,
+                     const vector<float>& activations_beta,
                      float clip,
                      bool linear_before_reset)
-    : FusedOp("GRUCell", {X, W, R, H_t})
-    , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
+    : FusedOp({X, W, R, initial_hidden_state})
+    , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
     , m_activation_g{get_activation_function(1)}
     , m_linear_before_reset{linear_before_reset}
@@ -69,19 +68,19 @@ op::GRUCell::GRUCell(const shared_ptr<Node>& X,
     constructor_validate_and_infer_types();
 }
 
-op::GRUCell::GRUCell(const shared_ptr<Node>& X,
-                     const shared_ptr<Node>& W,
-                     const shared_ptr<Node>& R,
-                     const shared_ptr<Node>& H_t,
+op::GRUCell::GRUCell(const Output<Node>& X,
+                     const Output<Node>& W,
+                     const Output<Node>& R,
+                     const Output<Node>& initial_hidden_state,
                      size_t hidden_size,
-                     const shared_ptr<Node>& B,
+                     const Output<Node>& B,
                      const vector<string>& activations,
-                     const vector<float>& activation_alpha,
-                     const vector<float>& activation_beta,
+                     const vector<float>& activations_alpha,
+                     const vector<float>& activations_beta,
                      float clip,
                      bool linear_before_reset)
-    : FusedOp("GRUCell", {X, W, R, H_t, B})
-    , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
+    : FusedOp({X, W, R, initial_hidden_state, B})
+    , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
     , m_activation_g{get_activation_function(1)}
     , m_linear_before_reset{linear_before_reset}
@@ -130,7 +129,7 @@ void op::GRUCell::pre_validate_and_infer_types()
                           ".");
     NODE_VALIDATION_CHECK(this,
                           (ht_shape == Shape{batch_size, get_hidden_size()}),
-                          "Input tensor H_t must have shape (",
+                          "Input tensor initial_hidden_state must have shape (",
                           batch_size,
                           ", ",
                           get_hidden_size(),
@@ -182,16 +181,17 @@ NodeVector op::GRUCell::decompose_op() const
     // f, g  - are activation functions
     // zt = f(Xt*(Wz^T) + Ht-1*(Rz^T) + Wbz + Rbz)
     // rt = f(Xt*(Wr^T) + Ht-1*(Rr^T) + Wbr + Rbr)
-    // ht = g(Xt*(Wh^T) + (rt (.) Ht-1)*(Rh^T) + Rbh + Wbh) # default, when linear_before_reset := false
+    // ht = g(Xt*(Wh^T) + (rt (.) Ht-1)*(Rh^T) + Rbh + Wbh) # when linear_before_reset := false
+    //                                                      # (default)
     // ht = g(Xt*(Wh^T) + (rt (.) (Ht-1*(Rh^T) + Rbh)) + Wbh) # when linear_before_reset := true
     // Ht = (1 - zt) (.) ht + zt (.) Ht-1
     // -------------------
 
-    std::shared_ptr<Node> X = get_argument(0);
-    std::shared_ptr<Node> W = get_argument(1);
-    std::shared_ptr<Node> R = get_argument(2);
-    std::shared_ptr<Node> H_t = get_argument(3);
-    std::shared_ptr<Node> B = get_argument(4);
+    Output<Node> X = input_value(0);
+    Output<Node> W = input_value(1);
+    Output<Node> R = input_value(2);
+    Output<Node> H_t = input_value(3);
+    Output<Node> B = input_value(4);
 
     // Get W and R biases separately.
     NodeVector b_W_R = builder::split(B, 2);
@@ -243,7 +243,7 @@ NodeVector op::GRUCell::decompose_op() const
     const auto& z_t = zr_t_gates.at(0);
     const auto& r_t = zr_t_gates.at(1);
 
-    shared_ptr<Node> h_t;
+    Output<Node> h_t;
 
     if (m_linear_before_reset)
     {
@@ -267,16 +267,16 @@ NodeVector op::GRUCell::decompose_op() const
     // Ht = (1 - zt) (.) ht + zt (.) Ht-1
     H_t = add(mul(sub(one, z_t), h_t), mul(z_t, H_t));
 
-    return {H_t};
+    return {H_t.get_node_shared_ptr()};
 }
 
 void op::GRUCell::add_default_bias_input()
 {
-    shared_ptr<Node> B =
+    Output<Node> B =
         op::Constant::create(input(0).get_element_type(),
                              Shape{2 * s_gates_count * get_hidden_size()},
                              vector<float>(2 * s_gates_count * get_hidden_size(), 0.f));
-    set_argument(4, B->output(0));
+    set_argument(4, B);
 }
 
 shared_ptr<Node> op::GRUCell::copy_with_new_args(const NodeVector& new_args) const
@@ -290,8 +290,8 @@ shared_ptr<Node> op::GRUCell::copy_with_new_args(const NodeVector& new_args) con
                                     new_args.at(3),
                                     get_hidden_size(),
                                     get_activations(),
-                                    get_activation_alpha(),
-                                    get_activation_beta(),
+                                    get_activations_alpha(),
+                                    get_activations_beta(),
                                     get_clip(),
                                     m_linear_before_reset);
     }
@@ -304,8 +304,8 @@ shared_ptr<Node> op::GRUCell::copy_with_new_args(const NodeVector& new_args) con
                                     get_hidden_size(),
                                     new_args.at(4),
                                     get_activations(),
-                                    get_activation_alpha(),
-                                    get_activation_beta(),
+                                    get_activations_alpha(),
+                                    get_activations_beta(),
                                     get_clip(),
                                     m_linear_before_reset);
     }

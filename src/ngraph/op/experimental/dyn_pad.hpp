@@ -27,6 +27,10 @@ namespace ngraph
         class DynPad : public Op
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"DynPad", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            DynPad() = default;
             /// \brief Perform dynamic padding of a tensor
             ///
             /// \param arg The node producing input tensor to be padded.
@@ -34,10 +38,10 @@ namespace ngraph
             /// \param padding_above The node producing the padding-above widths.
             /// \param padding_value The value to be used for padding. Must be scalar.
             /// \param pad_mode The padding mode: CONSTANT(default), EDGE or REFLECT.
-            DynPad(const std::shared_ptr<Node>& arg,
-                   const std::shared_ptr<Node>& padding_below,
-                   const std::shared_ptr<Node>& padding_above,
-                   const std::shared_ptr<Node>& padding_value,
+            DynPad(const Output<Node>& arg,
+                   const Output<Node>& padding_below,
+                   const Output<Node>& padding_above,
+                   const Output<Node>& padding_value,
                    PadMode pad_mode = PadMode::CONSTANT);
 
             PadMode get_pad_mode() const { return m_pad_mode; }

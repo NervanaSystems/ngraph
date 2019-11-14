@@ -14,11 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <algorithm>
-#include <iterator>
 #include <memory>
 
-#include "core/node.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "prelu.hpp"
 
@@ -40,7 +37,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

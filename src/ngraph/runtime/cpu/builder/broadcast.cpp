@@ -62,7 +62,7 @@ namespace ngraph
                         }
 
                         bool done = false;
-                        for (int i = 0; i < out_shape.size(); i++)
+                        for (size_t i = 0; i < out_shape.size(); i++)
                         {
                             if (!broadcast_axes.count(i))
                             {
@@ -86,7 +86,7 @@ namespace ngraph
                 // Ex. [2, 1, 1, 2] -> [2, 2]
 
                 auto squeezed_out_shape = Shape{};
-                for (int i = 0; i < out_shape.size(); i++)
+                for (size_t i = 0; i < out_shape.size(); i++)
                 {
                     if (out_shape[i] != 1)
                     {
@@ -113,7 +113,7 @@ namespace ngraph
 
                 // Squeeze input shape
                 auto squeezed_arg_shape = Shape{};
-                for (int i = 0; i < arg_shape.size(); i++)
+                for (size_t i = 0; i < arg_shape.size(); i++)
                 {
                     if (arg_shape[i] != 1)
                     {
@@ -155,10 +155,10 @@ namespace ngraph
                     }
                 }
 
-                SELECT_KERNEL_BY_RANK(kernel,
+                SELECT_KERNEL_ET_RANK(kernel,
                                       broadcast->get_input_element_type(0),
                                       out_rank,
-                                      runtime::cpu::kernel::broadcast);
+                                      runtime::cpu::kernel::broadcast)
             }
 
             template <>
@@ -186,7 +186,6 @@ namespace ngraph
                 }
                 return functor;
             }
-            REGISTER_CF_BUILDER(Broadcast);
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Broadcast)
@@ -222,7 +221,7 @@ namespace ngraph
                 else
                 {
                     functor = [&, size, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         memcpy(ctx->buffer_data[out_buffer_index],
                                ctx->buffer_data[arg_buffer_index],
                                size);
@@ -231,7 +230,11 @@ namespace ngraph
                 }
             }
 
-            REGISTER_OP_BUILDER(Broadcast);
+            void register_builders_broadcast_cpp()
+            {
+                REGISTER_CF_BUILDER(Broadcast);
+                REGISTER_OP_BUILDER(Broadcast);
+            }
         }
     }
 }

@@ -53,6 +53,7 @@
 #include "op/equal.hpp"
 #include "op/erf.hpp"
 #include "op/exp.hpp"
+#include "op/expand.hpp"
 #include "op/eye_like.hpp"
 #include "op/flatten.hpp"
 #include "op/floor.hpp"
@@ -85,7 +86,6 @@
 #include "op/not.hpp"
 #include "op/onehot.hpp"
 #include "op/or.hpp"
-#include "op/pad.cpp"
 #include "op/pad.hpp"
 #include "op/pow.hpp"
 #include "op/prelu.hpp"
@@ -96,6 +96,7 @@
 #include "op/reduce.hpp"
 #include "op/relu.hpp"
 #include "op/reshape.hpp"
+#include "op/reverse_sequence.h"
 #include "op/selu.hpp"
 #include "op/shape.hpp"
 #include "op/shrink.hpp"
@@ -178,7 +179,8 @@ namespace ngraph
             auto dm = m_map.find(domain);
             if (dm == std::end(m_map))
             {
-                throw error::UnknownDomain{domain};
+                NGRAPH_WARN << "Domain '" << domain << "' not recognized by nGraph";
+                return OperatorSet{};
             }
             if (domain == "" && version > OperatorsBridge::LATEST_SUPPORTED_ONNX_OPSET_VERSION)
             {
@@ -247,6 +249,7 @@ namespace ngraph
             REGISTER_OPERATOR("Cast", 1, cast);
             REGISTER_OPERATOR("Ceil", 1, ceil);
             REGISTER_OPERATOR("Clip", 1, clip);
+            REGISTER_OPERATOR("Clip", 11, clip);
             REGISTER_OPERATOR("Concat", 1, concat);
             REGISTER_OPERATOR("Constant", 1, constant);
             REGISTER_OPERATOR("Conv", 1, conv);
@@ -263,6 +266,7 @@ namespace ngraph
             REGISTER_OPERATOR("Equal", 1, equal);
             REGISTER_OPERATOR("Erf", 1, erf);
             REGISTER_OPERATOR("Exp", 1, exp);
+            REGISTER_OPERATOR("Expand", 1, expand);
             REGISTER_OPERATOR("EyeLike", 1, eye_like);
             REGISTER_OPERATOR("Flatten", 1, flatten);
             REGISTER_OPERATOR("Floor", 1, floor);
@@ -319,6 +323,7 @@ namespace ngraph
             REGISTER_OPERATOR("ReduceSumSquare", 1, reduce_sum_square);
             REGISTER_OPERATOR("Relu", 1, relu);
             REGISTER_OPERATOR("Reshape", 1, reshape);
+            REGISTER_OPERATOR("ReverseSequence", 1, reverse_sequence);
             REGISTER_OPERATOR("Selu", 1, selu);
             REGISTER_OPERATOR("Shape", 1, shape);
             REGISTER_OPERATOR("Shrink", 1, shrink);
@@ -343,6 +348,8 @@ namespace ngraph
             REGISTER_OPERATOR("Tanh", 1, tanh);
             REGISTER_OPERATOR("ThresholdedRelu", 1, thresholded_relu);
             REGISTER_OPERATOR("TopK", 1, topk);
+            REGISTER_OPERATOR("TopK", 10, topk);
+            REGISTER_OPERATOR("TopK", 11, topk);
             REGISTER_OPERATOR("Transpose", 1, transpose);
             REGISTER_OPERATOR("Unsqueeze", 1, unsqueeze);
             REGISTER_OPERATOR("Where", 1, where);

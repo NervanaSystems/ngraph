@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "cpu_visualize_tree.hpp"
+#include <string>
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
@@ -49,12 +50,29 @@ static void visualize_layout_format(const Node& node, ostream& ss)
         {
             ss << "\ninput_order=" << reshape->get_input_order();
         }
-        ss << "\nin="
-           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
-                  static_cast<mkldnn::memory::format>(in_tvl->get_mkldnn_md().data.format));
-        ss << " out="
-           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
-                  static_cast<mkldnn::memory::format>(out_tvl->get_mkldnn_md().data.format));
+#if MKLDNN_VERSION_MAJOR >= 1
+        auto in_md = in_tvl->get_mkldnn_md();
+        auto out_md = out_tvl->get_mkldnn_md();
+        ss << "\nin strides={";
+        for (auto i = 0; i < in_md.data.ndims - 1; i++)
+        {
+            ss << in_md.data.format_desc.blocking.strides[i] << ",";
+        }
+        ss << in_md.data.format_desc.blocking.strides[in_md.data.ndims - 1] << "}";
+        ss << "\nout strides={";
+        for (auto i = 0; i < out_md.data.ndims - 1; i++)
+        {
+            ss << out_md.data.format_desc.blocking.strides[i] << ",";
+        }
+        ss << out_md.data.format_desc.blocking.strides[out_md.data.ndims - 1] << "}";
+#else
+        ss << "\nin=" << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
+                             static_cast<mkldnn::memory::FORMAT_KIND>(
+                                 in_tvl->get_mkldnn_md().data.FORMAT_KIND));
+        ss << " out=" << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
+                             static_cast<mkldnn::memory::FORMAT_KIND>(
+                                 out_tvl->get_mkldnn_md().data.FORMAT_KIND));
+#endif
         ss << " ";
     }
     catch (...)

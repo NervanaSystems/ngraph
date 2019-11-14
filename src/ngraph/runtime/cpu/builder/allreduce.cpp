@@ -36,7 +36,7 @@ namespace ngraph
                 auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
                 auto count = static_cast<int>(out[0].get_size());
-                auto data_type = args[0].get_element_type().get_type_enum();
+                auto data_type = args[0].get_element_type();
                 const ngraph::op::AllReduce* allreduce =
                     static_cast<const ngraph::op::AllReduce*>(node);
                 auto reduce_type = allreduce->get_reduce_type();
@@ -48,12 +48,16 @@ namespace ngraph
                     call_seq,
                     external_function_name.c_str(),
                     node->get_name().c_str(),
-                    node->get_friendly_name().c_str(),
+                    // if provenance_tags is set in nGraph once and only once, it will print the tag
+                    // name otherwise, it will print the get_friendly_name
+                    node->get_provenance_tags().size() == 1
+                        ? (*(node->get_provenance_tags()).begin()).c_str()
+                        : node->get_friendly_name().c_str(),
                     count);
 
                 auto functor =
                     [&, count, reduce_type, data_type, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         get_distributed_interface()->all_reduce(ctx->buffer_data[arg_buffer_index],
                                                                 ctx->buffer_data[out_buffer_index],
                                                                 data_type,
@@ -63,7 +67,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(AllReduce);
+            void register_builders_allreduce_cpp() { REGISTER_OP_BUILDER(AllReduce); }
         }
     }
 }

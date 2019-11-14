@@ -244,10 +244,7 @@ namespace ngraph
                     case 4: reshape_in4<T>(in, out, in_shape, in_axis_order, out_shape); break;
                     case 5: reshape_in5<T>(in, out, in_shape, in_axis_order, out_shape); break;
                     case 6: reshape_in6<T>(in, out, in_shape, in_axis_order, out_shape); break;
-                    default:
-                        NGRAPH_INFO << "reference::reshape";
-                        reference::reshape(in, out, in_shape, in_axis_order, out_shape);
-                        break;
+                    default: reference::reshape(in, out, in_shape, in_axis_order, out_shape); break;
                     }
                 }
             }

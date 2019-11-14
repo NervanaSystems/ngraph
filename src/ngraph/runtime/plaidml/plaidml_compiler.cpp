@@ -17,6 +17,8 @@
 #include "ngraph/runtime/plaidml/plaidml_compiler.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/layer_norm.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
@@ -26,7 +28,7 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
-#include "ngraph/pass/prefix_reshape_elimination.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
@@ -44,8 +46,7 @@ namespace
 {
     void write_debug(const ngraph::Node& op)
     {
-        PLAIDML_DEBUG << "Node: name=\"" << op.get_name() << "\" desc=\"" << op.description()
-                      << "\"";
+        PLAIDML_DEBUG << "Compiling: " << op;
         for (const auto& op_input : op.get_inputs())
         {
             ngraph::descriptor::Tensor* tensor = op_input.get_output().get_tensor_ptr().get();
@@ -68,7 +69,7 @@ namespace
             PLAIDML_DEBUG << "Retire tensor: " << t;
         }
     }
-}
+} // namespace
 
 ngraph::runtime::plaidml::Compiler::Compiler(Config* config)
     : m_config{config}
@@ -86,9 +87,21 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     // compilation.
 
     ngraph::pass::Manager pass_manager;
+    pass_manager.set_per_pass_validation(false);
 
     // We apply the same general-purposes passes as the CPU backend.
-    pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>();
+    pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>([](const Node& node) -> bool {
+        if (node.description() == ngraph::op::GroupConvolution().description())
+        {
+            return true;
+        }
+        else if (node.description() == ngraph::op::LayerNorm().description())
+        {
+            return true;
+        }
+        return false;
+    });
+    pass_manager.register_pass<ngraph::pass::Opset0Downgrade>();
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
@@ -104,7 +117,6 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ReplicateElision>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ReplicateCombination>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ImplicitBroadcast>();
-    pass_manager.register_pass<ngraph::pass::PrefixReshapeElimination>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::LowerConvolutions>();
     if (pass_manager.get_pass_config().get_pass_enable("Winograd"))
     {
@@ -126,7 +138,7 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     // before we rewrite, we make our own copy of the function.
     auto rewrite_func = clone_function(*func);
 
-    // Apply passes.
+    // Apply passes, with revalidation disabled.
     pass_manager.run_passes(rewrite_func);
 
     // Compile the resulting function.

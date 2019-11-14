@@ -20,9 +20,27 @@
 
 #pragma once
 
+#include <string>
+
 #ifdef IN_NGRAPH_LIBRARY
 #error("ngraph.hpp is for external use only")
 #endif
+
+extern "C" const char* get_ngraph_version_string();
+namespace ngraph
+{
+    /// \brief Function to query parsed version information of the version of ngraph which
+    /// contains this function. Version information strictly follows Semantic Versioning
+    /// http://semver.org
+    /// \param major Returns the major part of the version
+    /// \param minor Returns the minor part of the version
+    /// \param patch Returns the patch part of the version
+    /// \param extra Returns the extra part of the version. This includes everything following
+    /// the patch version number.
+    ///
+    /// \note Throws a runtime_error if there is an error during parsing
+    void get_version(size_t& major, size_t& minor, size_t& patch, std::string& extra);
+}
 
 /// \namespace ngraph
 /// \brief The Intel Nervana Graph C++ API.
@@ -44,9 +62,16 @@
 ///        recipes, for example auto-broadcast.
 
 #include "ngraph/builder/autobroadcast.hpp"
+#include "ngraph/builder/dequantize_builder.hpp"
 #include "ngraph/builder/numpy_transpose.hpp"
+#include "ngraph/builder/quantize_builder.hpp"
+#include "ngraph/builder/quantized_concat_builder.hpp"
+#include "ngraph/builder/quantized_conv_builder.hpp"
+#include "ngraph/builder/quantized_dot_builder.hpp"
 #include "ngraph/builder/reduce_ops.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/tensor_mask.hpp"
+#include "ngraph/component_manager.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
@@ -56,6 +81,7 @@
 #include "ngraph/dimension.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/lambda.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
@@ -68,8 +94,10 @@
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
+#include "ngraph/op/atan2.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/binary_convolution.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/op/ceiling.hpp"
@@ -92,6 +120,8 @@
 #include "ngraph/op/experimental/dyn_replace_slice.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
+#include "ngraph/op/experimental/generate_mask.hpp"
+#include "ngraph/op/experimental/random_uniform.hpp"
 #include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/experimental/tile.hpp"
@@ -102,20 +132,26 @@
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/fake_quantize.hpp"
+#include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
-#include "ngraph/op/fused/leaky_relu.hpp"
+#include "ngraph/op/fused/layer_norm.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/fused/lstm_sequence.hpp"
+#include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/mvn.hpp"
-#include "ngraph/op/fused/normalize.hpp"
+#include "ngraph/op/fused/normalize_l2.hpp"
+#include "ngraph/op/fused/partial_slice.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
+#include "ngraph/op/fused/selu.hpp"
 #include "ngraph/op/fused/shuffle_channels.hpp"
+#include "ngraph/op/fused/softmax_crossentropy.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/fused/split.hpp"
 #include "ngraph/op/fused/squared_difference.hpp"
@@ -148,7 +184,11 @@
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/quantized_convolution.hpp"
+#include "ngraph/op/quantized_dot.hpp"
 #include "ngraph/op/recv.hpp"
+#include "ngraph/op/reduce_mean.hpp"
+#include "ngraph/op/reduce_prod.hpp"
+#include "ngraph/op/reduce_sum.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -166,12 +206,15 @@
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/stop_gradient.hpp"
+#include "ngraph/op/strided_slice.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/op/tensor_iterator.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/partial_shape.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"

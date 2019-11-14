@@ -24,7 +24,6 @@ namespace ngraph
     {
         struct PriorBoxClusteredAttrs
         {
-            // num_priors     Number of prior boxes
             // widths         Desired widths of prior boxes
             // heights        Desired heights of prior boxes
             // clip           Clip output to [0,1]
@@ -32,7 +31,6 @@ namespace ngraph
             // step_heights   Distance between prior box centers
             // offset         Box offset relative to top center of image
             // variances      Values to adjust prior boxes with
-            size_t num_priors;
             std::vector<float> widths;
             std::vector<float> heights;
             bool clip = false;
@@ -47,13 +45,16 @@ namespace ngraph
         class PriorBoxClustered : public Op
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"PriorBoxClustered", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a PriorBoxClustered operation
             ///
             /// \param layer_shape    Shape of layer for which prior boxes are computed
             /// \param image_shape    Shape of image to which prior boxes are scaled
             /// \param attrs          PriorBoxClustered attributes
-            PriorBoxClustered(const std::shared_ptr<Node>& layer_shape,
-                              const std::shared_ptr<Node>& image_shape,
+            PriorBoxClustered(const Output<Node>& layer_shape,
+                              const Output<Node>& image_shape,
                               const PriorBoxClusteredAttrs& attrs);
 
             void validate_and_infer_types() override;

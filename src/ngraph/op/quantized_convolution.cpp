@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2018-2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,41 +15,39 @@
 //*****************************************************************************
 
 #include "quantized_convolution.hpp"
-#include <numeric>
 #include "ngraph/coordinate_diff.hpp"
-#include "ngraph/op/convolution.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& input,
-                                               const shared_ptr<Node>& filters,
+constexpr NodeTypeInfo op::QuantizedConvolution::type_info;
+
+op::QuantizedConvolution::QuantizedConvolution(const Output<Node>& input,
+                                               const Output<Node>& filters,
                                                const Strides& window_movement_strides,
                                                const Strides& window_dilation_strides,
                                                const CoordinateDiff& padding_below,
                                                const CoordinateDiff& padding_above,
                                                const Strides& data_dilation_strides,
-                                               const shared_ptr<Node>& input_scale,
-                                               const shared_ptr<Node>& input_zero_point,
-                                               const shared_ptr<Node>& filter_scale,
-                                               const shared_ptr<Node>& filter_zero_point,
-                                               const shared_ptr<Node>& output_scale,
-                                               const shared_ptr<Node>& output_zero_point,
+                                               const Output<Node>& input_scale,
+                                               const Output<Node>& input_zero_point,
+                                               const Output<Node>& filter_scale,
+                                               const Output<Node>& filter_zero_point,
+                                               const Output<Node>& output_scale,
+                                               const Output<Node>& output_zero_point,
                                                const element::Type& output_type,
                                                const AxisSet& input_axes,
                                                const AxisSet& filter_axes,
                                                const AxisSet& output_axes)
-    : Op("QuantizedConvolution",
-         check_single_output_args({input,
-                                   filters,
-                                   input_scale,
-                                   input_zero_point,
-                                   filter_scale,
-                                   filter_zero_point,
-                                   output_scale,
-                                   output_zero_point}))
+    : Op({input,
+          filters,
+          input_scale,
+          input_zero_point,
+          filter_scale,
+          filter_zero_point,
+          output_scale,
+          output_zero_point})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -195,8 +193,8 @@ shared_ptr<Node> op::QuantizedConvolution::copy_with_new_args(const NodeVector& 
                                                      m_output_axes));
 }
 
-void op::QuantizedConvolution::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                 const NodeVector& deltas)
+void op::QuantizedConvolution::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                                 const NodeVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }

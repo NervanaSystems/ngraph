@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::BroadcastDistributed::type_name{"BroadcastDistributed"};
+constexpr NodeTypeInfo op::BroadcastDistributed::type_info;
 
 op::BroadcastDistributed::BroadcastDistributed(const Output<Node>& arg, int root_id)
     : Op({arg})

@@ -19,11 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Slice::type_name{"Slice"};
-
-op::Slice::Slice()
-{
-}
+constexpr NodeTypeInfo op::Slice::type_info;
 
 op::Slice::Slice(const Output<Node>& arg,
                  const Coordinate& lower_bounds,
@@ -139,7 +135,7 @@ void op::Slice::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = input_value(0);
 
     adjoints.add_delta_to_slice(x, delta, m_lower_bounds, m_upper_bounds, m_strides);
 }

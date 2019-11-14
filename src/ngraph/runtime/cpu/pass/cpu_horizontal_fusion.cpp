@@ -107,7 +107,7 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
 
         auto conv_bias_root = std::static_pointer_cast<op::ConvolutionBias>(m.get_match_root());
 
-        //check if the node has been replaced
+        // check if the node has been replaced
         if (conv_bias_root->get_users().empty())
         {
             NGRAPH_DEBUG << "conv_horizontal_fusion: root node has been replaced\n";
@@ -169,7 +169,7 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
             conv_bias_root->with_relu());
         NGRAPH_DEBUG << "conv_horizontal_fusion: new cb shape "
                      << conv_bias_new->get_output_shape(0) << "\n";
-        //slice
+        // slice
         size_t index = 0;
         for (auto cb : conv_bias_nodes)
         {

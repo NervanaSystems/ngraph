@@ -17,7 +17,7 @@
 #pragma once
 
 #include <memory>
-#include <set>
+#include <vector>
 
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/tensor.hpp"
@@ -48,7 +48,7 @@ namespace ngraph
             void set_tensor_ptr(const std::shared_ptr<Tensor>& tensor) { m_tensor = tensor; }
             void add_input(Input* input);
             void remove_input(Input* input);
-            const std::set<Input*>& get_inputs() const { return m_inputs; }
+            const std::vector<Input*>& get_inputs() const { return m_inputs; }
             Tensor& get_tensor() const;
 
             /// \return the shape of the output
@@ -64,7 +64,7 @@ namespace ngraph
             Node* m_node;
             size_t m_index;
             std::shared_ptr<Tensor> m_tensor;
-            std::set<Input*> m_inputs;
+            std::vector<Input*> m_inputs;
 
         private:
             Output(const Output&) = delete;

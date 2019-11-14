@@ -113,14 +113,13 @@ TEST(type_prop_layers, prior_box3)
 TEST(type_prop_layers, prior_box_clustered)
 {
     op::PriorBoxClusteredAttrs attrs;
-    attrs.num_priors = 3;
     attrs.widths = {4.0f, 2.0f, 3.2f};
     attrs.heights = {1.0f, 2.0f, 1.1f};
 
     auto layer_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {19, 19});
     auto image_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {300, 300});
     auto pbc = make_shared<op::PriorBoxClustered>(layer_shape, image_shape, attrs);
-    // Output shape - 4 * 19 * 19 * 3 (num_priors)
+    // Output shape - 4 * 19 * 19 * 3 (attrs.widths.size())
     ASSERT_EQ(pbc->get_shape(), (Shape{2, 4332}));
 }
 
@@ -130,12 +129,13 @@ TEST(type_prop_layers, proposal)
     attrs.base_size = 1;
     attrs.pre_nms_topn = 20;
     attrs.post_nms_topn = 200;
+    const size_t batch_size = 7;
 
-    auto class_probs = make_shared<op::Parameter>(element::f32, Shape{1, 12, 34, 62});
-    auto class_logits = make_shared<op::Parameter>(element::f32, Shape{1, 24, 34, 62});
-    auto image_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {1, 6});
+    auto class_probs = make_shared<op::Parameter>(element::f32, Shape{batch_size, 12, 34, 62});
+    auto class_logits = make_shared<op::Parameter>(element::f32, Shape{batch_size, 24, 34, 62});
+    auto image_shape = make_shared<op::Parameter>(element::f32, Shape{3});
     auto op = make_shared<op::Proposal>(class_probs, class_logits, image_shape, attrs);
-    ASSERT_EQ(op->get_shape(), (Shape{200, 5}));
+    ASSERT_EQ(op->get_shape(), (Shape{batch_size * attrs.post_nms_topn, 5}));
 }
 
 TEST(type_prop_layers, region_yolo1)
@@ -171,7 +171,7 @@ TEST(type_prop_layers, psroi_pooling)
 {
     auto inputs = make_shared<op::Parameter>(element::f32, Shape{1, 3, 4, 5});
     auto coords = make_shared<op::Parameter>(element::f32, Shape{150, 5});
-    auto op = make_shared<op::PSROIPooling>(inputs, coords, 2, 6, 0.0625, Shape{}, "Avg");
+    auto op = make_shared<op::PSROIPooling>(inputs, coords, 2, 6, 0.0625, 0, 0, "Avg");
     ASSERT_EQ(op->get_shape(), (Shape{150, 2, 6, 6}));
 }
 

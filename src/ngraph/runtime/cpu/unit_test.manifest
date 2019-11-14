@@ -8,7 +8,23 @@ sum_stable_acc_double
 max_3d_to_scalar_int32
 
 # Not implemented
-erf
-zero_sized_erf
 send_recv
 send_recv_ring
+
+# param not supported in CPU backend
+group_conv_data_dilation
+
+# axes input param not supported
+lrn_across_h
+lrn_across_hw
+lrn_across_all_dims
+lrn_across_nw
+lrn_across_empty
+lrn_6D_across_2_axes
+
+# Gelu tests not supported in CPU backend, we use mkldnn gelubackprop (and not factor)
+gelu_backprop_factor_f32
+backwards_gelu_f32
+
+# ONNX TopK with dynamic K
+top_k_opset_10

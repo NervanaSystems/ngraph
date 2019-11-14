@@ -29,7 +29,9 @@ void regclass_pyngraph_op_util_ArithmeticReduction(py::module m)
                std::shared_ptr<ngraph::op::util::ArithmeticReduction>,
                ngraph::op::Op>
         arithmeticReduction(m, "ArithmeticRedection");
-    // arithmeticReduction.def(py::init<const std::string&, const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet& >());
+    // arithmeticReduction.def(py::init<const std::string&,
+    //                                  const std::shared_ptr<ngraph::Node>&,
+    //                                  const ngraph::AxisSet& >());
     arithmeticReduction.def_property_readonly(
         "reduction_axes", &ngraph::op::util::ArithmeticReduction::get_reduction_axes);
 }

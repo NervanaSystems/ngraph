@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Cos::type_name{"Cos"};
+constexpr NodeTypeInfo op::Cos::type_info;
 
 op::Cos::Cos(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
@@ -40,7 +40,7 @@ void op::Cos::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = input_value(0);
 
     adjoints.add_delta(x, -delta * (make_shared<op::Sin>(x)));
 }

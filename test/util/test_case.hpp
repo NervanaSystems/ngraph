@@ -38,12 +38,12 @@ namespace ngraph
             {
             }
 
-            NgraphTestCase& set_tolerance(int tolerance_bits);
-
-            /// \brief Makes the test case print the expected and computed values to the console. This should only be used for debugging purposes.
+            /// \brief Makes the test case print the expected and computed values to the console.
+            ///        This should only be used for debugging purposes.
             ///
-            /// Just before the assertion is done, the current test case will gather expected and computed values,
-            /// format them as 2 columns and print out to the console along with a corresponding index in the vector.
+            /// Just before the assertion is done, the current test case will gather expected and
+            /// computed values, format them as 2 columns and print out to the console along with
+            //  a corresponding index in the vector.
             ///
             /// \param dump - Indicates if the test case should perform the console printout
             NgraphTestCase& dump_results(bool dump = true);
@@ -130,7 +130,7 @@ namespace ngraph
                 add_expected_output(expected_shape, value);
             }
 
-            void run();
+            void run(size_t tolerance_bits = DEFAULT_FLOAT_TOLERANCE_BITS);
 
         private:
             template <typename T>
@@ -198,8 +198,8 @@ namespace ngraph
             std::vector<std::shared_ptr<ngraph::runtime::Tensor>> m_input_tensors;
             std::vector<std::shared_ptr<ngraph::runtime::Tensor>> m_result_tensors;
             std::vector<std::shared_ptr<ngraph::op::Constant>> m_expected_outputs;
-            int m_input_index = 0;
-            int m_output_index = 0;
+            size_t m_input_index = 0;
+            size_t m_output_index = 0;
             bool m_dump_results = false;
             int m_tolerance_bits = DEFAULT_DOUBLE_TOLERANCE_BITS;
         };

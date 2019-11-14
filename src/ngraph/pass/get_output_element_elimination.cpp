@@ -39,7 +39,7 @@ bool pass::GetOutputElementElimination::run_on_node(shared_ptr<Node> n)
     {
         if (auto goe = dynamic_cast<op::GetOutputElement*>(input.get_source_output().get_node()))
         {
-            input.replace_source_output(goe->input(goe->get_n()).get_source_output());
+            input.replace_source_output(goe->input(0).get_source_output());
             // we don't need to fix anything w.r.t GetOutputElement as it will become unreachable
             optimized = true;
         }

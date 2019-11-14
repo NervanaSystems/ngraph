@@ -36,7 +36,9 @@ namespace ngraph
         class NullNode : public ngraph::Node
         {
         public:
-            NullNode();
+            static constexpr NodeTypeInfo type_info{"NullNode", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            NullNode() = default;
 
             bool is_null() const final override { return true; }
             virtual std::shared_ptr<Node>

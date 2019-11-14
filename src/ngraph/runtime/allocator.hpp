@@ -30,7 +30,7 @@ namespace ngraph
         class DefaultAllocator;
         /// \brief Create a default allocator that calls into system
         ///        allocation libraries
-        std::unique_ptr<Allocator> create_default_allocator();
+        ngraph::runtime::Allocator* get_default_allocator();
     }
 }
 
@@ -41,7 +41,8 @@ public:
     virtual ~Allocator() = 0;
     /// \brief allocates memory with the given size and alignment requirement
     /// \param size exact size of bytes to allocate
-    /// \param alignment specifies the alignment. Must be a valid alignment supported by the implementation.
+    /// \param alignment specifies the alignment. Must be a valid alignment supported by the
+    ///                  implementation.
     virtual void* malloc(size_t size, size_t alignment) = 0;
 
     /// \brief deallocates the memory pointed by ptr

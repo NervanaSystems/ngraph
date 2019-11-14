@@ -22,7 +22,6 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
-#include "ngraph/type/bfloat16.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -31,12 +30,12 @@ namespace ngraph
     namespace op
     {
         /// \brief Class for constants.
-        class Constant : public Node
+        class Constant : public Op
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"Constant", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a tensor constant.
             ///
             /// \param type The element type of the tensor constant.
@@ -45,8 +44,7 @@ namespace ngraph
             ///        of values must match the size of the shape.
             template <typename T>
             Constant(const element::Type& type, Shape shape, const std::vector<T>& values)
-                : Node("Constant", {})
-                , m_element_type(type)
+                : m_element_type(type)
                 , m_shape(shape)
                 , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
                                                     host_alignment()))
@@ -72,6 +70,7 @@ namespace ngraph
                     write_values(values);
                 }
                 constructor_validate_and_infer_types();
+                m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
             }
 
             /// \brief Constructs a tensor constant
@@ -81,8 +80,7 @@ namespace ngraph
             /// \param shape The shape of the tensor constant.
             /// \param values A list of string values to use as the constant data.
             Constant(const element::Type& type, Shape shape, const std::vector<std::string>& values)
-                : Node({})
-                , m_element_type(type)
+                : m_element_type(type)
                 , m_shape(shape)
                 , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
                                                     host_alignment()))
@@ -97,38 +95,41 @@ namespace ngraph
                     ", expected ",
                     shape_size(m_shape),
                     ".");
-
-                if (type.is_integral())
+                if (values.size())
                 {
-                    if (type.is_signed())
+                    if (type.is_integral())
                     {
-                        std::vector<int64_t> dvalues = parse_string<int64_t>(values);
-                        if (values.size() == 1 && shape_size(m_shape) != 1)
+                        if (type.is_signed())
                         {
-                            dvalues = std::vector<int64_t>(shape_size(m_shape), dvalues[0]);
+                            std::vector<int64_t> dvalues = parse_string<int64_t>(values);
+                            if (values.size() == 1 && shape_size(m_shape) != 1)
+                            {
+                                dvalues = std::vector<int64_t>(shape_size(m_shape), dvalues[0]);
+                            }
+                            write_values(dvalues);
                         }
-                        write_values(dvalues);
+                        else
+                        {
+                            std::vector<uint64_t> dvalues = parse_string<uint64_t>(values);
+                            if (values.size() == 1 && shape_size(m_shape) != 1)
+                            {
+                                dvalues = std::vector<uint64_t>(shape_size(m_shape), dvalues[0]);
+                            }
+                            write_values(dvalues);
+                        }
                     }
                     else
                     {
-                        std::vector<uint64_t> dvalues = parse_string<uint64_t>(values);
+                        std::vector<double> dvalues = parse_string<double>(values);
                         if (values.size() == 1 && shape_size(m_shape) != 1)
                         {
-                            dvalues = std::vector<uint64_t>(shape_size(m_shape), dvalues[0]);
+                            dvalues = std::vector<double>(shape_size(m_shape), dvalues[0]);
                         }
                         write_values(dvalues);
                     }
                 }
-                else
-                {
-                    std::vector<double> dvalues = parse_string<double>(values);
-                    if (values.size() == 1 && shape_size(m_shape) != 1)
-                    {
-                        dvalues = std::vector<double>(shape_size(m_shape), dvalues[0]);
-                    }
-                    write_values(dvalues);
-                }
                 constructor_validate_and_infer_types();
+                m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
             }
 
             /// \brief Constructs a tensor constant with the same initialization value copied across
@@ -138,8 +139,7 @@ namespace ngraph
             /// \param shape The shape of the tensor constant.
             /// \param data A void* to constant data.
             Constant(const element::Type& type, const Shape& shape, const void* data)
-                : Node({})
-                , m_element_type(type)
+                : m_element_type(type)
                 , m_shape(shape)
                 , m_data(nullptr)
             {
@@ -148,6 +148,7 @@ namespace ngraph
                                                         host_alignment()));
                 std::memcpy(m_data->get_ptr(), data, size);
                 constructor_validate_and_infer_types();
+                m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
             }
 
             virtual ~Constant() override;
@@ -248,12 +249,16 @@ namespace ngraph
 
             bool is_constant() const override { return true; }
             bool are_all_data_elements_bitwise_identical() const;
+            bool get_all_data_elements_bitwise_identical() const
+            {
+                return m_all_elements_bitwise_identical;
+            }
             std::string convert_value_to_string(size_t index) const;
 
         protected:
             void* get_data_ptr_nc() { return (m_data ? m_data->get_ptr() : nullptr); }
-            Constant(const std::string& name, const NodeVector& args)
-                : Node(name, args)
+            Constant(const OutputVector& args)
+                : Op(args)
                 , m_shape({})
             {
             }
@@ -278,7 +283,7 @@ namespace ngraph
 
             template <typename T>
             void write_to_buffer(const element::Type& target_type,
-                                 const Shape& target_shape,
+                                 const Shape& /* target_shape */,
                                  const std::vector<T>& source,
                                  void* target,
                                  size_t target_element_count)
@@ -287,12 +292,12 @@ namespace ngraph
                 {
                     throw std::runtime_error("Constant initializer does not match shape");
                 }
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-                switch (target_type.get_type_enum())
+                switch (target_type)
                 {
                 case element::Type_t::boolean:
                     write_buffer<char, T>(target, source, target_element_count);
@@ -336,7 +341,7 @@ namespace ngraph
                 case element::Type_t::undefined: throw std::runtime_error("unsupported type");
                 case element::Type_t::dynamic: throw std::runtime_error("unsupported type");
                 }
-#if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
             }
@@ -345,6 +350,7 @@ namespace ngraph
             element::Type m_element_type;
             Shape m_shape{};
             std::unique_ptr<runtime::AlignedBuffer> m_data;
+            bool m_all_elements_bitwise_identical;
             Constant(const Constant&) = delete;
             Constant operator=(const Constant&) = delete;
         };
@@ -352,11 +358,14 @@ namespace ngraph
         class ScalarConstantLikeBase : public Constant
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"ScalarConstantLikeBase", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             std::shared_ptr<op::Constant> as_constant() const;
 
         protected:
-            ScalarConstantLikeBase(const std::string& name, const NodeVector& args)
-                : Constant(name, args)
+            ScalarConstantLikeBase(const OutputVector& args)
+                : Constant(args)
             {
             }
         };
@@ -373,8 +382,8 @@ namespace ngraph
             /// \param like A tensor that will supply the element type.
             /// \param value The value of the scalar.
             template <typename T>
-            ScalarConstantLike(const std::shared_ptr<Node>& like, T value)
-                : ScalarConstantLikeBase("ScalarConstantLike", {like})
+            ScalarConstantLike(const Output<Node>& like, T value)
+                : ScalarConstantLikeBase({like})
                 , m_value(static_cast<double>(value))
             {
                 constructor_validate_and_infer_types();

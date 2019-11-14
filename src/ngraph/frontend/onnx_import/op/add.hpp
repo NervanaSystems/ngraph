@@ -47,13 +47,13 @@ namespace ngraph
             {
                 inline NodeVector add(const Node& node)
                 {
-                    NodeVector ng_inputs{ngraph::op::numpy_style_broadcast(node.get_ng_inputs())};
-                    return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
+                    return {std::make_shared<ngraph::op::v1::Add>(node.get_ng_inputs().at(0),
+                                                                  node.get_ng_inputs().at(1))};
                 }
 
             } // namespace set_7
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

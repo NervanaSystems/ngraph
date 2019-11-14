@@ -16,20 +16,18 @@
 
 #include <functional>
 #include <memory>
-#include <utility>
 
 #include "ngraph/axis_vector.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/dot.hpp"
-#include "ngraph/op/multiply.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/op/sum.hpp"
 #include "ngraph/shape.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-const string op::Dot::type_name{"Dot"};
+constexpr NodeTypeInfo op::Dot::type_info;
 
 op::Dot::Dot(const Output<Node>& arg0, const Output<Node>& arg1)
     : Dot(arg0, arg1, 0, false)
@@ -182,11 +180,11 @@ void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
-    auto y = get_argument(1);
+    auto x = input_value(0);
+    auto y = input_value(1);
 
-    auto x_shape = x->get_shape();         // shape IJ
-    auto y_shape = y->get_shape();         // shape JK
+    auto x_shape = x.get_shape();          // shape IJ
+    auto y_shape = y.get_shape();          // shape JK
     auto delta_shape = delta->get_shape(); // shape IK
 
     Shape I_shape;
@@ -203,4 +201,9 @@ void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
     auto x_reshaped = make_reshape_axes_to_front(x, I_shape, J_shape);               // JI
     auto x_reshaped_dot_delta = make_shared<Dot>(x_reshaped, delta, I_shape.size()); // JI.IK->JK
     adjoints.add_delta(y, x_reshaped_dot_delta);
+}
+
+shared_ptr<Node> op::Dot::get_default_value() const
+{
+    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
 }

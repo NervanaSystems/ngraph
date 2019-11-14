@@ -39,8 +39,10 @@ namespace ngraph
 class ngraph::runtime::plaidml::op::Convolution final : public ngraph::op::Op
 {
 public:
+    static constexpr NodeTypeInfo type_info{"PlaidmlConvolution", 0};
+    const NodeTypeInfo& get_type_info() const override { return type_info; }
     Convolution(std::shared_ptr<ngraph::op::Convolution> src,
-                const NodeVector& args,
+                const OutputVector& args,
                 AxisVector data_axes,
                 AxisVector filters_axes,
                 AxisVector output_axes);
@@ -63,8 +65,10 @@ private:
 class ngraph::runtime::plaidml::op::ConvolutionBackpropData final : public ngraph::op::Op
 {
 public:
+    static constexpr NodeTypeInfo type_info{"plaidmlConvolutionBackpropData", 0};
+    const NodeTypeInfo& get_type_info() const override { return type_info; }
     ConvolutionBackpropData(std::shared_ptr<ngraph::op::ConvolutionBackpropData> src,
-                            const NodeVector& args,
+                            const OutputVector& args,
                             AxisVector filters_axes,
                             AxisVector output_axes,
                             AxisVector data_axes);
@@ -87,8 +91,10 @@ private:
 class ngraph::runtime::plaidml::op::ConvolutionBackpropFilters final : public ngraph::op::Op
 {
 public:
+    static constexpr NodeTypeInfo type_info{"plaidmlConvolutionBackpropFilters", 0};
+    const NodeTypeInfo& get_type_info() const override { return type_info; }
     ConvolutionBackpropFilters(std::shared_ptr<ngraph::op::ConvolutionBackpropFilters> src,
-                               const NodeVector& args,
+                               const OutputVector& args,
                                AxisVector data_axes,
                                AxisVector output_axes,
                                AxisVector filters_axes);

@@ -29,14 +29,20 @@ namespace ngraph
         class MVN : public ngraph::op::util::FusedOp
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"MVN", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            MVN() = default;
             /// \brief Constructs an MVN operation.
             ///
             /// \param data Input tensor with data
-            /// \param normalize_variance flag that denotes whether to perform variance normalization.
+            /// \param normalize_variance flag that denotes whether to perform variance
+            ///                           normalization.
             /// \param across_channels flag that denotes if mean values are shared across channels.
-            /// \param eps the number to be added to the variance to avoid division by zero when normalizing the value
+            /// \param eps the number to be added to the variance to avoid division by zero when
+            ///            normalizing the value
             ///
-            MVN(const std::shared_ptr<ngraph::Node>& data,
+            MVN(const Output<Node>& data,
                 bool across_channels = true,
                 bool normalize_variance = true,
                 double eps = 1e-9);
@@ -45,15 +51,19 @@ namespace ngraph
             ///
             /// \param data Input tensor with data
             /// \param reduction_axes A list of axes, along which to reduce.
-            /// \param normalize_variance flag that denotes whether to perform variance normalization.
-            /// \param eps the number to be added to the variance to avoid division by zero when normalizing the value
+            /// \param normalize_variance flag that denotes whether to perform variance
+            ///                           normalization.
+            /// \param eps the number to be added to the variance to avoid division by zero when
+            ///            normalizing the value
             ///
-            MVN(const std::shared_ptr<ngraph::Node>& data,
+            MVN(const Output<Node>& data,
                 AxisSet reduction_axes,
                 bool normalize_variance = true,
                 double eps = 1e-9);
 
             virtual NodeVector decompose_op() const override;
+
+            virtual void pre_validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -61,10 +71,11 @@ namespace ngraph
             double get_eps() const { return m_eps; }
             bool get_normalize_variance() const { return m_normalize_variance; }
             AxisSet get_reduction_axes() const { return m_reduction_axes; }
+            void set_reduction_axes(AxisSet axes) { m_reduction_axes = axes; }
         private:
-            const double m_eps;
-            const bool m_across_channels;
-            const bool m_normalize_variance;
+            double m_eps;
+            bool m_across_channels;
+            bool m_normalize_variance;
             AxisSet m_reduction_axes;
         };
     } // namespace op

@@ -65,8 +65,8 @@ namespace ngraph
                 // Returns the indicated operation input as a PlaidML variable.
                 vertexai::plaidml::variable op_input(std::size_t idx) const
                 {
-                    const auto& ti = m_build->bindings.at(
-                        op().get_inputs()[idx].get_output().get_tensor_ptr().get());
+                    const auto& ti =
+                        m_build->bindings.at(&op().input(idx).get_source_output().get_tensor());
                     return ti.var;
                 }
 

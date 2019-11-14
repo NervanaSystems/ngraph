@@ -33,13 +33,12 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::GetOutputElement)
             {
+                (void)node;
                 auto& functors = external_function->get_functors();
-                auto goe = static_cast<const ngraph::op::GetOutputElement*>(node);
-                size_t n = goe->get_n();
-                auto arg_buffer_index = external_function->get_buffer_index(args[n].get_name());
+                auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
-                auto functor = [&, arg_buffer_index, out_buffer_index](CPURuntimeContext* ctx,
-                                                                       CPUExecutionContext* ectx) {
+                auto functor = [&, arg_buffer_index, out_buffer_index](
+                    CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                     if (ctx->buffer_data[arg_buffer_index] != ctx->buffer_data[out_buffer_index])
                     {
                         throw ngraph_error("GOE's input and out must be equal");
@@ -49,7 +48,10 @@ namespace ngraph
                 return;
             }
 
-            REGISTER_OP_BUILDER(GetOutputElement);
+            void register_builders_get_output_element_cpp()
+            {
+                REGISTER_OP_BUILDER(GetOutputElement);
+            }
         }
     }
 }

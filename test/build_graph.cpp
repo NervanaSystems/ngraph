@@ -166,3 +166,56 @@ TEST(build_graph, multi_output_split)
                                                   2);
     EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 91, 131}));
 }
+
+TEST(build_graph, multi_output_split_dynamic)
+{
+    const auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    const auto split = make_shared<op::Split>(data, 1, 2);
+    auto abs = make_shared<op::Abs>(split->output(1));
+    EXPECT_TRUE(abs->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+
+    auto f = make_shared<Function>(abs, ParameterVector{data});
+    auto new_parameter = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    split->input(0).replace_source_output(new_parameter->output(0));
+    f->validate_nodes_and_infer_types();
+    EXPECT_EQ(abs->get_shape(), (Shape{2, 2}));
+}
+
+TEST(build_graph, function_revalidate_and_infer)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto pattern = op::Constant::create(element::i64, Shape{6}, {1, 3, 16, 2, 2, 2});
+
+    auto r = make_shared<op::DynReshape>(arg, pattern);
+    auto relu = make_shared<op::Relu>(r);
+    auto f = make_shared<Function>(relu, ParameterVector{arg});
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_EQ(r->get_output_shape(0), (Shape{1, 3, 16, 2, 2, 2}));
+    EXPECT_EQ(f->get_output_shape(0), (Shape{1, 3, 16, 2, 2, 2}));
+
+    auto new_pattern = op::Constant::create(element::i64, Shape{2}, {32, 12});
+    r->input(1).replace_source_output(new_pattern->output(0));
+
+    f->validate_nodes_and_infer_types();
+    EXPECT_EQ(r->get_output_shape(0), (Shape{32, 12}));
+    EXPECT_EQ(f->get_output_shape(0), (Shape{32, 12}));
+}
+
+TEST(build_graph, validate_function_for_dynamic_shape)
+{
+    auto make_function = [&](bool dynamic_shape) {
+
+        auto param1_shape =
+            dynamic_shape ? PartialShape{Dimension::dynamic(), 2, 3} : Shape{5, 4, 2};
+        auto param2_shape = dynamic_shape ? PartialShape::dynamic() : Shape{5, 2, 3};
+        auto param_1 = std::make_shared<op::Parameter>(element::f32, param1_shape);
+        auto param_2 = std::make_shared<op::Parameter>(element::f32, param2_shape);
+        auto batch_dot = make_shared<op::BatchMatMul>(param_1, param_2);
+        auto f = make_shared<Function>(NodeVector{batch_dot}, ParameterVector{param_1, param_2});
+        return f;
+    };
+
+    EXPECT_TRUE(make_function(true)->is_dynamic());
+    EXPECT_FALSE(make_function(false)->is_dynamic());
+}

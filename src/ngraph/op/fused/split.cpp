@@ -21,8 +21,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Split::Split(const shared_ptr<Node>& data, const int axis, const size_t num_split)
-    : FusedOp("Split", {data})
+constexpr NodeTypeInfo op::Split::type_info;
+
+op::Split::Split(const Output<Node>& data, const int axis, const size_t num_split)
+    : FusedOp({data})
     , m_split_evenly{true}
     , m_axis{axis}
     , m_num_split{num_split}
@@ -30,12 +32,11 @@ op::Split::Split(const shared_ptr<Node>& data, const int axis, const size_t num_
     constructor_validate_and_infer_types();
 }
 
-op::Split::Split(const std::shared_ptr<ngraph::Node>& data,
-                 const int axis,
-                 const std::vector<size_t>& splits)
-    : FusedOp("Split", {data})
+op::Split::Split(const Output<Node>& data, const int axis, const std::vector<size_t>& splits)
+    : FusedOp({data})
     , m_split_evenly{false}
     , m_axis{axis}
+    , m_num_split{0}
     , m_splits{splits}
 {
     constructor_validate_and_infer_types();
@@ -43,11 +44,22 @@ op::Split::Split(const std::shared_ptr<ngraph::Node>& data,
 
 void op::Split::pre_validate_and_infer_types()
 {
-    const auto shape = get_argument(0)->get_shape();
+    // Create dynamic-typed outputs. Actual shape/type will be computed during shape inference
+    for (size_t i = 0; i < std::max(m_splits.size(), m_num_split); i++)
+    {
+        set_output_type(i, input(0).get_element_type(), PartialShape::dynamic());
+    }
+
+    if (is_dynamic())
+    {
+        return;
+    }
+
+    const auto shape = input(0).get_shape();
 
     m_axis = adjust_axis_value(m_axis, shape.size());
     NODE_VALIDATION_CHECK(this,
-                          m_axis >= 0 && m_axis < shape.size(),
+                          m_axis >= 0 && m_axis < static_cast<int64_t>(shape.size()),
                           "The 'axis' parameter for Split has to point to one of the "
                           "input tensor's shape dimensions.");
 
@@ -84,7 +96,7 @@ void op::Split::pre_validate_and_infer_types()
 
 NodeVector op::Split::decompose_op() const
 {
-    return builder::split(get_argument(0), m_splits, m_axis);
+    return builder::split(input_value(0), m_splits, m_axis);
 }
 
 shared_ptr<Node> op::Split::copy_with_new_args(const NodeVector& new_args) const

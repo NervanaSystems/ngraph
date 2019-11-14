@@ -20,7 +20,6 @@
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
-#include "ngraph/util.hpp"
 
 #include <memory>
 
@@ -33,10 +32,14 @@ namespace ngraph
         class Relu : public ngraph::op::util::UnaryElementwiseArithmetic
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"Relu", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            Relu() = default;
             /// \brief Constructs a Relu operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Relu(std::shared_ptr<ngraph::Node> arg);
+            Relu(const Output<ngraph::Node>& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -50,6 +53,9 @@ namespace ngraph
         class ReluBackprop : public ngraph::op::util::BinaryElementwiseArithmetic
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"ReluBackprop", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a ReluBackprop operation.
             ///
             /// \param arg Node that produces the relu forward input tensor.

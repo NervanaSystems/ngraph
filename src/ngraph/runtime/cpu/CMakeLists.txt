@@ -16,9 +16,16 @@
 
 include(FindOpenMP)
 
+if (NGRAPH_CPU_STATIC_LIB_ENABLE)
+    set(LIBRARY_TYPE STATIC)
+else()
+    set(LIBRARY_TYPE SHARED)
+endif()
+
 set(SRC
     cpu_backend.cpp
     cpu_builder.cpp
+    cpu_builder_registry.cpp
     cpu_call_frame.cpp
     cpu_executor.cpp
     cpu_external_function.cpp
@@ -31,6 +38,7 @@ set(SRC
     cpu_visualize_tree.cpp
     cpu_cse.cpp
     cpu_debugger.cpp
+    cpu_debug_tracer.cpp
     builder/add.cpp
     builder/allreduce.cpp
     builder/avg_pool.cpp
@@ -50,6 +58,7 @@ set(SRC
     builder/erf.cpp
     builder/gather.cpp
     builder/gather_nd.cpp
+    builder/gelu.cpp
     builder/leaky_relu.cpp
     builder/lstm.cpp
     builder/lrn.cpp
@@ -58,17 +67,15 @@ set(SRC
     builder/max_pool.cpp
     builder/min.cpp
     builder/one_hot.cpp
+    builder/random_uniform.cpp
     builder/relu.cpp
     builder/pad.cpp
     builder/product.cpp
     builder/reduce_function.cpp
     builder/replace_slice.cpp
     builder/quantization.cpp
-    builder/quantized_avg_pool.cpp
     builder/quantized_conv.cpp
-    builder/quantized_concat.cpp
     builder/quantized_dot.cpp
-    builder/quantized_max_pool.cpp
     builder/quantized_matmul.cpp
     builder/reshape.cpp
     builder/reverse.cpp
@@ -101,6 +108,7 @@ set(SRC
     op/convert_layout.cpp
     op/deconv.cpp
     op/dropout.cpp
+    op/gelu_backprop.cpp
     op/group_conv_bias.cpp
     op/halide_op.cpp
     op/leaky_relu.cpp
@@ -113,18 +121,15 @@ set(SRC
     op/update_slice.cpp
     pass/cpu_assignment.cpp
     pass/cpu_collapse_dims.cpp
-    pass/cpu_compiled_kernel_fusion.cpp
     pass/cpu_fusion.cpp
     pass/cpu_horizontal_fusion.cpp
     pass/cpu_layout.cpp
     pass/cpu_mat_fusion.cpp
     pass/cpu_memory_assignment.cpp
     pass/cpu_memory_optimization.cpp
-    pass/cpu_mkldnn_primitive_build.cpp
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
     pass/cpu_workspace_insertion.cpp
-    ngraph_version.cpp
 )
 
 if (NOT NGRAPH_DEX_ONLY)
@@ -133,6 +138,7 @@ if (NOT NGRAPH_DEX_ONLY)
         cpu_emitter.cpp
         cpu_kernel_emitters.cpp
         cpu_kernel_utils.cpp
+        pass/cpu_mkldnn_primitive_build.cpp
         )
 endif()
 
@@ -153,14 +159,53 @@ if (NGRAPH_MLIR_ENABLE)
         )
 endif()
 
+set(NGRAPH_CPU_ALL_DATATYPES
+    boolean
+    f32
+    f64
+    i8
+    i16
+    i32
+    i64
+    u8
+    u16
+    u32
+    u64
+    )
+
+set(NGRAPH_CPU_COMMON_DATATYPES
+    f32
+    i64
+    )
+
+
 if (NGRAPH_CPU_ENABLE)
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
-    add_library(cpu_backend SHARED ${SRC})
+    set(NGRAPH_CPU_OPTIMIZED_DATATYPES "common"
+        CACHE STRING "Semicolon-separated list of datatypes to optimize for, or \"common\" or \"all\".")
+
+    if (NGRAPH_CPU_OPTIMIZED_DATATYPES STREQUAL "all")
+        set(NGRAPH_CPU_OPTIMIZED_DATATYPES ${NGRAPH_CPU_ALL_DATATYPES})
+    endif()
+
+    if (NGRAPH_CPU_OPTIMIZED_DATATYPES STREQUAL "common")
+        set(NGRAPH_CPU_OPTIMIZED_DATATYPES ${NGRAPH_CPU_COMMON_DATATYPES})
+    endif()
+
+    list(REMOVE_DUPLICATES NGRAPH_CPU_OPTIMIZED_DATATYPES)
+
+    add_library(cpu_backend ${LIBRARY_TYPE} ${SRC})
+    if (NGRAPH_CPU_STATIC_LIB_ENABLE)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_CPU_STATIC_LIB_ENABLE")
+    endif()
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(cpu_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
+    endif()
+    if (NGRAPH_USE_LEGACY_MKLDNN)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_USE_LEGACY_MKLDNN")
     endif()
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
@@ -168,9 +213,8 @@ if (NGRAPH_CPU_ENABLE)
     if (NGRAPH_ENABLE_CPU_CONV_AUTO)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_ENABLE_CPU_CONV_AUTO")
     endif()
-    if(NGRAPH_TBB_ENABLE)
-        set_source_files_properties(cpu_external_function.cpp
-            PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
+    if (NGRAPH_TBB_ENABLE)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_TBB_ENABLE")
     endif()
     if (NGRAPH_HALIDE)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_HALIDE")
@@ -200,13 +244,20 @@ if (NGRAPH_CPU_ENABLE)
     endif()
     target_compile_definitions(cpu_backend PRIVATE CPU_BACKEND_DLL_EXPORTS)
 
+    foreach(t ${NGRAPH_CPU_OPTIMIZED_DATATYPES})
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_CPU_OPTIMIZE_${t}")
+    endforeach()
+
     add_dependencies(cpu_backend libmkldnn ext_eigen)
-    target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libtbb)
+   	target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen)
     if (NGRAPH_JSON_ENABLE)
         target_link_libraries(cpu_backend PUBLIC libjson)
+    endif()    
+    if (NGRAPH_TBB_ENABLE)
+        target_link_libraries(cpu_backend PUBLIC libtbb)
     endif()
     if (NOT NGRAPH_DEX_ONLY)
-        target_link_libraries(cpu_backend PUBLIC codegen)
+        target_link_libraries(cpu_backend PRIVATE codegen)
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
 
@@ -227,10 +278,8 @@ if (NGRAPH_CPU_ENABLE)
                                DEFINITION MLIR_LLVM_INCLUDEPATH)
         
         message(STATUS "Building CPU backend with MLIR")
-        message(STATUS "MLIR INCLUDE DIRS: ${MLIR_INCLUDE_PATHS}")
-        message(STATUS "LLVM INCLUDE DIRS: ${MLIR_LLVM_INCLUDEPATH}")
         add_dependencies(cpu_backend mlir_backend)
-        target_include_directories(cpu_backend PUBLIC ${MLIR_INCLUDE_PATHS} ${MLIR_LLVM_INCLUDEPATH})
+        target_include_directories(cpu_backend PUBLIC ${MLIR_INCLUDE_PATHS} ${MLIR_LLVM_INCLUDE_PATH})
         target_link_libraries(cpu_backend PUBLIC mlir_backend)
         # TODO: Get rid of the compile time def, and move all MLIR code to separate src files
         # and add them to cpu_backend here instead.

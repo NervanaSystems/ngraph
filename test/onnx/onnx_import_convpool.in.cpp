@@ -423,6 +423,5 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_convtranspose_output_shape)
     test_case.add_expected_output_from_file<float>(
         {1, 2, 10, 8}, TEST_FILES, "onnx/convtranspose_output_shape/y.bin");
 
-    test_case.dump_results();
     test_case.run();
 }

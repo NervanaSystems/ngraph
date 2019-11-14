@@ -25,12 +25,19 @@
 #include <random>
 #include <vector>
 
+#include "gtest/gtest.h"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/serializer.hpp"
+
+#ifdef NGRAPH_MLIR_ENABLE
+#define MLIR_DISABLE_TEST(name) DISABLED_##name
+#else
+#define MLIR_DISABLE_TEST(name) name
+#endif
 
 namespace ngraph
 {
@@ -79,7 +86,7 @@ std::vector<std::shared_ptr<T>> get_ops_of_type(std::shared_ptr<ngraph::Function
     std::vector<std::shared_ptr<T>> ops;
     for (auto op : f->get_ops())
     {
-        if (auto cop = std::dynamic_pointer_cast<T>(op))
+        if (auto cop = ngraph::as_type_ptr<T>(op))
         {
             ops.push_back(cop);
         }
@@ -94,7 +101,7 @@ size_t count_ops_of_type(std::shared_ptr<ngraph::Function> f)
     size_t count = 0;
     for (auto op : f->get_ops())
     {
-        if (std::dynamic_pointer_cast<T>(op))
+        if (ngraph::as_type_ptr<T>(op))
         {
             count++;
         }
@@ -277,3 +284,6 @@ std::vector<T> read_binary_file(const std::string& path)
     inputs_fs.read(reinterpret_cast<char*>(file_content.data()), size);
     return file_content;
 }
+
+testing::AssertionResult test_ordered_ops(std::shared_ptr<ngraph::Function> f,
+                                          const ngraph::NodeVector& required_ops);

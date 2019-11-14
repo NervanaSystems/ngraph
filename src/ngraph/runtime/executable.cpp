@@ -81,6 +81,7 @@ void runtime::Executable::validate(const vector<std::shared_ptr<runtime::Tensor>
     for (size_t i = 0; i < results.size(); i++)
     {
         if (outputs[i]->get_element_type().is_static() &&
+            results[i]->get_element_type().is_static() &&
             results[i]->get_element_type() != outputs[i]->get_element_type())
         {
             stringstream ss;
@@ -108,6 +109,11 @@ const ngraph::ResultVector& runtime::Executable::get_results() const
     return m_results;
 }
 
+size_t runtime::Executable::get_preferred_pipeline_depth() const
+{
+    return 2;
+}
+
 void runtime::Executable::set_parameters_and_results(const Function& func)
 {
     m_parameters = func.get_parameters();
@@ -119,7 +125,30 @@ vector<runtime::PerformanceCounter> runtime::Executable::get_performance_data() 
     return vector<PerformanceCounter>();
 }
 
-void runtime::Executable::save(std::ostream& output_stream)
+void runtime::Executable::save(std::ostream& /* output_stream */)
 {
-    throw runtime_error("save opertion unimplemented.");
+    throw runtime_error("save operation unimplemented.");
+}
+
+shared_ptr<runtime::Tensor> runtime::Executable::create_input_tensor(size_t /* input_index */)
+{
+    throw runtime_error("create_input_tensor unimplemented");
+}
+
+shared_ptr<runtime::Tensor> runtime::Executable::create_output_tensor(size_t /* output_index */)
+{
+    throw runtime_error("create_output_tensor unimplemented");
+}
+
+vector<shared_ptr<runtime::Tensor>>
+    runtime::Executable::create_input_tensor(size_t /* input_index */, size_t /* pipeline_depth */)
+{
+    throw runtime_error("create_input_tensor unimplemented");
+}
+
+vector<shared_ptr<runtime::Tensor>>
+    runtime::Executable::create_output_tensor(size_t /* output_index */,
+                                              size_t /* pipeline_depth */)
+{
+    throw runtime_error("create_output_tensor unimplemented");
 }

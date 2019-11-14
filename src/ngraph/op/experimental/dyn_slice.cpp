@@ -24,16 +24,18 @@
 using namespace std;
 using namespace ngraph;
 
-op::DynSlice::DynSlice(const shared_ptr<Node>& arg,
-                       const shared_ptr<Node>& lower_bounds,
-                       const shared_ptr<Node>& upper_bounds,
-                       const shared_ptr<Node>& strides,
+constexpr NodeTypeInfo op::DynSlice::type_info;
+
+op::DynSlice::DynSlice(const Output<Node>& arg,
+                       const Output<Node>& lower_bounds,
+                       const Output<Node>& upper_bounds,
+                       const Output<Node>& strides,
                        const AxisSet& lower_bounds_mask,
                        const AxisSet& upper_bounds_mask,
                        const AxisSet& new_axis,
                        const AxisSet& shrink_axis,
                        const AxisSet& ellipsis_mask)
-    : Op("DynSlice", check_single_output_args({arg, lower_bounds, upper_bounds, strides}))
+    : Op({arg, lower_bounds, upper_bounds, strides})
     , m_lower_bounds_mask(lower_bounds_mask)
     , m_upper_bounds_mask(upper_bounds_mask)
     , m_new_axis(new_axis)
@@ -84,9 +86,9 @@ void op::DynSlice::validate_and_infer_types()
     set_input_is_relevant_to_shape(2);
     set_input_is_relevant_to_shape(3);
 
-    auto lower_bounds = dynamic_pointer_cast<op::Constant>(get_argument(1));
-    auto upper_bounds = dynamic_pointer_cast<op::Constant>(get_argument(2));
-    auto strides = dynamic_pointer_cast<op::Constant>(get_argument(3));
+    auto lower_bounds = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr());
+    auto upper_bounds = as_type_ptr<op::Constant>(input_value(2).get_node_shared_ptr());
+    auto strides = as_type_ptr<op::Constant>(input_value(3).get_node_shared_ptr());
 
     if (lower_bounds && upper_bounds && strides)
     {
@@ -123,7 +125,8 @@ shared_ptr<Node> op::DynSlice::copy_with_new_args(const NodeVector& new_args) co
                                  m_ellipsis_mask);
 }
 
-void op::DynSlice::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::DynSlice::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                     const NodeVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for DynSlice");
 }

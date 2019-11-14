@@ -50,9 +50,9 @@ namespace ngraph
     }
 }
 
-// Support for multiple results, multiple outputs and getoutputelement, and multiple subgraphs in a single
-// pipeline is not implemented since this should go away in favor of the "hybrid" transformer approach of
-// carving out subgraphs in core ngraph
+// Support for multiple results, multiple outputs and getoutputelement, and multiple subgraphs in a
+// single pipeline is not implemented since this should go away in favor of the "hybrid" transformer
+// approach of carving out subgraphs in core ngraph
 
 bool runtime::cpu::pass::HalideSubgraphExtraction::run_on_function(
     std::shared_ptr<ngraph::Function> function)

@@ -28,6 +28,10 @@ namespace ngraph
         class Transpose : public Op
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"Transpose", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            Transpose() = default;
             /// \brief Constructs a transpose operation.
             ///
             /// \param arg Node producing the tensor to be transposed.
@@ -35,7 +39,7 @@ namespace ngraph
             ///                    input shape. Must be a vector of element type element::i64,
             ///                    with shape [n], where n is the rank of arg. The tensor's
             ///                    value must contain every integer in the range [0,n-1].
-            Transpose(const std::shared_ptr<Node>& arg, const std::shared_ptr<Node>& input_order);
+            Transpose(const Output<Node>& arg, const Output<Node>& input_order);
 
             void validate_and_infer_types() override;
 

@@ -44,6 +44,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/pass_config.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
+#include "ngraph/runtime/cpu/cpu_debug_tracer.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
@@ -61,6 +62,7 @@ namespace ngraph
             class CPU_Emitter;
             class CPU_CallFrame;
             class CPU_Debugger;
+            class CPU_DebugTracer;
 
 #if !defined(NGRAPH_DEX_ONLY)
 
@@ -72,18 +74,40 @@ namespace ngraph
 
             using OpMap = std::unordered_map<std::type_index, OpFunction>;
 #endif
+            struct TensorTracerAttributes
+            {
+                size_t m_number_of_elements;
+                ngraph::Shape m_t_shape;
+                element::Type m_type_of_element;
+
+                TensorTracerAttributes(const size_t size,
+                                       const ngraph::Shape& shape,
+                                       const element::Type& type)
+                    : m_number_of_elements(size)
+                    , m_t_shape(shape)
+                    , m_type_of_element(type)
+                {
+                }
+            };
 
             struct OpAttributes
             {
                 std::string Description;
                 std::vector<std::string> Outputs;
                 std::vector<std::string> Inputs;
+                std::vector<TensorTracerAttributes> m_outputs_tensor_attrs;
+                std::vector<TensorTracerAttributes> m_inputs_tensor_attrs;
+
                 OpAttributes(const std::string& desc,
                              const std::vector<std::string>& outputs,
-                             const std::vector<std::string>& inputs)
+                             const std::vector<std::string>& inputs,
+                             const std::vector<TensorTracerAttributes>& out_t_attrs,
+                             const std::vector<TensorTracerAttributes>& in_t_attrs)
                     : Description(desc)
                     , Outputs(outputs)
                     , Inputs(inputs)
+                    , m_outputs_tensor_attrs(out_t_attrs)
+                    , m_inputs_tensor_attrs(in_t_attrs)
                 {
                 }
             };
@@ -113,12 +137,14 @@ namespace ngraph
                     return m_mkldnn_emitter;
                 }
 
-                // Return the tuple including the string to create mkldnn primitive, the deps and the index in CODEGEN
-                const std::tuple<std::string, std::vector<size_t>, size_t>&
+                // Return the tuple including the string to create mkldnn primitive, the deps, the
+                // index and
+                // the scratchpad size in CODEGEN
+                const std::tuple<std::string, std::vector<size_t>, size_t, size_t>&
                     get_primitive_build_tuple(const Node* node) const
                 {
-                    auto it = m_node_primitive_string_deps_index_map.find(node);
-                    NGRAPH_CHECK(it != m_node_primitive_string_deps_index_map.end(),
+                    auto it = m_node_primitive_string_deps_index_size_map.find(node);
+                    NGRAPH_CHECK(it != m_node_primitive_string_deps_index_size_map.end(),
                                  "Primitive build tuple not found for node ",
                                  node->description());
 
@@ -137,7 +163,8 @@ namespace ngraph
                 static constexpr size_t s_memory_pool_alignment = 4096;
 
                 std::vector<CPUKernelFunctor>& get_functors() { return functors; }
-                // return an index into the cpu_runtime_context's buffer_data vector to get the tensor
+                // return an index into the cpu_runtime_context's buffer_data vector to get the
+                // tensor
                 size_t get_buffer_index(const std::string& name);
                 size_t get_buffer_size() const { return m_buffer_size; }
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>&
@@ -187,6 +214,10 @@ namespace ngraph
 
                 std::vector<ngraph::State*> m_states;
 
+                void dump_one_kernel(CPU_DebugTracer& debug_tracer,
+                                     CPURuntimeContext* ctx,
+                                     bool is_it_input);
+
             private:
                 // Register passes that are common to codegen and DEX
                 void register_common_passes(ngraph::pass::Manager& pass_manager,
@@ -212,6 +243,7 @@ namespace ngraph
                     const Node&,
                     const Node&,
                     const std::unordered_map<const Node*, std::string>& node_cache);
+
                 std::string emit_op_as_function(const Node&, const std::string& function_name);
                 std::string strip_comments(const std::string&);
 
@@ -233,7 +265,9 @@ namespace ngraph
                 bool m_release_function;
                 bool m_emit_timing;
 
+#if defined(NGRAPH_TBB_ENABLE)
                 bool m_use_tbb;
+#endif
 #if !defined(NGRAPH_DEX_ONLY)
                 bool m_is_compiled;
 #endif
@@ -270,7 +304,8 @@ namespace ngraph
                     enable_nodename_list;
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>
                     executor;
-                // name of a tensor and index into the cpu_runtime_context's buffer_data vector to get the tensor
+                // name of a tensor and index into the cpu_runtime_context's buffer_data vector to
+                // get the tensor
                 std::unordered_map<std::string, size_t> m_buffer_indices;
                 std::unordered_map<std::string, bool> tensor_stale;
                 // Each tensor is put into one buffer set.
@@ -303,7 +338,7 @@ namespace ngraph
                 // output index, and offset into the output.
                 // used to calculate the correct address at runtime
                 std::list<std::tuple<size_t, size_t, size_t>> function_output_index_offset;
-                //size of the cpu_runtime_context's buffer_data vector.
+                // size of the cpu_runtime_context's buffer_data vector.
                 size_t m_buffer_size = 0;
                 std::unordered_map<std::string, std::shared_ptr<CPU_ExternalFunction>> callees;
                 bool m_is_built;
@@ -316,9 +351,10 @@ namespace ngraph
                 std::unordered_map<std::string, size_t> subgraph_param_indices;
 #endif
 
-                /// Map each node with mkldnn implementation to its mkldnn primitive creating string, deps, and mkldnn primitive index.
-                std::map<const Node*, std::tuple<std::string, std::vector<size_t>, size_t>>
-                    m_node_primitive_string_deps_index_map;
+                /// Map each node with mkldnn implementation to its mkldnn primitive creating
+                /// string, deps, mkldnn primitive index, and mkldnn scratchpad size.
+                std::map<const Node*, std::tuple<std::string, std::vector<size_t>, size_t, size_t>>
+                    m_node_primitive_string_deps_index_size_map;
                 /// Name of the file to store descriptors for mkldnn_primitives
                 const std::string m_desc_filename = "desc_file";
             };

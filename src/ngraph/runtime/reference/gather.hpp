@@ -43,8 +43,8 @@ namespace ngraph
             //         out' = out[out_index] # rank(out') == rank(params')
             //         gather_nd(params', indices'', out')
             template <typename T, typename U>
-            void gather(T* params,
-                        U* indices,
+            void gather(const T* params,
+                        const U* indices,
                         T* out,
                         const Shape& params_shape,
                         const Shape& indices_shape,
@@ -106,7 +106,8 @@ namespace ngraph
                                                            params_outer_strides,
                                                            params_outer_axis_order);
 
-                // Create a CoordinateTransform for "indices" that visits only the first element along inner most axis
+                // Create a CoordinateTransform for "indices" that visits only the first element
+                // along inner most axis
                 Coordinate indices_outer_start_corner(indices_ndim, 0);
                 Coordinate indices_outer_end_corner(indices_shape);
                 if (indices_ndim > 0)
@@ -148,13 +149,14 @@ namespace ngraph
                 auto out_outer_coord_iter = out_outer_transform.begin();
                 for (const Coordinate& params_outer_coord : params_outer_transform)
                 {
-                    T* params_prime = &params[params_outer_transform.index(params_outer_coord)];
+                    const T* params_prime =
+                        &params[params_outer_transform.index(params_outer_coord)];
                     T* out_outer = &out[out_outer_transform.index(*out_outer_coord_iter)];
 
                     auto out_inner_coord_iter = out_inner_transform.begin();
                     for (const Coordinate& indices_outer_coord : indices_outer_transform)
                     {
-                        U* indices_prime =
+                        const U* indices_prime =
                             &indices[indices_outer_transform.index(indices_outer_coord)];
                         T* out_prime = &out_outer[out_inner_transform.index(*out_inner_coord_iter)];
                         gather_nd<T, U>(params_prime,

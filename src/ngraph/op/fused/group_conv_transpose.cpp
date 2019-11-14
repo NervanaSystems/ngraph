@@ -21,14 +21,15 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/slice.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::GroupConvolutionTranspose::GroupConvolutionTranspose(const shared_ptr<Node>& data,
-                                                         const shared_ptr<Node>& filters,
+constexpr NodeTypeInfo op::GroupConvolutionTranspose::type_info;
+
+op::GroupConvolutionTranspose::GroupConvolutionTranspose(const Output<Node>& data,
+                                                         const Output<Node>& filters,
                                                          const Strides& strides,
                                                          const Strides& dilations,
                                                          const CoordinateDiff& padding_begin,
@@ -37,7 +38,7 @@ op::GroupConvolutionTranspose::GroupConvolutionTranspose(const shared_ptr<Node>&
                                                          const size_t groups,
                                                          const PadType& pad_type,
                                                          const Shape& output_shape)
-    : FusedOp("GroupConvolutionTranspose", check_single_output_args({data, filters}))
+    : FusedOp({data, filters})
     , m_strides(strides)
     , m_dilations(dilations)
     , m_padding_begin(padding_begin)
@@ -50,8 +51,8 @@ op::GroupConvolutionTranspose::GroupConvolutionTranspose(const shared_ptr<Node>&
     constructor_validate_and_infer_types();
 }
 
-op::GroupConvolutionTranspose::GroupConvolutionTranspose(const std::shared_ptr<Node>& data,
-                                                         const std::shared_ptr<Node>& filters,
+op::GroupConvolutionTranspose::GroupConvolutionTranspose(const Output<Node>& data,
+                                                         const Output<Node>& filters,
                                                          const std::size_t groups)
     : GroupConvolutionTranspose(data,
                                 filters,
@@ -66,8 +67,8 @@ op::GroupConvolutionTranspose::GroupConvolutionTranspose(const std::shared_ptr<N
 {
 }
 
-op::GroupConvolutionTranspose::GroupConvolutionTranspose(const std::shared_ptr<Node>& data,
-                                                         const std::shared_ptr<Node>& filters,
+op::GroupConvolutionTranspose::GroupConvolutionTranspose(const Output<Node>& data,
+                                                         const Output<Node>& filters,
                                                          const Strides& strides,
                                                          const Strides& dilations,
                                                          const CoordinateDiff& output_padding,
@@ -86,8 +87,8 @@ op::GroupConvolutionTranspose::GroupConvolutionTranspose(const std::shared_ptr<N
 {
 }
 
-op::GroupConvolutionTranspose::GroupConvolutionTranspose(const std::shared_ptr<Node>& data,
-                                                         const std::shared_ptr<Node>& filters,
+op::GroupConvolutionTranspose::GroupConvolutionTranspose(const Output<Node>& data,
+                                                         const Output<Node>& filters,
                                                          const Shape& output_shape,
                                                          const std::size_t groups)
     : GroupConvolutionTranspose(data,
@@ -128,9 +129,6 @@ void op::GroupConvolutionTranspose::pre_validate_and_infer_types()
         NODE_VALIDATION_CHECK(this,
                               n_data_channels % m_groups == 0,
                               "Number of data channels not a multiple of group size.");
-        // padding type
-        NODE_VALIDATION_CHECK(
-            this, m_pad_type == PadType::EXPLICIT, "Currently only eplicit pad type is supported.");
 
         if (m_padding_begin.size() == 0)
         {
@@ -180,7 +178,7 @@ void op::GroupConvolutionTranspose::pre_validate_and_infer_types()
                 out_shape.erase(std::begin(out_shape), std::begin(out_shape) + 2);
             }
 
-            for (int i = 0; i < num_spatial_dims; ++i)
+            for (uint64_t i = 0; i < num_spatial_dims; ++i)
             {
                 int total_padding = m_strides[i] * (data_shape[i + 2] - 1) +
                                     m_dilations[i] * (filters_shape[i + 2] - 1) - out_shape[i] +
@@ -188,6 +186,30 @@ void op::GroupConvolutionTranspose::pre_validate_and_infer_types()
                 m_padding_begin[i] = total_padding / 2;
             }
             m_padding_end = m_padding_begin;
+        }
+    }
+}
+
+void op::GroupConvolutionTranspose::post_validate_and_infer_types()
+{
+    auto data_shape = get_input_partial_shape(0);
+    auto filters_shape = get_input_partial_shape(1);
+    if (data_shape.is_static() && filters_shape.is_static())
+    {
+        if (m_pad_type == PadType::SAME_UPPER || m_pad_type == PadType::SAME_LOWER)
+        {
+            m_padding_begin.clear();
+            m_padding_end.clear();
+            auto filter_shape = filters_shape.to_shape();
+            // Extract kernel shape
+            filter_shape.erase(filter_shape.begin(), filter_shape.begin() + 2);
+            infer_auto_padding(data_shape.to_shape(),
+                               filter_shape,
+                               m_strides,
+                               m_dilations,
+                               m_pad_type,
+                               m_padding_end,
+                               m_padding_begin);
         }
     }
 }
@@ -209,8 +231,8 @@ shared_ptr<Node> op::GroupConvolutionTranspose::copy_with_new_args(const NodeVec
 
 Shape op::GroupConvolutionTranspose::get_data_batch_shape() const
 {
-    const auto& data_shape = get_argument(0)->get_shape();
-    const auto& filters_shape = get_argument(1)->get_shape();
+    const auto& data_shape = input(0).get_shape();
+    const auto& filters_shape = input(1).get_shape();
     const size_t num_spatial_dims = data_shape.size() - 2;
 
     Shape data_batch_shape(data_shape.size(), 1);
@@ -245,27 +267,27 @@ Shape op::GroupConvolutionTranspose::get_data_batch_shape() const
 
 NodeVector op::GroupConvolutionTranspose::decompose_op() const
 {
-    auto data = get_argument(0);
-    auto filters = get_argument(1);
+    auto data = input_value(0);
+    auto filters = input_value(1);
 
     const Shape data_batch_shape = get_data_batch_shape();
-    const size_t num_spatial_dims = data->get_shape().size() - 2;
+    const size_t num_spatial_dims = data.get_shape().size() - 2;
 
     if (m_groups > 1)
     {
         // Split one convolution op to N ops where N is the number of groups
         // and concat results after computation.
-        const size_t n_data_channels{data->get_shape().at(1)};
-        const size_t n_filters_channels{filters->get_shape().at(0)};
+        const size_t n_data_channels{data.get_shape().at(1)};
+        const size_t n_filters_channels{filters.get_shape().at(0)};
         const size_t data_group_size{n_data_channels / m_groups};
         const size_t filters_group_size{n_filters_channels / m_groups};
         NodeVector convolution_nodes;
 
         // initial bounds for slice
-        vector<size_t> data_lower_bounds(data->get_shape().size());
-        vector<size_t> data_upper_bounds{data->get_shape()};
-        vector<size_t> filters_lower_bounds(filters->get_shape().size());
-        vector<size_t> filters_upper_bounds{filters->get_shape()};
+        vector<size_t> data_lower_bounds(data.get_shape().size());
+        vector<size_t> data_upper_bounds{data.get_shape()};
+        vector<size_t> filters_lower_bounds(filters.get_shape().size());
+        vector<size_t> filters_upper_bounds{filters.get_shape()};
 
         for (size_t group{0}; group < m_groups; ++group)
         {
@@ -305,8 +327,8 @@ NodeVector op::GroupConvolutionTranspose::decompose_op() const
     }
 }
 
-void op::GroupConvolutionTranspose::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                      const NodeVector& deltas)
+void op::GroupConvolutionTranspose::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                                      const NodeVector& /* deltas */)
 {
     throw ngraph_error(
         "Generating adjoints is not yet implemented for GroupConvolutionTranspose node.");

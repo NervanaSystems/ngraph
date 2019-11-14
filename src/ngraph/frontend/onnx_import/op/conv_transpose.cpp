@@ -26,9 +26,9 @@
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/fused/group_conv_transpose.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
-#include "ngraph/strides.hpp"
 
 namespace ngraph
 {
@@ -51,6 +51,7 @@ namespace ngraph
                     auto strides = convpool::get_strides(node);
                     auto dilations = convpool::get_dilations(node);
                     auto paddings = convpool::get_pads(node);
+                    ngraph::op::PadType auto_pad_type = convpool::get_auto_pad(node);
                     CoordinateDiff padding_below = paddings.first;
                     CoordinateDiff padding_above = paddings.second;
 
@@ -63,9 +64,11 @@ namespace ngraph
 
                     int64_t groups{node.get_attribute_value<int64_t>("group", 1)};
 
-                    ASSERT_VALID_ARGUMENT(node,
-                                          ((groups >= 0) && (groups <= data->get_shape().at(1)) &&
-                                           (groups <= filters->get_shape().at(0))))
+                    ASSERT_VALID_ARGUMENT(
+                        node,
+                        ((groups >= 0) &&
+                         (groups <= static_cast<int64_t>(data->get_shape().at(1))) &&
+                         (groups <= static_cast<int64_t>(filters->get_shape().at(0)))))
                         << "incorrect value of 'group' attribute: " << groups;
 
                     std::size_t n_data_channels{data_shape.at(1)};
@@ -100,7 +103,8 @@ namespace ngraph
                             padding_below,
                             padding_above,
                             CoordinateDiff(std::begin(output_padding), std::end(output_padding)),
-                            groups);
+                            groups,
+                            auto_pad_type);
                     }
 
                     // no bias param
@@ -118,7 +122,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

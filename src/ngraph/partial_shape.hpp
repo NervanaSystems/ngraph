@@ -25,6 +25,11 @@
 
 namespace ngraph
 {
+    namespace op
+    {
+        struct AutoBroadcastSpec;
+    }
+
     /// \brief Class representing a shape that may be partially or totally dynamic.
     ///
     /// XXX: THIS CLASS IS EXPERIMENTAL AND THE ENTIRE DESIGN IS SUBJECT TO CHANGE.
@@ -34,7 +39,7 @@ namespace ngraph
     /// \li Dynamic rank. (Informal notation: `?`)
     /// \li Static rank, but dynamic dimensions on some or all axes.
     ///     (Informal notation examples: `{1,2,?,4}`, `{?,?,?}`)
-    /// \li Static rank, and dynamic dimensions on all axes.
+    /// \li Static rank, and static dimensions on all axes.
     ///     (Informal notation examples: `{1,2,3,4}`, `{6}`, `{}`)
     class PartialShape
     {
@@ -176,6 +181,8 @@ namespace ngraph
         /// \param i The index of the dimension being selected.
         /// \return A reference to the `i`th Dimension of this shape.
         Dimension& operator[](size_t i) { return m_dimensions[i]; }
+        /// \brief Returns a vector of the dimensions. This has no meaning if dynamic.
+        explicit operator std::vector<Dimension>() const { return m_dimensions; }
         friend std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
         friend PartialShape operator+(const PartialShape& s1, const PartialShape& s2);
 

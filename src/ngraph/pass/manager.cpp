@@ -53,13 +53,9 @@ pass::Manager::~Manager()
 {
 }
 
-void pass::Manager::initialize_default_passes()
+void pass::Manager::run_passes(shared_ptr<Function> func, bool /* transitive */)
 {
-}
-
-void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
-{
-    bool profile_enabled = getenv("NGRAPH_PROFILE_PASS_ENABLE") != nullptr;
+    static bool profile_enabled = getenv("NGRAPH_PROFILE_PASS_ENABLE") != nullptr;
 
     get_state().set_function(func);
     vector<std::pair<shared_ptr<Function>, bool>> fs{std::make_pair(func, func->is_dynamic())};
@@ -90,8 +86,8 @@ void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
             for (auto f_pair : fs)
             {
                 shared_ptr<Function> f = f_pair.first;
-                // This checks is to skip the graph optimization when the graph pass relies on static shape
-                // but the function state is dynamic.
+                // This checks is to skip the graph optimization when the graph pass relies on
+                // static shape but the function state is dynamic.
                 // we update the function dynamic state only if we run the graph pass successfully.
                 if (function_pass->get_property(PassProperty::REQUIRE_STATIC_SHAPE) &&
                     f_pair.second)
@@ -136,13 +132,6 @@ void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
                 bool function_modified = call_graph_pass->run_on_call_graph(f->get_ordered_ops());
                 f_pair.second = (function_modified == true) ? f->is_dynamic() : f_pair.second;
             }
-        }
-
-        // Better to do this in node replacement but this will do for now
-        for (auto f_pair : fs)
-        {
-            shared_ptr<Function> f = f_pair.first;
-            f->validate_nodes_and_infer_types();
         }
 
         if (m_visualize || m_serialize)

@@ -1,4 +1,4 @@
-.. Copyright 2018-2019 Intel Corporation
+.. Copyright 2017-2019 Intel Corporation
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
@@ -12,43 +12,38 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-######################
-nGraph Compiler stack 
-######################
+
+nGraph Compiler Stack Documentation 
+###################################
 
 
 .. _ngraph_home:
 
 .. only:: release
 
-  nGraph Compiler stack documentation for version |version|.
-
-   Documentation for the latest (master) development branch can be found 
-   at https://ngraph.nervanasys.com/docs/latest 
-   .. https://docs.ngraph.ai/
+   nGraph Compiler stack documentation for version |version|.
 
 .. only:: (development or daily)
 
    nGraph Compiler stack documentation for the master tree under development 
    (version |version|).
 
-For information about the releases, see the :doc:`../project/release-notes`. 
 
-The nGraph Library and Compiler stack are provided under the `Apache 2.0 license`_ 
-(found in the LICENSE file in the project's `GitHub repo`_). It may also import 
-or reference packages, scripts, and other files that use licensing.
-
-.. _Apache 2.0 license: https://github.com/NervanaSystems/ngraph/blob/master/LICENSE
-.. _GitHub repo: https://github.com/NervanaSystems/ngraph
-
+.. toctree::
+   :name: mastertoctree
+   :titlesonly: 
 
 .. toctree::
    :maxdepth: 1
-   :caption: Getting Started
-   
+
+   introduction.rst
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Framework Support
+
    frameworks/index.rst
    frameworks/validated/list.rst
-   frameworks/generic-configs.rst
 
 
 .. toctree::
@@ -61,19 +56,14 @@ or reference packages, scripts, and other files that use licensing.
    nGraph Core Ops <ops/index.rst>
    core/constructing-graphs/index.rst
    core/passes/passes.rst
+   provenance/index.rst
 
    
 .. toctree::
    :maxdepth: 1
-   :caption: nGraph Python API
+   :caption: APIs 
 
    python_api/index.rst
-
-   
-.. toctree::
-   :maxdepth: 1
-   :caption: Backend Developers
-
    backends/index.rst
    backends/cpp-api.rst
 
@@ -87,15 +77,20 @@ or reference packages, scripts, and other files that use licensing.
 
 .. toctree::
    :maxdepth: 1
-   :caption: Project Metadata
+   :caption: Contributing
+
+   project/contribution-guide.rst
+   glossary.rst
+
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
 
    project/release-notes.rst
-   project/introduction.rst
-   project/contribution-guide.rst
-   project/doc-contributor-README.rst
    project/index.rst
-   project/extras.rst 
-   glossary.rst
+   project/extras/index.rst 
+
 
 .. only:: html
 

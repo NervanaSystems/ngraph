@@ -35,6 +35,10 @@ namespace ngraph
         class GroupConvolutionTranspose : public util::FusedOp
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"GroupConvolutionTranspose", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            GroupConvolutionTranspose() = default;
             ///
             /// \brief      Constructs GroupConvolutionTranspose operation.
             ///
@@ -44,15 +48,16 @@ namespace ngraph
             /// \param[in]  dilations       The dilations along each feature axis.
             /// \param[in]  padding_begin   The padding added at the beggining of each feature axis.
             /// \param[in]  padding_end     The padding added at the end of each feature axis.
-            /// \param[in]  output_padding  The zero-padding (adjustment) added to one side of the output.
-            /// \param[in]  groups          The number of groups the input channels and output channels
-            ///                             are divided into.
+            /// \param[in]  output_padding  The zero-padding (adjustment) added to one side of the
+            ///                             output.
+            /// \param[in]  groups          The number of groups the input channels and output
+            ///                             channels are divided into.
             /// \param[in]  pad_type        The provided padding type.
             /// \param[in]  output_shape    The output shape. When provided padding values are
             ///                             automatically inferred.
             ///
-            GroupConvolutionTranspose(const std::shared_ptr<Node>& data,
-                                      const std::shared_ptr<Node>& filters,
+            GroupConvolutionTranspose(const Output<Node>& data,
+                                      const Output<Node>& filters,
                                       const Strides& strides,
                                       const Strides& dilations,
                                       const CoordinateDiff& padding_begin,
@@ -65,13 +70,13 @@ namespace ngraph
             ///
             /// \brief      Constructs GroupConvolutionTranspose operation.
             ///
-            /// \param[in]  data            The node producing input data.
-            /// \param[in]  filters         The node producing filters data.
-            /// \param[in]  groups          The number of groups the input channels and output channels
-            ///                             are divided into.
+            /// \param[in]  data      The node producing input data.
+            /// \param[in]  filters   The node producing filters data.
+            /// \param[in]  groups    The number of groups the input channels and output channels
+            ///                       are divided into.
             ///
-            GroupConvolutionTranspose(const std::shared_ptr<Node>& data,
-                                      const std::shared_ptr<Node>& filters,
+            GroupConvolutionTranspose(const Output<Node>& data,
+                                      const Output<Node>& filters,
                                       const std::size_t groups = 1UL);
 
             ///
@@ -81,14 +86,15 @@ namespace ngraph
             /// \param[in]  filters         The node producing filters data.
             /// \param[in]  strides         The strides along each feature axis.
             /// \param[in]  dilations       The dilations along each feature axis.
-            /// \param[in]  output_padding  The zero-padding (adjustment) added to one side of the output.
+            /// \param[in]  output_padding  The zero-padding (adjustment) added to one side of the
+            ///                             output.
             /// \param[in]  output_shape    The output shape. When provided padding values are
             ///                             automatically inferred.
-            /// \param[in]  groups          The number of groups the input channels and output channels
-            ///                             are divided into.
+            /// \param[in]  groups          The number of groups the input channels and output
+            ///                             channels are divided into.
             ///
-            GroupConvolutionTranspose(const std::shared_ptr<Node>& data,
-                                      const std::shared_ptr<Node>& filters,
+            GroupConvolutionTranspose(const Output<Node>& data,
+                                      const Output<Node>& filters,
                                       const Strides& strides,
                                       const Strides& dilations,
                                       const CoordinateDiff& output_padding,
@@ -102,16 +108,16 @@ namespace ngraph
             /// \param[in]  filters         The node producing filters data.
             /// \param[in]  output_shape    The output shape. When provided padding values are
             ///                             automatically inferred.
-            /// \param[in]  groups          The number of groups the input channels and output channels
-            ///                             are divided into.
+            /// \param[in]  groups          The number of groups the input channels and output
+            ///                             channels are divided into.
             ///
-            GroupConvolutionTranspose(const std::shared_ptr<Node>& data,
-                                      const std::shared_ptr<Node>& filters,
+            GroupConvolutionTranspose(const Output<Node>& data,
+                                      const Output<Node>& filters,
                                       const Shape& output_shape,
                                       const std::size_t groups = 1UL);
 
-            std::shared_ptr<Node> get_filters() { return get_argument(1); }
-            std::shared_ptr<Node> get_data() { return get_argument(0); }
+            Output<Node> get_data() { return input_value(0); }
+            Output<Node> get_filters() { return input_value(1); }
             const Strides& get_strides() const { return m_strides; }
             const Strides& get_dilations() const { return m_dilations; }
             const CoordinateDiff& get_padding_begin() const { return m_padding_begin; }
@@ -121,6 +127,7 @@ namespace ngraph
             const PadType& get_pad_type() const { return m_pad_type; }
             const Shape& get_output_shape() const { return m_output_shape; }
             virtual void pre_validate_and_infer_types() override;
+            virtual void post_validate_and_infer_types() override;
             virtual NodeVector decompose_op() const override;
 
             virtual std::shared_ptr<Node>

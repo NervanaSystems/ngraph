@@ -14,60 +14,52 @@
 // limitations under the License.
 //*****************************************************************************
 
+#if defined(NGRAPH_TBB_ENABLE)
 #include <tbb/tbb_stddef.h>
+#endif
 
 #include "cpu_backend_visibility.h"
+
+#include "ngraph/component_manager.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
+#include "ngraph/runtime/cpu/cpu_builder_registry.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/cpu/static_initialize.hpp"
 #include "ngraph/util.hpp"
 
 #ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/compiler.hpp"
+#include "contrib/mlir/backend/cpu/cpu_backend.hpp"
+#include "contrib/mlir/core/compiler.hpp"
 #endif
 
 using namespace ngraph;
 using namespace std;
 
-extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
+extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend()
 {
-    class CPU_BackendConstructor : public runtime::BackendConstructor
-    {
-    public:
-        std::shared_ptr<runtime::Backend> create(const std::string& config) override
+    runtime::BackendManager::register_backend("CPU", [](const std::string& /* config */) {
+        static bool is_initialized = false;
+        if (!is_initialized)
         {
+#if defined(NGRAPH_TBB_ENABLE)
             // Force TBB to link to the backend
             tbb::TBB_runtime_interface_version();
-            return make_shared<runtime::cpu::CPU_Backend>();
+#endif
+            ngraph::runtime::cpu::register_builders();
+            is_initialized = true;
         }
-    };
-
-    static unique_ptr<runtime::BackendConstructor> s_backend_constructor(
-        new CPU_BackendConstructor());
-    return s_backend_constructor.get();
-}
-
-namespace
-{
-    static class CPUStaticInit
-    {
-    public:
-        CPUStaticInit()
-        {
-            runtime::BackendManager::register_backend("CPU", get_backend_constructor_pointer());
-        }
-        ~CPUStaticInit() {}
-    } s_cpu_static_init;
+        return make_shared<runtime::cpu::CPU_Backend>();
+    });
 }
 
 runtime::cpu::CPU_Backend::~CPU_Backend()
 {
     m_exec_map.clear();
 }
-
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
     const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function,
     ngraph::pass::PassConfig& pass_config,
@@ -104,12 +96,15 @@ shared_ptr<runtime::Executable>
     if (std::getenv("NGRAPH_MLIR") != nullptr)
     {
         // Initialize MLIR compiler
-        ngmlir::MLIRCompiler::init_mlir();
+        ngmlir::MLIRCompiler::init();
+        // Initialize MLIR backend
+        ngmlir::MLIRCPUBackend::init();
     }
 #endif
 
     shared_ptr<runtime::Executable> rc;
-    // we will protect the access to map (m_exec_map) across multiple threads by creating a lock_gaurd
+    // we will protect the access to map (m_exec_map) across multiple threads by creating a
+    // lock_gaurd
     // m_exec_map_mutex will be released once the object `guard` goes out of scope
     {
         std::lock_guard<std::mutex> guard(m_exec_map_mutex);
@@ -185,13 +180,12 @@ runtime::Allocator* runtime::cpu::CPU_Backend::get_host_memory_allocator()
 {
     if (!m_allocator)
     {
-        m_allocator = create_default_allocator();
+        return runtime::get_default_allocator();
     }
-    return m_allocator.get();
+    return m_allocator;
 }
 
-void runtime::cpu::CPU_Backend::set_host_memory_allocator(
-    std::unique_ptr<runtime::Allocator> allocator)
+void runtime::cpu::CPU_Backend::set_host_memory_allocator(Allocator* allocator)
 {
     if (m_allocator)
     {
@@ -200,7 +194,7 @@ void runtime::cpu::CPU_Backend::set_host_memory_allocator(
         throw ngraph_error(
             "Allocator already exists. Changing allocators mid-execution is not permitted.");
     }
-    m_allocator = std::move(allocator);
+    m_allocator = allocator;
 }
 
 vector<runtime::PerformanceCounter> runtime::cpu::CPU_Executable::get_performance_data() const
@@ -216,11 +210,10 @@ vector<runtime::PerformanceCounter> runtime::cpu::CPU_Executable::get_performanc
     return rc;
 }
 
-bool runtime::cpu::CPU_Backend::is_supported(const Node& op) const
+bool runtime::cpu::CPU_Backend::is_supported(const Node& /* op */) const
 {
     return true;
 }
-
 bool runtime::cpu::CPU_Backend::is_supported_property(const Property prop) const
 {
     if (prop == Property::memory_attach)

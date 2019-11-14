@@ -35,16 +35,12 @@ namespace ngraph
                     auto data = node.get_ng_inputs().at(0);
                     double alpha = node.get_attribute_value<double>("alpha", 1);
 
-                    std::shared_ptr<ngraph::Node> alpha_node =
-                        std::make_shared<ngraph::op::Constant>(
-                            data->get_element_type(), Shape{}, std::vector<double>{alpha});
-
-                    return NodeVector{std::make_shared<ngraph::op::Elu>(data, alpha_node)};
+                    return NodeVector{std::make_shared<ngraph::op::Elu>(data, alpha)};
                 }
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

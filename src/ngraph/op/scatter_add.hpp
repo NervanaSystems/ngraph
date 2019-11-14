@@ -26,20 +26,25 @@ namespace ngraph
         class ScatterAdd : public Op
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"ScatterAdd", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            ScatterAdd() = default;
             /// \param inputs Tensor
             /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
             /// \param updates Tensor: Must have same type as inputs
-            ScatterAdd(const std::shared_ptr<Node>& inputs,
-                       const std::shared_ptr<Node>& indices,
-                       const std::shared_ptr<Node>& updates)
-                : Op("ScatterAdd", check_single_output_args({inputs, indices, updates}))
+            ScatterAdd(const Output<Node>& inputs,
+                       const Output<Node>& indices,
+                       const Output<Node>& updates)
+                : Op({inputs, indices, updates})
             {
                 constructor_validate_and_infer_types();
             }
 
             void validate_and_infer_types() override;
 
-            void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override
+            void generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                   const NodeVector& /* deltas */) override
             {
                 throw ngraph_error("Not yet implemented");
             }

@@ -30,9 +30,9 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
-            GroupConvolution();
+            static constexpr NodeTypeInfo type_info{"GroupConvolution", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            GroupConvolution() = default;
             GroupConvolution(const Output<Node>& data_batch,
                              const Output<Node>& filters,
                              const Strides& window_movement_strides,
@@ -43,15 +43,24 @@ namespace ngraph
                              const size_t groups,
                              const PadType& pad_type = PadType::EXPLICIT);
 
+            // constructor which accept groups included in filters shape.
+            GroupConvolution(const Output<Node>& data_batch,
+                             const Output<Node>& filters,
+                             const Strides& window_movement_strides,
+                             const Strides& window_dilation_strides,
+                             const CoordinateDiff& padding_below,
+                             const CoordinateDiff& padding_above,
+                             const Strides& data_dilation_strides,
+                             const PadType& pad_type = PadType::EXPLICIT);
             Shape get_weights_dimensions() const;
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
-            std::shared_ptr<Node> get_filters() { return get_argument(1); }
-            std::shared_ptr<Node> get_data_batch() { return get_argument(0); }
-            size_t get_groups() const { return m_groups; }
+            Output<Node> get_filters() { return input_value(1); }
+            Output<Node> get_data_batch() { return input_value(0); }
+            size_t get_groups() const;
             const PadType& get_pad_type() const { return m_pad_type; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -70,8 +79,11 @@ namespace ngraph
             CoordinateDiff m_padding_below;
             CoordinateDiff m_padding_above;
             Strides m_data_dilation_strides;
-            size_t m_groups{0};
+            Dimension m_groups;
             PadType m_pad_type{PadType::NOTSET};
+
+        private:
+            bool has_groups_in_filters_shape() const;
         };
     }
 }

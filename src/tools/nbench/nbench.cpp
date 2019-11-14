@@ -16,14 +16,20 @@
 
 // tool to benchmark any ngraph json model with given backend.
 // compile and run with:
-// g++ ./nbench.cpp -std=c++11 -I$HOME/ngraph_dist/include -L$HOME/ngraph_dist/lib -lngraph -o nbench
-// env LD_LIBRARY_PATH=$HOME/ngraph_dist/lib env NGRAPH_INTERPRETER_EMIT_TIMING=1 ./nbench
+// $ g++ ./nbench.cpp
+//             -std=c++11
+//             -I$HOME/ngraph_dist/include
+//             -L$HOME/ngraph_dist/lib
+//             -lngraph
+//             -o nbench
+// $ env LD_LIBRARY_PATH=$HOME/ngraph_dist/lib env NGRAPH_INTERPRETER_EMIT_TIMING=1 ./nbench
 // sample models are under ../../test/models
 
 #include <fstream>
 #include <iomanip>
 
 #include "benchmark.hpp"
+#include "benchmark_pipelined.hpp"
 #include "ngraph/distributed.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/file_util.hpp"
@@ -33,11 +39,21 @@
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
+
+static void configure_static_backends()
+{
+#ifdef NGRAPH_INTERPRETER_STATIC_LIB_ENABLE
+    ngraph::runtime::BackendManager::register_backend(
+        "INTERPRETER", ngraph::runtime::interpreter::get_backend_constructor_pointer());
+#endif
+}
 
 class PerfShape : public ngraph::runtime::PerformanceCounter
 {
@@ -181,8 +197,10 @@ int main(int argc, char** argv)
     int warmup_iterations = 1;
     bool copy_data = true;
     bool dot_file = false;
+    bool double_buffer = false;
 
-    for (size_t i = 1; i < argc; i++)
+    configure_static_backends();
+    for (int i = 1; i < argc; i++)
     {
         string arg = argv[i];
         if (arg == "-f" || arg == "--file")
@@ -228,6 +246,10 @@ int main(int argc, char** argv)
         else if (arg == "-d" || arg == "--directory")
         {
             directory = argv[++i];
+        }
+        else if (arg == "--double_buffer")
+        {
+            double_buffer = true;
         }
         else if (arg == "-w" || arg == "--warmup_iterations")
         {
@@ -283,6 +305,7 @@ OPTIONS
         -w|--warmup_iterations    Number of warm-up iterations
         --no_copy_data            Disable copy of input/result data every iteration
         --dot                     Generate Graphviz dot file
+        --double_buffer           Double buffer inputs and outputs
 )###";
         return 1;
     }
@@ -420,8 +443,17 @@ OPTIONS
             {
                 cout << "\n---- Benchmark ----\n";
                 shared_ptr<Function> f = deserialize(model);
-                auto perf_data = run_benchmark(
-                    f, backend, iterations, timing_detail, warmup_iterations, copy_data);
+                vector<runtime::PerformanceCounter> perf_data;
+                if (double_buffer)
+                {
+                    perf_data = run_benchmark_pipelined(
+                        f, backend, iterations, timing_detail, warmup_iterations, copy_data);
+                }
+                else
+                {
+                    perf_data = run_benchmark(
+                        f, backend, iterations, timing_detail, warmup_iterations, copy_data);
+                }
                 auto perf_shape = to_perf_shape(f, perf_data);
                 aggregate_perf_data.insert(
                     aggregate_perf_data.end(), perf_shape.begin(), perf_shape.end());

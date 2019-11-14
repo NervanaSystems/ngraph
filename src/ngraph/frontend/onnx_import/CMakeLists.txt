@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-set(ONNX_OPSET_VERSION 10 CACHE INTERNAL "Supported version of ONNX operator set")
+set(ONNX_OPSET_VERSION 11 CACHE INTERNAL "Supported version of ONNX operator set")
 
 add_library(onnx_import_interface OBJECT
         core/node.cpp
@@ -86,6 +86,8 @@ add_library(onnx_import STATIC
         op/equal.hpp
         op/erf.hpp
         op/exp.hpp
+        op/expand.hpp
+        op/expand.cpp
         op/eye_like.cpp
         op/eye_like.hpp
         op/flatten.cpp
@@ -155,6 +157,8 @@ add_library(onnx_import STATIC
         op/relu.hpp
         op/reshape.cpp
         op/reshape.hpp
+        op/reverse_sequence.cpp
+        op/reverse_sequence.h
         op/selu.cpp
         op/selu.hpp
         op/shape.hpp
@@ -202,8 +206,8 @@ add_library(onnx_import STATIC
         utils/common.hpp
         utils/convpool.cpp
         utils/convpool.hpp
-        utils/matmul_factory.cpp
-        utils/matmul_factory.hpp
+        utils/pooling_factory.cpp
+        utils/pooling_factory.hpp
         utils/reduction.cpp
         utils/reduction.hpp
         utils/reshape.cpp
@@ -216,23 +220,24 @@ add_dependencies(onnx_import_interface protobuf::libprotobuf onnx::libonnx onnx:
 add_dependencies(onnx_import onnx_import_interface)
 
 set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_include_directories(onnx_import PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
+target_include_directories(onnx_import 
+    SYSTEM PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
     SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
 target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES} ${ONNX_PROTO_LIBRARY})
 
 target_compile_definitions(onnx_import PRIVATE ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
 
 set_property(TARGET onnx_import_interface PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_include_directories(onnx_import_interface PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
+target_include_directories(onnx_import_interface SYSTEM PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
     SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
 
 target_compile_definitions(onnx_import_interface PRIVATE ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(onnx_import PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
-            -Wno-extended-offsetof -Wno-shorten-64-to-32 -Wno-unused-macros -Wno-missing-variable-declarations
+            -Wno-invalid-offsetof -Wno-shorten-64-to-32 -Wno-unused-macros -Wno-missing-variable-declarations
             -Wno-unused-private-field -Wno-shadow -Wno-deprecated PUBLIC -Wno-undefined-func-template)
     target_compile_options(onnx_import_interface PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
-            -Wno-extended-offsetof -Wno-shorten-64-to-32 -Wno-unused-macros -Wno-missing-variable-declarations
+            -Wno-invalid-offsetof -Wno-shorten-64-to-32 -Wno-unused-macros -Wno-missing-variable-declarations
             -Wno-unused-private-field -Wno-shadow -Wno-deprecated PUBLIC -Wno-undefined-func-template)
 endif()

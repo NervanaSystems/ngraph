@@ -22,29 +22,70 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise multiplication operation.
-        class Multiply : public util::BinaryElementwiseArithmetic
+        namespace v0
         {
-        public:
-            /// \brief Constructs a multiplication operation.
-            ///
-            /// \param arg0 Node that produces the first input tensor.
-            /// \param arg1 Node that produces the second input tensor.
-            /// \param autob Auto broadcast specification
-            Multiply(const std::shared_ptr<Node>& arg0,
-                     const std::shared_ptr<Node>& arg1,
-                     const AutoBroadcastSpec& autob = AutoBroadcastSpec());
+            /// \brief Elementwise multiplication operation.
+            class Multiply : public util::BinaryElementwiseArithmetic
+            {
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"Multiply", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a multiplication operation.
+                Multiply() = default;
+                /// \brief Constructs a multiplication operation.
+                ///
+                /// \param arg0 Node that produces the first input tensor.
+                /// \param arg1 Node that produces the second input tensor.
+                /// \param auto_broadcast Auto broadcast specification
+                Multiply(const Output<Node>& arg0,
+                         const Output<Node>& arg1,
+                         const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-            virtual bool is_commutative() override { return true; }
-        };
-    };
+                virtual bool is_commutative() const override { return true; }
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+            };
+        } // namespace v0
 
-    std::shared_ptr<ngraph::Node> operator*(const std::shared_ptr<ngraph::Node> arg0,
-                                            const std::shared_ptr<ngraph::Node> arg1);
-}
+        namespace v1
+        {
+            /// \brief Elementwise multiplication operation.
+            class Multiply : public util::BinaryElementwiseArithmetic
+            {
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"Multiply", 1};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a multiplication operation.
+                Multiply() = default;
+                /// \brief Constructs a multiplication operation.
+                ///
+                /// \param arg0 Node that produces the first input tensor.
+                /// \param arg1 Node that produces the second input tensor.
+                /// \param auto_broadcast Auto broadcast specification
+                Multiply(const Output<Node>& arg0,
+                         const Output<Node>& arg1,
+                         const AutoBroadcastSpec& auto_broadcast =
+                             AutoBroadcastSpec(AutoBroadcastType::NUMPY));
+
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+                virtual bool is_commutative() const override { return true; }
+                size_t get_version() const override { return 1; }
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+            };
+        } // namespace v1
+
+        using v0::Multiply;
+    } // namespace op
+
+    std::shared_ptr<Node> operator*(const Output<Node>& arg0, const Output<Node>& arg1);
+} // namespace ngraph

@@ -23,10 +23,15 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Takes a slice of an input tensor, i.e., the sub-tensor that resides within a bounding box, optionally with stride.
+        /// \brief Takes a slice of an input tensor, i.e., the sub-tensor that resides within a
+        ///        bounding box, optionally with stride.
         class DynReplaceSlice : public Op
         {
         public:
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"DynReplaceSlice", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            DynReplaceSlice() = default;
             /// \brief Constructs a dynamic tensor replace-slice operation.
             ///
             /// \param arg The tensor in which to replace the slice.
@@ -40,11 +45,11 @@ namespace ngraph
             /// \param new_axis          Add dimension one axis at the set positions
             /// \param shrink_axis       Delete dimensions at the set positions
             /// \param ellipsis_mask     Inserts missing dimensions on the set position
-            DynReplaceSlice(const std::shared_ptr<Node>& arg,
-                            const std::shared_ptr<Node>& replacement,
-                            const std::shared_ptr<Node>& lower_bounds,
-                            const std::shared_ptr<Node>& upper_bounds,
-                            const std::shared_ptr<Node>& strides,
+            DynReplaceSlice(const Output<Node>& arg,
+                            const Output<Node>& replacement,
+                            const Output<Node>& lower_bounds,
+                            const Output<Node>& upper_bounds,
+                            const Output<Node>& strides,
                             const AxisSet& lower_bounds_mask = AxisSet{},
                             const AxisSet& upper_bounds_mask = AxisSet{},
                             const AxisSet& new_axis = AxisSet{},
@@ -58,11 +63,11 @@ namespace ngraph
             const AxisSet& get_ellipsis_mask() const { return m_ellipsis_mask; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+            void validate_and_infer_types() override;
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-            void validate_and_infer_types() override;
 
         private:
             /// Helper method to compute output shape

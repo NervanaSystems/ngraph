@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Cosh::type_name{"Cosh"};
+constexpr NodeTypeInfo op::Cosh::type_info;
 
 op::Cosh::Cosh(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
@@ -39,7 +39,7 @@ void op::Cosh::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector&
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = input_value(0);
 
     adjoints.add_delta(x, delta * (make_shared<op::Sinh>(x)));
 }
