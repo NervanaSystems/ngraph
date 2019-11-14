@@ -92,7 +92,6 @@
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
-#include "ngraph/op/fused/selu.hpp"
 #include "ngraph/op/fused/shuffle_channels.hpp"
 #include "ngraph/op/fused/softmax_crossentropy.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
@@ -2473,11 +2472,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Select>(args[0], args[1], args[2]);
             break;
         }
-        case OP_TYPEID::Selu:
-        {
-            node = make_shared<op::Selu>(args[0], args[1], args[2]);
-            break;
-        }
+        // case OP_TYPEID::Selu:
+        // {
+        //     node = make_shared<op::Selu>(args[0], args[1], args[2]);
+        //     break;
+        // }
         case OP_TYPEID::Send:
         {
             auto dest_id = node_js.at("dest_id").get<size_t>();
@@ -4004,8 +4003,8 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Select: { break;
     }
-    case OP_TYPEID::Selu: { break;
-    }
+    // case OP_TYPEID::Selu: { break;
+    // }
     case OP_TYPEID::Send:
     {
         auto tmp = static_cast<const op::Send*>(&n);
