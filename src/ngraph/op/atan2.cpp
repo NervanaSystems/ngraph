@@ -15,6 +15,12 @@
 //*****************************************************************************
 
 #include "ngraph/op/atan2.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/divide.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/negative.hpp"
+#include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/subtract.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -39,5 +45,9 @@ void op::Atan2::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector
     {
         throw ngraph_error("Autodiff not supported with auto broadcasting");
     }
-    throw ngraph_error("Autodiff not supported for Atan2");
+    auto y = input_value(0);
+    auto x = input_value(1);
+    auto delta_over_r = deltas.at(0) / (x * x + y * y);
+    adjoints.add_delta(y, x * delta_over_r);
+    adjoints.add_delta(x, -y * delta_over_r);
 }
