@@ -37,7 +37,7 @@ op::Sigmoid::Sigmoid(const Output<Node>& arg)
 }
 
 op::SigmoidBackprop::SigmoidBackprop(const Output<Node>& arg, const Output<Node>& delta)
-    : BinaryElementwiseArithmetic(arg, delta)
+    : BinaryElementwiseArithmetic(arg, delta, AutoBroadcastSpec::NONE)
 {
     constructor_validate_and_infer_types();
 }

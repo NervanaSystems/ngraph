@@ -20,6 +20,7 @@
 #include <ostream>
 
 #include "ngraph/attribute_adapter.hpp"
+#include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/type.hpp"
 
 namespace ngraph
@@ -269,6 +270,11 @@ namespace ngraph
             {
                 return a.m_type == m_type && a.m_axis == m_axis;
             }
+
+            NGRAPH_API
+            static const AutoBroadcastSpec NUMPY;
+            NGRAPH_API
+            static const AutoBroadcastSpec NONE;
         };
     }
 }
