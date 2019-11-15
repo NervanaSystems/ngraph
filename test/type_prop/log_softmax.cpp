@@ -14,31 +14,29 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "gtest/gtest.h"
+#include "ngraph/ngraph.hpp"
+#include "util/type_prop.hpp"
 
-#include "core/node.hpp"
-#include "ngraph/node.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+TEST(type_prop, log_softmax)
 {
-    namespace onnx_import
+    const auto data = make_shared<op::Parameter>(element::f64, Shape{2, 2});
+    const auto axis = 2;
+    try
     {
-        namespace op
-        {
-            namespace set_1
-            {
-                NodeVector clip(const Node& node);
-
-            } // namespace set_1
-
-            namespace set_11
-            {
-                NodeVector clip(const Node& node);
-
-            } // namespace set_11
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+        const auto log_softmax = make_shared<op::LogSoftmax>(data, axis);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid axis value not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Parameter axis "));
+    }
+    catch (...)
+    {
+        FAIL() << "Log softmax failed for unexpected reason";
+    }
+}
