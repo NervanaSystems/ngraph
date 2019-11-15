@@ -21,8 +21,6 @@
 #include "ngraph/serializer.hpp"
 #include "util/test_tools.hpp"
 
-#include "ngraph/op/util/opset1.hpp"
-
 #include <memory>
 using namespace std;
 using namespace ngraph;

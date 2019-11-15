@@ -69,7 +69,6 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
-    opset0.cpp
     opset1.cpp
     opset_pass/broadcast_opset_pass.cpp
     opset_pass/convolution_opset_pass.cpp

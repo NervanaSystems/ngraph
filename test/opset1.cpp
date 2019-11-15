@@ -17,7 +17,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph/op/util/opset1.hpp"
+#include "ngraph/opsets/opset1.hpp"
 
 #include <memory>
 using namespace std;
