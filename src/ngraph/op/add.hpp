@@ -52,7 +52,7 @@ namespace ngraph
                     const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
                 std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
-
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual bool is_commutative() const override { return true; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -90,7 +90,7 @@ namespace ngraph
                         AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 
                 std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
-
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual bool is_commutative() const override { return true; }
                 size_t get_version() const override { return 1; }
             protected:

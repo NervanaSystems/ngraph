@@ -434,6 +434,13 @@ static element::Type read_element_type(json j)
     return element::Type(bitwidth, is_real, is_signed, is_quantized, c_type_string);
 }
 
+static op::LSTMWeightsFormat read_lstm_weights_format(const json& js)
+{
+    return has_key(js, "weights_format")
+               ? static_cast<op::LSTMWeightsFormat>(js.at("weights_format"))
+               : op::LSTMWeightsFormat::IFCO;
+}
+
 void ngraph::serialize(const string& path, shared_ptr<ngraph::Function> func, size_t indent)
 {
     ofstream out(path);
@@ -1835,24 +1842,60 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::LSTMCell:
         {
             auto hidden_size = node_js.at("hidden_size").get<size_t>();
+            auto weights_format = read_lstm_weights_format(node_js);
             auto clip = node_js.at("clip").get<float>();
             auto activations = node_js.at("activations").get<vector<string>>();
-            auto activation_alpha = node_js.at("activation_alpha").get<vector<float>>();
-            auto activation_beta = node_js.at("activation_beta").get<vector<float>>();
+            auto activations_alpha = node_js.at("activations_alpha").get<vector<float>>();
+            auto activations_beta = node_js.at("activations_beta").get<vector<float>>();
             auto input_forget = node_js.at("input_forget").get<bool>();
-            node = make_shared<op::LSTMCell>(args[0],
-                                             args[1],
-                                             args[2],
-                                             args[3],
-                                             args[4],
-                                             hidden_size,
-                                             args[5],
-                                             args[6],
-                                             activations,
-                                             activation_alpha,
-                                             activation_beta,
-                                             clip,
-                                             input_forget);
+            if (args.size() == 7)
+            {
+                node = make_shared<op::LSTMCell>(args[0],
+                                                 args[1],
+                                                 args[2],
+                                                 args[3],
+                                                 args[4],
+                                                 args[5],
+                                                 args[6],
+                                                 hidden_size,
+                                                 weights_format,
+                                                 activations,
+                                                 activations_alpha,
+                                                 activations_beta,
+                                                 clip,
+                                                 input_forget);
+            }
+            if (args.size() == 6)
+            {
+                node = make_shared<op::LSTMCell>(args[0],
+                                                 args[1],
+                                                 args[2],
+                                                 args[3],
+                                                 args[4],
+                                                 args[5],
+                                                 hidden_size,
+                                                 weights_format,
+                                                 activations,
+                                                 activations_alpha,
+                                                 activations_beta,
+                                                 clip,
+                                                 input_forget);
+            }
+            else
+            {
+                node = make_shared<op::LSTMCell>(args[0],
+                                                 args[1],
+                                                 args[2],
+                                                 args[3],
+                                                 args[4],
+                                                 hidden_size,
+                                                 weights_format,
+                                                 activations,
+                                                 activations_alpha,
+                                                 activations_beta,
+                                                 clip,
+                                                 input_forget);
+            }
             break;
         }
         case OP_TYPEID::LSTMSequence:
@@ -1864,6 +1907,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto activations_beta = node_js.at("activations_beta").get<vector<float>>();
             auto input_forget = node_js.at("input_forget").get<bool>();
             auto direction = node_js.at("direction").get<op::LSTMSequence::direction>();
+            auto weights_format = read_lstm_weights_format(node_js);
             if (args.size() == 8)
             {
                 node = make_shared<op::LSTMSequence>(args[0],
@@ -1876,6 +1920,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                      args[7],
                                                      hidden_size,
                                                      direction,
+                                                     weights_format,
                                                      activations_alpha,
                                                      activations_beta,
                                                      activations,
@@ -1893,6 +1938,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                      args[6],
                                                      hidden_size,
                                                      direction,
+                                                     weights_format,
                                                      activations_alpha,
                                                      activations_beta,
                                                      activations,
@@ -2400,8 +2446,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                             args[1],
                                             args[2],
                                             args[3],
-                                            hidden_size,
                                             args[4],
+                                            hidden_size,
                                             activations,
                                             activation_alpha,
                                             activation_beta,
@@ -3425,8 +3471,8 @@ json JSONSerializer::serialize_node(const Node& n)
         node["hidden_size"] = tmp->get_hidden_size();
         node["clip"] = tmp->get_clip();
         node["activations"] = tmp->get_activations();
-        node["activation_alpha"] = tmp->get_activation_alpha();
-        node["activation_beta"] = tmp->get_activation_beta();
+        node["activations_alpha"] = tmp->get_activations_alpha();
+        node["activations_beta"] = tmp->get_activations_beta();
         node["linear_before_reset"] = tmp->get_linear_before_reset();
         break;
     }
@@ -3565,10 +3611,11 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = static_cast<const op::LSTMCell*>(&n);
         node["hidden_size"] = tmp->get_hidden_size();
+        node["weights_format"] = tmp->get_weights_format();
         node["clip"] = tmp->get_clip();
         node["activations"] = tmp->get_activations();
-        node["activation_alpha"] = tmp->get_activation_alpha();
-        node["activation_beta"] = tmp->get_activation_beta();
+        node["activations_alpha"] = tmp->get_activations_alpha();
+        node["activations_beta"] = tmp->get_activations_beta();
         node["input_forget"] = tmp->get_input_forget();
         break;
     }
@@ -3577,6 +3624,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::LSTMSequence*>(&n);
         node["direction"] = tmp->get_direction();
         node["hidden_size"] = tmp->get_hidden_size();
+        node["weights_format"] = tmp->get_weights_format();
         node["clip_threshold"] = tmp->get_clip_threshold();
         node["activations"] = tmp->get_activations();
         node["activations_alpha"] = tmp->get_activations_alpha();
@@ -3949,8 +3997,8 @@ json JSONSerializer::serialize_node(const Node& n)
         node["hidden_size"] = tmp->get_hidden_size();
         node["clip"] = tmp->get_clip();
         node["activations"] = tmp->get_activations();
-        node["activation_alpha"] = tmp->get_activation_alpha();
-        node["activation_beta"] = tmp->get_activation_beta();
+        node["activations_alpha"] = tmp->get_activations_alpha();
+        node["activations_beta"] = tmp->get_activations_beta();
         break;
     }
     case OP_TYPEID::ScalarConstantLike:

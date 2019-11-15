@@ -37,6 +37,28 @@ op::MatMul::MatMul(const Output<Node>& A,
     constructor_validate_and_infer_types();
 }
 
+void op::MatMul::pre_validate_and_infer_types()
+{
+    element::Type result_et;
+    NODE_VALIDATION_CHECK(
+        this,
+        element::Type::merge(result_et, get_input_element_type(0), get_input_element_type(1)),
+        "Arguments do not have the same element type (arg0 element type: ",
+        get_input_element_type(0),
+        ", arg1 element type: ",
+        get_input_element_type(1),
+        ").");
+
+    const Rank& A_rank = get_input_partial_shape(0).rank();
+    const Rank& B_rank = get_input_partial_shape(1).rank();
+
+    if (A_rank.is_static() && B_rank.is_static())
+    {
+        Rank max_rank = int64_t(A_rank) > int64_t(B_rank) ? A_rank : B_rank;
+        set_output_type(0, result_et, PartialShape::dynamic(max_rank));
+    }
+}
+
 NodeVector op::MatMul::decompose_op() const
 {
     auto A = input_value(0);
