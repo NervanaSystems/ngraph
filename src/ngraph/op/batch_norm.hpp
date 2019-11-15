@@ -43,6 +43,8 @@ namespace ngraph
                               const Output<Node>& beta,
                               double epsilon);
 
+            bool visit_attributes(AttributeVisitor& visitor) override;
+
             NGRAPH_DEPRECATED_DOC
             /// In this version of BatchNorm:
             ///
@@ -107,6 +109,8 @@ namespace ngraph
                                const Output<Node>& mean,
                                const Output<Node>& variance,
                                double epsilon);
+
+            bool visit_attributes(AttributeVisitor& visitor) override;
 
             NGRAPH_DEPRECATED_DOC
             /// In this version of BatchNorm:
@@ -184,6 +188,7 @@ namespace ngraph
                                       const Output<Node>& delta);
 
             void validate_and_infer_types() override;
+            bool visit_attributes(AttributeVisitor& visitor) override;
 
             double get_eps_value() const { return m_epsilon; }
             void set_eps_value(double epsilon) { m_epsilon = epsilon; }
