@@ -613,7 +613,11 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
     case OP_TYPEID::Softmax:
     {
         auto tmp = as_type_ptr<op::v1::Softmax>(node);
-        const AxisSet& axes{tmp->get_axis()};
+        auto axis = tmp->get_axis();
+        auto data = node->input(0);
+        auto data_shape = data.get_shape();
+        std::vector<size_t> axes(data_shape.size() - axis);
+        std::iota(std::begin(axes), std::end(axes), axis);
         auto replacement_node =
             make_shared<op::v0::Softmax>(node->input(0).get_source_output(), axes);
         replace_node(node, replacement_node);
