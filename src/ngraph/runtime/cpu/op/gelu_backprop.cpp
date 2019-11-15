@@ -22,7 +22,7 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::GeluBackprop::type_info;
 
 op::GeluBackprop::GeluBackprop(const Output<ngraph::Node>& arg, const Output<ngraph::Node>& delta)
-    : BinaryElementwiseArithmetic(arg, delta)
+    : BinaryElementwiseArithmetic(arg, delta, AutoBroadcastSpec::NONE)
 {
     constructor_validate_and_infer_types();
     set_output_size(1);

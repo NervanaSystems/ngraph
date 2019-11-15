@@ -34,13 +34,31 @@ namespace ngraph
                            const Shape& out_shape,
                            const AxisSet& broadcast_axes)
             {
-                CoordinateTransform input_transform(in_shape);
+                // Remove all broadcast axes from in_shape
+                Shape adjusted_in_shape;
+                for (auto length : in_shape)
+                {
+                    if (length != 1)
+                    {
+                        adjusted_in_shape.push_back(length);
+                    }
+                }
+                // Remove 1s from out_shape
+                AxisSet adjusted_axes(broadcast_axes);
+                for (uint64_t axis = 0; axis < out_shape.size(); ++axis)
+                {
+                    auto length = out_shape.at(axis);
+                    if (length == 1)
+                    {
+                        adjusted_axes.insert(axis);
+                    }
+                }
+                CoordinateTransform input_transform(adjusted_in_shape);
                 CoordinateTransform output_transform(out_shape);
 
                 for (const Coordinate& output_coord : output_transform)
                 {
-                    Coordinate input_coord = reduce(output_coord, broadcast_axes);
-
+                    Coordinate input_coord = reduce(output_coord, adjusted_axes);
                     out[output_transform.index(output_coord)] =
                         arg[input_transform.index(input_coord)];
                 }
