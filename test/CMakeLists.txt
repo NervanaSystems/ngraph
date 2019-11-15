@@ -105,6 +105,7 @@ set(SRC
     type_prop/any.cpp
     type_prop/avg_pool.cpp
     type_prop/batch_mat_mul.cpp
+    type_prop/batch_mat_mul_transpose.cpp
     type_prop/batch_norm.cpp
     type_prop/binary_elementwise.cpp
     type_prop/broadcast.cpp
