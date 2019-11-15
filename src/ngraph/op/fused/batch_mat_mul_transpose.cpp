@@ -44,15 +44,16 @@ op::BatchMatMulTranspose::BatchMatMulTranspose(const Output<Node>& arg0,
 NodeVector op::BatchMatMulTranspose::decompose_op() const
 {
     const PartialShape& arg0_pshape = get_input_partial_shape(0);
-    if (arg0_pshape.is_dynamic())
-    {
-        throw ngraph_error("Arg0 needs to have static shape to decompose");
-    }
     const PartialShape& arg1_pshape = get_input_partial_shape(1);
-    if (arg1_pshape.is_dynamic())
-    {
-        throw ngraph_error("Arg1 needs to have static shape to decompose");
-    }
+    NODE_VALIDATION_CHECK(this,
+                          !arg0_pshape.is_dynamic(),
+                          "Arg0 needs to have static shape to decompose, but got shape ",
+                          arg0_pshape);
+
+    NODE_VALIDATION_CHECK(this,
+                          !arg1_pshape.is_dynamic(),
+                          "Arg1 needs to have static shape to decompose, but got shape ",
+                          arg1_pshape);
 
     const auto arg0_shape = get_input_shape(0);
     const auto num_batches = arg0_shape.at(0);
