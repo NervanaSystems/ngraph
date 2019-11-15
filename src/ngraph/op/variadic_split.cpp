@@ -14,6 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <numeric>
+
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/variadic_split.hpp"
 
 using namespace std;
@@ -40,12 +43,50 @@ void ngraph::op::v1::VariadicSplit::validate_and_infer_types()
     if (split_lengths_pshape_rank.is_static())
     {
         auto num_outputs = static_cast<size_t>(split_lengths_pshape_rank);
-        auto data_type = get_input_element_type(0);
+        auto data = input_value(0);
+        auto axis_input = input_value(1).get_node_shared_ptr();
+        auto split_lengths_input = input_value(2).get_node_shared_ptr();
+        auto data_shape = data.get_partial_shape();
+        auto data_type = data.get_element_type();
 
         set_output_size(num_outputs);
-        for (size_t output{0}; output < num_outputs; ++output)
+        if (data_shape.is_static() && axis_input->is_constant() &&
+            split_lengths_input->is_constant())
         {
-            set_output_type(output, data_type, PartialShape::dynamic());
+            auto axis = as_type_ptr<op::Constant>(axis_input)->get_vector<size_t>()[0];
+            auto split_lengths = as_type_ptr<op::Constant>(axis_input)->get_vector<size_t>();
+
+            auto splits_length = std::accumulate(split_lengths.begin(), split_lengths.end(), 0UL);
+
+            NODE_VALIDATION_CHECK(this, axis > 0, "Provided axis:", axis, " can not be negative");
+            auto data_rank = static_cast<size_t>(data_shape.rank());
+            NODE_VALIDATION_CHECK(this,
+                                  axis < data_rank,
+                                  "Provided axis:",
+                                  axis,
+                                  " can not be higher than input data rank: ",
+                                  data_rank);
+
+            NODE_VALIDATION_CHECK(this,
+                                  splits_length == static_cast<size_t>(data_shape[axis]),
+                                  "Total length of splits:",
+                                  splits_length,
+                                  " does not sum to length of the choosen axis: ",
+                                  static_cast<size_t>(data_shape[axis]));
+
+            for (size_t output{0}; output < num_outputs; ++output)
+            {
+                auto tmp_shape = data_shape.to_shape();
+                tmp_shape.at(axis) = split_lengths.at(axis);
+                set_output_type(output, data_type, tmp_shape);
+            }
+        }
+        else
+        {
+            for (size_t output{0}; output < num_outputs; ++output)
+            {
+                set_output_type(output, data_type, PartialShape::dynamic());
+            }
         }
     }
 }
