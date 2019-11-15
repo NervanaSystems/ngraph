@@ -14,12 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
 #include <memory>
 
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/fused/log_softmax.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -29,7 +29,15 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector log_softmax(const Node& node);
+                NodeVector log_softmax(const Node& node)
+                {
+                    NodeVector inputs{node.get_ng_inputs()};
+                    auto data = inputs.at(0);
+                    auto data_shape = data->get_shape();
+                    int axis = node.get_attribute_value<int64_t>("axis", 1);
+
+                    return {std::make_shared<ngraph::op::LogSoftmax>(data, axis)};
+                }
 
             } // namespace set_1
 
