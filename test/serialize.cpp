@@ -760,3 +760,25 @@ TEST(serialize, depth_to_space)
     EXPECT_EQ(depth_to_space_out->get_block_size(), block_size);
     EXPECT_EQ(depth_to_space_out->get_mode(), mode);
 }
+
+TEST(serialize, space_to_depth)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{4, 6, 8});
+    auto mode = op::SpaceToDepth::SpaceToDepthMode::BLOCKS_FIRST;
+    size_t block_size = 2;
+    auto space_to_depth_in = make_shared<op::SpaceToDepth>(arg, mode, block_size);
+
+    auto result = make_shared<op::Result>(space_to_depth_in);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_space_to_depth = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto depth_to_space_out = as_type_ptr<op::SpaceToDepth>(g_space_to_depth);
+
+    EXPECT_EQ(depth_to_space_out->description(), "SpaceToDepth");
+    EXPECT_EQ(depth_to_space_out->get_version(), 0);
+    EXPECT_EQ(depth_to_space_out->get_block_size(), block_size);
+    EXPECT_EQ(depth_to_space_out->get_mode(), mode);
+}
