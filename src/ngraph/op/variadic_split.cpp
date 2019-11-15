@@ -29,6 +29,13 @@ op::v1::VariadicSplit::VariadicSplit(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
+void ngraph::op::v1::VariadicSplit::validate_and_infer_types()
+{
+    set_input_is_relevant_to_value(0);
+    set_input_is_relevant_to_value(1);
+    set_input_is_relevant_to_value(2);
+}
+
 shared_ptr<Node> op::v1::VariadicSplit::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
