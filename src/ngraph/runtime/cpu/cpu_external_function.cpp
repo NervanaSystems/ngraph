@@ -56,6 +56,7 @@
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
+#include "ngraph/op/atan2.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
@@ -368,6 +369,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::ArgMax), &runtime::cpu::CPU_Emitter::emit<op::ArgMax>},
     {TI(ngraph::op::Acos), &runtime::cpu::CPU_Emitter::emit<op::Acos>},
     {TI(ngraph::op::Atan), &runtime::cpu::CPU_Emitter::emit<op::Atan>},
+    {TI(ngraph::op::Atan2), &runtime::cpu::CPU_Emitter::emit<op::Atan2>},
     {TI(ngraph::op::ReplaceSlice), &runtime::cpu::CPU_Emitter::emit<op::ReplaceSlice>},
     {TI(ngraph::op::UpdateSlice), &runtime::cpu::CPU_Emitter::emit<op::UpdateSlice>},
     {TI(ngraph::op::OneHot), &runtime::cpu::CPU_Emitter::emit<op::OneHot>},
@@ -1208,7 +1210,8 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         else if (typeid(ngraph::op::GeluBackpropFactor) == typeid(node))
         {
 #if MKLDNN_VERSION_MAJOR < 1
-            return ((node.input(0).get_element_type() == element::f32) ? true : false);
+            // TODO: (gauri): need to differentiate which implementation : erf vs tanh
+            return false;
 #else
             // TODO: will be supported in mkldnn v1.1
             return false;
@@ -1217,7 +1220,8 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         else if (typeid(ngraph::op::Gelu) == typeid(node))
         {
 #if MKLDNN_VERSION_MAJOR < 1
-            return ((node.input(0).get_element_type() == element::f32) ? true : false);
+            // TODO: (gauri): need to differentiate which implementation : erf vs tanh
+            return false;
 #else
             // TODO: will be supported in mkldnn v1.1
             return false;

@@ -22,7 +22,9 @@
 #include <vector>
 
 #include "exceptions.hpp"
+#include "ngraph/builder/split.hpp"
 #include "ngraph/frontend/onnx_import/op/lstm.hpp"
+#include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/lstm_sequence.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -82,17 +84,19 @@ namespace ngraph
                             m_map[LSTMInput::LSTM_INPUT_W]->get_shape().front();
 
                         // ------ Optional inputs ------
-                        // The bias tensor for input gate. Shape [num_directions, 8*hidden_size]
+                        // The bias tensor for input gate. Shape [num_directions, 4*hidden_size]
                         if (ng_inputs.size() > 3 && !ng_inputs.at(3)->is_null())
                         {
-                            m_map[LSTMInput::LSTM_INPUT_B] = ng_inputs.at(3);
+                            auto bias = ng_inputs.at(3);
+                            auto split_bias = builder::split(bias, 2, 1);
+                            m_map[LSTMInput::LSTM_INPUT_B] = split_bias.at(0) + split_bias.at(1);
                         }
                         else
                         {
                             m_map[LSTMInput::LSTM_INPUT_B] = ngraph::op::Constant::create(
                                 element::f32,
-                                Shape{num_directions, 2 * gates_count * hidden_size},
-                                std::vector<float>(num_directions * 2 * gates_count * hidden_size,
+                                Shape{num_directions, gates_count * hidden_size},
+                                std::vector<float>(num_directions * gates_count * hidden_size,
                                                    0.f));
                         }
                         // The lengths of the sequences in a batch. Shape [batch_size]
@@ -224,6 +228,7 @@ namespace ngraph
                         input_map.at(LSTMInput::LSTM_INPUT_P),
                         attributes.m_hidden_size,
                         attributes.m_direction,
+                        ngraph::op::LSTMWeightsFormat::IOFC,
                         attributes.m_activation_alpha,
                         attributes.m_activation_beta,
                         attributes.m_activations,

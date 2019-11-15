@@ -80,7 +80,7 @@ TEST(opset_transform, opset1_convolution_downgrade_pass)
 
 TEST(opset_transform, opset1_convolution_backprop_data_downgrade_pass)
 {
-    Shape data_batch_shape{64, 3, 100};
+    auto data_batch_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {64, 3, 100});
     auto filters = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});
     auto delta = make_shared<op::Parameter>(element::f32, Shape{64, 128, 96});
     auto strides = Strides{1};
@@ -89,7 +89,7 @@ TEST(opset_transform, opset1_convolution_backprop_data_downgrade_pass)
     auto padding_end = CoordinateDiff{3};
 
     auto conv = make_shared<op::v1::ConvolutionBackpropData>(
-        data_batch_shape, filters, delta, strides, dilations, padding_begin, padding_end);
+        filters, delta, data_batch_shape, strides, dilations, padding_begin, padding_end);
     auto result = make_shared<op::Result>(conv);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{filters, delta});
 
@@ -103,7 +103,7 @@ TEST(opset_transform, opset1_convolution_backprop_data_downgrade_pass)
 
     EXPECT_EQ(conv_v0_node->description(), "ConvolutionBackpropData");
     EXPECT_EQ(conv_v0_node->get_version(), 0);
-    EXPECT_EQ(conv_v0_node->get_data_batch_shape(), data_batch_shape);
+    EXPECT_EQ(conv_v0_node->get_data_batch_shape(), (Shape{64, 3, 100}));
     EXPECT_EQ(conv_v0_node->get_window_movement_strides_forward(), strides);
     EXPECT_EQ(conv_v0_node->get_window_dilation_strides_forward(), dilations);
     EXPECT_EQ(conv_v0_node->get_padding_below_forward(), padding_begin);
@@ -113,7 +113,7 @@ TEST(opset_transform, opset1_convolution_backprop_data_downgrade_pass)
 
 TEST(opset_transform, opset1_convolution_backprop_filters_downgrade_pass)
 {
-    Shape filters_shape{128, 3, 10};
+    auto filters_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {128, 3, 10});
     auto data = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});
     auto delta = make_shared<op::Parameter>(element::f32, Shape{64, 128, 96});
     auto strides = Strides{1};
@@ -121,7 +121,7 @@ TEST(opset_transform, opset1_convolution_backprop_filters_downgrade_pass)
     auto padding_begin = CoordinateDiff{2};
     auto padding_end = CoordinateDiff{3};
     auto conv = make_shared<op::v1::ConvolutionBackpropFilters>(
-        data, filters_shape, delta, strides, dilations, padding_begin, padding_end);
+        data, delta, filters_shape, strides, dilations, padding_begin, padding_end);
     auto result = make_shared<op::Result>(conv);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data, delta});
 
@@ -135,7 +135,7 @@ TEST(opset_transform, opset1_convolution_backprop_filters_downgrade_pass)
 
     EXPECT_EQ(conv_v0_node->description(), "ConvolutionBackpropFilters");
     EXPECT_EQ(conv_v0_node->get_version(), 0);
-    EXPECT_EQ(conv_v0_node->get_filters_shape(), filters_shape);
+    EXPECT_EQ(conv_v0_node->get_filters_shape(), (Shape{128, 3, 10}));
     EXPECT_EQ(conv_v0_node->get_window_movement_strides_forward(), strides);
     EXPECT_EQ(conv_v0_node->get_window_dilation_strides_forward(), dilations);
     EXPECT_EQ(conv_v0_node->get_padding_below_forward(), padding_begin);

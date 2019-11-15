@@ -35,17 +35,33 @@ namespace ngraph
         class DepthToSpace : public ngraph::op::util::FusedOp
         {
         public:
+            enum class DepthToSpaceMode
+            {
+                // The input depth is divided to [block_size, ..., block_size, new_depth]
+                BLOCKS_FIRST,
+                // The input depth is divided to [new_depth, block_size, ..., block_size]
+                DEPTH_FIRST
+            };
+
             NGRAPH_API
             static constexpr NodeTypeInfo type_info{"DepthToSpace", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             DepthToSpace() = default;
             /// \brief Constructs a DepthToSpace operation.
             ///
-            /// \param data - Node producing the input tensor
-            /// \param block_size - the size of the block of values to be moved
-            DepthToSpace(const Output<Node>& data, std::size_t block_size);
+            /// \param data Node producing the input tensor
+            /// \param mode Specifies how the input depth dimension is split to block coordinates
+            /// \param block_size The size of the block of values to be moved
+            DepthToSpace(const Output<Node>& data,
+                         const DepthToSpaceMode& mode,
+                         std::size_t block_size = 1);
+
+            DepthToSpace(const Output<Node>& data,
+                         const std::string& mode,
+                         std::size_t block_size = 1);
 
             std::size_t get_block_size() const { return m_blocksize; }
+            DepthToSpaceMode get_mode() const { return m_mode; }
             virtual NodeVector decompose_op() const override;
 
             virtual std::shared_ptr<Node>
@@ -53,6 +69,8 @@ namespace ngraph
 
         protected:
             std::size_t m_blocksize;
+            DepthToSpaceMode m_mode;
+            DepthToSpaceMode mode_from_string(const std::string& mode) const;
         };
     }
 }

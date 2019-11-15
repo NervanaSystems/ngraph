@@ -45,6 +45,8 @@ namespace ngraph
                                   const Output<Node>& beta,
                                   double epsilon);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
                 NGRAPH_DEPRECATED_DOC
                 /// In this version of BatchNorm:
                 ///
@@ -111,6 +113,8 @@ namespace ngraph
                                    const Output<Node>& variance,
                                    double epsilon);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
                 NGRAPH_DEPRECATED_DOC
                 /// In this version of BatchNorm:
                 ///
@@ -176,6 +180,8 @@ namespace ngraph
                                           const Output<Node>& variance,
                                           const Output<Node>& delta,
                                           double epsilon);
+
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 NGRAPH_DEPRECATED_DOC
                 NGRAPH_DEPRECATED("Use another constructor")
