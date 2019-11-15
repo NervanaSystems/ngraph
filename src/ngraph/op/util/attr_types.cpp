@@ -110,10 +110,10 @@ namespace ngraph
     EnumNames<op::TopKSortType>& EnumNames<op::TopKSortType>::get()
     {
         static auto enum_names =
-            EnumNames<op::EpsMode>("op::TopKSortType",
-                                   {{"NONE", op::TopKSortType::NONE},
-                                    {"SORT_INDICES", op::TopKSortType::SORT_INDICES},
-                                    {"SORT_VALUES", op::TopKSortType::SORT_VALUES}});
+            EnumNames<op::TopKSortType>("op::TopKSortType",
+                                        {{"NONE", op::TopKSortType::NONE},
+                                         {"SORT_INDICES", op::TopKSortType::SORT_INDICES},
+                                         {"SORT_VALUES", op::TopKSortType::SORT_VALUES}});
         return enum_names;
     }
 
