@@ -34,6 +34,20 @@ void ngraph::op::v1::VariadicSplit::validate_and_infer_types()
     set_input_is_relevant_to_value(0);
     set_input_is_relevant_to_value(1);
     set_input_is_relevant_to_value(2);
+
+    auto split_lengths_pshape_rank = get_input_partial_shape(2).rank();
+
+    if (split_lengths_pshape_rank.is_static())
+    {
+        auto num_outputs = static_cast<size_t>(split_lengths_pshape_rank);
+        auto data_type = get_input_element_type(0);
+
+        set_output_size(num_outputs);
+        for (size_t output{0}; output < num_outputs; ++output)
+        {
+            set_output_type(output, data_type, PartialShape::dynamic());
+        }
+    }
 }
 
 shared_ptr<Node> op::v1::VariadicSplit::copy_with_new_args(const NodeVector& new_args) const
