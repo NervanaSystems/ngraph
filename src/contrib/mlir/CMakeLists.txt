@@ -77,7 +77,9 @@ function(whole_archive_link target)
     set_target_properties(${target} PROPERTIES LINK_FLAGS ${link_flags})
 endfunction(whole_archive_link)
 
-set(LIBS ${LLVM_BUILD_LIBRARY_DIR}/libMLIRAffineOps.a ${LLVM_BUILD_LIBRARY_DIR}/libMLIRStandardOps.a)
+set(LIBS
+    ${LLVM_BUILD_LIBRARY_DIR}/libMLIRAffineOps.a
+    ${LLVM_BUILD_LIBRARY_DIR}/libMLIRStandardOps.a)
 whole_archive_link(mlir_backend ${LIBS})
 # Link LLVM libs
 target_link_libraries(
