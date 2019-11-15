@@ -2595,7 +2595,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::SpaceToDepth:
         {
             auto block_size = node_js.at("block_size").get<size_t>();
-            node = make_shared<op::SpaceToDepth>(args[0], block_size);
+            auto mode = node_js.at("mode").get<op::SpaceToDepth::SpaceToDepthMode>();
+            node = make_shared<op::SpaceToDepth>(args[0], mode, block_size);
             break;
         }
         case OP_TYPEID::Split:
@@ -4069,6 +4070,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = static_cast<const op::SpaceToDepth*>(&n);
         node["type"] = write_element_type(tmp->get_element_type());
+        node["mode"] = tmp->get_mode();
         node["block_size"] = tmp->get_block_size();
         break;
     }
