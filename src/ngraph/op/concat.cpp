@@ -36,6 +36,12 @@ op::Concat::Concat(const NodeVector& args, int64_t axis)
 {
 }
 
+bool op::Concat::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("axis", m_axis);
+    return true;
+}
+
 void op::Concat::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this, get_input_size() >= 1, "At least one argument required.");

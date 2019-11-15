@@ -26,7 +26,7 @@ op::util::IndexReduction::IndexReduction()
 }
 
 op::util::IndexReduction::IndexReduction(const Output<Node>& arg,
-                                         size_t axis,
+                                         uint64_t axis,
                                          const element::Type& index_element_type)
     : Op({arg})
 {
@@ -35,7 +35,7 @@ op::util::IndexReduction::IndexReduction(const Output<Node>& arg,
 }
 
 op::util::IndexReduction::IndexReduction(const std::shared_ptr<Node>& arg,
-                                         size_t axis,
+                                         uint64_t axis,
                                          const element::Type& index_element_type)
     : Op(check_single_output_args({arg}))
 {
@@ -45,7 +45,7 @@ op::util::IndexReduction::IndexReduction(const std::shared_ptr<Node>& arg,
 
 op::util::IndexReduction::IndexReduction(const std::string& node_type,
                                          const std::shared_ptr<Node>& arg,
-                                         size_t axis,
+                                         uint64_t axis,
                                          const element::Type& index_element_type)
     : Op(node_type, check_single_output_args({arg}))
 {
@@ -53,11 +53,11 @@ op::util::IndexReduction::IndexReduction(const std::string& node_type,
     set_index_element_type(index_element_type);
 }
 
-size_t op::util::IndexReduction::get_reduction_axis() const
+uint64_t op::util::IndexReduction::get_reduction_axis() const
 {
     return m_axis;
 }
-void op::util::IndexReduction::set_reduction_axis(size_t value)
+void op::util::IndexReduction::set_reduction_axis(uint64_t value)
 {
     m_axis = value;
 }
@@ -124,4 +124,11 @@ void op::util::IndexReduction::generate_adjoints(autodiff::Adjoints& /* adjoints
                                                  const NodeVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
+}
+
+bool op::util::IndexReduction::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("axis", m_axis);
+    visitor.on_attribute("index_element_type", m_index_element_type);
+    return true;
 }
