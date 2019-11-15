@@ -29,6 +29,12 @@ op::v1::LogicalAnd::LogicalAnd(const Output<Node>& arg0,
     constructor_validate_and_infer_types();
 }
 
+bool op::v1::LogicalAnd::visit_attributes(AttributeVisitor& visitor)
+{
+    BinaryElementwiseLogical::visit_attributes(visitor);
+    return true;
+}
+
 shared_ptr<Node> op::v1::LogicalAnd::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
@@ -43,6 +49,12 @@ op::v0::And::And(const Output<Node>& arg0,
     : BinaryElementwiseLogical(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::v0::And::visit_attributes(AttributeVisitor& visitor)
+{
+    BinaryElementwiseLogical::visit_attributes(visitor);
+    return true;
 }
 
 shared_ptr<Node> op::v0::And::copy_with_new_args(const NodeVector& new_args) const

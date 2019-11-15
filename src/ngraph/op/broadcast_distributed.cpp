@@ -21,11 +21,17 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::BroadcastDistributed::type_info;
 
-op::BroadcastDistributed::BroadcastDistributed(const Output<Node>& arg, int root_id)
+op::BroadcastDistributed::BroadcastDistributed(const Output<Node>& arg, int64_t root_id)
     : Op({arg})
     , m_root_id(root_id)
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::BroadcastDistributed::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("root_id", m_root_id);
+    return true;
 }
 
 void op::BroadcastDistributed::validate_and_infer_types()
@@ -47,12 +53,12 @@ shared_ptr<Node> op::BroadcastDistributed::copy_with_new_args(const NodeVector& 
     return make_shared<BroadcastDistributed>(new_args.at(0), m_root_id);
 }
 
-int op::BroadcastDistributed::get_root_id() const
+int64_t op::BroadcastDistributed::get_root_id() const
 {
     return m_root_id;
 }
 
-void op::BroadcastDistributed::set_root_id(int root_id)
+void op::BroadcastDistributed::set_root_id(int64_t root_id)
 {
     m_root_id = root_id;
 }
