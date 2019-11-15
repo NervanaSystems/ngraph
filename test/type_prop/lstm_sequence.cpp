@@ -28,7 +28,7 @@ TEST(type_prop, lstm_sequence)
     const auto R = make_shared<op::Parameter>(element::f32, Shape{1, 12, 3});
     const auto initial_hidden_state = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     const auto initial_cell_state = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{1, 24});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{1, 12});
     const auto sequence_lengths = make_shared<op::Parameter>(element::i32, Shape{2});
     const auto hidden_size = 3;
 
@@ -41,6 +41,20 @@ TEST(type_prop, lstm_sequence)
                                                              B,
                                                              hidden_size,
                                                              op::LSTMSequence::direction::FORWARD);
+    EXPECT_EQ(lstm_sequence->get_hidden_size(), hidden_size);
+    EXPECT_EQ(lstm_sequence->get_direction(), op::LSTMSequence::direction::FORWARD);
+    EXPECT_EQ(lstm_sequence->get_weights_format(), op::LSTMWeightsFormat::IFCO);
+    EXPECT_TRUE(lstm_sequence->get_activations_alpha().empty());
+    EXPECT_TRUE(lstm_sequence->get_activations_beta().empty());
+    EXPECT_EQ(lstm_sequence->get_activations()[0], "sigmoid");
+    EXPECT_EQ(lstm_sequence->get_activations()[1], "tanh");
+    EXPECT_EQ(lstm_sequence->get_activations()[2], "tanh");
+    EXPECT_EQ(lstm_sequence->get_clip_threshold(), 0.f);
+    EXPECT_FALSE(lstm_sequence->get_input_forget());
     EXPECT_EQ(lstm_sequence->output(0).get_element_type(), element::f32);
     EXPECT_EQ(lstm_sequence->output(0).get_shape(), (Shape{1, 1, 2, 3}));
+    EXPECT_EQ(lstm_sequence->output(1).get_element_type(), element::f32);
+    EXPECT_EQ(lstm_sequence->output(1).get_shape(), (Shape{1, 2, 3}));
+    EXPECT_EQ(lstm_sequence->output(2).get_element_type(), element::f32);
+    EXPECT_EQ(lstm_sequence->output(2).get_shape(), (Shape{1, 2, 3}));
 }
