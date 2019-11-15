@@ -310,7 +310,7 @@ def scale_shift(data, scale, shift, name=None):  # type: (Node, Node, Node, str)
 
 
 @nameable_op
-def space_to_depth(data, block_size, name=None):  # type: (Node, int, str) -> Node
+def space_to_depth(data, mode, block_size, name=None):  # type: (Node, str, int, str) -> Node
     """Perform SpaceToDepth operation on the input tensor.
 
     SpaceToDepth rearranges blocks of spatial data into depth.
@@ -318,11 +318,16 @@ def space_to_depth(data, block_size, name=None):  # type: (Node, int, str) -> No
     and width dimensions are moved to the depth dimension.
 
     :param data: The node with data tensor.
+    :param mode: Specifies how the output depth dimension is gathered from block coordinates.
+
+                 blocks_first: The output depth is gathered from [block_size, ..., block_size, C]
+                 depth_first: The output depth is gathered from [C, block_size, ..., block_size]
+
     :param block_size: The size of the block of values to be moved. Scalar value.
     :param name: Optional output node name.
     :return: The new node performing a SpaceToDepth operation on input tensor.
     """
-    return SpaceToDepth(data, block_size)
+    return SpaceToDepth(data, mode, block_size)
 
 
 @nameable_op
