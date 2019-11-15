@@ -96,7 +96,7 @@ void op::v0::Softmax::validate_and_infer_types()
             for (auto axis : m_axes)
             {
                 NODE_VALIDATION_CHECK(this,
-                                      axis >= 0 && axis < static_cast<size_t>(input_shape.rank()),
+                                      axis < static_cast<size_t>(input_shape.rank()),
                                       "Reduction axis (",
                                       axis,
                                       ") is out of bounds (argument shape: ",
