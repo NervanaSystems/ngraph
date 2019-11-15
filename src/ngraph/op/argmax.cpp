@@ -28,6 +28,12 @@ op::ArgMax::ArgMax(const Output<Node>& arg, size_t axis, const element::Type& in
     constructor_validate_and_infer_types();
 }
 
+bool op::ArgMax::visit_attributes(AttributeVisitor& visitor)
+{
+    IndexReduction::visit_attributes(visitor);
+    return true;
+}
+
 shared_ptr<Node> op::ArgMax::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
