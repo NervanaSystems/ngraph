@@ -22,9 +22,5 @@ lrn_across_nw
 lrn_across_empty
 lrn_6D_across_2_axes
 
-# Gelu tests not supported in CPU backend, we use mkldnn gelubackprop (and not factor)
-gelu_backprop_factor_f32
-backwards_gelu_f32
-
 # ONNX TopK with dynamic K
 top_k_opset_10

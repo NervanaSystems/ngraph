@@ -215,6 +215,34 @@ namespace ngraph
 
     namespace op
     {
+        enum class TopKSortType
+        {
+            // Returned values are not sorted
+            NONE,
+            // Sort result based on element indices
+            SORT_INDICES,
+            // Sort result based on element values
+            SORT_VALUES,
+        };
+        std::ostream& operator<<(std::ostream& s, const TopKSortType& type);
+    }
+
+    template <>
+    class AttributeAdapter<op::TopKSortType> : public EnumAttributeAdapterBase<op::TopKSortType>
+    {
+    public:
+        AttributeAdapter(op::TopKSortType& value)
+            : EnumAttributeAdapterBase<op::TopKSortType>(value)
+        {
+        }
+
+        NGRAPH_API
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::TopKSortType>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
+
+    namespace op
+    {
         /// \brief Implicit broadcast specification
         struct AutoBroadcastSpec
         {

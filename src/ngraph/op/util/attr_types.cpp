@@ -105,4 +105,22 @@ namespace ngraph
     {
         return s << as_string(type);
     }
+
+    template <>
+    EnumNames<op::TopKSortType>& EnumNames<op::TopKSortType>::get()
+    {
+        static auto enum_names =
+            EnumNames<op::EpsMode>("op::TopKSortType",
+                                   {{"NONE", op::TopKSortType::NONE},
+                                    {"SORT_INDICES", op::TopKSortType::SORT_INDICES},
+                                    {"SORT_VALUES", op::TopKSortType::SORT_VALUES}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::TopKSortType>::type_info;
+
+    std::ostream& op::operator<<(std::ostream& s, const op::TopKSortType& type)
+    {
+        return s << as_string(type);
+    }
 }
