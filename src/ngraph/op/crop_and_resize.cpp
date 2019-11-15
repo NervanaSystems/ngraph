@@ -138,7 +138,10 @@ void op::CropAndResize::validate_and_infer_types()
     else if (crop_size_et == element::u64)
     {
         auto v = crop_size_const->get_vector<uint64_t>();
-        set_output_type(0, image_et, {num_boxes, v[0], v[1], image_depth});
+        set_output_type(
+            0,
+            image_et,
+            {num_boxes, static_cast<int64_t>(v[0]), static_cast<int64_t>(v[1]), image_depth});
     }
     else
     {
