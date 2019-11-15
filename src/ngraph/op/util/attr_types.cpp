@@ -19,6 +19,9 @@
 
 using namespace ngraph;
 
+const op::AutoBroadcastSpec op::AutoBroadcastSpec::NUMPY(AutoBroadcastType::NUMPY, 0);
+const op::AutoBroadcastSpec op::AutoBroadcastSpec::NONE{AutoBroadcastType::NONE, 0};
+
 namespace ngraph
 {
     template <>

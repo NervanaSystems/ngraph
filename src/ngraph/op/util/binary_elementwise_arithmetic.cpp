@@ -19,7 +19,8 @@
 using namespace std;
 using namespace ngraph;
 
-op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic()
+op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(const AutoBroadcastSpec& autob)
+    : m_autob(autob)
 {
 }
 
