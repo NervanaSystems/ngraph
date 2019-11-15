@@ -110,4 +110,10 @@ namespace ngraph
                            std::int64_t tensor_rank,
                            std::int64_t axis_range_min,
                            std::int64_t axis_range_max);
+
+    int64_t normalize_axis(const std::string& node_description,
+                           std::int64_t axis,
+                           std::int64_t tensor_rank,
+                           std::int64_t axis_range_min,
+                           std::int64_t axis_range_max);
 }
