@@ -2595,7 +2595,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::SpaceToDepth:
         {
             auto block_size = node_js.at("block_size").get<size_t>();
-            node = make_shared<op::SpaceToDepth>(args[0], block_size);
+            auto mode = node_js.at("mode").get<op::SpaceToDepth::SpaceToDepthMode>();
+            node = make_shared<op::SpaceToDepth>(args[0], mode, block_size);
             break;
         }
         case OP_TYPEID::Split:
@@ -2612,7 +2613,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::SquaredDifference:
         {
-            node = make_shared<op::SquaredDifference>(args[0], args[1]);
+            node = make_shared<op::SquaredDifference>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Squeeze:
@@ -4068,6 +4070,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = static_cast<const op::SpaceToDepth*>(&n);
         node["type"] = write_element_type(tmp->get_element_type());
+        node["mode"] = tmp->get_mode();
         node["block_size"] = tmp->get_block_size();
         break;
     }
@@ -4080,7 +4083,14 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Sqrt: { break;
     }
-    case OP_TYPEID::SquaredDifference: { break;
+    case OP_TYPEID::SquaredDifference:
+    {
+        auto tmp = static_cast<const op::SquaredDifference*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::Squeeze: { break;
     }
