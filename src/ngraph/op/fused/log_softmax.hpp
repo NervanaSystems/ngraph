@@ -16,39 +16,36 @@
 
 #pragma once
 
-#include <memory>
-
-#include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise inverse sine (arcsin) operation.
-        ///
-        class Asin : public util::UnaryElementwiseArithmetic
+        /// \brief LogSoftmax operation
+        class LogSoftmax : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Asin", 0};
+            static constexpr NodeTypeInfo type_info{"LogSoftmax", 0};
+            LogSoftmax() = default;
             const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs an arcsin operation.
-            Asin() = default;
-            /// \brief Constructs an arcsin operation.
+            /// \brief Constructs a LogSoftmax node.
             ///
-            /// \param arg Output that produces the input tensor.<br>
-            /// `[d1, ...]`
-            ///
-            /// Output `[d1, ...]`
-            ///
-            Asin(const Output<Node>& arg);
+            /// \param data Node that produces the first input tensor
+            /// \param axis Describes the axis of the inputs when coerced to 2D
+            LogSoftmax(const Output<Node>& data, int64_t axis);
+
+            virtual NodeVector decompose_op() const override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
-            bool visit_attributes(AttributeVisitor& visitor) override { return true; }
+
+            int64_t get_axis() const { return m_axis; }
         protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+            int64_t m_axis;
         };
-    }
-}
+    } // namespace op
+} // namespace ngraph

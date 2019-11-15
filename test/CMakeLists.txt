@@ -46,6 +46,7 @@ set(SRC
     aligned_buffer.cpp
     all_close_f.cpp
     assertion.cpp
+    attributes.cpp
     bfloat16.cpp
     build_graph.cpp
     builder_autobroadcast.cpp
@@ -138,6 +139,7 @@ set(SRC
     type_prop/hard_sigmoid.cpp
     type_prop/index_reduction.cpp
     type_prop/layer_norm.cpp
+    type_prop/log_softmax.cpp
     type_prop/lrn.cpp
     type_prop/lstm_cell.cpp
     type_prop/lstm_sequence.cpp

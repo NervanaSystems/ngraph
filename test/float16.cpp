@@ -90,8 +90,20 @@ TEST(float16, assigns)
 
 TEST(float16, values)
 {
-    std::vector<double> f32vec{2.73786e-05, 3.87722e-05, -0.0223043};
-    std::vector<uint16_t> intvals = {459, 650, 42422};
+    std::vector<double> f32vec{2.73786e-05,
+                               3.87722e-05,
+                               -0.0223043,
+                               5.10779e-05,
+                               -5.10779e-05,
+                               -2.553895e-05,
+                               -0.0001021558,
+                               5.960464477539063e-08,
+                               8.940696716308594e-08,
+                               65536.0,
+                               65519.0,
+                               65520.0};
+    std::vector<uint16_t> intvals = {
+        459, 650, 42422, 857, 0x8359, 0x81ac, 0x86b2, 0x01, 0x02, 0x7c00, 0x7bff, 0x7c00};
     for (size_t i = 0; i < f32vec.size(); ++i)
     {
         float16 fp16val = f32vec.at(i);
