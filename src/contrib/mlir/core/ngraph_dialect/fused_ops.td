@@ -287,12 +287,15 @@ def NGMatMul :
 }
 
 // LSTM Cell Op
+// 
 def NGLSTMCellOp : 
     NG_OneResult_Op<"lstmCell", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$X, NG_TensorType:$W, NG_TensorType:$R,
                NG_TensorType:$H_t, NG_TensorType:$C_t,
-               NG_TensorType:$B, NG_TensorType:$P,
+               Variadic<NG_TensorType>:$optionalArgs, 
                I64Attr:$hiddenSize,
+               DefaultValuedAttr<LSTMWeightsFormatEnumAttr, 
+                                 "static_cast<int64_t>(MLIRLSTMWeightsFormat::IFCO)">:$weightFormat,
                DefaultValuedAttr<StrArrayAttr, "{\"sigmoid\",\"tanh\",\"tanh\"}">:$activations,
                DefaultValuedAttr<F32ArrayAttr, "{}">:$activationAlpha,
                DefaultValuedAttr<F32ArrayAttr, "{}">:$activationBeta,
@@ -302,10 +305,46 @@ def NGLSTMCellOp :
   let summary = "LSTM Cell";
   let description = [{
     LSTM Cell
+    X    The input tensor with shape: [batch_size,
+            
+    H_t  The hidden state tensor at current time step with shape: [batch_size, hidden_size].
+    
+    C_t  The cell state tensor at current time step with shape: [batch_size, hidden_size].
+    
+    W    The weight tensor with shape: [4*hidden_size, input_size].
+    
+    R    The recurrence weight tensor with shape: [4*hidden_size, hidden_size].
+        
+    B    [Optional] The bias tensor for gates with shape: [4*hidden_size].
+    
+    P    [Optional] The weight tensor for peepholes with shape: 
+                    [3*hidden_size] - 3 equals to only iof gates.
+                    The order is: input, output, forget gates.
+    
+    hiddenSize    The number of hidden units for recurrent cell.
+    
+    weightsFormat The order of gates in weights tensors. 
+                  The default format is IFCO since it is used by DNNL.
+    
+    activations   The vector of activation functions used inside
+                  recurrent cell.
+    
+    activationsAlpha  The vector of alpha parameters for activation
+                      functions in order respective to activation list.
+    
+    activationsBeta   The vector of beta parameters for activation
+                      functions in order respective to activation list.
+    
+    clip              The value defining clipping range [-clip, clip] on
+                      input of activation functions.
+    
+    inputForget       Controls coupling input and forget gates.
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return mlir::success(); /* TBD */ }];  
+  let verifier = [{ 
+    return mlir::success(); /* TBD */ 
+  }];  
 
   let builders = [
     OpBuilder<
@@ -336,6 +375,24 @@ def NGLSTMCellOp :
   ];
 
   let extraClassDeclaration = [{
+    // get bias operand if present
+    Value* B() 
+    { 
+      auto varArgs = optionalArgs();
+      return varArgs.begin() != varArgs.end() ? *varArgs.begin() : nullptr;
+    }
+    // get peephole weights operand if present
+    Value* P() 
+    { 
+      auto varArgs = optionalArgs();
+      auto it = varArgs.begin();
+      it = std::next(it);
+      if (it == varArgs.end())
+        return nullptr;
+      it = std::next(it);
+      return it == varArgs.end() ? *it : nullptr;
+    }
+
     void setHiddenSize  (const Attribute& attr)       { this->setAttr("hiddenSize", attr); }
     void setActivations (const ArrayAttr& attr)       { this->setAttr("activation", attr); }
     void setActivationsAlpha (const ArrayAttr& attr)  { this->setAttr("activatiAlpha", attr); }
@@ -454,7 +511,7 @@ def NGLayerNormOp :
 }
 
 
-// LayerNormBackProp Op
+// LayerNormBackprop Op
 def NGLayerNormBackpropOp : 
     NG_Op<"layernormBackprop", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Results<(outs NG_TensorType:$d_data, NG_TensorType:$d_scale, NG_TensorType:$d_bias)>,
@@ -775,7 +832,8 @@ def NGFakeQuantOp :
 // DepthToSpace Op
 def NGDepthToSpaceOp : 
     NG_OneResult_Op<"depthToSpace", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
-    Arguments<(ins NG_TensorType:$data, I64Attr:$blockSize)>
+    Arguments<(ins NG_TensorType:$data, I64Attr:$blockSize, 
+               DepthToSpaceModeEnumAttr:$mode)>
 {
   let summary = "DepthToSpace Op";
   let description = [{
@@ -788,7 +846,8 @@ def NGDepthToSpaceOp :
   }];
 
   let extraClassDeclaration = [{
-    void setBlockSize(const Attribute& attr) { this->setAttr("blockSize", attr); }
+    void setBlockSize(const Attribute& attr) { this->setAttr("blockSize", attr);}
+    void setMode(const Attribute& attr)      { this->setAttr("mode", attr);     } 
   }];
 }
 
@@ -829,12 +888,16 @@ def NGConvBiasOp :
 
 // ConvBiasBackpropFiltersBias Op
 def NGConvBiasBackpropFiltersBias :
-    NG_OneResult_Op<"convBiasBackPropFiltersBias", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_Op<"convBiasBackpropFiltersBias", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    Results<(outs NG_TensorType:$filter, NG_TensorType:$bias)>, 
     Arguments<(ins NG_TensorType:$images, NG_TensorType:$outputDelta,
-               I64ArrayAttr:$biasShape, I64ArrayAttr:$strides, 
-               I64ArrayAttr:$padBelow, I64ArrayAttr:$padAbove)>
+               I64ArrayAttr:$filtersShape, I64ArrayAttr:$biasShape,
+               I64ArrayAttr:$strides, I64ArrayAttr:$padBelow, I64ArrayAttr:$padAbove)>
 {
   let extraClassDeclaration = [{
+    void setFiltersShape(const ArrayAttr& attr) { this->setAttr("filtersShape", attr); }
+    void setBiasShape(const ArrayAttr& attr)    { this->setAttr("biasShape", attr);    }
+
     void setStrides(const ArrayAttr& attr)  { this->setAttr("strides", attr);  }
     void setPadAbove(const ArrayAttr& attr) { this->setAttr("padAbove", attr); }
     void setPadBelow(const ArrayAttr& attr) { this->setAttr("padBelow", attr); }

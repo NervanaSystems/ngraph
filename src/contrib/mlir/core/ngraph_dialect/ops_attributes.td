@@ -87,4 +87,24 @@ def AutoBroadcastEnumAttr   : I32EnumAttr<"MLIRAutoBroadcastMode",
                                           [AutoBroadcastNone, AutoBroadcastExplicit,
                                            AutoBroadcastNumPy, AutoBroadcastPDPD]>;
 
+
+def DepthToSpaceModeBlocks  : I32EnumAttrCase<"BLOCKS_FIRST", 0>;
+def DepthToSpaceModeDepth   : I32EnumAttrCase<"DEPTH_FIRST",  1>;
+
+def DepthToSpaceModeEnumAttr: I32EnumAttr<"MLIRDepthToSpaceMode", 
+                                          "Specifies how the input depth dimension is split to block coordinates",
+                                          [DepthToSpaceModeBlocks, DepthToSpaceModeDepth]>;
+
+def LSTMWeightsFormatFICO   : I32EnumAttrCase<"FICO", 0>;   // IE
+def LSTMWeightsFormatICOF   : I32EnumAttrCase<"ICOF", 1>;   // PyTorch
+def LSTMWeightsFormatIFCO   : I32EnumAttrCase<"IFCO", 2>;   // DNNL, TF, MxNet
+def LSTMWeightsFormatIFOC   : I32EnumAttrCase<"IFOC", 3>;   // Caffe
+def LSTMWeightsFormatIOFC   : I32EnumAttrCase<"IOFC", 4>;   // ONNX
+
+def LSTMWeightsFormatEnumAttr: I32EnumAttr<"MLIRLSTMWeightsFormat", 
+                                            "LSTM Cell Weights Format",
+                                            [LSTMWeightsFormatFICO, LSTMWeightsFormatICOF, 
+                                             LSTMWeightsFormatIFCO, LSTMWeightsFormatIFOC,
+                                             LSTMWeightsFormatIOFC]>;
+        
 #endif // NG_OP_ATTRIBUTES

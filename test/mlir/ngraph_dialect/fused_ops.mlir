@@ -67,10 +67,6 @@ func @scaleShift(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>, %arg2: 
   "ng.return"(%0) : (!ng.tensor<2x2xf32>) -> ()
 }
 
-// RNNCell : TODO
-// LSTMCell : TODO
-// GRUCell : TODO
-
 // -----
 
 // CHECK-LABEL: func @prelu
@@ -219,6 +215,7 @@ func @elu(%arg0: !ng.tensor<4x4xf32>) -> !ng.tensor<4x4xf32>
 }
 
 // -----
+
 //CHECK-LABEL: func @fakeQuant
 func @fakeQuant(%arg0: !ng.tensor<1x2x3x4xf32>, %arg1: !ng.tensor<1xf32>,
                 %arg2: !ng.tensor<1xf32>, %arg3: !ng.tensor<1xf32>, %arg4: !ng.tensor<1xf32>) -> !ng.tensor<1x2x3x4xf32>
@@ -227,3 +224,67 @@ func @fakeQuant(%arg0: !ng.tensor<1x2x3x4xf32>, %arg1: !ng.tensor<1xf32>,
   %0 = "ng.fakeQuant"(%arg0, %arg1, %arg2, %arg3, %arg4) {levels = 4 : i64} : (!ng.tensor<1x2x3x4xf32>, !ng.tensor<1xf32>, !ng.tensor<1xf32>, !ng.tensor<1xf32>, !ng.tensor<1xf32>) -> !ng.tensor<1x2x3x4xf32>
   "ng.return"(%0) : (!ng.tensor<1x2x3x4xf32>) -> ()
 }
+
+// -----
+
+//CHECK-LABEL: func @depthToSpace
+func @depthToSpace(%arg0: !ng.tensor<1x8x2x2xf32>) -> !ng.tensor<1x2x4x4xf32>
+{
+  //CHECK: %{{[0-9]+}} = "ng.depthToSpace"(%{{.*}}) {blockSize = 2 : i64, mode = 0 : i32} : (!ng.tensor<1x8x2x2xf32>) -> !ng.tensor<1x2x4x4xf32>
+  %0 = "ng.depthToSpace"(%arg0) {blockSize = 2 : i64, mode = 0 : i32} : (!ng.tensor<1x8x2x2xf32>) -> !ng.tensor<1x2x4x4xf32>
+  "ng.return"(%0) : (!ng.tensor<1x2x4x4xf32>) -> ()
+}
+
+// -----
+
+//CHECK-LABEL: func @convBias
+func @convBias(%arg0: !ng.tensor<1x3x2xf32>, %arg1: !ng.tensor<2x3x1xf32>, %arg2: !ng.tensor<2xf32>) -> (!ng.tensor<1x2x2xf32>)
+{
+  //CHECK: %{{[0-9]+}} = "ng.convBias"(%{{.*}}, %{{.*}}, %{{.*}}) {padAbove = [0], padBelow = [0], strides = [1]} : (!ng.tensor<1x3x2xf32>, !ng.tensor<2x3x1xf32>, !ng.tensor<2xf32>) -> !ng.tensor<1x2x2xf32>
+  %0 = "ng.convBias"(%arg0, %arg1, %arg2) {padAbove=[0], padBelow=[0], strides=[1]} : (!ng.tensor<1x3x2xf32>, !ng.tensor<2x3x1xf32>, !ng.tensor<2xf32>) -> !ng.tensor<1x2x2xf32>
+  "ng.return"(%0) : (!ng.tensor<1x2x2xf32>) -> ()
+}
+
+// -----
+
+//CHECK-LABEL: func @convBiasBackprop
+func @convBiasBackprop(%arg0: !ng.tensor<1x3x2x2xf32>, %arg1: !ng.tensor<1x2x2x2xf32>) -> (!ng.tensor<12x3x1x1xf32>)
+{
+  //CHECK: %{{[0-9]+}}:2 = "ng.convBiasBackpropFiltersBias"(%{{.*}}, %{{.*}}) {biasShape = [2], filtersShape = [2, 3, 1, 1], padAbove = [0], padBelow = [0], strides = [1]} : (!ng.tensor<1x3x2x2xf32>, !ng.tensor<1x2x2x2xf32>) -> (!ng.tensor<2x3x1x1xf32>, !ng.tensor<2xf32>)
+  
+  %0:2 = "ng.convBiasBackpropFiltersBias"(%arg0, %arg1) {biasShape=[2], filtersShape=[2, 3, 1, 1], padAbove=[0], padBelow=[0], strides=[1]} : (!ng.tensor<1x3x2x2xf32>, !ng.tensor<1x2x2x2xf32>) -> (!ng.tensor<2x3x1x1xf32>, !ng.tensor<2xf32>)
+  "ng.return"(%0#0) : (!ng.tensor<2x3x1x1xf32>) -> ()
+}
+
+// -----
+
+//CHECK-LABEL: func @convBiasAdd
+func @convBiasAdd(%arg0: !ng.tensor<1x3x2x2xf32>, %arg1: !ng.tensor<2x3x1x1xf32>, %arg2: !ng.tensor<2xf32>, %arg3: !ng.tensor<1x2x2x2xf32>) -> !ng.tensor<1x2x2x2xf32>
+{
+  // CHECK: %{{[0-9]+}} = "ng.convBiasAdd"(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) {padAbove = [0, 0], padBelow = [0, 0], strides = [1, 1]} : (!ng.tensor<1x3x2x2xf32>, !ng.tensor<2x3x1x1xf32>, !ng.tensor<2xf32>, !ng.tensor<1x2x2x2xf32>) -> !ng.tensor<1x2x2x2xf32>
+  %0 = "ng.convBiasAdd" (%arg0, %arg1, %arg2, %arg3) {padAbove=[0, 0], padBelow=[0, 0], strides=[1, 1]} : (!ng.tensor<1x3x2x2xf32>, !ng.tensor<2x3x1x1xf32>, !ng.tensor<2xf32>, !ng.tensor<1x2x2x2xf32>) -> !ng.tensor<1x2x2x2xf32>
+  "ng.return"(%0) : (!ng.tensor<1x2x2x2xf32>) -> ()
+}
+
+// -----
+
+//CHECK-LABEL: func @rnnCell
+func @rnnCell(%arg0: !ng.tensor<2x3xf32>, %arg1: !ng.tensor<2x3xf32>, %arg2: !ng.tensor<2x3xf32>, %arg3: !ng.tensor<3x3xf32>) -> !ng.tensor<2x3xf32>
+{
+  // CHECK: %{{[0-9]+}} = "ng.rnnCell"(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) {hiddenSize = 3 : i64} : (!ng.tensor<2x3xf32>, !ng.tensor<2x3xf32>, !ng.tensor<2x3xf32>, !ng.tensor<3x3xf32>) -> !ng.tensor<2x3xf32>
+  %0 = "ng.rnnCell" (%arg0, %arg1, %arg2, %arg3) {hiddenSize = 3 : i64} : (!ng.tensor<2x3xf32>, !ng.tensor<2x3xf32>, !ng.tensor<2x3xf32>, !ng.tensor<3x3xf32>) -> !ng.tensor<2x3xf32>
+  "ng.return" (%0) : (!ng.tensor<2x3xf32>)->()
+
+}
+
+// -----
+
+//CHECK-LABEL: func @lstmCell
+func @lstmCell(%arg0: !ng.tensor<2x3xf32>, %arg1: !ng.tensor<2x3xf32>, %arg2: !ng.tensor<2x3xf32>, %arg3: !ng.tensor<12x3xf32>, %arg4: !ng.tensor<12x3xf32>) -> !ng.tensor<2x3xf32>
+{
+  // CHECK: %{{[0-9]+}} = "ng.lstmCell"(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) {hiddenSize = 3 : i64} : (!ng.tensor<2x3xf32>, !ng.tensor<2x3xf32>, !ng.tensor<2x3xf32>, !ng.tensor<12x3xf32>, !ng.tensor<12x3xf32>) -> !ng.tensor<2x3xf32>
+  %0 = "ng.lstmCell" (%arg0, %arg1, %arg2, %arg3, %arg4) {hiddenSize = 3 : i64} : (!ng.tensor<2x3xf32>, !ng.tensor<2x3xf32>, !ng.tensor<2x3xf32>, !ng.tensor<12x3xf32>, !ng.tensor<12x3xf32>) -> !ng.tensor<2x3xf32>
+  "ng.return" (%0) : (!ng.tensor<2x3xf32>)->()
+}
+
+// GRUCell : TODO
