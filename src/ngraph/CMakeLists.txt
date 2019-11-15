@@ -16,6 +16,9 @@
 
 set (SRC
     assertion.hpp
+    attribute_adapter.cpp
+    attribute_adapter.hpp
+    attribute_visitor.hpp
     autodiff/adjoints.cpp
     autodiff/adjoints.hpp
     axis_set.cpp
@@ -77,12 +80,17 @@ set (SRC
     dimension.hpp
     distributed.cpp
     distributed.hpp
+    enum_names.hpp
     except.hpp
+    factory.cpp
+    factory.hpp
     file_util.cpp
     file_util.hpp
     function.cpp
     function.hpp
     graph_util.cpp
+    lambda.cpp
+    lambda.hpp
     log.cpp
     log.hpp
     ngraph.cpp
@@ -112,6 +120,8 @@ set (SRC
     op/asin.hpp
     op/atan.cpp
     op/atan.hpp
+    op/atan2.cpp
+    op/atan2.hpp
     op/avg_pool.cpp
     op/avg_pool.hpp
     op/batch_norm.cpp
@@ -315,6 +325,8 @@ set (SRC
     op/tan.hpp
     op/tanh.cpp
     op/tanh.hpp
+    op/tensor_iterator.cpp
+    op/tensor_iterator.hpp
     op/topk.cpp
     op/topk.hpp
     op/xor.cpp
@@ -549,6 +561,7 @@ set (SRC
     type/float16.cpp
     type/float16.hpp
     type/element_type.cpp
+    type.hpp
     util.cpp
     util.hpp
     validation_util.cpp

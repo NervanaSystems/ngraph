@@ -43,6 +43,8 @@ namespace ngraph
                    const bool& transpose_a = 0,
                    const bool& transpose_b = 0);
 
+            virtual void pre_validate_and_infer_types() override;
+
             virtual NodeVector decompose_op() const override;
 
             virtual std::shared_ptr<Node>

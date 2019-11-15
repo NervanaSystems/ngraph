@@ -58,21 +58,47 @@ NodeVector op::LSTMSequence::decompose_op() const
 shared_ptr<Node> op::LSTMSequence::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<LSTMSequence>(new_args.at(0), // X
-                                     new_args.at(1), // initial_hidden_state
-                                     new_args.at(2), // initial_cell_state
-                                     new_args.at(3), // sequence_lengths
-                                     new_args.at(4), // W
-                                     new_args.at(5), // R
-                                     new_args.at(6), // B
-                                     new_args.at(7), // P
-                                     m_hidden_size,
-                                     m_direction,
-                                     m_activations_alpha,
-                                     m_activations_beta,
-                                     m_activations,
-                                     m_clip_threshold,
-                                     m_input_forget);
+    if (new_args.size() == 8)
+    {
+        return make_shared<LSTMSequence>(new_args.at(0), // X
+                                         new_args.at(1), // initial_hidden_state
+                                         new_args.at(2), // initial_cell_state
+                                         new_args.at(3), // sequence_lengths
+                                         new_args.at(4), // W
+                                         new_args.at(5), // R
+                                         new_args.at(6), // B
+                                         new_args.at(7), // P
+                                         m_hidden_size,
+                                         m_direction,
+                                         m_weights_format,
+                                         m_activations_alpha,
+                                         m_activations_beta,
+                                         m_activations,
+                                         m_clip_threshold,
+                                         m_input_forget);
+    }
+    else if (new_args.size() == 7)
+    {
+        return make_shared<LSTMSequence>(new_args.at(0), // X
+                                         new_args.at(1), // initial_hidden_state
+                                         new_args.at(2), // initial_cell_state
+                                         new_args.at(3), // sequence_lengths
+                                         new_args.at(4), // W
+                                         new_args.at(5), // R
+                                         new_args.at(6), // B
+                                         m_hidden_size,
+                                         m_direction,
+                                         m_weights_format,
+                                         m_activations_alpha,
+                                         m_activations_beta,
+                                         m_activations,
+                                         m_clip_threshold,
+                                         m_input_forget);
+    }
+    else
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
 }
 
 shared_ptr<Node> op::LSTMSequence::get_masked_node(const shared_ptr<Node>& data,
@@ -157,13 +183,14 @@ NodeVector op::LSTMSequence::lstm_pass(bool is_reverse) const
     for (const auto& in_x : in_seqs)
     {
         shared_ptr<Node> lstm_cell = make_shared<op::LSTMCell>(in_x,
-                                                               W,
-                                                               R,
                                                                H_t,
                                                                C_t,
-                                                               m_hidden_size,
+                                                               W,
+                                                               R,
                                                                B,
                                                                P,
+                                                               m_hidden_size,
+                                                               m_weights_format,
                                                                m_activations,
                                                                m_activations_alpha,
                                                                m_activations_beta,

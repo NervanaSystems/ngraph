@@ -61,6 +61,8 @@ namespace ngraph
 /// \brief Convenience functions that create addional graph nodes to implement commonly-used
 ///        recipes, for example auto-broadcast.
 
+#include "ngraph/attribute_adapter.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/dequantize_builder.hpp"
 #include "ngraph/builder/numpy_transpose.hpp"
@@ -80,7 +82,9 @@ namespace ngraph
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/dimension.hpp"
 #include "ngraph/except.hpp"
+#include "ngraph/factory.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/lambda.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
@@ -93,6 +97,7 @@ namespace ngraph
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
+#include "ngraph/op/atan2.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/binary_convolution.hpp"
@@ -209,6 +214,7 @@ namespace ngraph
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/op/tensor_iterator.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/xor.hpp"
@@ -218,4 +224,5 @@ namespace ngraph
 #include "ngraph/shape.hpp"
 #include "ngraph/shape_util.hpp"
 #include "ngraph/specialize_function.hpp"
+#include "ngraph/type.hpp"
 #include "ngraph/type/element_type.hpp"

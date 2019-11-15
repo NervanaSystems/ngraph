@@ -32,15 +32,7 @@ namespace ngraph
             class TopK : public Op
             {
             public:
-                enum class SortType
-                {
-                    // Returned values are not sorted
-                    NONE,
-                    // Sort result based on element indices
-                    SORT_INDICES,
-                    // Sort result based on element values
-                    SORT_VALUES,
-                };
+                using SortType = TopKSortType;
 
                 NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"TopK", 0};
@@ -125,12 +117,7 @@ namespace ngraph
             class TopK : public Op
             {
             public:
-                enum class SortType
-                {
-                    NONE,
-                    SORT_INDICES,
-                    SORT_VALUES,
-                };
+                using SortType = TopKSortType;
 
                 enum class Mode
                 {

@@ -50,6 +50,7 @@ namespace ngraph
     template <typename NodeType>
     class Output;
 
+    class AttributeVisitor;
     class Variant;
     class Node;
     using NodeVector = std::vector<std::shared_ptr<Node>>;
@@ -61,7 +62,10 @@ namespace ngraph
     {
         struct AutoBroadcastSpec;
         class Constant;
+        class Result;
     } // namespace op
+
+    using ResultVector = std::vector<std::shared_ptr<op::Result>>;
 
     namespace autodiff
     {
@@ -80,6 +84,8 @@ namespace ngraph
 
     OutputVector as_output_vector(const NodeVector& args);
     NodeVector as_node_vector(const OutputVector& values);
+    /// Returns a ResultVector referencing values.
+    ResultVector as_result_vector(const OutputVector& values);
 
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
@@ -105,13 +111,14 @@ namespace ngraph
         template <typename NodeType>
         friend class Output;
 
-    protected:
+    public:
         /// Throws if the node is invalid.
         virtual void validate_and_infer_types();
 
         // Called in constructors during transition
         void constructor_validate_and_infer_types();
 
+    protected:
         std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args(
             const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec());
         void validate_and_infer_elementwise_arithmetic(
@@ -152,6 +159,7 @@ namespace ngraph
 
         virtual ~Node();
 
+        virtual bool visit_attributes(AttributeVisitor& visitor) { return false; }
         virtual bool is_unary_elementwise_arithmetic() const { return false; }
         virtual bool is_binary_elementwise_arithmetic() const { return false; }
         virtual bool is_binary_elementwise_comparison() const { return false; }
