@@ -275,6 +275,15 @@ namespace ngraph
                                       const double value,
                                       const std::vector<std::minstd_rand>& vmsr,
                                       const bool use_seed);
+
+                template <typename ElementType>
+                void reference_cumsum(void* arg,
+                                      void* out,
+                                      const Shape& in_shape,
+                                      const Shape& out_shape,
+                                      const int64_t axis,
+                                      const int exclusive,
+                                      const int reverse);
             }
         }
     }
