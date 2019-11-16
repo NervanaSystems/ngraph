@@ -41,21 +41,24 @@ void op::HardSigmoid::pre_validate_and_infer_types()
 {
     const auto& alpha_pshape = get_input_partial_shape(1);
     const auto& beta_pshape = get_input_partial_shape(2);
-    NODE_VALIDATION_CHECK(this,
-                          alpha_pshape.is_static() && beta_pshape.is_static(),
-                          "Both alpha and beta inputs must have static shapes.");
 
-    const Shape alpha_shape = alpha_pshape.to_shape();
+    if (alpha_pshape.is_static())
+    {
+        const auto alpha_shape = alpha_pshape.to_shape();
+        NODE_VALIDATION_CHECK(this,
+                              is_scalar(alpha_shape),
+                              "A scalar is expected for the 'alpha' input. Got: ",
+                              alpha_shape);
+    }
 
-    NODE_VALIDATION_CHECK(this,
-                          is_scalar(alpha_shape),
-                          "A scalar is expected for the alpha input. Got: ",
-                          alpha_shape);
-
-    const Shape beta_shape = beta_pshape.to_shape();
-
-    NODE_VALIDATION_CHECK(
-        this, is_scalar(beta_shape), "A scalar is expected for the beta input. Got: ", beta_shape);
+    if (beta_pshape.is_static())
+    {
+        const auto beta_shape = beta_pshape.to_shape();
+        NODE_VALIDATION_CHECK(this,
+                              is_scalar(beta_shape),
+                              "A scalar is expected for the 'beta' input. Got: ",
+                              beta_shape);
+    }
 
     const auto& data_et = input(0).get_element_type();
     const auto& alpha_et = input(1).get_element_type();
