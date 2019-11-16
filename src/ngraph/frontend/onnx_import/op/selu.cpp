@@ -45,7 +45,7 @@ namespace ngraph
                     auto gamma_node = std::make_shared<ngraph::op::Constant>(
                         data->get_element_type(), data->get_shape(), std::vector<double>{gamma});
 
-                    return {std::make_shared<ngraph::op::v1::Selu>(data, alpha_node, gamma_node)};
+                    return {std::make_shared<ngraph::op::v0::Selu>(data, alpha_node, gamma_node)};
                 }
 
             } // namespace set_1

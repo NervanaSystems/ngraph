@@ -23,33 +23,38 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief SpaceToDepth permutes input tensor blocks of spatial data into depth dimension.
-        ///
-        /// \note  Values from the height and width dimensions are moved to the depth dimension.
-        ///
-        ///        Output node produces a tensor with shape:
-        ///        [N, C * blocksize * blocksize, H / blocksize, W / blocksize]
-        class SpaceToDepth : public ngraph::op::util::FusedOp
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"SpaceToDepth", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            SpaceToDepth() = default;
-            /// \brief Constructs a SpaceToDepth operation.
+            /// \brief SpaceToDepth permutes input tensor blocks of spatial data into depth
+            /// dimension.
             ///
-            /// \param data - Node producing the input tensor
-            /// \param block_size - the size of the block of values to be moved
-            SpaceToDepth(const Output<Node>& data, std::size_t block_size);
+            /// \note  Values from the height and width dimensions are moved to the depth dimension.
+            ///
+            ///        Output node produces a tensor with shape:
+            ///        [N, C * blocksize * blocksize, H / blocksize, W / blocksize]
+            class SpaceToDepth : public ngraph::op::util::FusedOp
+            {
+            public:
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"SpaceToDepth", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                SpaceToDepth() = default;
+                /// \brief Constructs a SpaceToDepth operation.
+                ///
+                /// \param data - Node producing the input tensor
+                /// \param block_size - the size of the block of values to be moved
+                SpaceToDepth(const Output<Node>& data, std::size_t block_size);
 
-            std::size_t get_block_size() const { return m_blocksize; }
-            virtual NodeVector decompose_op() const override;
+                std::size_t get_block_size() const { return m_blocksize; }
+                virtual NodeVector decompose_op() const override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-        protected:
-            std::size_t m_blocksize;
-        };
+            protected:
+                std::size_t m_blocksize;
+            };
+        }
+        using v0::SpaceToDepth;
     }
 }
