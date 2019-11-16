@@ -44,12 +44,13 @@ NodeVector op::Softplus::decompose_op() const
     const auto zero_node = builder::make_constant(data.get_element_type(), data.get_shape(), 0.f);
     const auto one_node = builder::make_constant(data.get_element_type(), data.get_shape(), 1.f);
 
-    const auto positive_val_node =
-        data + std::make_shared<op::Log>(
-                   std::make_shared<op::Exp>(std::make_shared<op::Negative>(data)) + one_node);
+    const auto positive_val_node = std::make_shared<op::v1::Add>(
+        data,
+        std::make_shared<op::Log>(std::make_shared<op::v1::Add>(
+            std::make_shared<op::Exp>(std::make_shared<op::Negative>(data)), one_node)));
 
-    const auto negative_val_node =
-        std::make_shared<op::Log>(std::make_shared<op::Exp>(data) + one_node);
+    const auto negative_val_node = std::make_shared<op::Log>(
+        std::make_shared<op::v1::Add>(std::make_shared<op::Exp>(data), one_node));
 
     const auto condition_node = std::make_shared<op::Greater>(data, zero_node);
 
