@@ -52,7 +52,7 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/op/xor.hpp"
-#include "ngraph/pass/op_downgrade_v1tov0.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/slice_plan.hpp"
 
 #include <algorithm>
@@ -102,7 +102,7 @@ void downgrade_binary_elementwise_node(const shared_ptr<Node>& node)
     replace_node(node, replacement_node);
 }
 
-bool pass::OpDowngradeV1ToV0::run_on_node(shared_ptr<Node> node)
+bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 {
     bool modified = false;
 

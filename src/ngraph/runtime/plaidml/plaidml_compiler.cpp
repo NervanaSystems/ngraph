@@ -28,7 +28,7 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
-#include "ngraph/pass/op_downgrade_v1tov0.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
@@ -101,7 +101,7 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
         }
         return false;
     });
-    pass_manager.register_pass<ngraph::pass::OpDowngradeV1ToV0>();
+    pass_manager.register_pass<ngraph::pass::Opset0Downgrade>();
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();

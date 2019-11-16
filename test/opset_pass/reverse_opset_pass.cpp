@@ -19,8 +19,8 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/op_downgrade_v1tov0.hpp"
-#include "ngraph/pass/op_upgrade_v0tov1.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
+#include "ngraph/pass/opset1_upgrade.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;
@@ -36,7 +36,7 @@ TEST(opset_transform, opset1_reverse_upgrade_pass)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::OpUpgradeV0ToV1>();
+    pass_manager.register_pass<pass::Opset1Upgrade>();
     pass_manager.run_passes(f);
 
     const auto pass_replacement_node =
@@ -64,7 +64,7 @@ TEST(opset_transform, opset0_reverse_downgrade_pass_index_mode)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::OpDowngradeV1ToV0>();
+    pass_manager.register_pass<pass::Opset0Downgrade>();
     pass_manager.run_passes(f);
 
     const auto pass_replacement_node =
@@ -88,7 +88,7 @@ TEST(opset_transform, opset0_reverse_downgrade_pass_mask_mode)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::OpDowngradeV1ToV0>();
+    pass_manager.register_pass<pass::Opset0Downgrade>();
     pass_manager.run_passes(f);
 
     const auto pass_replacement_node =
@@ -110,11 +110,11 @@ TEST(opset_transform, opset0_reverse_downgrade_pass_axes_not_constant)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data, axes});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::OpDowngradeV1ToV0>();
+    pass_manager.register_pass<pass::Opset0Downgrade>();
     try
     {
         pass_manager.run_passes(f);
-        FAIL() << "Exception after OpDowngradeV1ToV0 pass was not thrown.";
+        FAIL() << "Exception after Opset0Downgrade pass was not thrown.";
     }
     catch (const ngraph_error& error)
     {
