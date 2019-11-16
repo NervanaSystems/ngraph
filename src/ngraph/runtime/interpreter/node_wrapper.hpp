@@ -36,15 +36,18 @@ namespace ngraph
 // Abs,
 // Acos,
 // ...
-#define NGRAPH_OP(a, b) a,
 enum class ngraph::runtime::interpreter::OP_TYPEID
 {
-#include "ngraph/op/op_tbl.hpp"
+#define NGRAPH_OP(a, b) a,
+#include "ngraph/op/op_v0_tbl.hpp"
 #ifdef INTERPRETER_USE_HYBRID
 #include "ngraph/runtime/hybrid/op/op_tbl.hpp"
 #endif
-};
 #undef NGRAPH_OP
+#define NGRAPH_OP(a, b) a##_v1,
+#include "ngraph/op/op_v1_tbl.hpp"
+#undef NGRAPH_OP
+};
 
 /// \brief This class allows adding an enum typeid to each Node. This makes dealing with
 /// collections of Nodes a little easier and faster as we can use switch() instead of

@@ -1500,7 +1500,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             break;
         }
         case OP_TYPEID::DynReshape:
-        case OP_TYPEID::DynReshape_v1:
+        case OP_TYPEID::Reshape_v1:
         {
             const auto zero_flag = node_js.at("zero_flag").get<bool>();
             if (op_version == 0)
@@ -2350,7 +2350,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             break;
         }
         case OP_TYPEID::Product:
-        case OP_TYPEID::Product_v1:
         case OP_TYPEID::ReduceProd_v1:
         {
             if (op_version == 0)
@@ -2483,7 +2482,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             break;
         }
         case OP_TYPEID::Reshape:
-        case OP_TYPEID::Reshape_v1:
         {
             auto input_order = node_js.at("input_order").get<vector<size_t>>();
             auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
@@ -2624,7 +2622,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             break;
         }
         case OP_TYPEID::Slice:
-        case OP_TYPEID::Slice_v1:
+        case OP_TYPEID::StridedSlice_v1:
         {
             if (op_version == 0)
             {
@@ -2723,8 +2721,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             node = make_shared<op::Squeeze>(args[0], args[1]);
             break;
-        }
-        case OP_TYPEID::StridedSlice_v1: { break;
         }
         case OP_TYPEID::Subtract:
         case OP_TYPEID::Subtract_v1:
@@ -3456,7 +3452,7 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::DynReshape:
-    case OP_TYPEID::DynReshape_v1:
+    case OP_TYPEID::Reshape_v1:
     {
         if (op_version == 0)
         {
@@ -4029,7 +4025,6 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::PRelu_v1: { break;
     }
     case OP_TYPEID::Product:
-    case OP_TYPEID::Product_v1:
     case OP_TYPEID::ReduceProd_v1:
     {
         if (op_version == 0)
@@ -4132,7 +4127,6 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Reshape:
-    case OP_TYPEID::Reshape_v1:
     {
         auto tmp = static_cast<const op::Reshape*>(&n);
         node["input_order"] = tmp->get_input_order();
@@ -4232,7 +4226,6 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Sinh_v1: { break;
     }
     case OP_TYPEID::Slice:
-    case OP_TYPEID::Slice_v1:
     case OP_TYPEID::StridedSlice_v1:
     {
         if (op_version == 0)

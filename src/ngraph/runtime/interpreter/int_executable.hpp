@@ -426,6 +426,11 @@ private:
                                    avg_pool->get_include_padding_in_avg_computation());
             break;
         }
+        case OP_TYPEID::BinaryConvolution_v1:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            break;
+        }
         case OP_TYPEID::GenerateMask:
         {
             bool use_seed = static_cast<bool>(args[2]->get_data_ptr<const int32_t>()[0]);
@@ -1011,11 +1016,55 @@ private:
                                   less_eq->get_autob());
             break;
         }
+        case OP_TYPEID::LessEqual_v1:
+        {
+            auto less_eq = static_cast<const op::v1::LessEqual*>(&node);
+            reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
+                                  args[1]->get_data_ptr<const T>(),
+                                  out[0]->get_data_ptr<char>(),
+                                  node.get_input_shape(0),
+                                  node.get_input_shape(1),
+                                  less_eq->get_autob());
+            break;
+        }
         case OP_TYPEID::Log:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::log<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
+        }
+        case OP_TYPEID::LogicalAnd_v1:
+        {
+            auto logical_and = static_cast<const op::v1::LogicalAnd*>(&node);
+            reference::logical_and(args[0]->get_data_ptr<const T>(),
+                                   args[1]->get_data_ptr<const T>(),
+                                   out[0]->get_data_ptr<T>(),
+                                   node.get_input_shape(0),
+                                   node.get_input_shape(1),
+                                   logical_and->get_autob());
+            break;
+        }
+        case OP_TYPEID::LogicalOr_v1:
+        {
+            auto logical_or = static_cast<const op::v1::LogicalOr*>(&node);
+            reference::logical_or(args[0]->get_data_ptr<const T>(),
+                                  args[1]->get_data_ptr<const T>(),
+                                  out[0]->get_data_ptr<T>(),
+                                  node.get_input_shape(0),
+                                  node.get_input_shape(1),
+                                  logical_or->get_autob());
+            break;
+        }
+        case OP_TYPEID::LogicalXor_v1:
+        {
+            auto logical_xor = static_cast<const op::v1::LogicalXor*>(&node);
+            reference::logical_xor(args[0]->get_data_ptr<const T>(),
+                                   args[1]->get_data_ptr<const T>(),
+                                   out[0]->get_data_ptr<T>(),
+                                   node.get_input_shape(0),
+                                   node.get_input_shape(1),
+                                   logical_xor->get_autob());
             break;
         }
         case OP_TYPEID::LRN:
@@ -1121,6 +1170,7 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
+        case OP_TYPEID::LogicalNot_v1:
         case OP_TYPEID::Not:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1815,9 +1865,93 @@ private:
         case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::Transpose:
         case OP_TYPEID::DynPad:
-        case OP_TYPEID::Selu:
         case OP_TYPEID::Tile:
         case OP_TYPEID::DynReplaceSlice:
+        case OP_TYPEID::Abs_v1:
+        case OP_TYPEID::Acos_v1:
+        case OP_TYPEID::Add_v1:
+        case OP_TYPEID::Asin_v1:
+        case OP_TYPEID::Atan_v1:
+        case OP_TYPEID::AvgPool_v1:
+        case OP_TYPEID::BatchNormInference_v1:
+        case OP_TYPEID::Broadcast_v1:
+        case OP_TYPEID::Ceiling_v1:
+        case OP_TYPEID::Clamp_v1:
+        case OP_TYPEID::Concat_v1:
+        case OP_TYPEID::Constant_v1:
+        case OP_TYPEID::Convert_v1:
+        case OP_TYPEID::Convolution_v1:
+        case OP_TYPEID::ConvolutionBackpropData_v1:
+        case OP_TYPEID::Cos_v1:
+        case OP_TYPEID::Cosh_v1:
+        case OP_TYPEID::DepthToSpace_v1:
+        case OP_TYPEID::Divide_v1:
+        case OP_TYPEID::Elu_v1:
+        case OP_TYPEID::Erf_v1:
+        case OP_TYPEID::Equal_v1:
+        case OP_TYPEID::Exp_v1:
+        case OP_TYPEID::FakeQuantize_v1:
+        case OP_TYPEID::Floor_v1:
+        case OP_TYPEID::Gather_v1:
+        case OP_TYPEID::Greater_v1:
+        case OP_TYPEID::GreaterEq_v1:
+        case OP_TYPEID::GroupConvolution_v1:
+        case OP_TYPEID::HardSigmoid_v1:
+        case OP_TYPEID::Interpolate_v1:
+        case OP_TYPEID::Less_v1:
+        case OP_TYPEID::Log_v1:
+        case OP_TYPEID::LRN_v1:
+        case OP_TYPEID::LSTMCell_v1:
+        case OP_TYPEID::LSTMSequence_v1:
+        case OP_TYPEID::MatMul_v1:
+        case OP_TYPEID::MaxPool_v1:
+        case OP_TYPEID::Maximum_v1:
+        case OP_TYPEID::Minimum_v1:
+        case OP_TYPEID::Multiply_v1:
+        case OP_TYPEID::Negative_v1:
+        case OP_TYPEID::NormalizeL2_v1:
+        case OP_TYPEID::NotEqual_v1:
+        case OP_TYPEID::OneHot_v1:
+        case OP_TYPEID::PRelu_v1:
+        case OP_TYPEID::Pad_v1:
+        case OP_TYPEID::Parameter_v1:
+        case OP_TYPEID::Power_v1:
+        case OP_TYPEID::Range_v1:
+        case OP_TYPEID::Relu_v1:
+        case OP_TYPEID::ReduceMax_v1:
+        case OP_TYPEID::ReduceMin_v1:
+        case OP_TYPEID::ReduceProd_v1:
+        case OP_TYPEID::ReduceSum_v1:
+        case OP_TYPEID::Reshape_v1:
+        case OP_TYPEID::Result_v1:
+        case OP_TYPEID::Reverse_v1:
+        case OP_TYPEID::ReverseSequence_v1:
+        case OP_TYPEID::RNNCell_v1:
+        case OP_TYPEID::ShapeOf_v1:
+        case OP_TYPEID::ShuffleChannels_v1:
+        case OP_TYPEID::Sign_v1:
+        case OP_TYPEID::Sigmoid_v1:
+        case OP_TYPEID::Sin_v1:
+        case OP_TYPEID::Sinh_v1:
+        case OP_TYPEID::Softmax_v1:
+        case OP_TYPEID::Sqrt_v1:
+        case OP_TYPEID::SpaceToDepth_v1:
+        case OP_TYPEID::Split_v1:
+        case OP_TYPEID::SquaredDifference_v1:
+        case OP_TYPEID::StridedSlice_v1:
+        case OP_TYPEID::Subtract_v1:
+        case OP_TYPEID::Tan_v1:
+        case OP_TYPEID::Tanh_v1:
+        case OP_TYPEID::Tile_v1:
+        case OP_TYPEID::TopK_v1:
+        case OP_TYPEID::Transpose_v1:
+        case OP_TYPEID::Unsqueeze_v1:
+        case OP_TYPEID::AvgPoolBackprop_v1:
+        case OP_TYPEID::ConvolutionBackpropFilters_v1:
+        case OP_TYPEID::MaxPoolBackprop_v1:
+        case OP_TYPEID::Squeeze_v1:
+        case OP_TYPEID::GenerateMask_v1:
+
             throw unsupported_op("Unsupported op '" + node.description() + "'");
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop

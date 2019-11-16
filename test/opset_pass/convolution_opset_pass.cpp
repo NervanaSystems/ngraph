@@ -35,8 +35,7 @@ TEST(opset_transform, opset1_convolution_upgrade_pass)
     auto node = convolution_s1_result->input(0).get_source_output().get_node_shared_ptr();
     auto convolution_v1_node = static_pointer_cast<op::v1::Convolution>(node);
 
-    EXPECT_EQ(convolution_v1_node->description(), "Convolution");
-    EXPECT_EQ(convolution_v1_node->get_version(), 1);
+    EXPECT_TRUE(is_type<op::v1::Convolution>(convolution_v1_node));
 
     EXPECT_EQ(convolution_v1_node->get_pads_begin(), pads_begin);
     EXPECT_EQ(convolution_v1_node->get_pads_end(), pads_end);
@@ -68,8 +67,7 @@ TEST(opset_transform, opset1_convolution_downgrade_pass)
     auto node = conv_s0_result->input(0).get_source_output().get_node_shared_ptr();
     auto conv_v0_node = static_pointer_cast<op::v0::Convolution>(node);
 
-    EXPECT_EQ(conv_v0_node->description(), "Convolution");
-    EXPECT_EQ(conv_v0_node->get_version(), 0);
+    EXPECT_TRUE(is_type<op::v0::Convolution>(conv_v0_node));
     EXPECT_EQ(conv_v0_node->get_window_movement_strides(), strides);
     EXPECT_EQ(conv_v0_node->get_window_dilation_strides(), dilations);
     EXPECT_EQ(conv_v0_node->get_padding_below(), pads_begin);
@@ -101,8 +99,7 @@ TEST(opset_transform, opset1_convolution_backprop_data_downgrade_pass)
     auto node = conv_s0_result->input(0).get_source_output().get_node_shared_ptr();
     auto conv_v0_node = static_pointer_cast<op::v0::ConvolutionBackpropData>(node);
 
-    EXPECT_EQ(conv_v0_node->description(), "ConvolutionBackpropData");
-    EXPECT_EQ(conv_v0_node->get_version(), 0);
+    EXPECT_TRUE(is_type<op::v0::ConvolutionBackpropData>(conv_v0_node));
     EXPECT_EQ(conv_v0_node->get_data_batch_shape(), (Shape{64, 3, 100}));
     EXPECT_EQ(conv_v0_node->get_window_movement_strides_forward(), strides);
     EXPECT_EQ(conv_v0_node->get_window_dilation_strides_forward(), dilations);
@@ -133,8 +130,7 @@ TEST(opset_transform, opset1_convolution_backprop_filters_downgrade_pass)
     auto node = conv_s0_result->input(0).get_source_output().get_node_shared_ptr();
     auto conv_v0_node = static_pointer_cast<op::v0::ConvolutionBackpropFilters>(node);
 
-    EXPECT_EQ(conv_v0_node->description(), "ConvolutionBackpropFilters");
-    EXPECT_EQ(conv_v0_node->get_version(), 0);
+    EXPECT_TRUE(is_type<op::v0::ConvolutionBackpropFilters>(conv_v0_node));
     EXPECT_EQ(conv_v0_node->get_filters_shape(), (Shape{128, 3, 10}));
     EXPECT_EQ(conv_v0_node->get_window_movement_strides_forward(), strides);
     EXPECT_EQ(conv_v0_node->get_window_dilation_strides_forward(), dilations);
