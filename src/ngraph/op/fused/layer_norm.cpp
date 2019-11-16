@@ -170,7 +170,7 @@ shared_ptr<Node> op::LayerNorm::copy_with_new_args(const NodeVector& new_args) c
     }
 }
 
-void op::LayerNorm::pre_validate_and_infer_types()
+void op::LayerNorm::validate_and_infer_types()
 {
     element::Type input_element_type = get_input_element_type(0);
 
@@ -509,7 +509,7 @@ shared_ptr<Node> op::LayerNormBackprop::copy_with_new_args(const NodeVector& new
     }
 }
 
-void op::LayerNormBackprop::pre_validate_and_infer_types()
+void op::LayerNormBackprop::validate_and_infer_types()
 {
     element::Type input_element_type = get_input_element_type(0);
 
