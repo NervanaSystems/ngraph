@@ -100,6 +100,10 @@ void op::GroupConvolution::pre_validate_and_infer_types()
                                get_groups()) == data_shape.to_shape()[1],
                               "Incorrect number of channels per filter");
     }
+    else
+    {
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
+    }
 }
 
 void op::GroupConvolution::post_validate_and_infer_types()
