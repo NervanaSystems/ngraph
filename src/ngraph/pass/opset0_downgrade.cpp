@@ -60,18 +60,23 @@
 using namespace std;
 using namespace ngraph;
 
-#define NGRAPH_OP(a, b) a,
 enum class OP_TYPEID
 {
-#include "ngraph/op/fused_op_tbl.hpp"
+#define NGRAPH_OP(a, b) a,
+//#include "ngraph/op/fused_op_tbl.hpp"
+//#include "ngraph/op/op_v0_tbl.hpp"
+#undef NGRAPH_OP
+#define NGRAPH_OP(a, b) a##_v1,
 #include "ngraph/op/op_v1_tbl.hpp"
 };
 #undef NGRAPH_OP
 
 #define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
 static unordered_map<string, OP_TYPEID> typeid_map{
-#include "ngraph/op/fused_op_tbl.hpp"
-#include "ngraph/op/op_v1_tbl.hpp"
+//#include "ngraph/op/fused_op_tbl.hpp"
+//#include "ngraph/op/op_v0_tbl.hpp"
+#undef NGRAPH_OP
+#define NGRAPH_OP(a, b) {#a, OP_TYPEID::a##_v1},
 };
 #undef NGRAPH_OP
 
@@ -127,13 +132,13 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 #endif
     switch (get_typeid(node))
     {
-    case OP_TYPEID::Add:
+    case OP_TYPEID::Add_v1:
     {
         downgrade_binary_elementwise_node<op::v0::Add, op::v1::Add>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::AvgPool:
+    case OP_TYPEID::AvgPool_v1:
     {
         const auto tmp = as_type_ptr<op::v1::AvgPool>(node);
 
@@ -158,7 +163,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::AvgPoolBackprop:
+    case OP_TYPEID::AvgPoolBackprop_v1:
     {
         const auto tmp = as_type_ptr<op::v1::AvgPoolBackprop>(node);
         NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
@@ -184,7 +189,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Broadcast:
+    case OP_TYPEID::Broadcast_v1:
     {
         auto tmp = dynamic_cast<const op::v1::Broadcast*>(node.get());
         const auto arg = node->input(0).get_source_output();
@@ -200,7 +205,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Convolution:
+    case OP_TYPEID::Convolution_v1:
     {
         auto tmp = as_type_ptr<op::v1::Convolution>(node);
         const auto data_arg = node->input(0).get_source_output();
@@ -223,7 +228,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::ConvolutionBackpropData:
+    case OP_TYPEID::ConvolutionBackpropData_v1:
     {
         auto tmp = as_type_ptr<op::v1::ConvolutionBackpropData>(node);
         NGRAPH_CHECK(node->input_value(2).get_node_shared_ptr()->is_constant());
@@ -251,7 +256,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::ConvolutionBackpropFilters:
+    case OP_TYPEID::ConvolutionBackpropFilters_v1:
     {
         auto tmp = as_type_ptr<op::v1::ConvolutionBackpropFilters>(node);
         NGRAPH_CHECK(node->input_value(2).get_node_shared_ptr()->is_constant());
@@ -279,7 +284,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Divide:
+    case OP_TYPEID::Divide_v1:
     {
         const auto tmp = as_type_ptr<op::v1::Divide>(node);
         const auto input_arg0 = node->input(0).get_source_output();
@@ -291,7 +296,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::DynReshape:
+    case OP_TYPEID::DynReshape_v1:
     {
         auto tmp = as_type_ptr<op::v1::Reshape>(node);
         auto replacement_node = make_shared<op::v0::DynReshape>(node->input(0).get_source_output(),
@@ -301,13 +306,13 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Equal:
+    case OP_TYPEID::Equal_v1:
     {
         downgrade_binary_elementwise_node<op::v0::Equal, op::v1::Equal>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::GenerateMask:
+    case OP_TYPEID::GenerateMask_v1:
     {
         auto tmp = dynamic_cast<const op::v1::GenerateMask*>(node.get());
         NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
@@ -326,61 +331,61 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Greater:
+    case OP_TYPEID::Greater_v1:
     {
         downgrade_binary_elementwise_node<op::v0::Greater, op::v1::Greater>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::GreaterEq:
+    case OP_TYPEID::GreaterEq_v1:
     {
         downgrade_binary_elementwise_node<op::v0::GreaterEq, op::v1::GreaterEq>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::Less:
+    case OP_TYPEID::Less_v1:
     {
         downgrade_binary_elementwise_node<op::v0::Less, op::v1::Less>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::LessEqual:
+    case OP_TYPEID::LessEqual_v1:
     {
         downgrade_binary_elementwise_node<op::v0::LessEq, op::v1::LessEqual>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::LogicalAnd:
+    case OP_TYPEID::LogicalAnd_v1:
     {
         downgrade_binary_elementwise_node<op::v0::And, op::v1::LogicalAnd>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::LogicalNot:
+    case OP_TYPEID::LogicalNot_v1:
     {
         replace_node(node, make_shared<op::v0::Not>(node->input(0).get_source_output()));
         modified = true;
         break;
     }
-    case OP_TYPEID::LogicalOr:
+    case OP_TYPEID::LogicalOr_v1:
     {
         downgrade_binary_elementwise_node<op::v0::Or, op::v1::LogicalOr>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::LogicalXor:
+    case OP_TYPEID::LogicalXor_v1:
     {
         downgrade_binary_elementwise_node<op::v0::Xor, op::v1::LogicalXor>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::Maximum:
+    case OP_TYPEID::Maximum_v1:
     {
         downgrade_binary_elementwise_node<op::v0::Maximum, op::v1::Maximum>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::MaxPool:
+    case OP_TYPEID::MaxPool_v1:
     {
         auto tmp = as_type_ptr<op::v1::MaxPool>(node);
 
@@ -403,7 +408,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::MaxPoolBackprop:
+    case OP_TYPEID::MaxPoolBackprop_v1:
     {
         const auto tmp = as_type_ptr<op::v1::MaxPoolBackprop>(node);
 
@@ -440,25 +445,25 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Minimum:
+    case OP_TYPEID::Minimum_v1:
     {
         downgrade_binary_elementwise_node<op::v0::Minimum, op::v1::Minimum>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::Multiply:
+    case OP_TYPEID::Multiply_v1:
     {
         downgrade_binary_elementwise_node<op::v0::Multiply, op::v1::Multiply>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::NotEqual:
+    case OP_TYPEID::NotEqual_v1:
     {
         downgrade_binary_elementwise_node<op::v0::NotEqual, op::v1::NotEqual>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::Pad:
+    case OP_TYPEID::Pad_v1:
     {
         auto tmp = as_type_ptr<op::v1::Pad>(node);
         const auto pad_arg = node->input(0).get_source_output();
@@ -470,13 +475,13 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Power:
+    case OP_TYPEID::Power_v1:
     {
         downgrade_binary_elementwise_node<op::v0::Power, op::v1::Power>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::Product:
+    case OP_TYPEID::Product_v1:
     {
         auto tmp = as_type_ptr<op::v1::ReduceProd>(node);
         auto replacement_node = make_shared<op::v0::Product>(node->input(0).get_source_output(),
@@ -510,7 +515,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Reverse:
+    case OP_TYPEID::Reverse_v1:
     {
         auto tmp = as_type_ptr<op::v1::Reverse>(node);
         auto axes_node = tmp->input_value(1).get_node_shared_ptr();
@@ -542,7 +547,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Slice:
+    case OP_TYPEID::Slice_v1:
     {
         auto convert_mask_to_axes = [](const std::vector<int64_t>& mask) {
             AxisSet axes{};
@@ -609,7 +614,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         replace_node(node, replacement_node);
         break;
     }
-    case OP_TYPEID::Sum:
+    case OP_TYPEID::ReduceSum_v1:
     {
         auto tmp = as_type_ptr<op::v1::ReduceSum>(node);
         auto replacement_node = make_shared<op::v0::Sum>(node->input(0).get_source_output(),
@@ -643,7 +648,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::TopK:
+    case OP_TYPEID::TopK_v1:
     {
         const auto tmp = as_type_ptr<op::v1::TopK>(node);
         const auto axis = tmp->get_axis();
