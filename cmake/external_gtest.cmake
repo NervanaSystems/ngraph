@@ -60,6 +60,8 @@ ExternalProject_Add(
         ${GTEST_CMAKE_ARGS}
     BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/build"
     EXCLUDE_FROM_ALL TRUE
+    BUILD_BYPRODUCTS ${CMAKE_BINARY_DIR}/ngraph/gtest/build/googlemock/gtest/libgtest.a
+    BUILD_BYPRODUCTS ${CMAKE_BINARY_DIR}/ngraph/gtest/build/googlemock/libgmock.a
     )
 
 #------------------------------------------------------------------------------
