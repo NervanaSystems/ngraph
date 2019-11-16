@@ -1399,14 +1399,14 @@ TEST(constant_folding, const_gather)
     auto constant_indices =
         op::Constant::create(element::i64, Shape{4}, vector<int64_t>{0, 3, 2, 2});
     size_t gather_axis = 1;
-    auto gather = make_shared<op::Gather>(constant_data, constant_indices, gather_axis);
+    auto gather = make_shared<op::v0::Gather>(constant_data, constant_indices, gather_axis);
     auto f = make_shared<Function>(gather, ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Gather>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Gather>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
@@ -1434,7 +1434,7 @@ TEST(constant_folding, const_gather_v1)
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Gather>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
@@ -1462,7 +1462,7 @@ TEST(constant_folding, const_gather_v1_scalar)
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Gather>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));

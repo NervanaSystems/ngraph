@@ -105,7 +105,7 @@ void pass::ConstantFolding::construct_constant_gather()
     auto indices_label =
         make_shared<pattern::op::Label>(element::i64, Shape{5}, pattern::has_class<op::Constant>());
     size_t gather_axis = 1;
-    auto gather_v0 = make_shared<op::Gather>(data_label, indices_label, gather_axis);
+    auto gather_v0 = make_shared<op::v0::Gather>(data_label, indices_label, gather_axis);
 
     auto axis_label =
         make_shared<pattern::op::Label>(element::i64, Shape{1}, pattern::has_class<op::Constant>());
