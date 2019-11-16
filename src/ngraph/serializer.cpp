@@ -199,32 +199,26 @@ enum class OP_TYPEID
     UnknownOp
 };
 
-static OP_TYPEID get_typeid(const string& s)
+static OP_TYPEID get_typeid(const NodeTypeInfo& type_info)
 {
     // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
-    // {"Abs", OP_TYPEID::Abs},
-    // {"Acos", OP_TYPEID::Acos},
+    // {Abs::type_info, OP_TYPEID::Abs},
+    // {Acos::type_info, OP_TYPEID::Acos},
     // ...
-    static const unordered_map<string, OP_TYPEID> typeid_map{
-#define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
-#include "ngraph/op/fused_op_tbl.hpp"
-#include "ngraph/op/op_v0_tbl.hpp"
-#undef NGRAPH_OP
-    };
-    static const map<NodeTypeInfo, OP_TYPEID> typeinfo_map_v0{
+    static const map<NodeTypeInfo, OP_TYPEID> type_info_map{
 #define NGRAPH_OP(a, b) {b::a::type_info, OP_TYPEID::a},
 #include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_v0_tbl.hpp"
 #undef NGRAPH_OP
-    };
-    static const map<NodeTypeInfo, OP_TYPEID> typeinfo_map_v1{
 #define NGRAPH_OP(a, b) {b::a::type_info, OP_TYPEID::a##_v1},
 #include "ngraph/op/op_v1_tbl.hpp"
 #undef NGRAPH_OP
     };
     OP_TYPEID rc = OP_TYPEID::UnknownOp;
-    auto it = typeid_map.find(s);
-    if (it != typeid_map.end())
+
+    // Try by type_info map
+    auto it = type_info_map.find(type_info);
+    if (it != type_info_map.end())
     {
         rc = it->second;
     }
@@ -912,10 +906,19 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
     shared_ptr<Node> node;
     try
     {
-        string node_name = node_js.at("name").get<string>();
         string node_op = node_js.at("op").get<string>();
-        string friendly_name = get_value<string>(node_js, "friendly_name");
         size_t op_version = get_value<size_t>(node_js, "op_version");
+        NodeTypeInfo type_info{node_op.c_str(), op_version};
+        string type_info_name;
+        if (has_key(node_js, "type_info"))
+        {
+            json jtype_info = node_js["type_info"];
+            type_info_name = jtype_info.at("name").get<string>();
+            type_info.name = type_info_name.c_str();
+            type_info.version = jtype_info.at("version").get<uint64_t>();
+        }
+        string node_name = node_js.at("name").get<string>();
+        string friendly_name = get_value<string>(node_js, "friendly_name");
         vector<json> control_deps_inputs = get_value<vector<json>>(node_js, "control_deps");
         vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
         OutputVectorHelper args(deserialize_output_vector(node_js["inputs"]));
@@ -927,7 +930,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
 #endif
 
-        switch (get_typeid(node_op))
+        switch (get_typeid(type_info))
         {
         case OP_TYPEID::Abs:
         case OP_TYPEID::Abs_v1:
@@ -2875,7 +2878,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::UnknownOp:
         {
             stringstream ss;
-            ss << "unsupported op " << node_op;
+            ss << "unsupported op " << type_info.name << ":" << type_info.version;
             throw runtime_error(ss.str());
         }
         }
@@ -2978,7 +2981,12 @@ json JSONSerializer::serialize_output_vector(const OutputVector& output_vector)
 json JSONSerializer::serialize_node(const Node& n)
 {
     m_nodes_serialized.insert(&n);
+    const NodeTypeInfo& type_info = n.get_type_info();
+    json jtype_info;
+    jtype_info["name"] = type_info.name;
+    jtype_info["version"] = type_info.version;
     json node;
+    node["type_info"] = jtype_info;
     node["name"] = n.get_name();
     auto op_version = n.get_version();
     node["op_version"] = op_version;
@@ -2987,7 +2995,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         node["friendly_name"] = n.get_friendly_name();
     }
-    node["op"] = n.description();
+    node["op"] = n.type_info.name;
     // TODO Multiple outputs
     json inputs = json::array();
     json control_deps = json::array();
@@ -3038,14 +3046,13 @@ json JSONSerializer::serialize_node(const Node& n)
         node["provenance_tags"] = provenance_tags;
     }
 
-    string node_op = n.description();
 #if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
 #endif
-    switch (get_typeid(node_op))
+    switch (get_typeid(type_info))
     {
     case OP_TYPEID::Abs:
     case OP_TYPEID::Abs_v1: { break;

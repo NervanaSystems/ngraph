@@ -57,7 +57,7 @@ TEST(opset_transform, opset1_reshape_downgrade_pass)
     pass_manager.run_passes(f);
 
     const auto pass_replacement_node = f->get_result()->input_value(0).get_node_shared_ptr();
-    EXPECT_TRUE(is_type<op::DynReshape>(pass_replacement_node));
     const auto reshape_v1 = as_type_ptr<op::v0::DynReshape>(pass_replacement_node);
+    EXPECT_TRUE(reshape_v1);
     EXPECT_EQ(reshape_v1->get_zero_flag(), true);
 }
