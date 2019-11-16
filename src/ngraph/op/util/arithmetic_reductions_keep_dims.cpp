@@ -38,6 +38,9 @@ void op::util::ArithmeticReductionKeepDims::validate_and_infer_types()
         auto input_rank = input_shape.rank();
         PartialShape result_shape{PartialShape::dynamic()};
 
+        if (input_rank.is_static())
+            result_shape = PartialShape::dynamic(input_rank);
+
         if (input_rank.is_static() && reduction_axes_constant())
         {
             std::vector<Dimension> dims;

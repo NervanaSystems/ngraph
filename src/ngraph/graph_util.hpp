@@ -81,6 +81,7 @@ namespace ngraph
     ///
     /// \param target Node to be replaced.
     /// \param replacement Node to replace `target` with.
+    /// \param output_order Vector determines order of replacement node's outputs.
     ///
     /// This is primarily used in graph-rewriting passes. For example, we
     /// might "fuse" two Concat operations as follows:
@@ -209,6 +210,9 @@ namespace ngraph
     ///        auto new_N = N->copy_with_new_args(N->get_arguments());
     ///        shared_ptr<Node> M = make_shared<SomeUnaryOp>(new_N);
     ///        replace_node(N, M);
+    void replace_node(std::shared_ptr<Node> target,
+                      std::shared_ptr<Node> replacement,
+                      const std::vector<int64_t>& output_order);
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
     /// \brief Replace multiple nodes in a function.

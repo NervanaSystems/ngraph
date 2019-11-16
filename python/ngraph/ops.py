@@ -242,11 +242,11 @@ def group_convolution(data_batch,                      # type: Node
 
 @nameable_op
 def rnn_cell(X,                      # type: Node
+             H_t,                    # type: Node
              W,                      # type: Node
              R,                      # type: Node
-             H_t,                    # type: Node
-             hidden_size,            # type: int
              B,                      # type: Node
+             hidden_size,            # type: int
              activations,            # type: List[str]
              activation_alpha,       # type: List[float]
              activation_beta,        # type: List[float]
@@ -261,29 +261,30 @@ def rnn_cell(X,                      # type: Node
 
     Note this class represents only single *cell* and not whole RNN *layer*.
 
-    :param X: The input tensor with shape: [batch_size, input_size].
-    :param W: The weight tensor with shape: [hidden_size, input_size].
-    :param R: The recurrence weight tensor with shape: [hidden_size, hidden_size].
-    :param H_t: The hidden state tensor at current time step with
-                shape: [batch_size, hidden_size].
-    :param hidden_size: The number of hidden units for recurrent cell.
-    :param B: The bias tensor for input gate with shape: [2*hidden_size].
-    :param activations: The vector of activation functions used inside recurrent cell.
-    :param activation_alpha: The vector of alpha parameters for activation
-                            functions in order respective to activation list.
-    :param activation_beta: The vector of beta parameters for activation functions
-                            in order respective to activation list.
-    :param clip: The value defining clipping range [-clip, clip] on
-                 input of activation functions.
-    :param name: Optional output node name.
-    :return: The new node performing a RNNCell operation on tensor from input node.
+    :param      X:                 The input tensor with shape: [batch_size, input_size].
+    :param      H_t:               The hidden state tensor at current time step with shape:
+                                   [batch_size, hidden_size].
+    :param      W:                 The weight tensor with shape: [hidden_size, input_size].
+    :param      R:                 The recurrence weight tensor with shape: [hidden_size,
+                                   hidden_size].
+    :param      B:                 The bias tensor for input gate with shape: [2*hidden_size].
+    :param      hidden_size:       The number of hidden units for recurrent cell.
+    :param      activations:       The vector of activation functions used inside recurrent cell.
+    :param      activation_alpha:  The vector of alpha parameters for activation functions in
+                                   order respective to activation list.
+    :param      activation_beta:   The vector of beta parameters for activation functions in order
+                                   respective to activation list.
+    :param      clip:              The value defining clipping range [-clip, clip] on input of
+                                   activation functions.
+    :param      name:              Optional output node name.
+    :returns:   The new node performing a RNNCell operation on tensor from input node.
     """
     return RNNCell(X,
+                   H_t,
                    W,
                    R,
-                   H_t,
-                   hidden_size,
                    B,
+                   hidden_size,
                    activations,
                    activation_alpha,
                    activation_beta,
@@ -309,7 +310,7 @@ def scale_shift(data, scale, shift, name=None):  # type: (Node, Node, Node, str)
 
 
 @nameable_op
-def space_to_depth(data, block_size, name=None):  # type: (Node, int, str) -> Node
+def space_to_depth(data, mode, block_size, name=None):  # type: (Node, str, int, str) -> Node
     """Perform SpaceToDepth operation on the input tensor.
 
     SpaceToDepth rearranges blocks of spatial data into depth.
@@ -317,11 +318,16 @@ def space_to_depth(data, block_size, name=None):  # type: (Node, int, str) -> No
     and width dimensions are moved to the depth dimension.
 
     :param data: The node with data tensor.
+    :param mode: Specifies how the output depth dimension is gathered from block coordinates.
+
+                 blocks_first: The output depth is gathered from [block_size, ..., block_size, C]
+                 depth_first: The output depth is gathered from [C, block_size, ..., block_size]
+
     :param block_size: The size of the block of values to be moved. Scalar value.
     :param name: Optional output node name.
     :return: The new node performing a SpaceToDepth operation on input tensor.
     """
-    return SpaceToDepth(data, block_size)
+    return SpaceToDepth(data, mode, block_size)
 
 
 @nameable_op
