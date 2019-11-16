@@ -34,7 +34,7 @@ TEST(type_prop, squared_difference)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("axes are incompatible"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument shapes are inconsistent"));
     }
 
     const auto clamp = make_shared<op::SquaredDifference>(x1, x3);
