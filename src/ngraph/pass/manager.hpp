@@ -45,7 +45,7 @@ public:
     std::shared_ptr<T> register_pass(Args&&... args)
     {
         auto pass = get_pass_name(typeid(T).name());
-        if (m_pass_config.get_pass(pass) && !m_pass_config.get_pass_enable(pass))
+        if (m_pass_config.is_pass_configured(pass) && !m_pass_config.get_pass_enable(pass))
         {
             return nullptr;
         }
