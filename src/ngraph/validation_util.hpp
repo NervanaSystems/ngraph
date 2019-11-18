@@ -102,4 +102,6 @@ namespace ngraph
                                    const AxisSet& new_axis_mask,
                                    const AxisSet& shrink_axis_mask,
                                    const AxisSet& ellipsis_mask);
+
+    std::size_t normalize_axis(const Node* node, std::int64_t axis, std::int64_t tensor_rank);
 }
