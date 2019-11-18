@@ -26,8 +26,11 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::SquaredDifference::type_info;
 
-op::SquaredDifference::SquaredDifference(const Output<Node>& x1, const Output<Node>& x2)
+op::SquaredDifference::SquaredDifference(const Output<Node>& x1,
+                                         const Output<Node>& x2,
+                                         const AutoBroadcastSpec& auto_broadcast)
     : FusedOp({x1, x2})
+    , m_autobroadcast(auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }
@@ -37,19 +40,14 @@ NodeVector op::SquaredDifference::decompose_op() const
     const auto x1 = input_value(0);
     const auto x2 = input_value(1);
 
-    const auto broadcasted = numpy_style_broadcast_values({x1, x2});
-
-    const auto difference = broadcasted.at(0) - broadcasted.at(1);
+    const auto difference = make_shared<op::Subtract>(x1, x2, m_autobroadcast);
 
     return {difference * difference};
 }
 
 shared_ptr<Node> op::SquaredDifference::copy_with_new_args(const NodeVector& new_args) const
 {
-    NODE_VALIDATION_CHECK(this,
-                          new_args.size() == 2,
-                          "Expected 2 elements in new_args for the SquaredDifference op but got ",
-                          new_args.size());
+    check_new_args_count(this, new_args);
 
-    return make_shared<SquaredDifference>(new_args.at(0), new_args.at(1));
+    return make_shared<SquaredDifference>(new_args.at(0), new_args.at(1), get_autob());
 }

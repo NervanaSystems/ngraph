@@ -1213,7 +1213,8 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         else if (typeid(ngraph::op::GeluBackpropFactor) == typeid(node))
         {
 #if MKLDNN_VERSION_MAJOR < 1
-            return ((node.input(0).get_element_type() == element::f32) ? true : false);
+            // TODO: (gauri): need to differentiate which implementation : erf vs tanh
+            return false;
 #else
             // TODO: will be supported in mkldnn v1.1
             return false;
@@ -1222,7 +1223,8 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         else if (typeid(ngraph::op::Gelu) == typeid(node))
         {
 #if MKLDNN_VERSION_MAJOR < 1
-            return ((node.input(0).get_element_type() == element::f32) ? true : false);
+            // TODO: (gauri): need to differentiate which implementation : erf vs tanh
+            return false;
 #else
             // TODO: will be supported in mkldnn v1.1
             return false;

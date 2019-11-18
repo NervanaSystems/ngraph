@@ -14,8 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "matmul.hpp"
-#include "ngraph/builder/matmul_factory.hpp"
+#include <memory>
+
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/fused/log_softmax.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -25,24 +29,16 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector matmul(const Node& node)
+                NodeVector log_softmax(const Node& node)
                 {
-                    auto ng_inputs = node.get_ng_inputs();
-                    auto factory = builder::MatmulFactory(
-                        (OutputVector(std::begin(ng_inputs), std::end(ng_inputs))));
-                    std::size_t left_rank{ng_inputs.at(0)->get_shape().size()};
-                    std::size_t right_rank{ng_inputs.at(1)->get_shape().size()};
+                    NodeVector inputs{node.get_ng_inputs()};
+                    auto data = inputs.at(0);
+                    auto data_shape = data->get_shape();
+                    int axis = node.get_attribute_value<int64_t>("axis", 1);
 
-                    if (left_rank == 0 || right_rank == 0)
-                    {
-                        NGRAPH_WARN
-                            << (node) << " "
-                            << "ONNX standard doesn't allow scalar operands, however nGraph "
-                               "accepts them. Consider use of element-wise multiplication instead "
-                               "to conform with ONNX standard.";
-                    }
-                    return factory.make_matmul_op();
+                    return {std::make_shared<ngraph::op::LogSoftmax>(data, axis)};
                 }
+
             } // namespace set_1
 
         } // namespace op
