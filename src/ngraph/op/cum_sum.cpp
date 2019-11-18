@@ -34,6 +34,11 @@ op::CumSum::CumSum(const Output<Node>& arg,
 {
     auto const_op = as_type_ptr<op::Constant>(axis.get_node_shared_ptr());
     m_axis = *(static_cast<const int64_t*>(const_op->get_data_ptr()));
+
+    if (m_axis < 0)
+    {
+        m_axis = m_axis + arg.get_shape().size();
+    }
     set_output_type(0, arg.get_element_type(), arg.get_shape());
 }
 

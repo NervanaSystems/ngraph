@@ -169,8 +169,8 @@ NGRAPH_TEST(${BACKEND_NAME}, cum_sum_2dim_allmodes)
     };
 
     test_cum_sum_allmodes(1, 1, 0);
-    test_cum_sum_allmodes(1, 0, 1);
-    test_cum_sum_allmodes(1, 1, 1);
+    test_cum_sum_allmodes(-1, 0, 1);
+    test_cum_sum_allmodes(-1, 1, 1);
     test_cum_sum_allmodes(0, 0, 0);
     test_cum_sum_allmodes(0, 1, 1);
     test_cum_sum_allmodes(0, 0, 1);

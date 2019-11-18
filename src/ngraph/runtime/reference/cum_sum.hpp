@@ -71,7 +71,6 @@ namespace ngraph
 
                 auto cum_sum =
                     [&, exclusive, reverse](std::vector<std::pair<size_t, T>>& tensor_vec) {
-                        // TODO (pthoreho): Add support for exclsuive and reverse mode
                         if (reverse == 0)
                         {
                             T prev = 0;
