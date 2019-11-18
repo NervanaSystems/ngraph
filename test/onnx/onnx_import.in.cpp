@@ -1703,3 +1703,19 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reverse_sequence_time_and_batch_axis_equ
                  ngraph_error)
         << "ReverseSequence 'time_axis' and 'batch_axis' can't be equal.";
 }
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_mod)
+{
+    const auto mod_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/mod_sign.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(mod_fn, "${BACKEND_NAME}");
+
+    test_case.add_input<int64_t>(
+        {-8, 3, 4, 9, -17, 1 });
+    test_case.add_input<int64_t>({ 22, -13, 8, -3, 7, 2 });
+    test_case.add_expected_output<int64_t>(
+        Shape{ 6 },
+        { -8, 3, 4, 0, -3, 1 });
+
+    test_case.run();
+}
