@@ -257,6 +257,10 @@ namespace ngraph
                 , m_axis(0)
             {
             }
+            AutoBroadcastSpec(const char* type)
+                : AutoBroadcastSpec(type_from_string(type))
+            {
+            }
             AutoBroadcastSpec(AutoBroadcastType type, int64_t axis)
                 : m_type(type)
                 , m_axis(axis)
@@ -275,6 +279,9 @@ namespace ngraph
             static const AutoBroadcastSpec NUMPY;
             NGRAPH_API
             static const AutoBroadcastSpec NONE;
+
+        private:
+            AutoBroadcastType type_from_string(const std::string& type) const;
         };
     }
 }
