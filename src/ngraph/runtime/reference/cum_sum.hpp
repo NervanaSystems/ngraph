@@ -48,21 +48,61 @@ namespace ngraph
                     cs[temp_transform.index(output_coord)] = 0;
                 }
 
+                auto get_key = [&, axis](const Coordinate& coord) -> Coordinate {
+                    Coordinate result(coord.size(), 0);
+                    result[axis] = coord[axis];
+
+                    for (size_t i = 0; i < coord.size(); i++)
+                    {
+                        result[i] = coord[i] - result[i];
+                    }
+                    return result;
+                };
+
+                // Map to collect tensor elements belonging to the same axis
+                std::map<Coordinate, std::vector<std::pair<size_t, T>>> map_cooord_to_val;
+
+                auto print_map = [&]() {
+                    std::cout << "I am here" << std::endl;
+                    for (auto const& it : map_cooord_to_val)
+                    {
+                        std::cout << "key: " << it.first << std::endl;
+                        for (auto val : it.second)
+                        {
+                            std::cout << "(" << val.first << ", " << val.second << ")" << std::endl;
+                        }
+                        std::cout << std::endl;
+                    }
+                };
                 CoordinateTransform input_transform(in_shape);
                 T prev = 0;
                 for (const Coordinate& input_coord : input_transform)
                 {
-                    // TODO (pthoreho): Add support for exclsuive and reverse mode
-
                     // points to the current element in the input tensor
                     T current = arg[input_transform.index(input_coord)];
                     // holds the reference of the output corrosponding to the given input tensor
                     T& z = out[input_transform.index(input_coord)];
+
+                    // TODO (pthoreho): Add support for exclsuive and reverse mode
+                    std::cout << get_key(input_coord) << std::endl;
+                    auto key = get_key(input_coord);
+                    auto index = input_transform.index(input_coord);
+                    if (map_cooord_to_val.find(key) != map_cooord_to_val.end())
+                    {
+                        map_cooord_to_val[key].push_back(std::make_pair(index, current));
+                    }
+                    else
+                    {
+                        map_cooord_to_val.insert({key, std::vector<std::pair<size_t, T>>()});
+                        map_cooord_to_val[key].push_back(std::make_pair(index, current));
+                    }
+
                     z = prev + current;
                     // captures the result of the current output for cummulative sum in the
                     // subsequent sum
                     prev = z;
                 }
+                print_map();
             }
         }
     }

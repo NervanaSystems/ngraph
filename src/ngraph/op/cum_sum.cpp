@@ -31,8 +31,9 @@ op::CumSum::CumSum(const Output<Node>& arg,
     : Op({arg, axis})
     , m_exclusive(exclusive)
     , m_reverse(reverse)
-    , m_axis(1)
 {
+    auto const_op = as_type_ptr<op::Constant>(axis.get_node_shared_ptr());
+    m_axis = *(static_cast<const int64_t*>(const_op->get_data_ptr()));
     set_output_type(0, arg.get_element_type(), arg.get_shape());
 }
 

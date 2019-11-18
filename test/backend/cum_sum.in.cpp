@@ -41,7 +41,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cum_sum_default)
 {
     Shape shape{1, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::CumSum>(A, 0), ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::CumSum>(A, 1), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -55,9 +55,9 @@ NGRAPH_TEST(${BACKEND_NAME}, cum_sum_default)
     EXPECT_TRUE(test::all_close_f((vector<float>{1, 3, 6, 10}), read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, cum_sum_exlusive)
+NGRAPH_TEST(${BACKEND_NAME}, cum_sum_2dim)
 {
-    Shape shape{1, 4};
+    Shape shape{2, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::CumSum>(A, 0, 1), ParameterVector{A});
 
@@ -65,10 +65,32 @@ NGRAPH_TEST(${BACKEND_NAME}, cum_sum_exlusive)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
-    copy_data(a, vector<float>{1, 2, 3, 4});
+    copy_data(a, vector<float>{0, 1, 2, 3, 4, 5, 6, 7});
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f((vector<float>{0, 1, 3, 6}), read_vector<float>(result)));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{0, 1, 3, 6, 4, 9, 15, 22}), read_vector<float>(result)));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, cum_sum_3dim)
+{
+    Shape shape{3, 2, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::CumSum>(A, 0), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12,
+                               13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24});
+    auto result = backend->create_tensor(element::f32, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f((vector<float>{0,  1,  3,  6,  4,  9,  15, 22, 8,  17, 27, 38,
+                                                 12, 25, 39, 54, 16, 33, 51, 70, 20, 41, 63, 86}),
+                                  read_vector<float>(result)));
 }
