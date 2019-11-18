@@ -326,7 +326,7 @@ namespace
                 // 2. View creation: Create a view with the tensor shape and an N-D to 1 map over
                 //    the linear buffer.
                 // If two memrefs are defined via 2 Views over the same buffer, then they share and
-                // wil re-use the same buffer.
+                // will re-use the same buffer.
                 auto tensorType = origResult->getType().cast<NGTensorType>();
                 Value* newResult = nullptr;
                 Attribute bufferIdAttr = getBufferId(op);
