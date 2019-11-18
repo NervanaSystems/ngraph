@@ -644,7 +644,8 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
         auto type_info = desc->get_type_info();
         if (std::strcmp(type_info.name, "InvariantInputDescription") == 0)
         {
-            auto input_desc = as_type_ptr<ngraph::op::TensorIterator::InvariantInputDescription>(desc);
+            auto input_desc =
+                as_type_ptr<ngraph::op::TensorIterator::InvariantInputDescription>(desc);
             EXPECT_NE(input_desc, nullptr);
         }
         else if (std::strcmp(type_info.name, "SliceInputDescription") == 0)
@@ -671,7 +672,8 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
         auto type_info = desc->get_type_info();
         if (std::strcmp(type_info.name, "ConcatOutputDescription") == 0)
         {
-            auto output_desc = as_type_ptr<ngraph::op::TensorIterator::ConcatOutputDescription>(desc);
+            auto output_desc =
+                as_type_ptr<ngraph::op::TensorIterator::ConcatOutputDescription>(desc);
             EXPECT_NE(output_desc, nullptr);
         }
         else if (std::strcmp(type_info.name, "BodyOutputDescription") == 0)
