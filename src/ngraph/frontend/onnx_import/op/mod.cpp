@@ -35,7 +35,8 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> divisor{node.get_ng_inputs().at(1)};
 
                     std::int64_t fmod = node.get_attribute_value<std::int64_t>("fmod", 0);
-                    ASSERT_IS_SUPPORTED(node, fmod == 1) << "Only 'fmod' mode is supported.";
+                    ASSERT_IS_SUPPORTED(node, fmod == 1)
+                        << "Only 'fmod=1' mode is supported for mod operator.";
 
                     const auto auto_broadcast = ngraph::op::AutoBroadcastType::NUMPY;
 
