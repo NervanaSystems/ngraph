@@ -213,6 +213,8 @@ set (SRC
     op/strided_slice.hpp
     op/floor.cpp
     op/floor.hpp
+    op/floor_mod.cpp
+    op/floor_mod.hpp
     op/gather.cpp
     op/gather.hpp
     op/gather_nd.cpp
