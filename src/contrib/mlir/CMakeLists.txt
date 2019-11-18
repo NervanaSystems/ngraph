@@ -79,7 +79,8 @@ endfunction(whole_archive_link)
 
 set(LIBS
     ${LLVM_BUILD_LIBRARY_DIR}/libMLIRAffineOps.a
-    ${LLVM_BUILD_LIBRARY_DIR}/libMLIRStandardOps.a)
+    ${LLVM_BUILD_LIBRARY_DIR}/libMLIRStandardOps.a
+)
 whole_archive_link(mlir_backend ${LIBS})
 # Link LLVM libs
 target_link_libraries(
