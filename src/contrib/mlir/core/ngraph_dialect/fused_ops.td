@@ -86,7 +86,9 @@ def NGSplitOp :
 // SpaceToDepth Op
 def NGSpaceToDepthOp :
     NG_OneResult_Op<"spaceToDepth", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
-    Arguments<(ins NG_TensorType:$data, I64Attr:$blockSize)>
+    Arguments<(ins NG_TensorType:$data, 
+              DefaultValuedAttr<I64Attr, "1">:$blockSize,
+              DepthSpaceModeEnumAttr:$mode)>
 {
   let summary = "Space to depth op";
   let description = [{
@@ -832,8 +834,9 @@ def NGFakeQuantOp :
 // DepthToSpace Op
 def NGDepthToSpaceOp : 
     NG_OneResult_Op<"depthToSpace", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
-    Arguments<(ins NG_TensorType:$data, I64Attr:$blockSize, 
-               DepthToSpaceModeEnumAttr:$mode)>
+    Arguments<(ins NG_TensorType:$data, 
+               DefaultValuedAttr<I64Attr, "1">:$blockSize, 
+               DepthSpaceModeEnumAttr:$mode)>
 {
   let summary = "DepthToSpace Op";
   let description = [{

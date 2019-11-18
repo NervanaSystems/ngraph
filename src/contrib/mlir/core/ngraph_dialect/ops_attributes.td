@@ -88,12 +88,12 @@ def AutoBroadcastEnumAttr   : I32EnumAttr<"MLIRAutoBroadcastMode",
                                            AutoBroadcastNumPy, AutoBroadcastPDPD]>;
 
 
-def DepthToSpaceModeBlocks  : I32EnumAttrCase<"BLOCKS_FIRST", 0>;
-def DepthToSpaceModeDepth   : I32EnumAttrCase<"DEPTH_FIRST",  1>;
+def DepthSpaceModeBlocks  : I32EnumAttrCase<"BLOCKS_FIRST", 0>;
+def DepthSpaceModeDepth   : I32EnumAttrCase<"DEPTH_FIRST",  1>;
 
-def DepthToSpaceModeEnumAttr: I32EnumAttr<"MLIRDepthToSpaceMode", 
-                                          "Specifies how the input depth dimension is split to block coordinates",
-                                          [DepthToSpaceModeBlocks, DepthToSpaceModeDepth]>;
+def DepthSpaceModeEnumAttr: I32EnumAttr<"MLIRDepthToSpaceMode", 
+                                        "Specifies how the input depth dimension is split to block coordinates",
+                                        [DepthSpaceModeBlocks, DepthSpaceModeDepth]>;
 
 def LSTMWeightsFormatFICO   : I32EnumAttrCase<"FICO", 0>;   // IE
 def LSTMWeightsFormatICOF   : I32EnumAttrCase<"ICOF", 1>;   // PyTorch
