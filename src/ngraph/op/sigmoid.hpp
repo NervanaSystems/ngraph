@@ -49,7 +49,11 @@ namespace ngraph
                 NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"SigmoidBackprop", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
-                SigmoidBackprop() = default;
+                SigmoidBackprop()
+                    : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NONE)
+                {
+                }
+
                 /// \brief Constructs a SigmoidBackprop operation.
                 ///
                 /// \param arg Node that produces the Sigmoid forward input tensor.
