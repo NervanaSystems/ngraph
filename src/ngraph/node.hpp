@@ -410,6 +410,9 @@ namespace ngraph
         /// \throw std::out_of_range if the node does not have at least `input_index+1` inputs.
         Input<Node> input(size_t input_index);
 
+        // Simplify migration from 0.25.1
+        Output<Node> input_value(size_t input_index) const;
+
         /// \return A handle to the `input_index`th input of this node.
         /// \throw std::out_of_range if the node does not have at least `input_index+1` inputs.
         Input<const Node> input(size_t input_index) const;
@@ -648,6 +651,12 @@ namespace ngraph
         }
 
         return Input<const Node>(this, input_index);
+    }
+
+    // Simplify migration from 0.25.1
+    inline Output<Node> Node::input_value(size_t input_index) const
+    {
+        return input(input_index).get_source_output();
     }
 
     inline Output<Node> Node::output(size_t output_index)
