@@ -55,7 +55,7 @@ func @i64(%arg0: !ng.i64) {
 // -----
 
 // CHECK-LABEL: func @u8
-// CHECK-SAME: (%{{.*}}: !ng.i8)
+// CHECK-SAME: (%{{.*}}: !ng.u8)
 func @u8(%arg0: !ng.u8) {
   "ng.return"() : () -> ()
 }
@@ -63,7 +63,7 @@ func @u8(%arg0: !ng.u8) {
 // -----
 
 // CHECK-LABEL: func @u16
-// CHECK-SAME: (%{{.*}}: !ng.i16)
+// CHECK-SAME: (%{{.*}}: !ng.u16)
 func @u16(%arg0: !ng.u16) {
   "ng.return"() : () -> ()
 }
@@ -71,7 +71,7 @@ func @u16(%arg0: !ng.u16) {
 // -----
 
 // CHECK-LABEL: func @u32
-// CHECK-SAME: (%{{.*}}: !ng.i32)
+// CHECK-SAME: (%{{.*}}: !ng.u32)
 func @u32(%arg0: !ng.u32) {
   "ng.return"() : () -> ()
 }
@@ -81,5 +81,85 @@ func @u32(%arg0: !ng.u32) {
 // CHECK: func @u64
 // CHECK-SAME (%{{.*}}: !ng.i64)
 func @u64(%arg0: !ng.u64) {
+  "ng.return"() : () -> ()
+}
+
+// -----
+
+// CHECK: func @tensor_i8
+// CHECK-SAME: (%{{.*}}: !ng.tensor<2x2x!ng.i8>)
+func @tensor_i8(%arg0: !ng.tensor<2x2x!ng.i8>) {
+  "ng.return"() : () -> ()
+}
+
+// -----
+
+// CHECK: func @tensor_i16
+// CHECK-SAME: (%{{.*}}: !ng.tensor<2x2x!ng.i16>)
+func @tensor_i16(%arg0: !ng.tensor<2x2x!ng.i16>) {
+  "ng.return"() : () -> ()
+}
+
+// -----
+
+// CHECK: func @tensor_i32
+// CHECK-SAME: (%{{.*}}: !ng.tensor<2x2x!ng.i32>)
+func @tensor_i32(%arg0: !ng.tensor<2x2x!ng.i32>) {
+  "ng.return"() : () -> ()
+}
+
+// -----
+
+// CHECK: func @tensor_i64
+// CHECK-SAME: (%{{.*}}: !ng.tensor<2x2x!ng.i64>)
+func @tensor_i64(%arg0: !ng.tensor<2x2x!ng.i64>) {
+  "ng.return"() : () -> ()
+}
+
+// -----
+
+// CHECK: func @tensor_u8
+// CHECK-SAME: (%{{.*}}: !ng.tensor<2x2x!ng.u8>)
+func @tensor_u8(%arg0: !ng.tensor<2x2x!ng.u8>) {
+  "ng.return"() : () -> ()
+}
+
+// -----
+
+// CHECK: func @tensor_u16
+// CHECK-SAME: (%{{.*}}: !ng.tensor<2x2x!ng.u16>)
+func @tensor_u16(%arg0: !ng.tensor<2x2x!ng.u16>) {
+  "ng.return"() : () -> ()
+}
+
+// -----
+
+// CHECK: func @tensor_u32
+// CHECK-SAME: (%{{.*}}: !ng.tensor<2x2x!ng.u32>)
+func @tensor_u32(%arg0: !ng.tensor<2x2x!ng.u32>) {
+  "ng.return"() : () -> ()
+}
+
+// -----
+
+// CHECK: func @tensor_u64
+// CHECK-SAME: (%{{.*}}: !ng.tensor<2x2x!ng.u64>)
+func @tensor_u64(%arg0: !ng.tensor<2x2x!ng.u64>) {
+  "ng.return"() : () -> ()
+}
+
+// -----
+
+// CHECK: func @tensor_f32
+// CHECK-SAME: (%{{.*}}: !ng.tensor<2x2xf32>)
+func @tensor_f32(%arg0: !ng.tensor<2x2xf32>) {
+  "ng.return"() : () -> ()
+}
+
+// -----
+
+// CHECK: func @tensor_f64
+// CHECK-SAME: (%{{.*}}: !ng.tensor<2x2xf64>)
+func @tensor_f64(%arg0: !ng.tensor<2x2xf64>) {
   "ng.return"() : () -> ()
 }
