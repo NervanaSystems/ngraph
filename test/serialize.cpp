@@ -638,11 +638,48 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
     tensor_iterator->set_sliced_input(Yi, Y, 0, 2, 2, -1, 1);
     tensor_iterator->set_invariant_input(M_body, M);
 
+    // check input descriptors
+    for (auto& desc : tensor_iterator->get_input_descriptions())
+    {
+        auto type_info = desc->get_type_info();
+        if (std::strcmp(type_info.name, "InvariantInputDescription") == 0)
+        {
+            auto input_desc = as_type_ptr<ngraph::op::TensorIterator::InvariantInputDescription>(desc);
+            EXPECT_NE(input_desc, nullptr);
+        }
+        else if (std::strcmp(type_info.name, "SliceInputDescription") == 0)
+        {
+            auto input_desc = as_type_ptr<ngraph::op::TensorIterator::SliceInputDescription>(desc);
+            EXPECT_NE(input_desc, nullptr);
+        }
+        else if (std::strcmp(type_info.name, "MergedInputDescription") == 0)
+        {
+            auto input_desc = as_type_ptr<ngraph::op::TensorIterator::MergedInputDescription>(desc);
+            EXPECT_NE(input_desc, nullptr);
+        }
+    }
+
     // Output 0 is last Zo
     auto out0 = tensor_iterator->get_iter_value(Zo, -1);
     // Output 1 is concat of Zos
     // start=0, stride=2, part_size=2, end=20, axis=1
     auto out1 = tensor_iterator->get_concatenated_slices(Zo, 0, 2, 2, 20, 1);
+
+    // check output descriptors
+    for (auto& desc : tensor_iterator->get_output_descriptions())
+    {
+        auto type_info = desc->get_type_info();
+        if (std::strcmp(type_info.name, "ConcatOutputDescription") == 0)
+        {
+            auto output_desc = as_type_ptr<ngraph::op::TensorIterator::ConcatOutputDescription>(desc);
+            EXPECT_NE(output_desc, nullptr);
+        }
+        else if (std::strcmp(type_info.name, "BodyOutputDescription") == 0)
+        {
+            auto output_desc = as_type_ptr<ngraph::op::TensorIterator::BodyOutputDescription>(desc);
+            EXPECT_NE(output_desc, nullptr);
+        }
+    }
 
     auto result0 = make_shared<op::Result>(out0);
     auto result1 = make_shared<op::Result>(out1);
