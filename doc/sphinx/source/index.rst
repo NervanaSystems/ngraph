@@ -70,7 +70,6 @@ nGraph Compiler Stack Documentation
 
    Basic Concepts <backends/index.rst>
    backends/plaidml-ng-api/index.rst
-   nGraph as a Submodule <backends/ovt.rst>
    Integrating Other Backends <backends/cpp-api.rst>
 
 

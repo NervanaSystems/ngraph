@@ -21,6 +21,27 @@ We are pleased to announce the release of version |version|.
 Core updates for |version|
 --------------------------
 
++ New ops
++ Provenance improvements from 0.25.1
++ More dynamic shape ops
++ More informative errors
+
+
+
+Latest documentation updates
+----------------------------
+
++ Additional details on quantization
++ Index updates
++ API updates
+
+.. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
+
+
+
+Changelog on Previous Releases
+==============================
+
 + All ops support ``Output<Node>`` arguments
 + Additional ops
 + ONNX handling unknown domains
@@ -31,20 +52,9 @@ Core updates for |version|
 + Negative indices/axes fixes
 + Better support for MKL-DNN 1.0 (DNNL)
 + Additional constant element types
-
-Latest documentation updates
-----------------------------
-
 + Add new Sphinx-friendly theme (can be built natively for an alternative to ngraph.ai docs). 
 + Update PaddlePaddle documentation to reflect demo directories instead of example directory.
 + Update doc regarding the validation of ``Sum`` op.
-
-.. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
-
-
-
-Changelog on Previous Releases
-==============================
 
 0.26.1
 ------
