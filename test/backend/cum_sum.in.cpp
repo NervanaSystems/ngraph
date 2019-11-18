@@ -118,3 +118,60 @@ NGRAPH_TEST(${BACKEND_NAME}, cum_sum_3d)
     test_cumsum_3d(1);
     test_cumsum_3d(2);
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, cum_sum_2dim_allmodes)
+{
+    auto test_cum_sum_allmodes = [](const int64_t axis, int exclusive, int reverse) {
+        Shape shape{2, 4};
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto f = make_shared<Function>(make_shared<op::CumSum>(A, axis, exclusive, reverse),
+                                       ParameterVector{A});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+        // Create some tensors for input/output
+        auto a = backend->create_tensor(element::f32, shape);
+        copy_data(a, vector<float>{0, 1, 2, 3, 4, 5, 6, 7});
+        auto result = backend->create_tensor(element::f32, shape);
+
+        auto handle = backend->compile(f);
+        handle->call_with_validate({result}, {a});
+        if (axis == 1 && exclusive == 1 && reverse == 0)
+        {
+            EXPECT_TRUE(test::all_close_f((vector<float>{0, 0, 1, 3, 0, 4, 9, 15}),
+                                          read_vector<float>(result)));
+        }
+        else if (axis == 1 && exclusive == 0 && reverse == 1)
+        {
+            EXPECT_TRUE(test::all_close_f((vector<float>{6, 6, 5, 3, 22, 18, 13, 7}),
+                                          read_vector<float>(result)));
+        }
+        else if (axis == 1 && exclusive == 1 && reverse == 1)
+        {
+            EXPECT_TRUE(test::all_close_f((vector<float>{6, 5, 3, 0, 18, 13, 7, 0}),
+                                          read_vector<float>(result)));
+        }
+        else if (axis == 0 && exclusive == 0 && reverse == 0)
+        {
+            EXPECT_TRUE(test::all_close_f((vector<float>{0, 1, 2, 3, 4, 6, 8, 10}),
+                                          read_vector<float>(result)));
+        }
+        else if (axis == 0 && exclusive == 1 && reverse == 1)
+        {
+            EXPECT_TRUE(test::all_close_f((vector<float>{4, 5, 6, 7, 0, 0, 0, 0}),
+                                          read_vector<float>(result)));
+        }
+        else if (axis == 0 && exclusive == 0 && reverse == 1)
+        {
+            EXPECT_TRUE(test::all_close_f((vector<float>{4, 6, 8, 10, 4, 5, 6, 7}),
+                                          read_vector<float>(result)));
+        }
+    };
+
+    test_cum_sum_allmodes(1, 1, 0);
+    test_cum_sum_allmodes(1, 0, 1);
+    test_cum_sum_allmodes(1, 1, 1);
+    test_cum_sum_allmodes(0, 0, 0);
+    test_cum_sum_allmodes(0, 1, 1);
+    test_cum_sum_allmodes(0, 0, 1);
+}

@@ -55,6 +55,20 @@ namespace ngraph
                     return result;
                 };
 
+                auto update_output_buffer =
+                    [&](size_t input_index,
+                        size_t output_index,
+                        T& prev,
+                        std::vector<std::pair<size_t, T>>& tensor_vec) -> void {
+
+                    tensor_vec[input_index].second = prev + tensor_vec[input_index].second;
+                    out[tensor_vec[output_index].first] = tensor_vec[input_index].second;
+
+                    // update prev to hold the last result value to compute ruuning sum for
+                    // subsequent iter
+                    prev = out[tensor_vec[output_index].first];
+                };
+
                 auto cum_sum =
                     [&, exclusive, reverse](std::vector<std::pair<size_t, T>>& tensor_vec) {
                         // TODO (pthoreho): Add support for exclsuive and reverse mode
@@ -63,9 +77,31 @@ namespace ngraph
                             T prev = 0;
                             for (size_t i = 0; i < tensor_vec.size(); i++)
                             {
-                                tensor_vec[i].second = prev + tensor_vec[i].second;
-                                out[tensor_vec[i].first] = tensor_vec[i].second;
-                                prev = out[tensor_vec[i].first];
+                                if (exclusive == 1 && i == 0)
+                                {
+                                    out[tensor_vec[i].first] = prev;
+                                    continue;
+                                }
+                                // we will compute running sum of j-1 elements if exlusive=1 or else
+                                // for j elements if exclusive = 0
+                                size_t arg_index = exclusive == 1 ? i - 1 : i;
+                                update_output_buffer(arg_index, i, prev, tensor_vec);
+                            }
+                        }
+                        else // reverse == 1
+                        {
+                            T prev = 0;
+                            for (size_t i = tensor_vec.size(); i-- > 0;)
+                            {
+                                if (exclusive == 1 && i == tensor_vec.size() - 1)
+                                {
+                                    out[tensor_vec[i].first] = prev;
+                                    continue;
+                                }
+                                // we will compute running sum of j-1 elements if exlusive=1 or else
+                                // for j elements if exclusive = 0
+                                size_t arg_index = exclusive == 1 ? i + 1 : i;
+                                update_output_buffer(arg_index, i, prev, tensor_vec);
                             }
                         }
                     };
