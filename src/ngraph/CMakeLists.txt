@@ -144,6 +144,8 @@ set (SRC
     op/cos.hpp
     op/cosh.cpp
     op/cosh.hpp
+    op/crop_and_resize.cpp
+    op/crop_and_resize.hpp
     op/dequantize.cpp
     op/dequantize.hpp
     op/divide.cpp
