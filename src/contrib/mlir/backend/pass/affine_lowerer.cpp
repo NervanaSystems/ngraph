@@ -521,7 +521,7 @@ namespace
         NGRAPH_CHECK(lhs->getType().isa<MemRefType>());
         Type elemTy = lhs->getType().dyn_cast<MemRefType>().getElementType();
 
-        LoopNestBuilder(pivs, lbs, ubs, steps)([&] {
+        AffineLoopNestBuilder(pivs, lbs, ubs, steps)([&] {
             ValueHandle val = iLHS(ivs);
             ValueHandle zero = createZeroConstant(elemTy);
             iRes(ivs) = intrinsics::select(val > zero, val, zero);
@@ -591,12 +591,14 @@ namespace
 
         {
             IndexHandle n, k;
-            LoopBuilder(&n, nLb, nUb, nStep)(
-                [&] { LoopBuilder(&k, kLb, kUb, kStep)([&] { iRes(n, k) = zeroInit; }); });
+            LoopBuilder::makeAffine(&n, nLb, nUb, nStep)([&] {
+                LoopBuilder::makeAffine(&k, kLb, kUb, kStep)([&] { iRes(n, k) = zeroInit; });
+            });
         }
-        LoopBuilder(&n, nLb, nUb, nStep)([&] {
-            LoopBuilder(&m, mLb, mUb, mStep)([&] {
-                LoopBuilder(&k, kLb, kUb, kStep)([&] { iRes(n, k) += iLhs(n, m) * iRhs(m, k); });
+        LoopBuilder::makeAffine(&n, nLb, nUb, nStep)([&] {
+            LoopBuilder::makeAffine(&m, mLb, mUb, mStep)([&] {
+                LoopBuilder::makeAffine(&k, kLb, kUb, kStep)(
+                    [&] { iRes(n, k) += iLhs(n, m) * iRhs(m, k); });
             });
         });
 
@@ -658,7 +660,7 @@ namespace
                 indexVarSteps.push_back(vOperand.step(i));
             }
 
-            LoopNestBuilder(indexVarPtrs, indexVarLbs, indexVarUbs, indexVarSteps)([&] {
+            AffineLoopNestBuilder(indexVarPtrs, indexVarLbs, indexVarUbs, indexVarSteps)([&] {
                 IndexedValue ivRes(result);
                 IndexedValue ivOperand(operand);
 
@@ -758,12 +760,12 @@ namespace
         //                   params[P_0, P_1, .. P_(A-1), indices[I_0, .., I_(M-1)],
         //                          P_(A+1), ... P_(N-1)];
 
-        LoopNestBuilder(indicesIVPtrs, indicesLbs, indicesUbs, indicesSteps)([&] {
+        AffineLoopNestBuilder(indicesIVPtrs, indicesLbs, indicesUbs, indicesSteps)([&] {
             // Load axis value from indices array and cast it to Index Type
             ValueHandle axisIdx = ValueHandle::create<IndexCastOp>(
                 (ValueHandle)iIndices(indicesIVs), rewriter.getIndexType());
 
-            LoopNestBuilder(paramsIVPtrs, paramsLbs, paramsUbs, paramsSteps)([&] {
+            AffineLoopNestBuilder(paramsIVPtrs, paramsLbs, paramsUbs, paramsSteps)([&] {
                 // construct indices for param
                 // [P_0, P_1, .. P_axis-1, Indices[I0, I1, .. I_k-1], P_axis+1, P_axis+2, .. P_n-1]
                 for (auto i = 0, j = 0; i < vParams.rank(); i++)
@@ -965,8 +967,7 @@ namespace
 
             NGRAPH_CHECK(affineExprs.size() == isEq.size() && isEq.size() == 2 * spatialRank,
                          "Invalid number of expressions in the IntegerSet");
-            nonPaddedRange =
-                rewriter.getIntegerSet(spatialRank, 2 * spatialRank, affineExprs, isEq);
+            nonPaddedRange = IntegerSet::get(spatialRank, 2 * spatialRank, affineExprs, isEq);
         }
 
         // Initialize output to zero
@@ -975,9 +976,9 @@ namespace
             auto resSpatialIndices = makeIndexHandles(spatialRank);
             auto resSpatialIndicesPtrs = makeIndexHandlePointers(resSpatialIndices);
 
-            LoopBuilder(&n, batchLb, batchUb, 1)([&] {
-                LoopBuilder(&k, numFiltersLb, numFiltersUb, 1)([&] {
-                    LoopNestBuilder(
+            LoopBuilder::makeAffine(&n, batchLb, batchUb, 1)([&] {
+                LoopBuilder::makeAffine(&k, numFiltersLb, numFiltersUb, 1)([&] {
+                    AffineLoopNestBuilder(
                         resSpatialIndicesPtrs, resSpatialLbs, resSpatialUbs, resSteps)([&] {
                         SmallVector<IndexHandle, 4> resIndices;
                         // Result indices
@@ -994,13 +995,13 @@ namespace
 
         IndexHandle n, k, c;
         // Convolution loop
-        LoopBuilder(&n, batchLb, batchUb, 1)([&] {
+        LoopBuilder::makeAffine(&n, batchLb, batchUb, 1)([&] {
             // Number of filters loop
-            LoopBuilder(&k, numFiltersLb, numFiltersUb, 1)([&] {
+            LoopBuilder::makeAffine(&k, numFiltersLb, numFiltersUb, 1)([&] {
                 // Channels loop
-                LoopBuilder(&c, numChannelsLb, numChannelsUb, 1)([&] {
+                LoopBuilder::makeAffine(&c, numChannelsLb, numChannelsUb, 1)([&] {
                     // Results loop
-                    LoopNestBuilder(
+                    AffineLoopNestBuilder(
                         resSpatialIndicesPtrs, resSpatialLbs, resSpatialUbs, resSteps)([&] {
                         // Compute image start indices
                         SmallVector<IndexHandle, 4> imgStartIndices;
@@ -1017,10 +1018,10 @@ namespace
                         resIndices.insert(
                             resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
                         // Filters spatial loop
-                        LoopNestBuilder(filtersSpatialIndicesPtrs,
-                                        filtersSpatialLbs,
-                                        filtersSpatialUbs,
-                                        filtersSteps)([&] {
+                        AffineLoopNestBuilder(filtersSpatialIndicesPtrs,
+                                              filtersSpatialLbs,
+                                              filtersSpatialUbs,
+                                              filtersSteps)([&] {
                             SmallVector<IndexHandle, 4> imgIndices, filtersIndices;
                             // Image indices
                             // Here we compute the virtual start index into the padded image.
@@ -1131,7 +1132,7 @@ namespace
         NGRAPH_CHECK(lhs->getType().isa<MemRefType>());
         Type elemTy = lhs->getType().cast<MemRefType>().getElementType();
 
-        LoopNestBuilder(pivs, lbs, ubs, steps)([&] {
+        AffineLoopNestBuilder(pivs, lbs, ubs, steps)([&] {
             ValueHandle val = iLHS(ivs);
             if (isa<NGNegOp>(op))
             {
@@ -1173,7 +1174,7 @@ namespace
         auto pivs = makeIndexHandlePointers(ivs);
         // Steps
         auto steps = vLHS.getSteps();
-        LoopNestBuilder(pivs, lbs, ubs, steps)(
+        AffineLoopNestBuilder(pivs, lbs, ubs, steps)(
             // single stmt body
             [&] {
                 if (isa<NGAddOp>(op))
@@ -1266,7 +1267,7 @@ namespace
             auto pivs = makeIndexHandlePointers(ivs);
             auto steps = vRes.getSteps();
             auto initVal = vArg.lb(axis);
-            LoopNestBuilder(pivs, resLbs, resUbs, steps)(
+            AffineLoopNestBuilder(pivs, resLbs, resUbs, steps)(
                 [&] { iRes(ivs) = ValueHandle::create<IndexCastOp>(initVal, resTy); });
         }
 
@@ -1282,7 +1283,7 @@ namespace
                          "Expected integer result type in index reduction");
 
             // iterate over all argument dimensions
-            LoopNestBuilder(pAllIVs, argLbs, argUbs, steps)([&] {
+            AffineLoopNestBuilder(pAllIVs, argLbs, argUbs, steps)([&] {
                 // build a list of non-reduction IVs
                 for (auto i = 0; i < vArg.rank(); i++)
                 {

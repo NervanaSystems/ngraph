@@ -61,9 +61,9 @@ target_link_libraries(
 # some libs need whole archive linkage because of Globals static initialization
 function(whole_archive_link target)
     if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
-        set(link_flags "-Llib -Wl,-all_load ")
+        set(link_flags "-L${LLVM_BUILD_LIBRARY_DIR} -Wl,-force_load ")
         FOREACH(LIB ${ARGN})
-            string(CONCAT link_flags ${link_flags} "${LIB}")
+            string(CONCAT link_flags ${link_flags} "${LIB} ")
         ENDFOREACH(LIB)
     else()
         set(link_flags "-Llib -Wl,--whole-archive,")
@@ -77,10 +77,11 @@ function(whole_archive_link target)
     set_target_properties(${target} PROPERTIES LINK_FLAGS ${link_flags})
 endfunction(whole_archive_link)
 
-whole_archive_link(mlir_backend
+set(LIBS
     ${LLVM_BUILD_LIBRARY_DIR}/libMLIRAffineOps.a
     ${LLVM_BUILD_LIBRARY_DIR}/libMLIRStandardOps.a
 )
+whole_archive_link(mlir_backend ${LIBS})
 # Link LLVM libs
 target_link_libraries(
     mlir_backend PRIVATE 
