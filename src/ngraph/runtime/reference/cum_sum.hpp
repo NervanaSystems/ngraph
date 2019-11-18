@@ -38,14 +38,10 @@ namespace ngraph
                         const int exclusive,
                         const int reverse)
             {
-                auto temp_shape = reduce(out_shape, AxisSet{static_cast<size_t>(axis)});
-                CoordinateTransform temp_transform(temp_shape);
-                std::vector<T> cs(shape_size(temp_shape));
-
+                CoordinateTransform temp_transform(out_shape);
                 for (const Coordinate& output_coord : temp_transform)
                 {
                     out[temp_transform.index(output_coord)] = 0;
-                    cs[temp_transform.index(output_coord)] = 0;
                 }
 
                 auto get_key = [&, axis](const Coordinate& coord) -> Coordinate {
@@ -59,32 +55,28 @@ namespace ngraph
                     return result;
                 };
 
+                auto cum_sum =
+                    [&, exclusive, reverse](std::vector<std::pair<size_t, T>>& tensor_vec) {
+                        // TODO (pthoreho): Add support for exclsuive and reverse mode
+                        if (reverse == 0)
+                        {
+                            T prev = 0;
+                            for (size_t i = 0; i < tensor_vec.size(); i++)
+                            {
+                                tensor_vec[i].second = prev + tensor_vec[i].second;
+                                out[tensor_vec[i].first] = tensor_vec[i].second;
+                                prev = out[tensor_vec[i].first];
+                            }
+                        }
+                    };
+
                 // Map to collect tensor elements belonging to the same axis
                 std::map<Coordinate, std::vector<std::pair<size_t, T>>> map_cooord_to_val;
-
-                auto print_map = [&]() {
-                    std::cout << "I am here" << std::endl;
-                    for (auto const& it : map_cooord_to_val)
-                    {
-                        std::cout << "key: " << it.first << std::endl;
-                        for (auto val : it.second)
-                        {
-                            std::cout << "(" << val.first << ", " << val.second << ")" << std::endl;
-                        }
-                        std::cout << std::endl;
-                    }
-                };
                 CoordinateTransform input_transform(in_shape);
-                T prev = 0;
                 for (const Coordinate& input_coord : input_transform)
                 {
                     // points to the current element in the input tensor
                     T current = arg[input_transform.index(input_coord)];
-                    // holds the reference of the output corrosponding to the given input tensor
-                    T& z = out[input_transform.index(input_coord)];
-
-                    // TODO (pthoreho): Add support for exclsuive and reverse mode
-                    std::cout << get_key(input_coord) << std::endl;
                     auto key = get_key(input_coord);
                     auto index = input_transform.index(input_coord);
                     if (map_cooord_to_val.find(key) != map_cooord_to_val.end())
@@ -96,13 +88,12 @@ namespace ngraph
                         map_cooord_to_val.insert({key, std::vector<std::pair<size_t, T>>()});
                         map_cooord_to_val[key].push_back(std::make_pair(index, current));
                     }
-
-                    z = prev + current;
-                    // captures the result of the current output for cummulative sum in the
-                    // subsequent sum
-                    prev = z;
                 }
-                print_map();
+                // iterate the map and perform cumulative sum over the give axis
+                for (auto& it : map_cooord_to_val)
+                {
+                    cum_sum(it.second);
+                }
             }
         }
     }
