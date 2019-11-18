@@ -15,12 +15,12 @@
 //*****************************************************************************
 #include "ngraph/op/fused/mod.hpp"
 #include "ngraph/builder/make_constant.hpp"
-#include "ngraph/op/divide.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/subtract.hpp"
-#include "ngraph/op/sign.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/convert.hpp"
+#include "ngraph/op/divide.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/sign.hpp"
+#include "ngraph/op/subtract.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -41,8 +41,8 @@ NodeVector op::Mod::decompose_op() const
     const auto divisor = make_shared<op::Abs>(input_value(1));
 
     // truncated(a / b)
-    auto division =
-        make_shared<op::Convert>(make_shared<op::Divide>(dividend, divisor, m_auto_broadcast), ngraph::element::i64);
+    auto division = make_shared<op::Convert>(
+        make_shared<op::Divide>(dividend, divisor, m_auto_broadcast), ngraph::element::i64);
     division = make_shared<op::Convert>(division, dividend_et);
     // truncated(a / b) * b
     const auto multiplication = make_shared<op::Multiply>(division, divisor, m_auto_broadcast);
@@ -50,7 +50,7 @@ NodeVector op::Mod::decompose_op() const
     const auto mod = make_shared<op::Subtract>(dividend, multiplication, m_auto_broadcast);
 
     // apply sign of dividend
-    return { make_shared<op::Multiply>(dividend_sign, mod, m_auto_broadcast) };
+    return {make_shared<op::Multiply>(dividend_sign, mod, m_auto_broadcast)};
 }
 
 shared_ptr<Node> op::Mod::copy_with_new_args(const NodeVector& new_args) const

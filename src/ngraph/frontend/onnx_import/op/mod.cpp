@@ -32,14 +32,14 @@ namespace ngraph
                 NodeVector mod(const Node& node)
                 {
                     std::shared_ptr<ngraph::Node> dividend{node.get_ng_inputs().at(0)};
-                    std::shared_ptr<ngraph::Node> divisor{ node.get_ng_inputs().at(1) };
+                    std::shared_ptr<ngraph::Node> divisor{node.get_ng_inputs().at(1)};
 
                     std::int64_t fmod = node.get_attribute_value<std::int64_t>("fmod", 0);
                     ASSERT_IS_SUPPORTED(node, fmod == 1) << "Only 'fmod' mode is supported.";
 
                     const auto auto_broadcast = ngraph::op::AutoBroadcastType::NUMPY;
 
-                    return { std::make_shared<ngraph::op::Mod>(dividend, divisor, auto_broadcast) };
+                    return {std::make_shared<ngraph::op::Mod>(dividend, divisor, auto_broadcast)};
                 }
 
             } // namespace set_1
