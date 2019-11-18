@@ -121,6 +121,8 @@ namespace ngraph
     ///          of parameters of f, with nullptr indicating that no substitution is to be made for
     ///          the corresponding parameter.
     /// \param constant_folding If flag is true, constant propagation is applied
+    /// \param share_constants If flag is true, cloned function will have shared constants with
+    ///          original function.
     /// \return A clone of f, with the parameter element types, shapes, and values specialized.
     /// \throws CheckFailure if parameter_element_types, parameter_shapes is not valid
     ///         (see details).
@@ -198,5 +200,6 @@ namespace ngraph
                             const std::vector<element::Type>& parameter_element_types,
                             const std::vector<PartialShape>& parameter_shapes,
                             const std::vector<void*>& parameter_values,
-                            bool constant_folding);
+                            bool constant_folding,
+                            bool share_constants);
 }

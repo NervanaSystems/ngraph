@@ -16,9 +16,9 @@
 
 #include <memory>
 
-#include "ngraph/builder/make_constant.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/log.hpp"
@@ -40,9 +40,10 @@ namespace ngraph
                     auto data = node.get_ng_inputs().at(0);
 
                     std::shared_ptr<ngraph::Node> zero_node =
-                        builder::make_constant(data->get_element_type(), data->get_shape(), 0.f);
-                    std::shared_ptr<ngraph::Node> one_node =
-                        builder::make_constant(data->get_element_type(), data->get_shape(), 1.f);
+                        std::make_shared<ngraph::op::Constant>(
+                            data->get_element_type(), data->get_shape(), std::vector<float>{0.f});
+                    std::shared_ptr<ngraph::Node> one_node = std::make_shared<ngraph::op::Constant>(
+                        data->get_element_type(), data->get_shape(), std::vector<float>{1.f});
 
                     std::shared_ptr<ngraph::Node> positive_val_node =
                         data + std::make_shared<ngraph::op::Log>(

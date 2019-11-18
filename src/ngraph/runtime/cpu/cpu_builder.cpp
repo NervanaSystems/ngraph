@@ -31,6 +31,7 @@
 #include "ngraph/op/and.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
+#include "ngraph/op/atan2.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/cos.hpp"
@@ -75,6 +76,7 @@
 #include "ngraph/runtime/cpu/kernel/and.hpp"
 #include "ngraph/runtime/cpu/kernel/asin.hpp"
 #include "ngraph/runtime/cpu/kernel/atan.hpp"
+#include "ngraph/runtime/cpu/kernel/atan2.hpp"
 #include "ngraph/runtime/cpu/kernel/broadcast.hpp"
 #include "ngraph/runtime/cpu/kernel/ceil.hpp"
 #include "ngraph/runtime/cpu/kernel/cos.hpp"
@@ -335,6 +337,12 @@ namespace ngraph
             }
 
             template <>
+            void Builder::BUILDER_DECL(ngraph::op::Atan2)
+            {
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::atan2);
+            }
+
+            template <>
             void Builder::BUILDER_DECL(ngraph::op::Ceiling)
             {
                 BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::ceil);
@@ -493,6 +501,12 @@ namespace ngraph
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Multiply)
             {
                 BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::multiply);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Power)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::cwise_pow);
             }
 
             template <>
@@ -677,6 +691,7 @@ namespace ngraph
                 REGISTER_OP_BUILDER(Acos);
                 REGISTER_OP_BUILDER(Asin);
                 REGISTER_OP_BUILDER(Atan);
+                REGISTER_OP_BUILDER(Atan2);
                 REGISTER_OP_BUILDER(Ceiling);
                 REGISTER_OP_BUILDER(Cos);
                 REGISTER_OP_BUILDER(Cosh);
@@ -727,6 +742,7 @@ namespace ngraph
                 REGISTER_CF_BUILDER(Xor);
                 REGISTER_CF_BUILDER(Sign);
                 REGISTER_CF_BUILDER(Not);
+                REGISTER_CF_BUILDER(Power);
             }
         }
     }
