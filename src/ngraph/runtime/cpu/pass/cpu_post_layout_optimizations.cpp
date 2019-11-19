@@ -441,8 +441,7 @@ bool ngraph::runtime::cpu::pass::CPUConvertLayoutConstantFolding::run_on_functio
                     break;
                 case element::Type_t::u1:
                     NGRAPH_CHECK(
-                            false,
-                            "Encountered 'u1' element type in construct_constant_convertlayout");
+                        false, "Encountered 'u1' element type in construct_constant_convertlayout");
                     break;
                 case element::Type_t::boolean:
                     replacement = fold_constant_convertlayout_helper<char>(

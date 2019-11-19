@@ -118,8 +118,7 @@ void pass::ConstantFolding::construct_constant_broadcast()
                          "Encountered 'dynamic' element type in constant_broadcast_callback");
             break;
         case element::Type_t::u1:
-            NGRAPH_CHECK(false,
-                         "Encountered 'u1' element type in constant_broadcast_callback");
+            NGRAPH_CHECK(false, "Encountered 'u1' element type in constant_broadcast_callback");
             break;
         case element::Type_t::boolean:
             replacement = fold_constant_broadcast<char>(constant_match, broadcast_match, func);

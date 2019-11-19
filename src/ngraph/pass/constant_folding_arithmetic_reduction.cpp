@@ -190,8 +190,7 @@ static shared_ptr<op::Constant>
                      "Encountered 'dynamic' element type in fold_constant_arithmetic_reduction");
         break;
     case element::Type_t::u1:
-        NGRAPH_CHECK(false,
-                     "Encountered 'u1' element type in fold_constant_arithmetic_reduction");
+        NGRAPH_CHECK(false, "Encountered 'u1' element type in fold_constant_arithmetic_reduction");
         break;
     case element::Type_t::boolean:
         return fold_constant_arithmetic_reduction_helper<char>(constant, reduction_node);
