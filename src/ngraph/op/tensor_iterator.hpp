@@ -130,6 +130,7 @@ namespace ngraph
             class InvariantInputDescription : public InputDescription
             {
             public:
+                NGRAPH_API
                 static constexpr DiscreteTypeInfo type_info{"InvariantInputDescription", 0};
                 const DiscreteTypeInfo& get_type_info() const override { return type_info; }
                 InvariantInputDescription(uint64_t input_index, uint64_t body_parameter_index);
