@@ -20,20 +20,12 @@
 #pragma once
 
 #include "contrib/mlir/core/compiler.hpp"
-#include "contrib/mlir/runtime/cpu/memory_manager.hpp"
+
 #include "ngraph/check.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/node.hpp"
 
-#include <mlir/ExecutionEngine/MemRefUtils.h>
-#include <mlir/IR/Builders.h>
-#include <mlir/IR/Module.h>
-#include <mlir/IR/Types.h>
 #include <mlir/Pass/Pass.h>
-
-#include <typeindex>
-#include <unordered_map>
-#include <vector>
 
 using namespace ngraph::runtime::ngmlir;
 
