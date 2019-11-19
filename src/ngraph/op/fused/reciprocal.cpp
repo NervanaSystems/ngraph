@@ -13,19 +13,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include "ngraph/op/fused/reciprocal.hpp"
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/divide.hpp"
 
-#include "ngraph/op/fused/space_to_depth.hpp"
-#include "pyngraph/ops/fused/space_to_depth.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace py = pybind11;
+constexpr NodeTypeInfo op::Reciprocal::type_info;
 
-void regclass_pyngraph_op_SpaceToDepth(py::module m)
+op::Reciprocal::Reciprocal(const Output<Node>& data)
+    : FusedOp({data})
 {
-    py::class_<ngraph::op::SpaceToDepth, std::shared_ptr<ngraph::op::SpaceToDepth>, ngraph::op::Op>
-        spacetodepth(m, "SpaceToDepth");
-    spacetodepth.doc() = "ngraph.impl.op.SpaceToDepth wraps ngraph::op::SpaceToDepth";
-    spacetodepth.def(py::init<const std::shared_ptr<ngraph::Node>&, const std::string&, int&>());
+    constructor_validate_and_infer_types();
+}
+
+NodeVector op::Reciprocal::decompose_op() const
+{
+    auto data = input_value(0);
+    auto one_node = op::Constant::create(data.get_element_type(), data.get_shape(), {1});
+    return {make_shared<op::v1::Divide>(one_node, data)};
+}
+
+shared_ptr<Node> op::Reciprocal::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<Reciprocal>(new_args.at(0));
 }

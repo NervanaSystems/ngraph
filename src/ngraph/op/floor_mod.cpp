@@ -14,18 +14,23 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include "ngraph/op/floor_mod.hpp"
 
-#include "ngraph/op/fused/space_to_depth.hpp"
-#include "pyngraph/ops/fused/space_to_depth.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace py = pybind11;
+constexpr NodeTypeInfo op::v1::FloorMod::type_info;
 
-void regclass_pyngraph_op_SpaceToDepth(py::module m)
+op::v1::FloorMod::FloorMod(const Output<Node>& arg0,
+                           const Output<Node>& arg1,
+                           const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
-    py::class_<ngraph::op::SpaceToDepth, std::shared_ptr<ngraph::op::SpaceToDepth>, ngraph::op::Op>
-        spacetodepth(m, "SpaceToDepth");
-    spacetodepth.doc() = "ngraph.impl.op.SpaceToDepth wraps ngraph::op::SpaceToDepth";
-    spacetodepth.def(py::init<const std::shared_ptr<ngraph::Node>&, const std::string&, int&>());
+    constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::v1::FloorMod::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<FloorMod>(new_args.at(0), new_args.at(1), this->get_autob());
 }
