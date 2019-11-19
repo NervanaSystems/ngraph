@@ -349,9 +349,7 @@ set (SRC
     op/fused/gelu.hpp
     op/fused/gemm.cpp
     op/fused/gemm.hpp
-    op/fused/grn.cpp
-    op/fused/grn.hpp
-    op/fused/group_conv.hpp
+        op/fused/group_conv.hpp
     op/fused/group_conv.cpp
     op/fused/group_conv_transpose.hpp
     op/fused/group_conv_transpose.cpp

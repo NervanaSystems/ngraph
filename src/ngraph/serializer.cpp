@@ -78,7 +78,6 @@
 #include "ngraph/op/fused/fake_quantize.hpp"
 #include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/gemm.hpp"
-#include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/fused/gru_cell.hpp"
@@ -1647,12 +1646,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                     args[1],
                     read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
             }
-            break;
-        }
-        case OP_TYPEID::GRN:
-        {
-            auto bias = node_js.at("bias").get<float>();
-            node = make_shared<op::GRN>(args[0], bias);
             break;
         }
         case OP_TYPEID::GroupConvolution:
@@ -3481,12 +3474,6 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
-        break;
-    }
-    case OP_TYPEID::GRN:
-    {
-        auto tmp = static_cast<const op::GRN*>(&n);
-        node["bias"] = tmp->get_bias();
         break;
     }
     case OP_TYPEID::GRUCell:

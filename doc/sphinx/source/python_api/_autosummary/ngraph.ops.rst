@@ -45,7 +45,6 @@ ngraph.ops
       get_output_element
       greater
       greater_eq
-      grn
       group_convolution
       hard_sigmoid
       less

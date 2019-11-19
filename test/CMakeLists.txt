@@ -131,8 +131,7 @@ set(SRC
     type_prop/gather_nd.cpp
     type_prop/gemm.cpp
     type_prop/get_output_element.cpp
-    type_prop/grn.cpp
-    type_prop/group_convolution.cpp
+        type_prop/group_convolution.cpp
     type_prop/group_convolution_transpose.cpp
     type_prop/gru_cell.cpp
     type_prop/hard_sigmoid.cpp

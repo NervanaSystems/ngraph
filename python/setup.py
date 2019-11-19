@@ -197,7 +197,6 @@ sources = [
     'pyngraph/ops/fused/gemm.cpp',
     'pyngraph/ops/greater.cpp',
     'pyngraph/ops/greater_eq.cpp',
-    'pyngraph/ops/fused/grn.cpp',
     'pyngraph/ops/fused/group_conv.cpp',
     'pyngraph/ops/fused/hard_sigmoid.cpp',
     'pyngraph/ops/less.cpp',

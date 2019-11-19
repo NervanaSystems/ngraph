@@ -138,7 +138,6 @@ namespace ngraph
 #include "ngraph/op/fused/fake_quantize.hpp"
 #include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/gemm.hpp"
-#include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/fused/gru_cell.hpp"

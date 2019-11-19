@@ -303,30 +303,6 @@ def test_unsqueeze():
     assert np.allclose(result, expected)
 
 
-def test_grn_operator():
-    runtime = get_runtime()
-
-    data_value = np.arange(start=1.0, stop=25.0, dtype=np.float32).reshape(1, 2, 3, 4)
-    bias = np.float32(1e-6)
-
-    data_shape = [1, 2, 3, 4]
-
-    parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
-
-    model = ng.grn(parameter_data, bias)
-    computation = runtime.computation(model, parameter_data)
-
-    result = computation(data_value)
-    expected = np.array([[[[0.0766965, 0.14142136, 0.19611613, 0.24253564],
-                           [0.28216633, 0.31622776, 0.34570536, 0.37139067],
-                           [0.39391932, 0.41380295, 0.4314555, 0.4472136]],
-                          [[0.9970545, 0.98994946, 0.9805807, 0.97014254],
-                           [0.9593655, 0.9486833, 0.9383431, 0.9284767],
-                           [0.91914505, 0.9103665, 0.9021342, 0.8944272]]]], dtype=np.float32)
-
-    assert np.allclose(result, expected)
-
-
 def test_prelu_operator():
     runtime = get_runtime()
 
