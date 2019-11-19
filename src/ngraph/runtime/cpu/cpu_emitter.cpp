@@ -4609,16 +4609,11 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::CumSum)
             {
                 const ngraph::op::CumSum* cumsum = static_cast<const ngraph::op::CumSum*>(node);
-
+                writer.block_begin();
                 writer << "reference::cumsum<" << cumsum->get_element_type().c_type_string()
                        << ">(";
-                writer << "            static_cast<const "
-                       << cumsum->get_element_type().c_type_string() << ">(" << args[0].get_name()
-                       << ")"
-                       << ",\n";
-                writer << "            static_cast<" << cumsum->get_element_type().c_type_string()
-                       << ">(" << out[0].get_name() << ")"
-                       << ",\n";
+                writer << "            " << args[0].get_name() << ",\n";
+                writer << "            " << out[0].get_name() << ",\n";
                 writer << "            {" << join(args[0].get_shape()) << "},\n";
                 writer << "            {" << join(out[0].get_shape()) << "},\n";
                 writer << "            " << cumsum->get_axis() << ",\n";
