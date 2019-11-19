@@ -19,9 +19,7 @@
 #include <memory>
 
 #include "core/node.hpp"
-#include "ngraph/frontend/onnx_import/op/softmax.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/log.hpp"
 
 namespace ngraph
 {
@@ -31,10 +29,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector log_softmax(const Node& node)
-                {
-                    return {std::make_shared<ngraph::op::Log>(softmax(node).at(0))};
-                }
+                NodeVector log_softmax(const Node& node);
 
             } // namespace set_1
 

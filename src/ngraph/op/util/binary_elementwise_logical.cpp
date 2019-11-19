@@ -52,3 +52,9 @@ void op::util::BinaryElementwiseLogical::validate_and_infer_types()
 {
     validate_and_infer_elementwise_logical(m_autob);
 }
+
+bool op::util::BinaryElementwiseLogical::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("autob", m_autob);
+    return true;
+}
