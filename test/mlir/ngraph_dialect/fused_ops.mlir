@@ -43,8 +43,8 @@ func @split(%arg0: !ng.tensor<2x2x16xf32>) -> !ng.tensor<2x2x4xf32> {
 
 // CHECK-LABEL: func @spaceToDepth
 func @spaceToDepth(%arg0: !ng.tensor<1x4x16x16xf32>) -> !ng.tensor<1x64x4x4xf32> {
-  // CHECK: %{{[0-9]+}} = "ng.spaceToDepth"(%{{.*}}) {blockSize = 4 : i64} : (!ng.tensor<1x4x16x16xf32>) -> !ng.tensor<1x64x4x4xf32>
-  %0 = "ng.spaceToDepth"(%arg0) {blockSize = 4} : (!ng.tensor<1x4x16x16xf32>) -> (!ng.tensor<1x64x4x4xf32>)
+  // CHECK: %{{[0-9]+}} = "ng.spaceToDepth"(%{{.*}}) {blockSize = 4 : i64, mode = 0 : i32} : (!ng.tensor<1x4x16x16xf32>) -> !ng.tensor<1x64x4x4xf32>
+  %0 = "ng.spaceToDepth"(%arg0) {blockSize = 4, mode = 0 : i32} : (!ng.tensor<1x4x16x16xf32>) -> (!ng.tensor<1x64x4x4xf32>)
   "ng.return"(%0) : (!ng.tensor<1x64x4x4xf32>) -> ()
 }
 
