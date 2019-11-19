@@ -199,21 +199,21 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_string_cast)
     auto a = make_shared<op::Parameter>(element::f32, Shape{1});
     auto b = make_shared<op::Parameter>(element::f32, Shape{1});
 
-    auto add = make_shared<op::Add>(a, b, "numpy");
+    auto add = make_shared<op::Add>(a, b, "NUMPY");
     ASSERT_EQ(add->get_autob(), op::AutoBroadcastType::NUMPY);
 
-    add = make_shared<op::Add>(a, b, "none");
+    add = make_shared<op::Add>(a, b, "NONE");
     ASSERT_EQ(add->get_autob(), op::AutoBroadcastType::NONE);
 
-    add = make_shared<op::Add>(a, b, "pdpd");
+    add = make_shared<op::Add>(a, b, "PDPD");
     ASSERT_EQ(add->get_autob(), op::AutoBroadcastType::PDPD);
 
-    add = make_shared<op::Add>(a, b, "explicit");
+    add = make_shared<op::Add>(a, b, "EXPLICIT");
     ASSERT_EQ(add->get_autob(), op::AutoBroadcastType::EXPLICIT);
 
     try
     {
-        add = make_shared<op::Add>(a, b, "unknown");
+        add = make_shared<op::Add>(a, b, "UNKNOWN");
         FAIL() << "Unknown AutoBroadcastType not detected.";
     }
     catch (const ngraph_error& error)

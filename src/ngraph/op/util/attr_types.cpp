@@ -132,10 +132,10 @@ namespace ngraph
     op::AutoBroadcastType op::AutoBroadcastSpec::type_from_string(const std::string& type) const
     {
         static const std::map<std::string, AutoBroadcastType> allowed_values = {
-            {"none", AutoBroadcastType::NONE},
-            {"numpy", AutoBroadcastType::NUMPY},
-            {"pdpd", AutoBroadcastType::PDPD},
-            {"explicit", AutoBroadcastType::EXPLICIT}};
+            {"NONE", AutoBroadcastType::NONE},
+            {"NUMPY", AutoBroadcastType::NUMPY},
+            {"PDPD", AutoBroadcastType::PDPD},
+            {"EXPLICIT", AutoBroadcastType::EXPLICIT}};
 
         NGRAPH_CHECK(allowed_values.count(type) > 0, "Invalid 'type' value passed in.");
 
