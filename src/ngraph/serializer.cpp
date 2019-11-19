@@ -70,6 +70,7 @@
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
+#include "ngraph/op/floor_mod.hpp"
 #include "ngraph/op/fused/clamp.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
@@ -1542,6 +1543,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Floor:
         {
             node = make_shared<op::Floor>(args[0]);
+            break;
+        }
+        case OP_TYPEID::FloorMod:
+        {
+            node = make_shared<op::FloorMod>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Gather:
@@ -3388,6 +3395,15 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Floor: { break;
+    }
+    case OP_TYPEID::FloorMod:
+    {
+        auto tmp = static_cast<const op::FloorMod*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::Gather:
     {

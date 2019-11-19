@@ -14,27 +14,23 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style.
-// Follows nGraph naming convention for public APIs only, else MLIR naming convention.
+#include "ngraph/op/floor_mod.hpp"
 
-#pragma once
+using namespace std;
+using namespace ngraph;
 
-#include "contrib/mlir/core/compiler.hpp"
+constexpr NodeTypeInfo op::v1::FloorMod::type_info;
 
-#include "ngraph/check.hpp"
-#include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/node.hpp"
-
-#include <mlir/Pass/Pass.h>
-
-using namespace ngraph::runtime::ngmlir;
-
-namespace ngraph
+op::v1::FloorMod::FloorMod(const Output<Node>& arg0,
+                           const Output<Node>& arg1,
+                           const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
-    namespace pass
-    {
-        std::unique_ptr<mlir::Pass>
-            createNgDialectConversionPass(const ngraph::op::CompiledKernel* compiledKernel,
-                                          mlir::MLIRContext* context);
-    }
+    constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::v1::FloorMod::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<FloorMod>(new_args.at(0), new_args.at(1), this->get_autob());
 }

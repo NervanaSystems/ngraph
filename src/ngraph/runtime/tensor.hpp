@@ -105,7 +105,9 @@ namespace ngraph
 
             /// \brief copy bytes directly from source to this tensor
             /// \param source The source tensor
-            virtual void copy_from(const ngraph::runtime::Tensor& source);
+            virtual void copy_from(const ngraph::runtime::Tensor& source) NGRAPH_DEPRECATED(
+                "Allocate buf_ptr with size=get_size_in_bytes(), then use source.read(buf_ptr, "
+                "size) followed by this->write(buf_ptr, size)");
 
         protected:
             std::shared_ptr<ngraph::descriptor::Tensor> m_descriptor;
