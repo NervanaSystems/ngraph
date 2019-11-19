@@ -64,6 +64,7 @@ static shared_ptr<op::Constant> fold_constant_gather(const shared_ptr<op::Consta
     case element::Type_t::f64:
     case element::Type_t::i8:
     case element::Type_t::i16:
+    case element::Type_t::u1:
     case element::Type_t::u8:
     case element::Type_t::u16:
     case element::Type_t::u32:
@@ -112,6 +113,9 @@ void pass::ConstantFolding::construct_constant_gather()
             break;
         case element::Type_t::dynamic:
             NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_gather_callback");
+            break;
+        case element::Type_t::u1:
+            NGRAPH_CHECK(false, "Encountered 'u1' element type in constant_gather_callback");
             break;
         case element::Type_t::boolean:
             replacement = fold_constant_gather<char>(data, indices, gather);
