@@ -77,7 +77,7 @@ def NGSplitOp :
   let verifier = [{ return mlir::success(); /* TBD */ }];
 
   let extraClassDeclaration = [{
-    void setAxis(const Attribute& attr)                 { this->setAttr("axis", attr);            }
+    void setAxis(const Attribute& attr)            { this->setAttr("axis", attr);            }
     void setNumSplits(const ArrayAttr& arrayAttr)  { this->setAttr("numSplits", arrayAttr);  }
   }];
  
@@ -106,6 +106,7 @@ def NGSpaceToDepthOp :
 
   let extraClassDeclaration = [{
     void setBlockSize(const Attribute& attr) { this->setAttr("blockSize", attr); }
+    void setMode(const Attribute& attr)      { this->setAttr("mode", attr);      } 
   }];
 }
     
