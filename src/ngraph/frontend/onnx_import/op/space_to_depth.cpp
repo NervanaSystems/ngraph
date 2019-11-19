@@ -29,7 +29,9 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
                     std::size_t block_size = node.get_attribute_value<std::int64_t>("blocksize");
-                    return NodeVector{std::make_shared<ngraph::op::SpaceToDepth>(data, block_size)};
+                    const auto mode = ngraph::op::SpaceToDepth::SpaceToDepthMode::BLOCKS_FIRST;
+                    return NodeVector{
+                        std::make_shared<ngraph::op::SpaceToDepth>(data, mode, block_size)};
                 }
             } // namespace set_1
 
