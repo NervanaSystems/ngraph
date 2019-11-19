@@ -1892,6 +1892,7 @@ private:
         case OP_TYPEID::Exp_v1:
         case OP_TYPEID::FakeQuantize_v1:
         case OP_TYPEID::Floor_v1:
+        case OP_TYPEID::FloorMod_v1:
         case OP_TYPEID::Gather_v1:
         case OP_TYPEID::Greater_v1:
         case OP_TYPEID::GreaterEq_v1:
