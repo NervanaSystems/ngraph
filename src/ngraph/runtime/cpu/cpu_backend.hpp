@@ -105,7 +105,6 @@ namespace ngraph
                     create_output_tensor(size_t output_index, size_t pipeline_depth) override;
 
             private:
-
                 std::shared_ptr<ngraph::op::Parameter> get_parameter(size_t index) const;
                 std::shared_ptr<ngraph::op::Result> get_result(size_t index) const;
                 class FunctionInstance
