@@ -73,6 +73,7 @@
 #include "ngraph/op/floor_mod.hpp"
 #include "ngraph/op/fused/clamp.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/crossentropy.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/fake_quantize.hpp"
@@ -1388,6 +1389,21 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Cosh:
         {
             node = make_shared<op::Cosh>(args[0]);
+            break;
+        }
+        case OP_TYPEID::CrossEntropy:
+        {
+            auto soft_label = node_js.at("soft_label");
+            auto ignore_index = node_js.at("ignore_index");
+            node = make_shared<op::CrossEntropy>(args[0], args[1], soft_label, ignore_index);
+            break;
+        }
+        case OP_TYPEID::CrossEntropyBackprop:
+        {
+            auto soft_label = node_js.at("soft_label");
+            auto ignore_index = node_js.at("ignore_index");
+            node = make_shared<op::CrossEntropyBackprop>(
+                args[0], args[1], args[2], soft_label, ignore_index);
             break;
         }
         case OP_TYPEID::DepthToSpace:
@@ -3278,6 +3294,20 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Cos: { break;
     }
     case OP_TYPEID::Cosh: { break;
+    }
+    case OP_TYPEID::CrossEntropy:
+    {
+        auto tmp = static_cast<const op::CrossEntropy*>(&n);
+        node["soft_label"] = tmp->get_soft_label();
+        node["ignore_index"] = tmp->get_ignore_index();
+        break;
+    }
+    case OP_TYPEID::CrossEntropyBackprop:
+    {
+        auto tmp = static_cast<const op::CrossEntropyBackprop*>(&n);
+        node["soft_label"] = tmp->get_soft_label();
+        node["ignore_index"] = tmp->get_ignore_index();
+        break;
     }
     case OP_TYPEID::Dequantize:
     {
