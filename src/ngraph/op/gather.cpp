@@ -134,7 +134,7 @@ void op::v1::Gather::validate_and_infer_types()
     if (input_rank.is_static() && axis != AXIS_NOT_SET_VALUE)
     {
         NODE_VALIDATION_CHECK(this,
-                              axis >= 0 && axis < static_cast<size_t>(input_rank),
+                              axis < static_cast<size_t>(input_rank),
                               "The axis must => 0 and <= input_rank (axis: ",
                               axis,
                               ").");

@@ -16,6 +16,9 @@
 
 set (SRC
     assertion.hpp
+    attribute_adapter.cpp
+    attribute_adapter.hpp
+    attribute_visitor.hpp
     autodiff/adjoints.cpp
     autodiff/adjoints.hpp
     axis_set.cpp
@@ -77,12 +80,17 @@ set (SRC
     dimension.hpp
     distributed.cpp
     distributed.hpp
+    enum_names.hpp
     except.hpp
+    factory.cpp
+    factory.hpp
     file_util.cpp
     file_util.hpp
     function.cpp
     function.hpp
     graph_util.cpp
+    lambda.cpp
+    lambda.hpp
     log.cpp
     log.hpp
     ngraph.cpp
@@ -112,10 +120,14 @@ set (SRC
     op/asin.hpp
     op/atan.cpp
     op/atan.hpp
+    op/atan2.cpp
+    op/atan2.hpp
     op/avg_pool.cpp
     op/avg_pool.hpp
     op/batch_norm.cpp
     op/batch_norm.hpp
+    op/binary_convolution.cpp
+    op/binary_convolution.hpp
     op/broadcast.cpp
     op/broadcast_distributed.cpp
     op/ceiling.cpp
@@ -201,6 +213,8 @@ set (SRC
     op/strided_slice.hpp
     op/floor.cpp
     op/floor.hpp
+    op/floor_mod.cpp
+    op/floor_mod.hpp
     op/gather.cpp
     op/gather.hpp
     op/gather_nd.cpp
@@ -313,6 +327,8 @@ set (SRC
     op/tan.hpp
     op/tanh.cpp
     op/tanh.hpp
+    op/tensor_iterator.cpp
+    op/tensor_iterator.hpp
     op/topk.cpp
     op/topk.hpp
     op/xor.cpp
@@ -343,6 +359,8 @@ set (SRC
     op/fused/gru_cell.hpp
     op/fused/layer_norm.cpp
     op/fused/layer_norm.hpp
+    op/fused/log_softmax.cpp
+    op/fused/log_softmax.hpp
     op/fused/lstm_cell.cpp
     op/fused/lstm_cell.hpp
     op/fused/lstm_sequence.cpp
@@ -357,10 +375,14 @@ set (SRC
     op/fused/partial_slice.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
+    op/fused/reciprocal.cpp
+    op/fused/reciprocal.hpp
     op/fused/rnn_cell.cpp
     op/fused/rnn_cell.hpp
     op/fused/scale_shift.cpp
     op/fused/scale_shift.hpp
+    op/fused/selu.cpp
+    op/fused/selu.hpp
     op/fused/shuffle_channels.cpp
     op/fused/shuffle_channels.hpp
     op/fused/softmax_crossentropy.cpp
@@ -547,6 +569,7 @@ set (SRC
     type/float16.cpp
     type/float16.hpp
     type/element_type.cpp
+    type.hpp
     util.cpp
     util.hpp
     validation_util.cpp

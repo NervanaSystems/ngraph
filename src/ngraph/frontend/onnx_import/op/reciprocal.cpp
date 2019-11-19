@@ -17,8 +17,7 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/divide.hpp"
+#include "ngraph/op/fused/reciprocal.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 
@@ -36,11 +35,7 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
 
-                    std::shared_ptr<ngraph::Node> one_node = std::make_shared<ngraph::op::Constant>(
-                        data->get_element_type(), Shape{}, std::vector<double>{1});
-                    one_node = ngraph::op::make_broadcast_node(one_node, data->get_shape());
-
-                    return {one_node / data};
+                    return {std::make_shared<ngraph::op::Reciprocal>(data)};
                 }
 
             } // namespace set_1

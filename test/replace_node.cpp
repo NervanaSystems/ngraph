@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "gtest/gtest.h"
+#include "util/type_prop.hpp"
 
 #include "ngraph/ngraph.hpp"
 
@@ -118,4 +119,60 @@ TEST(replace_node, replace_nodes)
     // z_replacement's arguments should be x_replacement and mul.
     ASSERT_EQ(z_replacement->input(0).get_source_output().get_node_shared_ptr(), x_replacement);
     ASSERT_EQ(z_replacement->input(1).get_source_output().get_node_shared_ptr(), mul);
+}
+
+TEST(replace_node, replace_nodes_output_order)
+{
+    auto data = make_shared<op::Parameter>(element::f16, Shape{4, 3});
+    auto topk_v0 = make_shared<op::v0::TopK>(data, 0, element::i32, 2, true);
+
+    auto topk_v1 = make_shared<op::v1::TopK>(data,
+                                             op::Constant::create(element::i32, Shape{}, {2}),
+                                             0,
+                                             op::v1::TopK::Mode::MAX,
+                                             op::v1::TopK::SortType::SORT_VALUES,
+                                             element::i32);
+
+    auto values = make_shared<op::GetOutputElement>(topk_v1, 0);
+    auto indices = make_shared<op::GetOutputElement>(topk_v1, 1);
+
+    ASSERT_EQ(values->input(0).get_source_output().get_element_type(), element::f16);
+    ASSERT_EQ(indices->input(0).get_source_output().get_element_type(), element::i32);
+
+    std::vector<int64_t> output_order{1, 0};
+    replace_node(topk_v1, topk_v0, output_order);
+
+    ASSERT_EQ(values->input(0).get_source_output().get_element_type(), element::f16);
+    ASSERT_EQ(indices->input(0).get_source_output().get_element_type(), element::i32);
+}
+
+TEST(replace_node, replace_nodes_output_order_incorrect_size)
+{
+    auto data = make_shared<op::Parameter>(element::f16, Shape{4, 3});
+    auto topk_v0 = make_shared<op::v0::TopK>(data, 0, element::i32, 2, true);
+
+    auto topk_v1 = make_shared<op::v1::TopK>(data,
+                                             op::Constant::create(element::i32, Shape{}, {2}),
+                                             0,
+                                             op::v1::TopK::Mode::MAX,
+                                             op::v1::TopK::SortType::SORT_VALUES,
+                                             element::i32);
+
+    auto values = make_shared<op::GetOutputElement>(topk_v1, 0);
+    auto indices = make_shared<op::GetOutputElement>(topk_v1, 1);
+
+    std::vector<int64_t> output_order{2, 1, 0};
+    try
+    {
+        replace_node(topk_v1, topk_v0, output_order);
+        FAIL() << "Incorrect output order size exception not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Target output size: "));
+    }
+    catch (...)
+    {
+        FAIL() << "Incorrect output order size exception not thrown for unexpected reason";
+    }
 }
