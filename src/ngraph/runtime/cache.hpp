@@ -23,6 +23,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <mutex>
 #include "ngraph/runtime/executable.hpp"
 #include "ngraph/shape.hpp"
 
