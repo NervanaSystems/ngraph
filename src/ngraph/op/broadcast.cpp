@@ -46,6 +46,12 @@ op::v1::Broadcast::Broadcast(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
+bool op::v1::Broadcast::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("broadcast_spec", m_broadcast_spec);
+    return true;
+}
+
 std::pair<bool, AxisSet> op::v1::Broadcast::get_broadcast_axes() const
 {
     AxisSet broadcast_axes;
@@ -286,6 +292,13 @@ op::v0::Broadcast::Broadcast(const Output<Node>& arg,
 {
 }
 
+bool op::v0::Broadcast::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("shape", m_shape);
+    visitor.on_attribute("broadcast_axes", m_broadcast_axes);
+    return true;
+}
+
 void op::v0::Broadcast::validate_and_infer_types()
 {
     infer_shape();
@@ -353,6 +366,14 @@ op::v0::BroadcastLike::BroadcastLike(const Output<Node>& arg,
     , m_initial_broadcast_axes(initial_broadcast_axes)
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::v0::BroadcastLike::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("shape", m_shape);
+    visitor.on_attribute("broadcast_axes", m_broadcast_axes);
+    visitor.on_attribute("initial_broadcast_axes", m_initial_broadcast_axes);
+    return true;
 }
 
 shared_ptr<Node> op::v0::BroadcastLike::copy_with_new_args(const NodeVector& new_args) const

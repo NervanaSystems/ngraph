@@ -45,7 +45,10 @@ namespace ngraph
             public:
                 static constexpr NodeTypeInfo type_info{"Power", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
-                Power() = default;
+                Power()
+                    : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NONE)
+                {
+                }
                 /// \brief Constructs an exponentiation operation.
                 ///
                 /// \param arg0 Node that produces the first input tensor.
@@ -87,7 +90,11 @@ namespace ngraph
             public:
                 static constexpr NodeTypeInfo type_info{"Power", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
-                Power() = default;
+                Power()
+                    : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NUMPY)
+                {
+                }
+
                 /// \brief Constructs an exponentiation operation.
                 ///
                 /// \param arg0 Node that produces the first input tensor.

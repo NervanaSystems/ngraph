@@ -48,6 +48,8 @@ namespace ngraph
                       const PartialShape& pshape,
                       const bool cacheable = false);
 
+            bool visit_attributes(AttributeVisitor& visitor) override;
+
             bool is_parameter() const override { return true; }
             void validate_and_infer_types() override;
 

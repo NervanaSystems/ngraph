@@ -55,3 +55,9 @@ void op::util::BinaryElementwiseComparison::validate_and_infer_types()
 
     set_output_type(0, element::boolean, args_pshape);
 }
+
+bool op::util::BinaryElementwiseComparison::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("autob", m_autob);
+    return true;
+}

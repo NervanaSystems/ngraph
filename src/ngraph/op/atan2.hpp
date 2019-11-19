@@ -30,7 +30,10 @@ namespace ngraph
         public:
             static constexpr NodeTypeInfo type_info{"Atan2", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
-            Atan2() = default;
+            Atan2()
+                : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NONE)
+            {
+            }
 
             /// \brief atan2(y,x) is the angle from the origin to the point (x,y) (note reversed
             /// order).

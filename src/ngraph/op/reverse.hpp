@@ -82,7 +82,7 @@ namespace ngraph
 
         namespace v1
         {
-            class Reverse : public Op
+            class NGRAPH_API Reverse : public Op
             {
             public:
                 enum class Mode
@@ -91,7 +91,6 @@ namespace ngraph
                     MASK
                 };
 
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Reverse", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Reverse() = default;

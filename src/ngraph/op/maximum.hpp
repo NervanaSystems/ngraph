@@ -31,7 +31,10 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"Maximum", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a maximum operation.
-                Maximum() = default;
+                Maximum()
+                    : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NONE)
+                {
+                }
                 /// \brief Constructs a maximum operation.
                 ///
                 /// \param arg0 Node that produces the first input tensor.
@@ -60,7 +63,11 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"Maximum", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a maximum operation.
-                Maximum() = default;
+                Maximum()
+                    : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NUMPY)
+                {
+                }
+
                 /// \brief Constructs a maximum operation.
                 ///
                 /// \param arg0 Node that produces the first input tensor.

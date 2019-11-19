@@ -31,7 +31,10 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"Divide", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a division operation.
-                Divide() = default;
+                Divide()
+                    : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NONE)
+                {
+                }
                 /// \brief Constructs a division operation.
                 ///
                 /// \param arg0 Node that produces the first input tensor.
@@ -74,7 +77,11 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"Divide", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a division operation.
-                Divide() = default;
+                Divide()
+                    : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NUMPY)
+                {
+                }
+
                 /// \brief Constructs a division operation.
                 ///
                 /// \param arg0 Node that produces the first input tensor.

@@ -28,7 +28,11 @@ namespace ngraph
         public:
             static constexpr NodeTypeInfo type_info{"Subtract", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
-            Subtract() = default;
+            Subtract()
+                : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NONE)
+            {
+            }
+
             /// \brief Constructs a subtraction operation.
             ///
             /// \param arg0 Node that produces the first input tensor.

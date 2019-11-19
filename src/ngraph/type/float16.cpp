@@ -71,10 +71,11 @@ float16::float16(float value)
         // denorm
         biased_exp = 0;
         raw_frac |= hidden_one;
-        uint32_t shift = (-15 - exp) + (23 - frac_size) + 1;
-        raw_frac = (raw_frac + (hidden_one >> (shift + 1))) >> shift;
+        uint32_t exp_shift = (-15 - exp) + 1;
+        uint32_t shift = exp_shift + (23 - frac_size);
+        raw_frac = (raw_frac + (hidden_one >> (frac_size - exp_shift + 1))) >> shift;
     }
-    else if (exp > 15)
+    else if (exp > 15 || (exp == 15 && raw_frac > 0x7fef00 /* numpy overflow value */))
     {
         biased_exp = 0x1F;
         raw_frac = 0;

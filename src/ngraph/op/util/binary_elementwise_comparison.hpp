@@ -92,6 +92,8 @@ namespace ngraph
                 void set_autob(const AutoBroadcastSpec& autob) { m_autob = autob; }
                 bool supports_auto_broadcast() const override { return true; }
                 bool is_binary_elementwise_comparison() const override { return true; }
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
             private:
                 AutoBroadcastSpec m_autob;
             };

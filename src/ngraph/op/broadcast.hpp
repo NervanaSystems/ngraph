@@ -45,7 +45,7 @@ namespace ngraph
                 Broadcast(const Output<Node>& arg,
                           const Shape& shape,
                           const AxisSet& broadcast_axes);
-
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
@@ -92,7 +92,7 @@ namespace ngraph
                 BroadcastLike(const Output<Node>& arg,
                               const Output<Node>& like_arg,
                               const AxisSet& initial_broadcast_axes);
-
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -151,7 +151,7 @@ namespace ngraph
                           const Output<Node>& target_shape,
                           const AutoBroadcastSpec& broadcast_spec =
                               AutoBroadcastSpec(AutoBroadcastType::NUMPY));
-
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
 

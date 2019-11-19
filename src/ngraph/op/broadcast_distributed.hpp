@@ -30,17 +30,17 @@ namespace ngraph
             static constexpr NodeTypeInfo type_info{"BroadcastDistributed", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             BroadcastDistributed() = default;
-            BroadcastDistributed(const Output<Node>& arg, int root_id = 0);
-
+            BroadcastDistributed(const Output<Node>& arg, int64_t root_id = 0);
+            bool visit_attributes(AttributeVisitor& visitor) override;
             void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
-            int get_root_id() const;
-            void set_root_id(int root_id);
+            int64_t get_root_id() const;
+            void set_root_id(int64_t root_id);
 
         private:
-            int m_root_id;
+            int64_t m_root_id;
         };
     }
 }
