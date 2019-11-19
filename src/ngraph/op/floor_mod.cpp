@@ -14,34 +14,23 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <memory>
-#include <vector>
+#include "ngraph/op/floor_mod.hpp"
 
-#include "ngraph/op/fused/reciprocal.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/shape.hpp"
+using namespace std;
+using namespace ngraph;
 
-#include "reciprocal.hpp"
+constexpr NodeTypeInfo op::v1::FloorMod::type_info;
 
-namespace ngraph
+op::v1::FloorMod::FloorMod(const Output<Node>& arg0,
+                           const Output<Node>& arg1,
+                           const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
-    namespace onnx_import
-    {
-        namespace op
-        {
-            namespace set_1
-            {
-                NodeVector reciprocal(const Node& node)
-                {
-                    auto data = node.get_ng_inputs().at(0);
+    constructor_validate_and_infer_types();
+}
 
-                    return {std::make_shared<ngraph::op::Reciprocal>(data)};
-                }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+shared_ptr<Node> op::v1::FloorMod::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<FloorMod>(new_args.at(0), new_args.at(1), this->get_autob());
+}
