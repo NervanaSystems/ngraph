@@ -39,7 +39,10 @@ NodeVector op::Softsign::decompose_op() const
     const auto data_shape = data.get_shape();
     const auto one_node = op::Constant::create(data.get_element_type(), data_shape, {1});
 
-    return {data / (std::make_shared<op::Abs>(data) + one_node)};
+    const auto abs_plus_one =
+        std::make_shared<op::v1::Add>(std::make_shared<op::Abs>(data), one_node);
+
+    return {std::make_shared<op::v1::Divide>(data, abs_plus_one)};
 }
 
 std::shared_ptr<Node> op::Softsign::copy_with_new_args(const NodeVector& new_args) const
