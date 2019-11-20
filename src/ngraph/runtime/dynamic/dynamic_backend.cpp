@@ -175,12 +175,23 @@ bool runtime::dynamic::DynamicExecutable::call(
             }
         }
 
+        std::shared_ptr<Function> clone = m_lru->get_cloned_function(merged_input_shapes);
+        const ResultVector& results = clone->get_results();
+        for (auto& result : results)
+        {
+            NGRAPH_CHECK(result->get_output_partial_shape(0).is_static(),
+                         "Shape staticization failed for result node ",
+                         *result);
+        }
+        NGRAPH_CHECK(results.size() == outputs.size());
+
         for (size_t i = 0; i < outputs.size(); i++)
         {
             if (auto dynamic_tensor =
                     std::dynamic_pointer_cast<runtime::dynamic::DynamicTensor>(outputs[i]))
             {
-                NGRAPH_CHECK(dynamic_tensor->has_storage());
+                dynamic_tensor->make_storage(results[i]->get_output_element_type(0),
+                                             results[i]->get_output_shape(0));
                 wrapped_outputs.push_back(dynamic_tensor->get_wrapped_tensor());
             }
             else
@@ -266,7 +277,6 @@ bool runtime::dynamic::DynamicExecutable::call(
         // FIXME(amprocte): Vile, temporary hack: we need to do repeated rounds of
         // ConstantFolding/DynElimination until everything that DynElimination is supposed to
         // eliminate has actually been eliminated. We could do this by monitoring the return values
-        // of
         // of the passes (keep iterating until both CF and DE report no changes), but that did not
         // seem to work so here we are. Probably a better fix is to somehow combine the matchers in
         // CF
@@ -319,7 +329,7 @@ bool runtime::dynamic::DynamicExecutable::call(
         auto compiled_executable =
             m_wrapped_backend->compile(clone, m_enable_performance_collection);
         // Put compiled executable in the cache.
-        m_lru->add_entry(merged_input_shapes, compiled_executable);
+        m_lru->add_entry(merged_input_shapes, compiled_executable, clone);
         auto result = compiled_executable->call(wrapped_outputs, wrapped_inputs);
 
         return result;

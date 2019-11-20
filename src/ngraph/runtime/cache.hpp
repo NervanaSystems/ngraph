@@ -24,6 +24,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include "ngraph/function.hpp"
 #include "ngraph/runtime/executable.hpp"
 #include "ngraph/shape.hpp"
 
@@ -37,19 +38,24 @@ namespace ngraph
         {
         public:
             using GraphCache = unordered_map<string, shared_ptr<Executable>>;
+            using ClonedFunctionMap = unordered_map<string, shared_ptr<Function>>;
 
             LRUCache();
 
             virtual ~LRUCache();
 
-            void add_entry(const vector<int>& shape, shared_ptr<Executable> exec);
+            void add_entry(const vector<int>& shape,
+                           shared_ptr<Executable> exec,
+                           shared_ptr<Function> func);
             bool is_cached(const vector<int>& shape);
             shared_ptr<Executable> get_cached_entry(const vector<int>& shape);
             ostringstream convert_shape_to_string(const vector<int>& shape);
+            shared_ptr<Function> get_cloned_function(const vector<int>& shape);
 
         private:
             int m_size; // cache size
             GraphCache m_map;
+            ClonedFunctionMap m_clone_function_map;
             list<vector<int>> m_list;
             mutex m_mutex;
         };

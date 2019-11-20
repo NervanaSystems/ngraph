@@ -43,6 +43,7 @@ runtime::LRUCache::~LRUCache()
 {
     m_list.clear();
     m_map.clear();
+    m_clone_function_map.clear();
 }
 
 ostringstream runtime::LRUCache::convert_shape_to_string(const vector<int>& shape)
@@ -56,7 +57,9 @@ ostringstream runtime::LRUCache::convert_shape_to_string(const vector<int>& shap
     return key;
 }
 
-void runtime::LRUCache::add_entry(const vector<int>& shape, shared_ptr<runtime::Executable> exec)
+void runtime::LRUCache::add_entry(const vector<int>& shape,
+                                  shared_ptr<runtime::Executable> exec,
+                                  shared_ptr<Function> func)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     ostringstream key;
@@ -71,6 +74,7 @@ void runtime::LRUCache::add_entry(const vector<int>& shape, shared_ptr<runtime::
     key = convert_shape_to_string(shape);
     m_map.insert({key.str(), exec});
     m_list.push_front(shape);
+    m_clone_function_map.insert({key.str(), func});
     NGRAPH_INFO << "Key is " << key.str();
 }
 
@@ -94,16 +98,38 @@ shared_ptr<runtime::Executable> runtime::LRUCache::get_cached_entry(const vector
     ostringstream key;
     key = convert_shape_to_string(shape);
     auto it = m_map.find(key.str());
-
-    // update list to push this reference to the front
-    for (auto itr = m_list.begin(); itr != m_list.end(); itr++)
+    if (it == m_map.end())
     {
-        if (*itr == shape)
+        throw ngraph_error("Entry not found in cache");
+    }
+    else
+    {
+        // update list to push this reference to the front
+        for (auto itr = m_list.begin(); itr != m_list.end(); itr++)
         {
-            m_list.remove(shape);
-            m_list.push_front(shape);
-            break;
+            if (*itr == shape)
+            {
+                m_list.remove(shape);
+                m_list.push_front(shape);
+                break;
+            }
         }
+        return it->second;
+    }
+}
+
+// Need the clone function to get the output shape so that
+// storage can be allocated for output
+shared_ptr<Function> runtime::LRUCache::get_cloned_function(const vector<int>& shape)
+{
+    std::lock_guard<std::mutex> guard(m_mutex);
+    // find the entry and return the function
+    ostringstream key;
+    key = convert_shape_to_string(shape);
+    auto it = m_clone_function_map.find(key.str());
+    if (it == m_clone_function_map.end())
+    {
+        throw ngraph_error("Cloned function not found");
     }
     return it->second;
 }
