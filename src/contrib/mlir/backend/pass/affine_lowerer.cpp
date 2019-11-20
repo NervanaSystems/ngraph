@@ -1218,27 +1218,39 @@ namespace
                 }
                 else if (isa<NGGreaterOp>(op))
                 {
-                    iRes(ivs) = ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs));
+                    iRes(ivs) = edsc::intrinsics::zero_extendi(
+                        ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs)),
+                        IntegerType::get(8, op->getContext()));
                 }
                 else if (isa<NGLessOp>(op))
                 {
-                    iRes(ivs) = ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs));
+                    iRes(ivs) = edsc::intrinsics::zero_extendi(
+                        ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs)),
+                        IntegerType::get(8, op->getContext()));
                 }
                 else if (isa<NGGreaterEqOp>(op))
                 {
-                    iRes(ivs) = ValueHandle(iLHS(ivs)) >= ValueHandle(iRHS(ivs));
+                    iRes(ivs) = edsc::intrinsics::zero_extendi(
+                        ValueHandle(iLHS(ivs)) >= ValueHandle(iRHS(ivs)),
+                        IntegerType::get(8, op->getContext()));
                 }
                 else if (isa<NGLessEqOp>(op))
                 {
-                    iRes(ivs) = ValueHandle(iLHS(ivs)) <= ValueHandle(iRHS(ivs));
+                    iRes(ivs) = edsc::intrinsics::zero_extendi(
+                        ValueHandle(iLHS(ivs)) <= ValueHandle(iRHS(ivs)),
+                        IntegerType::get(8, op->getContext()));
                 }
                 else if (isa<NGEqOp>(op))
                 {
-                    iRes(ivs) = ValueHandle(iLHS(ivs)) == ValueHandle(iRHS(ivs));
+                    iRes(ivs) = edsc::intrinsics::zero_extendi(
+                        ValueHandle(iLHS(ivs)) == ValueHandle(iRHS(ivs)),
+                        IntegerType::get(8, op->getContext()));
                 }
                 else if (isa<NGNotEqOp>(op))
                 {
-                    iRes(ivs) = ValueHandle(iLHS(ivs)) != ValueHandle(iRHS(ivs));
+                    iRes(ivs) = edsc::intrinsics::zero_extendi(
+                        ValueHandle(iLHS(ivs)) != ValueHandle(iRHS(ivs)),
+                        IntegerType::get(8, op->getContext()));
                 }
                 else if (isa<NGMaxOp>(op))
                 {
