@@ -14,9 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/cum_sum.hpp"
-
 #include "cum_sum.hpp"
+#include "ngraph/op/cum_sum.hpp"
 
 namespace ngraph
 {
@@ -28,7 +27,17 @@ namespace ngraph
             {
                 NodeVector cum_sum(const Node& node)
                 {
-                    return NodeVector{std::make_shared<ngraph::op::CumSum>()};
+                    auto data = node.get_ng_inputs().at(0);
+                    auto exclusive = node.get_attribute_value<int64_t>("exclusive", 0);
+                    auto reverse = node.get_attribute_value<int64_t>("reverse", 0);
+                    
+                    if (node.get_ng_inputs().size() > 1)
+                    {
+                        auto axis = node.get_ng_inputs().at(1);  // optional input, 0-D tensor
+                        return NodeVector{std::make_shared<ngraph::op::CumSum>(data, axis, exclusive, reverse)};
+                    }
+                    
+                    return NodeVector{std::make_shared<ngraph::op::CumSum>(data, exclusive=exclusive, reverse=reverse)};
                 }
 
             } // namespace set_1

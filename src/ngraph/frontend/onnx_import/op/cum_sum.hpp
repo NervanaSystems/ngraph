@@ -18,7 +18,6 @@
 
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/cum_sum.hpp"
 
 namespace ngraph
 {
@@ -28,7 +27,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector cum_sum(const Node& node)
+                NodeVector cum_sum(const Node& node);
 
             } // namespace set_1
 
