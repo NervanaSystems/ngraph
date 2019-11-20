@@ -14,8 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <numeric>
-
 #include "exceptions.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "softmax.hpp"
