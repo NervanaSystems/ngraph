@@ -583,8 +583,8 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2)
     auto tensor_iterator = make_shared<op::TensorIterator>();
     tensor_iterator->set_body(body);
     // The Xi are the elements of Xseq
-    // start=0, stride=2, part_size=2, end=20, axis=1
-    tensor_iterator->set_sliced_input(Xi, X, 0, 2, 2, 20, 1);
+    // start=0, stride=2, part_size=2, end=40, axis=1
+    tensor_iterator->set_sliced_input(Xi, X, 0, 2, 2, 40, 1);
     // The Yi are the elements of Yseq
     // start=0, stride=2, part_size=2, end=-1, axis=1
     tensor_iterator->set_sliced_input(Yi, Y, 0, 2, 2, -1, 1);
@@ -631,8 +631,8 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
     auto tensor_iterator = make_shared<op::TensorIterator>();
     tensor_iterator->set_body(body);
     // The Xi are the elements of Xseq
-    // start=0, stride=2, part_size=2, end=20, axis=1
-    tensor_iterator->set_sliced_input(Xi, X, 0, 2, 2, 20, 1);
+    // start=0, stride=2, part_size=2, end=40, axis=1
+    tensor_iterator->set_sliced_input(Xi, X, 0, 2, 2, 40, 1);
     // The Yi are the elements of Yseq
     // start=0, stride=2, part_size=2, end=-1, axis=1
     tensor_iterator->set_sliced_input(Yi, Y, 0, 2, 2, -1, 1);
