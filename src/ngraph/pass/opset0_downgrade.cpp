@@ -745,11 +745,11 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         const auto sort_type = tmp->get_sort_type();
         const auto index_elem_type = tmp->get_index_element_type();
 
-        bool comnpute_max;
+        bool compute_max;
         switch (tmp->get_mode())
         {
-        case op::v1::TopK::Mode::MAX: comnpute_max = true; break;
-        case op::v1::TopK::Mode::MIN: comnpute_max = false; break;
+        case op::v1::TopK::Mode::MAX: compute_max = true; break;
+        case op::v1::TopK::Mode::MIN: compute_max = false; break;
         default: break;
         }
 
@@ -757,7 +757,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         const auto k_node = node->input_value(1);
 
         auto replacement_node = make_shared<op::v0::TopK>(
-            arg_node, k_node, axis, index_elem_type, comnpute_max, sort_type);
+            arg_node, k_node, axis, index_elem_type, compute_max, sort_type);
 
         // values output will be 0, indices 1
         vector<int64_t> output_order{1, 0};

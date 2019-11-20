@@ -80,6 +80,6 @@ namespace ngraph
         as_type_ptr(Value value)
     {
         return is_type<Type>(value) ? std::static_pointer_cast<Type>(value)
-                                    : std::shared_ptr<Type>();
+                                    : std::shared_ptr<Type>(nullptr);
     }
 }
