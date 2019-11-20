@@ -27,13 +27,14 @@ namespace ngraph
             {
                 NodeVector cum_sum(const Node& node)
                 {
-                    auto data = node.get_ng_inputs().at(0);
+                    auto inputs = node.get_ng_inputs();
+                    auto data = inputs.at(0);
                     auto exclusive = node.get_attribute_value<int64_t>("exclusive", 0);
                     auto reverse = node.get_attribute_value<int64_t>("reverse", 0);
                     
-                    if (node.get_ng_inputs().size() > 1)
+                    if (inputs.size() > 1)
                     {
-                        auto axis = node.get_ng_inputs().at(1);  // optional input, 0-D tensor
+                        auto axis = inputs.at(1);  // optional input, 0-D tensor
                         return NodeVector{std::make_shared<ngraph::op::CumSum>(data, axis, exclusive, reverse)};
                     }
                     else
