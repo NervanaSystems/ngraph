@@ -17,12 +17,12 @@
 #pragma once
 
 #include <atomic>
+#include <functional>
 #include <initializer_list>
 #include <list>
 #include <memory>
 #include <string>
 #include <vector>
-#include <functional>
 
 #include "ngraph/lambda.hpp"
 #include "ngraph/node.hpp"

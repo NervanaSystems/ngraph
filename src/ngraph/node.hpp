@@ -29,6 +29,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/check.hpp"
 #include "ngraph/coordinate.hpp"
@@ -36,12 +37,11 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/op_annotations.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type.hpp"
-#include "ngraph/attribute_visitor.hpp"
-#include "ngraph/log.hpp"
 
 namespace ngraph
 {
