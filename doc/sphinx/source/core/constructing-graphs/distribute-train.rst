@@ -33,7 +33,7 @@ Finally, to run the training using two nGraph devices, invoke
 
 .. code-block:: console 
 
-   $ mpirun 
+   mpirun 
 
 To deploy data-parallel training, the ``AllReduce`` op should be added after the 
 steps needed to complete the :doc:`backpropagation <../constructing-graphs/derive-for-training>`; 
@@ -48,7 +48,7 @@ See the `full code`_ in the ``examples`` folder ``/doc/examples/mnist_mlp/dist_m
 
 .. code-block:: console 
 
-   $ mpirun -np 2 dist_mnist_mlp
+   mpirun -np 2 dist_mnist_mlp
 
 
 .. _Intel MLSL: https://github.com/intel/MLSL/releases
