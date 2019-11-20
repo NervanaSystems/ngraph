@@ -350,7 +350,6 @@ set(MULTI_TEST_SRC
     backend/sum.in.cpp
     backend/tan.in.cpp
     backend/tanh.in.cpp
-    backend/tensorview_custom_mem.in.cpp
     backend/tile.in.cpp
     backend/topk.in.cpp
     backend/transpose.in.cpp
@@ -432,7 +431,6 @@ if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
             backend/subtract.in.cpp
             backend/tan.in.cpp
             backend/tanh.in.cpp
-            backend/tensorview_custom_mem.in.cpp
             backend/transpose.in.cpp
             backend/validate_call.in.cpp
             backend/zero_sized.in.cpp
