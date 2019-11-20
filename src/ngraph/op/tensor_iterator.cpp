@@ -274,8 +274,7 @@ void op::TensorIterator::validate_and_infer_types()
     auto make_positive = [](int64_t value, uint64_t dim_size) -> int64_t {
         if (value < 0)
         {
-            value =
-                dim_size + value + 1; // +1 because value (right border) is included [...,  value]
+            value = dim_size + value;
         }
         return value;
     };
@@ -306,12 +305,12 @@ void op::TensorIterator::validate_and_infer_types()
 
                 if (m_num_iterations == -1)
                 {
-                    m_num_iterations = abs(end - start) / part_size;
+                    m_num_iterations = abs(end - start + 1) / part_size;
                 }
                 else
                 {
                     NODE_VALIDATION_CHECK(this,
-                                          m_num_iterations == abs(end - start) / part_size,
+                                          m_num_iterations == abs(end - start + 1) / part_size,
                                           "Number of slices not the same");
                 }
 
