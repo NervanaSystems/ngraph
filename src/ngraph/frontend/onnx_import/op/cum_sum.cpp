@@ -36,8 +36,11 @@ namespace ngraph
                         auto axis = node.get_ng_inputs().at(1);  // optional input, 0-D tensor
                         return NodeVector{std::make_shared<ngraph::op::CumSum>(data, axis, exclusive, reverse)};
                     }
-                    
-                    return NodeVector{std::make_shared<ngraph::op::CumSum>(data, exclusive=exclusive, reverse=reverse)};
+                    else
+                    {
+                        int64_t axis = 0;  // default
+                        return NodeVector{std::make_shared<ngraph::op::CumSum>(data, axis, exclusive, reverse)};
+                    }
                 }
 
             } // namespace set_1
