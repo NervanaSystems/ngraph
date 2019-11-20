@@ -1,3 +1,5 @@
+:orphan:
+
 .. frameworks/index.rst
 
 Working with Frameworks
