@@ -20,6 +20,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/util/op_annotations.hpp"
+#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph;

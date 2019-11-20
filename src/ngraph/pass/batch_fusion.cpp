@@ -35,6 +35,7 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/log.hpp"
 
 using namespace ngraph;
 

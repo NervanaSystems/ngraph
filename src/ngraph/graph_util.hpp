@@ -29,7 +29,6 @@
 #include "ngraph/check.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/placement.hpp"
 
 namespace ngraph
 {
@@ -394,9 +393,6 @@ namespace ngraph
 
     // input function is cloned and returned
     std::shared_ptr<ngraph::Function> clone_function(const ngraph::Function& func);
-
-    // Assert that nodes in the function is colocated and return that placement
-    Placement get_colocated_function_placement(std::shared_ptr<Function> func);
 
     std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
         insert_result_parameter_split(const std::shared_ptr<Node>& src_node,

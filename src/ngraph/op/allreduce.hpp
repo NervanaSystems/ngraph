@@ -18,6 +18,7 @@
 
 #include <memory>
 #include "ngraph/op/op.hpp"
+#include "ngraph/distributed.hpp"
 
 namespace ngraph
 {

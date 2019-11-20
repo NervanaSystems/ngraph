@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <functional>
 
 #include "ngraph/lambda.hpp"
 #include "ngraph/node.hpp"
@@ -110,9 +111,6 @@ namespace ngraph
         /// graphs and should not be considered the actual memory consumption of a graph.
         size_t get_graph_size() const;
 
-        size_t get_placement() const;
-        void set_placement(size_t placement);
-
         /// \brief Returns true if any of the op's defined in the function contains partial shape
         bool is_dynamic() const;
 
@@ -138,6 +136,5 @@ namespace ngraph
         size_t m_instance_id;
         std::string m_name;
         const std::string m_unique_name;
-        size_t m_placement{0};
     };
 }
