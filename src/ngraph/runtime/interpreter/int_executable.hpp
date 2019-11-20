@@ -1550,6 +1550,11 @@ private:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
             break;
         }
+        case OP_TYPEID::Reciprocal:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            break;
+        }
         case OP_TYPEID::Relu:
         {
             size_t element_count = shape_size(node.get_output_shape(0));

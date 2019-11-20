@@ -1179,7 +1179,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Ceiling>(args[0]);
             break;
         }
-        case OP_TYPEID::Clamp:
         case OP_TYPEID::Clamp_v1:
         {
             const auto clamp_min = node_js.at("min").get<float>();
@@ -1591,9 +1590,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Floor>(args[0]);
             break;
         }
-        case OP_TYPEID::FloorMod:
+        case OP_TYPEID::FloorMod_v1:
         {
-            node = make_shared<op::FloorMod>(
+            node = make_shared<op::v1::FloorMod>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
@@ -3263,7 +3262,6 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Ceiling:
     case OP_TYPEID::Ceiling_v1: { break;
     }
-    case OP_TYPEID::Clamp:
     case OP_TYPEID::Clamp_v1:
     {
         auto tmp = static_cast<const op::Clamp*>(&n);
@@ -3539,9 +3537,9 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Floor:
     case OP_TYPEID::Floor_v1: { break;
     }
-    case OP_TYPEID::FloorMod:
+    case OP_TYPEID::FloorMod_v1:
     {
-        auto tmp = static_cast<const op::FloorMod*>(&n);
+        auto tmp = static_cast<const op::v1::FloorMod*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());

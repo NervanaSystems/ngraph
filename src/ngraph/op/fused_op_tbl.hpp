@@ -22,7 +22,6 @@
 #define NGRAPH_OP(x, y)
 #endif
 
-NGRAPH_OP(Clamp, ngraph::op)
 NGRAPH_OP(ConvolutionBias, ngraph::op)
 NGRAPH_OP(ConvolutionBiasAdd, ngraph::op)
 NGRAPH_OP(ConvolutionBiasBackpropFiltersBias, ngraph::op)
@@ -48,7 +47,6 @@ NGRAPH_OP(NormalizeL2, ngraph::op)
 NGRAPH_OP(PartialSlice, ngraph::op)
 NGRAPH_OP(PartialSliceBackprop, ngraph::op)
 NGRAPH_OP(PRelu, ngraph::op)
-NGRAPH_OP(Reciprocal, ngraph::op)
 NGRAPH_OP(RNNCell, ngraph::op)
 NGRAPH_OP(ScaleShift, ngraph::op)
 NGRAPH_OP(Selu, ngraph::op)
