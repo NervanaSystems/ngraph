@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <cstdint>
+#include <numeric>
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
