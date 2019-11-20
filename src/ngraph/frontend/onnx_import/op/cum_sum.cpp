@@ -14,6 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <memory>
+
 #include "cum_sum.hpp"
 #include "ngraph/op/cum_sum.hpp"
 
@@ -29,8 +31,8 @@ namespace ngraph
                 {
                     auto inputs = node.get_ng_inputs();
                     auto data = inputs.at(0);
-                    auto exclusive = node.get_attribute_value<int64_t>("exclusive", 0);
-                    auto reverse = node.get_attribute_value<int64_t>("reverse", 0);
+                    auto exclusive = node.get_attribute_value<std::int64_t>("exclusive", 0);
+                    auto reverse = node.get_attribute_value<std::int64_t>("reverse", 0);
 
                     if (inputs.size() > 1)
                     {
