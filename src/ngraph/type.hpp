@@ -38,12 +38,16 @@ namespace ngraph
         const char* name;
         uint64_t version;
 
-        bool is_castable(const DiscreteTypeInfo& target_type) const { return this == &target_type; }
+        bool is_castable(const DiscreteTypeInfo& target_type) const { return *this == target_type; }
         // For use as a key
         bool operator<(const DiscreteTypeInfo& b) const
         {
             return version < b.version ||
                    (version == b.version && std::string(name) < std::string(b.name));
+        }
+        bool operator==(const DiscreteTypeInfo& b) const
+        {
+            return version == b.version && std::string(name) == std::string(b.name);
         }
     };
 
@@ -80,6 +84,6 @@ namespace ngraph
         as_type_ptr(Value value)
     {
         return is_type<Type>(value) ? std::static_pointer_cast<Type>(value)
-                                    : std::shared_ptr<Type>(nullptr);
+                                    : std::shared_ptr<Type>();
     }
 }
