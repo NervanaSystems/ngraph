@@ -24,3 +24,44 @@ std::ostream& ngraph::operator<<(std::ostream& s, const Coordinate& coordinate)
     s << "}";
     return s;
 }
+
+ngraph::Coordinate::Coordinate() {}
+
+ngraph::Coordinate::Coordinate(const std::initializer_list<size_t>& axes)
+    : std::vector<size_t>(axes)
+{
+}
+
+ngraph::Coordinate::Coordinate(const Shape& shape)
+    : std::vector<size_t>(static_cast<const std::vector<size_t>&>(shape))
+{
+}
+
+ngraph::Coordinate::Coordinate(const std::vector<size_t>& axes)
+    : std::vector<size_t>(axes)
+{
+}
+
+ngraph::Coordinate::Coordinate(const Coordinate& axes)
+    : std::vector<size_t>(axes)
+{
+}
+
+ngraph::Coordinate::Coordinate(size_t n, size_t initial_value)
+    : std::vector<size_t>(n, initial_value)
+{
+}
+
+ngraph::Coordinate::~Coordinate() {}
+
+ngraph::Coordinate& ngraph::Coordinate::operator=(const Coordinate& v)
+{
+    static_cast<std::vector<size_t>*>(this)->operator=(v);
+    return *this;
+}
+
+ngraph::Coordinate& ngraph::Coordinate::operator=(Coordinate&& v) noexcept
+{
+    static_cast<std::vector<size_t>*>(this)->operator=(v);
+    return *this;
+}

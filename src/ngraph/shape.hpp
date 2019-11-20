@@ -26,18 +26,20 @@
 namespace ngraph
 {
     /// \brief Shape for a tensor.
-    class NGRAPH_API Shape : public std::vector<size_t>
+    class Shape : public std::vector<size_t>
     {
     public:
-        Shape();
+        NGRAPH_API Shape();
 
-        Shape(const std::initializer_list<size_t>& axis_lengths);
+        NGRAPH_API Shape(const std::initializer_list<size_t>& axis_lengths);
 
-        Shape(const std::vector<size_t>& axis_lengths);
+        NGRAPH_API Shape(const std::vector<size_t>& axis_lengths);
 
-        Shape(const Shape& axis_lengths);
+        NGRAPH_API Shape(const Shape& axis_lengths);
 
-        explicit Shape(size_t n, size_t initial_value = 0);
+        NGRAPH_API explicit Shape(size_t n, size_t initial_value = 0);
+
+        NGRAPH_API ~Shape();
 
         template <class InputIterator>
         Shape(InputIterator first, InputIterator last)
@@ -45,8 +47,8 @@ namespace ngraph
         {
         }
 
-        Shape& operator=(const Shape& v);
-        Shape& operator=(Shape&& v) noexcept;
+        NGRAPH_API Shape& operator=(const Shape& v);
+        NGRAPH_API Shape& operator=(Shape&& v) noexcept;
     };
 
     /// Number of elements in spanned by a shape

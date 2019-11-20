@@ -26,46 +26,24 @@
 namespace ngraph
 {
     /// \brief A set of axes.
-    class NGRAPH_API AxisSet : public std::set<size_t>
+    class AxisSet : public std::set<size_t>
     {
     public:
-        AxisSet();
-        AxisSet(const std::initializer_list<size_t>& axes)
-            : std::set<size_t>(axes)
-        {
-        }
+        NGRAPH_API AxisSet();
 
-        AxisSet(const std::set<size_t>& axes)
-            : std::set<size_t>(axes)
-        {
-        }
+        NGRAPH_API AxisSet(const std::initializer_list<size_t>& axes);
 
-        AxisSet(const std::vector<size_t>& axes)
-            : std::set<size_t>(axes.begin(), axes.end())
-        {
-        }
+        NGRAPH_API AxisSet(const std::set<size_t>& axes);
 
-        AxisSet(const AxisSet& axes)
-            : std::set<size_t>(axes)
-        {
-        }
+        NGRAPH_API AxisSet(const std::vector<size_t>& axes);
 
-        AxisSet& operator=(const AxisSet& v)
-        {
-            static_cast<std::set<size_t>*>(this)->operator=(v);
-            return *this;
-        }
+        NGRAPH_API AxisSet(const AxisSet& axes);
 
-        AxisSet& operator=(AxisSet&& v) noexcept
-        {
-            static_cast<std::set<size_t>*>(this)->operator=(v);
-            return *this;
-        }
+        NGRAPH_API AxisSet& operator=(const AxisSet& v);
 
-        std::vector<int64_t> to_vector() const
-        {
-            return std::vector<int64_t>(this->begin(), this->end());
-        }
+        NGRAPH_API AxisSet& operator=(AxisSet&& v) noexcept;
+
+        NGRAPH_API std::vector<int64_t> to_vector() const;
     };
 
     std::ostream& operator<<(std::ostream& s, const AxisSet& axis_set);

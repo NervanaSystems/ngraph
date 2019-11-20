@@ -25,28 +25,16 @@
 namespace ngraph
 {
     /// \brief A vector of axes.
-    class NGRAPH_API AxisVector : public std::vector<size_t>
+    class AxisVector : public std::vector<size_t>
     {
     public:
-        AxisVector(const std::initializer_list<size_t>& axes)
-            : std::vector<size_t>(axes)
-        {
-        }
+        NGRAPH_API AxisVector(const std::initializer_list<size_t>& axes);
 
-        AxisVector(const std::vector<size_t>& axes)
-            : std::vector<size_t>(axes)
-        {
-        }
+        NGRAPH_API AxisVector(const std::vector<size_t>& axes);
 
-        AxisVector(const AxisVector& axes)
-            : std::vector<size_t>(axes)
-        {
-        }
+        NGRAPH_API AxisVector(const AxisVector& axes);
 
-        explicit AxisVector(size_t n)
-            : std::vector<size_t>(n)
-        {
-        }
+        NGRAPH_API explicit AxisVector(size_t n);
 
         template <class InputIterator>
         AxisVector(InputIterator first, InputIterator last)
@@ -54,17 +42,13 @@ namespace ngraph
         {
         }
 
-        AxisVector() {}
-        AxisVector& operator=(const AxisVector& v)
-        {
-            static_cast<std::vector<size_t>*>(this)->operator=(v);
-            return *this;
-        }
-        AxisVector& operator=(AxisVector&& v) noexcept
-        {
-            static_cast<std::vector<size_t>*>(this)->operator=(v);
-            return *this;
-        }
+        NGRAPH_API AxisVector();
+
+        NGRAPH_API ~AxisVector();
+
+        NGRAPH_API AxisVector& operator=(const AxisVector& v);
+
+        NGRAPH_API AxisVector& operator=(AxisVector&& v) noexcept;
     };
 
     std::ostream& operator<<(std::ostream& s, const AxisVector& axis_vector);
