@@ -631,23 +631,23 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
     auto tensor_iterator = make_shared<op::TensorIterator>();
     tensor_iterator->set_body(body);
     // The Xi are the elements of Xseq
-    // start=0, stride=2, part_size=2, end=40, axis=1
-    tensor_iterator->set_sliced_input(Xi, X, 0, 2, 2, 40, 1);
+    // start=0, stride=2, part_size=2, end=39, axis=1
+    tensor_iterator->set_sliced_input(Xi, X, 0, 2, 2, 39, 1);
     // The Yi are the elements of Yseq
-    // start=0, stride=2, part_size=2, end=-1, axis=1
-    tensor_iterator->set_sliced_input(Yi, Y, 0, 2, 2, -1, 1);
+    // start=0, stride=2, part_size=2, end=-2, axis=1
+    tensor_iterator->set_sliced_input(Yi, Y, 0, 2, 2, -2, 1);
     tensor_iterator->set_invariant_input(M_body, M);
 
     // Output 0 is last Zo
     auto out0 = tensor_iterator->get_iter_value(Zo, -1);
     // Output 1 is concat of Zos
-    // start=0, stride=2, part_size=2, end=20, axis=1
-    auto out1 = tensor_iterator->get_concatenated_slices(Zo, 0, 2, 2, 20, 1);
+    // start=0, stride=2, part_size=2, end=39, axis=1
+    auto out1 = tensor_iterator->get_concatenated_slices(Zo, 0, 2, 2, 39, 1);
 
     auto result0 = make_shared<op::Result>(out0);
     auto result1 = make_shared<op::Result>(out1);
     Shape out0_shape{32, 2, 10};
-    Shape out1_shape{32, 40, 10};
+    Shape out1_shape{32, 38, 10};
 
     auto results = ResultVector{result0, result1};
     auto f = make_shared<Function>(results, ParameterVector{X, Y, M});
