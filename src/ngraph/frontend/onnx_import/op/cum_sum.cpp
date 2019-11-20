@@ -31,16 +31,18 @@ namespace ngraph
                     auto data = inputs.at(0);
                     auto exclusive = node.get_attribute_value<int64_t>("exclusive", 0);
                     auto reverse = node.get_attribute_value<int64_t>("reverse", 0);
-                    
+
                     if (inputs.size() > 1)
                     {
-                        auto axis = inputs.at(1);  // optional input, 0-D tensor
-                        return NodeVector{std::make_shared<ngraph::op::CumSum>(data, axis, exclusive, reverse)};
+                        auto axis = inputs.at(1); // optional input, 0-D tensor
+                        return NodeVector{
+                            std::make_shared<ngraph::op::CumSum>(data, axis, exclusive, reverse)};
                     }
                     else
                     {
-                        int64_t axis = 0;  // default
-                        return NodeVector{std::make_shared<ngraph::op::CumSum>(data, axis, exclusive, reverse)};
+                        int64_t axis = 0; // default
+                        return NodeVector{
+                            std::make_shared<ngraph::op::CumSum>(data, axis, exclusive, reverse)};
                     }
                 }
 
