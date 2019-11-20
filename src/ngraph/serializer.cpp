@@ -46,7 +46,6 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
-#include "ngraph/op/fused/crossentropy.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
@@ -75,6 +74,7 @@
 #include "ngraph/op/floor_mod.hpp"
 #include "ngraph/op/fused/clamp.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/crossentropy.hpp"
 #include "ngraph/op/fused/crossentropy.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
@@ -187,20 +187,23 @@ bool ngraph::get_serialize_output_shapes()
     return s_serialize_output_shapes_enabled;
 }
 
-// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
-// Abs,
-// Acos,
-// ...
-enum class OP_TYPEID
+namespace
 {
+    // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
+    // Abs,
+    // Acos,
+    // ...
+    enum class OP_TYPEID
+    {
 #define NGRAPH_OP(a, b) a,
 #include "ngraph/op/op_v0_tbl.hpp"
 #undef NGRAPH_OP
 #define NGRAPH_OP(a, b) a##_v1,
 #include "ngraph/op/op_v1_tbl.hpp"
 #undef NGRAPH_OP
-    UnknownOp
-};
+        UnknownOp
+    };
+}
 
 static OP_TYPEID get_typeid(const NodeTypeInfo& type_info)
 {
@@ -218,7 +221,6 @@ static OP_TYPEID get_typeid(const NodeTypeInfo& type_info)
     };
     OP_TYPEID rc = OP_TYPEID::UnknownOp;
 
-    // Try by type_info map
     auto it = type_info_map.find(type_info);
     if (it != type_info_map.end())
     {

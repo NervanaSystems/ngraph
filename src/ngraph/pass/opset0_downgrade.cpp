@@ -168,17 +168,20 @@
 using namespace std;
 using namespace ngraph;
 
-enum class OP_TYPEID
+namespace
 {
+    enum class OP_TYPEID
+    {
 #define NGRAPH_OP(a, b) a,
 //#include "ngraph/op/fused_op_tbl.hpp"
 //#include "ngraph/op/op_v0_tbl.hpp"
 #undef NGRAPH_OP
 #define NGRAPH_OP(a, b) a##_v1,
 #include "ngraph/op/op_v1_tbl.hpp"
-    OTHER
-};
+        OTHER
+    };
 #undef NGRAPH_OP
+}
 
 static OP_TYPEID get_typeid(shared_ptr<Node> node)
 {

@@ -91,7 +91,6 @@
 #ifdef INTERPRETER_USE_HYBRID
 #include "ngraph/runtime/hybrid/op/function_call.hpp"
 #endif
-#include "ngraph/runtime/interpreter/node_wrapper.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
@@ -187,6 +186,29 @@ namespace ngraph
         {
             class INTBackend;
             class INTExecutable;
+
+            namespace
+            {
+                // This expands the op list in op_tbl.hpp into a list of enumerations that look like
+                // this:
+                // Abs,
+                // Acos,
+                // ...
+                enum class OP_TYPEID
+                {
+#define NGRAPH_OP(a, b) a,
+#include "ngraph/op/op_v0_tbl.hpp"
+#ifdef INTERPRETER_USE_HYBRID
+#include "ngraph/runtime/hybrid/op/op_tbl.hpp"
+#endif
+#undef NGRAPH_OP
+#define NGRAPH_OP(a, b) a##_v1,
+#include "ngraph/op/op_v1_tbl.hpp"
+#undef NGRAPH_OP
+                    UnknownOp
+                };
+            }
+
         } // namespace interpreter
     }     // namespace runtime
 } // namespace ngraph
@@ -229,35 +251,25 @@ private:
     bool m_performance_counters_enabled = false;
     std::shared_ptr<Function> m_function;
     std::unordered_map<std::shared_ptr<const Node>, stopwatch> m_timer_map;
-    std::vector<NodeWrapper> m_wrapped_nodes;
+    std::vector<std::shared_ptr<Node>> m_nodes;
     std::unordered_map<const Node*, std::shared_ptr<State>> m_states;
     std::set<std::string> m_unsupported_op_name_list;
+
+    static OP_TYPEID get_typeid(const NodeTypeInfo& type_info);
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
                                   const Node* op = nullptr);
 
     void generate_calls(const element::Type& type,
-                        const NodeWrapper& op,
+                        const Node& op,
                         const std::vector<std::shared_ptr<HostTensor>>& outputs,
                         const std::vector<std::shared_ptr<HostTensor>>& inputs);
 
     template <typename T>
-    void op_engine(const NodeWrapper& node_wrapper,
+    void op_engine(const Node& node,
                    const std::vector<std::shared_ptr<HostTensor>>& out,
                    const std::vector<std::shared_ptr<HostTensor>>& args)
     {
-        const Node& node = *node_wrapper.get_node();
-
-        size_t op_version = node.get_version();
-        bool is_op_version_supported = op_version == 0;
-        NGRAPH_CHECK(is_op_version_supported,
-                     "Unsupported operator version ",
-                     op_version,
-                     " in ",
-                     node,
-                     ".\n",
-                     "INTERPRETER backend currently only supports op in version 0.");
-
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
@@ -267,7 +279,7 @@ private:
 #pragma GCC diagnostic error "-Wswitch-enum"
 // #pragma GCC diagnostic error "-Wcovered-switch-default"
 #endif
-        switch (node_wrapper.get_typeid())
+        switch (get_typeid(node.get_type_info()))
         {
         case OP_TYPEID::Abs:
         {
@@ -1978,7 +1990,7 @@ private:
         case OP_TYPEID::MaxPoolBackprop_v1:
         case OP_TYPEID::Squeeze_v1:
         case OP_TYPEID::GenerateMask_v1:
-            std::cerr << "This is it" << std::endl;
+        case OP_TYPEID::UnknownOp:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
