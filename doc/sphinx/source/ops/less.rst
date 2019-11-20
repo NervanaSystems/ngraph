@@ -48,6 +48,6 @@ Mathematical Definition
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Less
+.. doxygenclass:: ngraph::op::v0::Less
    :project: ngraph
    :members:
