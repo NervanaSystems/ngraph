@@ -464,16 +464,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_cum_sum_3d_exclusive_reverse)
         file_util::path_join(SERIALIZED_ZOO, "onnx/cum_sum_3d_exclusive_reverse.prototxt"));
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
-    test_case.add_input<float>(
-        {1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 
-        7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 
-        13.f, 14.f, 15.f, 16.f, 17.f, 18.f, 
-        19.f, 20.f, 21.f, 22.f, 23.f, 24.f});
-    test_case.add_expected_output<float>(Shape{2, 3, 4}, 
-        {13.f, 14.f, 15.f, 16.f, 17.f, 18.f, 
-        19.f, 20.f, 21.f, 22.f, 23.f, 24.f, 
-        0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 
-        0.f, 0.f, 0.f, 0.f, 0.f});
+    test_case.add_input<float>({1.f,  2.f,  3.f,  4.f,  5.f,  6.f,  7.f,  8.f,
+                                9.f,  10.f, 11.f, 12.f, 13.f, 14.f, 15.f, 16.f,
+                                17.f, 18.f, 19.f, 20.f, 21.f, 22.f, 23.f, 24.f});
+    test_case.add_expected_output<float>(
+        Shape{2, 3, 4}, {13.f, 14.f, 15.f, 16.f, 17.f, 18.f, 19.f, 20.f, 21.f, 22.f, 23.f, 24.f,
+                         0.f,  0.f,  0.f,  0.f,  0.f,  0.f,  0.f,  0.f,  0.f,  0.f,  0.f,  0.f});
     test_case.run();
 }
 
