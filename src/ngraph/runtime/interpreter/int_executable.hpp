@@ -1892,6 +1892,8 @@ private:
         case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
         case OP_TYPEID::Cos_v1:
         case OP_TYPEID::Cosh_v1:
+        case OP_TYPEID::CrossEntropy:
+        case OP_TYPEID::CrossEntropyBackprop:
         case OP_TYPEID::DepthToSpace_v1:
         case OP_TYPEID::Divide_v1:
         case OP_TYPEID::Elu_v1:
