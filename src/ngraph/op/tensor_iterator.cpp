@@ -305,12 +305,13 @@ void op::TensorIterator::validate_and_infer_types()
 
                 if (m_num_iterations == -1)
                 {
-                    m_num_iterations = abs(end - start + 1) / part_size;
+                    // +1 because the left and right borders are included [start, end]
+                    m_num_iterations = (abs(end - start) + 1) / part_size;
                 }
                 else
                 {
                     NODE_VALIDATION_CHECK(this,
-                                          m_num_iterations == abs(end - start + 1) / part_size,
+                                          m_num_iterations == (abs(end - start) + 1) / part_size,
                                           "Number of slices not the same");
                 }
 
