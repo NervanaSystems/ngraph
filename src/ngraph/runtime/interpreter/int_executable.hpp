@@ -1067,7 +1067,7 @@ private:
                                    logical_xor->get_autob());
             break;
         }
-        case OP_TYPEID::LRN:
+        case OP_TYPEID::LRN_v1:
         {
             const op::LRN* lrn = static_cast<const op::LRN*>(&node);
             reference::lrn<T>(args[0]->get_data_ptr<const T>(),
@@ -1887,6 +1887,9 @@ private:
         case OP_TYPEID::Convert_v1:
         case OP_TYPEID::Convolution_v1:
         case OP_TYPEID::ConvolutionBackpropData_v1:
+        case OP_TYPEID::ConvolutionBias:
+        case OP_TYPEID::ConvolutionBiasAdd:
+        case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
         case OP_TYPEID::Cos_v1:
         case OP_TYPEID::Cosh_v1:
         case OP_TYPEID::DepthToSpace_v1:
@@ -1902,11 +1905,19 @@ private:
         case OP_TYPEID::Greater_v1:
         case OP_TYPEID::GreaterEq_v1:
         case OP_TYPEID::GroupConvolution_v1:
+        case OP_TYPEID::GRN:
+        case OP_TYPEID::GRUCell:
+        case OP_TYPEID::Gelu:
+        case OP_TYPEID::GeluBackpropFactor:
+        case OP_TYPEID::Gemm:
+        case OP_TYPEID::GroupConvolutionTranspose:
         case OP_TYPEID::HardSigmoid_v1:
         case OP_TYPEID::Interpolate_v1:
+        case OP_TYPEID::LayerNorm:
+        case OP_TYPEID::LayerNormBackprop:
         case OP_TYPEID::Less_v1:
         case OP_TYPEID::Log_v1:
-        case OP_TYPEID::LRN_v1:
+        case OP_TYPEID::LogSoftmax:
         case OP_TYPEID::LSTMCell_v1:
         case OP_TYPEID::LSTMSequence_v1:
         case OP_TYPEID::MatMul_v1:
@@ -1914,6 +1925,7 @@ private:
         case OP_TYPEID::Maximum_v1:
         case OP_TYPEID::Minimum_v1:
         case OP_TYPEID::Multiply_v1:
+        case OP_TYPEID::MVN:
         case OP_TYPEID::Negative_v1:
         case OP_TYPEID::NormalizeL2_v1:
         case OP_TYPEID::NotEqual_v1:
@@ -1921,6 +1933,8 @@ private:
         case OP_TYPEID::PRelu_v1:
         case OP_TYPEID::Pad_v1:
         case OP_TYPEID::Parameter_v1:
+        case OP_TYPEID::PartialSlice:
+        case OP_TYPEID::PartialSliceBackprop:
         case OP_TYPEID::Power_v1:
         case OP_TYPEID::Range_v1:
         case OP_TYPEID::Relu_v1:
@@ -1933,6 +1947,8 @@ private:
         case OP_TYPEID::Reverse_v1:
         case OP_TYPEID::ReverseSequence_v1:
         case OP_TYPEID::RNNCell_v1:
+        case OP_TYPEID::ScaleShift:
+        case OP_TYPEID::Selu:
         case OP_TYPEID::ShapeOf_v1:
         case OP_TYPEID::ShuffleChannels_v1:
         case OP_TYPEID::Sign_v1:
@@ -1940,6 +1956,8 @@ private:
         case OP_TYPEID::Sin_v1:
         case OP_TYPEID::Sinh_v1:
         case OP_TYPEID::Softmax_v1:
+        case OP_TYPEID::SoftmaxCrossEntropy:
+        case OP_TYPEID::SoftmaxCrossEntropyBackprop:
         case OP_TYPEID::Sqrt_v1:
         case OP_TYPEID::SpaceToDepth_v1:
         case OP_TYPEID::Split_v1:
@@ -1948,6 +1966,7 @@ private:
         case OP_TYPEID::Subtract_v1:
         case OP_TYPEID::Tan_v1:
         case OP_TYPEID::Tanh_v1:
+        case OP_TYPEID::TensorIterator_v1:
         case OP_TYPEID::Tile_v1:
         case OP_TYPEID::TopK_v1:
         case OP_TYPEID::Transpose_v1:
@@ -1957,7 +1976,7 @@ private:
         case OP_TYPEID::MaxPoolBackprop_v1:
         case OP_TYPEID::Squeeze_v1:
         case OP_TYPEID::GenerateMask_v1:
-
+            std::cerr << "This is it" << std::endl;
             throw unsupported_op("Unsupported op '" + node.description() + "'");
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop

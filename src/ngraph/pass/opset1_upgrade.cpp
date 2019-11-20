@@ -165,7 +165,6 @@ using namespace ngraph;
 enum class OP_TYPEID
 {
 #define NGRAPH_OP(a, b) a,
-#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_v0_tbl.hpp"
 #undef NGRAPH_OP
     OTHER
@@ -175,7 +174,6 @@ static OP_TYPEID get_typeid(shared_ptr<Node> node)
 {
     static map<NodeTypeInfo, OP_TYPEID> typeid_map{
 #define NGRAPH_OP(a, b) {b::a::type_info, OP_TYPEID::a},
-#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_v0_tbl.hpp"
 #undef NGRAPH_OP
     };

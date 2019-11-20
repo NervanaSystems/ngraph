@@ -192,7 +192,6 @@ bool ngraph::get_serialize_output_shapes()
 enum class OP_TYPEID
 {
 #define NGRAPH_OP(a, b) a,
-#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_v0_tbl.hpp"
 #undef NGRAPH_OP
 #define NGRAPH_OP(a, b) a##_v1,
@@ -209,7 +208,6 @@ static OP_TYPEID get_typeid(const NodeTypeInfo& type_info)
     // ...
     static const map<NodeTypeInfo, OP_TYPEID> type_info_map{
 #define NGRAPH_OP(a, b) {b::a::type_info, OP_TYPEID::a},
-#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_v0_tbl.hpp"
 #undef NGRAPH_OP
 #define NGRAPH_OP(a, b) {b::a::type_info, OP_TYPEID::a##_v1},
@@ -1426,7 +1424,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Cosh>(args[0]);
             break;
         }
-        case OP_TYPEID::DepthToSpace:
         case OP_TYPEID::DepthToSpace_v1:
         {
             auto mode = node_js.at("mode").get<op::DepthToSpace::DepthToSpaceMode>();
@@ -1535,7 +1532,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                              ellipsis_mask);
             break;
         }
-        case OP_TYPEID::Elu:
         case OP_TYPEID::Elu_v1:
         {
             auto alpha = node_js.at("alpha").get<double>();
@@ -1576,7 +1572,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Exp>(args[0]);
             break;
         }
-        case OP_TYPEID::FakeQuantize:
         case OP_TYPEID::FakeQuantize_v1:
         {
             size_t levels = node_js.at("levels").get<size_t>();
@@ -1704,7 +1699,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::GRN>(args[0], bias);
             break;
         }
-        case OP_TYPEID::GroupConvolution:
         case OP_TYPEID::GroupConvolution_v1:
         {
             auto window_movement_strides =
@@ -1772,7 +1766,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                             linear_before_reset);
             break;
         }
-        case OP_TYPEID::HardSigmoid:
         case OP_TYPEID::HardSigmoid_v1:
         {
             auto alpha = node_js.at("alpha").get<float>();
@@ -1893,7 +1886,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::LogSoftmax>(args[0], axis);
             break;
         }
-        case OP_TYPEID::LRN:
         case OP_TYPEID::LRN_v1:
         {
             auto alpha = node_js.at("alpha").get<double>();
@@ -1903,7 +1895,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::LRN>(args[0], args[1], alpha, beta, bias, nsize);
             break;
         }
-        case OP_TYPEID::LSTMCell:
         case OP_TYPEID::LSTMCell_v1:
         {
             auto hidden_size = node_js.at("hidden_size").get<size_t>();
@@ -1963,7 +1954,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             break;
         }
-        case OP_TYPEID::LSTMSequence:
         case OP_TYPEID::LSTMSequence_v1:
         {
             auto hidden_size = node_js.at("hidden_size").get<size_t>();
@@ -2013,7 +2003,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             break;
         }
-        case OP_TYPEID::MatMul:
         case OP_TYPEID::MatMul_v1:
         {
             bool transpose_a = node_js.at("transpose_a").get<bool>();
@@ -2210,7 +2199,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Negative>(args[0]);
             break;
         }
-        case OP_TYPEID::NormalizeL2:
         case OP_TYPEID::NormalizeL2_v1:
         {
             float eps = node_js.at("eps").get<float>();
@@ -2353,7 +2341,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             break;
         }
-        case OP_TYPEID::PRelu:
         case OP_TYPEID::PRelu_v1:
         {
             node = make_shared<op::PRelu>(args[0], args[1]);
@@ -2536,7 +2523,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::ReverseSequence>(args[0], args[1], batch_axis, sequence_axis);
             break;
         }
-        case OP_TYPEID::RNNCell:
         case OP_TYPEID::RNNCell_v1:
         {
             auto hidden_size = node_js.at("hidden_size").get<size_t>();
@@ -2599,7 +2585,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::ShapeOf>(args[0]);
             break;
         }
-        case OP_TYPEID::ShuffleChannels:
         case OP_TYPEID::ShuffleChannels_v1:
         {
             const auto axis = node_js.at("axis").get<size_t>();
@@ -2702,7 +2687,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], args[2], soft_label, ignore_index);
             break;
         }
-        case OP_TYPEID::SpaceToDepth:
         case OP_TYPEID::SpaceToDepth_v1:
         {
             auto block_size = node_js.at("block_size").get<size_t>();
@@ -2710,7 +2694,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::SpaceToDepth>(args[0], mode, block_size);
             break;
         }
-        case OP_TYPEID::Split:
         case OP_TYPEID::Split_v1:
         {
             const auto axis = node_js.at("axis").get<size_t>();
@@ -2724,14 +2707,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Sqrt>(args[0]);
             break;
         }
-        case OP_TYPEID::SquaredDifference:
         case OP_TYPEID::SquaredDifference_v1:
         {
             node = make_shared<op::SquaredDifference>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
-        case OP_TYPEID::Squeeze:
         case OP_TYPEID::Squeeze_v1:
         {
             node = make_shared<op::Squeeze>(args[0], args[1]);
@@ -2774,7 +2755,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Tanh>(args[0]);
             break;
         }
-        case OP_TYPEID::TensorIterator:
+        case OP_TYPEID::TensorIterator_v1:
         {
             auto ti = make_shared<op::TensorIterator>(args);
             json jbody = node_js["body"];
@@ -2875,7 +2856,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::StopGradient>(args[0]);
             break;
         }
-        case OP_TYPEID::Unsqueeze:
         case OP_TYPEID::Unsqueeze_v1:
         {
             node = make_shared<op::Unsqueeze>(args[0], args[1]);
@@ -3418,7 +3398,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["axes"] = serialize_axis_set(tmp->get_axes());
         break;
     }
-    case OP_TYPEID::DepthToSpace:
     case OP_TYPEID::DepthToSpace_v1:
     {
         auto tmp = static_cast<const op::DepthToSpace*>(&n);
@@ -3494,7 +3473,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["ellipsis_mask"] = tmp->get_ellipsis_mask();
         break;
     }
-    case OP_TYPEID::Elu:
     case OP_TYPEID::Elu_v1:
     {
         auto tmp = static_cast<const op::Elu*>(&n);
@@ -3527,7 +3505,6 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Exp:
     case OP_TYPEID::Exp_v1: { break;
     }
-    case OP_TYPEID::FakeQuantize:
     case OP_TYPEID::FakeQuantize_v1:
     {
         auto tmp = static_cast<const op::FakeQuantize*>(&n);
@@ -3645,7 +3622,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["linear_before_reset"] = tmp->get_linear_before_reset();
         break;
     }
-    case OP_TYPEID::GroupConvolution:
     case OP_TYPEID::GroupConvolution_v1:
     {
         auto tmp = static_cast<const op::GroupConvolution*>(&n);
@@ -3671,7 +3647,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["output_shape"] = tmp->get_output_shape();
         break;
     }
-    case OP_TYPEID::HardSigmoid:
     case OP_TYPEID::HardSigmoid_v1:
     {
         auto tmp = static_cast<const op::HardSigmoid*>(&n);
@@ -3773,7 +3748,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["axis"] = tmp->get_axis();
         break;
     }
-    case OP_TYPEID::LRN:
     case OP_TYPEID::LRN_v1:
     {
         auto tmp = static_cast<const op::LRN*>(&n);
@@ -3783,7 +3757,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["nsize"] = tmp->get_nsize();
         break;
     }
-    case OP_TYPEID::LSTMCell:
     case OP_TYPEID::LSTMCell_v1:
     {
         auto tmp = static_cast<const op::LSTMCell*>(&n);
@@ -3796,7 +3769,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["input_forget"] = tmp->get_input_forget();
         break;
     }
-    case OP_TYPEID::LSTMSequence:
     case OP_TYPEID::LSTMSequence_v1:
     {
         auto tmp = dynamic_cast<const op::LSTMSequence*>(&n);
@@ -3810,7 +3782,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["input_forget"] = tmp->get_input_forget();
         break;
     }
-    case OP_TYPEID::MatMul:
     case OP_TYPEID::MatMul_v1:
     {
         auto tmp = static_cast<const op::MatMul*>(&n);
@@ -3943,7 +3914,6 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Negative:
     case OP_TYPEID::Negative_v1: { break;
     }
-    case OP_TYPEID::NormalizeL2:
     case OP_TYPEID::NormalizeL2_v1:
     {
         auto tmp = static_cast<const op::NormalizeL2*>(&n);
@@ -4048,7 +4018,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["output_shapes"] = std::move(outputs_js);
         break;
     }
-    case OP_TYPEID::PRelu:
     case OP_TYPEID::PRelu_v1: { break;
     }
     case OP_TYPEID::Product:
@@ -4194,7 +4163,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["sequence_axis"] = tmp->get_sequence_axis();
         break;
     }
-    case OP_TYPEID::RNNCell:
     case OP_TYPEID::RNNCell_v1:
     {
         auto tmp = static_cast<const op::RNNCell*>(&n);
@@ -4232,7 +4200,6 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::ShapeOf:
     case OP_TYPEID::ShapeOf_v1: { break;
     }
-    case OP_TYPEID::ShuffleChannels:
     case OP_TYPEID::ShuffleChannels_v1:
     {
         const auto tmp = static_cast<const op::ShuffleChannels*>(&n);
@@ -4275,7 +4242,6 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    case OP_TYPEID::SpaceToDepth:
     case OP_TYPEID::SpaceToDepth_v1:
     {
         auto tmp = static_cast<const op::SpaceToDepth*>(&n);
@@ -4284,7 +4250,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["block_size"] = tmp->get_block_size();
         break;
     }
-    case OP_TYPEID::Split:
     case OP_TYPEID::Split_v1:
     {
         auto tmp = static_cast<const op::Split*>(&n);
@@ -4295,7 +4260,6 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Sqrt:
     case OP_TYPEID::Sqrt_v1: { break;
     }
-    case OP_TYPEID::SquaredDifference:
     case OP_TYPEID::SquaredDifference_v1:
     {
         auto tmp = static_cast<const op::SquaredDifference*>(&n);
@@ -4305,7 +4269,6 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    case OP_TYPEID::Squeeze:
     case OP_TYPEID::Squeeze_v1: { break;
     }
     case OP_TYPEID::StopGradient: { break;
@@ -4368,7 +4331,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Tanh:
     case OP_TYPEID::Tanh_v1: { break;
     }
-    case OP_TYPEID::TensorIterator:
+    case OP_TYPEID::TensorIterator_v1:
     {
         auto tmp = static_cast<const op::TensorIterator*>(&n);
         json body = json::object();
@@ -4435,7 +4398,6 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Transpose:
     case OP_TYPEID::Transpose_v1: { break;
     }
-    case OP_TYPEID::Unsqueeze:
     case OP_TYPEID::Unsqueeze_v1: { break;
     }
     case OP_TYPEID::Xor:

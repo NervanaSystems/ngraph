@@ -22,21 +22,23 @@ using namespace std;
 runtime::interpreter::NodeWrapper::NodeWrapper(const shared_ptr<const Node>& node)
     : m_node{node}
 {
-// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
-// {"Abs", runtime::interpreter::OP_TYPEID::Abs},
-// {"Acos", runtime::interpreter::OP_TYPEID::Acos},
-// ...
-#define NGRAPH_OP(a, b) {#a, runtime::interpreter::OP_TYPEID::a},
-    static unordered_map<string, runtime::interpreter::OP_TYPEID> typeid_map{
-#include "ngraph/op/op_tbl.hpp"
+    static const map<NodeTypeInfo, OP_TYPEID> type_info_map{
+#define NGRAPH_OP(a, b) {b::a::type_info, OP_TYPEID::a},
+#include "ngraph/op/op_v0_tbl.hpp"
+#undef NGRAPH_OP
+#define NGRAPH_OP(a, b) {b::a::type_info, OP_TYPEID::a##_v1},
+#include "ngraph/op/op_v1_tbl.hpp"
+#undef NGRAPH_OP
 #ifdef INTERPRETER_USE_HYBRID
+#define NGRAPH_OP(a, b) {b::a::type_info, OP_TYPEID::a##_hybrid},
 #include "ngraph/runtime/hybrid/op/op_tbl.hpp"
+#undef NGRAPH_OP
 #endif
     };
 #undef NGRAPH_OP
 
-    auto it = typeid_map.find(m_node->description());
-    if (it != typeid_map.end())
+    auto it = type_info_map.find(m_node->get_type_info());
+    if (it != type_info_map.end())
     {
         m_typeid = it->second;
     }
