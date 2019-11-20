@@ -131,7 +131,7 @@ bool runtime::dynamic::DynamicExecutable::call(
             void* data_ptr = malloc(input->get_size_in_bytes());
             input->read(data_ptr, input->get_size_in_bytes());
             // assuming that shape relevant inputs are int64_t
-            int* result = (int*)data_ptr;
+            int64_t* result = (int64_t*)data_ptr;
             for (int i = 0; i < input->get_element_count(); i++)
             {
                 merged_input_shapes.emplace_back(result[i]);
