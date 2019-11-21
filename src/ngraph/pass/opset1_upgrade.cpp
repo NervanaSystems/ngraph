@@ -209,14 +209,14 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
                      "other than `1`. Node: ",
                      *node);
 
-        auto replacement_node =
-            make_shared<op::v1::ConvolutionBackpropData>(node->input(0).get_source_output(),
-                                                         node->input(1).get_source_output(),
-                                                         node->input(2).get_source_output(),
-                                                         strides,
-                                                         dilations,
-                                                         pads_begin,
-                                                         pads_end);
+        auto replacement_node = make_shared<op::v1::ConvolutionBackpropData>(
+            node->input(1).get_source_output(), // data
+            node->input(0).get_source_output(), // filters
+            op::Constant::create(element::i64, Shape{data_batch_shape.size()}, data_batch_shape),
+            strides,
+            pads_begin,
+            pads_end,
+            dilations);
         replace_node(node, replacement_node);
         modified = true;
         break;
