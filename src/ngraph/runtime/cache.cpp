@@ -62,20 +62,17 @@ void runtime::LRUCache::add_entry(const vector<int>& shape,
                                   shared_ptr<Function> func)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
-    ostringstream key;
     // check if the list is empty
     if (m_list.size() == m_size)
     {
-        ostringstream key = convert_shape_to_string(m_list.back());
         m_list.pop_back();
-        m_map.erase(key.str());
+        m_map.erase(convert_shape_to_string(m_list.back()).str());
     }
 
-    key = convert_shape_to_string(shape);
-    m_map.insert({key.str(), exec});
+    m_map.insert({convert_shape_to_string(shape).str(), exec});
     m_list.push_front(shape);
-    m_clone_function_map.insert({key.str(), func});
-    NGRAPH_INFO << "Key is " << key.str();
+    m_clone_function_map.insert({convert_shape_to_string(shape).str(), func});
+    NGRAPH_INFO << "Key is " << convert_shape_to_string(shape).str();
 }
 
 bool runtime::LRUCache::is_cached(const vector<int>& shape)
@@ -95,9 +92,7 @@ shared_ptr<runtime::Executable> runtime::LRUCache::get_cached_entry(const vector
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     // find the entry and return the function
-    ostringstream key;
-    key = convert_shape_to_string(shape);
-    auto it = m_map.find(key.str());
+    auto it = m_map.find(convert_shape_to_string(shape).str());
     if (it == m_map.end())
     {
         throw ngraph_error("Entry not found in cache");
@@ -124,9 +119,7 @@ shared_ptr<Function> runtime::LRUCache::get_cloned_function(const vector<int>& s
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     // find the entry and return the function
-    ostringstream key;
-    key = convert_shape_to_string(shape);
-    auto it = m_clone_function_map.find(key.str());
+    auto it = m_clone_function_map.find(convert_shape_to_string(shape).str());
     if (it == m_clone_function_map.end())
     {
         throw ngraph_error("Cloned function not found");
