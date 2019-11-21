@@ -75,6 +75,9 @@ void pass::ConstantFolding::construct_constant_transpose()
             NGRAPH_CHECK(false,
                          "Encountered 'dynamic' element type in constant_transpose_callback");
             break;
+        case element::Type_t::u1:
+            NGRAPH_CHECK(false, "Encountered 'u1' element type in constant_transpose_callback");
+            break;
         case element::Type_t::boolean:
             replacement = fold_constant_transpose<char>(
                 constant_data_match, constant_perm_match, transpose_match);

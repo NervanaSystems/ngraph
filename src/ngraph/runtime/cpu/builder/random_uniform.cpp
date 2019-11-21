@@ -112,6 +112,9 @@ namespace ngraph
                     NGRAPH_CHECK(false,
                                  "Encountered 'dynamic' element type in fold_constant_convert");
                     break;
+                case element::Type_t::u1:
+                    NGRAPH_CHECK(false, "Encountered 'u1' element type in fold_constant_convert");
+                    break;
                 case element::Type_t::boolean:
                     functor = prepare_functor<char>(node, args, out, external_function);
                     break;

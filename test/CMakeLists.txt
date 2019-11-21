@@ -54,6 +54,7 @@ set(SRC
     constant_folding.cpp
     concat_fusion.cpp
     control_dependencies.cpp
+    convert_u1_to_string.cpp
     coordinate.cpp
     copy.cpp
     cpio.cpp
