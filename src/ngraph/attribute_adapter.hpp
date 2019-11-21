@@ -36,7 +36,7 @@ namespace ngraph
 
     /// ValueAccessor<T> represents values that support get/set through T
     template <typename T>
-    class NGRAPH_API ValueAccessor : public ValueAccessor<void>
+    class ValueAccessor : public ValueAccessor<void>
     {
     public:
         virtual ~ValueAccessor() {}
@@ -52,7 +52,7 @@ namespace ngraph
     };
 
     template <typename Type>
-    class NGRAPH_API ValueReference
+    class ValueReference
     {
     public:
         operator Type&() const { return m_value; }
