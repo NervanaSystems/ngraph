@@ -26,8 +26,8 @@ constexpr NodeTypeInfo op::CumSum::type_info;
 
 op::CumSum::CumSum(const Output<Node>& arg,
                    const Output<Node>& axis,
-                   const int exclusive,
-                   const int reverse)
+                   const bool exclusive,
+                   const bool reverse)
     : Op({arg, axis})
     , m_exclusive(exclusive)
     , m_reverse(reverse)
@@ -35,17 +35,24 @@ op::CumSum::CumSum(const Output<Node>& arg,
     auto const_op = as_type_ptr<op::Constant>(axis.get_node_shared_ptr());
     m_axis = *(static_cast<const int64_t*>(const_op->get_data_ptr()));
 
+    size_t rank = arg.get_shape().size();
+    NODE_VALIDATION_CHECK(this,
+                          m_axis < -rank || m_axis > rank,
+                          "axis must be in the range [-rank, rank] but (got ",
+                          m_axis,
+                          ").");
     if (m_axis < 0)
     {
-        m_axis = m_axis + arg.get_shape().size();
+        m_axis = m_axis + rank;
     }
+
     set_output_type(0, arg.get_element_type(), arg.get_shape());
 }
 
 op::CumSum::CumSum(const Output<Node>& arg,
                    const int64_t axis,
-                   const int exclusive,
-                   const int reverse)
+                   const bool exclusive,
+                   const bool reverse)
     : CumSum(arg, op::Constant::create(element::i64, Shape{}, {axis}), exclusive, reverse)
 {
     set_output_type(0, arg.get_element_type(), arg.get_shape());

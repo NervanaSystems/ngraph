@@ -70,13 +70,13 @@ namespace ngraph
            ///
            /// \param arg The tensor to be summed.
            /// \param axis The axis position along which cumulative sum must be performed.
-           CumSum(const Output<Node>& arg, const int64_t axis = 0, const int exclusive = 0, const int reverse = 0); 
+           CumSum(const Output<Node>& arg, const int64_t axis = 0, const bool exclusive = false, const bool reverse = false); 
     
            /// \brief Constructs a cumulative summation operation.
            ///
            /// \param arg The tensor to be summed.
            /// \param axis The axis position along which cumulative sum must be performed.
-           CumSum(const Output<Node>& arg, const Output<Node>& axis, const int exclusive = 0, const int reverse = 0);
+           CumSum(const Output<Node>& arg, const Output<Node>& axis, const bool exclusive = false, const bool reverse = false);
 
            virtual std::shared_ptr<Node>
                copy_with_new_args(const NodeVector& new_args) const override;
@@ -84,15 +84,15 @@ namespace ngraph
            /// \return The default value for CumSum.
            virtual std::shared_ptr<Node> get_default_value() const override;
            int64_t get_axis() const { return m_axis; }
-           int is_exclusive() const { return m_exclusive; }
-           int is_reverse() const { return m_reverse; }
+           bool is_exclusive() const { return m_exclusive; }
+           bool is_reverse() const { return m_reverse; }
        protected:
            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                const NodeVector& deltas) override;
     
        private:
-	   int m_exclusive;
-	   int m_reverse;
+	   bool m_exclusive;
+	   bool m_reverse;
 	   int64_t m_axis;
        };
     }

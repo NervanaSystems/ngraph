@@ -35,8 +35,8 @@ namespace ngraph
                         const Shape& in_shape,
                         const Shape& out_shape,
                         const int64_t axis,
-                        const int exclusive,
-                        const int reverse)
+                        const bool exclusive,
+                        const bool reverse)
             {
                 CoordinateTransform temp_transform(out_shape);
                 for (const Coordinate& output_coord : temp_transform)
@@ -71,12 +71,12 @@ namespace ngraph
 
                 auto cum_sum =
                     [&, exclusive, reverse](std::vector<std::pair<size_t, T>>& tensor_vec) {
-                        if (reverse == 0)
+                        if (!reverse)
                         {
                             T prev = 0;
                             for (size_t i = 0; i < tensor_vec.size(); i++)
                             {
-                                if (exclusive == 1 && i == 0)
+                                if (exclusive && i == 0)
                                 {
                                     out[tensor_vec[i].first] = prev;
                                     continue;
@@ -87,12 +87,12 @@ namespace ngraph
                                 update_output_buffer(arg_index, i, prev, tensor_vec);
                             }
                         }
-                        else // reverse == 1
+                        else // reverse == true
                         {
                             T prev = 0;
                             for (size_t i = tensor_vec.size(); i-- > 0;)
                             {
-                                if (exclusive == 1 && i == tensor_vec.size() - 1)
+                                if (exclusive && i == tensor_vec.size() - 1)
                                 {
                                     out[tensor_vec[i].first] = prev;
                                     continue;

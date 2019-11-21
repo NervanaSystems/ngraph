@@ -33,8 +33,8 @@ namespace ngraph
                                       const Shape& in_shape,
                                       const Shape& out_shape,
                                       const int64_t axis,
-                                      const int exclusive,
-                                      const int reverse)
+                                      const bool exclusive,
+                                      const bool reverse)
                 {
                     reference::cumsum<ElementType>(static_cast<const ElementType*>(arg),
                                                    static_cast<ElementType*>(out),
