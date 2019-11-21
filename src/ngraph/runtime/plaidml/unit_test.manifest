@@ -147,6 +147,7 @@ pad_reflect_1d_multi_reflect
 pad_reflect_2d
 pad_reflect_2d_with_neg
 pad_symmetric
+cross_entropy_with_one_hot
 
 # No double precision FP support in PlaidML
 sum_trivial_in_double

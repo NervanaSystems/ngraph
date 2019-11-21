@@ -2548,3 +2548,47 @@ NGRAPH_TEST(${BACKEND_NAME}, gru_cell_activation_function)
 
     test_case.run();
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, cross_entropy_with_soft_labels)
+{
+    Shape tensor_shape{2, 4};
+    auto input = make_shared<op::Parameter>(element::f32, tensor_shape);
+    auto labels = make_shared<op::Parameter>(element::i32, Shape{2, 4});
+    auto cross_entropy = make_shared<op::CrossEntropy>(input, labels, true);
+    auto f0 = make_shared<Function>(NodeVector{cross_entropy}, ParameterVector{input, labels});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, tensor_shape);
+    copy_data(a, vector<float>{0.25f, 0.25f, 0.25f, 0.25f, 0.01f, 0.01f, 0.01f, 0.96f});
+    auto b = backend->create_tensor(element::i32, Shape{2, 4});
+    copy_data(b, vector<int32_t>{0, 0, 0, 1, 0, 0, 0, 1});
+    auto result0 = backend->create_tensor(element::f32, Shape{2, 1});
+    auto handle = backend->compile(f0);
+    handle->call_with_validate({result0}, {a, b});
+    vector<float> expected{1.38629f, 0.040822f};
+    auto result = read_vector<float>(result0);
+    EXPECT_TRUE(test::all_close_f(result, expected, 23));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, cross_entropy_with_one_hot)
+{
+    Shape tensor_shape{2, 4};
+    auto input = make_shared<op::Parameter>(element::f32, tensor_shape);
+    auto labels = make_shared<op::Parameter>(element::i32, Shape{2, 1});
+    auto cross_entropy = make_shared<op::CrossEntropy>(input, labels, false);
+    auto f0 = make_shared<Function>(NodeVector{cross_entropy}, ParameterVector{input, labels});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, tensor_shape);
+    copy_data(a, vector<float>{0.25f, 0.25f, 0.25f, 0.25f, 0.01f, 0.01f, 0.01f, 0.96f});
+    auto b = backend->create_tensor(element::i32, Shape{2, 1});
+    copy_data(b, vector<int32_t>{1, 1});
+    auto result0 = backend->create_tensor(element::f32, Shape{2, 1});
+    auto handle = backend->compile(f0);
+    handle->call_with_validate({result0}, {a, b});
+    vector<float> expected{1.38629f, 4.60517f};
+    auto result = read_vector<float>(result0);
+    EXPECT_TRUE(test::all_close_f(result, expected, 23));
+}
