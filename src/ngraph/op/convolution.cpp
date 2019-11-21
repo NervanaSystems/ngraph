@@ -102,15 +102,14 @@ void op::v1::Convolution::validate_and_infer_types()
         filters_et,
         ").");
 
-    result_shape =
-        infer_convolution_forward(this,
-                                  data_batch_shape,
-                                  Strides(static_cast<size_t>(data_batch_shape.rank()) - 2, 1),
-                                  m_pads_begin,
-                                  m_pads_end,
-                                  filters_shape,
-                                  m_strides,
-                                  m_dilations);
+    result_shape = infer_convolution_forward(this,
+                                             data_batch_shape,
+                                             Strides(m_strides.size(), 1), // dummy data dilations
+                                             m_pads_begin,
+                                             m_pads_end,
+                                             filters_shape,
+                                             m_strides,
+                                             m_dilations);
 
     set_output_type(0, result_et, result_shape);
 }
