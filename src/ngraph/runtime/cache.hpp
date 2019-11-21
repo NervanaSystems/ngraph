@@ -49,7 +49,7 @@ namespace ngraph
                            shared_ptr<Function> func);
             bool is_cached(const vector<int>& shape);
             shared_ptr<Executable> get_cached_entry(const vector<int>& shape);
-            ostringstream convert_shape_to_string(const vector<int>& shape);
+            void convert_shape_to_string(const vector<int>& shape, ostringstream& key);
             shared_ptr<Function> get_cloned_function(const vector<int>& shape);
 
         private:
