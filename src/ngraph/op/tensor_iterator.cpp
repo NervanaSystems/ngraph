@@ -271,6 +271,14 @@ void op::TensorIterator::validate_and_infer_types()
 
     std::vector<std::shared_ptr<Node>> ends;
 
+    auto make_positive = [](int64_t value, uint64_t dim_size) -> int64_t {
+        if (value < 0)
+        {
+            value = dim_size + value;
+        }
+        return value;
+    };
+
     // Input
     uint64_t index_it = 0;
     for (auto input_description : m_input_descriptions)
@@ -285,41 +293,26 @@ void op::TensorIterator::validate_and_infer_types()
                 m_body->get_parameters().at(slice_input_description->m_body_parameter_index);
             auto body_param_partial_shape = body_parameter->get_partial_shape();
             auto input_partial_shape = inputs().at(index).get_source_output().get_partial_shape();
-            auto start = slice_input_description->m_start;
-            auto part_size = slice_input_description->m_part_size;
-            auto end = slice_input_description->m_end;
-            if (end != -1)
-            {
-                if (m_num_iterations == -1)
-                {
-                    m_num_iterations = end - start;
-                }
-                else
-                {
-                    NODE_VALIDATION_CHECK(
-                        this, m_num_iterations == end - start, "Number of slices not the same");
-                }
-            }
-
             if (input_partial_shape.is_static())
             {
                 auto input_shape = input_partial_shape.to_shape();
                 auto axis = slice_input_description->m_axis;
-                if (end == -1)
+                auto part_size = slice_input_description->m_part_size;
+
+                auto dim_size = input_shape[axis];
+                auto start = make_positive(slice_input_description->m_start, dim_size);
+                auto end = make_positive(slice_input_description->m_end, dim_size);
+
+                if (m_num_iterations == -1)
                 {
-                    // for simple RNN case where stride is the same as part_size
-                    // when end is -1, we assume that we slice the input from "start" to the very
-                    // end.
-                    end = static_cast<size_t>(input_shape[axis]) / part_size + start;
-                    if (m_num_iterations == -1)
-                    {
-                        m_num_iterations = end - start;
-                    }
-                    else
-                    {
-                        NODE_VALIDATION_CHECK(
-                            this, m_num_iterations == end - start, "Number of slices not the same");
-                    }
+                    // +1 because the left and right borders are included [start, end]
+                    m_num_iterations = (abs(end - start) + 1) / part_size;
+                }
+                else
+                {
+                    NODE_VALIDATION_CHECK(this,
+                                          m_num_iterations == (abs(end - start) + 1) / part_size,
+                                          "Number of slices not the same");
                 }
 
                 if (body_param_partial_shape.is_static())
@@ -421,23 +414,10 @@ void op::TensorIterator::validate_and_infer_types()
             if (body_value_partial_shape.is_static())
             {
                 auto body_value_shape = body_value_partial_shape.to_shape();
-                auto start = concat_output_description->m_start;
                 auto part_size = concat_output_description->m_part_size;
-                auto end = concat_output_description->m_end;
                 auto axis = concat_output_description->m_axis;
+
                 Shape out_shape{body_value_shape};
-                if (end != -1)
-                {
-                    if (m_num_iterations != -1)
-                    {
-                        NODE_VALIDATION_CHECK(
-                            this, m_num_iterations == end - start, "Number of slices not the same");
-                    }
-                    else
-                    {
-                        m_num_iterations = end - start;
-                    }
-                }
                 if (m_num_iterations != -1)
                 {
                     // for simple RNN case where stride is the same as part_size

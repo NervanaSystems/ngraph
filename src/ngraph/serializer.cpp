@@ -156,6 +156,7 @@
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/strided_slice.hpp"
+#include "ngraph/op/strided_slice.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
@@ -163,6 +164,8 @@
 #include "ngraph/op/tensor_iterator.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/op/variadic_split.hpp"
+#include "ngraph/op/variadic_split.hpp"
 #include "ngraph/op/xor.hpp"
 #include "ngraph/provenance.hpp"
 #include "ngraph/serializer.hpp"
@@ -2880,6 +2883,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Unsqueeze>(args[0], args[1]);
             break;
         }
+        case OP_TYPEID::VariadicSplit_v1:
+        {
+            node = make_shared<op::v1::VariadicSplit>(args[0], args[1], args[2]);
+            break;
+        }
         case OP_TYPEID::Xor:
         {
             node = make_shared<op::v0::Xor>(
@@ -4441,6 +4449,8 @@ json JSONSerializer::serialize_node(const Node& n)
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
+    }
+    case OP_TYPEID::VariadicSplit_v1: { break;
     }
     case OP_TYPEID::UnknownOp: { break;
     }

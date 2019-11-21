@@ -81,9 +81,11 @@
 #include "ngraph/op/send.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
+#include "ngraph/op/strided_slice.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/variadic_split.hpp"
 #include "ngraph/op/xor.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
@@ -1991,6 +1993,7 @@ private:
         case OP_TYPEID::Squeeze_v1:
         case OP_TYPEID::GenerateMask_v1:
         case OP_TYPEID::UnknownOp:
+        case OP_TYPEID::VariadicSplit_v1:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop

@@ -14,7 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <algorithm>
 #include <cstdint>
+#include <numeric>
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
@@ -158,12 +160,11 @@
 #include "ngraph/op/tensor_iterator.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/op/variadic_split.hpp"
 #include "ngraph/op/xor.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/slice_plan.hpp"
 #include "ngraph/type.hpp"
-
-#include <algorithm>
 
 using namespace std;
 using namespace ngraph;
@@ -702,6 +703,20 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         }
 
         replace_node(node, replacement_node);
+        break;
+    }
+    case OP_TYPEID::Softmax_v1:
+    {
+        auto tmp = as_type_ptr<op::v1::Softmax>(node);
+        auto axis = tmp->get_axis();
+        auto data = node->input(0);
+        auto data_shape = data.get_shape();
+        std::vector<size_t> axes(data_shape.size() - axis);
+        std::iota(std::begin(axes), std::end(axes), axis);
+        auto replacement_node =
+            make_shared<op::v0::Softmax>(node->input(0).get_source_output(), axes);
+        replace_node(node, replacement_node);
+        modified = true;
         break;
     }
     case OP_TYPEID::ReduceSum_v1:

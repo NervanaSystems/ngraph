@@ -159,7 +159,7 @@ NGRAPH_OP(Tile, ngraph::op)
 NGRAPH_OP(TopK, ngraph::op::v1)
 NGRAPH_OP(Transpose, ngraph::op)
 NGRAPH_OP(Unsqueeze, ngraph::op)
-// NGRAPH_OP(VariadicSplit, ngraph::op)
+NGRAPH_OP(VariadicSplit, ngraph::op::v1)
 
 // Related to v1
 NGRAPH_OP(AvgPoolBackprop, ngraph::op::v1)
