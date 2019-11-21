@@ -162,6 +162,7 @@
 #include "ngraph/op/tensor_iterator.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/op/variadic_split.hpp"
 #include "ngraph/op/xor.hpp"
 #include "ngraph/provenance.hpp"
 #include "ngraph/serializer.hpp"
@@ -2795,6 +2796,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Unsqueeze>(args[0], args[1]);
             break;
         }
+        case OP_TYPEID::VariadicSplit:
+        {
+            node = make_shared<op::v1::VariadicSplit>(args[0], args[1], args[2]);
+            break;
+        }
         case OP_TYPEID::Xor:
         {
             node = make_shared<op::v0::Xor>(
@@ -4292,6 +4298,8 @@ json JSONSerializer::serialize_node(const Node& n)
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
+    }
+    case OP_TYPEID::VariadicSplit: { break;
     }
     case OP_TYPEID::UnknownOp: { break;
     }
