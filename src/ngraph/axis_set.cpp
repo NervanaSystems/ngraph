@@ -17,7 +17,8 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/util.hpp"
 
-ngraph::AxisSet::AxisSet() : std::set<size_t>()
+ngraph::AxisSet::AxisSet()
+    : std::set<size_t>()
 {
 }
 

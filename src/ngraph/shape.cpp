@@ -50,7 +50,9 @@ ngraph::Shape::Shape(size_t n, size_t initial_value)
 {
 }
 
-ngraph::Shape::~Shape() {}
+ngraph::Shape::~Shape()
+{
+}
 
 ngraph::Shape& ngraph::Shape::operator=(const Shape& v)
 {

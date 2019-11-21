@@ -16,10 +16,10 @@
 
 #pragma once
 
+#include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
-#include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
 {

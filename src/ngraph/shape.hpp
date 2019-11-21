@@ -20,8 +20,8 @@
 #include <vector>
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/strides.hpp"
 #include "ngraph/ngraph_visibility.hpp"
+#include "ngraph/strides.hpp"
 
 namespace ngraph
 {

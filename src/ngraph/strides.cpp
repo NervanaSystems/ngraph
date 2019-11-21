@@ -25,7 +25,6 @@ std::ostream& ngraph::operator<<(std::ostream& s, const Strides& strides)
     return s;
 }
 
-
 ngraph::Strides::Strides()
     : std::vector<size_t>()
 {

@@ -70,7 +70,8 @@ namespace ngraph
     };
 
     template <typename Type>
-    class NGRAPH_API EnumAttributeAdapterBase : public ValueReference<Type>, public ValueAccessor<std::string>
+    class NGRAPH_API EnumAttributeAdapterBase : public ValueReference<Type>,
+                                                public ValueAccessor<std::string>
     {
     public:
         EnumAttributeAdapterBase(Type& value)
@@ -86,7 +87,8 @@ namespace ngraph
     };
 
     template <>
-    class NGRAPH_API AttributeAdapter<float> : public ValueReference<float>, public ValueAccessor<double>
+    class NGRAPH_API AttributeAdapter<float> : public ValueReference<float>,
+                                               public ValueAccessor<double>
     {
     public:
         AttributeAdapter(float& value)
@@ -100,7 +102,8 @@ namespace ngraph
     };
 
     template <>
-    class NGRAPH_API AttributeAdapter<double> : public ValueReference<double>, public ValueAccessor<double>
+    class NGRAPH_API AttributeAdapter<double> : public ValueReference<double>,
+                                                public ValueAccessor<double>
     {
     public:
         AttributeAdapter(double& value)
@@ -114,7 +117,8 @@ namespace ngraph
     };
 
     template <>
-    class NGRAPH_API AttributeAdapter<int8_t> : public ValueReference<int8_t>, public ValueAccessor<int64_t>
+    class NGRAPH_API AttributeAdapter<int8_t> : public ValueReference<int8_t>,
+                                                public ValueAccessor<int64_t>
     {
     public:
         AttributeAdapter(int8_t& value)
@@ -128,7 +132,8 @@ namespace ngraph
     };
 
     template <>
-    class NGRAPH_API AttributeAdapter<int16_t> : public ValueReference<int16_t>, public ValueAccessor<int64_t>
+    class NGRAPH_API AttributeAdapter<int16_t> : public ValueReference<int16_t>,
+                                                 public ValueAccessor<int64_t>
     {
     public:
         AttributeAdapter(int16_t& value)
@@ -142,7 +147,8 @@ namespace ngraph
     };
 
     template <>
-    class NGRAPH_API AttributeAdapter<int32_t> : public ValueReference<int32_t>, public ValueAccessor<int64_t>
+    class NGRAPH_API AttributeAdapter<int32_t> : public ValueReference<int32_t>,
+                                                 public ValueAccessor<int64_t>
     {
     public:
         AttributeAdapter(int32_t& value)
@@ -156,7 +162,8 @@ namespace ngraph
     };
 
     template <>
-    class NGRAPH_API AttributeAdapter<int64_t> : public ValueReference<int64_t>, public ValueAccessor<int64_t>
+    class NGRAPH_API AttributeAdapter<int64_t> : public ValueReference<int64_t>,
+                                                 public ValueAccessor<int64_t>
     {
     public:
         AttributeAdapter(int64_t& value)
@@ -170,7 +177,8 @@ namespace ngraph
     };
 
     template <>
-    class NGRAPH_API AttributeAdapter<uint8_t> : public ValueReference<uint8_t>, public ValueAccessor<int64_t>
+    class NGRAPH_API AttributeAdapter<uint8_t> : public ValueReference<uint8_t>,
+                                                 public ValueAccessor<int64_t>
     {
     public:
         AttributeAdapter(uint8_t& value)
@@ -185,7 +193,7 @@ namespace ngraph
 
     template <>
     class NGRAPH_API AttributeAdapter<uint16_t> : public ValueReference<uint16_t>,
-                                       public ValueAccessor<int64_t>
+                                                  public ValueAccessor<int64_t>
     {
     public:
         AttributeAdapter(uint16_t& value)
@@ -200,7 +208,7 @@ namespace ngraph
 
     template <>
     class NGRAPH_API AttributeAdapter<uint32_t> : public ValueReference<uint32_t>,
-                                       public ValueAccessor<int64_t>
+                                                  public ValueAccessor<int64_t>
     {
     public:
         AttributeAdapter(uint32_t& value)
@@ -215,7 +223,7 @@ namespace ngraph
 
     template <>
     class NGRAPH_API AttributeAdapter<uint64_t> : public ValueReference<uint64_t>,
-                                       public ValueAccessor<int64_t>
+                                                  public ValueAccessor<int64_t>
     {
     public:
         AttributeAdapter(uint64_t& value)
@@ -231,8 +239,8 @@ namespace ngraph
     /// Note: These class bodies cannot be defined with templates because of interactions
     /// between dllexport and templates on Windows.
     template <>
-    class NGRAPH_API AttributeAdapter<std::vector<int64_t>> : public ValueReference<std::vector<int64_t>>,
-                                                   public ValueAccessor<std::vector<int64_t>>
+    class NGRAPH_API AttributeAdapter<std::vector<int64_t>>
+        : public ValueReference<std::vector<int64_t>>, public ValueAccessor<std::vector<int64_t>>
     {
     public:
         AttributeAdapter(std::vector<int64_t>& value)
@@ -246,8 +254,8 @@ namespace ngraph
     };
 
     template <>
-    class NGRAPH_API AttributeAdapter<std::vector<uint64_t>> : public ValueReference<std::vector<uint64_t>>,
-                                                    public ValueAccessor<std::vector<int64_t>>
+    class NGRAPH_API AttributeAdapter<std::vector<uint64_t>>
+        : public ValueReference<std::vector<uint64_t>>, public ValueAccessor<std::vector<int64_t>>
     {
     public:
         AttributeAdapter(std::vector<uint64_t>& value)
@@ -263,7 +271,7 @@ namespace ngraph
     class Shape;
     template <>
     class NGRAPH_API AttributeAdapter<Shape> : public ValueReference<Shape>,
-                                    public ValueAccessor<std::vector<int64_t>>
+                                               public ValueAccessor<std::vector<int64_t>>
     {
     public:
         AttributeAdapter(Shape& value)
@@ -279,7 +287,7 @@ namespace ngraph
     class Strides;
     template <>
     class NGRAPH_API AttributeAdapter<Strides> : public ValueReference<Strides>,
-                                      public ValueAccessor<std::vector<int64_t>>
+                                                 public ValueAccessor<std::vector<int64_t>>
     {
     public:
         AttributeAdapter(Strides& value)
@@ -295,7 +303,7 @@ namespace ngraph
     class AxisSet;
     template <>
     class NGRAPH_API AttributeAdapter<AxisSet> : public ValueReference<AxisSet>,
-                                      public ValueAccessor<std::vector<int64_t>>
+                                                 public ValueAccessor<std::vector<int64_t>>
     {
     public:
         AttributeAdapter(AxisSet& value)
@@ -311,7 +319,7 @@ namespace ngraph
     class PartialShape;
     template <>
     class NGRAPH_API AttributeAdapter<PartialShape> : public ValueReference<PartialShape>,
-                                           public ValueAccessor<void>
+                                                      public ValueAccessor<void>
     {
     public:
         AttributeAdapter(PartialShape& value)
@@ -329,7 +337,7 @@ namespace ngraph
 
     template <>
     class NGRAPH_API AttributeAdapter<element::Type> : public ValueReference<element::Type>,
-                                            public ValueAccessor<void>
+                                                       public ValueAccessor<void>
     {
     public:
         AttributeAdapter(element::Type& value)
@@ -346,8 +354,8 @@ namespace ngraph
     }
 
     template <>
-    class NGRAPH_API AttributeAdapter<op::AutoBroadcastSpec> : public ValueReference<op::AutoBroadcastSpec>,
-                                                    public ValueAccessor<void>
+    class NGRAPH_API AttributeAdapter<op::AutoBroadcastSpec>
+        : public ValueReference<op::AutoBroadcastSpec>, public ValueAccessor<void>
     {
     public:
         AttributeAdapter(op::AutoBroadcastSpec& value)

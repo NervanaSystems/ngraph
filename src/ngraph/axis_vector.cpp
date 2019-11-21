@@ -26,7 +26,7 @@ std::ostream& ngraph::operator<<(std::ostream& s, const AxisVector& axis_vector)
 }
 
 ngraph::AxisVector::AxisVector(const std::initializer_list<size_t>& axes)
-            : std::vector<size_t>(axes)
+    : std::vector<size_t>(axes)
 {
 }
 
@@ -45,9 +45,13 @@ ngraph::AxisVector::AxisVector(size_t n)
 {
 }
 
-ngraph::AxisVector::AxisVector() {}
+ngraph::AxisVector::AxisVector()
+{
+}
 
-ngraph::AxisVector::~AxisVector() {}
+ngraph::AxisVector::~AxisVector()
+{
+}
 
 ngraph::AxisVector& ngraph::AxisVector::operator=(const AxisVector& v)
 {

@@ -21,8 +21,8 @@
 //    (or does nothing for static build)
 
 #ifdef _WIN32
-#pragma warning(disable:4251)
-#pragma warning(disable:4275)
+#pragma warning(disable : 4251)
+#pragma warning(disable : 4275)
 #endif
 
 #ifdef ngraph_EXPORTS // defined if we are building the NGRAPH DLL (instead of using it)

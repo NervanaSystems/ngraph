@@ -105,7 +105,8 @@ namespace ngraph
     }
 
     template <>
-    class NGRAPH_API AttributeAdapter<op::RoundingType> : public EnumAttributeAdapterBase<op::RoundingType>
+    class NGRAPH_API AttributeAdapter<op::RoundingType>
+        : public EnumAttributeAdapterBase<op::RoundingType>
     {
     public:
         AttributeAdapter(op::RoundingType& value)
@@ -224,7 +225,8 @@ namespace ngraph
     }
 
     template <>
-    class NGRAPH_API AttributeAdapter<op::TopKSortType> : public EnumAttributeAdapterBase<op::TopKSortType>
+    class NGRAPH_API AttributeAdapter<op::TopKSortType>
+        : public EnumAttributeAdapterBase<op::TopKSortType>
     {
     public:
         AttributeAdapter(op::TopKSortType& value)

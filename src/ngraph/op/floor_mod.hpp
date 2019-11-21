@@ -34,7 +34,10 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"FloorMod", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs an uninitialized addition operation
-                FloorMod() = default;
+                FloorMod()
+                    : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NONE)
+                {
+                }
 
                 /// \brief Constructs an Floor Mod operation.
                 ///

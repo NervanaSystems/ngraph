@@ -461,36 +461,36 @@ if (NOT DEFINED NGRAPH_TBB_ENABLE)
     set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
 endif()
 
-# Since UNIX and APPLE support Bash we can use a Bash script to do the clang-format functions
+# Since UNIX support Bash we can use a Bash script to do the clang-format functions
 # This is much faster than the cmake method
-if (UNIX OR APPLE)
+if (UNIX)
     add_custom_target(style-check COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/check-code-format.sh)
     add_custom_target(style-apply COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/apply-code-format.sh)
     add_custom_target(style COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/apply-code-format.sh)
 else()
     add_custom_target(style-check
         COMMAND ${CMAKE_COMMAND}
-        -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-        -P ${CMAKE_MODULE_PATH}style_check.cmake
+        -DNGRAPH_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/style_check.cmake
     )
 
     add_custom_target(style-apply
         COMMAND ${CMAKE_COMMAND}
-        -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-        -P ${CMAKE_MODULE_PATH}style_apply.cmake
+        -DNGRAPH_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/style_apply.cmake
     )
 
     add_custom_target(style
         COMMAND ${CMAKE_COMMAND}
-        -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-        -P ${CMAKE_MODULE_PATH}style_apply.cmake
+        -DNGRAPH_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/style_apply.cmake
     )
 endif()
 
 add_custom_target(fix-mode
     COMMAND ${CMAKE_COMMAND}
-    -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-    -P ${CMAKE_MODULE_PATH}fix_mode.cmake
+    -DNGRAPH_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/fix_mode.cmake
 )
 
 #-----------------------------------------------------------------------------------------------
