@@ -35,9 +35,7 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs an uninitialized addition operation
                 FloorMod()
-                    : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NONE)
-                {
-                }
+                    : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NUMPY){};
 
                 /// \brief Constructs an Floor Mod operation.
                 ///
