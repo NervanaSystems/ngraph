@@ -4,18 +4,62 @@
 Execute a computation
 ######################
 
-This section explains how to manually perform the steps that would normally be 
-performed by a framework :term:`bridge` to execute a computation. The nGraph 
-library is targeted toward automatic construction; it is far easier for a 
-processing unit (GPU, CPU, or an `Intel Nervana NNP`_) to run a computation than 
-it is for a human to map out how that computation happens. Unfortunately, things 
-that make by-hand graph construction simpler tend to make automatic construction 
-more difficult, and vice versa.
+.. contents::
 
-Here we will do all the bridge steps manually. The :term:`model description` 
-walk-through below is based on the :file:`abc.cpp` code in the ``/doc/examples/`` 
-directory. We'll be deconstructing the steps that must happen (either programmatically 
-or manually) in order to successfully execute a computation:
+This section explains how to manually perform the steps that would normally be 
+performed by a framework :term:`bridge` to execute a computation. nGraph graphs 
+are targeted toward automatic construction; it is far easier for a processor (
+a CPU, GPU, or `custom silicon`_) to execute a computation than it is for a human 
+to map out how that computation happens. Unfortunately, things that make 
+by-hand graph construction simpler tend to make automatic construction more 
+difficult, and vice versa.
+
+Nevertheless, it can be helpful to break down what is happening during graph 
+construction in order to understand what a programmatic approach can do better, 
+especially as parameters increase, or as graphs become especially large. 
+
+The documetation that follows explains two approaches frameworks can use to
+compile with nGraph operations.   
+
+* :ref:`Using complete shapes <scenario_one>`
+* :ref:`Using partial shapes <scenario_two>`
+
+
+In the :ref:`first scenario <scenario_one>`, the :term:`model description` 
+walk-through is based on the :file:`abc.cpp` code in the ``/doc/examples/abc`` 
+directory, and it deconstructs the steps that must happen (either programmatically 
+or manually) in order to successfully execute a computation. The full code 
+for this scenario is in the :ref:`static shapes example <sshp>`, and it ex
+
+The :ref:`second scenario <scenario_two>` involves the use of dynamic tensors. 
+A :term:`dynamic tensor` is a tensor whose shape can change from one "iteration" 
+to the next. When created, a framework :term:`bridge` might supply only *partial* 
+shape information: it might be **all** the tensor dimensions, **some** of the 
+tensor dimensions, or **none** of the tensor dimensions; furthermore, the rank 
+of the tensor may be left unspecified. The "actual" shape of the tensor is not 
+specified until some function writes some value to it. The actual shape can 
+change when the value of the tensor is overwritten. It is the backend’s 
+responsibility to set the actual shape. The :term:`model description` 
+for the second scenario based on the :file:`partial_shape.cpp` code in the 
+``/doc/examples/dynamic_tensor`` directory, and it deconstructs the steps that 
+must happen (either programmatically or manually) in order to successfully 
+retreive shape data:
+
+
+.. _scenario_one:
+
+Scenario One: Using Complete Shapes
+===================================
+
+The nGraph :term:`IR` uses a strong, dynamic type system, including static 
+shapes. This means that at compilation, every tensor (or, equivalently,
+every node output) in the graph is assigned **complete shape information**
+-- in other words one and only one shape. The static process by which this 
+assignment takes place is called :term:`shape propagation`. 
+
+A step-by-step example of how a framework might execute with complete shape 
+information is provided here. For a step-by-step example using dynamic 
+shapes, see :ref:`scenario_two`.
 
 * :ref:`define_cmp`
 * :ref:`specify_backend`
@@ -25,13 +69,8 @@ or manually) in order to successfully execute a computation:
 * :ref:`invoke_cmp`
 * :ref:`access_outputs`
 
-The full code is at the :ref:`end of this page <all_together>`.
-
-
-.. _define_cmp:
-
 Define the computation
-======================
+----------------------
 
 To a :term:`framework`, a computation is simply a transformation of inputs to 
 outputs. While a :term:`bridge` can programmatically construct the graph 
@@ -111,7 +150,7 @@ function, in the order they are to be passed to the compiled function. A
 .. _specify_backend:
 
 Specify the backend upon which to run the computation
-=====================================================
+-----------------------------------------------------
 
 For a framework bridge, a *backend* is the environment that can perform the 
 computations; it can be done with a CPU, GPU, or an Intel Nervana NNP. A 
@@ -139,7 +178,7 @@ To continue with our original example and select the ``"CPU_Backend"``:
 .. _compile_cmp:
 
 Compile the computation 
-=======================
+-----------------------
 
 Compilation triggers something that can be used as a factory for producing a 
 ``CallFrame`` which is a *function* and its associated *state* that can run 
@@ -152,7 +191,7 @@ thread needs to execute the function at the same time, create multiple
 .. _allocate_backend_storage:
 
 Allocate backend storage for the inputs and outputs
-===================================================
+---------------------------------------------------
 
 At the graph level, functions are stateless. They do have internal state related 
 to execution, but there is no user-visible state. Variables must be passed as 
@@ -182,7 +221,7 @@ with ``Tensor``.
 .. _initialize_inputs:
 
 Initialize the inputs
-=====================
+---------------------
 
 Next we need to copy some data into the tensors.
 
@@ -196,7 +235,7 @@ copying data to/from the tensor.
 .. _invoke_cmp:
 
 Invoke the computation
-======================
+----------------------
 
 To invoke the function, we simply pass argument and resultant tensors to the 
 call frame:
@@ -209,7 +248,7 @@ call frame:
 .. _access_outputs:
 
 Access the outputs
-==================
+------------------
 
 We can use the ``read`` method to access the result:
 
@@ -217,10 +256,10 @@ We can use the ``read`` method to access the result:
    :language: cpp
    :lines: 60-77
 
-.. _all_together:
+.. _sshp:
 
-Put it all together
-===================
+Compiling with Complete Shapes
+==============================
 
 .. literalinclude:: ../../../../examples/abc/abc.cpp
    :language: cpp
@@ -229,6 +268,61 @@ Put it all together
 
 
 
+.. _scenario_two:
 
-.. _Intel MKL-DNN: https://01.org/mkl-dnn
-.. _Intel Nervana NNP: https://ai.intel.com/intel-nervana-neural-network-processors-nnp-redefine-ai-silicon/
+Scenario Two: Known partial shape
+---------------------------------
+
+Create and compile a graph for ``f(x) = x + x`` where the provided info 
+of shape ``x`` is ``(2,?)``:
+
+.. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
+   :language: cpp
+   :lines: 27-32
+
+
+.. _create_dyn_tensor:
+
+Create a dynamic tensor
+-----------------------
+
+Create a dynamic tensor of shape ``(2,?)``
+
+.. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
+   :language: cpp
+   :lines: 35-37
+
+
+.. _call_graph_vw_:
+
+Write shape
+-----------
+
+Call the graph to write a value with shape (2,3) to t_out
+
+.. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
+   :language: cpp
+   :lines: 40-44
+
+
+.. _call_graph_vwnew:
+
+Write new shape
+---------------
+
+.. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
+   :language: cpp
+   :lines: 47-49
+
+.. _dshp:
+
+Compiling with Partial Shapes
+=============================
+
+.. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
+   :language: cpp
+   :linenos:
+   :caption: "Compiling with dynamic tensors and partial shapes"
+
+
+.. _custom silicon: https://www.intel.ai/nervana-nnp
