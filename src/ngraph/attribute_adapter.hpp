@@ -70,8 +70,7 @@ namespace ngraph
     };
 
     template <typename Type>
-    class EnumAttributeAdapterBase : public ValueReference<Type>,
-                                     public ValueAccessor<std::string>
+    class EnumAttributeAdapterBase : public ValueReference<Type>, public ValueAccessor<std::string>
     {
     public:
         EnumAttributeAdapterBase(Type& value)
