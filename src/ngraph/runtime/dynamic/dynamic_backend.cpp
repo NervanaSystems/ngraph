@@ -161,19 +161,6 @@ bool runtime::dynamic::DynamicExecutable::call(
         std::vector<std::shared_ptr<runtime::Tensor>> wrapped_inputs;
         std::vector<std::shared_ptr<runtime::Tensor>> wrapped_outputs;
         NGRAPH_INFO << "Cache Hit ";
-        for (auto& input : inputs)
-        {
-            if (auto dynamic_tensor =
-                    std::dynamic_pointer_cast<runtime::dynamic::DynamicTensor>(input))
-            {
-                NGRAPH_CHECK(dynamic_tensor->has_storage());
-                wrapped_inputs.push_back(dynamic_tensor->get_wrapped_tensor());
-            }
-            else
-            {
-                wrapped_inputs.push_back(input);
-            }
-        }
 
         std::shared_ptr<Function> clone = m_lru->get_cloned_function(merged_input_shapes);
         const ResultVector& results = clone->get_results();
@@ -200,7 +187,7 @@ bool runtime::dynamic::DynamicExecutable::call(
             }
         }
 
-        return m_lru->get_cached_entry(merged_input_shapes)->call(wrapped_outputs, wrapped_inputs);
+        return m_lru->get_cached_entry(merged_input_shapes)->call(wrapped_outputs, inputs);
     }
     else
     {
