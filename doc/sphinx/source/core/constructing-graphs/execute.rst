@@ -4,8 +4,6 @@
 Execute a computation
 ######################
 
-.. contents::
-
 This section explains how to manually perform the steps that would normally be 
 performed by a framework :term:`bridge` to execute a computation. nGraph graphs 
 are targeted toward automatic construction; it is far easier for a processor 
@@ -21,6 +19,11 @@ can use to compile with nGraph operations:
 * :ref:`Using complete shapes <scenario_one>`
 * :ref:`Using partial shapes <scenario_two>`
 
+The nGraph :abbr:`Intermediate Representation (IR)` uses a strong, dynamic 
+type system, including static shapes. This means that at compilation, every 
+tensor (or, equivalently, every node output) in the graph is assigned 
+**complete shape information**; that is, one and only one shape. The static 
+process by which this assignment takes place is called :term:`shape propagation`.
 
 In the :ref:`first scenario <scenario_one>`, the :term:`model description` 
 walk-through is based on the :file:`abc.cpp` code in the ``/doc/examples/abc`` 
@@ -32,12 +35,6 @@ shape information.
 
 Scenario One: Using Complete Shapes
 ===================================
-
-The nGraph :abbr:`Intermediate Representation (IR)` uses a strong, dynamic 
-type system, including static shapes. This means that at compilation, every 
-tensor (or, equivalently, every node output) in the graph is assigned 
-**complete shape information**; that is, one and only one shape. The static 
-process by which this assignment takes place is called :term:`shape propagation`.
 
 A step-by-step example of how a framework might execute with complete shape 
 information is provided here. For a step-by-step example using dynamic 
@@ -294,7 +291,10 @@ Create a dynamic tensor of shape ``(2,?)``
 
 .. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
    :language: cpp
-   :lines: 35-37
+   :line: 35
+
+At this point, ``t_out->get_shape()`` would throw an exception, while 
+``t_out->get_partial_shape()`` would return ``"(2,?)"``.
 
 
 .. _call_graph_vw_:
@@ -306,7 +306,10 @@ Call the graph to write a value with shape (2,3) to t_out
 
 .. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
    :language: cpp
-   :lines: 40-44
+   :lines: 38-40
+
+At this point, ``t_out->get_shape()`` would return ``Shape{2,3}``,
+while ``t_out->get_partial_shape()`` would return ``"(2,?)"``.
 
 
 .. _call_graph_vwnew:
@@ -314,9 +317,14 @@ Call the graph to write a value with shape (2,3) to t_out
 Write new shape
 ---------------
 
+Call the graph again, to write a value with a different shape to ``t_out``.
+
 .. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
    :language: cpp
-   :lines: 47-49
+   :lines: 43-45
+
+At this point, ``t_out->get_shape()`` would return ``Shape{2,20}``,
+while ``t_out->get_partial_shape()`` would return ``"(2,?)"``.
 
 
 .. _kpsh:
@@ -327,7 +335,7 @@ Compiling with Known Partial Shape
 .. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
    :language: cpp
    :linenos:
-   :caption: "Compiling with dynamic tensors and partial shape"
+   :caption: "Full code for compiling with dynamic tensors and partial shape"
 
 
 .. _purpose-built silicon: https://www.intel.ai/nervana-nnp

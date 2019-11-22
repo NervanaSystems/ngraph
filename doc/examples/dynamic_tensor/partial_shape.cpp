@@ -33,16 +33,12 @@ int main()
 
     // Create a dynamic tensor of shape (2,?)
     auto t_out = be->create_dynamic_tensor(element::i32, x_shape_info);
-    // At this point t_out->get_shape() would throw an exception,
-    // but t_out->get_partial_shape() would return "(2,?)"
-
+    
     // Call the graph to write a value with shape (2,3) to t_out
     auto t_in = be->create_tensor(element::i32, Shape{2,3});
     t_in->write();
     ex->call({t_out}, {t_in})
-    // At this point t_out->get_shape() would return Shape{2,3},
-    // but t_out->get_partial_shape() would return "(2,?)"
-
+    
     // Call the graph again, to write a value with a different shape to t_out.
     t_in = be->create_tensor(element::i32, Shape{2,20});
     t_in->write();
