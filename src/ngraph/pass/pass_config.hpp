@@ -32,6 +32,7 @@ class ngraph::pass::PassConfig
 public:
     PassConfig();
     const std::map<std::string, bool>& get_enables() const { return m_pass_enables; }
+    bool is_pass_configured(const std::string& name) const;
     void set_pass_enable(const std::string& name, bool enable);
     bool get_pass_enable(const std::string& name) const;
     const std::map<std::string, bool>& get_pass_attributes() const { return m_pass_attributes; }
