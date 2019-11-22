@@ -58,7 +58,10 @@ namespace ngraph
                 NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ReluBackprop", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
-                ReluBackprop() = default;
+                ReluBackprop()
+                    : BinaryElementwiseArithmetic(AutoBroadcastSpec::NONE)
+                {
+                }
                 /// \brief Constructs a ReluBackprop operation.
                 ///
                 /// \param arg Node that produces the relu forward input tensor.

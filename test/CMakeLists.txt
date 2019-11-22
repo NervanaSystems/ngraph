@@ -118,6 +118,7 @@ set(SRC
     type_prop/convert.cpp
     type_prop/convolution.cpp
     type_prop/convolution_bias.cpp
+    type_prop/crop_and_resize.cpp
     type_prop/depth_to_space.cpp
     type_prop/dequantize.cpp
     type_prop/dot.cpp

@@ -27,7 +27,6 @@ namespace ngraph
         namespace v0
         {
             /// \brief Performs a clipping operation on all elements of the input node
-            /// \brief Constructs a Clamp node.
             ///
             /// All input values that are outside of the <min;max> range are set to 'min' or 'max'
             /// depending on which side of the <min;max> range they are. The values that fall into
@@ -56,8 +55,8 @@ namespace ngraph
                 double get_min() const { return m_min; }
                 double get_max() const { return m_max; }
             private:
-                const double m_min;
-                const double m_max;
+                double m_min;
+                double m_max;
             };
         }
         using v0::Clamp;
