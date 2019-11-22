@@ -335,6 +335,8 @@ set (SRC
     op/topk.hpp
     op/xor.cpp
     op/xor.hpp
+    op/fused/batch_mat_mul_transpose.cpp
+    op/fused/batch_mat_mul_transpose.hpp
     op/fused/clamp.cpp
     op/fused/clamp.hpp
     op/fused/conv_fused.cpp

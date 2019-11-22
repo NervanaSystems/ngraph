@@ -626,6 +626,7 @@ private:
                 break;
             case element::Type_t::undefined:
             case element::Type_t::dynamic:
+            case element::Type_t::u1:
             case element::Type_t::bf16:
             case element::Type_t::f16:
                 ss << "unsupported element type " << type << " op Convert";

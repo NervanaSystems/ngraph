@@ -79,6 +79,9 @@ void pass::ConstantFolding::construct_constant_concat()
         case element::Type_t::dynamic:
             NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_concat");
             break;
+        case element::Type_t::u1:
+            NGRAPH_CHECK(false, "Encountered 'u1' element type in fold_constant_concat");
+            break;
         case element::Type_t::boolean:
             replacement = fold_constant_concat_helper<char>(concat_node);
             break;
