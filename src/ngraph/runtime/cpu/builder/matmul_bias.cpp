@@ -15,10 +15,11 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
+
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
+#include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
-#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 
 using namespace std;
 using namespace ngraph;

@@ -35,11 +35,10 @@ void test_type_prop_opset0_downgrade_pass(const element::Type& output_type,
     pass_manager.run_passes(f);
 
     auto v0_result = f->get_results().at(0);
-    auto node = v0_result->input(0).get_source_output().get_node_shared_ptr();
-    auto v0_node = static_pointer_cast<OpV0>(node);
+    auto node = v0_result->input_value(0).get_node_shared_ptr();
+    auto v0_node = as_type_ptr<OpV0>(node);
 
-    EXPECT_EQ(v0_node->description(), (node_name.empty() ? v1_node->description() : node_name));
-    EXPECT_EQ(v0_node->get_version(), 0);
+    EXPECT_TRUE(v0_node);
     EXPECT_EQ(v0_node->get_autob(), np_auto_b);
     EXPECT_EQ(v0_node->output(0).get_element_type(), output_type);
     EXPECT_EQ(v0_node->output(0).get_shape(), (Shape{1, 3, 2}));
