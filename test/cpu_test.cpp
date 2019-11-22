@@ -2222,3 +2222,108 @@ TEST(cpu_test, convolution_simple_bf16)
               read_vector<bfloat16>(result));
 }
 #endif
+
+// This tests a backend's implementation of the three parameter version of create_tensor
+// Testing using this tensor as a Function input
+TEST(cpu_test, create_tensor_2_input)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    vector<float> av = {1, 2, 3, 4};
+    vector<float> bv = {5, 6, 7, 8};
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape, av.data());
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shape, bv.data());
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    vector<float> expected = {6, 8, 10, 12};
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
+}
+
+// This tests a backend's implementation of the three parameter version of create_tensor
+// Testing using this tensor as a Function output
+TEST(cpu_test, create_tensor_2_output)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    vector<float> av = {1, 2, 3, 4};
+    vector<float> bv = {5, 6, 7, 8};
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shape);
+    copy_data(a, av);
+    copy_data(b, bv);
+
+    vector<float> actual(4);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shape, actual.data());
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    vector<float> expected = {6, 8, 10, 12};
+    EXPECT_TRUE(test::all_close_f(actual, expected, MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, tensorview_custom_mem)
+{
+    auto backend = runtime::Backend::create("CPU");
+
+    Shape shape{2, 2};
+
+    auto make_external = [&]() {
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto B = make_shared<op::Parameter>(element::f32, shape);
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), ParameterVector{A, B});
+
+        return f;
+    };
+
+    auto f = make_external();
+
+    vector<float> av{2, 4, 8, 16};
+    vector<float> bv{1, 2, 4, 8};
+    // use custom mem with tensorview, no need to copy data
+    auto a = backend->create_tensor(element::f32, shape, av.data());
+    auto b = backend->create_tensor(element::f32, shape, bv.data());
+
+    // use custom mem with result tensorview
+    vector<float> rv{0, 0, 0, 0};
+    auto result = backend->create_tensor(element::f32, shape, rv.data());
+
+    // result should be in memory without needing explict read
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    EXPECT_TRUE(test::all_close_f((vector<float>{2, 2, 2, 2}), rv, MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, one_hot_scalar_oob_in_3)
+{
+    Shape shape_a{};
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    Shape shape_r{3};
+    auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
+    auto f = make_shared<Function>(r, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i32, shape_a);
+    copy_data(a, vector<int32_t>{3});
+    vector<int32_t> r_data(4);
+    auto result = backend->create_tensor(element::i32, shape_r, r_data.data());
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ(r_data[3], 0);
+}
