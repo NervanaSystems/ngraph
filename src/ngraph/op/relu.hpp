@@ -50,8 +50,8 @@ namespace ngraph
                                                const NodeVector& deltas) override;
             };
 
-        /// \brief Elementwise ReluBackprop operation.
-        ///
+            /// \brief Elementwise ReluBackprop operation.
+            ///
             class ReluBackprop : public ngraph::op::util::BinaryElementwiseArithmetic
             {
             public:
