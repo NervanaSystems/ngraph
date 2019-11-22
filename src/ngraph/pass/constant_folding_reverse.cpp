@@ -52,6 +52,9 @@ static shared_ptr<op::Constant> fold_constant_reverse(shared_ptr<op::Constant> c
     case element::Type_t::dynamic:
         NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_convert");
         break;
+    case element::Type_t::u1:
+        NGRAPH_CHECK(false, "Encountered 'u1' element type in fold_constant_convert");
+        break;
     case element::Type_t::boolean:
         return fold_constant_reverse_helper<char>(constant, reversed_axes);
     case element::Type_t::bf16:

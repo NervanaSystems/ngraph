@@ -1,6 +1,8 @@
-.. frameworks/other.rst:
+.. frameworks/other/index.rst:
 
 .. _fw_other: 
+
+.. contents::
 
 Integrating other frameworks
 ============================
@@ -8,9 +10,9 @@ Integrating other frameworks
 This section details some of the *configuration options* and some of the 
 *environment variables* that can be used to tune for optimal performance when 
 your system already has a version of nGraph installed with one or more of our 
-supported :doc:`../backends/index`.
+supported :doc:`../../backends/index`.
 
-Regardless of the framework, after the :doc:`../buildlb` step, a good place 
+Regardless of the framework, after the :doc:`../../buildlb` step, a good place 
 to start usually involves making the libraries available to the framework. On 
 Linux\* systems built on Intel® Architecture, that command tends to looks 
 something like: 
@@ -24,7 +26,7 @@ something like:
 Find or display version
 -----------------------
 
-If you're working with the :doc:`../python_api/index`, the following command 
+If you're working with the :doc:`../../python_api/index`, the following command 
 may be useful:
 
 .. code-block:: console
@@ -92,10 +94,10 @@ Training Deep Neural Networks
 -----------------------------
 
 Before tweaking various environment variables, be aware that how the computation 
-gets executed depends upon the ordering of the data format that the model is 
-using. ``NHWC`` and ``NCHW`` are the two more common layouts in Deep Learning 
-models. Your ultimate runtime can vary greatly -- even when all other factors 
-are exactly the same -- when this detail is overlooked.
+gets executed depends  on the data layout that the model is using. ``NHWC`` and 
+``NCHW`` are common layouts in Deep Learning models. Your ultimate 
+runtime can vary greatly -- even when all other factors are exactly the same -- 
+when this detail is overlooked.
 
 For CPU (and most cuDNN) backends, the preferred layout is currently ``NCHW``.
 
@@ -110,7 +112,7 @@ Intel® Math Kernel Library for Deep Neural Networks
 ---------------------------------------------------
 
 .. important:: Intel® MKL-DNN is automatically enabled as part of an
-   nGraph default :doc:`build <../buildlb>`; you do *not* need to add it 
+   nGraph default :doc:`build <../../buildlb>`; you do *not* need to add it 
    separately or as an additional component to be able to use these 
    configuration settings.
 
@@ -229,4 +231,3 @@ thus can make more efficient use of the underlying hardware.
 .. _BUILDING.md: https://github.com/NervanaSystems/ngraph/blob/master/python/BUILDING.md
 .. _GCC wiki for details: https://gcc.gnu.org/wiki/FunctionMultiVersioning
 .. _following article may be helpful: https://clearlinux.org/documentation/clear-linux/tutorials/fmv
-

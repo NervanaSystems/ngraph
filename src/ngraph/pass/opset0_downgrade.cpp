@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <cstdint>
+#include <numeric>
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
@@ -48,6 +49,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/softmax.hpp"
 #include "ngraph/op/strided_slice.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
@@ -607,6 +609,20 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         }
 
         replace_node(node, replacement_node);
+        break;
+    }
+    case OP_TYPEID::Softmax:
+    {
+        auto tmp = as_type_ptr<op::v1::Softmax>(node);
+        auto axis = tmp->get_axis();
+        auto data = node->input(0);
+        auto data_shape = data.get_shape();
+        std::vector<size_t> axes(data_shape.size() - axis);
+        std::iota(std::begin(axes), std::end(axes), axis);
+        auto replacement_node =
+            make_shared<op::v0::Softmax>(node->input(0).get_source_output(), axes);
+        replace_node(node, replacement_node);
+        modified = true;
         break;
     }
     case OP_TYPEID::Sum:
