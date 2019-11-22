@@ -30,5 +30,5 @@ resources, it can either:
 
 .. note:: This section is aimed at intermediate-level developers. It assumes an
    understanding of the concepts in the previous sections. It does not assume 
-   knowledge of any particular frontend framework. 
+   knowledge of any particular frontend framework.
 

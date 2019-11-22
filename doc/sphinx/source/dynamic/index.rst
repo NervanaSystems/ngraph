@@ -18,8 +18,8 @@ inconsistent shape at runtime, and therefore infer an output shape of ``(2,5)``.
 That means that shape mismatches can now occur at runtime. 
 
 
-Dimension, Rank, and PartialShape Classes
------------------------------------------
+PartialShape Classes
+--------------------
 
 Partial shape information is expressed via the PartialShape, Dimension, and Rank, and 
 classes.
@@ -32,3 +32,4 @@ classes.
 .. toctree::
    :name: 
    :maxdepth: 1
+

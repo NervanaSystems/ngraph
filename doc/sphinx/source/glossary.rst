@@ -101,6 +101,14 @@ Glossary
       In the context of a function graph, the term "result" refers to
       what stands in for the returned value.
 
+   dynamic shape
+
+      A tensor whose shape can change from one "iteration" to the next. When 
+      created, a framework :term:`bridge` might supply only *partial* shape 
+      information: it might be **all** the tensor dimensions, **some** of the 
+      tensor dimensions, or **none** of the tensor dimensions; furthermore, 
+      the rank of the tensor may be left unspecified.
+
    shape
 
       The shape of a tensor is a tuple of non-negative integers that

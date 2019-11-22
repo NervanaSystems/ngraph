@@ -4,7 +4,7 @@
 List of Core ``ops``
 ####################
 
-Not currently a comprehensive list.  
+Some operations are experimental.  
 
 :ref:`more_about`
 
@@ -186,14 +186,6 @@ where there is no ambiguity.
 
 If a framework supports extending the set of ops it offers, a bridge may even 
 expose transformer-specific ops to the framework user.
-
-
-.. figure:: ../graphics/tablengraphops.png
-    :width: 535px
-    :alt: Operations Available in the nGraph IR 
-
-    Operations Available in the nGraph IR
-
 
 .. important:: Our design philosophy is that the graph is not a script for 
    running kernels; rather, our compilation will match ``ops`` to appropriate 

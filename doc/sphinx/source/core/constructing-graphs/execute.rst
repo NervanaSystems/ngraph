@@ -8,18 +8,21 @@ Execute a computation
 
 This section explains how to manually perform the steps that would normally be 
 performed by a framework :term:`bridge` to execute a computation. nGraph graphs 
-are targeted toward automatic construction; it is far easier for a processor (
-a CPU, GPU, or `custom silicon`_) to execute a computation than it is for a human 
-to map out how that computation happens. Unfortunately, things that make 
+are targeted toward automatic construction; it is far easier for a processor 
+(a CPU, GPU, or `custom silicon`_) to execute a computation than it is for a 
+human to map out how that computation happens. Unfortunately, things that make 
 by-hand graph construction simpler tend to make automatic construction more 
 difficult, and vice versa.
 
 Nevertheless, it can be helpful to break down what is happening during graph 
-construction in order to understand what a programmatic approach can do better, 
-especially as parameters increase, or as graphs become especially large. 
+construction. One of the most common goals of many showcase-level AI 
+technologies is the efficiency  network-based approach is to 
+ consider the goal of the programmatic approaches, (requiring 
+less memory, reducing energy -- especially as parameters increase, or as 
+graphs become especially large) can result in any desired efficiencies.
 
 The documetation that follows explains two approaches frameworks can use to
-compile with nGraph operations.   
+compile with nGraph operations:
 
 * :ref:`Using complete shapes <scenario_one>`
 * :ref:`Using partial shapes <scenario_two>`
