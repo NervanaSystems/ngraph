@@ -22,6 +22,7 @@
 #define NGRAPH_OP(x, y)
 #endif
 
+NGRAPH_OP(BatchMatMulTranspose, ngraph::op)
 NGRAPH_OP(Clamp, ngraph::op)
 NGRAPH_OP(ConvolutionBias, ngraph::op)
 NGRAPH_OP(ConvolutionBiasAdd, ngraph::op)
