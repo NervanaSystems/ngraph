@@ -166,7 +166,6 @@
 #include "ngraph/op/xor.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
-#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/dropout.hpp"
@@ -246,8 +245,6 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::MatmulBias);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchMatMul);
-            template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchMatMulTranspose);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Lstm);
             template <>
