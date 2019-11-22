@@ -54,6 +54,7 @@ set(SRC
     constant_folding.cpp
     concat_fusion.cpp
     control_dependencies.cpp
+    convert_u1_to_string.cpp
     coordinate.cpp
     copy.cpp
     cpio.cpp
@@ -106,6 +107,7 @@ set(SRC
     type_prop/any.cpp
     type_prop/avg_pool.cpp
     type_prop/batch_mat_mul.cpp
+    type_prop/batch_mat_mul_transpose.cpp
     type_prop/batch_norm.cpp
     type_prop/binary_elementwise.cpp
     type_prop/broadcast.cpp
@@ -350,7 +352,6 @@ set(MULTI_TEST_SRC
     backend/sum.in.cpp
     backend/tan.in.cpp
     backend/tanh.in.cpp
-    backend/tensorview_custom_mem.in.cpp
     backend/tile.in.cpp
     backend/topk.in.cpp
     backend/transpose.in.cpp
@@ -432,7 +433,6 @@ if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
             backend/subtract.in.cpp
             backend/tan.in.cpp
             backend/tanh.in.cpp
-            backend/tensorview_custom_mem.in.cpp
             backend/transpose.in.cpp
             backend/validate_call.in.cpp
             backend/zero_sized.in.cpp

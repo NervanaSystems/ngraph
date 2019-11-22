@@ -18,11 +18,11 @@
 // not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
 
 #include "dialect.hpp"
+#include <mlir/IR/DialectImplementation.h>
+#include <mlir/Parser.h>
 #include "ngraph/check.hpp"
 #include "ops.hpp"
 #include "type.hpp"
-
-#include <mlir/Parser.h>
 
 using namespace mlir;
 
@@ -39,63 +39,64 @@ NGraphOpsDialect::NGraphOpsDialect(mlir::MLIRContext* ctx)
         >();
 }
 
-mlir::Type NGraphOpsDialect::parseType(llvm::StringRef tyData, mlir::Location loc) const
+mlir::Type NGraphOpsDialect::parseType(mlir::DialectAsmParser& parser) const
 {
-    StringRef origTypeStr = tyData;
     MLIRContext* context = getContext();
 
     // Process nGraph tensor type.
-    if (tyData.consume_front("tensor"))
+    // failure is true
+    if (!parser.parseOptionalKeyword("tensor"))
     {
-        if (!tyData.consume_front("<") || !tyData.consume_back(">"))
+        llvm::SMLoc typeLoc = parser.getCurrentLocation();
+        if (parser.parseLess())
         {
-            return (emitError(loc, "expected '<' and '>' enclosing the tensor shape: " + tyData),
-                    Type());
+            parser.emitError(typeLoc, "expected '<' and '>' enclosing the tensor shape");
+            return Type();
         }
-
-        // Get x-separated sub-strings.
-        SmallVector<StringRef, 8> subStrings;
-        tyData.split(subStrings, "x");
 
         // Parse shape dimensions.
         SmallVector<int64_t, 4> shape;
-        for (unsigned i = 0, end = subStrings.size() - 1; i < end; ++i)
+        parser.parseDimensionList(shape);
+
+        // Parse the current element type.
+        Type eltType;
+
+        parser.parseType(eltType);
+        if (!eltType)
         {
-            StringRef dimStr = subStrings[i];
-            int64_t dim = -1;
-            // NOTE: `consumeInteger` returns false if an integer was parsed successfully.
-            if (dimStr.consumeInteger(/*Radix=*/10, dim) || !dimStr.empty())
-            {
-                return (
-                    emitError(loc, "expected a list of '[0-9]+x' dimension specifiers: " + tyData),
-                    Type());
-            }
-
-            shape.push_back(dim);
+            typeLoc = parser.getCurrentLocation();
+            parser.emitError(typeLoc, "Invalid tensor element type");
         }
-
-        // Parse nGraph element type.
-        auto elem_ty = mlir::parseType(subStrings.back(), context);
-        if (!elem_ty)
-        {
-            return (emitError(loc, "Unexpected element type in tensor type: " + tyData), Type());
-        }
-
-        return NGTensorType::get(context, elem_ty, shape);
+        parser.parseGreater();
+        return NGTensorType::get(context, eltType, shape);
     }
+    else
+    {
+        // parse nGraph scalar type
+        return parseEltType(parser);
+    }
+}
 
+mlir::Type NGraphOpsDialect::parseEltType(mlir::DialectAsmParser& parser) const
+{
     // Process nGraph integer element types.
+    MLIRContext* context = getContext();
+    int width = 0;
+    bool isSigned = false;
+    llvm::SMLoc loc = parser.getCurrentLocation();
+
+    StringRef tyData = parser.getFullSymbolSpec();
+    StringRef origTypeStr = tyData;
+
     if (tyData.startswith("i") || tyData.startswith("u"))
     {
-        bool isSigned = tyData.consume_front("i");
-        bool isUnsigned = tyData.consume_front("u");
-        NGRAPH_CHECK(isSigned != isUnsigned, "nGraph integer cannot be signed and unsigned");
-
+        isSigned = tyData.consume_front("i");
+        tyData.consume_front("u");
         unsigned width = 0;
         // NOTE: `consumeInteger` returns false if an integer was parsed successfully.
         if (tyData.consumeInteger(/*Radix=*/10, width) || width == 0 || !tyData.empty())
         {
-            return (emitError(loc, "Unexpected nGraph integer type: " + origTypeStr), Type());
+            parser.emitError(loc, "Unexpected nGraph integer type: " + origTypeStr);
         }
 
         switch (width)
@@ -108,9 +109,7 @@ mlir::Type NGraphOpsDialect::parseType(llvm::StringRef tyData, mlir::Location lo
             return isSigned ? NGIntegerType::getInt32(context) : NGIntegerType::getUInt32(context);
         case 64:
             return isSigned ? NGIntegerType::getInt64(context) : NGIntegerType::getUInt64(context);
-        default:
-            return (emitError(loc, "Unexpected width for nGraph integer type: " + origTypeStr),
-                    Type());
+        default: parser.emitError(loc, "Unexpected width for nGraph integer type: " + origTypeStr);
         }
     }
 
@@ -119,43 +118,49 @@ mlir::Type NGraphOpsDialect::parseType(llvm::StringRef tyData, mlir::Location lo
                  "Floating point types should be processed by standard parser");
 
     // NOTE: We may hit this error if the nGraph type is not yet supported in parser.
-    return (emitError(loc, "Unknown nGraph type: " + origTypeStr), Type());
+    parser.emitError(loc, "Unknown nGraph type: " + origTypeStr);
+
+    return Type();
 }
 
-void NGraphOpsDialect::printType(mlir::Type type, raw_ostream& os) const
+void NGraphOpsDialect::printType(mlir::Type type, mlir::DialectAsmPrinter& printer) const
 {
     switch (type.getKind())
     {
     case NG_TENSOR_TYPE_ID:
     {
-        os << "tensor<";
+        printer << "tensor<";
         auto tensorTy = type.cast<NGTensorType>();
         for (auto dim : tensorTy.getShape())
         {
-            os << dim << 'x';
+            printer << dim << 'x';
         }
-        os << tensorTy.getElementType() << '>';
+        printer << tensorTy.getElementType() << '>';
         return;
     }
     case NG_I8_TYPE_ID:
     case NG_I16_TYPE_ID:
     case NG_I32_TYPE_ID:
     case NG_I64_TYPE_ID:
+    {
+        auto intTy = type.cast<NGIntegerType>();
+        printer << "i" << intTy.getWidth();
+        return;
+    }
     case NG_U8_TYPE_ID:
     case NG_U16_TYPE_ID:
     case NG_U32_TYPE_ID:
     case NG_U64_TYPE_ID:
     {
         auto intTy = type.cast<NGIntegerType>();
-        os << "i" << intTy.getWidth();
+        printer << "u" << intTy.getWidth();
         return;
     }
     case NG_BOOL_TYPE_ID:
     {
-        os << "bool";
+        printer << "bool";
         return;
     }
-    default: { NGRAPH_CHECK(false, "Incorrect type to print?");
-    }
+    default: NGRAPH_UNREACHABLE("Incorrect type to print?");
     }
 }

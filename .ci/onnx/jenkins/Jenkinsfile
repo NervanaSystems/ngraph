@@ -113,10 +113,10 @@ pipeline {
         WORKDIR = "${WORKSPACE}/${BUILD_NUMBER}"
         JENKINS_GITHUB_CREDENTIAL_ID = "7157091e-bc04-42f0-99fd-dc4da2922a55"
         CI_DIR = "ngraph-onnx/.ci/jenkins"
-        NGRAPH_ONNX_REPO_ADDRESS = "https://github.com/NervanaSystems/ngraph-onnx.git"
-        NGRAPH_REPO_ADDRESS = "https://github.com/NervanaSystems/ngraph.git"
-        NGRAPH_ONNX_BRANCH="${CHANGE_BRANCH}"
-        NGRAPH_BRANCH="${CHANGE_BRANCH}"
+        NGRAPH_ONNX_REPO_ADDRESS = "git@github.com:NervanaSystems/ngraph-onnx.git"
+        NGRAPH_REPO_ADDRESS = "git@github.com:NervanaSystems/ngraph.git"
+        NGRAPH_ONNX_BRANCH = "${CHANGE_BRANCH}"
+        NGRAPH_BRANCH = "${CHANGE_BRANCH}"
     }
     options {
         skipDefaultCheckout true
