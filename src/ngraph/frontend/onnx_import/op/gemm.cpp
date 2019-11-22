@@ -17,8 +17,10 @@
 #include <memory>
 
 #include "gemm.hpp"
+#include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/gemm.hpp"
+#include "ngraph/op/fused/matmul.hpp"
+#include "ngraph/op/multiply.hpp"
 
 namespace ngraph
 {
@@ -45,14 +47,27 @@ namespace ngraph
                             input_b->get_element_type(), ngraph::Shape{}, {0});
                     }
 
-                    double alpha = node.get_attribute_value<double>("alpha", 1);
-                    double beta = node.get_attribute_value<double>("beta", 1);
+                    const auto alpha = node.get_attribute_value<float>("alpha", 1);
+                    const auto beta = node.get_attribute_value<float>("beta", 1);
 
-                    bool trans_a = node.get_attribute_value<int64_t>("transA", 0);
-                    bool trans_b = node.get_attribute_value<int64_t>("transB", 0);
+                    const auto alpha_node = ngraph::op::Constant::create(
+                        element::Type_t::f32, Shape{}, std::vector<float>{alpha});
+                    const auto beta_node = ngraph::op::Constant::create(
+                        element::Type_t::f32, Shape{}, std::vector<float>{beta});
 
-                    return NodeVector{std::make_shared<ngraph::op::Gemm>(
-                        input_a, input_b, input_c, alpha, beta, trans_a, trans_b)};
+                    const bool trans_a = node.get_attribute_value<int64_t>("transA", 0);
+                    const bool trans_b = node.get_attribute_value<int64_t>("transB", 0);
+
+                    auto matmul_node =
+                        std::make_shared<ngraph::op::MatMul>(input_a, input_b, trans_a, trans_b);
+
+                    auto alpha_times_product =
+                        std::make_shared<ngraph::op::v1::Multiply>(alpha_node, matmul_node);
+                    auto beta_times_input_c =
+                        std::make_shared<ngraph::op::v1::Multiply>(beta_node, input_c);
+
+                    return NodeVector{std::make_shared<ngraph::op::v1::Add>(alpha_times_product,
+                                                                            beta_times_input_c)};
                 }
 
             } // namespace set_1
