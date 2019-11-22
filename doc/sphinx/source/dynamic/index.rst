@@ -4,8 +4,8 @@
 Dynamic Shapes
 ==============
 
-For an example on how to use dynamic shapes, see *Scenario Two* on 
-the :ref:`scenario_two` documentation.
+For an example on how to use dynamic shapes, see the :ref:`scenario_two` 
+documentation.
 
 Runtime Error Checking
 ----------------------
@@ -18,18 +18,24 @@ inconsistent shape at runtime, and therefore infer an output shape of ``(2,5)``.
 That means that shape mismatches can now occur at runtime. 
 
 
-PartialShape Classes
---------------------
+.. _partial_shapes:
 
-Partial shape information is expressed via the PartialShape, Dimension, and Rank, and 
-classes.
+PartialShape, Dimension, and Rank Classes
+-----------------------------------------
+
+Partial shape information is expressed via the ``PartialShape``, ``Dimension``, 
+and ``Rank`` classes.
+
+.. note:: ``Rank``  is an alias for ``Dimension``, used when the value represents 
+   the number of axes in a shape, rather than the size of one dimension in a shape. 
+
 
 .. doxygenclass:: ngraph::PartialShape
    :project: ngraph
    :members: 
 
-=======
-.. toctree::
-   :name: 
-   :maxdepth: 1
+
+.. doxygenclass:: ngraph::Dimension
+   :project: ngraph
+   :members: 
 

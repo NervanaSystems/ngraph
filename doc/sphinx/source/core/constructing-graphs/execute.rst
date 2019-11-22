@@ -9,20 +9,14 @@ Execute a computation
 This section explains how to manually perform the steps that would normally be 
 performed by a framework :term:`bridge` to execute a computation. nGraph graphs 
 are targeted toward automatic construction; it is far easier for a processor 
-(a CPU, GPU, or `custom silicon`_) to execute a computation than it is for a 
-human to map out how that computation happens. Unfortunately, things that make 
-by-hand graph construction simpler tend to make automatic construction more 
-difficult, and vice versa.
+(a CPU, GPU, or `purpose-built silicon`_) to execute a computation than it is 
+for a human to map out how that computation happens. Unfortunately, things 
+that make by-hand graph construction simpler tend to make automatic construction 
+more difficult, and vice versa.
 
 Nevertheless, it can be helpful to break down what is happening during graph 
-construction. One of the most common goals of many showcase-level AI 
-technologies is the efficiency  network-based approach is to 
- consider the goal of the programmatic approaches, (requiring 
-less memory, reducing energy -- especially as parameters increase, or as 
-graphs become especially large) can result in any desired efficiencies.
-
-The documetation that follows explains two approaches frameworks can use to
-compile with nGraph operations:
+construction. The documetation that follows explains two approaches frameworks 
+can use to compile with nGraph operations:
 
 * :ref:`Using complete shapes <scenario_one>`
 * :ref:`Using partial shapes <scenario_two>`
@@ -34,31 +28,16 @@ directory, and it deconstructs the steps that must happen (either programmatical
 or manually) in order to successfully execute a computation given complete 
 shape information.  
 
-The :ref:`second scenario <scenario_two>` involves the use of dynamic tensors. 
-A :term:`dynamic tensor` is a tensor whose shape can change from one "iteration" 
-to the next. When created, a framework :term:`bridge` might supply only *partial* 
-shape information: it might be **all** the tensor dimensions, **some** of the 
-tensor dimensions, or **none** of the tensor dimensions; furthermore, the rank 
-of the tensor may be left unspecified. The "actual" shape of the tensor is not 
-specified until some function writes some value to it. The actual shape can 
-change when the value of the tensor is overwritten. It is the backend’s 
-responsibility to set the actual shape. The :term:`model description` 
-for the second scenario based on the :file:`partial_shape.cpp` code in the 
-``/doc/examples/dynamic_tensor`` directory, and it deconstructs the steps that 
-must happen (either programmatically or manually) in order to successfully 
-retreive shape data
-
-
 .. _scenario_one:
 
 Scenario One: Using Complete Shapes
 ===================================
 
-The nGraph :term:`IR` uses a strong, dynamic type system, including static 
-shapes. This means that at compilation, every tensor (or, equivalently,
-every node output) in the graph is assigned **complete shape information**;
-that is, one and only one shape. The static process by which this assignment 
-takes place is called :term:`shape propagation`.
+The nGraph :abbr:`Intermediate Representation (IR)` uses a strong, dynamic 
+type system, including static shapes. This means that at compilation, every 
+tensor (or, equivalently, every node output) in the graph is assigned 
+**complete shape information**; that is, one and only one shape. The static 
+process by which this assignment takes place is called :term:`shape propagation`.
 
 A step-by-step example of how a framework might execute with complete shape 
 information is provided here. For a step-by-step example using dynamic 
@@ -159,7 +138,7 @@ Specify the backend upon which to run the computation
 -----------------------------------------------------
 
 For a framework bridge, a *backend* is the environment that can perform the 
-computations; it can be done with a CPU, GPU, or an Intel Nervana NNP. A 
+computations; it can be done with a CPU, GPU, or `purpose-built silicon`_. A 
 *transformer* can compile computations for a backend, allocate and deallocate 
 tensors, and invoke computations.
 
@@ -168,7 +147,7 @@ and allocate backends. A backend is somewhat analogous to a multi-threaded
 process.
 
 There are two backends for the CPU: the optimized ``"CPU"`` backend, which uses 
-the `Intel MKL-DNN`_, and the ``"INTERPRETER"`` backend, which runs reference 
+the `DNNL`_, and the ``"INTERPRETER"`` backend, which runs reference 
 versions of kernels that favor implementation clarity over speed. The 
 ``"INTERPRETER"`` backend can be slow, and is primarily intended for testing. 
 See the documentation on :doc:`runtime options for various backends <../../backends/index>` 
@@ -264,8 +243,8 @@ We can use the ``read`` method to access the result:
 
 .. _sshp:
 
-Compiling with Complete Shapes
-==============================
+Compiling with Complete Shape Information
+-----------------------------------------
 
 .. literalinclude:: ../../../../examples/abc/abc.cpp
    :language: cpp
@@ -273,11 +252,30 @@ Compiling with Complete Shapes
    :caption: "The (a + b) * c example for executing a computation on nGraph"
 
 
-
 .. _scenario_two:
 
-Scenario Two: Known partial shape
----------------------------------
+Scenario Two: Known Partial Shape
+=================================
+
+The :ref:`second scenario <scenario_two>` involves the use of dynamic tensors. 
+A :term:`dynamic tensor` is a tensor whose shape can change from one "iteration" 
+to the next. When created, a framework :term:`bridge` might supply only *partial* 
+shape information: it might be **all** the tensor dimensions, **some** of the 
+tensor dimensions, or **none** of the tensor dimensions; furthermore, the rank 
+of the tensor may be left unspecified. The "actual" shape of the tensor is not 
+specified until some function writes some value to it. The actual shape can 
+change when the value of the tensor is overwritten. It is the backend’s 
+responsibility to set the actual shape. The :term:`model description` 
+for the second scenario based on the :file:`partial_shape.cpp` code in the 
+``/doc/examples/dynamic_tensor`` directory, and it deconstructs the steps that 
+must happen (either programmatically or manually) in order to successfully 
+retreive shape data.
+
+* :ref:`create_dyn_tensor`
+* :ref:`call_graph_vw_`
+* :ref:`call_graph_vwnew`
+* :ref:`kpsh`
+
 
 Create and compile a graph for ``f(x) = x + x`` where the provided info 
 of shape ``x`` is ``(2,?)``:
@@ -320,15 +318,19 @@ Write new shape
    :language: cpp
    :lines: 47-49
 
-.. _dshp:
 
-Compiling with Partial Shapes
-=============================
+.. _kpsh:
+
+Compiling with Known Partial Shape
+----------------------------------
 
 .. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
    :language: cpp
    :linenos:
-   :caption: "Compiling with dynamic tensors and partial shapes"
+   :caption: "Compiling with dynamic tensors and partial shape"
 
 
-.. _custom silicon: https://www.intel.ai/nervana-nnp
+.. _purpose-built silicon: https://www.intel.ai/nervana-nnp
+.. _DNNL: https://intel.github.io/mkl-dnn/ 
+
+
