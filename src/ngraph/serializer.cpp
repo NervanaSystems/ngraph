@@ -46,6 +46,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
+#include "ngraph/op/crop_and_resize.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
@@ -1454,6 +1455,15 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], args[2], soft_label, ignore_index);
             break;
         }
+        case OP_TYPEID::CropAndResize:
+        {
+            auto resize_method =
+                as_type<op::CropAndResize::ResizeMethod>(node_js.at("resize_method").get<string>());
+            auto extrapolation_value = node_js.at("extrapolation_value").get<float>();
+            node = make_shared<op::CropAndResize>(
+                args[0], args[1], args[2], args[3], resize_method, extrapolation_value);
+            break;
+        }
         case OP_TYPEID::DepthToSpace_v1:
         {
             auto mode = node_js.at("mode").get<op::DepthToSpace::DepthToSpaceMode>();
@@ -1798,9 +1808,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::HardSigmoid_v1:
         {
-            auto alpha = node_js.at("alpha").get<float>();
-            auto beta = node_js.at("beta").get<float>();
-            node = make_shared<op::HardSigmoid>(args[0], alpha, beta);
+            node = make_shared<op::HardSigmoid>(args[0], args[1], args[2]);
             break;
         }
         case OP_TYPEID::Interpolate_v1: { break;
@@ -3447,6 +3455,13 @@ json JSONSerializer::serialize_node(const Node& n)
         node["ignore_index"] = tmp->get_ignore_index();
         break;
     }
+    case OP_TYPEID::CropAndResize:
+    {
+        auto tmp = static_cast<const op::CropAndResize*>(&n);
+        node["resize_method"] = as_string(tmp->get_resize_method());
+        node["extrapolation_value"] = tmp->get_extrapolation_value();
+        break;
+    }
     case OP_TYPEID::Dequantize:
     {
         auto tmp = static_cast<const op::Dequantize*>(&n);
@@ -3703,12 +3718,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["output_shape"] = tmp->get_output_shape();
         break;
     }
-    case OP_TYPEID::HardSigmoid_v1:
-    {
-        auto tmp = static_cast<const op::HardSigmoid*>(&n);
-        node["alpha"] = tmp->get_alpha();
-        node["beta"] = tmp->get_beta();
-        break;
+    case OP_TYPEID::HardSigmoid_v1: { break;
     }
     case OP_TYPEID::Interpolate_v1: { break;
     }
