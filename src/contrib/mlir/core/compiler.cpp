@@ -45,6 +45,7 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/softmax.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -435,6 +436,18 @@ namespace ngraph
                 convOp.setPadAbove(attr);
                 return op;
             }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Softmax)
+            {
+                mlir::Operation* op = compiler.createGenericOp<mlir::NGSoftMaxOp>(ngNode);
+                auto softmaxNode = static_cast<const ngraph::op::Softmax*>(ngNode);
+                auto softmaxOp = llvm::cast<mlir::NGSoftMaxOp>(op);
+
+                mlir::ArrayAttr attr = compiler.getShapeAsAttr(softmaxNode->get_axes());
+                softmaxOp.setAxes(attr);
+                return op;
+            }
         }
     }
 }
@@ -446,6 +459,8 @@ mlir::Operation* MLIRCompiler::createGenericOp(const ngraph::Node* ngNode)
     std::vector<mlir::Type> resTypes;
     auto inputMap = m_compiledKernel->get_input_map();
     std::shared_ptr<descriptor::Tensor> argTensor;
+    auto argInputs = ngNode->inputs();
+    int i = 0;
     for (auto& argOutput : ngNode->input_values())
     {
         auto argOutputNode = argOutput.get_node();
@@ -455,6 +470,18 @@ mlir::Operation* MLIRCompiler::createGenericOp(const ngraph::Node* ngNode)
             NGRAPH_CHECK(it != inputMap.end(), "Parameter not in CK input map");
 
             argTensor = m_compiledKernel->input_values().at(it->second).get_tensor_ptr();
+            // argInputs[i].replace_source_output(m_compiledKernel->input_values().at(it->second));
+            Output<Node> originOutput = m_compiledKernel->input_values().at(it->second);
+            // argInputs[i].replace_source_output(originOutput);
+            // std::cout << "argInputs[" << i << "] is " << argInputs[i].get_node()->get_name() <<
+            // std::endl;
+            //   std::cout << "CK input is " <<
+            //   m_compiledKernel->input_values().at(it->second).get_node()->get_name() <<
+            //   std::endl;
+            for (auto& input : argOutput.get_target_inputs())
+            {
+                input.replace_source_output(originOutput);
+            }
         }
         else
         {
@@ -463,6 +490,7 @@ mlir::Operation* MLIRCompiler::createGenericOp(const ngraph::Node* ngNode)
 
         auto argV = getTensorValue(argTensor.get()).m_value;
         argValues.push_back(argV);
+        i++;
     }
 
     for (auto& output : ngNode->outputs())

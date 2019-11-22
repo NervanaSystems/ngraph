@@ -676,6 +676,7 @@ namespace
         NGRAPH_CHECK(lhs && rhs && result, "Unexpected null values in MatMulOp");
 
         auto resultTy = result->getType().dyn_cast<MemRefType>();
+        auto resultShape = resultTy.getShape();
         auto lhsTy = lhs->getType().dyn_cast<MemRefType>();
         auto lhsShape = lhsTy.getShape();
         auto rhsTy = rhs->getType().dyn_cast<MemRefType>();
@@ -688,40 +689,9 @@ namespace
         NGRAPH_CHECK(elemTy == lhsTy.getElementType() && elemTy == rhsTy.getElementType(),
                      "Types mismatch in MatMulOp");
 
-        MemRefView vRes(result), vLhs(lhs), vRhs(rhs);
-
-        NGRAPH_CHECK(vLhs.rank() == 2 && vRhs.rank() == 2 && vRes.rank() == 2,
+        NGRAPH_CHECK(lhsShape.size() == 2 && rhsShape.size() == 2 && resultShape.size() == 2,
                      "MatMul operation is only supported for 2D tensors");
 
-        // It's important to note that MemRefView priovides lb/ub/step info is "reverse order",
-        // i.e., fastest varying dimension is the last one, slowest varying dimension is the first
-        // one.
-        unsigned lhsDim0 = vLhs.fastestVarying() - 1;
-        unsigned lhsDim1 = vLhs.fastestVarying();
-        unsigned rhsDim0 = vRhs.fastestVarying() - 1;
-        unsigned rhsDim1 = vRhs.fastestVarying();
-
-        auto m = lhsShape[lhsDim0];
-        auto k = lhsShape[lhsDim1];
-        auto n = rhsShape[rhsDim1];
-        auto lda = lhsShape[lhsDim1];
-        auto ldb = rhsShape[rhsDim1];
-
-        if (matmul.transposeA())
-        {
-            m = lhsShape[lhsDim1];
-            k = lhsShape[lhsDim0];
-        }
-        if (matmul.transposeB())
-        {
-            n = rhsShape[rhsDim0];
-        }
-
-        auto mArg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), m);
-        auto kArg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), k);
-        auto nArg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), n);
-        auto ldaArg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), lda);
-        auto ldbArg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), ldb);
         auto transposeA =
             matmul.transposeA()
                 ? rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 1, 1)
@@ -732,24 +702,16 @@ namespace
                 : rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 0, 1);
 
         auto boolTy = rewriter.getI1Type();
-        auto sizeTy = rewriter.getIndexType();
-        auto callBackFunc = pass.getCallDecl("__mlir_cblas_sgemm",
-                                             {lhsTy,
-                                              rhsTy,
-                                              resultTy,
-                                              boolTy,
-                                              boolTy,
-                                              sizeTy,
-                                              sizeTy,
-                                              sizeTy,
-                                              sizeTy,
-                                              sizeTy,
-                                              sizeTy},
-                                             {},
-                                             rewriter);
+        auto floatTy = rewriter.getF32Type();
+        auto memrefTy = MemRefType::get({-1, -1}, floatTy, {}, 0);
+        auto callBackFunc = pass.getCallDecl(
+            "__mlir_cblas_sgemm", {memrefTy, memrefTy, memrefTy, boolTy, boolTy}, {}, rewriter);
 
-        SmallVector<mlir::Value*, 11> args = {
-            lhs, rhs, result, transposeA, transposeB, mArg, nArg, kArg, ldaArg, ldbArg, nArg};
+        auto lhsCast = rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), lhs, memrefTy);
+        auto rhsCast = rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), rhs, memrefTy);
+        auto resultCast =
+            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), result, memrefTy);
+        SmallVector<mlir::Value*, 11> args = {lhsCast, rhsCast, resultCast, transposeA, transposeB};
 
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
@@ -875,74 +837,130 @@ namespace
         auto sizeTy = rewriter.getIndexType();
         auto intTy = rewriter.getIntegerType(32);
 
-        auto module = pass.getModule();
-        auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
-        auto llvmF32Ty = LLVM::LLVMType::getFloatTy(llvmDialect);
-        auto llvmF32PtrTy = llvmF32Ty.getPointerTo();
-        auto llvmI1Ty = LLVM::LLVMType::getInt1Ty(llvmDialect);
-        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
-        auto llvmI32Ty = LLVM::LLVMType::getInt32Ty(llvmDialect);
-        auto llvmArrayTy = LLVM::LLVMType::getArrayTy(llvmI64Ty, 2);
-        auto llvmStructPtrTy = LLVM::LLVMType::getStructTy(
-                                   llvmDialect, {llvmF32PtrTy, llvmI64Ty, llvmArrayTy, llvmArrayTy})
-                                   .getPointerTo();
-        auto llvmVoidTy = LLVM::LLVMType::getVoidTy(llvmDialect);
-
-        LLVM::LLVMType llvmBiasTy;
-        if (vBias.rank() == 0)
+        auto memrefTy = MemRefType::get({-1, -1}, floatTy, {}, 0);
+        auto lhsCast = rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), lhs, memrefTy);
+        auto rhsCast = rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), rhs, memrefTy);
+        auto resultCast =
+            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), result, memrefTy);
+        SmallVector<mlir::Value*, 12> args;
+        FuncOp callBackFunc;
+        if (vBias.rank() == 2)
         {
-            llvmBiasTy =
-                LLVM::LLVMType::getStructTy(llvmDialect, {llvmF32PtrTy, llvmI64Ty}).getPointerTo();
+            auto biasCast =
+                rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), bias, memrefTy);
+            callBackFunc = pass.getCallDecl("__mlir_cblas_sgemm_2d_bias",
+                                            {memrefTy,
+                                             memrefTy,
+                                             memrefTy,
+                                             memrefTy,
+                                             boolTy,
+                                             boolTy,
+                                             sizeTy,
+                                             sizeTy,
+                                             sizeTy,
+                                             sizeTy,
+                                             sizeTy,
+                                             sizeTy,
+                                             floatTy,
+                                             floatTy,
+                                             intTy},
+                                            {},
+                                            rewriter);
+
+            args = {lhsCast,
+                    rhsCast,
+                    biasCast,
+                    resultCast,
+                    transposeA,
+                    transposeB,
+                    mArg,
+                    nArg,
+                    kArg,
+                    ldaArg,
+                    ldbArg,
+                    nArg,
+                    alpha,
+                    beta,
+                    broadcastHintArg};
         }
         else if (vBias.rank() == 1)
         {
-            auto llvmArray1Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 1);
-            llvmBiasTy = LLVM::LLVMType::getStructTy(
-                             llvmDialect, {llvmF32PtrTy, llvmI64Ty, llvmArray1Ty, llvmArray1Ty})
-                             .getPointerTo();
+            auto memref1dTy = MemRefType::get({-1}, floatTy, {}, 0);
+            auto biasCast =
+                rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), bias, memref1dTy);
+            callBackFunc = pass.getCallDecl("__mlir_cblas_sgemm_1d_bias",
+                                            {memrefTy,
+                                             memrefTy,
+                                             memref1dTy,
+                                             memrefTy,
+                                             boolTy,
+                                             boolTy,
+                                             sizeTy,
+                                             sizeTy,
+                                             sizeTy,
+                                             sizeTy,
+                                             sizeTy,
+                                             sizeTy,
+                                             floatTy,
+                                             floatTy,
+                                             intTy},
+                                            {},
+                                            rewriter);
+
+            args = {lhsCast,
+                    rhsCast,
+                    biasCast,
+                    resultCast,
+                    transposeA,
+                    transposeB,
+                    mArg,
+                    nArg,
+                    kArg,
+                    ldaArg,
+                    ldbArg,
+                    nArg,
+                    alpha,
+                    beta,
+                    broadcastHintArg};
         }
         else
         {
-            llvmBiasTy = llvmStructPtrTy;
+            callBackFunc = pass.getCallDecl("__mlir_cblas_sgemm_scalar_bias",
+                                            {memrefTy,
+                                             memrefTy,
+                                             biasTy,
+                                             memrefTy,
+                                             boolTy,
+                                             boolTy,
+                                             sizeTy,
+                                             sizeTy,
+                                             sizeTy,
+                                             sizeTy,
+                                             sizeTy,
+                                             sizeTy,
+                                             floatTy,
+                                             floatTy,
+                                             intTy},
+                                            {},
+                                            rewriter);
+
+            args = {lhsCast,
+                    rhsCast,
+                    bias,
+                    resultCast,
+                    transposeA,
+                    transposeB,
+                    mArg,
+                    nArg,
+                    kArg,
+                    ldaArg,
+                    ldbArg,
+                    nArg,
+                    alpha,
+                    beta,
+                    broadcastHintArg};
         }
-
-        auto callBackFunc = pass.getCallDecl("__mlir_cblas_sgemm_1",
-                                             {llvmStructPtrTy,
-                                              llvmStructPtrTy,
-                                              llvmBiasTy,
-                                              llvmStructPtrTy,
-                                              llvmI1Ty,
-                                              llvmI1Ty,
-                                              llvmI64Ty,
-                                              llvmI64Ty,
-                                              llvmI64Ty,
-                                              llvmI64Ty,
-                                              llvmI64Ty,
-                                              llvmI64Ty,
-                                              llvmF32Ty,
-                                              llvmF32Ty,
-                                              llvmI32Ty},
-                                             llvmVoidTy,
-                                             rewriter);
-
-        SmallVector<mlir::Value*, 12> args = {lhs,
-                                              rhs,
-                                              bias,
-                                              result,
-                                              transposeA,
-                                              transposeB,
-                                              mArg,
-                                              nArg,
-                                              kArg,
-                                              ldaArg,
-                                              ldbArg,
-                                              nArg,
-                                              alpha,
-                                              beta,
-                                              broadcastHintArg};
-
-        rewriter.create<mlir::LLVM::CallOp>(
-            rewriter.getUnknownLoc(), llvmVoidTy, rewriter.getSymbolRefAttr(callBackFunc), args);
+        rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
 
         return matchSuccess();
@@ -1429,6 +1447,80 @@ namespace
         });
 
         rewriter.replaceOp(op, {result});
+        return matchSuccess();
+    }
+
+    REWRITER(NGSoftMaxOp)
+    {
+        auto softmax = cast<NGSoftMaxOp>(op);
+        auto loc = softmax.getLoc();
+
+        // Retrieve/generate Values for operands and result.
+        ScopedContext scope(rewriter, loc);
+        Value* lhs = operands[0];
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(lhs && result, "Unexpected null values in SoftmaxOp");
+
+        auto resultTy = result->getType().dyn_cast<MemRefType>();
+        auto resultShape = resultTy.getShape();
+        auto lhsTy = lhs->getType().dyn_cast<MemRefType>();
+        auto lhsShape = lhsTy.getShape();
+        NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
+        NGRAPH_CHECK(lhsTy, "Unexpected non-memref LHS type");
+
+        Type elemTy = resultTy.getElementType();
+        NGRAPH_CHECK(elemTy == lhsTy.getElementType(), "Types mismatch in SoftmaxOp");
+
+        NGRAPH_CHECK((lhsShape.size() == 2 && resultShape.size() == 2) ||
+                         (lhsShape.size() == 4 && resultShape.size() == 4),
+                     "MKLDNN Softmax operation is only supported for 2D and 4D tensors");
+
+        auto floatTy = rewriter.getF32Type();
+        auto axes = softmax.axes().getValue();
+        auto axis = axes[0].cast<IntegerAttr>().getInt();
+        auto axisArg = rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), axis, 64);
+
+        auto sizeTy = rewriter.getIndexType();
+        auto int64Ty = rewriter.getIntegerType(64);
+
+        SmallVector<mlir::Value*, 4> args;
+        FuncOp callBackFunc;
+        if (lhsShape.size() == 2)
+        {
+            auto memref2dTy = MemRefType::get({-1, -1}, floatTy, {}, 0);
+            auto lhsCast =
+                rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), lhs, memref2dTy);
+            auto resultCast =
+                rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), result, memref2dTy);
+
+            callBackFunc = pass.getCallDecl(
+                "__mlir_mkldnn_softmax_2d", {memref2dTy, memref2dTy, int64Ty}, {}, rewriter);
+
+            args = {lhsCast,
+
+                    resultCast,
+                    axisArg};
+        }
+        else if (lhsShape.size() == 4)
+        {
+            auto memref4dTy = MemRefType::get({-1, -1, -1, -1}, floatTy, {}, 0);
+            auto lhsCast =
+                rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), lhs, memref4dTy);
+            auto resultCast =
+                rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), result, memref4dTy);
+
+            callBackFunc = pass.getCallDecl(
+                "__mlir_mkldnn_softmax_4d", {memref4dTy, memref4dTy, int64Ty}, {}, rewriter);
+
+            args = {lhsCast,
+
+                    resultCast,
+                    axisArg};
+        }
+
+        rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
+        rewriter.replaceOp(op, result);
+
         return matchSuccess();
     }
 

@@ -34,6 +34,15 @@ namespace ngraph
     {
         namespace ngmlir
         {
+            template <int N>
+            struct StridedMemRef
+            {
+                float* basePtr;
+                int64_t offset;
+                int64_t shape[N];
+                int64_t strides[N];
+            };
+
             /// A CPU Runtime is an MLIR runtime that owns an MLIR context and a module
             /// The module should be in LLVM dialect and ready to be lowered via an MLIR
             /// ExecutionEngine. The runtime owns the context and must out-live any MLIR
@@ -42,12 +51,18 @@ namespace ngraph
             {
             public:
                 /// Executes a pre-compiled subgraph
-                void run(void* args) override;
+                void run(void* args,
+                         const std::vector<std::vector<size_t>>& shapeVec,
+                         const std::vector<std::vector<size_t>>& stridesVec) override;
 
             private:
-                void run_internal(std::vector<void*>& externalTensors);
+                void run_internal(std::vector<void*>& externalTensors,
+                                  const std::vector<std::vector<size_t>>& shapeVec,
+                                  const std::vector<std::vector<size_t>>& stridesVec);
                 // Bind external tensors to MLIR module entry point
-                void bindArguments(std::vector<void*>& externalTensors);
+                void bindArguments(std::vector<void*>& externalTensors,
+                                   const std::vector<std::vector<size_t>>& shapeVec,
+                                   const std::vector<std::vector<size_t>>& stridesVec);
                 // Invokes an MLIR module entry point with bound arguments
                 void execute();
                 // Cleans up allocated args
@@ -57,7 +72,8 @@ namespace ngraph
                 llvm::SmallVector<void*, 8> allocateMemrefArgs();
 
                 /// Helper to allocate a mem ref object. Handles static shapes only for now.
-                mlir::StaticFloatMemRef* allocateMemrefDescriptor();
+                template <int N>
+                StridedMemRef<N>* allocateMemrefDescriptor();
 
             private:
                 // Pointers to externally allocated memory for sub-graph's input and output tensors.
@@ -65,6 +81,7 @@ namespace ngraph
                 // Arguments for the MLIR function generated for the nGraph sub-graph.
                 llvm::SmallVector<void*, 8> m_invokeArgs;
                 std::unique_ptr<mlir::ExecutionEngine> m_engine;
+                std::vector<size_t> m_ranks;
             };
         }
     }

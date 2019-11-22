@@ -329,5 +329,25 @@ def NGConvolutionOp :
   }];
 }
 
+// softmax
+def NGSoftMaxOp :
+    NG_OneResult_Op<"softmax", [NoSideEffect]>,
+    Arguments<(ins NG_TensorType :$arg,
+               I64ArrayAttr  :$axes)>
+{ 
+    let summary = "Softmax operation.";
+    let description = [{
+        arg   Node that produces the first input tensor.
+        axes  The axis positions (0-based) on which to calculate the softmax.
+    }];
+
+    let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+    let verifier = [{ return verifyOp(this); }];
+    let extraClassDeclaration = [{
+      void setAxes(const ArrayAttr& arrayAttr) { this->setAttr("axes", arrayAttr); }
+    }];
+}
+
+
 // Terminator Ops
 def NGReturnOp : NG_Terminator_Op<"return">;

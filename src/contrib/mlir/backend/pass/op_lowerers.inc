@@ -41,6 +41,7 @@ MLIR_OP(NGMaxOp             , true                  )
 MLIR_OP(NGMinOp             , true                  )
 MLIR_OP(NGNegOp             , true                  )
 MLIR_OP(NGReluOp            , true                  )
+MLIR_OP(NGSoftMaxOp         , false                 )
 MLIR_OP(NGSubOp             , true                  )
 MLIR_LAST_OP(NGReturnOp     , false                 )
 

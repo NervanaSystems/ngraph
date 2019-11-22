@@ -43,22 +43,54 @@ namespace ngraph
                 // Tensors haven't been allocated yet so we have to keep a pointer to the pointer
                 // that will hold the future memory address.
                 std::vector<size_t> buffer_indices;
+                std::vector<std::vector<size_t>> shape_vec;
+                std::vector<std::vector<size_t>> strides_vec;
                 for (const TensorViewWrapper& arg : args)
                 {
                     auto buffer_index = external_function->get_buffer_index(arg.get_name());
                     buffer_indices.push_back(buffer_index);
+                    // Get shape and strides
+                    auto tensor_shape = arg.get_shape();
+                    std::vector<size_t> shape(tensor_shape.size());
+                    for (auto i = 0; i < tensor_shape.size(); i++)
+                    {
+                        shape[i] = tensor_shape[i];
+                    }
+                    shape_vec.push_back(shape);
+                    auto tensor_strides = arg.get_strides();
+                    std::vector<size_t> strides(tensor_strides.size());
+                    for (auto i = 0; i < tensor_strides.size(); i++)
+                    {
+                        strides[i] = tensor_strides[i];
+                    }
+                    strides_vec.push_back(strides);
                 }
 
                 for (const TensorViewWrapper& result : out)
                 {
                     auto buffer_index = external_function->get_buffer_index(result.get_name());
                     buffer_indices.push_back(buffer_index);
+                    // Get shape and strides
+                    auto tensor_shape = result.get_shape();
+                    std::vector<size_t> shape(tensor_shape.size());
+                    for (auto i = 0; i < tensor_shape.size(); i++)
+                    {
+                        shape[i] = tensor_shape[i];
+                    }
+                    shape_vec.push_back(shape);
+                    auto tensor_strides = result.get_strides();
+                    std::vector<size_t> strides(tensor_strides.size());
+                    for (auto i = 0; i < tensor_strides.size(); i++)
+                    {
+                        strides[i] = tensor_strides[i];
+                    }
+                    strides_vec.push_back(strides);
                 }
 
                 // Create functor that will be executed to compile and run this CompiledKernel.
                 // Note that 'double_ptr_args' must be captured by value since it's a local var.
-                auto functor = [node, buffer_indices](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                auto functor = [node, buffer_indices, shape_vec, strides_vec](
+                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
 
                     // MLIR requires a list of type-erased pointer to arguments. Tensors must have
                     // been allocated at this point so we can get rid of the extra reference.
@@ -97,13 +129,13 @@ namespace ngraph
                         mlir_backend.codegen();
                         // Store module into runtime, and invoke.
                         mlir_runtime.set_module(mlir_backend.get_module());
-                        mlir_runtime.run(&ptr_args);
+                        mlir_runtime.run(&ptr_args, shape_vec, strides_vec);
                     }
                     else
                     {
                         // We have found a cached runtime, just invoke.
                         MLIRCPURuntime& mlir_runtime = it->second;
-                        mlir_runtime.run(&ptr_args);
+                        mlir_runtime.run(&ptr_args, shape_vec, strides_vec);
                     }
                 };
 

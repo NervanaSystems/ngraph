@@ -40,6 +40,7 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/softmax.hpp"
 #include "ngraph/op/subtract.hpp"
 
 using namespace ngraph::descriptor;
@@ -538,6 +539,41 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
 
         return std::all_of(data_dilation.begin(), data_dilation.end(), is_one) &&
                std::all_of(window_dilation.begin(), window_dilation.end(), is_one);
+    }
+
+    // MKLDNN only supports softmax across single axis
+    if (TI(ngraph::op::Softmax) == TI(*node))
+    {
+        // Softmax is only supported through callback
+        if (std::getenv("NGRAPH_MLIR_CALLBACK") == nullptr)
+        {
+            return false;
+        }
+        auto softmax = static_cast<ngraph::op::Softmax*>(node.get());
+
+        auto arg0_shape = node->get_input_shape(0);
+        auto arg0_rank = arg0_shape.size();
+
+        return (arg0_rank == 4 || arg0_rank == 2) &&
+               node->get_input_element_type(0) == element::f32 && softmax->get_axes().size() == 1;
+    }
+
+    if (TI(ngraph::op::MatMul) == TI(*node))
+    {
+        // MatMul is only supported through callback
+        if (std::getenv("NGRAPH_MLIR_CALLBACK") == nullptr)
+        {
+            return false;
+        }
+    }
+
+    if (TI(ngraph::op::Gemm) == TI(*node))
+    {
+        // Gemm is only supported through callback
+        if (std::getenv("NGRAPH_MLIR_CALLBACK") == nullptr)
+        {
+            return false;
+        }
     }
 
     return true;
