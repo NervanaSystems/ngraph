@@ -14,82 +14,190 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <algorithm>
 #include <cstdint>
+#include <numeric>
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/abs.hpp"
+#include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/all.hpp"
+#include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/any.hpp"
+#include "ngraph/op/argmax.hpp"
+#include "ngraph/op/argmin.hpp"
+#include "ngraph/op/asin.hpp"
+#include "ngraph/op/atan.hpp"
+#include "ngraph/op/atan2.hpp"
 #include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/binary_convolution.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/broadcast_distributed.hpp"
+#include "ngraph/op/ceiling.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/cos.hpp"
+#include "ngraph/op/cosh.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
+#include "ngraph/op/dot.hpp"
+#include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
+#include "ngraph/op/erf.hpp"
+#include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
+#include "ngraph/op/experimental/compiled_kernel.hpp"
+#include "ngraph/op/experimental/dyn_broadcast.hpp"
+#include "ngraph/op/experimental/dyn_pad.hpp"
+#include "ngraph/op/experimental/dyn_replace_slice.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
+#include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
+#include "ngraph/op/experimental/layers/interpolate.hpp"
+#include "ngraph/op/experimental/quantized_conv_bias.hpp"
+#include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/experimental/quantized_dot_bias.hpp"
+#include "ngraph/op/experimental/random_uniform.hpp"
+#include "ngraph/op/experimental/range.hpp"
+#include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/experimental/tile.hpp"
+#include "ngraph/op/experimental/transpose.hpp"
+#include "ngraph/op/floor.hpp"
+#include "ngraph/op/floor_mod.hpp"
+#include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
+#include "ngraph/op/fused/clamp.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/crossentropy.hpp"
+#include "ngraph/op/fused/depth_to_space.hpp"
+#include "ngraph/op/fused/elu.hpp"
+#include "ngraph/op/fused/fake_quantize.hpp"
+#include "ngraph/op/fused/gelu.hpp"
+#include "ngraph/op/fused/gemm.hpp"
+#include "ngraph/op/fused/grn.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/group_conv_transpose.hpp"
+#include "ngraph/op/fused/gru_cell.hpp"
+#include "ngraph/op/fused/hard_sigmoid.hpp"
+#include "ngraph/op/fused/layer_norm.hpp"
+#include "ngraph/op/fused/log_softmax.hpp"
+#include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/fused/lstm_sequence.hpp"
+#include "ngraph/op/fused/matmul.hpp"
+#include "ngraph/op/fused/mvn.hpp"
+#include "ngraph/op/fused/normalize_l2.hpp"
+#include "ngraph/op/fused/partial_slice.hpp"
+#include "ngraph/op/fused/prelu.hpp"
+#include "ngraph/op/fused/reciprocal.hpp"
+#include "ngraph/op/fused/rnn_cell.hpp"
+#include "ngraph/op/fused/scale_shift.hpp"
+#include "ngraph/op/fused/selu.hpp"
+#include "ngraph/op/fused/shuffle_channels.hpp"
+#include "ngraph/op/fused/softmax_crossentropy.hpp"
+#include "ngraph/op/fused/space_to_depth.hpp"
+#include "ngraph/op/fused/split.hpp"
+#include "ngraph/op/fused/squared_difference.hpp"
+#include "ngraph/op/fused/squeeze.hpp"
+#include "ngraph/op/fused/unsqueeze.hpp"
+#include "ngraph/op/gather.hpp"
+#include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
+#include "ngraph/op/log.hpp"
+#include "ngraph/op/lrn.hpp"
+#include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
+#include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
+#include "ngraph/op/negative.hpp"
 #include "ngraph/op/not.hpp"
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/passthrough.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/quantize.hpp"
+#include "ngraph/op/quantized_convolution.hpp"
+#include "ngraph/op/quantized_dot.hpp"
+#include "ngraph/op/recv.hpp"
 #include "ngraph/op/reduce_prod.hpp"
 #include "ngraph/op/reduce_sum.hpp"
+#include "ngraph/op/relu.hpp"
+#include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/reverse_sequence.hpp"
+#include "ngraph/op/scatter_add.hpp"
+#include "ngraph/op/scatter_nd_add.hpp"
+#include "ngraph/op/select.hpp"
+#include "ngraph/op/send.hpp"
+#include "ngraph/op/sigmoid.hpp"
+#include "ngraph/op/sign.hpp"
+#include "ngraph/op/sin.hpp"
+#include "ngraph/op/sinh.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/softmax.hpp"
+#include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/strided_slice.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/tan.hpp"
+#include "ngraph/op/tanh.hpp"
+#include "ngraph/op/tensor_iterator.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/op/variadic_split.hpp"
 #include "ngraph/op/xor.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/slice_plan.hpp"
-
-#include <algorithm>
+#include "ngraph/type.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-#define NGRAPH_OP(a, b) a,
-enum class OP_TYPEID
+namespace
 {
-#include "ngraph/op/fused_op_tbl.hpp"
-#include "ngraph/op/op_tbl.hpp"
-};
+    enum class OP_TYPEID
+    {
+#define NGRAPH_OP(a, b) a,
+//#include "ngraph/op/fused_op_tbl.hpp"
+//#include "ngraph/op/op_v0_tbl.hpp"
 #undef NGRAPH_OP
-
-#define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
-static unordered_map<string, OP_TYPEID> typeid_map{
-#include "ngraph/op/fused_op_tbl.hpp"
-#include "ngraph/op/op_tbl.hpp"
-};
+#define NGRAPH_OP(a, b) a##_v1,
+#include "ngraph/op/op_v1_tbl.hpp"
+        OTHER
+    };
 #undef NGRAPH_OP
+}
 
 static OP_TYPEID get_typeid(shared_ptr<Node> node)
 {
-    OP_TYPEID type_id;
-    auto it = typeid_map.find(node->description());
+    static map<NodeTypeInfo, OP_TYPEID> typeid_map{
+#define NGRAPH_OP(a, b) {b::a::type_info, OP_TYPEID::a##_v1},
+#include "ngraph/op/op_v1_tbl.hpp"
+#undef NGRAPH_OP
+    };
+    OP_TYPEID type_id = OP_TYPEID::OTHER;
+    auto it = typeid_map.find(node->get_type_info());
     if (it != typeid_map.end())
     {
         type_id = it->second;
-    }
-    else
-    {
-        throw unsupported_op("Unsupported op '" + node->description() + "'");
     }
     return type_id;
 }
@@ -110,20 +218,6 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 {
     bool modified = false;
 
-    size_t op_version = node->get_version();
-
-    if (op_version == 0)
-    {
-        return modified;
-    }
-
-    NGRAPH_CHECK(op_version == 1,
-                 "Op version 1 transformation pass failed for ",
-                 *node,
-                 ", only op version 1 operations expected. Op version ",
-                 op_version,
-                 " found.");
-
 // Not all enumeration values explicitly handled in switch
 #if defined(__clang__)
 #pragma clang diagnostic push
@@ -131,13 +225,13 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 #endif
     switch (get_typeid(node))
     {
-    case OP_TYPEID::Add:
+    case OP_TYPEID::Add_v1:
     {
         downgrade_binary_elementwise_node<op::v0::Add, op::v1::Add>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::AvgPool:
+    case OP_TYPEID::AvgPool_v1:
     {
         const auto tmp = as_type_ptr<op::v1::AvgPool>(node);
 
@@ -162,7 +256,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::AvgPoolBackprop:
+    case OP_TYPEID::AvgPoolBackprop_v1:
     {
         const auto tmp = as_type_ptr<op::v1::AvgPoolBackprop>(node);
         NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
@@ -188,7 +282,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Broadcast:
+    case OP_TYPEID::Broadcast_v1:
     {
         auto tmp = dynamic_cast<const op::v1::Broadcast*>(node.get());
         const auto arg = node->input(0).get_source_output();
@@ -204,7 +298,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Convolution:
+    case OP_TYPEID::Convolution_v1:
     {
         auto tmp = as_type_ptr<op::v1::Convolution>(node);
         const auto data_arg = node->input(0).get_source_output();
@@ -227,7 +321,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::ConvolutionBackpropData:
+    case OP_TYPEID::ConvolutionBackpropData_v1:
     {
         auto tmp = as_type_ptr<op::v1::ConvolutionBackpropData>(node);
         NGRAPH_CHECK(node->input_value(2).get_node_shared_ptr()->is_constant());
@@ -255,7 +349,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::ConvolutionBackpropFilters:
+    case OP_TYPEID::ConvolutionBackpropFilters_v1:
     {
         auto tmp = as_type_ptr<op::v1::ConvolutionBackpropFilters>(node);
         NGRAPH_CHECK(node->input_value(2).get_node_shared_ptr()->is_constant());
@@ -283,7 +377,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Divide:
+    case OP_TYPEID::Divide_v1:
     {
         const auto tmp = as_type_ptr<op::v1::Divide>(node);
         const auto input_arg0 = node->input(0).get_source_output();
@@ -295,7 +389,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::DynReshape:
+    case OP_TYPEID::Reshape_v1:
     {
         auto tmp = as_type_ptr<op::v1::Reshape>(node);
         auto replacement_node = make_shared<op::v0::DynReshape>(node->input(0).get_source_output(),
@@ -305,13 +399,13 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Equal:
+    case OP_TYPEID::Equal_v1:
     {
         downgrade_binary_elementwise_node<op::v0::Equal, op::v1::Equal>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::GenerateMask:
+    case OP_TYPEID::GenerateMask_v1:
     {
         auto tmp = dynamic_cast<const op::v1::GenerateMask*>(node.get());
         NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
@@ -330,61 +424,61 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Greater:
+    case OP_TYPEID::Greater_v1:
     {
         downgrade_binary_elementwise_node<op::v0::Greater, op::v1::Greater>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::GreaterEq:
+    case OP_TYPEID::GreaterEq_v1:
     {
         downgrade_binary_elementwise_node<op::v0::GreaterEq, op::v1::GreaterEq>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::Less:
+    case OP_TYPEID::Less_v1:
     {
         downgrade_binary_elementwise_node<op::v0::Less, op::v1::Less>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::LessEqual:
+    case OP_TYPEID::LessEqual_v1:
     {
         downgrade_binary_elementwise_node<op::v0::LessEq, op::v1::LessEqual>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::LogicalAnd:
+    case OP_TYPEID::LogicalAnd_v1:
     {
         downgrade_binary_elementwise_node<op::v0::And, op::v1::LogicalAnd>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::LogicalNot:
+    case OP_TYPEID::LogicalNot_v1:
     {
         replace_node(node, make_shared<op::v0::Not>(node->input(0).get_source_output()));
         modified = true;
         break;
     }
-    case OP_TYPEID::LogicalOr:
+    case OP_TYPEID::LogicalOr_v1:
     {
         downgrade_binary_elementwise_node<op::v0::Or, op::v1::LogicalOr>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::LogicalXor:
+    case OP_TYPEID::LogicalXor_v1:
     {
         downgrade_binary_elementwise_node<op::v0::Xor, op::v1::LogicalXor>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::Maximum:
+    case OP_TYPEID::Maximum_v1:
     {
         downgrade_binary_elementwise_node<op::v0::Maximum, op::v1::Maximum>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::MaxPool:
+    case OP_TYPEID::MaxPool_v1:
     {
         auto tmp = as_type_ptr<op::v1::MaxPool>(node);
 
@@ -407,7 +501,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::MaxPoolBackprop:
+    case OP_TYPEID::MaxPoolBackprop_v1:
     {
         const auto tmp = as_type_ptr<op::v1::MaxPoolBackprop>(node);
 
@@ -444,25 +538,25 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Minimum:
+    case OP_TYPEID::Minimum_v1:
     {
         downgrade_binary_elementwise_node<op::v0::Minimum, op::v1::Minimum>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::Multiply:
+    case OP_TYPEID::Multiply_v1:
     {
         downgrade_binary_elementwise_node<op::v0::Multiply, op::v1::Multiply>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::NotEqual:
+    case OP_TYPEID::NotEqual_v1:
     {
         downgrade_binary_elementwise_node<op::v0::NotEqual, op::v1::NotEqual>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::OneHot:
+    case OP_TYPEID::OneHot_v1:
     {
         auto tmp = as_type_ptr<op::v1::OneHot>(node);
         const auto indices = tmp->input_value(0).get_node_shared_ptr();
@@ -494,7 +588,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Pad:
+    case OP_TYPEID::Pad_v1:
     {
         auto tmp = as_type_ptr<op::v1::Pad>(node);
         const auto pad_arg = node->input(0).get_source_output();
@@ -506,13 +600,13 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Power:
+    case OP_TYPEID::Power_v1:
     {
         downgrade_binary_elementwise_node<op::v0::Power, op::v1::Power>(node);
         modified = true;
         break;
     }
-    case OP_TYPEID::Product:
+    case OP_TYPEID::ReduceProd_v1:
     {
         auto tmp = as_type_ptr<op::v1::ReduceProd>(node);
         auto replacement_node = make_shared<op::v0::Product>(node->input(0).get_source_output(),
@@ -546,7 +640,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Reverse:
+    case OP_TYPEID::Reverse_v1:
     {
         auto tmp = as_type_ptr<op::v1::Reverse>(node);
         auto axes_node = tmp->input_value(1).get_node_shared_ptr();
@@ -578,7 +672,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Slice:
+    case OP_TYPEID::StridedSlice_v1:
     {
         auto convert_mask_to_axes = [](const std::vector<int64_t>& mask) {
             AxisSet axes{};
@@ -645,7 +739,21 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         replace_node(node, replacement_node);
         break;
     }
-    case OP_TYPEID::Sum:
+    case OP_TYPEID::Softmax_v1:
+    {
+        auto tmp = as_type_ptr<op::v1::Softmax>(node);
+        auto axis = tmp->get_axis();
+        auto data = node->input(0);
+        auto data_shape = data.get_shape();
+        std::vector<size_t> axes(data_shape.size() - axis);
+        std::iota(std::begin(axes), std::end(axes), axis);
+        auto replacement_node =
+            make_shared<op::v0::Softmax>(node->input(0).get_source_output(), axes);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::ReduceSum_v1:
     {
         auto tmp = as_type_ptr<op::v1::ReduceSum>(node);
         auto replacement_node = make_shared<op::v0::Sum>(node->input(0).get_source_output(),
@@ -679,18 +787,18 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::TopK:
+    case OP_TYPEID::TopK_v1:
     {
         const auto tmp = as_type_ptr<op::v1::TopK>(node);
         const auto axis = tmp->get_axis();
         const auto sort_type = tmp->get_sort_type();
         const auto index_elem_type = tmp->get_index_element_type();
 
-        bool comnpute_max;
+        bool compute_max;
         switch (tmp->get_mode())
         {
-        case op::v1::TopK::Mode::MAX: comnpute_max = true; break;
-        case op::v1::TopK::Mode::MIN: comnpute_max = false; break;
+        case op::v1::TopK::Mode::MAX: compute_max = true; break;
+        case op::v1::TopK::Mode::MIN: compute_max = false; break;
         default: break;
         }
 
@@ -698,7 +806,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         const auto k_node = node->input_value(1);
 
         auto replacement_node = make_shared<op::v0::TopK>(
-            arg_node, k_node, axis, index_elem_type, comnpute_max, sort_type);
+            arg_node, k_node, axis, index_elem_type, compute_max, sort_type);
 
         // values output will be 0, indices 1
         vector<int64_t> output_order{1, 0};

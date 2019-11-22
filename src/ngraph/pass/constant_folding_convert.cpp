@@ -57,6 +57,9 @@ shared_ptr<op::Constant> fold_constant_convert_helper0(shared_ptr<op::Constant> 
     case element::Type_t::dynamic:
         NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_convert");
         break;
+    case element::Type_t::u1:
+        NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_convert");
+        break;
     case element::Type_t::boolean:
         return fold_constant_convert_helper1<TI, char>(constant, output_element_type);
     case element::Type_t::bf16:
@@ -113,6 +116,9 @@ static shared_ptr<op::Constant> fold_constant_convert(shared_ptr<op::Constant> c
         break;
     case element::Type_t::dynamic:
         NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_convert");
+        break;
+    case element::Type_t::u1:
+        NGRAPH_CHECK(false, "Encountered 'u1' element type in fold_constant_convert");
         break;
     case element::Type_t::boolean:
         return fold_constant_convert_helper0<char>(constant, output_element_type);
