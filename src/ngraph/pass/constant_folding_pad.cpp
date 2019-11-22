@@ -100,6 +100,9 @@ void pass::ConstantFolding::construct_constant_pad()
         case element::Type_t::dynamic:
             NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_pad_callback");
             break;
+        case element::Type_t::u1:
+            NGRAPH_CHECK(false, "Encountered 'u1' element type in constant_pad_callback");
+            break;
         case element::Type_t::boolean:
             replacement = fold_constant_pad<char>(constant_match, pad_match, func);
             break;

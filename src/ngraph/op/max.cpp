@@ -75,6 +75,7 @@ shared_ptr<Node> op::v0::Max::get_default_value() const
     case element::Type_t::u64:
         return make_constant_from_string(
             to_string(numeric_limits<uint64_t>::min()), get_element_type(), get_shape());
+    case element::Type_t::u1:
     case element::Type_t::undefined:
     case element::Type_t::dynamic:
     default: throw runtime_error("Max default value not defined for type");

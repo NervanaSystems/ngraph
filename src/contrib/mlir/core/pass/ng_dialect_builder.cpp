@@ -46,32 +46,6 @@
 #include "ngraph/op/util/index_reduction.hpp"
 #include "ngraph/type/element_type.hpp"
 
-#include "contrib/mlir/utils.hpp"
-
-#include <llvm/ADT/STLExtras.h>
-#include <llvm/Analysis/TargetTransformInfo.h>
-#include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
-#include <llvm/IR/Module.h>
-#include <llvm/Support/ErrorOr.h>
-#include <llvm/Support/MemoryBuffer.h>
-#include <llvm/Support/SourceMgr.h>
-#include <llvm/Support/TargetSelect.h>
-#include <llvm/Target/TargetMachine.h>
-#include <mlir/Conversion/LoopToStandard/ConvertLoopToStandard.h>
-#include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
-#include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
-#include <mlir/Dialect/LLVMIR/LLVMDialect.h>
-#include <mlir/ExecutionEngine/ExecutionEngine.h>
-#include <mlir/ExecutionEngine/MemRefUtils.h>
-#include <mlir/ExecutionEngine/OptUtils.h>
-#include <mlir/Pass/PassManager.h>
-#include <mlir/Target/LLVMIR.h>
-#include <mlir/Transforms/DialectConversion.h>
-#include <mlir/Transforms/Passes.h>
-
-#include <memory>
-#include <mutex>
-
 // Defines a new LLVM debug type for this file to be used by LLVM_DEBUG macro.
 #define DEBUG_TYPE "mlir-compiler"
 
@@ -264,6 +238,7 @@ mlir::Type NgDialectConversionPass::getMlirType(const element::Type& type)
     {
     case ngraph::element::Type_t::undefined:
     case ngraph::element::Type_t::dynamic:
+    case ngraph::element::Type_t::u1:
     default: NGRAPH_CHECK(false, "MLIR: Unsupported NGraph types"); break;
     case ngraph::element::Type_t::bf16: return mlir::NGFloatType::getBF16(m_context);
     case ngraph::element::Type_t::f16: return mlir::NGFloatType::getF16(m_context);

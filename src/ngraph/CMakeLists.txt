@@ -213,6 +213,8 @@ set (SRC
     op/strided_slice.hpp
     op/floor.cpp
     op/floor.hpp
+    op/floor_mod.cpp
+    op/floor_mod.hpp
     op/gather.cpp
     op/gather.hpp
     op/gather_nd.cpp
@@ -321,6 +323,8 @@ set (SRC
     op/subtract.hpp
     op/sum.cpp
     op/sum.hpp
+    op/variadic_split.cpp
+    op/variadic_split.hpp
     op/tan.cpp
     op/tan.hpp
     op/tanh.cpp
@@ -331,10 +335,14 @@ set (SRC
     op/topk.hpp
     op/xor.cpp
     op/xor.hpp
+    op/fused/batch_mat_mul_transpose.cpp
+    op/fused/batch_mat_mul_transpose.hpp
     op/fused/clamp.cpp
     op/fused/clamp.hpp
     op/fused/conv_fused.cpp
     op/fused/conv_fused.hpp
+    op/fused/crossentropy.cpp
+    op/fused/crossentropy.hpp
     op/fused/hard_sigmoid.cpp
     op/fused/hard_sigmoid.hpp
     op/fused/depth_to_space.cpp
@@ -375,6 +383,8 @@ set (SRC
     op/fused/partial_slice.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
+    op/fused/reciprocal.cpp
+    op/fused/reciprocal.hpp
     op/fused/rnn_cell.cpp
     op/fused/rnn_cell.hpp
     op/fused/scale_shift.cpp
