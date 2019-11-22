@@ -238,6 +238,7 @@ mlir::Type NgDialectConversionPass::getMlirType(const element::Type& type)
     {
     case ngraph::element::Type_t::undefined:
     case ngraph::element::Type_t::dynamic:
+    case ngraph::element::Type_t::u1:
     default: NGRAPH_CHECK(false, "MLIR: Unsupported NGraph types"); break;
     case ngraph::element::Type_t::bf16: return mlir::NGFloatType::getBF16(m_context);
     case ngraph::element::Type_t::f16: return mlir::NGFloatType::getF16(m_context);
