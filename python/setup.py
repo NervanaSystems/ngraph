@@ -19,6 +19,7 @@ from setuptools.command.build_ext import build_ext
 import sys
 import setuptools
 import os
+import re
 import distutils.ccompiler
 
 __version__ = os.environ.get('NGRAPH_VERSION', '0.0.0-dev')
@@ -72,6 +73,11 @@ else:
     print('Cannot find library directory in {}, make sure that nGraph is installed '
           'correctly'.format(NGRAPH_CPP_DIST_DIR))
     sys.exit(1)
+
+NGRAPH_CPP_LIBRARY_NAME = 'ngraph'
+"""For some platforms OpenVINO adds 'd' suffix to library names in debug configuration"""
+if len([fn for fn in os.listdir(NGRAPH_CPP_LIBRARY_DIR) if re.search('ngraphd', fn)]):
+    NGRAPH_CPP_LIBRARY_NAME = 'ngraphd'
 
 
 def parallelCCompile(
@@ -192,6 +198,7 @@ sources = [
     'pyngraph/ops/greater.cpp',
     'pyngraph/ops/greater_eq.cpp',
     'pyngraph/ops/fused/grn.cpp',
+    'pyngraph/ops/fused/group_conv.cpp',
     'pyngraph/ops/fused/hard_sigmoid.cpp',
     'pyngraph/ops/less.cpp',
     'pyngraph/ops/less_eq.cpp',
@@ -223,6 +230,7 @@ sources = [
     'pyngraph/ops/replace_slice.cpp',
     'pyngraph/ops/reshape.cpp',
     'pyngraph/ops/reverse.cpp',
+    'pyngraph/ops/fused/rnn_cell.cpp',
     'pyngraph/ops/fused/scale_shift.cpp',
     'pyngraph/ops/select.cpp',
     'pyngraph/ops/fused/shuffle_channels.cpp',
@@ -281,7 +289,7 @@ include_dirs = [PYNGRAPH_ROOT_DIR, NGRAPH_CPP_INCLUDE_DIR, PYBIND11_INCLUDE_DIR]
 
 library_dirs = [NGRAPH_CPP_LIBRARY_DIR]
 
-libraries = ['ngraph']
+libraries = [NGRAPH_CPP_LIBRARY_NAME]
 
 extra_compile_args = []
 if NGRAPH_ONNX_IMPORT_ENABLE in ['TRUE', 'ON', True]:

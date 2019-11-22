@@ -76,7 +76,7 @@ namespace ngraph
                                 bias_buffer_index,
                                 dst_layer_buffer_index,
                                 dst_iter_buffer_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) {
+                                                       CPUExecutionContext* /* ectx */) {
                     if (ctx->first_iteration)
                     {
                         mkldnn_emitter->build_rnn_forward(ctx->mkldnn_memories,
@@ -109,7 +109,7 @@ namespace ngraph
                 };
                 functors.emplace_back(functor);
 #else
-                mkldnn_emitter->query_scratchpad_rnn_forward(rnn_desc);
+                size_t scratchpad_size = mkldnn_emitter->query_scratchpad_rnn_forward(rnn_desc);
 
                 auto src_iter_c_buffer_index =
                     external_function->get_buffer_index(args[2].get_name());
@@ -132,6 +132,7 @@ namespace ngraph
                 auto functor = [&,
                                 rnn_desc,
                                 rnn_index,
+                                scratchpad_size,
                                 src_layer_buffer_index,
                                 src_iter_buffer_index,
                                 src_iter_c_buffer_index,
@@ -174,7 +175,7 @@ namespace ngraph
                         ctx, deps[9], ctx->mkldnn_workspaces[deps[10]]);
 
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                        ctx, rnn_index, deps, cpu::mkldnn_utils::OpType::RNN);
+                        ctx, rnn_index, deps, cpu::mkldnn_utils::OpType::RNN, scratchpad_size);
                 };
                 functors.emplace_back(functor);
 #endif

@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::UpdateSlice::type_name{"UpdateSlice"};
+constexpr NodeTypeInfo op::UpdateSlice::type_info;
 
 op::UpdateSlice::UpdateSlice(const Output<Node>& arg0,
                              const Output<Node>& arg1,

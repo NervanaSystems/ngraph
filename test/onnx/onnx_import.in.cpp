@@ -268,6 +268,31 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_missing_op_domain)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_unknown_domain)
+{
+    // the importer should not throw when it encounters an unknown domain in the model
+    EXPECT_NO_THROW(onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/unknown_domain.prototxt")));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_op_in_unknown_domain)
+{
+    try
+    {
+        onnx_import::import_onnx_model(
+            file_util::path_join(SERIALIZED_ZOO, "onnx/unknown_domain_add.prototxt"));
+
+        FAIL() << "The onnx_importer did not throw for unknown domain and op";
+    }
+    catch (const ngraph::ngraph_error& e)
+    {
+        const std::string msg = e.what();
+
+        EXPECT_NE(msg.find("unknown.domain.Add"), std::string::npos)
+            << "The error message should contain domain and op name: unknown.domain.Add";
+    }
+}
+
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_missing_input)
 {
     onnx_import::register_operator(
@@ -1284,6 +1309,49 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_top_k)
     test_case.run();
 }
 
+NGRAPH_TEST(onnx_${BACKEND_NAME}, top_k_opset_10)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/top_k_opset_10.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
+    test_case.add_input<int64_t>({3});
+
+    test_case.add_expected_output<float>(Shape{3, 3}, {3, 2, 1, 7, 6, 5, 11, 10, 9}); // values
+    test_case.add_expected_output<std::int64_t>(Shape{3, 3},
+                                                {3, 2, 1, 3, 2, 1, 3, 2, 1}); // indices
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, top_k_opset_10_const_k)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/top_k_opset_10_const_k.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
+
+    test_case.add_expected_output<float>(Shape{3, 3}, {3, 2, 1, 7, 6, 5, 11, 10, 9}); // values
+    test_case.add_expected_output<std::int64_t>(Shape{3, 3},
+                                                {3, 2, 1, 3, 2, 1, 3, 2, 1}); // indices
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, top_k_opset_11_const_k_smallest)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/top_k_opset_11_const_k_smallest.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({0, 1, 2, 3, 4, 5, 6, 7, 11, 10, 9, 8});
+
+    test_case.add_expected_output<float>(Shape{3, 3}, {0, 1, 2, 4, 5, 6, 8, 9, 10}); // values
+    test_case.add_expected_output<std::int64_t>(Shape{3, 3},
+                                                {0, 1, 2, 0, 1, 2, 3, 2, 1}); // indices
+    test_case.run();
+}
+
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sinh)
 {
     auto function =
@@ -1608,4 +1676,30 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reverse_sequence_1_batch_0)
         {0.f, 1.f, 2.f, 3.f, 5.f, 4.f, 6.f, 7.f, 10.f, 9.f, 8.f, 11.f, 15.f, 14.f, 13.f, 12.f});
 
     test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reverse_sequence_incorrect_batch_axis)
+{
+    EXPECT_THROW(onnx_import::import_onnx_model(file_util::path_join(
+                     SERIALIZED_ZOO, "onnx/reverse_sequence_incorrect_batch_axis.prototxt")),
+                 ngraph_error)
+        << "ReverseSequence batch_axis attribute can only equal 0 or 1. Value of '2' is not "
+           "accepted.";
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reverse_sequence_incorrect_time_axis)
+{
+    EXPECT_THROW(onnx_import::import_onnx_model(file_util::path_join(
+                     SERIALIZED_ZOO, "onnx/reverse_sequence_incorrect_time_axis.prototxt")),
+                 ngraph_error)
+        << "ReverseSequence time_axis attribute can only equal 0 or 1. Value of '2' is not "
+           "accepted.";
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reverse_sequence_time_and_batch_axis_equal)
+{
+    EXPECT_THROW(onnx_import::import_onnx_model(file_util::path_join(
+                     SERIALIZED_ZOO, "onnx/reverse_sequence_time_and_batch_axis_equal.prototxt")),
+                 ngraph_error)
+        << "ReverseSequence 'time_axis' and 'batch_axis' can't be equal.";
 }

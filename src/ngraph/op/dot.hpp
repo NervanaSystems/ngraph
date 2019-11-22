@@ -30,8 +30,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"Dot", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a dot product operation.
             Dot() = default;
             /// \brief Constructs a dot product operation.
@@ -59,6 +59,8 @@ namespace ngraph
             Dot(const Output<Node>& arg0, const Output<Node>& arg1);
 
             void validate_and_infer_types() override;
+
+            virtual std::shared_ptr<Node> get_default_value() const override;
 
             size_t get_reduction_axes_count() const { return m_reduction_axes_count; }
             void set_reduction_axes_count(size_t reduction_axes_count)

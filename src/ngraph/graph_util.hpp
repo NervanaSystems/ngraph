@@ -71,12 +71,9 @@ namespace ngraph
                         bool include_control_deps,
                         const NodeVector& subgraph_params = {});
 
-    inline void traverse_functions(std::shared_ptr<Function> p,
-                                   std::function<void(std::shared_ptr<Function>)> f)
-        NGRAPH_DEPRECATED("Replace with f(p)")
-    {
-        f(p);
-    };
+    void traverse_functions(std::shared_ptr<Function> p,
+                            std::function<void(std::shared_ptr<Function>)> f)
+        NGRAPH_DEPRECATED("Replace with f(p)");
 
     /// \brief Replace the node `target` with the node `replacement`, i.e.,
     ///        redirect all users and control dependencies of `target` to
@@ -84,6 +81,7 @@ namespace ngraph
     ///
     /// \param target Node to be replaced.
     /// \param replacement Node to replace `target` with.
+    /// \param output_order Vector determines order of replacement node's outputs.
     ///
     /// This is primarily used in graph-rewriting passes. For example, we
     /// might "fuse" two Concat operations as follows:
@@ -212,6 +210,9 @@ namespace ngraph
     ///        auto new_N = N->copy_with_new_args(N->get_arguments());
     ///        shared_ptr<Node> M = make_shared<SomeUnaryOp>(new_N);
     ///        replace_node(N, M);
+    void replace_node(std::shared_ptr<Node> target,
+                      std::shared_ptr<Node> replacement,
+                      const std::vector<int64_t>& output_order);
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
     /// \brief Replace multiple nodes in a function.

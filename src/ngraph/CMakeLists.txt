@@ -16,6 +16,9 @@
 
 set (SRC
     assertion.hpp
+    attribute_adapter.cpp
+    attribute_adapter.hpp
+    attribute_visitor.hpp
     autodiff/adjoints.cpp
     autodiff/adjoints.hpp
     axis_set.cpp
@@ -54,6 +57,7 @@ set (SRC
     builder/tensor_mask.hpp
     check.hpp
     code_writer.hpp
+    component_manager.hpp
     coordinate.cpp
     coordinate.hpp
     coordinate_diff.cpp
@@ -76,12 +80,17 @@ set (SRC
     dimension.hpp
     distributed.cpp
     distributed.hpp
+    enum_names.hpp
     except.hpp
+    factory.cpp
+    factory.hpp
     file_util.cpp
     file_util.hpp
     function.cpp
     function.hpp
     graph_util.cpp
+    lambda.cpp
+    lambda.hpp
     log.cpp
     log.hpp
     ngraph.cpp
@@ -111,10 +120,14 @@ set (SRC
     op/asin.hpp
     op/atan.cpp
     op/atan.hpp
+    op/atan2.cpp
+    op/atan2.hpp
     op/avg_pool.cpp
     op/avg_pool.hpp
     op/batch_norm.cpp
     op/batch_norm.hpp
+    op/binary_convolution.cpp
+    op/binary_convolution.hpp
     op/broadcast.cpp
     op/broadcast_distributed.cpp
     op/ceiling.cpp
@@ -195,8 +208,13 @@ set (SRC
     op/experimental/layers/reorg_yolo.cpp
     op/experimental/layers/roi_pooling.hpp
     op/experimental/layers/roi_pooling.cpp
+    op/experimental/random_uniform.hpp
+    op/experimental/random_uniform.cpp
+    op/strided_slice.hpp
     op/floor.cpp
     op/floor.hpp
+    op/floor_mod.cpp
+    op/floor_mod.hpp
     op/gather.cpp
     op/gather.hpp
     op/gather_nd.cpp
@@ -249,6 +267,12 @@ set (SRC
     op/power.hpp
     op/product.cpp
     op/product.hpp
+    op/reduce_prod.cpp
+    op/reduce_prod.hpp
+    op/reduce_mean.cpp
+    op/reduce_mean.hpp
+    op/reduce_sum.cpp
+    op/reduce_sum.hpp
     op/quantize.cpp
     op/quantize.hpp
     op/quantized_convolution.cpp
@@ -289,6 +313,8 @@ set (SRC
     op/slice.hpp
     op/softmax.cpp
     op/softmax.hpp
+    op/strided_slice.cpp
+    op/strided_slice.hpp
     op/sqrt.cpp
     op/sqrt.hpp
     op/stop_gradient.cpp
@@ -297,18 +323,26 @@ set (SRC
     op/subtract.hpp
     op/sum.cpp
     op/sum.hpp
+    op/variadic_split.cpp
+    op/variadic_split.hpp
     op/tan.cpp
     op/tan.hpp
     op/tanh.cpp
     op/tanh.hpp
+    op/tensor_iterator.cpp
+    op/tensor_iterator.hpp
     op/topk.cpp
     op/topk.hpp
     op/xor.cpp
     op/xor.hpp
+    op/fused/batch_mat_mul_transpose.cpp
+    op/fused/batch_mat_mul_transpose.hpp
     op/fused/clamp.cpp
     op/fused/clamp.hpp
     op/fused/conv_fused.cpp
     op/fused/conv_fused.hpp
+    op/fused/crossentropy.cpp
+    op/fused/crossentropy.hpp
     op/fused/hard_sigmoid.cpp
     op/fused/hard_sigmoid.hpp
     op/fused/depth_to_space.cpp
@@ -329,22 +363,36 @@ set (SRC
     op/fused/group_conv_transpose.cpp
     op/fused/gru_cell.cpp
     op/fused/gru_cell.hpp
+    op/fused/layer_norm.cpp
+    op/fused/layer_norm.hpp
+    op/fused/log_softmax.cpp
+    op/fused/log_softmax.hpp
     op/fused/lstm_cell.cpp
     op/fused/lstm_cell.hpp
+    op/fused/lstm_sequence.cpp
+    op/fused/lstm_sequence.hpp
     op/fused/matmul.cpp
     op/fused/matmul.hpp
     op/fused/mvn.cpp
     op/fused/mvn.hpp
     op/fused/normalize_l2.cpp
     op/fused/normalize_l2.hpp
+    op/fused/partial_slice.cpp
+    op/fused/partial_slice.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
+    op/fused/reciprocal.cpp
+    op/fused/reciprocal.hpp
     op/fused/rnn_cell.cpp
     op/fused/rnn_cell.hpp
     op/fused/scale_shift.cpp
     op/fused/scale_shift.hpp
+    op/fused/selu.cpp
+    op/fused/selu.hpp
     op/fused/shuffle_channels.cpp
     op/fused/shuffle_channels.hpp
+    op/fused/softmax_crossentropy.cpp
+    op/fused/softmax_crossentropy.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
     op/fused/split.cpp
@@ -355,10 +403,14 @@ set (SRC
     op/fused/squeeze.hpp
     op/fused/unsqueeze.cpp
     op/fused/unsqueeze.hpp
+    op/util/attr_types.cpp
+    op/util/attr_types.hpp
     op/util/activation_functions.cpp
     op/util/activation_functions.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
+    op/util/arithmetic_reductions_keep_dims.hpp
+    op/util/arithmetic_reductions_keep_dims.cpp
     op/util/binary_elementwise_arithmetic.cpp
     op/util/binary_elementwise_arithmetic.hpp
     op/util/binary_elementwise_comparison.cpp
@@ -405,6 +457,8 @@ set (SRC
     pass/constant_folding_reshape.cpp
     pass/constant_folding_reverse.cpp
     pass/constant_folding_select.cpp
+    pass/constant_folding_squeeze.cpp
+    pass/constant_folding_unsqueeze.cpp
     pass/constant_folding_shape_of.cpp
     pass/constant_folding_slice.cpp
     pass/constant_folding_transpose.cpp
@@ -441,6 +495,8 @@ set (SRC
     pass/nop_elimination.hpp
     pass/pass.cpp
     pass/pass.hpp
+    pass/opset0_downgrade.cpp
+    pass/opset0_downgrade.hpp
     pass/opset1_upgrade.cpp
     pass/opset1_upgrade.hpp
     pass/pass_config.cpp
@@ -506,7 +562,10 @@ set (SRC
     slice_plan.hpp
     specialize_function.cpp
     specialize_function.hpp
-    state/rng_state.cpp
+    state/bernoulli_rng_state.cpp
+    state/bernoulli_rng_state.hpp
+    state/uniform_rng_state.cpp
+    state/uniform_rng_state.hpp
     strides.cpp
     strides.hpp
     type/bfloat16.cpp
@@ -514,10 +573,13 @@ set (SRC
     type/float16.cpp
     type/float16.hpp
     type/element_type.cpp
+    type.hpp
     util.cpp
     util.hpp
     validation_util.cpp
     validation_util.hpp
+    variant.cpp
+    variant.hpp
     )
 
 set(SRC ${SRC}
@@ -616,9 +678,14 @@ elseif(APPLE)
 endif()
 
 # Defines macro in C++ to load backend plugin
-target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
+target_include_directories(ngraph PUBLIC $<BUILD_INTERFACE:${NGRAPH_INCLUDE_PATH}> $<INSTALL_INTERFACE:include>)
+
+#Add an alias so that library can be used inside the build tree, e.g. when testing
+add_library(ngraph::ngraph ALIAS ngraph)
+
 if (NOT WIN32)
-    target_link_libraries(ngraph PUBLIC dl pthread)
+    find_package(Threads REQUIRED)
+    target_link_libraries(ngraph PUBLIC dl Threads::Threads)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
@@ -640,8 +707,7 @@ endif()
 #-----------------------------------------------------------------------------------------------
 
 # nGraph
-install(FILES ${CMAKE_BINARY_DIR}/VERSION DESTINATION ${CMAKE_INSTALL_PREFIX})
-install(TARGETS ngraph DESTINATION ${NGRAPH_INSTALL_LIB})  # libngraph.so
+install(TARGETS ngraph DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT ngraphTargets)  # libngraph.so
 install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/
     DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph"
@@ -649,7 +715,7 @@ install(DIRECTORY
         PATTERN "*.hpp"
         PATTERN "*.h"
 )
-install(FILES ${CMAKE_BINARY_DIR}/src/ngraph/version.hpp
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/version.hpp
     DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph")
 
 set(CPACK_GENERATOR "DEB")

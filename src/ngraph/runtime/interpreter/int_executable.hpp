@@ -32,6 +32,7 @@
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/binary_convolution.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/op/concat.hpp"
@@ -46,6 +47,7 @@
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_pad.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
+#include "ngraph/op/experimental/random_uniform.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -101,6 +103,7 @@
 #include "ngraph/runtime/reference/argmin.hpp"
 #include "ngraph/runtime/reference/asin.hpp"
 #include "ngraph/runtime/reference/atan.hpp"
+#include "ngraph/runtime/reference/atan2.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
 #include "ngraph/runtime/reference/batch_mat_mul.hpp"
 #include "ngraph/runtime/reference/batch_norm.hpp"
@@ -146,6 +149,7 @@
 #include "ngraph/runtime/reference/power.hpp"
 #include "ngraph/runtime/reference/product.hpp"
 #include "ngraph/runtime/reference/quantize.hpp"
+#include "ngraph/runtime/reference/random_uniform.hpp"
 #include "ngraph/runtime/reference/recv.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
 #include "ngraph/runtime/reference/replace_slice.hpp"
@@ -172,7 +176,8 @@
 #include "ngraph/runtime/reference/topk.hpp"
 #include "ngraph/runtime/reference/xor.hpp"
 #include "ngraph/runtime/tensor.hpp"
-#include "ngraph/state/rng_state.hpp"
+#include "ngraph/state/bernoulli_rng_state.hpp"
+#include "ngraph/state/uniform_rng_state.hpp"
 
 namespace ngraph
 {
@@ -195,7 +200,7 @@ public:
                   bool enable_performance_collection = false);
 
     bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,
-              const std::vector<std::shared_ptr<Tensor>>& intputs) override;
+              const std::vector<std::shared_ptr<Tensor>>& inputs) override;
 
     virtual void save(std::ostream& output_stream) override;
 
@@ -225,7 +230,7 @@ private:
     std::shared_ptr<Function> m_function;
     std::unordered_map<std::shared_ptr<const Node>, stopwatch> m_timer_map;
     std::vector<NodeWrapper> m_wrapped_nodes;
-    std::unordered_map<const Node*, std::shared_ptr<RNGState>> m_states;
+    std::unordered_map<const Node*, std::shared_ptr<State>> m_states;
     std::set<std::string> m_unsupported_op_name_list;
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
@@ -397,6 +402,15 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
+        case OP_TYPEID::Atan2:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::atan2<T>(args[0]->get_data_ptr<const T>(),
+                                args[1]->get_data_ptr<const T>(),
+                                out[0]->get_data_ptr<T>(),
+                                element_count);
+            break;
+        }
         case OP_TYPEID::AvgPool:
         {
             const op::AvgPool* avg_pool = static_cast<const op::AvgPool*>(&node);
@@ -412,6 +426,11 @@ private:
                                    avg_pool->get_include_padding_in_avg_computation());
             break;
         }
+        case OP_TYPEID::BinaryConvolution:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            break;
+        }
         case OP_TYPEID::GenerateMask:
         {
             bool use_seed = static_cast<bool>(args[2]->get_data_ptr<const int32_t>()[0]);
@@ -419,12 +438,12 @@ private:
             {
                 const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
                 auto seed = use_seed ? gm->get_seed() : 0;
-                m_states[&node] = std::unique_ptr<ngraph::RNGState>(
-                    ngraph::RNGState::create_rng_state(seed, gm->get_probability()));
+                m_states[&node] =
+                    std::unique_ptr<State>(new BernoulliRNGState(seed, gm->get_probability()));
             }
 
             bool training = static_cast<bool>(args[0]->get_data_ptr<const T>()[0]);
-            auto state = m_states.at(&node).get();
+            auto state = static_cast<BernoulliRNGState*>(m_states.at(&node).get());
             size_t element_count = shape_size(node.get_output_shape(0));
             if (!use_seed)
             {
@@ -653,6 +672,7 @@ private:
                 break;
             case element::Type_t::undefined:
             case element::Type_t::dynamic:
+            case element::Type_t::u1:
             case element::Type_t::bf16:
             case element::Type_t::f16:
                 ss << "unsupported element type " << type << " op Convert";
@@ -997,11 +1017,55 @@ private:
                                   less_eq->get_autob());
             break;
         }
+        case OP_TYPEID::LessEqual:
+        {
+            auto less_eq = static_cast<const op::v1::LessEqual*>(&node);
+            reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
+                                  args[1]->get_data_ptr<const T>(),
+                                  out[0]->get_data_ptr<char>(),
+                                  node.get_input_shape(0),
+                                  node.get_input_shape(1),
+                                  less_eq->get_autob());
+            break;
+        }
         case OP_TYPEID::Log:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::log<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
+        }
+        case OP_TYPEID::LogicalAnd:
+        {
+            auto logical_and = static_cast<const op::v1::LogicalAnd*>(&node);
+            reference::logical_and(args[0]->get_data_ptr<const T>(),
+                                   args[1]->get_data_ptr<const T>(),
+                                   out[0]->get_data_ptr<T>(),
+                                   node.get_input_shape(0),
+                                   node.get_input_shape(1),
+                                   logical_and->get_autob());
+            break;
+        }
+        case OP_TYPEID::LogicalOr:
+        {
+            auto logical_or = static_cast<const op::v1::LogicalOr*>(&node);
+            reference::logical_or(args[0]->get_data_ptr<const T>(),
+                                  args[1]->get_data_ptr<const T>(),
+                                  out[0]->get_data_ptr<T>(),
+                                  node.get_input_shape(0),
+                                  node.get_input_shape(1),
+                                  logical_or->get_autob());
+            break;
+        }
+        case OP_TYPEID::LogicalXor:
+        {
+            auto logical_xor = static_cast<const op::v1::LogicalXor*>(&node);
+            reference::logical_xor(args[0]->get_data_ptr<const T>(),
+                                   args[1]->get_data_ptr<const T>(),
+                                   out[0]->get_data_ptr<T>(),
+                                   node.get_input_shape(0),
+                                   node.get_input_shape(1),
+                                   logical_xor->get_autob());
             break;
         }
         case OP_TYPEID::LRN:
@@ -1107,6 +1171,7 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
+        case OP_TYPEID::LogicalNot:
         case OP_TYPEID::Not:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1449,6 +1514,38 @@ private:
             memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
             break;
         }
+        case OP_TYPEID::RandomUniform:
+        {
+            const op::RandomUniform* ru = static_cast<const op::RandomUniform*>(&node);
+
+            T min_val = args[0]->get_data_ptr<const T>()[0];
+            T max_val = args[1]->get_data_ptr<const T>()[0];
+            // In INTERPRETER we can ignore arg 2 (output_shape) for now because we only work on
+            // static output shapes anyway.
+            bool use_fixed_seed = static_cast<bool>(args[3]->get_data_ptr<const char>()[0]);
+
+            if (m_states.count(&node) == 0)
+            {
+                m_states[&node] = std::unique_ptr<UniformRNGState>(new UniformRNGState());
+            }
+
+            auto state = static_cast<UniformRNGState*>(m_states.at(&node).get());
+            size_t element_count = shape_size(node.get_output_shape(0));
+            if (!use_fixed_seed)
+            {
+                reference::random_uniform<T>(
+                    out[0]->get_data_ptr<T>(), min_val, max_val, element_count, state);
+            }
+            else
+            {
+                reference::random_uniform_with_fixed_seed<T>(out[0]->get_data_ptr<T>(),
+                                                             min_val,
+                                                             max_val,
+                                                             element_count,
+                                                             ru->get_fixed_seed());
+            }
+            break;
+        }
         case OP_TYPEID::Range:
         {
             throw unsupported_op("Unsupported op '" + node.description() + "'");
@@ -1771,6 +1868,8 @@ private:
         case OP_TYPEID::DynPad:
         case OP_TYPEID::Tile:
         case OP_TYPEID::DynReplaceSlice:
+        case OP_TYPEID::FloorMod:
+        case OP_TYPEID::VariadicSplit:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop

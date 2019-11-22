@@ -74,11 +74,16 @@ R"(
 
 struct CPURuntimeContextCG
 {
+#if defined(NGRAPH_TBB_ENABLE)
     std::unique_ptr<tbb::flow::graph> tbb_graph;
     std::unique_ptr<tbb::global_control> tbb_gcontrol;
 
     CPURuntimeContextCG() { init_tbb(); init_mkldnn_primitives();}
     ~CPURuntimeContextCG() { cleanup_tbb(); cleanup_mkldnn_primitives();}
+#else
+    CPURuntimeContextCG() { init_mkldnn_primitives();}
+    ~CPURuntimeContextCG() { cleanup_mkldnn_primitives();}
+#endif
 
     std::vector<mkldnn::memory*> mkldnn_memories;
     std::vector<mkldnn::primitive*> mkldnn_primitives;
@@ -97,7 +102,7 @@ struct CPURuntimeContextCG
 	}
 
     void mkldnn_invoke_primitive(size_t primitive_index, std::vector<size_t>& deps,
-                                        OpType type)
+                                        OpType type, size_t scratchpad_size)
 	{
         std::unordered_map<int, mkldnn::memory> exec_args;
         size_t nargs;
@@ -252,10 +257,13 @@ struct CPURuntimeContextCG
             break;
         }
 
-        mkldnn::memory scratchpad(*mkldnn_scratchpad_mds[primitive_index],
-                                  global_cpu_engine,
-                                  scratchpad_buffer->get_ptr());
-        exec_args.insert({MKLDNN_ARG_SCRATCHPAD, scratchpad});
+        if (scratchpad_size)
+        {
+            mkldnn::memory scratchpad(*mkldnn_scratchpad_mds[primitive_index],
+                                      global_cpu_engine,
+                                      scratchpad_buffer->get_ptr());
+            exec_args.insert({MKLDNN_ARG_SCRATCHPAD, scratchpad});
+        }
 
         mkldnn::stream s(global_cpu_engine);
         try
@@ -265,11 +273,12 @@ struct CPURuntimeContextCG
         }
         catch (const mkldnn::error& e)
         {
-            throw std::runtime_error("Could not run mkdnn primitive " + *e.message);
+            throw std::runtime_error("Could not run mkdnn primitive " + std::string(e.message));
         }
     }
 
 private:
+#if defined(NGRAPH_TBB_ENABLE)
     inline void init_tbb()
     {
         if (std::getenv("NGRAPH_CPU_USE_TBB"))
@@ -299,6 +308,7 @@ private:
             }
         }
     }
+#endif
 
     void init_mkldnn_primitives();
 

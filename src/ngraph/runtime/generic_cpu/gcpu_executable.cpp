@@ -29,6 +29,7 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -47,6 +48,7 @@ runtime::gcpu::GCPUExecutable::GCPUExecutable(const shared_ptr<Function>& functi
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
     pass_manager.register_pass<pass::FusedOpDecomposition>();
+    pass_manager.register_pass<pass::Opset0Downgrade>();
     pass_manager.register_pass<pass::ImplicitBroadcastElimination>();
     pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
     pass_manager.register_pass<pass::Liveness>();
@@ -110,7 +112,7 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
     for (size_t output_count = 0; output_count < get_results().size(); ++output_count)
     {
         auto output = get_results()[output_count];
-        if (!dynamic_pointer_cast<op::Result>(output))
+        if (!is_type<op::Result>(output))
         {
             throw ngraph_error("One of function's outputs isn't op::Result");
         }
@@ -228,6 +230,7 @@ void runtime::gcpu::GCPUExecutable::generate_calls(const element::Type& type,
     case element::Type_t::u64: op_engine<uint64_t>(op, out, in); break;
     case element::Type_t::undefined:
     case element::Type_t::dynamic:
+    case element::Type_t::u1:
     case element::Type_t::bf16:
     case element::Type_t::f16:
         ss << "unsupported element type " << type << " op " << op.get_node()->get_name();

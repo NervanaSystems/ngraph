@@ -21,7 +21,6 @@
 #include "ngraph/deprecated.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -32,8 +31,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"BatchNormTraining", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             BatchNormTraining() = default;
             /// \param input Must have rank >= 2, [., C, ...]
             /// \param gamma gamma scaling for normalized value. [C]
@@ -43,6 +42,8 @@ namespace ngraph
                               const Output<Node>& gamma,
                               const Output<Node>& beta,
                               double epsilon);
+
+            bool visit_attributes(AttributeVisitor& visitor) override;
 
             NGRAPH_DEPRECATED_DOC
             /// In this version of BatchNorm:
@@ -93,8 +94,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"BatchNormInference", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             BatchNormInference() = default;
             /// \param input [., C, ...]
             /// \param gamma gamma scaling for normalized value. [C]
@@ -108,6 +109,8 @@ namespace ngraph
                                const Output<Node>& mean,
                                const Output<Node>& variance,
                                double epsilon);
+
+            bool visit_attributes(AttributeVisitor& visitor) override;
 
             NGRAPH_DEPRECATED_DOC
             /// In this version of BatchNorm:
@@ -143,8 +146,8 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override
+            virtual void generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                           const NodeVector& /* deltas */) override
             {
                 throw ngraph_error("Invalid operation");
             }
@@ -163,8 +166,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"BatchNormTrainingBackprop", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             BatchNormTrainingBackprop() = default;
             BatchNormTrainingBackprop(const Output<Node>& input,
                                       const Output<Node>& gamma,
@@ -185,6 +188,7 @@ namespace ngraph
                                       const Output<Node>& delta);
 
             void validate_and_infer_types() override;
+            bool visit_attributes(AttributeVisitor& visitor) override;
 
             double get_eps_value() const { return m_epsilon; }
             void set_eps_value(double epsilon) { m_epsilon = epsilon; }

@@ -28,14 +28,14 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"Tile", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             Tile() = default;
             /// \brief Perform dynamic padding of a tensor
             ///
-            /// \param arg The node producing input tensor to be padded.
+            /// \param data The node producing input tensor to be padded.
             /// \param repeats The node producing the per-dimension replication factor
-            Tile(const Output<Node>& arg, const Output<Node>& repeats);
+            Tile(const Output<Node>& data, const Output<Node>& repeats);
 
             void validate_and_infer_types() override;
 

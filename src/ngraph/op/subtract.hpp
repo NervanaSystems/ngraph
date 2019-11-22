@@ -27,10 +27,14 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
-            Subtract() = default;
-            /// \brief Constructs an subtraction operation.
+            static constexpr NodeTypeInfo type_info{"Subtract", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            Subtract()
+                : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NONE)
+            {
+            }
+
+            /// \brief Constructs a subtraction operation.
             ///
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.

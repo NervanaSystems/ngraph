@@ -68,7 +68,7 @@ namespace ngraph
                                 filters->get_shape().size());
                             std::vector<std::size_t> filters_upper_bounds{filters->get_shape()};
 
-                            for (std::size_t group{0}; group < groups; ++group)
+                            for (int64_t group{0}; group < groups; ++group)
                             {
                                 // slice data
                                 data_lower_bounds[1] = group * data_group_size;
@@ -82,14 +82,13 @@ namespace ngraph
                                     filters, filters_lower_bounds, filters_upper_bounds);
 
                                 convolution_nodes.push_back(
-                                    std::make_shared<ngraph::op::Convolution>(sliced_data,
-                                                                              sliced_filters,
-                                                                              strides,
-                                                                              dilations,
-                                                                              padding_below,
-                                                                              padding_above,
-                                                                              Strides{},
-                                                                              auto_pad));
+                                    std::make_shared<ngraph::op::v1::Convolution>(sliced_data,
+                                                                                  sliced_filters,
+                                                                                  strides,
+                                                                                  padding_below,
+                                                                                  padding_above,
+                                                                                  dilations,
+                                                                                  auto_pad));
                             }
                             std::size_t concatenation_axis = 1;
                             return std::make_shared<ngraph::op::Concat>(convolution_nodes,
@@ -97,14 +96,13 @@ namespace ngraph
                         }
                         else
                         {
-                            return std::make_shared<ngraph::op::Convolution>(data,
-                                                                             filters,
-                                                                             strides,
-                                                                             dilations,
-                                                                             padding_below,
-                                                                             padding_above,
-                                                                             Strides{},
-                                                                             auto_pad);
+                            return std::make_shared<ngraph::op::v1::Convolution>(data,
+                                                                                 filters,
+                                                                                 strides,
+                                                                                 padding_below,
+                                                                                 padding_above,
+                                                                                 dilations,
+                                                                                 auto_pad);
                         }
                     }
 
@@ -118,9 +116,11 @@ namespace ngraph
 
                     int64_t groups{node.get_attribute_value<int64_t>("group", 1)};
 
-                    ASSERT_VALID_ARGUMENT(node,
-                                          ((groups >= 0) && (groups <= data->get_shape().at(1)) &&
-                                           (groups <= filters->get_shape().at(0))))
+                    ASSERT_VALID_ARGUMENT(
+                        node,
+                        ((groups >= 0) &&
+                         (groups <= static_cast<int64_t>(data->get_shape().at(1))) &&
+                         (groups <= static_cast<int64_t>(filters->get_shape().at(0)))))
                         << "incorrect value of 'group' attribute: " << groups;
 
                     std::size_t n_data_channels{data->get_shape().at(1)};

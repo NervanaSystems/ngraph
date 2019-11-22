@@ -42,6 +42,7 @@ namespace ngraph
                 register_builders_erf_cpp();
                 register_builders_gather_cpp();
                 register_builders_gather_nd_cpp();
+                register_builders_gelu_cpp();
                 register_builders_get_output_element_cpp();
                 register_builders_leaky_relu_cpp();
                 register_builders_lrn_cpp();
@@ -57,6 +58,7 @@ namespace ngraph
                 register_builders_quantized_conv_cpp();
                 register_builders_quantized_dot_cpp();
                 register_builders_quantized_matmul_cpp();
+                register_builders_random_uniform_cpp();
                 register_builders_reduce_function_cpp();
                 register_builders_relu_cpp();
                 register_builders_replace_slice_cpp();

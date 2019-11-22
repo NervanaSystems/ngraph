@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::DynPad::type_name{"DynPad"};
+constexpr NodeTypeInfo op::DynPad::type_info;
 
 op::DynPad::DynPad(const Output<Node>& arg,
                    const Output<Node>& padding_below,
@@ -111,7 +111,8 @@ shared_ptr<Node> op::DynPad::copy_with_new_args(const NodeVector& new_args) cons
 }
 
 // TODO: This function is not implemented!
-void op::DynPad::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::DynPad::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                   const NodeVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for DynPad");
 }

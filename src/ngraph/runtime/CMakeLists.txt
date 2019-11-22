@@ -23,10 +23,6 @@ if (NGRAPH_CPU_ENABLE)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 endif()
 
-if (NGRAPH_INTELGPU_ENABLE)
-    add_subdirectory(intelgpu)
-endif()
-
 if (NGRAPH_NOP_ENABLE)
     add_subdirectory(nop)
 endif()

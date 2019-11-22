@@ -22,7 +22,6 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
-#include "ngraph/type/bfloat16.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -31,12 +30,12 @@ namespace ngraph
     namespace op
     {
         /// \brief Class for constants.
-        class Constant : public Node
+        class Constant : public Op
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"Constant", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a tensor constant.
             ///
             /// \param type The element type of the tensor constant.
@@ -71,6 +70,7 @@ namespace ngraph
                     write_values(values);
                 }
                 constructor_validate_and_infer_types();
+                m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
             }
 
             /// \brief Constructs a tensor constant
@@ -129,6 +129,7 @@ namespace ngraph
                     }
                 }
                 constructor_validate_and_infer_types();
+                m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
             }
 
             /// \brief Constructs a tensor constant with the same initialization value copied across
@@ -147,6 +148,7 @@ namespace ngraph
                                                         host_alignment()));
                 std::memcpy(m_data->get_ptr(), data, size);
                 constructor_validate_and_infer_types();
+                m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
             }
 
             virtual ~Constant() override;
@@ -247,12 +249,16 @@ namespace ngraph
 
             bool is_constant() const override { return true; }
             bool are_all_data_elements_bitwise_identical() const;
+            bool get_all_data_elements_bitwise_identical() const
+            {
+                return m_all_elements_bitwise_identical;
+            }
             std::string convert_value_to_string(size_t index) const;
 
         protected:
             void* get_data_ptr_nc() { return (m_data ? m_data->get_ptr() : nullptr); }
             Constant(const OutputVector& args)
-                : Node(args)
+                : Op(args)
                 , m_shape({})
             {
             }
@@ -277,7 +283,7 @@ namespace ngraph
 
             template <typename T>
             void write_to_buffer(const element::Type& target_type,
-                                 const Shape& target_shape,
+                                 const Shape& /* target_shape */,
                                  const std::vector<T>& source,
                                  void* target,
                                  size_t target_element_count)
@@ -332,6 +338,7 @@ namespace ngraph
                 case element::Type_t::u64:
                     write_buffer<uint64_t, T>(target, source, target_element_count);
                     break;
+                case element::Type_t::u1: throw std::runtime_error("unsupported type");
                 case element::Type_t::undefined: throw std::runtime_error("unsupported type");
                 case element::Type_t::dynamic: throw std::runtime_error("unsupported type");
                 }
@@ -344,6 +351,7 @@ namespace ngraph
             element::Type m_element_type;
             Shape m_shape{};
             std::unique_ptr<runtime::AlignedBuffer> m_data;
+            bool m_all_elements_bitwise_identical;
             Constant(const Constant&) = delete;
             Constant operator=(const Constant&) = delete;
         };
@@ -352,8 +360,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"ScalarConstantLikeBase", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             std::shared_ptr<op::Constant> as_constant() const;
 
         protected:

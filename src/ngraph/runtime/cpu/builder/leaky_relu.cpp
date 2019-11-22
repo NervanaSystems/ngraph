@@ -44,7 +44,7 @@ namespace ngraph
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto leaky_relu_desc = mkldnn_emitter->get_leaky_relu_desc(node);
-                    QUERY_SCRATCHPAD(eltwise_forward, leaky_relu_desc);
+                    size_t scratchpad_size = QUERY_SCRATCHPAD(eltwise_forward, leaky_relu_desc);
 
                     // CPULeakyRelu needs 3 primitives: input, result, and eltwise_forward.
                     auto leaky_relu_index = mkldnn_emitter->reserve_primitive_space(3);
@@ -53,9 +53,10 @@ namespace ngraph
                     auto functor = [&,
                                     leaky_relu_desc,
                                     leaky_relu_index,
+                                    scratchpad_size,
                                     input_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_leaky_relu(ctx->mkldnn_memories,
@@ -71,7 +72,11 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, leaky_relu_index, deps, cpu::mkldnn_utils::OpType::LEAKYRELU);
+                            ctx,
+                            leaky_relu_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::LEAKYRELU,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -80,7 +85,7 @@ namespace ngraph
                     std::function<decltype(runtime::cpu::kernel::leaky_relu<float>)> kernel;
 
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::leaky_relu);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::leaky_relu)
 
                     auto functor = [&, kernel, alpha, count, input_buffer_index, out_buffer_index](
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) {

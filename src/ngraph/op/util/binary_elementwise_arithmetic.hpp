@@ -54,12 +54,12 @@ namespace ngraph
             class BinaryElementwiseArithmetic : public Op
             {
             protected:
-                /// \brief Constructs a binary elementwise arithmetic operation.
-                BinaryElementwiseArithmetic();
+                BinaryElementwiseArithmetic(const AutoBroadcastSpec& autob);
 
+                /// \brief Constructs a binary elementwise arithmetic operation.
                 BinaryElementwiseArithmetic(const std::shared_ptr<Node>& arg0,
                                             const std::shared_ptr<Node>& arg1,
-                                            const AutoBroadcastSpec& autob = AutoBroadcastSpec());
+                                            const AutoBroadcastSpec& autob);
 
                 /// \brief Constructs a binary elementwise arithmetic operation.
                 ///
@@ -67,7 +67,7 @@ namespace ngraph
                 /// \param arg1 Output that produces the second input tensor.
                 BinaryElementwiseArithmetic(const Output<Node>& arg0,
                                             const Output<Node>& arg1,
-                                            const AutoBroadcastSpec& autob = AutoBroadcastSpec());
+                                            const AutoBroadcastSpec& autob);
 
                 /// \brief Constructs a binary elementwise arithmetic operation.
                 ///
@@ -77,13 +77,17 @@ namespace ngraph
                 BinaryElementwiseArithmetic(const std::string& node_type,
                                             const std::shared_ptr<Node>& arg0,
                                             const std::shared_ptr<Node>& arg1,
-                                            const AutoBroadcastSpec& autob = AutoBroadcastSpec());
+                                            const AutoBroadcastSpec& autob);
 
             public:
                 void validate_and_infer_types() override;
 
-                const AutoBroadcastSpec& get_autob() const { return m_autob; }
+                const AutoBroadcastSpec& get_autob() const override { return m_autob; }
                 void set_autob(const AutoBroadcastSpec& autob) { m_autob = autob; }
+                bool is_binary_elementwise_arithmetic() const override { return true; }
+                bool supports_auto_broadcast() const override { return true; }
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
             private:
                 AutoBroadcastSpec m_autob;
             };

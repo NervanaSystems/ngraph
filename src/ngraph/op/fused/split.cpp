@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Split::type_name{"Split"};
+constexpr NodeTypeInfo op::Split::type_info;
 
 op::Split::Split(const Output<Node>& data, const int axis, const size_t num_split)
     : FusedOp({data})
@@ -36,6 +36,7 @@ op::Split::Split(const Output<Node>& data, const int axis, const std::vector<siz
     : FusedOp({data})
     , m_split_evenly{false}
     , m_axis{axis}
+    , m_num_split{0}
     , m_splits{splits}
 {
     constructor_validate_and_infer_types();
@@ -43,11 +44,22 @@ op::Split::Split(const Output<Node>& data, const int axis, const std::vector<siz
 
 void op::Split::pre_validate_and_infer_types()
 {
+    // Create dynamic-typed outputs. Actual shape/type will be computed during shape inference
+    for (size_t i = 0; i < std::max(m_splits.size(), m_num_split); i++)
+    {
+        set_output_type(i, input(0).get_element_type(), PartialShape::dynamic());
+    }
+
+    if (is_dynamic())
+    {
+        return;
+    }
+
     const auto shape = input(0).get_shape();
 
     m_axis = adjust_axis_value(m_axis, shape.size());
     NODE_VALIDATION_CHECK(this,
-                          m_axis >= 0 && m_axis < shape.size(),
+                          m_axis >= 0 && m_axis < static_cast<int64_t>(shape.size()),
                           "The 'axis' parameter for Split has to point to one of the "
                           "input tensor's shape dimensions.");
 

@@ -15,20 +15,21 @@
 //*****************************************************************************
 
 #include "ngraph/op/sum.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/op/broadcast.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-const string op::Sum::type_name{"Sum"};
+constexpr NodeTypeInfo op::v0::Sum::type_info;
 
-op::Sum::Sum(const Output<Node>& arg, const AxisSet& reduction_axes)
+op::v0::Sum::Sum(const Output<Node>& arg, const AxisSet& reduction_axes)
     : ArithmeticReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
 }
 
-op::Sum::Sum(const Output<Node>& arg, const Output<Node>& reduction_axes)
+op::v0::Sum::Sum(const Output<Node>& arg, const Output<Node>& reduction_axes)
     : ArithmeticReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
@@ -37,10 +38,10 @@ op::Sum::Sum(const Output<Node>& arg, const Output<Node>& reduction_axes)
 shared_ptr<Node> op::Sum::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Sum>(new_args.at(0), new_args.at(1));
+    return make_shared<op::v0::Sum>(new_args.at(0), new_args.at(1));
 }
 
-void op::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -48,4 +49,9 @@ void op::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
     auto& x_shape = x.get_shape();
 
     adjoints.add_delta(x, make_shared<op::Broadcast>(delta, x_shape, get_reduction_axes()));
+}
+
+shared_ptr<Node> op::v0::Sum::get_default_value() const
+{
+    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
 }

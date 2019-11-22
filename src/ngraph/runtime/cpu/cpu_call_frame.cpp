@@ -119,7 +119,7 @@ void runtime::cpu::CPU_CallFrame::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
 {
-    auto id = 0;
+    size_t id = 0;
     auto disable_caching = false;
     {
         std::unique_lock<std::mutex> lck(m_mutex);
@@ -128,7 +128,7 @@ void runtime::cpu::CPU_CallFrame::call(
             m_cv.wait(lck);
         }
 
-        for (auto i = 0; i < m_num_ctx; i++)
+        for (size_t i = 0; i < m_num_ctx; i++)
         {
             if (m_id_pool[i])
             {
@@ -181,7 +181,7 @@ void runtime::cpu::CPU_CallFrame::propagate_layouts(
 
 void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
 {
-    for (auto i = 0; i < m_num_ctx; i++)
+    for (size_t i = 0; i < m_num_ctx; i++)
     {
         m_id_pool[i] = true;
         auto ctx = new CPURuntimeContext;
@@ -217,7 +217,14 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
                 std::vector<mkldnn::memory*>(mkldnn_emitter->get_mkldnn_memories().size());
             ctx->mkldnn_scratchpad_mds = std::vector<mkldnn::memory::desc*>(
                 mkldnn_emitter->get_mkldnn_scratchpad_mds().size());
-            ctx->scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment);
+            if (scratchpad_size > 0)
+            {
+                ctx->scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment, allocator);
+            }
+            else
+            {
+                ctx->scratchpad_buffer = nullptr;
+            }
         }
         else
         {
@@ -226,7 +233,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
         }
 
         ctx->states = m_external_function->m_states.data();
-
+#if defined(NGRAPH_TBB_ENABLE)
         if (m_external_function->is_direct_execution() &&
             std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
         {
@@ -238,13 +245,14 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
             ctx->c =
                 new tbb::global_control(tbb::global_control::max_allowed_parallelism, parallelism);
         }
+#endif
     }
     m_num_ctx_available = m_num_ctx;
 }
 
 void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
 {
-    for (auto i = 0; i < m_num_ctx; i++)
+    for (size_t i = 0; i < m_num_ctx; i++)
     {
         auto ctx = m_ctx_vec.back();
         m_ctx_vec.pop_back();
@@ -272,6 +280,7 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
             delete ctx->scratchpad_buffer;
         }
 
+#if defined(NGRAPH_TBB_ENABLE)
         if (m_external_function->is_direct_execution() &&
             std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
         {
@@ -292,6 +301,7 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
             }
             delete ctx->c;
         }
+#endif
         delete ctx;
     }
     m_num_ctx_available = 0;

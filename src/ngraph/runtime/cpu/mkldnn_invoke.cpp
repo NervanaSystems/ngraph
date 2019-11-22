@@ -33,9 +33,14 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::set_memory_ptr(CPURuntimeCon
     primitive->set_data_handle(ptr);
 }
 
-extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
-    CPURuntimeContext* ctx, size_t primitive_index, std::vector<size_t>& deps, OpType type)
+extern "C" void
+    ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(CPURuntimeContext* ctx,
+                                                                size_t primitive_index,
+                                                                std::vector<size_t>& /* deps */,
+                                                                OpType /* type */,
+                                                                size_t scratchpad_size)
 {
+    (void)scratchpad_size;
     mkldnn::stream s(mkldnn::stream::kind::eager);
     try
     {
@@ -55,8 +60,12 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::set_memory_ptr(CPURuntimeCon
     memory->set_data_handle(ptr);
 }
 
-extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
-    CPURuntimeContext* ctx, size_t primitive_index, std::vector<size_t>& deps, OpType type)
+extern "C" void
+    ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(CPURuntimeContext* ctx,
+                                                                size_t primitive_index,
+                                                                std::vector<size_t>& deps,
+                                                                OpType type,
+                                                                size_t scratchpad_size)
 {
     std::unordered_map<int, mkldnn::memory> exec_args;
     size_t nargs;
@@ -70,6 +79,7 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
     case OpType::AVGPOOL:
     case OpType::BOUNDEDRELU:
     case OpType::CONVERTLAYOUT:
+    case OpType::GELU:
     case OpType::LEAKYRELU:
     case OpType::LRN:
     case OpType::MAXPOOL:
@@ -191,6 +201,7 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
                      {MKLDNN_ARG_DIFF_SRC, *ctx->mkldnn_memories[deps[2]]}};
         break;
     case OpType::RELUBACKPROP:
+    case OpType::GELUBACKPROP:
     case OpType::SIGMOIDBACKPROP:
         exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
                      {MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[1]]},
@@ -198,10 +209,13 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
         break;
     }
 
-    mkldnn::memory scratchpad(*ctx->mkldnn_scratchpad_mds[primitive_index],
-                              executor::global_cpu_engine,
-                              ctx->scratchpad_buffer->get_ptr());
-    exec_args.insert({MKLDNN_ARG_SCRATCHPAD, scratchpad});
+    if (scratchpad_size)
+    {
+        mkldnn::memory scratchpad(*ctx->mkldnn_scratchpad_mds[primitive_index],
+                                  executor::global_cpu_engine,
+                                  ctx->scratchpad_buffer->get_ptr());
+        exec_args.insert({MKLDNN_ARG_SCRATCHPAD, scratchpad});
+    }
 
     mkldnn::stream s(executor::global_cpu_engine);
     try

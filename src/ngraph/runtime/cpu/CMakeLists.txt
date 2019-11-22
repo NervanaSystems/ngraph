@@ -58,6 +58,7 @@ set(SRC
     builder/erf.cpp
     builder/gather.cpp
     builder/gather_nd.cpp
+    builder/gelu.cpp
     builder/leaky_relu.cpp
     builder/lstm.cpp
     builder/lrn.cpp
@@ -66,6 +67,7 @@ set(SRC
     builder/max_pool.cpp
     builder/min.cpp
     builder/one_hot.cpp
+    builder/random_uniform.cpp
     builder/relu.cpp
     builder/pad.cpp
     builder/product.cpp
@@ -98,7 +100,6 @@ set(SRC
     mkldnn_emitter.cpp
     mkldnn_invoke.cpp
     mkldnn_utils.cpp
-    op/batch_mat_mul_transpose.cpp
     op/batch_norm_relu.cpp
     op/bounded_relu.cpp
     op/conv_add.cpp
@@ -106,6 +107,7 @@ set(SRC
     op/convert_layout.cpp
     op/deconv.cpp
     op/dropout.cpp
+    op/gelu_backprop.cpp
     op/group_conv_bias.cpp
     op/halide_op.cpp
     op/leaky_relu.cpp
@@ -156,8 +158,41 @@ if (NGRAPH_MLIR_ENABLE)
         )
 endif()
 
+set(NGRAPH_CPU_ALL_DATATYPES
+    boolean
+    f32
+    f64
+    i8
+    i16
+    i32
+    i64
+    u8
+    u16
+    u32
+    u64
+    )
+
+set(NGRAPH_CPU_COMMON_DATATYPES
+    f32
+    i64
+    )
+
+
 if (NGRAPH_CPU_ENABLE)
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
+
+    set(NGRAPH_CPU_OPTIMIZED_DATATYPES "common"
+        CACHE STRING "Semicolon-separated list of datatypes to optimize for, or \"common\" or \"all\".")
+
+    if (NGRAPH_CPU_OPTIMIZED_DATATYPES STREQUAL "all")
+        set(NGRAPH_CPU_OPTIMIZED_DATATYPES ${NGRAPH_CPU_ALL_DATATYPES})
+    endif()
+
+    if (NGRAPH_CPU_OPTIMIZED_DATATYPES STREQUAL "common")
+        set(NGRAPH_CPU_OPTIMIZED_DATATYPES ${NGRAPH_CPU_COMMON_DATATYPES})
+    endif()
+
+    list(REMOVE_DUPLICATES NGRAPH_CPU_OPTIMIZED_DATATYPES)
 
     add_library(cpu_backend ${LIBRARY_TYPE} ${SRC})
     if (NGRAPH_CPU_STATIC_LIB_ENABLE)
@@ -177,9 +212,8 @@ if (NGRAPH_CPU_ENABLE)
     if (NGRAPH_ENABLE_CPU_CONV_AUTO)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_ENABLE_CPU_CONV_AUTO")
     endif()
-    if(NGRAPH_TBB_ENABLE)
-        set_source_files_properties(cpu_external_function.cpp
-            PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
+    if (NGRAPH_TBB_ENABLE)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_TBB_ENABLE")
     endif()
     if (NGRAPH_HALIDE)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_HALIDE")
@@ -209,14 +243,20 @@ if (NGRAPH_CPU_ENABLE)
     endif()
     target_compile_definitions(cpu_backend PRIVATE CPU_BACKEND_DLL_EXPORTS)
 
+    foreach(t ${NGRAPH_CPU_OPTIMIZED_DATATYPES})
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_CPU_OPTIMIZE_${t}")
+    endforeach()
+
     add_dependencies(cpu_backend libmkldnn ext_eigen)
-   	target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libtbb)
-        
+   	target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen)
     if (NGRAPH_JSON_ENABLE)
         target_link_libraries(cpu_backend PUBLIC libjson)
+    endif()    
+    if (NGRAPH_TBB_ENABLE)
+        target_link_libraries(cpu_backend PUBLIC libtbb)
     endif()
     if (NOT NGRAPH_DEX_ONLY)
-        target_link_libraries(cpu_backend PUBLIC codegen)
+        target_link_libraries(cpu_backend PRIVATE codegen)
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
 
@@ -233,7 +273,7 @@ if (NGRAPH_CPU_ENABLE)
         # TODO: can we get away without LLVM/MLIR include path. 
         # Currently mlir backend compiler.hpp include LLVM/MLIR files
         get_directory_property(MLIR_LLVM_INCLUDEPATH
-                               DIRECTORY ${NGRAPH_MLIR_SOURCE_DIR}/compiler
+                               DIRECTORY ${NGRAPH_MLIR_SOURCE_DIR}
                                DEFINITION MLIR_LLVM_INCLUDEPATH)
         
         message(STATUS "Building CPU backend with MLIR")

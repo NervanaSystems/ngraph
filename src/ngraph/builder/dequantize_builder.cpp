@@ -51,7 +51,8 @@ namespace ngraph
 
             auto zero = make_constant(quant_type, shape, 0);
             auto scale = quantization_utils::get_scale(min, max, quant_type);
-            return make_shared<op::Dequantize>(input, scale, zero, real_type, axes);
+            return make_shared<op::Dequantize>(input, scale, zero, real_type, axes)
+                ->add_provenance_group_members_above({input, min, max});
         }
     }
 }

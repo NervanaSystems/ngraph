@@ -65,7 +65,7 @@ namespace ngraph
 
                         auto functor =
                             [&, arg_buffer_indices, nargs, out_size, arg_sizes, out_buffer_index](
-                                CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                                 auto offset = 0;
                                 for (size_t i = 0; i < nargs; i++)
                                 {
@@ -101,7 +101,7 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto concat_pd =
                         mkldnn_emitter->get_concat_desc<ngraph::op::Concat>(node, nargs);
-                    QUERY_SCRATCHPAD(concat, concat_pd);
+                    size_t scratchpad_size = QUERY_SCRATCHPAD(concat, concat_pd);
 
                     std::vector<mkldnn::memory::desc> inputs_data_desc;
                     for (size_t i = 0; i < nargs; i++)
@@ -115,12 +115,13 @@ namespace ngraph
 
                     auto functor = [&,
                                     concat_pd,
+                                    scratchpad_size,
                                     inputs_data_desc,
                                     arg_buffer_indices,
                                     nargs,
                                     concat_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_concat(ctx->mkldnn_memories,
@@ -140,7 +141,11 @@ namespace ngraph
                             ctx, deps[nargs], ctx->buffer_data[out_buffer_index]);
 
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, concat_index, deps, cpu::mkldnn_utils::OpType::CONCAT);
+                            ctx,
+                            concat_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONCAT,
+                            scratchpad_size);
                     };
 
                     functors.emplace_back(functor);
@@ -149,10 +154,10 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::concat<float, 1>)> kernel;
 
-                    SELECT_KERNEL_BY_RANK(kernel,
+                    SELECT_KERNEL_ET_RANK(kernel,
                                           out[0].get_element_type(),
                                           out[0].get_shape().size(),
-                                          runtime::cpu::kernel::concat);
+                                          runtime::cpu::kernel::concat)
 
                     auto functor = [&,
                                     kernel,
@@ -161,7 +166,7 @@ namespace ngraph
                                     out_shape,
                                     axis,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         std::vector<void*> arg_tensors;
                         for (auto& arg_buffer_index : arg_buffer_indices)
                         {

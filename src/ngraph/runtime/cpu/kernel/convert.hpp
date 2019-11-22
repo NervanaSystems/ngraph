@@ -20,6 +20,7 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
+#include "ngraph/runtime/reference/convert.hpp"
 
 namespace ngraph
 {
@@ -109,6 +110,12 @@ namespace ngraph
                 void convert_to_bool(void* input, void* output, size_t count, int arena)
                 {
                     convert<InputElementType, bool>(input, output, count, arena);
+                }
+
+                template <typename InputElementType>
+                void convert_to_bf16(void* input, void* output, size_t count, int arena)
+                {
+                    convert<InputElementType, bfloat16>(input, output, count, arena);
                 }
             }
         }
