@@ -38,9 +38,7 @@ namespace ngraph
                     ASSERT_IS_SUPPORTED(node, fmod == 1)
                         << "Only 'fmod=1' mode is supported for mod operator.";
 
-                    const auto auto_broadcast = ngraph::op::AutoBroadcastType::NUMPY;
-
-                    return {std::make_shared<ngraph::op::Mod>(dividend, divisor, auto_broadcast)};
+                    return {std::make_shared<ngraph::op::Mod>(dividend, divisor)};
                 }
 
             } // namespace set_1
