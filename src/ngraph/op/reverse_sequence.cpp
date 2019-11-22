@@ -19,6 +19,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -27,8 +28,8 @@ constexpr NodeTypeInfo op::ReverseSequence::type_info;
 
 op::ReverseSequence::ReverseSequence(const Output<Node>& arg,
                                      const Output<Node>& seq_indices,
-                                     size_t batch_axis,
-                                     size_t seq_axis)
+                                     int64_t batch_axis,
+                                     int64_t seq_axis)
     : Op({arg, seq_indices})
     , m_batch_axis(batch_axis)
     , m_seq_axis(seq_axis)
@@ -41,21 +42,23 @@ void op::ReverseSequence::validate_and_infer_types()
     auto input_shape = get_input_partial_shape(0);
     auto input_rank = input_shape.rank();
 
-    NODE_VALIDATION_CHECK(this,
-                          input_rank.is_dynamic() || m_batch_axis < size_t(input_rank),
-                          "Batch axis index (",
-                          m_batch_axis,
-                          ") is out of bounds (argument shape: ",
-                          input_shape,
-                          ").");
+    if (m_batch_axis < 0 || m_seq_axis < 0)
+    {
+        NODE_VALIDATION_CHECK(this,
+                              input_rank.is_static(),
+                              "In order to handle negative axes input_rank must be static (",
+                              "batch_axis=",
+                              m_batch_axis,
+                              ", seq_axis=",
+                              m_seq_axis,
+                              ")");
+    }
 
-    NODE_VALIDATION_CHECK(this,
-                          input_rank.is_dynamic() || m_seq_axis < size_t(input_rank),
-                          "Sequence axis index (",
-                          m_seq_axis,
-                          ") is out of bounds (argument shape: ",
-                          input_shape,
-                          ").");
+    if (input_rank.is_static())
+    {
+        m_batch_axis = ngraph::normalize_axis(this, m_batch_axis, static_cast<int64_t>(input_rank));
+        m_seq_axis = ngraph::normalize_axis(this, m_seq_axis, static_cast<int64_t>(input_rank));
+    }
 
     auto indices_shape = get_input_partial_shape(1);
     auto indices_rank = indices_shape.rank();
