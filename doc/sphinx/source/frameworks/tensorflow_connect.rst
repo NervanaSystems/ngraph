@@ -1,7 +1,7 @@
 .. frameworks/tensorflow_connect.rst:
 
-nGraph Bridge for TensorFlow
-============================
+TensorFlow\*
+============
 
 
 See the `README`_ on the `ngraph_bridge repo`_ for the many ways to connect 

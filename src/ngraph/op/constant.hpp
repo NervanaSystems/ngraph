@@ -338,6 +338,7 @@ namespace ngraph
                 case element::Type_t::u64:
                     write_buffer<uint64_t, T>(target, source, target_element_count);
                     break;
+                case element::Type_t::u1: throw std::runtime_error("unsupported type");
                 case element::Type_t::undefined: throw std::runtime_error("unsupported type");
                 case element::Type_t::dynamic: throw std::runtime_error("unsupported type");
                 }

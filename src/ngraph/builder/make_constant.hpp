@@ -94,6 +94,8 @@ namespace ngraph
                 throw ngraph_error("make_constant: Unsupported element type 'dynamic'");
             case element::Type_t::boolean:
                 throw ngraph_error("make_constant: Unsupported element type 'boolean'");
+            case element::Type_t::u1:
+                throw ngraph_error("make_constant: Unsupported element type 'u1'");
             case element::Type_t::undefined:
                 throw ngraph_error("make_constant: Unsupported element type 'undefined'");
             }
