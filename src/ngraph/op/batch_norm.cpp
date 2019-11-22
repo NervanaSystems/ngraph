@@ -46,6 +46,12 @@ op::BatchNormTraining::BatchNormTraining(double eps,
     constructor_validate_and_infer_types();
 }
 
+bool op::BatchNormTraining::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("epsilon", m_epsilon);
+    return true;
+}
+
 void op::BatchNormTraining::validate_and_infer_types()
 {
     element::Type result_et;
@@ -129,6 +135,12 @@ op::BatchNormInference::BatchNormInference(double eps,
     constructor_validate_and_infer_types();
 }
 
+bool op::BatchNormInference::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("epsilon", m_epsilon);
+    return true;
+}
+
 void op::BatchNormInference::validate_and_infer_types()
 {
     element::Type result_et;
@@ -189,6 +201,12 @@ op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(double epsilon,
 {
     set_output_size(3);
     constructor_validate_and_infer_types();
+}
+
+bool op::BatchNormTrainingBackprop::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("epsilon", m_epsilon);
+    return true;
 }
 
 void op::BatchNormTrainingBackprop::validate_and_infer_types()

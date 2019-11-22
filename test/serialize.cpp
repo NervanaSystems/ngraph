@@ -486,8 +486,8 @@ TEST(serialize, tensor_iterator_raw)
     auto tensor_iterator = make_shared<op::TensorIterator>();
     tensor_iterator->set_body(body);
     // The Xi are the elements of Xseq
-    // start=0, stride=1, part_size=1, end=40, axis=1
-    tensor_iterator->set_sliced_input(Xi, X, 0, 1, 1, 40, 1);
+    // start=0, stride=1, part_size=1, end=39, axis=1
+    tensor_iterator->set_sliced_input(Xi, X, 0, 1, 1, 39, 1);
     // Hi is Hinit on the first iteration, Ho after that
     tensor_iterator->set_merged_input(Hi, Hinit, Ho);
     tensor_iterator->set_invariant_input(WH_body, WH);
@@ -499,8 +499,8 @@ TEST(serialize, tensor_iterator_raw)
     // Output 0 is last Yo
     auto out0 = tensor_iterator->get_iter_value(Yo, -1);
     // Output 1 is concat of hidden states
-    // start=0, stride=1, part_size=1, end=40, axis=1
-    auto out1 = tensor_iterator->get_concatenated_slices(Ho, 0, 1, 1, 40, 1);
+    // start=0, stride=1, part_size=1, end=39, axis=1
+    auto out1 = tensor_iterator->get_concatenated_slices(Ho, 0, 1, 1, 39, 1);
 
     auto results = ResultVector{make_shared<op::Result>(out0), make_shared<op::Result>(out1)};
     auto f = make_shared<Function>(results, ParameterVector{X, Hinit, WH, WX, bH, WY, bY});
@@ -543,7 +543,7 @@ TEST(serialize, tensor_iterator_lstm)
 
     auto tensor_iterator = make_shared<op::TensorIterator>();
     tensor_iterator->set_body(body);
-    // start=0, stride=1, part_size=1, end=40, axis=1
+    // start=0, stride=1, part_size=1, end=39, axis=1
     tensor_iterator->set_sliced_input(X, SENT, 0, 1, 1, -1, 1);
     // H_t is Hinit on the first iteration, Ho after that
     tensor_iterator->set_merged_input(H_t, H_init, H_o);
@@ -583,8 +583,8 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2)
     auto tensor_iterator = make_shared<op::TensorIterator>();
     tensor_iterator->set_body(body);
     // The Xi are the elements of Xseq
-    // start=0, stride=2, part_size=2, end=20, axis=1
-    tensor_iterator->set_sliced_input(Xi, X, 0, 2, 2, 20, 1);
+    // start=0, stride=2, part_size=2, end=39, axis=1
+    tensor_iterator->set_sliced_input(Xi, X, 0, 2, 2, 39, 1);
     // The Yi are the elements of Yseq
     // start=0, stride=2, part_size=2, end=-1, axis=1
     tensor_iterator->set_sliced_input(Yi, Y, 0, 2, 2, -1, 1);
@@ -593,8 +593,8 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2)
     // Output 0 is last Zo
     auto out0 = tensor_iterator->get_iter_value(Zo, -1);
     // Output 1 is concat of Zos
-    // start=0, stride=2, part_size=2, end=20, axis=1
-    auto out1 = tensor_iterator->get_concatenated_slices(Zo, 0, 2, 2, 20, 1);
+    // start=0, stride=2, part_size=2, end=39, axis=1
+    auto out1 = tensor_iterator->get_concatenated_slices(Zo, 0, 2, 2, 39, 1);
 
     auto result0 = make_shared<op::Result>(out0);
     auto result1 = make_shared<op::Result>(out1);
@@ -631,23 +631,62 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
     auto tensor_iterator = make_shared<op::TensorIterator>();
     tensor_iterator->set_body(body);
     // The Xi are the elements of Xseq
-    // start=0, stride=2, part_size=2, end=20, axis=1
-    tensor_iterator->set_sliced_input(Xi, X, 0, 2, 2, 20, 1);
+    // start=0, stride=2, part_size=2, end=38, axis=1
+    tensor_iterator->set_sliced_input(Xi, X, 0, 2, 2, 38, 1);
     // The Yi are the elements of Yseq
-    // start=0, stride=2, part_size=2, end=-1, axis=1
-    tensor_iterator->set_sliced_input(Yi, Y, 0, 2, 2, -1, 1);
+    // start=0, stride=2, part_size=2, end=-2, axis=1
+    tensor_iterator->set_sliced_input(Yi, Y, 0, 2, 2, -2, 1);
     tensor_iterator->set_invariant_input(M_body, M);
+
+    // check input descriptors
+    for (auto& desc : tensor_iterator->get_input_descriptions())
+    {
+        auto type_info = desc->get_type_info();
+        if (std::strcmp(type_info.name, "InvariantInputDescription") == 0)
+        {
+            auto input_desc =
+                as_type_ptr<ngraph::op::TensorIterator::InvariantInputDescription>(desc);
+            EXPECT_NE(input_desc, nullptr);
+        }
+        else if (std::strcmp(type_info.name, "SliceInputDescription") == 0)
+        {
+            auto input_desc = as_type_ptr<ngraph::op::TensorIterator::SliceInputDescription>(desc);
+            EXPECT_NE(input_desc, nullptr);
+        }
+        else if (std::strcmp(type_info.name, "MergedInputDescription") == 0)
+        {
+            auto input_desc = as_type_ptr<ngraph::op::TensorIterator::MergedInputDescription>(desc);
+            EXPECT_NE(input_desc, nullptr);
+        }
+    }
 
     // Output 0 is last Zo
     auto out0 = tensor_iterator->get_iter_value(Zo, -1);
     // Output 1 is concat of Zos
-    // start=0, stride=2, part_size=2, end=20, axis=1
-    auto out1 = tensor_iterator->get_concatenated_slices(Zo, 0, 2, 2, 20, 1);
+    // start=0, stride=2, part_size=2, end=38, axis=1
+    auto out1 = tensor_iterator->get_concatenated_slices(Zo, 0, 2, 2, 38, 1);
+
+    // check output descriptors
+    for (auto& desc : tensor_iterator->get_output_descriptions())
+    {
+        auto type_info = desc->get_type_info();
+        if (std::strcmp(type_info.name, "ConcatOutputDescription") == 0)
+        {
+            auto output_desc =
+                as_type_ptr<ngraph::op::TensorIterator::ConcatOutputDescription>(desc);
+            EXPECT_NE(output_desc, nullptr);
+        }
+        else if (std::strcmp(type_info.name, "BodyOutputDescription") == 0)
+        {
+            auto output_desc = as_type_ptr<ngraph::op::TensorIterator::BodyOutputDescription>(desc);
+            EXPECT_NE(output_desc, nullptr);
+        }
+    }
 
     auto result0 = make_shared<op::Result>(out0);
     auto result1 = make_shared<op::Result>(out1);
     Shape out0_shape{32, 2, 10};
-    Shape out1_shape{32, 40, 10};
+    Shape out1_shape{32, 38, 10};
 
     auto results = ResultVector{result0, result1};
     auto f = make_shared<Function>(results, ParameterVector{X, Y, M});
@@ -756,6 +795,28 @@ TEST(serialize, depth_to_space)
     auto depth_to_space_out = as_type_ptr<op::DepthToSpace>(g_depth_to_space);
 
     EXPECT_EQ(depth_to_space_out->description(), "DepthToSpace");
+    EXPECT_EQ(depth_to_space_out->get_version(), 0);
+    EXPECT_EQ(depth_to_space_out->get_block_size(), block_size);
+    EXPECT_EQ(depth_to_space_out->get_mode(), mode);
+}
+
+TEST(serialize, space_to_depth)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{4, 6, 8});
+    auto mode = op::SpaceToDepth::SpaceToDepthMode::BLOCKS_FIRST;
+    size_t block_size = 2;
+    auto space_to_depth_in = make_shared<op::SpaceToDepth>(arg, mode, block_size);
+
+    auto result = make_shared<op::Result>(space_to_depth_in);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_space_to_depth = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto depth_to_space_out = as_type_ptr<op::SpaceToDepth>(g_space_to_depth);
+
+    EXPECT_EQ(depth_to_space_out->description(), "SpaceToDepth");
     EXPECT_EQ(depth_to_space_out->get_version(), 0);
     EXPECT_EQ(depth_to_space_out->get_block_size(), block_size);
     EXPECT_EQ(depth_to_space_out->get_mode(), mode);

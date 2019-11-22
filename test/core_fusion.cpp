@@ -26,6 +26,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -648,6 +649,21 @@ TEST(core_fusion, DISABLED_conv_bias_bprop)
     }
 }
 
+#ifndef NGRAPH_JSON_DISABLE
+TEST(batch_fusion, fuse_batch_mat_mul_transpose)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::BatchFusion>();
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/batch_dot_3.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    size_t ccg = count_ops_of_type<op::BatchMatMulTranspose>(func);
+    ASSERT_EQ(ccg, 1);
+}
+#endif
+
 TEST(batch_fusion, group_convolution_fusion)
 {
     Shape shape_a{1, 32, 2, 2};
@@ -852,4 +868,43 @@ TEST(core_fusion, softmax_crossentropy)
 {
     test_softmax_crossentropy(Shape{41, 37}, Shape{41, 37}, true, -1);
     test_softmax_crossentropy(Shape{41, 37}, Shape{41, 1}, false, 5);
+}
+
+void test_crossentropy(Shape input_shape, Shape label_shape, bool soft_label, int64_t ignore_index)
+{
+    auto input = std::make_shared<op::Parameter>(element::f64, input_shape);
+    auto labels = std::make_shared<op::Parameter>(element::i64, label_shape);
+    auto sm_ce = std::make_shared<op::CrossEntropy>(input, labels, soft_label, ignore_index);
+    auto cpu_f = make_shared<Function>(sm_ce, ParameterVector{input, labels});
+
+    test::Uniform<double> rng(-1.0, 1.0);
+    vector<vector<double>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<double> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    // if softlabels = flase, we will have one one hot encoding for labels
+    if (!soft_label)
+    {
+        size_t onehot = count_ops_of_type<op::OneHot>(cpu_f);
+        ASSERT_EQ(onehot, 1);
+    }
+    if (ignore_index >= 0 && !soft_label)
+    // check for the mask
+    {
+        size_t not_equal = count_ops_of_type<op::NotEqual>(cpu_f);
+        ASSERT_EQ(not_equal, 1);
+    }
+}
+
+TEST(core_fusion, crossentropy)
+{
+    test_crossentropy(Shape{41, 37}, Shape{41, 37}, true, -1);
+    test_crossentropy(Shape{41, 37}, Shape{41, 1}, false, 5);
+    test_crossentropy(Shape{10, 2, 4, 10}, Shape{10, 2, 4, 1}, false, 5);
+    test_crossentropy(Shape{4, 3, 2, 4}, Shape{4, 3, 2, 4}, true, -1);
 }

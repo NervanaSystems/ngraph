@@ -43,6 +43,17 @@ else()
     set(GTEST_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 endif()
 
+#Build for ninja
+if(UNIX)
+    SET(GTEST_PATHS ${CMAKE_BINARY_DIR}/ngraph/gtest/build/googlemock/gtest/libgtest.a
+            ${CMAKE_BINARY_DIR}/ngraph/gtest/build/googlemock/libgmock.a)
+else()
+    SET(GTEST_PATHS ${CMAKE_BINARY_DIR}/ngraph/gtest/build/googlemock/gtest/gtest.lib
+            ${CMAKE_BINARY_DIR}/ngraph/gtest/build/googlemock/gtest/gmock.lib
+            ${CMAKE_BINARY_DIR}/ngraph/gtest/build/googlemock/gtest/gtestd.lib
+            ${CMAKE_BINARY_DIR}/ngraph/gtest/build/googlemock/gtest/gmockd.lib)
+endif()
+
 ExternalProject_Add(
     ext_gtest
     PREFIX gtest
@@ -60,6 +71,7 @@ ExternalProject_Add(
         ${GTEST_CMAKE_ARGS}
     BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/build"
     EXCLUDE_FROM_ALL TRUE
+    BUILD_BYPRODUCTS ${GTEST_PATHS}
     )
 
 #------------------------------------------------------------------------------

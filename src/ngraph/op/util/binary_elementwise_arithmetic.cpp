@@ -19,7 +19,8 @@
 using namespace std;
 using namespace ngraph;
 
-op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic()
+op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(const AutoBroadcastSpec& autob)
+    : m_autob(autob)
 {
 }
 
@@ -53,4 +54,10 @@ op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(
 void op::util::BinaryElementwiseArithmetic::validate_and_infer_types()
 {
     validate_and_infer_elementwise_arithmetic(m_autob);
+}
+
+bool op::util::BinaryElementwiseArithmetic::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("autob", m_autob);
+    return true;
 }

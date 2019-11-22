@@ -206,6 +206,30 @@ TEST(constant_folding, constant_broadcast_v1)
     ASSERT_EQ(values_expected, values_out);
 }
 
+TEST(constant_folding, constant_broadcast_v1_with_target_shape)
+{
+    vector<int32_t> values_in{1};
+    auto constant_in = make_shared<op::Constant>(element::i32, Shape{1, 1, 1, 1}, values_in);
+    vector<int64_t> shape_in{1, 3, 1, 1};
+    auto target_shape = make_shared<op::Constant>(element::i64, Shape{4}, shape_in);
+    auto broadcast_v1 = make_shared<op::v1::Broadcast>(constant_in, target_shape);
+    auto f = make_shared<Function>(broadcast_v1, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Broadcast>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int32_t>();
+
+    vector<int32_t> values_expected{1, 1, 1};
+    ASSERT_EQ(values_expected, values_out);
+}
+
 TEST(constant_folding, constant_broadcast_v1_numpy)
 {
     vector<int32_t> values_in{0, 1};
@@ -1375,14 +1399,70 @@ TEST(constant_folding, const_gather)
     auto constant_indices =
         op::Constant::create(element::i64, Shape{4}, vector<int64_t>{0, 3, 2, 2});
     size_t gather_axis = 1;
-    auto gather = make_shared<op::Gather>(constant_data, constant_indices, gather_axis);
+    auto gather = make_shared<op::v0::Gather>(constant_data, constant_indices, gather_axis);
     auto f = make_shared<Function>(gather, ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Gather>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Gather>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<float>();
+
+    vector<float> values_expected{1.0f, 4.0f, 3.0f, 3.0f, 6.0f, 9.0f, 8.0f, 8.0f};
+
+    ASSERT_TRUE(test::all_close_f(values_out, values_expected, MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(constant_folding, const_gather_v1)
+{
+    auto constant_data = op::Constant::create(
+        element::f32,
+        Shape{2, 5},
+        vector<float>{1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f});
+    auto constant_indices =
+        op::Constant::create(element::i64, Shape{4}, vector<int64_t>{0, 3, 2, 2});
+    auto constant_axis = op::Constant::create(element::i64, Shape{1}, vector<int64_t>{1});
+    auto gather = make_shared<op::v1::Gather>(constant_data, constant_indices, constant_axis);
+    auto f = make_shared<Function>(gather, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<float>();
+
+    vector<float> values_expected{1.0f, 4.0f, 3.0f, 3.0f, 6.0f, 9.0f, 8.0f, 8.0f};
+
+    ASSERT_TRUE(test::all_close_f(values_out, values_expected, MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(constant_folding, const_gather_v1_scalar)
+{
+    auto constant_data = op::Constant::create(
+        element::f32,
+        Shape{2, 5},
+        vector<float>{1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f});
+    auto constant_indices =
+        op::Constant::create(element::i64, Shape{4}, vector<int64_t>{0, 3, 2, 2});
+    auto constant_axis = op::Constant::create(element::i64, Shape{}, vector<int64_t>{1});
+    auto gather = make_shared<op::v1::Gather>(constant_data, constant_indices, constant_axis);
+    auto f = make_shared<Function>(gather, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));

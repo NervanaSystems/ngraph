@@ -64,25 +64,10 @@ NodeVector op::MatMul::decompose_op() const
     auto A = input_value(0);
     auto B = input_value(1);
 
-    // Specification is expecting that A & B have at least 2 dimenstions.
-    // Missing dimensions are padded with 1.
-    int a_rank = A.get_shape().size();
-    if (a_rank < 2)
-    {
-        A = a_rank == 0 ? make_shared<op::Reshape>(A, AxisVector{}, Shape{1, 1})
-                        : make_shared<op::Reshape>(A, AxisVector{1}, Shape{1, A.get_shape()[0]});
-        a_rank = 2;
-    }
+    const auto a_rank = A.get_shape().size();
+    const auto b_rank = B.get_shape().size();
 
-    int b_rank = B.get_shape().size();
-    if (b_rank < 2)
-    {
-        B = b_rank == 0 ? make_shared<op::Reshape>(B, AxisVector{}, Shape{1, 1})
-                        : make_shared<op::Reshape>(B, AxisVector{1}, Shape{1, B.get_shape()[0]});
-        b_rank = 2;
-    }
-
-    if (m_transpose_a)
+    if (m_transpose_a && a_rank >= 2)
     {
         vector<size_t> axes_order(a_rank);
         // generate default axes_order.
@@ -92,7 +77,7 @@ NodeVector op::MatMul::decompose_op() const
         A = builder::reorder_axes(A, axes_order);
     }
 
-    if (m_transpose_b)
+    if (m_transpose_b && b_rank >= 2)
     {
         vector<size_t> axes_order(b_rank);
         iota(axes_order.begin(), axes_order.end(), 0);

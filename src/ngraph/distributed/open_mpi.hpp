@@ -196,6 +196,7 @@ namespace ngraph
                 case element::Type_t::u64: m_type = MPI_UNSIGNED_LONG; break;
                 case element::Type_t::bf16:
                 case element::Type_t::f16:
+                case element::Type_t::u1:
                 case element::Type_t::undefined:
                 case element::Type_t::dynamic: throw std::runtime_error("unsupported type");
                 }
