@@ -75,6 +75,7 @@ namespace ngraph
                 NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"LSTMCell", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
+                LSTMCell() = default;
                 ///
                 /// \brief      Constructs LSTMCell node.
                 ///

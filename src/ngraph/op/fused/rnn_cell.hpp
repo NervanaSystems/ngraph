@@ -57,6 +57,7 @@ namespace ngraph
                 NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"RNNCell", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
+                RNNCell() = default;
                 ///
                 /// \brief      Constructs RNNCell node.
                 ///

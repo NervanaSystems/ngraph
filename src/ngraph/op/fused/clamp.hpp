@@ -27,6 +27,7 @@ namespace ngraph
         namespace v0
         {
             /// \brief Performs a clipping operation on all elements of the input node
+            /// \brief Constructs a Clamp node.
             ///
             /// All input values that are outside of the <min;max> range are set to 'min' or 'max'
             /// depending on which side of the <min;max> range they are. The values that fall into
@@ -37,6 +38,7 @@ namespace ngraph
                 NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Clamp", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Clamp() = default;
                 /// \brief Constructs a Clamp node.
                 ///
                 /// \param data - Node producing the input tensor

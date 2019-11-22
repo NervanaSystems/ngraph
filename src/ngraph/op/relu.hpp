@@ -50,14 +50,15 @@ namespace ngraph
                                                const NodeVector& deltas) override;
             };
 
-            /// \brief Elementwise ReluBackprop operation.
-            ///
+        /// \brief Elementwise ReluBackprop operation.
+        ///
             class ReluBackprop : public ngraph::op::util::BinaryElementwiseArithmetic
             {
             public:
                 NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ReluBackprop", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
+                ReluBackprop() = default;
                 /// \brief Constructs a ReluBackprop operation.
                 ///
                 /// \param arg Node that produces the relu forward input tensor.
