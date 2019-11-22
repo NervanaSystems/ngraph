@@ -23,75 +23,13 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/all.hpp"
-#include "ngraph/op/allreduce.hpp"
-#include "ngraph/op/and.hpp"
-#include "ngraph/op/any.hpp"
-#include "ngraph/op/argmax.hpp"
-#include "ngraph/op/argmin.hpp"
-#include "ngraph/op/avg_pool.hpp"
-#include "ngraph/op/batch_norm.hpp"
-#include "ngraph/op/binary_convolution.hpp"
-#include "ngraph/op/broadcast.hpp"
-#include "ngraph/op/broadcast_distributed.hpp"
-#include "ngraph/op/concat.hpp"
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/convolution.hpp"
-#include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/divide.hpp"
-#include "ngraph/op/dot.hpp"
-#include "ngraph/op/embedding_lookup.hpp"
-#include "ngraph/op/equal.hpp"
-#include "ngraph/op/experimental/batch_mat_mul.hpp"
-#include "ngraph/op/experimental/dyn_broadcast.hpp"
-#include "ngraph/op/experimental/dyn_pad.hpp"
-#include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/random_uniform.hpp"
-#include "ngraph/op/experimental/shape_of.hpp"
-#include "ngraph/op/gather.hpp"
-#include "ngraph/op/get_output_element.hpp"
-#include "ngraph/op/greater.hpp"
-#include "ngraph/op/greater_eq.hpp"
-#include "ngraph/op/less.hpp"
-#include "ngraph/op/less_eq.hpp"
-#include "ngraph/op/lrn.hpp"
-#include "ngraph/op/max.hpp"
-#include "ngraph/op/max_pool.hpp"
-#include "ngraph/op/maximum.hpp"
-#include "ngraph/op/min.hpp"
-#include "ngraph/op/minimum.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/not_equal.hpp"
-#include "ngraph/op/one_hot.hpp"
-#include "ngraph/op/or.hpp"
-#include "ngraph/op/pad.hpp"
-#include "ngraph/op/passthrough.hpp"
-#include "ngraph/op/power.hpp"
-#include "ngraph/op/product.hpp"
-#include "ngraph/op/quantize.hpp"
-#include "ngraph/op/quantized_convolution.hpp"
-#include "ngraph/op/quantized_dot.hpp"
-#include "ngraph/op/recv.hpp"
-#include "ngraph/op/replace_slice.hpp"
-#include "ngraph/op/reshape.hpp"
-#include "ngraph/op/result.hpp"
-#include "ngraph/op/reverse.hpp"
-#include "ngraph/op/reverse_sequence.hpp"
-#include "ngraph/op/send.hpp"
-#include "ngraph/op/slice.hpp"
-#include "ngraph/op/softmax.hpp"
-#include "ngraph/op/subtract.hpp"
-#include "ngraph/op/sum.hpp"
-#include "ngraph/op/topk.hpp"
-#include "ngraph/op/xor.hpp"
+#include "ngraph/ops.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #ifdef INTERPRETER_USE_HYBRID
 #include "ngraph/runtime/hybrid/op/function_call.hpp"
 #endif
-#include "ngraph/runtime/interpreter/node_wrapper.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
@@ -187,6 +125,29 @@ namespace ngraph
         {
             class INTBackend;
             class INTExecutable;
+
+            namespace
+            {
+                // This expands the op list in op_tbl.hpp into a list of enumerations that look like
+                // this:
+                // Abs,
+                // Acos,
+                // ...
+                enum class OP_TYPEID
+                {
+#define NGRAPH_OP(a, b) a,
+#include "ngraph/op/op_v0_tbl.hpp"
+#ifdef INTERPRETER_USE_HYBRID
+#include "ngraph/runtime/hybrid/op/op_tbl.hpp"
+#endif
+#undef NGRAPH_OP
+#define NGRAPH_OP(a, b) a##_v1,
+#include "ngraph/op/op_v1_tbl.hpp"
+#undef NGRAPH_OP
+                    UnknownOp
+                };
+            }
+
         } // namespace interpreter
     }     // namespace runtime
 } // namespace ngraph
@@ -229,35 +190,25 @@ private:
     bool m_performance_counters_enabled = false;
     std::shared_ptr<Function> m_function;
     std::unordered_map<std::shared_ptr<const Node>, stopwatch> m_timer_map;
-    std::vector<NodeWrapper> m_wrapped_nodes;
+    std::vector<std::shared_ptr<Node>> m_nodes;
     std::unordered_map<const Node*, std::shared_ptr<State>> m_states;
     std::set<std::string> m_unsupported_op_name_list;
+
+    static OP_TYPEID get_typeid(const NodeTypeInfo& type_info);
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
                                   const Node* op = nullptr);
 
     void generate_calls(const element::Type& type,
-                        const NodeWrapper& op,
+                        const Node& op,
                         const std::vector<std::shared_ptr<HostTensor>>& outputs,
                         const std::vector<std::shared_ptr<HostTensor>>& inputs);
 
     template <typename T>
-    void op_engine(const NodeWrapper& node_wrapper,
+    void op_engine(const Node& node,
                    const std::vector<std::shared_ptr<HostTensor>>& out,
                    const std::vector<std::shared_ptr<HostTensor>>& args)
     {
-        const Node& node = *node_wrapper.get_node();
-
-        size_t op_version = node.get_version();
-        bool is_op_version_supported = op_version == 0;
-        NGRAPH_CHECK(is_op_version_supported,
-                     "Unsupported operator version ",
-                     op_version,
-                     " in ",
-                     node,
-                     ".\n",
-                     "INTERPRETER backend currently only supports op in version 0.");
-
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
@@ -267,7 +218,7 @@ private:
 #pragma GCC diagnostic error "-Wswitch-enum"
 // #pragma GCC diagnostic error "-Wcovered-switch-default"
 #endif
-        switch (node_wrapper.get_typeid())
+        switch (get_typeid(node.get_type_info()))
         {
         case OP_TYPEID::Abs:
         {
@@ -426,7 +377,7 @@ private:
                                    avg_pool->get_include_padding_in_avg_computation());
             break;
         }
-        case OP_TYPEID::BinaryConvolution:
+        case OP_TYPEID::BinaryConvolution_v1:
         {
             throw unsupported_op("Unsupported op '" + node.description() + "'");
             break;
@@ -747,6 +698,11 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
+        case OP_TYPEID::CropAndResize:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            break;
+        }
         case OP_TYPEID::Dequantize:
         {
             const op::Dequantize* dequantize = static_cast<const op::Dequantize*>(&node);
@@ -1017,7 +973,7 @@ private:
                                   less_eq->get_autob());
             break;
         }
-        case OP_TYPEID::LessEqual:
+        case OP_TYPEID::LessEqual_v1:
         {
             auto less_eq = static_cast<const op::v1::LessEqual*>(&node);
             reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
@@ -1035,7 +991,7 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::LogicalAnd:
+        case OP_TYPEID::LogicalAnd_v1:
         {
             auto logical_and = static_cast<const op::v1::LogicalAnd*>(&node);
             reference::logical_and(args[0]->get_data_ptr<const T>(),
@@ -1046,7 +1002,7 @@ private:
                                    logical_and->get_autob());
             break;
         }
-        case OP_TYPEID::LogicalOr:
+        case OP_TYPEID::LogicalOr_v1:
         {
             auto logical_or = static_cast<const op::v1::LogicalOr*>(&node);
             reference::logical_or(args[0]->get_data_ptr<const T>(),
@@ -1057,7 +1013,7 @@ private:
                                   logical_or->get_autob());
             break;
         }
-        case OP_TYPEID::LogicalXor:
+        case OP_TYPEID::LogicalXor_v1:
         {
             auto logical_xor = static_cast<const op::v1::LogicalXor*>(&node);
             reference::logical_xor(args[0]->get_data_ptr<const T>(),
@@ -1068,7 +1024,7 @@ private:
                                    logical_xor->get_autob());
             break;
         }
-        case OP_TYPEID::LRN:
+        case OP_TYPEID::LRN_v1:
         {
             const op::LRN* lrn = static_cast<const op::LRN*>(&node);
             reference::lrn<T>(args[0]->get_data_ptr<const T>(),
@@ -1171,7 +1127,7 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::LogicalNot:
+        case OP_TYPEID::LogicalNot_v1:
         case OP_TYPEID::Not:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1551,6 +1507,11 @@ private:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
             break;
         }
+        case OP_TYPEID::Reciprocal:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            break;
+        }
         case OP_TYPEID::Relu:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1868,8 +1829,115 @@ private:
         case OP_TYPEID::DynPad:
         case OP_TYPEID::Tile:
         case OP_TYPEID::DynReplaceSlice:
-        case OP_TYPEID::FloorMod:
-        case OP_TYPEID::VariadicSplit:
+        case OP_TYPEID::Abs_v1:
+        case OP_TYPEID::Acos_v1:
+        case OP_TYPEID::Add_v1:
+        case OP_TYPEID::Asin_v1:
+        case OP_TYPEID::Atan_v1:
+        case OP_TYPEID::AvgPool_v1:
+        case OP_TYPEID::BatchMatMulTranspose:
+        case OP_TYPEID::BatchNormInference_v1:
+        case OP_TYPEID::Broadcast_v1:
+        case OP_TYPEID::Ceiling_v1:
+        case OP_TYPEID::Clamp_v1:
+        case OP_TYPEID::Concat_v1:
+        case OP_TYPEID::Constant_v1:
+        case OP_TYPEID::Convert_v1:
+        case OP_TYPEID::Convolution_v1:
+        case OP_TYPEID::ConvolutionBackpropData_v1:
+        case OP_TYPEID::ConvolutionBias:
+        case OP_TYPEID::ConvolutionBiasAdd:
+        case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
+        case OP_TYPEID::Cos_v1:
+        case OP_TYPEID::Cosh_v1:
+        case OP_TYPEID::CrossEntropy:
+        case OP_TYPEID::CrossEntropyBackprop:
+        case OP_TYPEID::DepthToSpace_v1:
+        case OP_TYPEID::Divide_v1:
+        case OP_TYPEID::Elu_v1:
+        case OP_TYPEID::Erf_v1:
+        case OP_TYPEID::Equal_v1:
+        case OP_TYPEID::Exp_v1:
+        case OP_TYPEID::FakeQuantize_v1:
+        case OP_TYPEID::Floor_v1:
+        case OP_TYPEID::FloorMod_v1:
+        case OP_TYPEID::Gather_v1:
+        case OP_TYPEID::Greater_v1:
+        case OP_TYPEID::GreaterEq_v1:
+        case OP_TYPEID::GroupConvolution_v1:
+        case OP_TYPEID::GRN:
+        case OP_TYPEID::GRUCell:
+        case OP_TYPEID::Gelu:
+        case OP_TYPEID::GeluBackpropFactor:
+        case OP_TYPEID::Gemm:
+        case OP_TYPEID::GroupConvolutionTranspose:
+        case OP_TYPEID::HardSigmoid_v1:
+        case OP_TYPEID::Interpolate_v1:
+        case OP_TYPEID::LayerNorm:
+        case OP_TYPEID::LayerNormBackprop:
+        case OP_TYPEID::Less_v1:
+        case OP_TYPEID::Log_v1:
+        case OP_TYPEID::LogSoftmax:
+        case OP_TYPEID::LSTMCell_v1:
+        case OP_TYPEID::LSTMSequence_v1:
+        case OP_TYPEID::MatMul_v1:
+        case OP_TYPEID::MaxPool_v1:
+        case OP_TYPEID::Maximum_v1:
+        case OP_TYPEID::Minimum_v1:
+        case OP_TYPEID::Multiply_v1:
+        case OP_TYPEID::MVN:
+        case OP_TYPEID::Negative_v1:
+        case OP_TYPEID::NormalizeL2_v1:
+        case OP_TYPEID::NotEqual_v1:
+        case OP_TYPEID::OneHot_v1:
+        case OP_TYPEID::PRelu_v1:
+        case OP_TYPEID::Pad_v1:
+        case OP_TYPEID::Parameter_v1:
+        case OP_TYPEID::PartialSlice:
+        case OP_TYPEID::PartialSliceBackprop:
+        case OP_TYPEID::Power_v1:
+        case OP_TYPEID::Range_v1:
+        case OP_TYPEID::Relu_v1:
+        case OP_TYPEID::ReduceMax_v1:
+        case OP_TYPEID::ReduceMin_v1:
+        case OP_TYPEID::ReduceProd_v1:
+        case OP_TYPEID::ReduceSum_v1:
+        case OP_TYPEID::Reshape_v1:
+        case OP_TYPEID::Result_v1:
+        case OP_TYPEID::Reverse_v1:
+        case OP_TYPEID::ReverseSequence_v1:
+        case OP_TYPEID::RNNCell_v1:
+        case OP_TYPEID::ScaleShift:
+        case OP_TYPEID::Selu:
+        case OP_TYPEID::ShapeOf_v1:
+        case OP_TYPEID::ShuffleChannels_v1:
+        case OP_TYPEID::Sign_v1:
+        case OP_TYPEID::Sigmoid_v1:
+        case OP_TYPEID::Sin_v1:
+        case OP_TYPEID::Sinh_v1:
+        case OP_TYPEID::Softmax_v1:
+        case OP_TYPEID::SoftmaxCrossEntropy:
+        case OP_TYPEID::SoftmaxCrossEntropyBackprop:
+        case OP_TYPEID::Sqrt_v1:
+        case OP_TYPEID::SpaceToDepth_v1:
+        case OP_TYPEID::Split_v1:
+        case OP_TYPEID::SquaredDifference_v1:
+        case OP_TYPEID::StridedSlice_v1:
+        case OP_TYPEID::Subtract_v1:
+        case OP_TYPEID::Tan_v1:
+        case OP_TYPEID::Tanh_v1:
+        case OP_TYPEID::TensorIterator_v1:
+        case OP_TYPEID::Tile_v1:
+        case OP_TYPEID::TopK_v1:
+        case OP_TYPEID::Transpose_v1:
+        case OP_TYPEID::Unsqueeze_v1:
+        case OP_TYPEID::AvgPoolBackprop_v1:
+        case OP_TYPEID::ConvolutionBackpropFilters_v1:
+        case OP_TYPEID::MaxPoolBackprop_v1:
+        case OP_TYPEID::Squeeze_v1:
+        case OP_TYPEID::GenerateMask_v1:
+        case OP_TYPEID::UnknownOp:
+        case OP_TYPEID::VariadicSplit_v1:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop

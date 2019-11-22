@@ -117,6 +117,7 @@ set(SRC
     type_prop/convert.cpp
     type_prop/convolution.cpp
     type_prop/convolution_bias.cpp
+    type_prop/crop_and_resize.cpp
     type_prop/depth_to_space.cpp
     type_prop/dequantize.cpp
     type_prop/dot.cpp
@@ -352,7 +353,6 @@ set(MULTI_TEST_SRC
     backend/sum.in.cpp
     backend/tan.in.cpp
     backend/tanh.in.cpp
-    backend/tensorview_custom_mem.in.cpp
     backend/tile.in.cpp
     backend/topk.in.cpp
     backend/transpose.in.cpp
@@ -434,7 +434,6 @@ if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
             backend/subtract.in.cpp
             backend/tan.in.cpp
             backend/tanh.in.cpp
-            backend/tensorview_custom_mem.in.cpp
             backend/transpose.in.cpp
             backend/validate_call.in.cpp
             backend/zero_sized.in.cpp

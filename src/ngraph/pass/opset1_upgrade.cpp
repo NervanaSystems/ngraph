@@ -15,41 +15,7 @@
 //*****************************************************************************
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/and.hpp"
-#include "ngraph/op/avg_pool.hpp"
-#include "ngraph/op/broadcast.hpp"
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/convolution.hpp"
-#include "ngraph/op/divide.hpp"
-#include "ngraph/op/equal.hpp"
-#include "ngraph/op/experimental/dyn_reshape.hpp"
-#include "ngraph/op/gather.hpp"
-#include "ngraph/op/get_output_element.hpp"
-#include "ngraph/op/greater.hpp"
-#include "ngraph/op/greater_eq.hpp"
-#include "ngraph/op/less.hpp"
-#include "ngraph/op/less_eq.hpp"
-#include "ngraph/op/max_pool.hpp"
-#include "ngraph/op/maximum.hpp"
-#include "ngraph/op/minimum.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/not.hpp"
-#include "ngraph/op/not_equal.hpp"
-#include "ngraph/op/or.hpp"
-#include "ngraph/op/pad.hpp"
-#include "ngraph/op/power.hpp"
-#include "ngraph/op/product.hpp"
-#include "ngraph/op/reduce_prod.hpp"
-#include "ngraph/op/reduce_sum.hpp"
-#include "ngraph/op/reshape.hpp"
-#include "ngraph/op/reverse.hpp"
-#include "ngraph/op/slice.hpp"
-#include "ngraph/op/softmax.hpp"
-#include "ngraph/op/strided_slice.hpp"
-#include "ngraph/op/sum.hpp"
-#include "ngraph/op/topk.hpp"
-#include "ngraph/op/xor.hpp"
+#include "ngraph/ops.hpp"
 
 #include <limits>
 #include <numeric>
@@ -57,32 +23,29 @@
 using namespace std;
 using namespace ngraph;
 
-#define NGRAPH_OP(a, b) a,
-enum class OP_TYPEID
+namespace
 {
-#include "ngraph/op/fused_op_tbl.hpp"
-#include "ngraph/op/op_tbl.hpp"
-};
+    enum class OP_TYPEID
+    {
+#define NGRAPH_OP(a, b) a,
+#include "ngraph/op/op_v0_tbl.hpp"
 #undef NGRAPH_OP
-
-#define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
-static unordered_map<string, OP_TYPEID> typeid_map{
-#include "ngraph/op/fused_op_tbl.hpp"
-#include "ngraph/op/op_tbl.hpp"
-};
-#undef NGRAPH_OP
+        OTHER
+    };
+}
 
 static OP_TYPEID get_typeid(shared_ptr<Node> node)
 {
-    OP_TYPEID type_id;
-    auto it = typeid_map.find(node->description());
+    static map<NodeTypeInfo, OP_TYPEID> typeid_map{
+#define NGRAPH_OP(a, b) {b::a::type_info, OP_TYPEID::a},
+#include "ngraph/op/op_v0_tbl.hpp"
+#undef NGRAPH_OP
+    };
+    OP_TYPEID type_id = OP_TYPEID::OTHER;
+    auto it = typeid_map.find(node->get_type_info());
     if (it != typeid_map.end())
     {
         type_id = it->second;
-    }
-    else
-    {
-        throw unsupported_op("Unsupported op '" + node->description() + "'");
     }
     return type_id;
 }
@@ -101,20 +64,6 @@ void upgrade_binary_elementwise_node(const shared_ptr<Node>& node)
 bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 {
     bool modified = false;
-
-    size_t op_version = node->get_version();
-
-    if (op_version == 1)
-    {
-        return modified;
-    }
-
-    NGRAPH_CHECK(op_version == 0,
-                 "Op version 1 transformation pass failed for ",
-                 *node,
-                 ", only op version 0 operations expected. Op version ",
-                 op_version,
-                 " found.");
 
 // Not all enumeration values explicitly handled in switch
 #if defined(__clang__)

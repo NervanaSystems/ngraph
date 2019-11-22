@@ -144,6 +144,8 @@ set (SRC
     op/cos.hpp
     op/cosh.cpp
     op/cosh.hpp
+    op/crop_and_resize.cpp
+    op/crop_and_resize.hpp
     op/dequantize.cpp
     op/dequantize.hpp
     op/divide.cpp
@@ -429,6 +431,7 @@ set (SRC
     op/util/rnn_cell_base.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
+    ops.hpp
     partial_shape.cpp
     partial_shape.hpp
     pass/algebraic_simplification.cpp
