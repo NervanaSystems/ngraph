@@ -672,6 +672,7 @@ private:
                 break;
             case element::Type_t::undefined:
             case element::Type_t::dynamic:
+            case element::Type_t::u1:
             case element::Type_t::bf16:
             case element::Type_t::f16:
                 ss << "unsupported element type " << type << " op Convert";
@@ -1867,6 +1868,8 @@ private:
         case OP_TYPEID::DynPad:
         case OP_TYPEID::Tile:
         case OP_TYPEID::DynReplaceSlice:
+        case OP_TYPEID::FloorMod:
+        case OP_TYPEID::VariadicSplit:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop

@@ -38,7 +38,9 @@
     <link rel="stylesheet" href="{{ pathto('_static/' + style, 1) }}" type="text/css" />
   {% endif %}
   
-<link href="https://fonts.googleapis.com/css?family=Nunito:300,300i,400&display=swap&subset=latin-ext" rel="stylesheet"> 
+<!-- <link href="https://fonts.googleapis.com/css?family=Nunito:300,300i,400&display=swap&subset=latin-ext" rel="stylesheet"> -->
+<link href="https://fonts.googleapis.com/css?family=Nunito+Sans:300,400,600,700,800,900" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">  
 
   {% for cssfile in css_files %}
     <link rel="stylesheet" href="{{ pathto(cssfile, 1) }}" type="text/css" />
@@ -84,14 +86,13 @@
 
 <body> 
   <div id="menu-float" class="menu-float">
-    <a href="https://www.ngraph.ai" target="_blank">Home</a>
-    <a href="https://www.youtube.com/embed/C9S0nmNS8bQ" target="_blank">Video</a>
-    <a href="https://www.ngraph.ai/ecosystem" target="_blank">Ecosystem</a>
-    <a href="https://ngraph.nervanasys.com/docs/latest">Docs</a>
-    <a href="https://www.ngraph.ai/tutorials">Tutorials</a>
-    <a href="https://ngraph.slack.com/"><img src="https://cdn.brandfolder.io/5H442O3W/as/pl546j-7le8zk-5h439l/Slack_Mark_Monochrome_White.png?width=35&height=35"></a>
+    <a href="https://www.ngraph.ai" target="_blank"><i class="fa fa-home"></i></a>
+    <a href="https://ngraph.nervanasys.com/docs/latest" title="Documentation Home"><i class="fa fa-book"></i></a>
+    <a href="https://www.ngraph.ai/tutorials" title="Tutorials"><i class="fa fa-user-circle"></i></a>
+    <a href="https://www.youtube.com/embed/C9S0nmNS8bQ" target="_blank"><i class="fa fa-video-camera"></i></a>
+    <a href="https://ngraph.slack.com/" title="nGraph Slack Channel"><i class="fa fa-slack"></i></a>
     <a href="https://github.com/NervanaSystems/ngraph/blob/master/LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
-    <a href="https://www.github.com/NervanaSystems/ngraph"><img src="https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master"></a>&nbsp;&nbsp;&nbsp;</div></body>
+    <a href="https://www.github.com/NervanaSystems/ngraph"><img src="https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master"></a></div></body>
 
 
 <body class="wy-body-for-nav" role="document">
