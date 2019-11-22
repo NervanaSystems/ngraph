@@ -1309,6 +1309,15 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], args[2], soft_label, ignore_index);
             break;
         }
+        case OP_TYPEID::CropAndResize:
+        {
+            auto resize_method =
+                as_type<op::CropAndResize::ResizeMethod>(node_js.at("resize_method").get<string>());
+            auto extrapolation_value = node_js.at("extrapolation_value").get<float>();
+            node = make_shared<op::CropAndResize>(
+                args[0], args[1], args[2], args[3], resize_method, extrapolation_value);
+            break;
+        }
         case OP_TYPEID::DepthToSpace_v1:
         {
             auto mode = node_js.at("mode").get<op::DepthToSpace::DepthToSpaceMode>();
@@ -3298,6 +3307,13 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = static_cast<const op::CrossEntropyBackprop*>(&n);
         node["soft_label"] = tmp->get_soft_label();
         node["ignore_index"] = tmp->get_ignore_index();
+        break;
+    }
+    case OP_TYPEID::CropAndResize:
+    {
+        auto tmp = static_cast<const op::CropAndResize*>(&n);
+        node["resize_method"] = as_string(tmp->get_resize_method());
+        node["extrapolation_value"] = tmp->get_extrapolation_value();
         break;
     }
     case OP_TYPEID::Dequantize:
