@@ -70,8 +70,11 @@
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
+#include "ngraph/op/floor_mod.hpp"
+#include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
 #include "ngraph/op/fused/clamp.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/crossentropy.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/fake_quantize.hpp"
@@ -83,6 +86,7 @@
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/layer_norm.hpp"
+#include "ngraph/op/fused/log_softmax.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/lstm_sequence.hpp"
 #include "ngraph/op/fused/matmul.hpp"
@@ -90,6 +94,7 @@
 #include "ngraph/op/fused/normalize_l2.hpp"
 #include "ngraph/op/fused/partial_slice.hpp"
 #include "ngraph/op/fused/prelu.hpp"
+#include "ngraph/op/fused/reciprocal.hpp"
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/selu.hpp"
@@ -157,6 +162,7 @@
 #include "ngraph/op/tensor_iterator.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/op/variadic_split.hpp"
 #include "ngraph/op/xor.hpp"
 #include "ngraph/provenance.hpp"
 #include "ngraph/serializer.hpp"
@@ -1072,7 +1078,14 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::BatchMatMul>(args[0], args[1]);
             break;
         }
-
+        case OP_TYPEID::BatchMatMulTranspose:
+        {
+            auto transpose_0 = node_js.at("transpose_0").get<bool>();
+            auto transpose_1 = node_js.at("transpose_1").get<bool>();
+            node =
+                make_shared<op::BatchMatMulTranspose>(args[0], args[1], transpose_0, transpose_1);
+            break;
+        }
         case OP_TYPEID::BatchNormTraining:
         {
             auto epsilon = node_js.at("eps").get<double>();
@@ -1387,6 +1400,21 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Cosh>(args[0]);
             break;
         }
+        case OP_TYPEID::CrossEntropy:
+        {
+            auto soft_label = node_js.at("soft_label");
+            auto ignore_index = node_js.at("ignore_index");
+            node = make_shared<op::CrossEntropy>(args[0], args[1], soft_label, ignore_index);
+            break;
+        }
+        case OP_TYPEID::CrossEntropyBackprop:
+        {
+            auto soft_label = node_js.at("soft_label");
+            auto ignore_index = node_js.at("ignore_index");
+            node = make_shared<op::CrossEntropyBackprop>(
+                args[0], args[1], args[2], soft_label, ignore_index);
+            break;
+        }
         case OP_TYPEID::DepthToSpace:
         {
             auto mode = node_js.at("mode").get<op::DepthToSpace::DepthToSpaceMode>();
@@ -1540,6 +1568,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Floor:
         {
             node = make_shared<op::Floor>(args[0]);
+            break;
+        }
+        case OP_TYPEID::FloorMod:
+        {
+            node = make_shared<op::FloorMod>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Gather:
@@ -1821,6 +1855,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             node = make_shared<op::v1::LogicalXor>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            break;
+        }
+        case OP_TYPEID::LogSoftmax:
+        {
+            auto axis = node_js.at("axis").get<int64_t>();
+            node = make_shared<op::LogSoftmax>(args[0], axis);
             break;
         }
         case OP_TYPEID::LRN:
@@ -2372,6 +2412,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Range>(args[0], args[1], args[2]);
             break;
         }
+        case OP_TYPEID::Reciprocal:
+        {
+            node = make_shared<op::Reciprocal>(args[0]);
+            break;
+        }
         case OP_TYPEID::Relu:
         {
             node = make_shared<op::Relu>(args[0]);
@@ -2588,7 +2633,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::SpaceToDepth:
         {
             auto block_size = node_js.at("block_size").get<size_t>();
-            node = make_shared<op::SpaceToDepth>(args[0], block_size);
+            auto mode = node_js.at("mode").get<op::SpaceToDepth::SpaceToDepthMode>();
+            node = make_shared<op::SpaceToDepth>(args[0], mode, block_size);
             break;
         }
         case OP_TYPEID::Split:
@@ -2605,7 +2651,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::SquaredDifference:
         {
-            node = make_shared<op::SquaredDifference>(args[0], args[1]);
+            node = make_shared<op::SquaredDifference>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Squeeze:
@@ -2747,6 +2794,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Unsqueeze:
         {
             node = make_shared<op::Unsqueeze>(args[0], args[1]);
+            break;
+        }
+        case OP_TYPEID::VariadicSplit:
+        {
+            node = make_shared<op::v1::VariadicSplit>(args[0], args[1], args[2]);
             break;
         }
         case OP_TYPEID::Xor:
@@ -3058,6 +3110,13 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::BatchMatMul: { break;
     }
+    case OP_TYPEID::BatchMatMulTranspose:
+    {
+        auto tmp = static_cast<const op::BatchMatMulTranspose*>(&n);
+        node["transpose_0"] = tmp->get_transpose_arg0();
+        node["transpose_1"] = tmp->get_transpose_arg1();
+        break;
+    }
     case OP_TYPEID::BatchNormTraining:
     {
         auto tmp = static_cast<const op::BatchNormTraining*>(&n);
@@ -3257,6 +3316,20 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Cosh: { break;
     }
+    case OP_TYPEID::CrossEntropy:
+    {
+        auto tmp = static_cast<const op::CrossEntropy*>(&n);
+        node["soft_label"] = tmp->get_soft_label();
+        node["ignore_index"] = tmp->get_ignore_index();
+        break;
+    }
+    case OP_TYPEID::CrossEntropyBackprop:
+    {
+        auto tmp = static_cast<const op::CrossEntropyBackprop*>(&n);
+        node["soft_label"] = tmp->get_soft_label();
+        node["ignore_index"] = tmp->get_ignore_index();
+        break;
+    }
     case OP_TYPEID::Dequantize:
     {
         auto tmp = static_cast<const op::Dequantize*>(&n);
@@ -3373,6 +3446,15 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Floor: { break;
+    }
+    case OP_TYPEID::FloorMod:
+    {
+        auto tmp = static_cast<const op::FloorMod*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::Gather:
     {
@@ -3583,6 +3665,12 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
+        break;
+    }
+    case OP_TYPEID::LogSoftmax:
+    {
+        auto tmp = static_cast<const op::LogSoftmax*>(&n);
+        node["axis"] = tmp->get_axis();
         break;
     }
     case OP_TYPEID::LRN:
@@ -3930,6 +4018,8 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Range: { break;
     }
+    case OP_TYPEID::Reciprocal: { break;
+    }
     case OP_TYPEID::Relu: { break;
     }
     case OP_TYPEID::ReluBackprop: { break;
@@ -4055,6 +4145,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = static_cast<const op::SpaceToDepth*>(&n);
         node["type"] = write_element_type(tmp->get_element_type());
+        node["mode"] = tmp->get_mode();
         node["block_size"] = tmp->get_block_size();
         break;
     }
@@ -4067,7 +4158,14 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Sqrt: { break;
     }
-    case OP_TYPEID::SquaredDifference: { break;
+    case OP_TYPEID::SquaredDifference:
+    {
+        auto tmp = static_cast<const op::SquaredDifference*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::Squeeze: { break;
     }
@@ -4200,6 +4298,8 @@ json JSONSerializer::serialize_node(const Node& n)
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
+    }
+    case OP_TYPEID::VariadicSplit: { break;
     }
     case OP_TYPEID::UnknownOp: { break;
     }

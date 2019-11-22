@@ -26,17 +26,34 @@ using namespace ngraph;
 template <typename T, typename U>
 static shared_ptr<op::Constant> fold_constant_gather_helper(const shared_ptr<op::Constant>& data,
                                                             const shared_ptr<op::Constant>& indices,
-                                                            const shared_ptr<op::Gather>& gather)
+                                                            const shared_ptr<Node>& gather)
 {
     std::vector<T> result_vec(shape_size(gather->get_shape()));
 
-    runtime::reference::gather<T, U>(data->get_data_ptr<T>(),
-                                     indices->get_data_ptr<U>(),
-                                     result_vec.data(),
-                                     data->get_shape(),
-                                     indices->get_shape(),
-                                     gather->get_shape(),
-                                     gather->get_axis());
+    if (auto gather_v1 = as_type_ptr<op::v1::Gather>(gather))
+    {
+        runtime::reference::gather<T, U>(data->get_data_ptr<T>(),
+                                         indices->get_data_ptr<U>(),
+                                         result_vec.data(),
+                                         data->get_shape(),
+                                         indices->get_shape(),
+                                         gather_v1->get_shape(),
+                                         gather_v1->get_axis());
+    }
+    else if (auto gather_v0 = as_type_ptr<op::v0::Gather>(gather))
+    {
+        runtime::reference::gather<T, U>(data->get_data_ptr<T>(),
+                                         indices->get_data_ptr<U>(),
+                                         result_vec.data(),
+                                         data->get_shape(),
+                                         indices->get_shape(),
+                                         gather_v0->get_shape(),
+                                         gather_v0->get_axis());
+    }
+    else
+    {
+        throw ngraph_error("Unsupported op in gather constant folding.");
+    }
 
     return make_shared<op::Constant>(
         gather->get_output_element_type(0), gather->get_output_shape(0), result_vec);
@@ -45,7 +62,7 @@ static shared_ptr<op::Constant> fold_constant_gather_helper(const shared_ptr<op:
 template <typename T>
 static shared_ptr<op::Constant> fold_constant_gather(const shared_ptr<op::Constant>& data,
                                                      const shared_ptr<op::Constant>& indices,
-                                                     const shared_ptr<op::Gather>& gather)
+                                                     const shared_ptr<Node>& gather)
 {
     auto indices_type = indices->get_output_element_type(0);
 
@@ -64,6 +81,7 @@ static shared_ptr<op::Constant> fold_constant_gather(const shared_ptr<op::Consta
     case element::Type_t::f64:
     case element::Type_t::i8:
     case element::Type_t::i16:
+    case element::Type_t::u1:
     case element::Type_t::u8:
     case element::Type_t::u16:
     case element::Type_t::u32:
@@ -88,7 +106,11 @@ void pass::ConstantFolding::construct_constant_gather()
     auto indices_label =
         make_shared<pattern::op::Label>(element::i64, Shape{5}, pattern::has_class<op::Constant>());
     size_t gather_axis = 1;
-    auto gather_op = make_shared<op::Gather>(data_label, indices_label, gather_axis);
+    auto gather_v0 = make_shared<op::v0::Gather>(data_label, indices_label, gather_axis);
+
+    auto axis_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{1}, pattern::has_class<op::Constant>());
+    auto gather_v1 = make_shared<op::v1::Gather>(data_label, indices_label, axis_label);
 
     auto constant_gather_callback = [data_label, indices_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_gather_callback against node = "
@@ -98,7 +120,7 @@ void pass::ConstantFolding::construct_constant_gather()
 
         auto data = static_pointer_cast<op::Constant>(pattern_map[data_label]);
         auto indices = static_pointer_cast<op::Constant>(pattern_map[indices_label]);
-        auto gather = static_pointer_cast<op::Gather>(m.get_match_root());
+        auto gather = m.get_match_root();
 
         NGRAPH_CHECK(revalidate_and_ensure_static(gather));
 
@@ -112,6 +134,9 @@ void pass::ConstantFolding::construct_constant_gather()
             break;
         case element::Type_t::dynamic:
             NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_gather_callback");
+            break;
+        case element::Type_t::u1:
+            NGRAPH_CHECK(false, "Encountered 'u1' element type in constant_gather_callback");
             break;
         case element::Type_t::boolean:
             replacement = fold_constant_gather<char>(data, indices, gather);
@@ -158,7 +183,12 @@ void pass::ConstantFolding::construct_constant_gather()
         return true;
     };
 
-    auto gather_matcher =
-        make_shared<pattern::Matcher>(gather_op, "ConstantFolding.ConstantGather");
-    this->add_matcher(gather_matcher, constant_gather_callback, PassProperty::CHANGE_DYNAMIC_STATE);
+    auto gather_matcher_v0 =
+        make_shared<pattern::Matcher>(gather_v0, "ConstantFolding.ConstantGatherV0");
+    this->add_matcher(
+        gather_matcher_v0, constant_gather_callback, PassProperty::CHANGE_DYNAMIC_STATE);
+    auto gather_matcher_v1 =
+        make_shared<pattern::Matcher>(gather_v1, "ConstantFolding.ConstantGatherV1");
+    this->add_matcher(
+        gather_matcher_v1, constant_gather_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }

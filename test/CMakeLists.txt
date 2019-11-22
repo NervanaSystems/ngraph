@@ -46,6 +46,7 @@ set(SRC
     aligned_buffer.cpp
     all_close_f.cpp
     assertion.cpp
+    attributes.cpp
     bfloat16.cpp
     build_graph.cpp
     builder_autobroadcast.cpp
@@ -53,6 +54,7 @@ set(SRC
     constant_folding.cpp
     concat_fusion.cpp
     control_dependencies.cpp
+    convert_u1_to_string.cpp
     coordinate.cpp
     copy.cpp
     cpio.cpp
@@ -105,6 +107,7 @@ set(SRC
     type_prop/any.cpp
     type_prop/avg_pool.cpp
     type_prop/batch_mat_mul.cpp
+    type_prop/batch_mat_mul_transpose.cpp
     type_prop/batch_norm.cpp
     type_prop/binary_elementwise.cpp
     type_prop/broadcast.cpp
@@ -137,6 +140,7 @@ set(SRC
     type_prop/hard_sigmoid.cpp
     type_prop/index_reduction.cpp
     type_prop/layer_norm.cpp
+    type_prop/log_softmax.cpp
     type_prop/lrn.cpp
     type_prop/lstm_cell.cpp
     type_prop/lstm_sequence.cpp

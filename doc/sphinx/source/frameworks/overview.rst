@@ -16,8 +16,9 @@ the nGraph Compiler, it helps to familiarize yourself with some basic concepts.
 We use the term :term:`bridge` to describe code that connects to any nGraph 
 device backend(s) while maintaining the framework's programmatic or user 
 interface. We have a `bridge for the TensorFlow framework`_. We also have a 
-:doc:`paddle_integ` bridge. Intel previously :doc:`contributed work to an MXNet bridge <../project/extras/testing_latency>`; 
-however, support for the MXNet bridge is no longer active. 
+:doc:`paddle_integ` bridge. Intel previously :doc:`contributed work to an MXNet 
+bridge <../project/extras/testing_latency>`; however, support for the MXNet 
+bridge is no longer active. 
 
 `ONNX`_ on its own is not a framework; it can be used with nGraph's 
 :doc:`../python_api/index` to import and execute ONNX models.
@@ -37,7 +38,7 @@ data scientists, or for deployment in cloud container environments, nGraph's
 We invite anyone working on new and novel frameworks or neural network designs 
 to explore our highly-modularized stack of components.
 
-Please read the :doc:`other` section for other framework-agnostic 
+Please read the :doc:`other/index` section for other framework-agnostic 
 configurations available to users of the nGraph Compiler stack. 
 
 .. figure:: ../graphics/overview-translation-flow.svg

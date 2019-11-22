@@ -130,6 +130,8 @@ namespace ngraph
                 /// `[n]`
                 AvgPool(const Output<Node>& arg, const Shape& window_shape);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
@@ -187,6 +189,7 @@ namespace ngraph
                                 bool include_padding_in_avg_computation);
 
                 void validate_and_infer_types() override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
@@ -281,6 +284,7 @@ namespace ngraph
 
                 size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
@@ -337,6 +341,7 @@ namespace ngraph
 
                 size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;

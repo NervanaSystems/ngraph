@@ -112,6 +112,7 @@ add_library(onnx_import STATIC
         op/leaky_relu.hpp
         op/less.hpp
         op/log.hpp
+        op/log_softmax.cpp
         op/log_softmax.hpp
         op/lp_norm.cpp
         op/lp_norm.hpp
@@ -121,7 +122,6 @@ add_library(onnx_import STATIC
         op/lrn.hpp
         op/lstm.cpp
         op/lstm.hpp
-        op/matmul.cpp
         op/matmul.hpp
         op/matmul_integer.cpp
         op/matmul_integer.hpp

@@ -84,6 +84,7 @@
 #include "ngraph/op/experimental/random_uniform.hpp"
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
+#include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
@@ -174,7 +175,6 @@
 #include "ngraph/runtime/cpu/cpu_visualize_tree.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
-#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -1210,7 +1210,8 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         else if (typeid(ngraph::op::GeluBackpropFactor) == typeid(node))
         {
 #if MKLDNN_VERSION_MAJOR < 1
-            return ((node.input(0).get_element_type() == element::f32) ? true : false);
+            // TODO: (gauri): need to differentiate which implementation : erf vs tanh
+            return false;
 #else
             // TODO: will be supported in mkldnn v1.1
             return false;
@@ -1219,7 +1220,8 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         else if (typeid(ngraph::op::Gelu) == typeid(node))
         {
 #if MKLDNN_VERSION_MAJOR < 1
-            return ((node.input(0).get_element_type() == element::f32) ? true : false);
+            // TODO: (gauri): need to differentiate which implementation : erf vs tanh
+            return false;
 #else
             // TODO: will be supported in mkldnn v1.1
             return false;
@@ -1262,7 +1264,6 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(BiDirectionalRnn, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPURnnMatFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(BatchFusion, true, ngraph::pass)
-    REGISTER_KNOBBED_PASS(CPUBatchFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(ReshapeSinking, false, ngraph::pass)
     REGISTER_KNOBBED_PASS(ReshapeElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(RecurrentReshapeElimination, false, ngraph::pass)
@@ -1374,6 +1375,7 @@ static void dump_one_kernel_with_type(runtime::cpu::CPU_DebugTracer& debug_trace
     case element::Type_t::f64:
     case element::Type_t::i16:
     case element::Type_t::i64:
+    case element::Type_t::u1:
     case element::Type_t::u16:
     case element::Type_t::u32:
     case element::Type_t::u64:
