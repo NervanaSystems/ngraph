@@ -1375,6 +1375,7 @@ static void dump_one_kernel_with_type(runtime::cpu::CPU_DebugTracer& debug_trace
     case element::Type_t::f64:
     case element::Type_t::i16:
     case element::Type_t::i64:
+    case element::Type_t::u1:
     case element::Type_t::u16:
     case element::Type_t::u32:
     case element::Type_t::u64:
