@@ -34,6 +34,7 @@ namespace ngraph
         public:
             static constexpr NodeTypeInfo type_info{"Clamp", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            Clamp() = default;
             /// \brief Constructs a Clamp node.
             ///
             /// \param data - Node producing the input tensor

@@ -27,6 +27,7 @@ namespace ngraph
         public:
             static constexpr NodeTypeInfo type_info{"ReorgYolo", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            ReorgYolo() = default;
             /// \brief Constructs a ReorgYolo operation
             ///
             /// \param input          Input

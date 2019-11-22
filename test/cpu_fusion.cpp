@@ -32,6 +32,7 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
+#include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
@@ -59,7 +60,6 @@
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
-#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -1092,7 +1092,7 @@ static double gelu_backprop_factor(double x)
 
 TEST(cpu_fusion, fuse_gelu_backprop_f32)
 {
-    Shape shape_a{2, 1, 60, 60};
+    Shape shape_a{2, 1, 600, 600};
 
     auto make_function = [shape_a]() {
         auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
@@ -3685,53 +3685,14 @@ TEST(cpu_fusion, sigmoid_multiply_fusion)
     ASSERT_EQ(ccg, 18);
 }
 
-TEST(cpu_fusion, fuse_batch_mat_mul_transpose)
-{
-    pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/batch_dot_3.json");
-    const string json_string = file_util::read_file_to_string(json_path);
-    stringstream ss(json_string);
-    shared_ptr<Function> func = ngraph::deserialize(ss);
-    pass_manager.run_passes(func);
-    size_t ccg = count_ops_of_type<op::BatchMatMulTranspose>(func);
-    ASSERT_EQ(ccg, 1);
-}
-
-TEST(cpu_fusion, fuse_batch_mat_mul_transpose_forward)
-{
-    pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-
-    const std::string file_name("mxnet/batch_dot_3.json");
-    auto cpu_f = make_function_from_file(file_name);
-    auto int_f = make_function_from_file(file_name);
-    pass_manager.run_passes(cpu_f);
-    test::Uniform<float> rng(0.0f, 1.0f);
-    vector<vector<float>> args;
-
-    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
-    {
-        vector<float> tensor_val(shape_size(param->get_shape()));
-        rng.initialize(tensor_val);
-        args.push_back(tensor_val);
-    }
-    auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
-    for (size_t i = 0; i < int_results.size(); i++)
-    {
-        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
-    }
-}
-
-TEST(cpu_fusion, fuse_batch_dot_backward)
+TEST(batch_fusion, fuse_batch_dot_backward)
 {
     const std::string file_name("mxnet/batch_dot_3.json");
     auto cpu_f = make_function_from_file(file_name);
     auto int_f = make_function_from_file(file_name);
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+    pass_manager.register_pass<ngraph::pass::BatchFusion>();
     pass_manager.run_passes(cpu_f);
 
     auto int_df = autodiff::backprop_function(int_f);
@@ -4044,28 +4005,4 @@ TEST(cpu_fusion, validate_fuse_gru_inputs)
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
-
-#if defined(AUTODIFF_BACKEND_CPU) && !defined(NGRAPH_JSON_DISABLE)
-NGRAPH_TEST(cpu_fusion, backwards_batchmatmultranspose_tensor2_tensor2)
-{
-    auto backend = runtime::Backend::create("CPU");
-
-    const std::string file_name("mxnet/batch_dot_3.json");
-    auto f = make_function_from_file(file_name);
-
-    test::Uniform<float> rng(-1.0f, 1.0f);
-    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> args;
-    for (shared_ptr<op::Parameter> param : f->get_parameters())
-    {
-        args.push_back(rng.initialize(backend->create_tensor<float>(param->get_shape())));
-    }
-
-    auto g = make_function_from_file(file_name);
-    pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    pass_manager.run_passes(g);
-    EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), f, g, args, .01f, .01f));
-}
-#endif
-
 #endif

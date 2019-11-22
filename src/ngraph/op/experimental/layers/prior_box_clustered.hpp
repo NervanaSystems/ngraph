@@ -47,6 +47,7 @@ namespace ngraph
         public:
             static constexpr NodeTypeInfo type_info{"PriorBoxClustered", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            PriorBoxClustered() = default;
             /// \brief Constructs a PriorBoxClustered operation
             ///
             /// \param layer_shape    Shape of layer for which prior boxes are computed

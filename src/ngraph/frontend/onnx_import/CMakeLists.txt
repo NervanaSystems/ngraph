@@ -225,13 +225,13 @@ target_include_directories(onnx_import
     SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
 target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES} ${ONNX_PROTO_LIBRARY})
 
-target_compile_definitions(onnx_import PRIVATE ngraph_EXPORTS ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
+target_compile_definitions(onnx_import PRIVATE ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
 
 set_property(TARGET onnx_import_interface PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_include_directories(onnx_import_interface SYSTEM PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
     SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
 
-target_compile_definitions(onnx_import_interface PRIVATE ngraph_EXPORTS ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
+target_compile_definitions(onnx_import_interface PRIVATE ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(onnx_import PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
@@ -241,3 +241,6 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
             -Wno-invalid-offsetof -Wno-shorten-64-to-32 -Wno-unused-macros -Wno-missing-variable-declarations
             -Wno-unused-private-field -Wno-shadow -Wno-deprecated PUBLIC -Wno-undefined-func-template)
 endif()
+
+target_compile_definitions(onnx_import PRIVATE ngraph_EXPORTS)
+target_compile_definitions(onnx_import_interface PRIVATE ngraph_EXPORTS)

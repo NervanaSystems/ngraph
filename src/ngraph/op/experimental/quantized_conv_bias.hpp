@@ -67,6 +67,7 @@ namespace ngraph
         public:
             static constexpr NodeTypeInfo type_info{"QuantizedConvolutionBiasAdd", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            QuantizedConvolutionBiasAdd() = default;
             QuantizedConvolutionBiasAdd(const Output<Node>& data_batch,
                                         const Output<Node>& filters,
                                         const Output<Node>& bias,
@@ -106,6 +107,7 @@ namespace ngraph
         public:
             static constexpr NodeTypeInfo type_info{"QuantizedConvolutionBiasSignedAdd", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            QuantizedConvolutionBiasSignedAdd() = default;
             QuantizedConvolutionBiasSignedAdd(const Output<Node>& data_batch,
                                               const Output<Node>& filters,
                                               const Output<Node>& bias,

@@ -43,6 +43,7 @@ namespace ngraph
         public:
             static constexpr NodeTypeInfo type_info{"GRUCell", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            GRUCell() = default;
             ///
             /// \brief      Constructs GRUCell node.
             ///

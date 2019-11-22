@@ -33,6 +33,7 @@ namespace ngraph
             public:
                 static constexpr NodeTypeInfo type_info{"LogicalOr", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
+                LogicalOr() = default;
                 /// \brief Constructs a logical-or operation.
                 ///
                 /// \param arg0 Node that produces the first input tensor.<br>
@@ -63,6 +64,7 @@ namespace ngraph
             public:
                 static constexpr NodeTypeInfo type_info{"Or", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Or() = default;
                 /// \brief Constructs a logical-or operation.
                 ///
                 /// \param arg0 Node that produces the first input tensor.<br>

@@ -49,6 +49,7 @@ namespace ngraph
             i16,
             i32,
             i64,
+            u1,
             u8,
             u16,
             u32,
@@ -139,6 +140,7 @@ namespace ngraph
         extern NGRAPH_API const Type i16;
         extern NGRAPH_API const Type i32;
         extern NGRAPH_API const Type i64;
+        extern NGRAPH_API const Type u1;
         extern NGRAPH_API const Type u8;
         extern NGRAPH_API const Type u16;
         extern NGRAPH_API const Type u32;

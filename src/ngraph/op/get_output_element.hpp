@@ -30,6 +30,7 @@ namespace ngraph
         public:
             static constexpr NodeTypeInfo type_info{"GetOutputElement", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            GetOutputElement() = default;
             /// \brief Constructs a get-tuple-element operation.
             ///
             /// \param arg The input tuple.

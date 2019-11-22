@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,25 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "gtest/gtest.h"
+#include "ngraph/ngraph.hpp"
+#include "util/all_close_f.hpp"
+#include "util/test_tools.hpp"
 
-#include "core/node.hpp"
-#include "ngraph/node.hpp"
+using namespace ngraph;
+using namespace std;
 
-namespace ngraph
+TEST(convert_u1_to_string, convert_u1_to_string)
 {
-    namespace onnx_import
+    vector<uint8_t> values{171, 16};
+    auto constant = make_shared<op::Constant>(element::u1, Shape{12}, &values[0]);
+
+    vector<string> ref{"1", "0", "1", "0", "1", "0", "1", "1", "0", "0", "0", "1"};
+    for (size_t i = 0; i < 12; ++i)
     {
-        namespace op
-        {
-            namespace set_1
-            {
-                NodeVector softmax(const Node& node);
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+        ASSERT_EQ(constant->convert_value_to_string(i), ref[i]);
+    }
+}

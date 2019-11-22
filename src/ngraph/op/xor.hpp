@@ -33,6 +33,7 @@ namespace ngraph
             public:
                 static constexpr NodeTypeInfo type_info{"LogicalXor", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
+                LogicalXor() = default;
                 /// \brief Constructs a logical-xor operation.
                 ///
                 /// \param arg0 Node that produces the first input tensor.<br>
@@ -63,6 +64,7 @@ namespace ngraph
             public:
                 static constexpr NodeTypeInfo type_info{"Xor", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Xor() = default;
                 /// \brief Constructs a logical-xor operation.
                 ///
                 /// \param arg0 Node that produces the first input tensor.<br>
