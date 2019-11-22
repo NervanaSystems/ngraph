@@ -4,7 +4,6 @@
 Dynamic Shapes
 ==============
 
-<<<<<<< HEAD
 For an example on how to use dynamic shapes, see *Scenario Two* on 
 the :ref:`scenario_two` documentation.
 
@@ -22,14 +21,8 @@ That means that shape mismatches can now occur at runtime.
 Dimension, Rank, and PartialShape Classes
 -----------------------------------------
 
-Partial shape information is expressed via the Dimension, Rank, and PartialShape 
+Partial shape information is expressed via the PartialShape, Dimension, and Rank, and 
 classes.
-
-
-.. doxygenclass:: ngraph::Dimension
-   :project: ngraph
-   :members: 
-
 
 .. doxygenclass:: ngraph::PartialShape
    :project: ngraph
@@ -39,6 +32,3 @@ classes.
 .. toctree::
    :name: 
    :maxdepth: 1
- 
-   
->>>>>>> master

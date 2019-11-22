@@ -28,8 +28,8 @@ compile with nGraph operations.
 In the :ref:`first scenario <scenario_one>`, the :term:`model description` 
 walk-through is based on the :file:`abc.cpp` code in the ``/doc/examples/abc`` 
 directory, and it deconstructs the steps that must happen (either programmatically 
-or manually) in order to successfully execute a computation. The full code 
-for this scenario is in the :ref:`static shapes example <sshp>`, and it ex
+or manually) in order to successfully execute a computation given complete 
+shape information.  
 
 The :ref:`second scenario <scenario_two>` involves the use of dynamic tensors. 
 A :term:`dynamic tensor` is a tensor whose shape can change from one "iteration" 
@@ -43,7 +43,7 @@ responsibility to set the actual shape. The :term:`model description`
 for the second scenario based on the :file:`partial_shape.cpp` code in the 
 ``/doc/examples/dynamic_tensor`` directory, and it deconstructs the steps that 
 must happen (either programmatically or manually) in order to successfully 
-retreive shape data:
+retreive shape data
 
 
 .. _scenario_one:
@@ -53,9 +53,9 @@ Scenario One: Using Complete Shapes
 
 The nGraph :term:`IR` uses a strong, dynamic type system, including static 
 shapes. This means that at compilation, every tensor (or, equivalently,
-every node output) in the graph is assigned **complete shape information**
--- in other words one and only one shape. The static process by which this 
-assignment takes place is called :term:`shape propagation`. 
+every node output) in the graph is assigned **complete shape information**;
+that is, one and only one shape. The static process by which this assignment 
+takes place is called :term:`shape propagation`.
 
 A step-by-step example of how a framework might execute with complete shape 
 information is provided here. For a step-by-step example using dynamic 
@@ -68,6 +68,9 @@ shapes, see :ref:`scenario_two`.
 * :ref:`initialize_inputs`
 * :ref:`invoke_cmp`
 * :ref:`access_outputs`
+
+
+.. _define_cmp:
 
 Define the computation
 ----------------------
