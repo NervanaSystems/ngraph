@@ -1893,6 +1893,7 @@ private:
         case OP_TYPEID::Asin_v1:
         case OP_TYPEID::Atan_v1:
         case OP_TYPEID::AvgPool_v1:
+        case OP_TYPEID::BatchMatMulTranspose:
         case OP_TYPEID::BatchNormInference_v1:
         case OP_TYPEID::Broadcast_v1:
         case OP_TYPEID::Ceiling_v1:
