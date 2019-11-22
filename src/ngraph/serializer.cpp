@@ -3701,14 +3701,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["output_shape"] = tmp->get_output_shape();
         break;
     }
-    case OP_TYPEID::HardSigmoid: { break;
-    }
-    case OP_TYPEID::HardSigmoid_v1:
-    {
-        auto tmp = static_cast<const op::HardSigmoid*>(&n);
-        node["alpha"] = tmp->get_alpha();
-        node["beta"] = tmp->get_beta();
-        break;
+    case OP_TYPEID::HardSigmoid_v1: { break;
     }
     case OP_TYPEID::Interpolate_v1: { break;
     }
