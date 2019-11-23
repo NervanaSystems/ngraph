@@ -287,9 +287,9 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::GreaterEq_v1:
+    case OP_TYPEID::GreaterEqual_v1:
     {
-        downgrade_binary_elementwise_node<op::v0::GreaterEq, op::v1::GreaterEq>(node);
+        downgrade_binary_elementwise_node<op::v0::GreaterEq, op::v1::GreaterEqual>(node);
         modified = true;
         break;
     }

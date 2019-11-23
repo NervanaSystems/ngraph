@@ -302,7 +302,7 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
     }
     case OP_TYPEID::GreaterEq:
     {
-        upgrade_binary_elementwise_node<op::v0::GreaterEq, op::v1::GreaterEq>(node);
+        upgrade_binary_elementwise_node<op::v0::GreaterEq, op::v1::GreaterEqual>(node);
         modified = true;
         break;
     }

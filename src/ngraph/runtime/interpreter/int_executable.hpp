@@ -1886,7 +1886,7 @@ private:
         case OP_TYPEID::Gather_v1:
         case OP_TYPEID::GenerateMask_v1:
         case OP_TYPEID::Greater_v1:
-        case OP_TYPEID::GreaterEq_v1:
+        case OP_TYPEID::GreaterEqual_v1:
         case OP_TYPEID::Less_v1:
         case OP_TYPEID::MaxPool_v1:
         case OP_TYPEID::MaxPoolBackprop_v1:
