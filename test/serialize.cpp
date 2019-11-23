@@ -352,9 +352,7 @@ TEST(serialize, opset1_softmax)
     shared_ptr<Function> g = deserialize(s);
     const auto g_result = g->get_results().at(0);
     const auto g_softmax = g_result->input(0).get_source_output().get_node_shared_ptr();
-
-    EXPECT_EQ(g_softmax->description(), "Softmax");
-    EXPECT_EQ(g_softmax->get_version(), 1);
+    EXPECT_TRUE(is_type<op::v1::Softmax>(g_softmax));
 }
 
 TEST(serialize, opset1_gather)
@@ -371,9 +369,7 @@ TEST(serialize, opset1_gather)
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
     auto g_gather = g_result->input(0).get_source_output().get_node_shared_ptr();
-
-    EXPECT_EQ(g_gather->description(), "Gather");
-    EXPECT_EQ(g_gather->get_version(), 1);
+    EXPECT_TRUE(is_type<op::v1::Gather>(g_gather));
 }
 
 TEST(serialize, opset1_product)
@@ -389,12 +385,10 @@ TEST(serialize, opset1_product)
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
     auto g_red_prod = g_result->input(0).get_source_output().get_node_shared_ptr();
-
-    EXPECT_EQ(g_red_prod->description(), "Product");
-    EXPECT_EQ(g_red_prod->get_version(), 1);
-    EXPECT_EQ(dynamic_cast<const op::v1::ReduceProd*>(g_red_prod.get())->get_keep_dims(), 1);
-    EXPECT_EQ(dynamic_cast<const op::v1::ReduceProd*>(g_red_prod.get())->get_reduction_axes(),
-              AxisSet({1, 2}));
+    auto node = as_type_ptr<op::v1::ReduceProd>(g_red_prod);
+    EXPECT_TRUE(node);
+    EXPECT_EQ(node->get_keep_dims(), 1);
+    EXPECT_EQ(node->get_reduction_axes(), AxisSet({1, 2}));
 }
 
 TEST(serialize, opset1_sum)
@@ -410,12 +404,10 @@ TEST(serialize, opset1_sum)
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
     auto g_red_sum = g_result->input(0).get_source_output().get_node_shared_ptr();
-
-    EXPECT_EQ(g_red_sum->description(), "Sum");
-    EXPECT_EQ(g_red_sum->get_version(), 1);
-    EXPECT_EQ(dynamic_cast<const op::v1::ReduceSum*>(g_red_sum.get())->get_keep_dims(), 1);
-    EXPECT_EQ(dynamic_cast<const op::v1::ReduceSum*>(g_red_sum.get())->get_reduction_axes(),
-              AxisSet({1, 2}));
+    auto node = as_type_ptr<op::v1::ReduceSum>(g_red_sum);
+    EXPECT_TRUE(node);
+    EXPECT_EQ(node->get_keep_dims(), 1);
+    EXPECT_EQ(node->get_reduction_axes(), AxisSet({1, 2}));
 }
 
 TEST(serialize, opset1_pad)

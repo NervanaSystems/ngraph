@@ -1863,7 +1863,7 @@ private:
         case OP_TYPEID::FloorMod_v1:
         case OP_TYPEID::Gather_v1:
         case OP_TYPEID::Greater_v1:
-        case OP_TYPEID::GreaterEq_v1:
+        case OP_TYPEID::GreaterEqual_v1:
         case OP_TYPEID::GroupConvolution_v1:
         case OP_TYPEID::GRN:
         case OP_TYPEID::GRUCell:
