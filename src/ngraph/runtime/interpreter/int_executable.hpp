@@ -752,10 +752,9 @@ private:
         {
             const op::CumSum* cumsum = static_cast<const op::CumSum*>(&node);
             reference::cumsum<T>(args[0]->get_data_ptr<const T>(),
+                                 args[1]->get_data_ptr<const T>(),
                                  out[0]->get_data_ptr<T>(),
                                  node.get_input_shape(0),
-                                 node.get_output_shape(0),
-                                 cumsum->get_axis(),
                                  cumsum->is_exclusive(),
                                  cumsum->is_reverse());
             break;

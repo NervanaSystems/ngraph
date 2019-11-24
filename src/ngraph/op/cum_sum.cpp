@@ -32,29 +32,12 @@ op::CumSum::CumSum(const Output<Node>& arg,
     , m_exclusive(exclusive)
     , m_reverse(reverse)
 {
-    auto const_op = as_type_ptr<op::Constant>(axis.get_node_shared_ptr());
-    m_axis = *(static_cast<const int64_t*>(const_op->get_data_ptr()));
-
-    size_t rank = arg.get_shape().size();
     NODE_VALIDATION_CHECK(this,
-                          m_axis < -rank || m_axis > rank,
-                          "axis must be in the range [-rank, rank] but (got ",
-                          m_axis,
+                          axis.get_element_type() == element::i32 ||
+                              axis.get_element_type() == element::i64,
+                          "axis element type must be either int64_t or int32_t but got (",
+                          axis.get_element_type(),
                           ").");
-    if (m_axis < 0)
-    {
-        m_axis = m_axis + rank;
-    }
-
-    set_output_type(0, arg.get_element_type(), arg.get_shape());
-}
-
-op::CumSum::CumSum(const Output<Node>& arg,
-                   const int64_t axis,
-                   const bool exclusive,
-                   const bool reverse)
-    : CumSum(arg, op::Constant::create(element::i64, Shape{}, {axis}), exclusive, reverse)
-{
     set_output_type(0, arg.get_element_type(), arg.get_shape());
 }
 
@@ -67,12 +50,8 @@ shared_ptr<Node> op::CumSum::copy_with_new_args(const NodeVector& new_args) cons
 void op::CumSum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     auto delta = deltas.at(0);
-
-    auto x = input_value(0);
-    auto& x_shape = x.get_shape();
-
-    adjoints.add_delta(
-        x, make_shared<op::Broadcast>(delta, x_shape, AxisSet{static_cast<size_t>(get_axis())}));
+    auto input_tensor = input_value(0);
+    adjoints.add_delta(input_tensor, delta);
 }
 
 shared_ptr<Node> op::CumSum::get_default_value() const

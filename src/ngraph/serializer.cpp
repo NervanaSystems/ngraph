@@ -1395,10 +1395,10 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::CumSum:
         {
-            auto axis = node_js.at("axis");
             auto exclusive = node_js.at("exclusive");
             auto reverse = node_js.at("reverse");
-            node = make_shared<op::CumSum>(args[0], axis, exclusive, reverse);
+            node = make_shared<op::CumSum>(args[0], args[1], exclusive, reverse);
+            break;
         }
         case OP_TYPEID::CrossEntropy:
         {
@@ -3312,9 +3312,9 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::CumSum:
     {
         auto tmp = static_cast<const op::CumSum*>(&n);
-        node["axis"] = tmp->get_axis();
         node["exclusive"] = tmp->is_exclusive();
         node["reverse"] = tmp->is_reverse();
+        break;
     }
     case OP_TYPEID::CrossEntropy:
     {

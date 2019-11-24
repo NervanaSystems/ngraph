@@ -27,22 +27,21 @@ namespace ngraph
         {
             namespace kernel
             {
-                template <typename ElementType>
-                void reference_cumsum(void* arg,
+                template <typename InputElementType, typename AxisElementType>
+                void reference_cumsum(void* input_tensor,
+                                      void* axis_tensor,
                                       void* out,
-                                      const Shape& in_shape,
-                                      const Shape& out_shape,
-                                      const int64_t axis,
+                                      const Shape& tensor_shape,
                                       const bool exclusive,
                                       const bool reverse)
                 {
-                    reference::cumsum<ElementType>(static_cast<const ElementType*>(arg),
-                                                   static_cast<ElementType*>(out),
-                                                   in_shape,
-                                                   out_shape,
-                                                   axis,
-                                                   exclusive,
-                                                   reverse);
+                    reference::cumsum<InputElementType, AxisElementType>(
+                        static_cast<const InputElementType*>(input_tensor),
+                        static_cast<const AxisElementType*>(axis_tensor),
+                        static_cast<InputElementType*>(out),
+                        tensor_shape,
+                        exclusive,
+                        reverse);
                 }
             }
         }

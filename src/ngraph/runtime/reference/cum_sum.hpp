@@ -19,7 +19,6 @@
 #include <cmath>
 
 #include "ngraph/coordinate_transform.hpp"
-#include "ngraph/shape_util.hpp"
 #include "ngraph/type/bfloat16.hpp"
 #include "ngraph/type/float16.hpp"
 
@@ -29,20 +28,28 @@ namespace ngraph
     {
         namespace reference
         {
-            template <typename T>
+            template <typename T, typename P>
             void cumsum(const T* arg,
+                        const P* axis_tensor,
                         T* out,
-                        const Shape& in_shape,
-                        const Shape& out_shape,
-                        const int64_t axis,
+                        const Shape& tensor_shape,
                         const bool exclusive,
                         const bool reverse)
             {
-                CoordinateTransform temp_transform(out_shape);
+                CoordinateTransform temp_transform(tensor_shape);
                 for (const Coordinate& output_coord : temp_transform)
                 {
                     out[temp_transform.index(output_coord)] = 0;
                 }
+
+                P axis = axis_tensor[0];
+                P rank = tensor_shape.size();
+
+                if (axis < -rank || axis > rank)
+                {
+                    throw ngraph_error("axis must be in the range [-rank, rank]");
+                }
+                axis = axis < 0 ? rank + axis : axis;
 
                 auto get_key = [&, axis](const Coordinate& coord) -> Coordinate {
                     Coordinate result(coord.size(), 0);
@@ -107,7 +114,7 @@ namespace ngraph
 
                 // Map to collect tensor elements belonging to the same axis
                 std::map<Coordinate, std::vector<std::pair<size_t, T>>> map_cooord_to_val;
-                CoordinateTransform input_transform(in_shape);
+                CoordinateTransform input_transform(tensor_shape);
                 for (const Coordinate& input_coord : input_transform)
                 {
                     // points to the current element in the input tensor
