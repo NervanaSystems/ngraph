@@ -27,7 +27,6 @@
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
-#include "ngraph/placement.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -343,7 +342,7 @@ void Node::set_friendly_name(const string& name)
     m_friendly_name = name;
 }
 
-Placement Node::get_placement() const
+Node::Placement Node::get_placement() const
 {
     return m_placement;
 }
@@ -351,16 +350,6 @@ Placement Node::get_placement() const
 void Node::set_placement(Placement placement)
 {
     m_placement = placement;
-}
-
-size_t Node::get_placement_index() const
-{
-    return m_placement_index;
-}
-
-void Node::set_placement_index(size_t placement)
-{
-    m_placement_index = placement;
 }
 
 void Node::add_provenance_group_member(const shared_ptr<Node>& node)

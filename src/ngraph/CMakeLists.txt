@@ -535,8 +535,6 @@ set (SRC
     pattern/op/label.hpp
     pattern/op/pattern.hpp
     pattern/op/skip.hpp
-    placement.cpp
-    placement.hpp
     provenance.cpp
     provenance.hpp
     rank.hpp

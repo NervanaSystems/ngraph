@@ -29,6 +29,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/check.hpp"
 #include "ngraph/coordinate.hpp"
@@ -36,9 +37,9 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/op_annotations.hpp"
-#include "ngraph/placement.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type.hpp"
 
@@ -50,7 +51,6 @@ namespace ngraph
     template <typename NodeType>
     class Output;
 
-    class AttributeVisitor;
     class Variant;
     class Node;
     using NodeVector = std::vector<std::shared_ptr<Node>>;
@@ -407,18 +407,28 @@ namespace ngraph
         /// True if this and node have one output with same element type and shape
         bool has_same_type(std::shared_ptr<const Node> node) const;
 
+        enum class Placement
+        {
+            DEFAULT,
+            INTERPRETER,
+            CPU,
+            GPU,
+            NNP,
+            PLAIDML,
+            UNDEFINED,
+            HOST,
+            DEVICE
+        };
+
         /// Get device placement
         Placement get_placement() const;
 
         /// Set device placement
         void set_placement(Placement placement);
 
-        /// Get device placement
-        size_t get_placement_index() const;
-
-        /// Set device placement
-        void set_placement_index(size_t placement);
-
+        bool is_placement_on_host() const { return m_placement == Placement::HOST; }
+        bool is_placement_on_device() const { return m_placement == Placement::DEVICE; }
+        bool is_placement_undefined() const { return m_placement == Placement::UNDEFINED; }
         using RTMap = std::map<std::string, std::shared_ptr<Variant>>;
 
         RTMap& get_rt_info() { return m_rt_info; }
@@ -462,8 +472,6 @@ namespace ngraph
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
         /// Use instance ids for comparison instead of memory addresses to improve determinism
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
-        static const size_t placement_invalid = -1;
-
         /// \return A vector containing a handle for each of this node's inputs, in order.
         // TODO: Rename to get_inputs()?
         std::vector<Input<Node>> inputs();
@@ -526,7 +534,6 @@ namespace ngraph
         std::deque<descriptor::Output> m_outputs;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
-        size_t m_placement_index = placement_invalid;
         std::shared_ptr<ngraph::op::util::OpAnnotations> m_op_annotations;
         std::map<std::string, std::shared_ptr<Variant>> m_rt_info;
     };
