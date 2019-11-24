@@ -4610,8 +4610,8 @@ namespace ngraph
             {
                 const ngraph::op::CumSum* cumsum = static_cast<const ngraph::op::CumSum*>(node);
                 writer.block_begin();
-                writer << "reference::cumsum<" << args[0] get_element_type().c_type_string()
-                       << ",           " << args[1].get_element_type().c_type_string() ">(";
+                writer << "reference::cumsum<" << args[0].get_element_type().c_type_string();
+                writer << ",           " << args[1].get_element_type().c_type_string() << ">(";
                 writer << "            " << args[0].get_name() << ",\n";
                 writer << "            " << args[1].get_name() << ",\n";
                 writer << "            " << out[0].get_name() << ",\n";
