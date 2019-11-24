@@ -409,12 +409,6 @@ namespace ngraph
 
         enum class Placement
         {
-            DEFAULT,
-            INTERPRETER,
-            CPU,
-            GPU,
-            NNP,
-            PLAIDML,
             UNDEFINED,
             HOST,
             DEVICE
@@ -533,7 +527,7 @@ namespace ngraph
         std::deque<descriptor::Input> m_inputs;
         std::deque<descriptor::Output> m_outputs;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
-        Placement m_placement = Placement::DEFAULT;
+        Placement m_placement = Placement::UNDEFINED;
         std::shared_ptr<ngraph::op::util::OpAnnotations> m_op_annotations;
         std::map<std::string, std::shared_ptr<Variant>> m_rt_info;
     };
