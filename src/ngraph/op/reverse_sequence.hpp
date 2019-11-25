@@ -55,8 +55,8 @@ namespace ngraph
         private:
             int64_t m_batch_axis;
             int64_t m_seq_axis;
-            int64_t m_normalized_batch_axis;
-            int64_t m_normalized_seq_axis;
+            size_t m_normalized_batch_axis;
+            size_t m_normalized_seq_axis;
         };
     }
 }

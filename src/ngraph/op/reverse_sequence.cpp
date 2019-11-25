@@ -33,8 +33,8 @@ op::ReverseSequence::ReverseSequence(const Output<Node>& arg,
     : Op({arg, seq_indices})
     , m_batch_axis(batch_axis)
     , m_seq_axis(seq_axis)
-    , m_normalized_batch_axis(batch_axis)
-    , m_normalized_seq_axis(seq_axis)
+    , m_normalized_batch_axis{0}
+    , m_normalized_seq_axis{0}
 {
     constructor_validate_and_infer_types();
 }
@@ -54,6 +54,11 @@ void op::ReverseSequence::validate_and_infer_types()
                               ", seq_axis=",
                               m_seq_axis,
                               ")");
+    }
+    else
+    {
+        m_normalized_batch_axis = m_batch_axis;
+        m_normalized_seq_axis = m_seq_axis;
     }
 
     if (input_rank.is_static())
