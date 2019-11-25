@@ -35,14 +35,14 @@ namespace ngraph
                     bool exclusive = node.get_attribute_value<std::int64_t>("exclusive", 0);
                     bool reverse = node.get_attribute_value<std::int64_t>("reverse", 0);
                     std::shared_ptr<ngraph::Node> axis;
-                    
+
                     if (inputs.size() > 1)
                     {
                         axis = inputs.at(1); // optional input, 0-D tensor
                     }
                     else
                     {
-                        axis = ngraph::op::Constant::create(element::i64, Shape{}, {0}); // default                      
+                        axis = ngraph::op::Constant::create(element::i64, Shape{}, {0}); // default
                     }
                     return NodeVector{
                         std::make_shared<ngraph::op::CumSum>(data, axis, exclusive, reverse)};
