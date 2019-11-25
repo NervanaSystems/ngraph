@@ -42,15 +42,15 @@ NodeVector op::Mod::decompose_op() const
 
     // truncated(a / b)
     auto division = make_shared<op::Convert>(
-        make_shared<op::Divide>(dividend, divisor, m_auto_broadcast), ngraph::element::i64);
+        make_shared<op::v1::Divide>(dividend, divisor, m_auto_broadcast), ngraph::element::i64);
     division = make_shared<op::Convert>(division, dividend_et);
     // truncated(a / b) * b
-    const auto multiplication = make_shared<op::Multiply>(division, divisor, m_auto_broadcast);
+    const auto multiplication = make_shared<op::v1::Multiply>(division, divisor, m_auto_broadcast);
     // a mod b = a - truncated(a / b) * b
     const auto mod = make_shared<op::Subtract>(dividend, multiplication, m_auto_broadcast);
 
     // apply sign of dividend
-    return {make_shared<op::Multiply>(dividend_sign, mod, m_auto_broadcast)};
+    return {make_shared<op::v1::Multiply>(dividend_sign, mod, m_auto_broadcast)};
 }
 
 shared_ptr<Node> op::Mod::copy_with_new_args(const NodeVector& new_args) const
