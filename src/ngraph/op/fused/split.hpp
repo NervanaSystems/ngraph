@@ -37,22 +37,22 @@ namespace ngraph
             /// \brief Constructs a Split op that evenly divides the input tensor.
             ///
             /// \param data - Node producing the input tensor
-            /// \param axis - indicates an axis along which the input tensor should be split.
+            /// \param axis - Node producing an axis along which the input tensor should be split.
             ///               Negative values mean counting from the back of the input tensor's
             ///               shape.
             /// \param num_split - a number of "pieces" the input tensor will be split to
-            Split(const Output<Node>& data, const int axis, const size_t num_split);
+            Split(const Output<Node>& data, const Output<Node>& axis, const size_t num_split);
 
             /// \brief Constructs a Split op that splits the input tensor into variable length
             ///        "pieces"
             ///
             /// \param data - Node producing the input tensor
-            /// \param axis - indicates an axis along which the input tensor should be split.
+            /// \param axis - Node producing an axis along which the input tensor should be split.
             ///               Negative values mean counting from the back of the input tensor's
             ///               shape.
             /// \param splits - a list of lengths that the input tensor should be split to. Use this
             ///                 constructor to split the input tensor to variable length chunks.
-            Split(const Output<Node>& data, const int axis, const std::vector<size_t>& splits);
+            Split(const Output<Node>& data, const Output<Node>& axis, const std::vector<size_t>& splits);
 
             void pre_validate_and_infer_types() override;
 
@@ -77,7 +77,7 @@ namespace ngraph
 
             /// used internally for validation purposes, indicates which constructor was used
             bool m_split_evenly;
-            int m_axis;
+            int64_t m_axis;
             size_t m_num_split;
             /// contains lengths of chunks that the input tensor will be split into
             std::vector<size_t> m_splits;

@@ -2726,9 +2726,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Split_v1:
         {
-            const auto axis = node_js.at("axis").get<size_t>();
             const auto splits = node_js.at("splits").get<vector<size_t>>();
-            node = make_shared<op::Split>(args[0], axis, splits);
+            node = make_shared<op::Split>(args[0], args[1], splits);
             break;
         }
         case OP_TYPEID::Sqrt:
@@ -4309,7 +4308,6 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Split_v1:
     {
         auto tmp = static_cast<const op::Split*>(&n);
-        node["axis"] = tmp->get_axis();
         node["splits"] = tmp->get_splits();
         break;
     }
