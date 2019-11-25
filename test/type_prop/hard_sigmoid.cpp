@@ -23,11 +23,12 @@ using namespace ngraph;
 
 TEST(type_prop, hardsigmoid)
 {
-    Shape data_shape{3, 5};
-    float alpha = 0.1;
-    float beta = 1.2;
-    auto P = make_shared<op::Parameter>(element::f32, data_shape);
-    auto H = make_shared<op::HardSigmoid>(P, alpha, beta);
+    const Shape data_shape{3, 5};
+
+    const auto P = make_shared<op::Parameter>(element::f32, data_shape);
+    const auto alpha = op::Constant::create<float>(P->get_element_type(), Shape{}, {0.1f});
+    const auto beta = op::Constant::create<float>(P->get_element_type(), Shape{}, {1.2f});
+    const auto H = make_shared<op::HardSigmoid>(P, alpha, beta);
     ASSERT_EQ(H->get_element_type(), element::f32);
     ASSERT_EQ(H->get_shape(), data_shape);
 }

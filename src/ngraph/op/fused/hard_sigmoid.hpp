@@ -33,23 +33,21 @@ namespace ngraph
             static constexpr NodeTypeInfo type_info{"HardSigmoid", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             HardSigmoid() = default;
+
             /// \brief      Constructs a HardSigmoid operation.
             ///
             /// \param      data   Input tensor.
-            /// \param[in]  alpha  The alpha parameter.
-            /// \param[in]  beta   The beta parameter.
+            /// \param[in]  alpha  A scalar value representing the alpha parameter.
+            /// \param[in]  beta   A scalar value representing the beta parameter.
             ///
-            HardSigmoid(const Output<Node>& data, float alpha, float beta);
+            HardSigmoid(const Output<Node>& data,
+                        const Output<Node>& alpha,
+                        const Output<Node>& beta);
 
+            virtual void pre_validate_and_infer_types() override;
             virtual NodeVector decompose_op() const override;
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
-
-            float get_alpha() const { return m_alpha; }
-            float get_beta() const { return m_beta; }
-        private:
-            float m_alpha;
-            float m_beta;
         };
     }
 }
