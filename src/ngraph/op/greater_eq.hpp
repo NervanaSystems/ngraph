@@ -72,6 +72,9 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
                 size_t get_version() const override { return 1; }
             };
+
+            // DO NOT USE. Will be removed once users switch to GreaterEqual
+            using GreaterEq = GreaterEqual;
         } // namespace v1
 
         using v0::GreaterEq;
