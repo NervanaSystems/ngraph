@@ -83,6 +83,7 @@ std::shared_ptr<Function>
         else
         {
             m[old_node.get()] = old_node->copy_with_new_inputs(new_args);
+            m[old_node.get()]->get_rt_info() = old_node->get_rt_info();
         }
 
         m[old_node.get()]->set_friendly_name(old_node->get_friendly_name());
