@@ -21,6 +21,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/slice_plan.hpp"
@@ -356,6 +357,37 @@ namespace
     bool op_cast(shared_ptr<op::v1::NotEqual> node)
     {
         op_cast_binary_elementwise_node<op::v0::NotEqual, op::v1::NotEqual>(node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::OneHot> node)
+    {
+        const auto indices = node->input_value(0).get_node_shared_ptr();
+        const auto depth = node->input_value(1).get_node_shared_ptr();
+        auto on_value = node->input_value(2).get_node_shared_ptr();
+        auto off_value = node->input_value(3).get_node_shared_ptr();
+        const auto axis = node->get_axis();
+
+        NGRAPH_CHECK(depth->is_constant(), "depth input must be constant", *node);
+        const auto const_depth = as_type_ptr<op::Constant>(depth);
+        std::int64_t depth_value = const_depth->get_vector<std::int64_t>()[0];
+
+        const auto indices_shape = node->get_input_partial_shape(0);
+        NGRAPH_CHECK(indices_shape.is_static(), "indices shape must be static", *node);
+        auto output_shape = indices_shape.to_shape();
+        output_shape.insert(output_shape.begin() + axis, depth_value);
+
+        auto one_hot = std::make_shared<ngraph::op::Convert>(
+            std::make_shared<ngraph::op::OneHot>(indices, output_shape, axis),
+            on_value->get_element_type());
+
+        auto broadcasted_values = op::numpy_style_broadcast({one_hot, on_value, off_value});
+        on_value = broadcasted_values[1];
+        off_value = broadcasted_values[2];
+
+        auto replacement_node = one_hot * (on_value - off_value) + off_value;
+
+        replace_node(node, replacement_node);
         return true;
     }
 
