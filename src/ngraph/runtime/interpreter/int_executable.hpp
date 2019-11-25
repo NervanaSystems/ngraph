@@ -1894,6 +1894,7 @@ private:
         case OP_TYPEID::Minimum_v1:
         case OP_TYPEID::Multiply_v1:
         case OP_TYPEID::NotEqual_v1:
+        case OP_TYPEID::OneHot_v1:
         case OP_TYPEID::Pad_v1:
         case OP_TYPEID::Power_v1:
         case OP_TYPEID::ReduceMax_v1:
