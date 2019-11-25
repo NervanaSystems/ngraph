@@ -458,6 +458,18 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_cum_sum_2d_axis_input)
     test_case.run();
 }
 
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_cum_sum_2d_dynamic_axis_input)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/cum_sum_2d_dynamic_axis_input.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({1.f, 2.f, 3.f, 4.f, 5.f, 6.f});
+    test_case.add_input<std::int32_t>({1});
+    test_case.add_expected_output<float>(Shape{2, 3}, {1.f, 3.f, 6.f, 4.f, 9.f, 15.f});
+    test_case.run();
+}
+
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_cum_sum_3d_exclusive_reverse)
 {
     auto function = onnx_import::import_onnx_model(
