@@ -15,13 +15,14 @@
 //*****************************************************************************
 
 #include "ngraph/op/one_hot.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::OneHot::type_info;
+constexpr NodeTypeInfo op::v0::OneHot::type_info;
 
-op::OneHot::OneHot(const Output<Node>& arg, const PartialShape& shape, size_t one_hot_axis)
+op::v0::OneHot::OneHot(const Output<Node>& arg, const PartialShape& shape, size_t one_hot_axis)
     : Op({arg})
     , m_shape(shape)
     , m_one_hot_axis(one_hot_axis)
@@ -29,7 +30,7 @@ op::OneHot::OneHot(const Output<Node>& arg, const PartialShape& shape, size_t on
     constructor_validate_and_infer_types();
 }
 
-void op::OneHot::validate_and_infer_types()
+void op::v0::OneHot::validate_and_infer_types()
 {
     element::Type arg_et = get_input_element_type(0);
     PartialShape arg_shape = get_input_partial_shape(0);
@@ -92,8 +93,86 @@ void op::OneHot::validate_and_infer_types()
     set_output_type(0, arg_et, result_shape);
 }
 
-shared_ptr<Node> op::OneHot::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::OneHot::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<OneHot>(new_args.at(0), m_shape, m_one_hot_axis);
+    return make_shared<v0::OneHot>(new_args.at(0), m_shape, m_one_hot_axis);
+}
+
+constexpr NodeTypeInfo op::v1::OneHot::type_info;
+
+op::v1::OneHot::OneHot(const Output<Node>& indices,
+                       const Output<Node>& depth,
+                       const Output<Node>& on_value,
+                       const Output<Node>& off_value,
+                       int64_t axis)
+    : Op({indices, depth, on_value, off_value})
+    , m_axis(axis)
+{
+    constructor_validate_and_infer_types();
+}
+
+void op::v1::OneHot::validate_and_infer_types()
+{
+    const auto& indices_et = get_input_element_type(0);
+    const auto& depth_et = get_input_element_type(1);
+    const auto& on_value_et = get_input_element_type(2);
+    const auto& off_value_et = get_input_element_type(3);
+
+    NODE_VALIDATION_CHECK(this,
+                          indices_et.is_dynamic() || indices_et.is_integral(),
+                          "Indices must be integral element type.");
+
+    NODE_VALIDATION_CHECK(this,
+                          depth_et.is_dynamic() || depth_et.is_integral(),
+                          "Depth must be integral element type.");
+
+    NODE_VALIDATION_CHECK(this,
+                          on_value_et.compatible(off_value_et),
+                          "on_value element type must be compatible with off_value element type.");
+
+    const auto& indices_shape = get_input_partial_shape(0);
+    const auto& depth_shape = get_input_partial_shape(1);
+    const auto& on_value_shape = get_input_partial_shape(2);
+    const auto& off_value_shape = get_input_partial_shape(3);
+
+    NODE_VALIDATION_CHECK(this,
+                          depth_shape.is_dynamic() || is_scalar(depth_shape.to_shape()),
+                          "depth input must be scalar.");
+
+    NODE_VALIDATION_CHECK(this,
+                          on_value_shape.is_dynamic() || is_scalar(on_value_shape.to_shape()),
+                          "on_value input must be scalar.");
+
+    NODE_VALIDATION_CHECK(this,
+                          off_value_shape.is_dynamic() || is_scalar(off_value_shape.to_shape()),
+                          "off_value input must be scalar.");
+
+    const auto& depth = input_value(1).get_node_shared_ptr();
+    PartialShape result_shape{PartialShape::dynamic()};
+
+    if (indices_shape.is_static() && indices_shape.rank().is_static() && depth->is_constant())
+    {
+        const auto indices_rank = static_cast<int64_t>(indices_shape.rank());
+
+        std::vector<Dimension> out_dims(indices_rank);
+        for (auto i = 0; i < indices_rank; i++)
+        {
+            out_dims[i] = indices_shape[i];
+        }
+        m_axis =
+            ngraph::normalize_axis(this, m_axis, indices_rank + 1, -indices_rank - 1, indices_rank);
+        int64_t depth_val = as_type_ptr<op::Constant>(depth)->get_vector<int64_t>()[0];
+        out_dims.insert(out_dims.begin() + m_axis, Dimension(depth_val));
+        result_shape = out_dims;
+    }
+
+    set_output_type(0, on_value_et, result_shape);
+}
+
+shared_ptr<Node> op::v1::OneHot::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<v1::OneHot>(
+        new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), m_axis);
 }
