@@ -306,6 +306,27 @@ mlir::LogicalResult verifyOp(NGConvolutionOp* op)
     return mlir::success();
 }
 
+template <>
+mlir::LogicalResult verifyOp(NGMatMulOp* op)
+{
+    // TODO(ayzhuang): Improve verification: proper shapes, etc.
+    return mlir::success();
+}
+
+template <>
+mlir::LogicalResult verifyOp(NGGemmOp* op)
+{
+    // TODO(ayzhuang): Improve verification: proper shapes, etc.
+    return mlir::success();
+}
+
+template <>
+mlir::LogicalResult verifyOp(NGSoftMaxOp* op)
+{
+    // TODO(ayzhuang): Improve verification: proper shapes, etc.
+    return mlir::success();
+}
+
 static std::string getBufferIdAttrName()
 {
     return "ng.buffer_id";

@@ -636,7 +636,7 @@ def NGReshape :
 }
 
 // softmax
-def NGSoftMax : 
+def NGSoftMaxOp : 
     NG_OneResult_Op<"softmax", [NoSideEffect, OpVersion0]>,
     Arguments<(ins NG_TensorType :$arg,
                I64ArrayAttr  :$axes)>
@@ -683,4 +683,30 @@ def NGTopK :
       void setComputeMax(const Attribute& attr) { this->setAttr("computeMax", attr); }
       void setSortType(const Attribute& attr)   { this->setAttr("sortType", attr); }
     }];
+}
+
+// MatMul
+def NGMatMulOp :
+    NG_OneResult_Op<"matmul", [NoSideEffect]>,
+    Arguments<(ins NG_TensorType:$matA, NG_TensorType:$matB, BoolAttr:$transposeA, BoolAttr:$transposeB)>
+{
+  let summary = "Matrix multiplication";
+
+  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+
+  let verifier = [{ return verifyOp(this); }];
+}
+
+// Gemm
+def NGGemmOp :
+    NG_OneResult_Op<"gemm", [NoSideEffect]>,
+    Arguments<(ins NG_TensorType:$matA, NG_TensorType:$matB, NG_TensorType:$matC,
+               BoolAttr:$transposeA, BoolAttr:$transposeB,
+               F32Attr:$alpha, F32Attr:$beta)>
+{
+  let summary = "Matrix multiplication with bias";
+
+  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+
+  let verifier = [{ return verifyOp(this); }];
 }

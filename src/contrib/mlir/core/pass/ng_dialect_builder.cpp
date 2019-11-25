@@ -30,10 +30,13 @@
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/concat.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
+#include "ngraph/op/fused/gemm.hpp"
+#include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/less.hpp"
@@ -42,6 +45,7 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/softmax.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -129,6 +133,9 @@ namespace
         template <typename T>
         mlir::ArrayAttr getShapeAsAttr(T ngShape);
 
+        /// Return the real input node corresponding to the fake node
+        std::shared_ptr<Node> getOriginArg(std::shared_ptr<Node> node) const;
+
     private:
         // Sub-graph to be compiled and executed with MLIR.
         const ngraph::op::CompiledKernel* m_compiledKernel;
@@ -214,6 +221,14 @@ mlir::ArrayAttr NgDialectConversionPass::getShapeAsAttr(T ngShape)
     SmallVector<int64_t, 4> mlirShape;
     getMlirShape(ngShape, mlirShape);
     return m_builder.getI64ArrayAttr(mlirShape);
+}
+
+std::shared_ptr<Node> NgDialectConversionPass::getOriginArg(std::shared_ptr<Node> node) const
+{
+    auto inputMap = m_compiledKernel->get_input_map();
+    auto it = inputMap.find(node);
+    NGRAPH_CHECK(it != inputMap.end(), "Parameter not in CK input map");
+    return m_compiledKernel->input_values().at(it->second).get_node_shared_ptr();
 }
 
 // Converts an nGraph Tensor into an MLIR tensor type, including the conversion of the Tensor's
@@ -437,6 +452,44 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Convolutio
     return op;
 }
 
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::MatMul)
+{
+    auto matmul = static_cast<const ngraph::op::MatMul*>(ngNode);
+    auto op = NgDialectObj.createGenericOp<mlir::NGMatMulOp>(ngNode);
+    op->setAttr("transposeA", NgDialectObj.m_builder.getBoolAttr(matmul->get_transpose_a()));
+    op->setAttr("transposeB", NgDialectObj.m_builder.getBoolAttr(matmul->get_transpose_b()));
+    return op;
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Gemm)
+{
+    auto gemm = static_cast<const ngraph::op::Gemm*>(ngNode);
+    auto op = NgDialectObj.createGenericOp<mlir::NGGemmOp>(ngNode);
+    op->setAttr("transposeA", NgDialectObj.m_builder.getBoolAttr(gemm->get_transA()));
+    op->setAttr("transposeB", NgDialectObj.m_builder.getBoolAttr(gemm->get_transB()));
+    op->setAttr("alpha", NgDialectObj.m_builder.getF32FloatAttr(gemm->get_alpha()));
+    op->setAttr("beta", NgDialectObj.m_builder.getF32FloatAttr(gemm->get_beta()));
+    return op;
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Softmax)
+{
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGSoftMaxOp>(ngNode);
+    auto softmaxNode = static_cast<const ngraph::op::Softmax*>(ngNode);
+    auto softmaxOp = llvm::cast<mlir::NGSoftMaxOp>(op);
+
+    auto originArg = NgDialectObj.getOriginArg(ngNode->input_value(1).get_node_shared_ptr());
+    auto const_op = as_type_ptr<ngraph::op::Constant>(originArg);
+
+    AxisSet axes = const_op->get_axis_set_val();
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(axes);
+    softmaxOp.setAxes(attr);
+    return op;
+}
+
 template <typename Op>
 mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ngNode)
 {
@@ -461,6 +514,10 @@ mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ng
 
         auto argV = getTensorValue(argTensor.get()).m_value;
         argValues.push_back(argV);
+        if (as_type<const ngraph::op::Softmax>(ngNode))
+        {
+            break;
+        }
     }
 
     for (auto& output : ngNode->outputs())
