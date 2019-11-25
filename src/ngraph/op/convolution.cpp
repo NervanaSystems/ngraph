@@ -292,7 +292,7 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
             {
                 output_padding.insert(output_padding.begin(), data_spatial_rank, 0);
             }
-            for (size_t i; i < data_spatial_rank; ++i)
+            for (size_t i = 0; i < data_spatial_rank; ++i)
             {
                 size_t tmp = m_strides[i] * (data_shape[i + 2] - 1) +
                              ((filters_shape[i] + 2 - 1) * m_dilations[i] + 1) - m_pads_begin[i] -

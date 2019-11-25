@@ -231,11 +231,9 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         auto pads_end = tmp->get_padding_above_forward();
         auto data_dilation_strides = tmp->get_data_dilation_strides_forward();
 
-        bool is_dds_valid = true;
-        for (auto value : data_dilation_strides)
-        {
-            is_dds_valid = is_dds_valid && (value == 1);
-        }
+        bool is_dds_valid = all_of(data_dilation_strides.begin(),
+                                   data_dilation_strides.end(),
+                                   [](size_t value) { return value == 1; });
 
         NGRAPH_CHECK(
             is_dds_valid,

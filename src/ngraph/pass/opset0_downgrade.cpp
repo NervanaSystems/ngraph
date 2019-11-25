@@ -197,11 +197,8 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 
         auto output_padding = tmp->get_output_padding();
 
-        bool is_op_valid = true;
-        for (auto value : output_padding)
-        {
-            is_op_valid = is_op_valid && (value == 0);
-        }
+        bool is_op_valid = all_of(
+            output_padding.begin(), output_padding.end(), [](size_t value) { return value == 0; });
 
         NGRAPH_CHECK(is_op_valid,
                      "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
