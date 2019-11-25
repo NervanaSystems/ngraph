@@ -31,6 +31,7 @@
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/concat.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
@@ -186,6 +187,14 @@ mlir::ArrayAttr MLIRCompiler::getShapeAsAttr(T ngShape)
     SmallVector<int64_t, 4> mlirShape;
     getMlirShape(ngShape, mlirShape);
     return m_builder->getI64ArrayAttr(mlirShape);
+}
+
+std::shared_ptr<Node> MLIRCompiler::getOriginArg(std::shared_ptr<Node> node) const
+{
+    auto inputMap = m_compiledKernel->get_input_map();
+    auto it = inputMap.find(node);
+    NGRAPH_CHECK(it != inputMap.end(), "Parameter not in CK input map");
+    return m_compiledKernel->input_values().at(it->second).get_node_shared_ptr();
 }
 
 // Converts an nGraph Tensor into an MLIR tensor type, including the conversion of the Tensor's
@@ -444,7 +453,12 @@ namespace ngraph
                 auto softmaxNode = static_cast<const ngraph::op::Softmax*>(ngNode);
                 auto softmaxOp = llvm::cast<mlir::NGSoftMaxOp>(op);
 
-                mlir::ArrayAttr attr = compiler.getShapeAsAttr(softmaxNode->get_axes());
+                auto originArg =
+                    compiler.getOriginArg(ngNode->input_value(1).get_node_shared_ptr());
+                auto const_op = as_type_ptr<ngraph::op::Constant>(originArg);
+
+                AxisSet axes = const_op->get_axis_set_val();
+                mlir::ArrayAttr attr = compiler.getShapeAsAttr(axes);
                 softmaxOp.setAxes(attr);
                 return op;
             }
@@ -470,18 +484,6 @@ mlir::Operation* MLIRCompiler::createGenericOp(const ngraph::Node* ngNode)
             NGRAPH_CHECK(it != inputMap.end(), "Parameter not in CK input map");
 
             argTensor = m_compiledKernel->input_values().at(it->second).get_tensor_ptr();
-            // argInputs[i].replace_source_output(m_compiledKernel->input_values().at(it->second));
-            Output<Node> originOutput = m_compiledKernel->input_values().at(it->second);
-            // argInputs[i].replace_source_output(originOutput);
-            // std::cout << "argInputs[" << i << "] is " << argInputs[i].get_node()->get_name() <<
-            // std::endl;
-            //   std::cout << "CK input is " <<
-            //   m_compiledKernel->input_values().at(it->second).get_node()->get_name() <<
-            //   std::endl;
-            for (auto& input : argOutput.get_target_inputs())
-            {
-                input.replace_source_output(originOutput);
-            }
         }
         else
         {

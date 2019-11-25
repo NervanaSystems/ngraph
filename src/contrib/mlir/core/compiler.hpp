@@ -125,6 +125,9 @@ namespace ngraph
                 template <typename T>
                 mlir::ArrayAttr getShapeAsAttr(T ngShape);
 
+                /// Return the real input node corresponding to the fake node
+                std::shared_ptr<Node> getOriginArg(std::shared_ptr<Node> node) const;
+
             private:
                 // Sub-graph to be compiled and executed with MLIR.
                 const ngraph::op::CompiledKernel* m_compiledKernel;

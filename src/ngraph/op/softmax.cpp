@@ -64,7 +64,6 @@ const AxisSet op::v0::Softmax::get_axes() const
     }
     else
     {
-        std::cout << "not constant\n";
         throw ngraph_error("get_axes called on a Softmax node whose 'axes' input is not constant");
     }
     return axes;
