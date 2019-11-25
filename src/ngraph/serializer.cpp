@@ -2883,17 +2883,19 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Acos: { break;
     }
     case OP_TYPEID::Add:
+    {
+        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
+        tmp = static_cast<const op::v0::Add*>(&n);
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
+    }
     case OP_TYPEID::Add_v1:
     {
         const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
-        if (op_version == 0)
-        {
-            tmp = static_cast<const op::v0::Add*>(&n);
-        }
-        if (op_version == 1)
-        {
-            tmp = static_cast<const op::v1::Add*>(&n);
-        }
+        tmp = static_cast<const op::v1::Add*>(&n);
         if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -2951,60 +2953,52 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::AvgPool:
-    case OP_TYPEID::AvgPool_v1:
     {
-        if (op_version == 0)
+        auto tmp = static_cast<const op::v0::AvgPool*>(&n);
+        node["window_shape"] = tmp->get_window_shape();
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+        node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
+        node["pad_type"] = tmp->get_pad_type();
+        if (tmp->get_ceil_mode())
         {
-            auto tmp = static_cast<const op::v0::AvgPool*>(&n);
-            node["window_shape"] = tmp->get_window_shape();
-            node["window_movement_strides"] = tmp->get_window_movement_strides();
-            node["padding_below"] = tmp->get_padding_below();
-            node["padding_above"] = tmp->get_padding_above();
-            node["include_padding_in_avg_computation"] =
-                tmp->get_include_padding_in_avg_computation();
-            node["pad_type"] = tmp->get_pad_type();
-            if (tmp->get_ceil_mode())
-            {
-                node["ceil_mode"] = tmp->get_ceil_mode();
-            }
-        }
-        if (op_version == 1)
-        {
-            auto tmp = static_cast<const op::v1::AvgPool*>(&n);
-            node["kernel"] = tmp->get_kernel();
-            node["strides"] = tmp->get_strides();
-            node["pads_begin"] = tmp->get_pads_begin();
-            node["pads_end"] = tmp->get_pads_end();
-            node["exclude_pad"] = tmp->get_exclude_pad();
-            node["auto_pad"] = tmp->get_auto_pad();
-            node["rounding_type"] = tmp->get_rounding_type();
+            node["ceil_mode"] = tmp->get_ceil_mode();
         }
         break;
     }
+    case OP_TYPEID::AvgPool_v1:
+    {
+        auto tmp = static_cast<const op::v1::AvgPool*>(&n);
+        node["kernel"] = tmp->get_kernel();
+        node["strides"] = tmp->get_strides();
+        node["pads_begin"] = tmp->get_pads_begin();
+        node["pads_end"] = tmp->get_pads_end();
+        node["exclude_pad"] = tmp->get_exclude_pad();
+        node["auto_pad"] = tmp->get_auto_pad();
+        node["rounding_type"] = tmp->get_rounding_type();
+        break;
+    }
     case OP_TYPEID::AvgPoolBackprop:
+    {
+        auto tmp = static_cast<const op::v0::AvgPoolBackprop*>(&n);
+        node["forward_arg_shape"] = tmp->get_forward_arg_shape();
+        node["window_shape"] = tmp->get_window_shape();
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+        node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
+        break;
+    }
     case OP_TYPEID::AvgPoolBackprop_v1:
     {
-        if (op_version == 0)
-        {
-            auto tmp = static_cast<const op::v0::AvgPoolBackprop*>(&n);
-            node["forward_arg_shape"] = tmp->get_forward_arg_shape();
-            node["window_shape"] = tmp->get_window_shape();
-            node["window_movement_strides"] = tmp->get_window_movement_strides();
-            node["padding_below"] = tmp->get_padding_below();
-            node["padding_above"] = tmp->get_padding_above();
-            node["include_padding_in_avg_computation"] =
-                tmp->get_include_padding_in_avg_computation();
-        }
-        if (op_version == 1)
-        {
-            auto tmp = static_cast<const op::v1::AvgPoolBackprop*>(&n);
-            node["forward_arg_shape"] = tmp->get_forward_arg_shape();
-            node["kernel"] = tmp->get_kernel();
-            node["strides"] = tmp->get_strides();
-            node["pads_begin"] = tmp->get_pads_begin();
-            node["pads_end"] = tmp->get_pads_end();
-            node["exclude_pad"] = tmp->get_exclude_pad();
-        }
+        auto tmp = static_cast<const op::v1::AvgPoolBackprop*>(&n);
+        node["forward_arg_shape"] = tmp->get_forward_arg_shape();
+        node["kernel"] = tmp->get_kernel();
+        node["strides"] = tmp->get_strides();
+        node["pads_begin"] = tmp->get_pads_begin();
+        node["pads_end"] = tmp->get_pads_end();
+        node["exclude_pad"] = tmp->get_exclude_pad();
         break;
     }
     case OP_TYPEID::BatchMatMul: { break;
@@ -3047,21 +3041,18 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Broadcast:
+    {
+        auto tmp = dynamic_cast<const op::v0::Broadcast*>(&n);
+        node["axes"] = serialize_axis_set(tmp->get_broadcast_axes());
+        node["shape"] = tmp->get_broadcast_shape();
+        break;
+    }
     case OP_TYPEID::Broadcast_v1:
     {
-        if (op_version == 0)
+        auto tmp = dynamic_cast<const op::v1::Broadcast*>(&n);
+        if (tmp->get_broadcast_spec().m_type != op::AutoBroadcastType::NONE)
         {
-            auto tmp = dynamic_cast<const op::v0::Broadcast*>(&n);
-            node["axes"] = serialize_axis_set(tmp->get_broadcast_axes());
-            node["shape"] = tmp->get_broadcast_shape();
-        }
-        if (op_version == 1)
-        {
-            auto tmp = dynamic_cast<const op::v1::Broadcast*>(&n);
-            if (tmp->get_broadcast_spec().m_type != op::AutoBroadcastType::NONE)
-            {
-                node["auto_broadcast"] = write_auto_broadcast(tmp->get_broadcast_spec());
-            }
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_broadcast_spec());
         }
         break;
     }
@@ -3112,75 +3103,66 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Convolution:
+    {
+        auto tmp = static_cast<const op::v0::Convolution*>(&n);
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["window_dilation_strides"] = tmp->get_window_dilation_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+        node["data_dilation_strides"] = tmp->get_data_dilation_strides();
+        node["pad_type"] = tmp->get_pad_type();
+        break;
+    }
     case OP_TYPEID::Convolution_v1:
     {
-        if (op_version == 0)
-        {
-            auto tmp = static_cast<const op::v0::Convolution*>(&n);
-            node["window_movement_strides"] = tmp->get_window_movement_strides();
-            node["window_dilation_strides"] = tmp->get_window_dilation_strides();
-            node["padding_below"] = tmp->get_padding_below();
-            node["padding_above"] = tmp->get_padding_above();
-            node["data_dilation_strides"] = tmp->get_data_dilation_strides();
-            node["pad_type"] = tmp->get_pad_type();
-        }
-        if (op_version == 1)
-        {
-            auto tmp = static_cast<const op::v1::Convolution*>(&n);
-            node["strides"] = tmp->get_strides();
-            node["dilations"] = tmp->get_dilations();
-            node["pads_begin"] = tmp->get_pads_begin();
-            node["pads_end"] = tmp->get_pads_end();
-            node["auto_pad"] = tmp->get_auto_pad();
-        }
+        auto tmp = static_cast<const op::v1::Convolution*>(&n);
+        node["strides"] = tmp->get_strides();
+        node["dilations"] = tmp->get_dilations();
+        node["pads_begin"] = tmp->get_pads_begin();
+        node["pads_end"] = tmp->get_pads_end();
+        node["auto_pad"] = tmp->get_auto_pad();
         break;
     }
     case OP_TYPEID::ConvolutionBackpropData:
+    {
+        auto tmp = static_cast<const op::v0::ConvolutionBackpropData*>(&n);
+        node["data_batch_shape"] = tmp->get_data_batch_shape();
+        node["window_movement_strides_forward"] = tmp->get_window_movement_strides_forward();
+        node["window_dilation_strides_forward"] = tmp->get_window_dilation_strides_forward();
+        node["padding_below_forward"] = tmp->get_padding_below_forward();
+        node["padding_above_forward"] = tmp->get_padding_above_forward();
+        node["data_dilation_strides_forward"] = tmp->get_data_dilation_strides_forward();
+        break;
+    }
     case OP_TYPEID::ConvolutionBackpropData_v1:
     {
-        if (op_version == 0)
-        {
-            auto tmp = static_cast<const op::v0::ConvolutionBackpropData*>(&n);
-            node["data_batch_shape"] = tmp->get_data_batch_shape();
-            node["window_movement_strides_forward"] = tmp->get_window_movement_strides_forward();
-            node["window_dilation_strides_forward"] = tmp->get_window_dilation_strides_forward();
-            node["padding_below_forward"] = tmp->get_padding_below_forward();
-            node["padding_above_forward"] = tmp->get_padding_above_forward();
-            node["data_dilation_strides_forward"] = tmp->get_data_dilation_strides_forward();
-        }
-        if (op_version == 1)
-        {
-            auto tmp = static_cast<const op::v1::ConvolutionBackpropData*>(&n);
-            node["data_batch_shape"] = tmp->get_data_batch_shape();
-            node["strides"] = tmp->get_strides();
-            node["dilations"] = tmp->get_dilations();
-            node["pads_begin"] = tmp->get_pads_begin();
-            node["pads_end"] = tmp->get_pads_end();
-        }
+        auto tmp = static_cast<const op::v1::ConvolutionBackpropData*>(&n);
+        node["data_batch_shape"] = tmp->get_data_batch_shape();
+        node["strides"] = tmp->get_strides();
+        node["dilations"] = tmp->get_dilations();
+        node["pads_begin"] = tmp->get_pads_begin();
+        node["pads_end"] = tmp->get_pads_end();
         break;
     }
     case OP_TYPEID::ConvolutionBackpropFilters:
+    {
+        auto tmp = static_cast<const op::v0::ConvolutionBackpropFilters*>(&n);
+        node["filters_shape"] = tmp->get_filters_shape();
+        node["window_movement_strides_forward"] = tmp->get_window_movement_strides_forward();
+        node["window_dilation_strides_forward"] = tmp->get_window_dilation_strides_forward();
+        node["padding_below_forward"] = tmp->get_padding_below_forward();
+        node["padding_above_forward"] = tmp->get_padding_above_forward();
+        node["data_dilation_strides_forward"] = tmp->get_data_dilation_strides_forward();
+        break;
+    }
     case OP_TYPEID::ConvolutionBackpropFilters_v1:
     {
-        if (op_version == 0)
-        {
-            auto tmp = static_cast<const op::v0::ConvolutionBackpropFilters*>(&n);
-            node["filters_shape"] = tmp->get_filters_shape();
-            node["window_movement_strides_forward"] = tmp->get_window_movement_strides_forward();
-            node["window_dilation_strides_forward"] = tmp->get_window_dilation_strides_forward();
-            node["padding_below_forward"] = tmp->get_padding_below_forward();
-            node["padding_above_forward"] = tmp->get_padding_above_forward();
-            node["data_dilation_strides_forward"] = tmp->get_data_dilation_strides_forward();
-        }
-        if (op_version == 1)
-        {
-            auto tmp = static_cast<const op::v1::ConvolutionBackpropFilters*>(&n);
-            node["filters_shape"] = tmp->get_filters_shape();
-            node["strides"] = tmp->get_strides();
-            node["dilations"] = tmp->get_dilations();
-            node["pads_begin"] = tmp->get_pads_begin();
-            node["pads_end"] = tmp->get_pads_end();
-        }
+        auto tmp = static_cast<const op::v1::ConvolutionBackpropFilters*>(&n);
+        node["filters_shape"] = tmp->get_filters_shape();
+        node["strides"] = tmp->get_strides();
+        node["dilations"] = tmp->get_dilations();
+        node["pads_begin"] = tmp->get_pads_begin();
+        node["pads_end"] = tmp->get_pads_end();
         break;
     }
     case OP_TYPEID::ConvolutionBias:
@@ -3277,21 +3259,23 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Divide:
+    {
+        const op::util::BinaryElementwiseArithmetic* bea_node = nullptr;
+        auto tmp = static_cast<const op::v0::Divide*>(&n);
+        bea_node = tmp;
+        node["pythondiv"] = tmp->is_pythondiv();
+        if (bea_node != nullptr && bea_node->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(bea_node->get_autob());
+        }
+        break;
+    }
     case OP_TYPEID::Divide_v1:
     {
         const op::util::BinaryElementwiseArithmetic* bea_node = nullptr;
-        if (op_version == 0)
-        {
-            auto tmp = static_cast<const op::v0::Divide*>(&n);
-            bea_node = tmp;
-            node["pythondiv"] = tmp->is_pythondiv();
-        }
-        else if (op_version == 1)
-        {
-            auto tmp = static_cast<const op::v1::Divide*>(&n);
-            bea_node = tmp;
-            node["pythondiv"] = tmp->is_pythondiv();
-        }
+        auto tmp = static_cast<const op::v1::Divide*>(&n);
+        bea_node = tmp;
+        node["pythondiv"] = tmp->is_pythondiv();
         if (bea_node != nullptr && bea_node->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(bea_node->get_autob());
@@ -3319,18 +3303,15 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::DynReshape:
+    {
+        auto tmp = static_cast<const op::v0::DynReshape*>(&n);
+        node["zero_flag"] = tmp->get_zero_flag();
+        break;
+    }
     case OP_TYPEID::Reshape_v1:
     {
-        if (op_version == 0)
-        {
-            auto tmp = static_cast<const op::v0::DynReshape*>(&n);
-            node["zero_flag"] = tmp->get_zero_flag();
-        }
-        if (op_version == 1)
-        {
-            auto tmp = static_cast<const op::v1::Reshape*>(&n);
-            node["zero_flag"] = tmp->get_zero_flag();
-        }
+        auto tmp = static_cast<const op::v1::Reshape*>(&n);
+        node["zero_flag"] = tmp->get_zero_flag();
         break;
     }
     case OP_TYPEID::DynSlice:
@@ -3352,17 +3333,19 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::EmbeddingLookup: { break;
     }
     case OP_TYPEID::Equal:
+    {
+        const op::util::BinaryElementwiseComparison* tmp = nullptr;
+        tmp = static_cast<const op::v0::Equal*>(&n);
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
+    }
     case OP_TYPEID::Equal_v1:
     {
         const op::util::BinaryElementwiseComparison* tmp = nullptr;
-        if (op_version == 0)
-        {
-            tmp = static_cast<const op::v0::Equal*>(&n);
-        }
-        if (op_version == 1)
-        {
-            tmp = static_cast<const op::v1::Equal*>(&n);
-        }
+        tmp = static_cast<const op::v1::Equal*>(&n);
         if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -3391,14 +3374,12 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Gather:
-    case OP_TYPEID::Gather_v1:
     {
-        if (op_version == 0)
-        {
-            auto tmp = static_cast<const op::v0::Gather*>(&n);
-            node["axis"] = tmp->get_axis();
-        }
+        auto tmp = static_cast<const op::v0::Gather*>(&n);
+        node["axis"] = tmp->get_axis();
         break;
+    }
+    case OP_TYPEID::Gather_v1: { break;
     }
     case OP_TYPEID::GatherND: { break;
     }
@@ -3422,6 +3403,15 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::GenerateMask:
+    {
+        auto tmp = static_cast<const op::GenerateMask*>(&n);
+        node["type"] = write_element_type(tmp->get_element_type());
+        node["use_seed"] = tmp->get_use_seed();
+        node["seed"] = tmp->get_seed();
+        node["probability"] = tmp->get_probability();
+        node["output_shape"] = tmp->get_mask_shape();
+        break;
+    }
     case OP_TYPEID::GenerateMask_v1:
     {
         auto tmp = static_cast<const op::GenerateMask*>(&n);
@@ -3429,25 +3419,22 @@ json JSONSerializer::serialize_node(const Node& n)
         node["use_seed"] = tmp->get_use_seed();
         node["seed"] = tmp->get_seed();
         node["probability"] = tmp->get_probability();
-        if (op_version == 0)
-        {
-            node["output_shape"] = tmp->get_mask_shape();
-        }
-
         break;
     }
     case OP_TYPEID::Greater:
+    {
+        const op::util::BinaryElementwiseComparison* tmp = nullptr;
+        tmp = static_cast<const op::v0::Greater*>(&n);
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
+    }
     case OP_TYPEID::Greater_v1:
     {
         const op::util::BinaryElementwiseComparison* tmp = nullptr;
-        if (op_version == 0)
-        {
-            tmp = static_cast<const op::v0::Greater*>(&n);
-        }
-        else if (op_version == 1)
-        {
-            tmp = static_cast<const op::v1::Greater*>(&n);
-        }
+        tmp = static_cast<const op::v1::Greater*>(&n);
         if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -3455,17 +3442,19 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::GreaterEq:
+    {
+        const op::util::BinaryElementwiseComparison* tmp = nullptr;
+        tmp = static_cast<const op::v0::GreaterEq*>(&n);
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
+    }
     case OP_TYPEID::GreaterEqual_v1:
     {
         const op::util::BinaryElementwiseComparison* tmp = nullptr;
-        if (op_version == 0)
-        {
-            tmp = static_cast<const op::v0::GreaterEq*>(&n);
-        }
-        else if (op_version == 1)
-        {
-            tmp = static_cast<const op::v1::GreaterEqual*>(&n);
-        }
+        tmp = static_cast<const op::v1::GreaterEqual*>(&n);
         if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -3537,17 +3526,19 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Less:
+    {
+        const op::util::BinaryElementwiseComparison* tmp = nullptr;
+        tmp = static_cast<const op::v0::Less*>(&n);
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
+    }
     case OP_TYPEID::Less_v1:
     {
         const op::util::BinaryElementwiseComparison* tmp = nullptr;
-        if (op_version == 0)
-        {
-            tmp = static_cast<const op::v0::Less*>(&n);
-        }
-        else if (op_version == 1)
-        {
-            tmp = static_cast<const op::v1::Less*>(&n);
-        }
+        tmp = static_cast<const op::v1::Less*>(&n);
         if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -3657,62 +3648,58 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::MaxPool:
+    {
+        auto tmp = static_cast<const op::v0::MaxPool*>(&n);
+        node["window_shape"] = tmp->get_window_shape();
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+        node["pad_type"] = tmp->get_pad_type();
+        break;
+    }
     case OP_TYPEID::MaxPool_v1:
     {
-        if (op_version == 0)
-        {
-            auto tmp = static_cast<const op::v0::MaxPool*>(&n);
-            node["window_shape"] = tmp->get_window_shape();
-            node["window_movement_strides"] = tmp->get_window_movement_strides();
-            node["padding_below"] = tmp->get_padding_below();
-            node["padding_above"] = tmp->get_padding_above();
-            node["pad_type"] = tmp->get_pad_type();
-        }
-        if (op_version == 1)
-        {
-            auto tmp = static_cast<const op::v1::MaxPool*>(&n);
-            node["kernel"] = tmp->get_kernel();
-            node["strides"] = tmp->get_strides();
-            node["pads_begin"] = tmp->get_pads_begin();
-            node["pads_end"] = tmp->get_pads_end();
-            node["auto_pad"] = tmp->get_auto_pad();
-            node["rounding_type"] = tmp->get_rounding_type();
-        }
+        auto tmp = static_cast<const op::v1::MaxPool*>(&n);
+        node["kernel"] = tmp->get_kernel();
+        node["strides"] = tmp->get_strides();
+        node["pads_begin"] = tmp->get_pads_begin();
+        node["pads_end"] = tmp->get_pads_end();
+        node["auto_pad"] = tmp->get_auto_pad();
+        node["rounding_type"] = tmp->get_rounding_type();
         break;
     }
     case OP_TYPEID::MaxPoolBackprop:
+    {
+        auto tmp = static_cast<const op::v0::MaxPoolBackprop*>(&n);
+        node["window_shape"] = tmp->get_window_shape();
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+        break;
+    }
     case OP_TYPEID::MaxPoolBackprop_v1:
     {
-        if (op_version == 0)
-        {
-            auto tmp = static_cast<const op::v0::MaxPoolBackprop*>(&n);
-            node["window_shape"] = tmp->get_window_shape();
-            node["window_movement_strides"] = tmp->get_window_movement_strides();
-            node["padding_below"] = tmp->get_padding_below();
-            node["padding_above"] = tmp->get_padding_above();
-        }
-        if (op_version == 1)
-        {
-            auto tmp = static_cast<const op::v1::MaxPoolBackprop*>(&n);
-            node["kernel"] = tmp->get_kernel();
-            node["strides"] = tmp->get_strides();
-            node["pads_begin"] = tmp->get_pads_begin();
-            node["pads_end"] = tmp->get_pads_end();
-        }
+        auto tmp = static_cast<const op::v1::MaxPoolBackprop*>(&n);
+        node["kernel"] = tmp->get_kernel();
+        node["strides"] = tmp->get_strides();
+        node["pads_begin"] = tmp->get_pads_begin();
+        node["pads_end"] = tmp->get_pads_end();
         break;
     }
     case OP_TYPEID::Maximum:
+    {
+        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
+        tmp = static_cast<const op::v0::Maximum*>(&n);
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
+    }
     case OP_TYPEID::Maximum_v1:
     {
         const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
-        if (op_version == 0)
-        {
-            tmp = static_cast<const op::v0::Maximum*>(&n);
-        }
-        else if (op_version == 1)
-        {
-            tmp = static_cast<const op::v1::Maximum*>(&n);
-        }
+        tmp = static_cast<const op::v1::Maximum*>(&n);
         if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -3729,17 +3716,19 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::ReduceMax_v1: { break;
     }
     case OP_TYPEID::Minimum:
+    {
+        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
+        tmp = static_cast<const op::v0::Minimum*>(&n);
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
+    }
     case OP_TYPEID::Minimum_v1:
     {
         const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
-        if (op_version == 0)
-        {
-            tmp = static_cast<const op::v0::Minimum*>(&n);
-        }
-        else if (op_version == 1)
-        {
-            tmp = static_cast<const op::v1::Minimum*>(&n);
-        }
+        tmp = static_cast<const op::v1::Minimum*>(&n);
         if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -3747,17 +3736,19 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Multiply:
+    {
+        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
+        tmp = static_cast<const op::v0::Multiply*>(&n);
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
+    }
     case OP_TYPEID::Multiply_v1:
     {
         const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
-        if (op_version == 0)
-        {
-            tmp = static_cast<const op::v0::Multiply*>(&n);
-        }
-        else if (op_version == 1)
-        {
-            tmp = static_cast<const op::v1::Multiply*>(&n);
-        }
+        tmp = static_cast<const op::v1::Multiply*>(&n);
         if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -3782,17 +3773,19 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::NotEqual:
+    {
+        const op::util::BinaryElementwiseComparison* tmp = nullptr;
+        tmp = static_cast<const op::v0::NotEqual*>(&n);
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
+    }
     case OP_TYPEID::NotEqual_v1:
     {
         const op::util::BinaryElementwiseComparison* tmp = nullptr;
-        if (op_version == 0)
-        {
-            tmp = static_cast<const op::v0::NotEqual*>(&n);
-        }
-        else if (op_version == 1)
-        {
-            tmp = static_cast<const op::v1::NotEqual*>(&n);
-        }
+        tmp = static_cast<const op::v1::NotEqual*>(&n);
         if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -3826,20 +3819,17 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Pad:
+    {
+        auto tmp = static_cast<const op::v0::Pad*>(&n);
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+        node["pad_mode"] = tmp->get_pad_mode();
+        break;
+    }
     case OP_TYPEID::Pad_v1:
     {
-        if (op_version == 0)
-        {
-            auto tmp = static_cast<const op::v0::Pad*>(&n);
-            node["padding_below"] = tmp->get_padding_below();
-            node["padding_above"] = tmp->get_padding_above();
-            node["pad_mode"] = tmp->get_pad_mode();
-        }
-        if (op_version == 1)
-        {
-            auto tmp = static_cast<const op::v1::Pad*>(&n);
-            node["pad_mode"] = tmp->get_pad_mode();
-        }
+        auto tmp = static_cast<const op::v1::Pad*>(&n);
+        node["pad_mode"] = tmp->get_pad_mode();
         break;
     }
     case OP_TYPEID::Parameter:
@@ -3886,32 +3876,28 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::PRelu: { break;
     }
-    case OP_TYPEID::Product:
+    case OP_TYPEID::Product: { break;
+    }
     case OP_TYPEID::ReduceProd_v1:
     {
-        if (op_version == 0)
-        {
-            break;
-        }
-        if (op_version == 1)
-        {
-            auto tmp = static_cast<const op::v1::ReduceProd*>(&n);
-            node["keep_dims"] = tmp->get_keep_dims();
-        }
+        auto tmp = static_cast<const op::v1::ReduceProd*>(&n);
+        node["keep_dims"] = tmp->get_keep_dims();
         break;
     }
     case OP_TYPEID::Power:
+    {
+        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
+        tmp = static_cast<const op::v0::Power*>(&n);
+        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
+    }
     case OP_TYPEID::Power_v1:
     {
         const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
-        if (op_version == 0)
-        {
-            tmp = static_cast<const op::v0::Power*>(&n);
-        }
-        else if (op_version == 1)
-        {
-            tmp = static_cast<const op::v1::Power*>(&n);
-        }
+        tmp = static_cast<const op::v1::Power*>(&n);
         if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -4008,20 +3994,15 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Reverse:
+    {
+        const auto tmp = static_cast<const op::Reverse*>(&n);
+        node["reversed_axes"] = serialize_axis_set(tmp->get_reversed_axes());
+        break;
+    }
     case OP_TYPEID::Reverse_v1:
     {
-        if (op_version == 0)
-        {
-            const auto tmp = static_cast<const op::Reverse*>(&n);
-            node["reversed_axes"] = serialize_axis_set(tmp->get_reversed_axes());
-            break;
-        }
-        else if (op_version == 1)
-        {
-            const auto tmp = static_cast<const op::v1::Reverse*>(&n);
-            node["mode"] = tmp->get_mode();
-            break;
-        }
+        const auto tmp = static_cast<const op::v1::Reverse*>(&n);
+        node["mode"] = tmp->get_mode();
         break;
     }
     case OP_TYPEID::ReverseSequence:
@@ -4085,24 +4066,21 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Sinh: { break;
     }
     case OP_TYPEID::Slice:
+    {
+        auto tmp = static_cast<const op::Slice*>(&n);
+        node["lower_bounds"] = tmp->get_lower_bounds();
+        node["upper_bounds"] = tmp->get_upper_bounds();
+        node["strides"] = tmp->get_strides();
+        break;
+    }
     case OP_TYPEID::StridedSlice_v1:
     {
-        if (op_version == 0)
-        {
-            auto tmp = static_cast<const op::Slice*>(&n);
-            node["lower_bounds"] = tmp->get_lower_bounds();
-            node["upper_bounds"] = tmp->get_upper_bounds();
-            node["strides"] = tmp->get_strides();
-        }
-        if (op_version == 1)
-        {
-            auto tmp = static_cast<const op::v1::StridedSlice*>(&n);
-            node["begin_mask"] = tmp->get_begin_mask();
-            node["end_mask"] = tmp->get_end_mask();
-            node["new_axis_mask"] = tmp->get_new_axis_mask();
-            node["shrink_axis_mask"] = tmp->get_shrink_axis_mask();
-            node["ellipsis_mask"] = tmp->get_ellipsis_mask();
-        }
+        auto tmp = static_cast<const op::v1::StridedSlice*>(&n);
+        node["begin_mask"] = tmp->get_begin_mask();
+        node["end_mask"] = tmp->get_end_mask();
+        node["new_axis_mask"] = tmp->get_new_axis_mask();
+        node["shrink_axis_mask"] = tmp->get_shrink_axis_mask();
+        node["ellipsis_mask"] = tmp->get_ellipsis_mask();
         break;
     }
     case OP_TYPEID::SpaceToDepth:
@@ -4144,32 +4122,21 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    case OP_TYPEID::Sum:
+    case OP_TYPEID::Sum: { break;
+    }
     case OP_TYPEID::ReduceSum_v1:
     {
-        if (op_version == 0)
-        {
-            break;
-        }
-        if (op_version == 1)
-        {
-            auto tmp = static_cast<const op::v1::ReduceSum*>(&n);
-            node["keep_dims"] = tmp->get_keep_dims();
-        }
+        auto tmp = static_cast<const op::v1::ReduceSum*>(&n);
+        node["keep_dims"] = tmp->get_keep_dims();
         break;
     }
-    case OP_TYPEID::Softmax:
+    case OP_TYPEID::Softmax: { break;
+    }
+
     case OP_TYPEID::Softmax_v1:
     {
-        if (op_version == 0)
-        {
-            break;
-        }
-        if (op_version == 1)
-        {
-            auto tmp = static_cast<const op::v1::Softmax*>(&n);
-            node["softmax_axis"] = tmp->get_axis();
-        }
+        auto tmp = static_cast<const op::v1::Softmax*>(&n);
+        node["softmax_axis"] = tmp->get_axis();
         break;
     }
     case OP_TYPEID::SoftmaxCrossEntropy:
@@ -4235,22 +4202,20 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Tile: { break;
     }
     case OP_TYPEID::TopK:
+    {
+        const auto tmp = static_cast<const op::TopK*>(&n);
+        node["index_element_type"] = write_element_type(tmp->get_index_element_type());
+        node["compute_max"] = tmp->get_compute_max();
+        break;
+    }
+
     case OP_TYPEID::TopK_v1:
     {
-        if (op_version == 0)
-        {
-            const auto tmp = static_cast<const op::TopK*>(&n);
-            node["index_element_type"] = write_element_type(tmp->get_index_element_type());
-            node["compute_max"] = tmp->get_compute_max();
-        }
-        else if (op_version == 1)
-        {
-            const auto tmp = static_cast<const op::v1::TopK*>(&n);
-            node["axis"] = tmp->get_axis();
-            node["mode"] = tmp->get_mode();
-            node["sort_type"] = tmp->get_sort_type();
-            node["index_element_type"] = write_element_type(tmp->get_index_element_type());
-        }
+        const auto tmp = static_cast<const op::v1::TopK*>(&n);
+        node["axis"] = tmp->get_axis();
+        node["mode"] = tmp->get_mode();
+        node["sort_type"] = tmp->get_sort_type();
+        node["index_element_type"] = write_element_type(tmp->get_index_element_type());
         break;
     }
     case OP_TYPEID::Transpose: { break;
