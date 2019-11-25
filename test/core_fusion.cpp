@@ -26,6 +26,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -647,6 +648,21 @@ TEST(core_fusion, DISABLED_conv_bias_bprop)
         EXPECT_TRUE(test::all_close(fused_r.at(i), decomp_r2.at(i)));
     }
 }
+
+#ifndef NGRAPH_JSON_DISABLE
+TEST(batch_fusion, fuse_batch_mat_mul_transpose)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::BatchFusion>();
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/batch_dot_3.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    size_t ccg = count_ops_of_type<op::BatchMatMulTranspose>(func);
+    ASSERT_EQ(ccg, 1);
+}
+#endif
 
 TEST(batch_fusion, group_convolution_fusion)
 {

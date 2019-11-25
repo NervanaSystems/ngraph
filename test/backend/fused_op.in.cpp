@@ -111,11 +111,15 @@ NGRAPH_TEST(${BACKEND_NAME}, reciprocal)
 
 NGRAPH_TEST(${BACKEND_NAME}, hardsigmoid)
 {
-    Shape shape{2, 7};
-    float alpha = 0.125f;
-    float beta = 0.642f;
+    const Shape shape{2, 7};
+    const float alpha_f = 0.125f;
+    const float beta_f = 0.642f;
 
-    auto A = make_shared<op::Parameter>(element::f32, shape);
+    const auto A = make_shared<op::Parameter>(element::f32, shape);
+
+    const auto alpha = op::Constant::create<float>(A->get_element_type(), Shape{}, {alpha_f});
+    const auto beta = op::Constant::create<float>(A->get_element_type(), Shape{}, {beta_f});
+
     auto hardsigmoid = make_shared<op::HardSigmoid>(A, alpha, beta);
     auto f0 = make_shared<Function>(NodeVector{hardsigmoid}, ParameterVector{A});
 
@@ -137,7 +141,7 @@ NGRAPH_TEST(${BACKEND_NAME}, hardsigmoid)
                              numeric_limits<float>::min() / 16.f,
                              -numeric_limits<float>::min() / 16.f};
 
-    auto impl = [alpha, beta](float val) { return min(max(alpha * val + beta, 0.f), 1.f); };
+    auto impl = [alpha_f, beta_f](float val) { return min(max(alpha_f * val + beta_f, 0.f), 1.f); };
     vector<float> expected_output;
     transform(begin(input_data), end(input_data), back_inserter(expected_output), impl);
 
@@ -359,6 +363,57 @@ NGRAPH_TEST(${BACKEND_NAME}, group_conv)
     handle->call_with_validate({result0}, {a, b});
     vector<float> expected{11, 14, 17, 20, 79, 86, 93, 100};
     EXPECT_EQ(expected, read_vector<float>(result0));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_transpose)
+{
+    Shape shape0 = Shape{2, 2, 3};
+    Shape shape1 = Shape{2, 3, 4};
+    auto arg0 = make_shared<op::Parameter>(element::f32, shape0);
+    auto arg1 = make_shared<op::Parameter>(element::f32, shape1);
+    auto bmmt = make_shared<op::BatchMatMulTranspose>(arg0, arg1, false, false);
+    auto f0 = make_shared<Function>(NodeVector{bmmt}, ParameterVector{arg0, arg1});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape0);
+    copy_data(a, vector<float>{1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4});
+    auto b = backend->create_tensor(element::f32, shape1);
+    copy_data(
+        b, vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3});
+    auto result0 = backend->create_tensor(element::f32, Shape{2, 2, 4});
+
+    auto handle = backend->compile(f0);
+    handle->call_with_validate({result0}, {a, b});
+    vector<float> expected{6, 6, 6, 6, 12, 12, 12, 12, 18, 18, 18, 18, 24, 24, 24, 24};
+    EXPECT_EQ(expected, read_vector<float>(result0));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_transpose_with_transpose)
+{
+    Shape shape0 = Shape{2, 3, 2};
+    Shape shape1 = Shape{2, 3, 4};
+    auto arg0 = make_shared<op::Parameter>(element::f32, shape0);
+    auto arg1 = make_shared<op::Parameter>(element::f32, shape1);
+    auto bmmt = make_shared<op::BatchMatMulTranspose>(arg0, arg1, true, false);
+    auto f0 = make_shared<Function>(NodeVector{bmmt}, ParameterVector{arg0, arg1});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape0);
+    copy_data(a, vector<float>{1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4});
+    auto b = backend->create_tensor(element::f32, shape1);
+    copy_data(
+        b, vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3});
+    auto result0 = backend->create_tensor(element::f32, Shape{2, 2, 4});
+
+    auto handle = backend->compile(f0);
+    handle->call_with_validate({result0}, {a, b});
+    vector<float> expected{9, 9, 9, 9, 11, 11, 11, 11, 21, 21, 21, 21, 23, 23, 23, 23};
+    EXPECT_EQ(expected, read_vector<float>(result0));
+    auto res = read_vector<float>(result0);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, group_conv_striding)

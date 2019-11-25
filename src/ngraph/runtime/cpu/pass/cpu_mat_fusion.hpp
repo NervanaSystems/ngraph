@@ -33,22 +33,6 @@ namespace ngraph
                     virtual bool
                         run_on_function(std::shared_ptr<ngraph::Function> function) override;
                 };
-                class CPU_BACKEND_API CPUBatchFusion : public ngraph::pass::FunctionPass
-                {
-                public:
-                    typedef ngraph::pass::FusionType FusionType;
-                    typedef ngraph::pass::FusionTypeMask FusionTypeMask;
-                    CPUBatchFusion(FusionTypeMask fusions = FusionType::ALL_FUSIONS)
-                        : FunctionPass()
-                        , m_fusion_type(fusions)
-                    {
-                    }
-                    virtual bool
-                        run_on_function(std::shared_ptr<ngraph::Function> function) override;
-
-                private:
-                    FusionTypeMask m_fusion_type;
-                };
             }
         }
     }

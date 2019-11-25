@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,19 +16,20 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
-#include "util/type_prop.hpp"
+#include "util/all_close_f.hpp"
+#include "util/test_tools.hpp"
 
-using namespace std;
 using namespace ngraph;
+using namespace std;
 
-TEST(type_prop, hardsigmoid)
+TEST(convert_u1_to_string, convert_u1_to_string)
 {
-    const Shape data_shape{3, 5};
+    vector<uint8_t> values{171, 16};
+    auto constant = make_shared<op::Constant>(element::u1, Shape{12}, &values[0]);
 
-    const auto P = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto alpha = op::Constant::create<float>(P->get_element_type(), Shape{}, {0.1f});
-    const auto beta = op::Constant::create<float>(P->get_element_type(), Shape{}, {1.2f});
-    const auto H = make_shared<op::HardSigmoid>(P, alpha, beta);
-    ASSERT_EQ(H->get_element_type(), element::f32);
-    ASSERT_EQ(H->get_shape(), data_shape);
+    vector<string> ref{"1", "0", "1", "0", "1", "0", "1", "1", "0", "0", "0", "1"};
+    for (size_t i = 0; i < 12; ++i)
+    {
+        ASSERT_EQ(constant->convert_value_to_string(i), ref[i]);
+    }
 }
