@@ -116,7 +116,6 @@ namespace ngraph
             virtual NodeVector decompose_op() const override;
 
             virtual void pre_validate_and_infer_types() override;
-            virtual void post_validate_and_infer_types() override;
 
         protected:
             Strides m_window_movement_strides;
@@ -156,7 +155,6 @@ namespace ngraph
             virtual NodeVector decompose_op() const override;
 
             virtual void pre_validate_and_infer_types() override;
-            virtual void post_validate_and_infer_types() override;
 
         protected:
             Strides m_window_movement_strides;

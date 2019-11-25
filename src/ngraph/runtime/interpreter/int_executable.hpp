@@ -1865,6 +1865,8 @@ private:
         case OP_TYPEID::Greater_v1:
         case OP_TYPEID::GreaterEq_v1:
         case OP_TYPEID::GroupConvolution_v1:
+        case OP_TYPEID::GroupConvolutionBackpropData:
+        case OP_TYPEID::GroupConvolutionBackpropFilters:
         case OP_TYPEID::GRN:
         case OP_TYPEID::GRUCell:
         case OP_TYPEID::Gelu:
