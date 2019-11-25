@@ -64,17 +64,6 @@ namespace ngraph
             size_t get_axis() const { return m_axis; }
             const std::vector<size_t>& get_splits() const { return m_splits; }
         private:
-            /// \brief Adjusts the axis for negative values
-            ///
-            /// \note Negative values mean that the API consumer wants to point the axis location
-            ///       from the back of the tensor. This is similar to the way NumPy works.
-            ///
-            /// \param axis - original axis value; negative values are accepted
-            /// \param input_tensor_rank - rank of the input data tensor
-            /// \return Returns a sum of parameters for negative axis value, or axis itself
-            ///         otherwise
-            size_t adjust_axis_value(const int axis, const size_t input_tensor_rank) const;
-
             /// used internally for validation purposes, indicates which constructor was used
             bool m_split_evenly;
             int64_t m_axis;

@@ -18,6 +18,7 @@
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/split.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -66,11 +67,7 @@ void op::Split::pre_validate_and_infer_types()
 
     const auto shape = input(0).get_shape();
 
-    m_axis = adjust_axis_value(m_axis, shape.size());
-    NODE_VALIDATION_CHECK(this,
-                          m_axis >= 0 && m_axis < static_cast<int64_t>(shape.size()),
-                          "The 'axis' parameter for Split has to point to one of the "
-                          "input tensor's shape dimensions.");
+    m_axis = ngraph::normalize_axis(this, m_axis, shape.size());
 
     const auto dimension_at_axis = shape.at(m_axis);
     if (m_split_evenly)
@@ -112,16 +109,4 @@ shared_ptr<Node> op::Split::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Split>(new_args.at(0), new_args.at(1), m_splits);
-}
-
-size_t op::Split::adjust_axis_value(const int axis, const size_t input_tensor_rank) const
-{
-    if (axis < 0)
-    {
-        return axis + input_tensor_rank;
-    }
-    else
-    {
-        return axis;
-    }
 }

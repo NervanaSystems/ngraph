@@ -45,11 +45,10 @@ TEST(type_prop, split)
         const auto split = make_shared<op::Split>(data, axis, splits); // invalid axis
         FAIL() << "Split node was created with incorrect data.";
     }
-    catch (const NodeValidationFailure& error)
+    catch (const ngraph_error& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("The 'axis' parameter for Split has to point to one of "
-                                         "the input tensor's shape dimensions."));
+                             std::string("Parameter axis -5 out of the tensor rank"));
     }
 
     const auto axis = op::Constant::create(element::i64, Shape{}, { 1 });
