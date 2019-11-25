@@ -36,6 +36,7 @@ namespace ngraph
             NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Constant", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            Constant() = default;
             /// \brief Constructs a tensor constant.
             ///
             /// \param type The element type of the tensor constant.
