@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "cum_sum.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/cum_sum.hpp"
 
 namespace ngraph
@@ -31,21 +32,20 @@ namespace ngraph
                 {
                     auto inputs = node.get_ng_inputs();
                     auto data = inputs.at(0);
-                    auto exclusive = node.get_attribute_value<std::int64_t>("exclusive", 0);
-                    auto reverse = node.get_attribute_value<std::int64_t>("reverse", 0);
-
+                    bool exclusive = node.get_attribute_value<std::int64_t>("exclusive", 0);
+                    bool reverse = node.get_attribute_value<std::int64_t>("reverse", 0);
+                    std::shared_ptr<ngraph::Node> axis;
+                    
                     if (inputs.size() > 1)
                     {
-                        auto axis = inputs.at(1); // optional input, 0-D tensor
-                        return NodeVector{
-                            std::make_shared<ngraph::op::CumSum>(data, axis, exclusive, reverse)};
+                        axis = inputs.at(1); // optional input, 0-D tensor
                     }
                     else
                     {
-                        int64_t axis = 0; // default
-                        return NodeVector{
-                            std::make_shared<ngraph::op::CumSum>(data, axis, exclusive, reverse)};
+                        axis = ngraph::op::Constant::create(element::i64, Shape{}, {0}); // default                      
                     }
+                    return NodeVector{
+                        std::make_shared<ngraph::op::CumSum>(data, axis, exclusive, reverse)};
                 }
 
             } // namespace set_1
