@@ -52,6 +52,10 @@ top_k_opset_10                          # No plans to implement TopK
 top_k_opset_10_const_k                  # No plans to implement TopK
 top_k_opset_11_const_k_smallest         # No plans to implement TopK
 
+# unsupported op: `Atan2`
+atan2
+backwards_atan2
+
 # unsupported op: `Erf`
 erf
 gelu_f32
@@ -143,6 +147,7 @@ pad_reflect_1d_multi_reflect
 pad_reflect_2d
 pad_reflect_2d_with_neg
 pad_symmetric
+cross_entropy_with_one_hot
 
 # No double precision FP support in PlaidML
 sum_trivial_in_double

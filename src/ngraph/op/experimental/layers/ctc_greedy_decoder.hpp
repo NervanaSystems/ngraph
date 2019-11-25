@@ -28,6 +28,7 @@ namespace ngraph
             NGRAPH_API
             static constexpr NodeTypeInfo type_info{"CTCGreedyDecoder", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            CTCGreedyDecoder() = default;
             /// \brief Constructs a CTCGreedyDecoder operation
             ///
             /// \param input              Logits on which greedy decoding is performed

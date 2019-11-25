@@ -30,8 +30,8 @@
 #include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Target/TargetMachine.h>
+#include <mlir/Dialect/LLVMIR/LLVMDialect.h>
 #include <mlir/ExecutionEngine/ExecutionEngine.h>
-#include <mlir/ExecutionEngine/MemRefUtils.h>
 #include <mlir/ExecutionEngine/OptUtils.h>
 #include <mlir/IR/Function.h>
 
@@ -88,7 +88,7 @@ void MLIRCPURuntime::bindArguments(std::vector<void*>& externalTensors,
 {
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
-    mlir::FuncOp func = m_module->lookupSymbol<mlir::FuncOp>("main");
+    auto func = m_module->lookupSymbol<mlir::LLVM::LLVMFuncOp>("main");
     NGRAPH_CHECK(func && !func.getBlocks().empty(), "Function not found");
 
     // Set external arguments
@@ -97,7 +97,7 @@ void MLIRCPURuntime::bindArguments(std::vector<void*>& externalTensors,
     // Create list with a type-erased double pointer for each invocation arguments.
     // We currently use 'allocateMemrefArgs', which creates the arguments list per call ABI (see
     // comment below).
-    // StaticFloatMemref is just a struct with the actual pointer to the data.
+    // StaticMemRef is just a struct with the actual pointer to the data.
 
     for (auto i = 0; i < shapeVec.size(); i++)
     {
@@ -235,11 +235,11 @@ void MLIRCPURuntime::cleanup()
 }
 
 // The current call ABI takes a single arg pointer (argPtr) pointing to a list of args.
-// Each arg is a  pointer to a StaticFloatMemRef which contains a data pointer
+// Each arg is a  pointer to a StaticMemRef which contains a data pointer
 //
 // The args are laid out as follows
-// argPtr-> arg[0]-> StaticFloatMemRef -> <data>
-//          arg[1]-> StaticFloatMemRef -> <data>
+// argPtr-> arg[0]-> StaticMemRef -> <data>
+//          arg[1]-> StaticMemRef -> <data>
 //          ...
 SmallVector<void*, 8> MLIRCPURuntime::allocateMemrefArgs()
 {
@@ -301,7 +301,7 @@ SmallVector<void*, 8> MLIRCPURuntime::allocateMemrefArgs()
 template <int N>
 StridedMemRef<N>* MLIRCPURuntime::allocateMemrefDescriptor()
 {
-    // We only use StaticFloatMemRef because that's what MLIR currently offers.
+    // We only use StaticMemRef because that's what MLIR currently offers.
     // We should expand this with different types and dynamic MemRefs
     auto* descriptor = reinterpret_cast<StridedMemRef<N>*>(malloc(sizeof(StridedMemRef<N>)));
     NGRAPH_CHECK(descriptor != nullptr, "NULL MemRef descriptor");

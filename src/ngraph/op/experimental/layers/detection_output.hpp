@@ -50,6 +50,7 @@ namespace ngraph
             NGRAPH_API
             static constexpr NodeTypeInfo type_info{"DetectionOutput", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            DetectionOutput() = default;
             /// \brief Constructs a DetectionOutput operation
             ///
             /// \param box_logits			Box logits
