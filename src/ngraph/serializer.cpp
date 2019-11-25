@@ -1079,6 +1079,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Convert>(args[0], target_type);
             break;
         }
+        case OP_TYPEID::ConvertLike_v1:
+        {
+            node = make_shared<op::v1::ConvertLike>(args[0], args[1]);
+            break;
+        }
         case OP_TYPEID::Convolution:
         case OP_TYPEID::Convolution_v1:
         {
@@ -3193,6 +3198,8 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = static_cast<const op::Convert*>(&n);
         node["target_type"] = write_element_type(tmp->get_convert_element_type());
         break;
+    }
+    case OP_TYPEID::ConvertLike_v1: { break;
     }
     case OP_TYPEID::Convolution:
     case OP_TYPEID::Convolution_v1:

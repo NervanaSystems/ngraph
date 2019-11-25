@@ -1843,6 +1843,7 @@ private:
         case OP_TYPEID::Concat_v1:
         case OP_TYPEID::Constant_v1:
         case OP_TYPEID::Convert_v1:
+        case OP_TYPEID::ConvertLike_v1:
         case OP_TYPEID::Convolution_v1:
         case OP_TYPEID::ConvolutionBackpropData_v1:
         case OP_TYPEID::ConvolutionBias:
