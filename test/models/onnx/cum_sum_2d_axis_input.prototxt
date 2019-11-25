@@ -43,7 +43,7 @@ graph {
     name: "axis"
     type {
       tensor_type {
-        elem_type: 2
+        elem_type: 7
       }
     }
   }
