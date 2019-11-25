@@ -146,6 +146,8 @@ set (SRC
     op/cosh.hpp
     op/cum_sum.cpp
     op/cum_sum.hpp
+    op/crop_and_resize.cpp
+    op/crop_and_resize.hpp
     op/dequantize.cpp
     op/dequantize.hpp
     op/divide.cpp
@@ -337,6 +339,8 @@ set (SRC
     op/topk.hpp
     op/xor.cpp
     op/xor.hpp
+    op/fused/batch_mat_mul_transpose.cpp
+    op/fused/batch_mat_mul_transpose.hpp
     op/fused/clamp.cpp
     op/fused/clamp.hpp
     op/fused/conv_fused.cpp
@@ -429,6 +433,7 @@ set (SRC
     op/util/rnn_cell_base.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
+    ops.hpp
     partial_shape.cpp
     partial_shape.hpp
     pass/algebraic_simplification.cpp
