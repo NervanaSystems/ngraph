@@ -53,8 +53,8 @@ namespace ngraph
             double get_min() const { return m_min; }
             double get_max() const { return m_max; }
         private:
-            const double m_min;
-            const double m_max;
+            double m_min;
+            double m_max;
         };
     }
 }
