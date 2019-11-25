@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "hard_sigmoid.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 
 using namespace ngraph::op;
@@ -31,10 +32,17 @@ namespace ngraph
             {
                 NodeVector hard_sigmoid(const Node& node)
                 {
-                    auto data = node.get_ng_inputs().at(0);
+                    const auto data = node.get_ng_inputs().at(0);
 
-                    double alpha = node.get_attribute_value<double>("alpha", 0.2);
-                    double beta = node.get_attribute_value<double>("beta", 0.5);
+                    const auto alpha = Constant::create<double>(
+                        data->get_element_type(),
+                        Shape{},
+                        std::vector<double>{node.get_attribute_value<double>("alpha", 0.2)});
+
+                    const auto beta = Constant::create<double>(
+                        data->get_element_type(),
+                        Shape{},
+                        std::vector<double>{node.get_attribute_value<double>("beta", 0.5)});
 
                     return {std::make_shared<ngraph::op::HardSigmoid>(data, alpha, beta)};
                 }
