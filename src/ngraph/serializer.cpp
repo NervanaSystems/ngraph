@@ -2063,9 +2063,18 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::OneHot:
         {
-            auto shape = node_js.at("shape").get<vector<size_t>>();
-            auto one_hot_axis = node_js.at("one_hot_axis").get<size_t>();
-            node = make_shared<op::OneHot>(args[0], read_partial_shape(shape), one_hot_axis);
+            if (op_version == 0)
+            {
+                auto shape = node_js.at("shape").get<vector<size_t>>();
+                auto one_hot_axis = node_js.at("one_hot_axis").get<size_t>();
+                node =
+                    make_shared<op::v0::OneHot>(args[0], read_partial_shape(shape), one_hot_axis);
+            }
+            if (op_version == 1)
+            {
+                auto axis = node_js.at("axis").get<int64_t>();
+                node = make_shared<op::v1::OneHot>(args[0], args[1], args[2], args[3], axis);
+            }
             break;
         }
         case OP_TYPEID::Or:
@@ -3794,9 +3803,17 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::OneHot:
     {
-        auto tmp = static_cast<const op::OneHot*>(&n);
-        node["shape"] = write_partial_shape(tmp->get_output_partial_shape(0));
-        node["one_hot_axis"] = tmp->get_one_hot_axis();
+        if (op_version == 0)
+        {
+            auto tmp = static_cast<const op::v0::OneHot*>(&n);
+            node["shape"] = write_partial_shape(tmp->get_output_partial_shape(0));
+            node["one_hot_axis"] = tmp->get_one_hot_axis();
+        }
+        if (op_version == 1)
+        {
+            auto tmp = static_cast<const op::v1::OneHot*>(&n);
+            node["axis"] = tmp->get_axis();
+        }
         break;
     }
     case OP_TYPEID::Or:
