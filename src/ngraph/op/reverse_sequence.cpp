@@ -33,6 +33,8 @@ op::ReverseSequence::ReverseSequence(const Output<Node>& arg,
     : Op({arg, seq_indices})
     , m_batch_axis(batch_axis)
     , m_seq_axis(seq_axis)
+    , m_normalized_batch_axis{0}
+    , m_normalized_seq_axis{0}
 {
     constructor_validate_and_infer_types();
 }
@@ -56,8 +58,10 @@ void op::ReverseSequence::validate_and_infer_types()
 
     if (input_rank.is_static())
     {
-        m_batch_axis = ngraph::normalize_axis(this, m_batch_axis, static_cast<int64_t>(input_rank));
-        m_seq_axis = ngraph::normalize_axis(this, m_seq_axis, static_cast<int64_t>(input_rank));
+        m_normalized_batch_axis =
+            ngraph::normalize_axis(this, m_batch_axis, static_cast<int64_t>(input_rank));
+        m_normalized_seq_axis =
+            ngraph::normalize_axis(this, m_seq_axis, static_cast<int64_t>(input_rank));
     }
 
     auto indices_shape = get_input_partial_shape(1);
@@ -76,20 +80,21 @@ void op::ReverseSequence::validate_and_infer_types()
     {
         Dimension merged_sequence_length;
 
-        NODE_VALIDATION_CHECK(
-            this,
-            Dimension::merge(merged_sequence_length, input_shape[m_batch_axis], indices_shape[0]),
-            "Sequence length (",
-            indices_shape[0],
-            ") is not equal to batch axis ",
-            "dimension (",
-            input_shape[m_batch_axis],
-            ") (argument shape: ",
-            input_shape,
-            ", sequence indices shape: ",
-            indices_shape,
-            ").");
-        output_shape[m_batch_axis] = merged_sequence_length;
+        NODE_VALIDATION_CHECK(this,
+                              Dimension::merge(merged_sequence_length,
+                                               input_shape[m_normalized_batch_axis],
+                                               indices_shape[0]),
+                              "Sequence length (",
+                              indices_shape[0],
+                              ") is not equal to batch axis ",
+                              "dimension (",
+                              input_shape[m_normalized_batch_axis],
+                              ") (argument shape: ",
+                              input_shape,
+                              ", sequence indices shape: ",
+                              indices_shape,
+                              ").");
+        output_shape[m_normalized_batch_axis] = merged_sequence_length;
     }
 
     set_output_type(0, get_input_element_type(0), output_shape);

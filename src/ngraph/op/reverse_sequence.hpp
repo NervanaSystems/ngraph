@@ -42,17 +42,21 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            size_t get_batch_axis() const { return m_batch_axis; }
-            void set_batch_axis(size_t batch_axis) { m_batch_axis = batch_axis; }
-            size_t get_sequence_axis() const { return m_seq_axis; }
-            void set_sequence_axis(size_t sequence_axis) { m_seq_axis = sequence_axis; }
+            size_t get_batch_axis() const { return m_normalized_batch_axis; }
+            int64_t get_origin_batch_axis() const { return m_batch_axis; }
+            void set_batch_axis(int64_t batch_axis) { m_batch_axis = batch_axis; }
+            size_t get_sequence_axis() const { return m_normalized_seq_axis; }
+            int64_t get_origin_sequence_axis() const { return m_seq_axis; }
+            void set_sequence_axis(int64_t sequence_axis) { m_seq_axis = sequence_axis; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
 
         private:
-            int64_t m_batch_axis{0};
-            int64_t m_seq_axis{0};
+            int64_t m_batch_axis;
+            int64_t m_seq_axis;
+            size_t m_normalized_batch_axis;
+            size_t m_normalized_seq_axis;
         };
     }
 }

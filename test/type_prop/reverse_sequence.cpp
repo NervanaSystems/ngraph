@@ -312,3 +312,16 @@ TEST(type_prop, reverse_sequence_negative_axis_dynamic_input_rank)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, reverse_sequence_negative_axes_support)
+{
+    auto data = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 3, 4, 5});
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape{3});
+    int64_t batch_axis = -3;
+    int64_t seq_axis = -2;
+
+    auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+
+    EXPECT_EQ(rs->get_batch_axis(), 2);
+    EXPECT_EQ(rs->get_sequence_axis(), 3);
+}
