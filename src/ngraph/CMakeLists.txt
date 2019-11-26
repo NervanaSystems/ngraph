@@ -146,6 +146,8 @@ set (SRC
     op/cosh.hpp
     op/crop_and_resize.cpp
     op/crop_and_resize.hpp
+    op/deformable_psroi_pooling.cpp
+    op/deformable_psroi_pooling.hpp
     op/dequantize.cpp
     op/dequantize.hpp
     op/divide.cpp
