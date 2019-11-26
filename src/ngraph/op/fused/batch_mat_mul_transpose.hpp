@@ -17,7 +17,8 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
-#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
+#include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
@@ -32,12 +33,13 @@ namespace ngraph
         /// For example, for `a` with shape `(batch_size, n, k)`, and `b` with
         /// shape `(batch_size, k, m)`, the result of BatchMatMul will have shape
         /// `(batch_size, n, m)`, and `BatchMatMulTranspose(a, b)[i] = Dot(a[i], b[i])`.
-        class BatchMatMulTranspose : public Op
+        class BatchMatMulTranspose : public ngraph::op::util::FusedOp
         {
         public:
-            CPU_BACKEND_API
+            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"BatchMatMulTranspose", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            BatchMatMulTranspose() = default;
             /// \brief Constructs a batch of matmul product operation.
             ///
             /// \param arg0 The node producing the first argument.
@@ -55,6 +57,8 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+
+            virtual NodeVector decompose_op() const override;
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,

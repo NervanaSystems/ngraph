@@ -241,6 +241,12 @@ gather_no_axis_bool
 batch_mat_mul_forward
 backwards_batchmatmul_tensor2_tensor2
 
+# unsupported op: `CumSum`
+cum_sum_default
+cum_sum_2dim
+cum_sum_3d
+cum_sum_2dim_allmodes
+
 # onnx tests
 model_quant_conv_linear_2d
 model_quant_conv_linear_3d

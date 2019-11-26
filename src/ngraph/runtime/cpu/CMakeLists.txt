@@ -52,6 +52,7 @@ set(SRC
     builder/convert.cpp
     builder/convert_layout.cpp
     builder/convolution.cpp
+    builder/cum_sum.cpp
     builder/dot.cpp
     builder/dropout.cpp
     builder/embedding_lookup.cpp
@@ -100,7 +101,6 @@ set(SRC
     mkldnn_emitter.cpp
     mkldnn_invoke.cpp
     mkldnn_utils.cpp
-    op/batch_mat_mul_transpose.cpp
     op/batch_norm_relu.cpp
     op/bounded_relu.cpp
     op/conv_add.cpp
