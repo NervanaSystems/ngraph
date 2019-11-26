@@ -141,4 +141,6 @@ namespace ngraph
 
         return allowed_values.at(type);
     }
+
+    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastSpec>::type_info;
 }
