@@ -53,7 +53,7 @@ nGraph code in one place allows for easy maintenance.
 
 .. _figure-paddle-design:
 
-.. figure:: ../graphics/paddlepaddle_design.png
+.. figure:: ../graphics/PaddlePaddle_DesignCLR.svg
    :width: 555px
    :alt: 
 
