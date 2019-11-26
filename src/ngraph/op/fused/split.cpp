@@ -26,15 +26,17 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::Split::type_info;
 
 op::Split::Split(const Output<Node>& data, const Output<Node>& axis, const size_t num_split)
-    : FusedOp({data, axis })
+    : FusedOp({data, axis})
     , m_split_evenly{true}
     , m_num_split{num_split}
 {
     constructor_validate_and_infer_types();
 }
 
-op::Split::Split(const Output<Node>& data, const Output<Node>& axis, const std::vector<size_t>& splits)
-    : FusedOp({data, axis })
+op::Split::Split(const Output<Node>& data,
+                 const Output<Node>& axis,
+                 const std::vector<size_t>& splits)
+    : FusedOp({data, axis})
     , m_split_evenly{false}
     , m_num_split{0}
     , m_splits{splits}
@@ -48,9 +50,7 @@ void op::Split::pre_validate_and_infer_types()
     NODE_VALIDATION_CHECK(this, is_scalar(axis_shape), "The 'axis' input node must be scalar");
 
     const auto axis_node = input_value(1).get_node_shared_ptr();
-    NODE_VALIDATION_CHECK(this,
-        axis_node->is_constant(),
-        "The 'axis' input node must be constant");
+    NODE_VALIDATION_CHECK(this, axis_node->is_constant(), "The 'axis' input node must be constant");
     const auto axis_node_const = as_type_ptr<op::Constant>(axis_node);
     m_axis = axis_node_const->get_vector<int64_t>()[0];
 

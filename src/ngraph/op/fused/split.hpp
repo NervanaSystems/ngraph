@@ -52,7 +52,9 @@ namespace ngraph
             ///               shape.
             /// \param splits - a list of lengths that the input tensor should be split to. Use this
             ///                 constructor to split the input tensor to variable length chunks.
-            Split(const Output<Node>& data, const Output<Node>& axis, const std::vector<size_t>& splits);
+            Split(const Output<Node>& data,
+                  const Output<Node>& axis,
+                  const std::vector<size_t>& splits);
 
             void pre_validate_and_infer_types() override;
 
