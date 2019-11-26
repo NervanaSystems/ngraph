@@ -155,17 +155,6 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    case OP_TYPEID::Convert:
-    {
-        const auto convert_v0 = dynamic_cast<const op::Convert*>(node.get());
-
-        const auto target_type = op::Constant::create(convert_v0->get_destination_type(), {}, {0});
-        auto convert_v1 = make_shared<op::v1::ConvertLike>(convert_v0->input_value(0), target_type);
-
-        replace_node(node, convert_v1);
-        modified = true;
-        break;
-    }
     case OP_TYPEID::Convolution:
     {
         auto tmp = dynamic_cast<const op::v0::Convolution*>(node.get());
