@@ -60,7 +60,7 @@ hardware-specific primitives; here they get matched via Intel® MKL-DNN.
 
 .. _figure-simple-compiler:
 
-.. figure:: ../../graphics/simple-compiler-passes.png
+.. figure:: ../../graphics/CompilerPassesHzntBlue.svg
    :width: 750px
    :alt: Simple kernel fusion
 
