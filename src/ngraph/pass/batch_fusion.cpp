@@ -115,7 +115,9 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
             NGRAPH_DEBUG << "convolution data's rank isn't equal to 4";
             return {nullptr};
         }
-        if (!is_trivial_convolution(sconv))
+
+        Strides stride_1{1, 1};
+        if (!is_trivial_convolution(sconv) || conv->get_data_dilation_strides() != stride_1)
         {
             NGRAPH_DEBUG << arg->get_name() << " isn't trivial convolution";
             return {nullptr};
