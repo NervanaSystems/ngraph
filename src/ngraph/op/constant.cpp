@@ -74,6 +74,9 @@ string op::Constant::convert_value_to_string(size_t index) const
     case element::Type_t::i16: rc = to_string(get_vector<int16_t>()[index]); break;
     case element::Type_t::i32: rc = to_string(get_vector<int32_t>()[index]); break;
     case element::Type_t::i64: rc = to_string(get_vector<int64_t>()[index]); break;
+    case element::Type_t::u1:
+        rc = to_string((get_vector<uint8_t>()[index / 8] >> (7 - (index % 8))) & 1);
+        break;
     case element::Type_t::u8: rc = to_string(get_vector<uint8_t>()[index]); break;
     case element::Type_t::u16: rc = to_string(get_vector<uint16_t>()[index]); break;
     case element::Type_t::u32: rc = to_string(get_vector<uint32_t>()[index]); break;
@@ -176,6 +179,7 @@ vector<string> op::Constant::get_value_strings() const
             rc.push_back(to_string(value));
         }
         break;
+    case element::Type_t::u1: throw runtime_error("unsupported type");
     case element::Type_t::undefined: throw runtime_error("unsupported type");
     case element::Type_t::dynamic: throw runtime_error("unsupported type");
     }
@@ -323,6 +327,7 @@ bool op::Constant::are_all_data_elements_bitwise_identical() const
         rc = test_bitwise_identical<uint64_t>(this);
         break;
     }
+    case element::Type_t::u1:
     case element::Type_t::undefined:
     case element::Type_t::dynamic: break;
     }

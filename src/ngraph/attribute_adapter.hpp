@@ -32,6 +32,7 @@ namespace ngraph
     {
     public:
         virtual const DiscreteTypeInfo& get_type_info() const = 0;
+        virtual ~ValueAccessor() {}
     };
 
     /// ValueAccessor<T> represents values that support get/set through T
@@ -39,7 +40,6 @@ namespace ngraph
     class ValueAccessor : public ValueAccessor<void>
     {
     public:
-        virtual ~ValueAccessor() {}
         virtual const DiscreteTypeInfo& get_type_info() const = 0;
         /// Returns the value
         virtual const T& get() = 0;

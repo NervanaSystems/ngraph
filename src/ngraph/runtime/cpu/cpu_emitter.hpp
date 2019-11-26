@@ -42,6 +42,7 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/not.hpp"
 #include "ngraph/op/not_equal.hpp"
+#include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/power.hpp"
@@ -78,6 +79,7 @@ namespace ngraph
         class BatchNormTrainingRelu;
         class BatchNormInferenceRelu;
         class BatchNormTrainingBackprop;
+        class CumSum;
         class Dot;
         class GetOutputElement;
         class Abs;
@@ -110,7 +112,6 @@ namespace ngraph
         class ScatterNDAdd;
         class UpdateSlice;
         class ReplaceSlice;
-        class OneHot;
         class Ceiling;
         class Floor;
         class Sqrt;
@@ -233,6 +234,8 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormInferenceRelu);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormTrainingBackprop);
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::CumSum);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Dot);
             template <>
