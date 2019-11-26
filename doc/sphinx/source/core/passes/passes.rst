@@ -61,7 +61,7 @@ hardware-specific primitives; here they get matched via Intel® MKL-DNN.
 .. _figure-simple-compiler:
 
 .. figure:: ../../graphics/CompilerPassesHzntBlue.svg
-   :width: 750px
+   :width: 100%
    :alt: Simple kernel fusion
 
    Figure A: On the left side of *Figure A* is a fully-formed function 
