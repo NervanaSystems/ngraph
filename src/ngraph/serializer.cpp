@@ -3393,7 +3393,7 @@ json JSONSerializer::serialize_node(const Node& n)
         if (op_version == 1)
         {
             auto tmp = static_cast<const op::v1::Reshape*>(&n);
-            node["zero_flag"] = tmp->get_zero_flag();
+            node["special_zero"] = tmp->get_special_zero();
         }
         break;
     }

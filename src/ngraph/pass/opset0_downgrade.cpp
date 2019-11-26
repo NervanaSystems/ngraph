@@ -252,7 +252,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         auto tmp = as_type_ptr<op::v1::Reshape>(node);
         auto replacement_node = make_shared<op::v0::DynReshape>(node->input(0).get_source_output(),
                                                                 node->input(1).get_source_output(),
-                                                                tmp->get_zero_flag());
+                                                                tmp->get_special_zero());
         replace_node(node, replacement_node);
         modified = true;
         break;
