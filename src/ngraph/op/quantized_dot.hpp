@@ -28,6 +28,7 @@ namespace ngraph
             NGRAPH_API
             static constexpr NodeTypeInfo type_info{"QuantizedDot", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            QuantizedDot() = default;
             /// \brief Constructs a quantized convolution operation.
             ///
             /// \param input0 The node producing the input data batch tensor.

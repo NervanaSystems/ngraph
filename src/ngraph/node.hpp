@@ -178,7 +178,7 @@ namespace ngraph
         /// Returns the NodeTypeInfo for the node's class.
         /// During transition to type_info, returns a dummy type_info for Node if the class
         /// has not been updated yet.
-        virtual const NodeTypeInfo& get_type_info() const { return type_info; }
+        virtual const NodeTypeInfo& get_type_info() const = 0;
         virtual const char* get_type_name() const
         {
             auto& info = get_type_info();
