@@ -59,3 +59,47 @@ TEST(type_prop, split)
     EXPECT_EQ(split->output(0).get_element_type(), element::i32);
     EXPECT_EQ(split->output(1).get_element_type(), element::i32);
 }
+
+TEST(type_prop, split_axis_must_be_scalar)
+{
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{ 2, 6 });
+    const std::vector<size_t> splits = { 1, 6 };
+    const auto axis = op::Constant::create(element::i64, Shape{2}, { 0,1 });
+
+    try
+    {
+        const auto split = make_shared<op::Split>(data, axis, splits);
+        FAIL() << "Incorrect axis of Split not detected.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("The 'axis' input node must be scalar"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason.";
+    }
+}
+
+TEST(type_prop, split_axis_must_be_constant)
+{
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{ 2, 6 });
+    const std::vector<size_t> splits = { 1, 6 };
+    const auto axis = make_shared<op::Parameter>(element::i32, Shape{});
+
+    try
+    {
+        const auto split = make_shared<op::Split>(data, axis, splits);
+        FAIL() << "Not constant axis of Split not detected.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("The 'axis' input node must be constant"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason.";
+    }
+}
