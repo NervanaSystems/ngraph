@@ -35,6 +35,7 @@ namespace ngraph
         public:
             static constexpr NodeTypeInfo type_info{"Constant", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            Constant() = default;
             /// \brief Constructs a tensor constant.
             ///
             /// \param type The element type of the tensor constant.
@@ -361,6 +362,7 @@ namespace ngraph
             static constexpr NodeTypeInfo type_info{"ScalarConstantLikeBase", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             std::shared_ptr<op::Constant> as_constant() const;
+            ScalarConstantLikeBase() = default;
 
         protected:
             ScalarConstantLikeBase(const OutputVector& args)
