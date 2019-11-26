@@ -52,6 +52,7 @@ set(SRC
     builder/convert.cpp
     builder/convert_layout.cpp
     builder/convolution.cpp
+    builder/cum_sum.cpp
     builder/dot.cpp
     builder/dropout.cpp
     builder/embedding_lookup.cpp
