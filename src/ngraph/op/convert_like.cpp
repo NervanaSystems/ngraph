@@ -44,6 +44,5 @@ void op::v1::ConvertLike::generate_adjoints(autodiff::Adjoints& adjoints, const 
 {
     const auto delta = deltas.at(0);
 
-    adjoints.add_delta(input_value(0),
-                       make_shared<op::v1::ConvertLike>(delta, input_value(1)));
+    adjoints.add_delta(input_value(0), make_shared<op::v1::ConvertLike>(delta, input_value(1)));
 }
