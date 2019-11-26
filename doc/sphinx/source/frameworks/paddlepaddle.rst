@@ -53,8 +53,8 @@ nGraph code in one place allows for easy maintenance.
 
 .. _figure-paddle-design:
 
-.. figure:: ../graphics/paddlepaddle_design.png
-   :width: 555px
+.. figure:: ../graphics/PaddlePaddle_DesignCLR.svg
+   :width: 100%
    :alt: 
 
 *Figure A* above depicts nGraph access from PaddlePaddle. The PaddlePaddle 
@@ -71,7 +71,7 @@ is organized in the following file structure:
 .. _figure-paddle-dir:
 
 .. figure:: ../graphics/PaddlePaddleDir.svg
-   :width: 555px
+   :width: 100%
    :alt: 
 
 Compilation of nGraph is handled by the ``ngraph.cmake`` file in the 
