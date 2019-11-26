@@ -256,17 +256,17 @@ Scenario Two: Known Partial Shape
 
 The :ref:`second scenario <scenario_two>` involves the use of dynamic tensors. 
 A :term:`dynamic tensor` is a tensor whose shape can change from one "iteration" 
-to the next. When created, a framework :term:`bridge` might supply only *partial* 
-shape information: it might be **all** the tensor dimensions, **some** of the 
-tensor dimensions, or **none** of the tensor dimensions; furthermore, the rank 
-of the tensor may be left unspecified. The "actual" shape of the tensor is not 
-specified until some function writes some value to it. The actual shape can 
-change when the value of the tensor is overwritten. It is the backend’s 
-responsibility to set the actual shape. The :term:`model description` 
-for the second scenario based on the :file:`partial_shape.cpp` code in the 
-``/doc/examples/dynamic_tensor`` directory, and it deconstructs the steps that 
-must happen (either programmatically or manually) in order to successfully 
-retreive shape data.
+to the next. When a dynamic tensor is created, a framework :term:`bridge` might 
+supply only *partial* shape information: it might be **all** the tensor 
+dimensions, **some** of the tensor dimensions, or **none** of the tensor 
+dimensions; furthermore, the rank of the tensor may be left unspecified. 
+The "actual" shape of the tensor is not specified until some function writes 
+some value to it. The actual shape can change when the value of the tensor 
+is overwritten. It is the backend’s responsibility to set the actual shape. 
+The :term:`model description` for the second scenario based on the 
+:file:`partial_shape.cpp` code in the ``/doc/examples/dynamic_tensor`` 
+directory, and it deconstructs the steps that must happen (either 
+programmatically or manually) in order to successfully retreive shape data.
 
 * :ref:`create_dyn_tensor`
 * :ref:`call_graph_vw_`
