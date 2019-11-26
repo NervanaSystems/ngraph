@@ -186,11 +186,17 @@ namespace
         /// Allocates a linear buffer for a temporary tensor
         Value* createTempBuffer(Type type, PatternRewriter& rewriter);
 
-        /// Creates a temp view over a pre-allocated buffer (see createTempBuffer)
+        /// Creates an allocation or view of a memref.
         /// type     MemRef Type
-        /// buffer   The value defining the buffer we are creating a view over
-        /// offset   The offset into the buffer this view starts at
-        Value* createTempView(Type type, Value* buffer, unsigned offset, PatternRewriter& rewriter);
+        /// buffer   Optional buffer value to create view over
+        /// offset   Optional offset into the buffer this view starts at
+        ///
+        /// If buffer is null, a new allocation of a memref is created. 
+        /// Offset is ignored.  If buffer is non-null, then we create a temp 
+        /// view over a pre-allocated buffer (see createTempBuffer)
+
+        Value*
+            createTempMemref(Type type, Value* buffer, unsigned offset, PatternRewriter& rewriter);
 
         /// Inserts dealloc Ops for each temporary allocated by AllocOp
         void insertDeallocs(PatternRewriter& rewriter);
@@ -336,8 +342,7 @@ namespace
                 if (!bufferIdAttr)
                 {
                     // Allocate new memref
-                    bufferValue = createTempBuffer(memRefType, rewriter);
-                    newResult = createTempView(memRefType, bufferValue, 0, rewriter);
+                    newResult = createTempMemref(memRefType, nullptr, 0, rewriter);
                 }
                 else
                 {
@@ -355,7 +360,7 @@ namespace
                         bufferValue = it->second;
                     }
                     // Create a temp view over the linear buffer
-                    newResult = createTempView(memRefType, bufferValue, 0, rewriter);
+                    newResult = createTempMemref(memRefType, bufferValue, 0, rewriter);
                 }
                 NGRAPH_CHECK(newResult != nullptr, "Temp memref value is not set");
                 newResults.push_back(newResult);
@@ -393,33 +398,43 @@ namespace
         return alloc;
     }
 
-    Value* DialectLoweringPass::createTempView(Type type,
-                                               Value* buffer,
-                                               unsigned offset,
-                                               PatternRewriter& rewriter)
+    Value* DialectLoweringPass::createTempMemref(Type type,
+                                                 Value* buffer,
+                                                 unsigned offset,
+                                                 PatternRewriter& rewriter)
     {
         NGRAPH_CHECK(offset == 0, "Only zero offset is supported");
-        NGRAPH_CHECK(buffer != nullptr, "Cannot create a view over an undefined buffer");
-
         MemRefType memRefType = type.cast<MemRefType>();
-
-        // create the N-D to 1D affine expression mapping the memref shape to the underlying linear
-        // buffer
-        // This is simply (d0, d1, d2, .. dN-1) --> d0 * S0 + d1 * S1 ... + dN-1 * SN-1
-        // Where Si is the stride along the i_th dimension
-        auto shape = memRefType.getShape();
-        SmallVector<int64_t, 4> strides(shape.size(), 0);
-        strides[shape.size() - 1] = 1;
-        for (int64_t i = shape.size() - 2; i >= 0; i--)
+        if (buffer)
         {
-            strides[i] = strides[i + 1] * shape[i + 1];
+            // We have a buffer to map to. Create a view over it.
+
+            // Create the N-D to 1D affine expression mapping the memref shape to the underlying
+            // linear
+            // buffer
+            // This is simply (d0, d1, d2, .. dN-1) --> d0 * S0 + d1 * S1 ... + dN-1 * SN-1
+            // Where Si is the stride along the i_th dimension
+            auto shape = memRefType.getShape();
+            SmallVector<int64_t, 4> strides(shape.size(), 0);
+            strides[shape.size() - 1] = 1;
+            for (int64_t i = shape.size() - 2; i >= 0; i--)
+            {
+                strides[i] = strides[i + 1] * shape[i + 1];
+            }
+
+            auto map = makeStridedLinearLayoutMap(strides, offset, rewriter.getContext());
+            MemRefType newMemRefType = MemRefType::get(shape, memRefType.getElementType(), map);
+            auto viewOp = rewriter.create<mlir::ViewOp>(
+                buffer->getDefiningOp()->getLoc(), newMemRefType, buffer, llvm::None);
+            return viewOp.getResult();
         }
 
-        auto map = makeStridedLinearLayoutMap(strides, offset, rewriter.getContext());
-        MemRefType newMemRefType = MemRefType::get(shape, memRefType.getElementType(), map);
-        auto viewOp = rewriter.create<mlir::ViewOp>(
-            buffer->getDefiningOp()->getLoc(), newMemRefType, buffer, llvm::None);
-        return viewOp.getResult();
+        // No buffer, create an atomic memref without underlying buffer
+        NGRAPH_CHECK(memRefType.hasStaticShape(), "Dynamic shapes are not supported");
+
+        Value* alloc = rewriter.create<mlir::AllocOp>(rewriter.getUnknownLoc(), memRefType);
+        memRefsToDealloc.push_back(alloc);
+        return alloc;
     }
 
     /// Add llvm.noalias attribute to all the memref function arguments. We know that this is safe
