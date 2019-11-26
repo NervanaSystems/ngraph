@@ -25,10 +25,10 @@
 
 /// \return Return the outputs of the node.
 static ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node,
-                                      int64_t outputs_numer)
+                                      int64_t outputs_number)
 {
-    ngraph::NodeVector outputs(outputs_numer);
-    for (int i = 0; i < outputs_numer; ++i)
+    ngraph::NodeVector outputs(outputs_number);
+    for (int i = 0; i < outputs_number; ++i)
     {
         outputs[i] = std::make_shared<ngraph::op::GetOutputElement>(node, i);
     }
