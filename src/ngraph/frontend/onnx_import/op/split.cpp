@@ -19,21 +19,8 @@
 
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/split.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "op/split.hpp"
 #include "utils/common.hpp"
-
-/// \return Return the outputs of the node.
-static ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node,
-                                      int64_t outputs_number)
-{
-    ngraph::NodeVector outputs(outputs_number);
-    for (int i = 0; i < outputs_number; ++i)
-    {
-        outputs[i] = std::make_shared<ngraph::op::GetOutputElement>(node, i);
-    }
-    return outputs;
-}
 
 namespace ngraph
 {
@@ -51,23 +38,20 @@ namespace ngraph
                         ngraph::op::Constant::create(element::i64, Shape{}, {axis});
 
                     std::shared_ptr<ngraph::op::Split> fused_split;
-                    try
+                    if (node.has_attribute("split"))
                     {
                         const auto length_parts =
                             node.get_attribute_value<std::vector<std::size_t>>("split");
                         fused_split =
                             std::make_shared<ngraph::op::Split>(input, axis_node, length_parts);
                     }
-                    catch (const error::node::UnknownAttribute&)
+                    else
                     {
-                        // an exception will be caught if the input node does not contain
-                        // the 'split' attribute - this means we should split the input tensor
-                        // into same-length parts equal to the number of node outputs
                         const auto outputs_number = node.get_output_names().size();
                         fused_split =
                             std::make_shared<ngraph::op::Split>(input, axis_node, outputs_number);
                     }
-                    return get_outputs(fused_split, fused_split->get_splits().size());
+                    return common::get_outputs(fused_split, fused_split->get_splits().size());
                 }
 
             } // namespace set_1

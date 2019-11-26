@@ -16,6 +16,7 @@
 #include <onnx/onnx_pb.h> // onnx types
 
 #include "common.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "validation_util.hpp"
 
 namespace ngraph
@@ -77,6 +78,17 @@ namespace ngraph
                 }
 
                 return new_axes;
+            }
+
+            ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node,
+                                           int64_t outputs_number)
+            {
+                ngraph::NodeVector outputs(outputs_number);
+                for (int i = 0; i < outputs_number; ++i)
+                {
+                    outputs[i] = std::make_shared<ngraph::op::GetOutputElement>(node, i);
+                }
+                return outputs;
             }
 
         } // namespace  common
