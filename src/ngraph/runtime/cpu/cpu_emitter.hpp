@@ -42,6 +42,7 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/not.hpp"
 #include "ngraph/op/not_equal.hpp"
+#include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/power.hpp"
@@ -110,7 +111,6 @@ namespace ngraph
         class ScatterNDAdd;
         class UpdateSlice;
         class ReplaceSlice;
-        class OneHot;
         class Ceiling;
         class Floor;
         class Sqrt;
