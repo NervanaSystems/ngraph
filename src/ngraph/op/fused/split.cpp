@@ -98,6 +98,7 @@ void op::Split::pre_validate_and_infer_types()
                               all_splits_positive == true,
                               "All values of the 'splits' attribute must be greater than zero");
     }
+    set_input_is_relevant_to_shape(0);
 }
 
 NodeVector op::Split::decompose_op() const
