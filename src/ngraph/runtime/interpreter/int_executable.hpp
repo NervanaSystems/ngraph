@@ -55,6 +55,7 @@
 #include "ngraph/runtime/reference/copy.hpp"
 #include "ngraph/runtime/reference/cos.hpp"
 #include "ngraph/runtime/reference/cosh.hpp"
+#include "ngraph/runtime/reference/cum_sum.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/divide.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
@@ -696,6 +697,30 @@ private:
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::cosh<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
+        }
+        case OP_TYPEID::CumSum:
+        {
+            const op::CumSum* cumsum = static_cast<const op::CumSum*>(&node);
+            auto axis_et = node.get_input_element_type(1);
+            if (axis_et == element::i32)
+            {
+                reference::cumsum<T, int32_t>(args[0]->get_data_ptr<const T>(),
+                                              args[1]->get_data_ptr<const int32_t>(),
+                                              out[0]->get_data_ptr<T>(),
+                                              node.get_input_shape(0),
+                                              cumsum->is_exclusive(),
+                                              cumsum->is_reverse());
+            }
+            else if (axis_et == element::i64)
+            {
+                reference::cumsum<T, int64_t>(args[0]->get_data_ptr<const T>(),
+                                              args[1]->get_data_ptr<const int64_t>(),
+                                              out[0]->get_data_ptr<T>(),
+                                              node.get_input_shape(0),
+                                              cumsum->is_exclusive(),
+                                              cumsum->is_reverse());
+            }
             break;
         }
         case OP_TYPEID::CropAndResize:

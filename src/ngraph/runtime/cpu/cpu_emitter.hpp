@@ -118,6 +118,8 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormTrainingBackprop);
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::CumSum);
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Dot);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Multiply);
