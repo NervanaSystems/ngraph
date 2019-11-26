@@ -27,5 +27,7 @@ void regclass_pyngraph_op_HardSigmoid(py::module m)
     py::class_<ngraph::op::HardSigmoid, std::shared_ptr<ngraph::op::HardSigmoid>, ngraph::op::Op>
         hardsigmoid(m, "HardSigmoid");
     hardsigmoid.doc() = "ngraph.impl.op.HardSigmoid wraps ngraph::op::HardSigmoid";
-    hardsigmoid.def(py::init<const std::shared_ptr<ngraph::Node>&, float&, float&>());
+    hardsigmoid.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                             const std::shared_ptr<ngraph::Node>&,
+                             const std::shared_ptr<ngraph::Node>&>());
 }
