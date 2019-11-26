@@ -28,6 +28,7 @@ namespace ngraph
             NGRAPH_API
             static constexpr NodeTypeInfo type_info{"ROIPooling", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            ROIPooling() = default;
             /// \brief Constructs a ROIPooling operation
             ///
             /// \param input          Input feature map {N, C, ...}

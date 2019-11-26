@@ -29,41 +29,73 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::HardSigmoid::type_info;
 
-op::HardSigmoid::HardSigmoid(const Output<Node>& data, float alpha, float beta)
-    : FusedOp({data})
-    , m_alpha(alpha)
-    , m_beta(beta)
+op::HardSigmoid::HardSigmoid(const Output<Node>& data,
+                             const Output<Node>& alpha,
+                             const Output<Node>& beta)
+    : FusedOp({data, alpha, beta})
 {
     constructor_validate_and_infer_types();
 }
 
+void op::HardSigmoid::pre_validate_and_infer_types()
+{
+    const auto& alpha_pshape = get_input_partial_shape(1);
+    const auto& beta_pshape = get_input_partial_shape(2);
+
+    if (alpha_pshape.is_static())
+    {
+        const auto alpha_shape = alpha_pshape.to_shape();
+        NODE_VALIDATION_CHECK(this,
+                              is_scalar(alpha_shape),
+                              "A scalar is expected for the 'alpha' input. Got: ",
+                              alpha_shape);
+    }
+
+    if (beta_pshape.is_static())
+    {
+        const auto beta_shape = beta_pshape.to_shape();
+        NODE_VALIDATION_CHECK(this,
+                              is_scalar(beta_shape),
+                              "A scalar is expected for the 'beta' input. Got: ",
+                              beta_shape);
+    }
+
+    const auto& data_et = input(0).get_element_type();
+    const auto& alpha_et = input(1).get_element_type();
+    const auto& beta_et = input(2).get_element_type();
+
+    NODE_VALIDATION_CHECK(
+        this,
+        data_et == alpha_et && data_et == beta_et,
+        "The element types of both alpha and beta inputs must match the data input type.");
+}
+
 NodeVector op::HardSigmoid::decompose_op() const
 {
-    auto data = input_value(0);
-    auto data_shape = data.get_shape();
-    size_t elem_count = shape_size(data_shape);
+    const auto data = input_value(0);
 
-    std::shared_ptr<ngraph::Node> alpha_node = ngraph::op::Constant::create<float>(
-        data.get_element_type(), data_shape, std::vector<float>(elem_count, m_alpha));
+    const auto one_node =
+        ngraph::op::Constant::create<float>(data.get_element_type(), data.get_shape(), {1.0f});
 
-    std::shared_ptr<ngraph::Node> beta_node = ngraph::op::Constant::create<float>(
-        data.get_element_type(), data_shape, std::vector<float>(elem_count, m_beta));
+    const auto zero_node =
+        ngraph::op::Constant::create<float>(data.get_element_type(), data.get_shape(), {0.0f});
 
-    std::shared_ptr<ngraph::Node> one_node = ngraph::op::Constant::create<float>(
-        data.get_element_type(), data_shape, std::vector<float>(elem_count, 1.0));
+    const auto alpha_node = input_value(1).get_node_shared_ptr();
+    const auto beta_node = input_value(2).get_node_shared_ptr();
 
-    std::shared_ptr<ngraph::Node> zero_node = ngraph::op::Constant::create<float>(
-        data.get_element_type(), data_shape, std::vector<float>(elem_count, 0.0));
+    std::shared_ptr<Node> alpha_x_plus_beta =
+        std::make_shared<op::v1::Multiply>(alpha_node, data, AutoBroadcastType::NUMPY);
 
-    return {std::make_shared<op::Minimum>(
-        std::make_shared<op::Maximum>(alpha_node * data + beta_node, zero_node), one_node)};
+    alpha_x_plus_beta =
+        std::make_shared<op::v1::Add>(alpha_x_plus_beta, beta_node, AutoBroadcastType::NUMPY);
+
+    return {std::make_shared<op::v1::Minimum>(
+        std::make_shared<op::v1::Maximum>(alpha_x_plus_beta, zero_node), one_node)};
 }
 
 shared_ptr<Node> op::HardSigmoid::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-    return make_shared<HardSigmoid>(new_args.at(0), m_alpha, m_beta);
+    check_new_args_count(this, new_args);
+
+    return make_shared<HardSigmoid>(new_args.at(0), new_args.at(1), new_args.at(2));
 }
