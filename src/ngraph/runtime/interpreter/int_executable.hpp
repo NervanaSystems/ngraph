@@ -136,13 +136,10 @@ namespace ngraph
                 enum class OP_TYPEID
                 {
 #define NGRAPH_OP(a, b) a,
-#include "ngraph/op/op_v0_tbl.hpp"
-#ifdef INTERPRETER_USE_HYBRID
-#include "ngraph/runtime/hybrid/op/op_tbl.hpp"
-#endif
+#include "ngraph/opsets/opset0_tbl.hpp"
 #undef NGRAPH_OP
-#define NGRAPH_OP(a, b) a##_v1,
-#include "ngraph/op/op_v1_tbl.hpp"
+#define NGRAPH_OP(a, b) a##_extra,
+#include "ngraph/runtime/interpreter/int_extra_op_tbl.hpp"
 #undef NGRAPH_OP
                     UnknownOp
                 };
@@ -375,11 +372,6 @@ private:
                                    avg_pool->get_padding_below(),
                                    avg_pool->get_padding_above(),
                                    avg_pool->get_include_padding_in_avg_computation());
-            break;
-        }
-        case OP_TYPEID::BinaryConvolution_v1:
-        {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
             break;
         }
         case OP_TYPEID::GenerateMask:
@@ -973,7 +965,7 @@ private:
                                   less_eq->get_autob());
             break;
         }
-        case OP_TYPEID::LessEqual_v1:
+        case OP_TYPEID::LessEqual_extra:
         {
             auto less_eq = static_cast<const op::v1::LessEqual*>(&node);
             reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
@@ -991,7 +983,7 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::LogicalAnd_v1:
+        case OP_TYPEID::LogicalAnd_extra:
         {
             auto logical_and = static_cast<const op::v1::LogicalAnd*>(&node);
             reference::logical_and(args[0]->get_data_ptr<const T>(),
@@ -1002,7 +994,7 @@ private:
                                    logical_and->get_autob());
             break;
         }
-        case OP_TYPEID::LogicalOr_v1:
+        case OP_TYPEID::LogicalOr_extra:
         {
             auto logical_or = static_cast<const op::v1::LogicalOr*>(&node);
             reference::logical_or(args[0]->get_data_ptr<const T>(),
@@ -1013,7 +1005,7 @@ private:
                                   logical_or->get_autob());
             break;
         }
-        case OP_TYPEID::LogicalXor_v1:
+        case OP_TYPEID::LogicalXor_extra:
         {
             auto logical_xor = static_cast<const op::v1::LogicalXor*>(&node);
             reference::logical_xor(args[0]->get_data_ptr<const T>(),
@@ -1127,7 +1119,7 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::LogicalNot_v1:
+        case OP_TYPEID::LogicalNot_extra:
         case OP_TYPEID::Not:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1872,42 +1864,6 @@ private:
         case OP_TYPEID::SquaredDifference:
         case OP_TYPEID::Squeeze:
         case OP_TYPEID::Unsqueeze:
-        // v1 ops are not yet supported. Use downgrade passes before execution
-        case OP_TYPEID::Add_v1:
-        case OP_TYPEID::AvgPool_v1:
-        case OP_TYPEID::AvgPoolBackprop_v1:
-        case OP_TYPEID::Broadcast_v1:
-        case OP_TYPEID::Convolution_v1:
-        case OP_TYPEID::ConvolutionBackpropData_v1:
-        case OP_TYPEID::ConvolutionBackpropFilters_v1:
-        case OP_TYPEID::Divide_v1:
-        case OP_TYPEID::Equal_v1:
-        case OP_TYPEID::FloorMod_v1:
-        case OP_TYPEID::Gather_v1:
-        case OP_TYPEID::GenerateMask_v1:
-        case OP_TYPEID::Greater_v1:
-        case OP_TYPEID::GreaterEqual_v1:
-        case OP_TYPEID::Less_v1:
-        case OP_TYPEID::MaxPool_v1:
-        case OP_TYPEID::MaxPoolBackprop_v1:
-        case OP_TYPEID::Maximum_v1:
-        case OP_TYPEID::Minimum_v1:
-        case OP_TYPEID::Multiply_v1:
-        case OP_TYPEID::NotEqual_v1:
-        case OP_TYPEID::OneHot_v1:
-        case OP_TYPEID::Pad_v1:
-        case OP_TYPEID::Power_v1:
-        case OP_TYPEID::ReduceMax_v1:
-        case OP_TYPEID::ReduceMean_v1:
-        case OP_TYPEID::ReduceMin_v1:
-        case OP_TYPEID::ReduceProd_v1:
-        case OP_TYPEID::ReduceSum_v1:
-        case OP_TYPEID::Reshape_v1:
-        case OP_TYPEID::Reverse_v1:
-        case OP_TYPEID::Softmax_v1:
-        case OP_TYPEID::StridedSlice_v1:
-        case OP_TYPEID::TopK_v1:
-        case OP_TYPEID::VariadicSplit_v1:
         // Tensor Iterator not yet supported
         case OP_TYPEID::TensorIterator:
         case OP_TYPEID::UnknownOp:

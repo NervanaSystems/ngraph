@@ -46,10 +46,10 @@ runtime::interpreter::OP_TYPEID
     // ...
     static const map<NodeTypeInfo, OP_TYPEID> type_info_map{
 #define NGRAPH_OP(a, b) {b::a::type_info, OP_TYPEID::a},
-#include "ngraph/op/op_v0_tbl.hpp"
+#include "ngraph/opsets/opset0_tbl.hpp"
 #undef NGRAPH_OP
-#define NGRAPH_OP(a, b) {b::a::type_info, OP_TYPEID::a##_v1},
-#include "ngraph/op/op_v1_tbl.hpp"
+#define NGRAPH_OP(a, b) {b::a::type_info, OP_TYPEID::a##_extra},
+#include "ngraph/runtime/interpreter/int_extra_op_tbl.hpp"
 #undef NGRAPH_OP
     };
     OP_TYPEID rc = OP_TYPEID::UnknownOp;
