@@ -79,6 +79,7 @@ namespace ngraph
         class BatchNormTrainingRelu;
         class BatchNormInferenceRelu;
         class BatchNormTrainingBackprop;
+        class CumSum;
         class Dot;
         class GetOutputElement;
         class Abs;
@@ -233,6 +234,8 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormInferenceRelu);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormTrainingBackprop);
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::CumSum);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Dot);
             template <>
