@@ -21,6 +21,8 @@
 #include <random>
 #include <string>
 
+#include "util/type_prop.hpp"
+
 // clang-format off
 #ifdef ${BACKEND_NAME}_FLOAT_TOLERANCE_BITS
 #define DEFAULT_FLOAT_TOLERANCE_BITS ${BACKEND_NAME}_FLOAT_TOLERANCE_BITS
@@ -190,4 +192,36 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise_pdpd_dynamic)
     copy_data(t_b, vector<float>(3, 1));
     ex->call_with_validate({t_r}, {t_a, t_b});
     ASSERT_EQ(t_r->get_shape(), (Shape{2, 3, 4, 5}));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_string_cast)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto b = make_shared<op::Parameter>(element::f32, Shape{1});
+
+    auto add = make_shared<op::Add>(a, b, "NUMPY");
+    ASSERT_EQ(add->get_autob(), op::AutoBroadcastType::NUMPY);
+
+    add = make_shared<op::Add>(a, b, "NONE");
+    ASSERT_EQ(add->get_autob(), op::AutoBroadcastType::NONE);
+
+    add = make_shared<op::Add>(a, b, "PDPD");
+    ASSERT_EQ(add->get_autob(), op::AutoBroadcastType::PDPD);
+
+    add = make_shared<op::Add>(a, b, "EXPLICIT");
+    ASSERT_EQ(add->get_autob(), op::AutoBroadcastType::EXPLICIT);
+
+    try
+    {
+        add = make_shared<op::Add>(a, b, "UNKNOWN");
+        FAIL() << "Unknown AutoBroadcastType not detected.";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Invalid 'type' value passed in."));
+    }
+    catch (...)
+    {
+        FAIL() << "AutoBroadcastType checking failed for unexpected reason";
+    }
 }
