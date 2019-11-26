@@ -133,7 +133,7 @@ namespace ngraph
                 // ...
                 enum class OP_TYPEID
                 {
-#define NGRAPH_OP(a, b) a,
+#define NGRAPH_OP(NAME, NAMESPACE) a,
 #include "ngraph/opsets/opset0_tbl.hpp"
 #undef NGRAPH_OP
                     UnknownOp

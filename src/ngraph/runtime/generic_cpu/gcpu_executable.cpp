@@ -44,7 +44,7 @@ runtime::gcpu::OP_TYPEID runtime::gcpu::GCPUExecutable::get_typeid(const NodeTyp
     // {Acos::type_info, OP_TYPEID::Acos},
     // ...
     static const map<NodeTypeInfo, OP_TYPEID> type_info_map{
-#define NGRAPH_OP(a, b) {b::a::type_info, OP_TYPEID::a},
+#define NGRAPH_OP(NAME, NAMESPACE) {NAMESPACE::NAME::type_info, OP_TYPEID::NAME},
 #include "ngraph/opsets/opset0_tbl.hpp"
 #undef NGRAPH_OP
     };

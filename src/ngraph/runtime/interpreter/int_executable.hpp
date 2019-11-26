@@ -135,11 +135,8 @@ namespace ngraph
                 // ...
                 enum class OP_TYPEID
                 {
-#define NGRAPH_OP(a, b) a,
-#include "ngraph/opsets/opset0_tbl.hpp"
-#undef NGRAPH_OP
-#define NGRAPH_OP(a, b) a##_extra,
-#include "ngraph/runtime/interpreter/int_extra_op_tbl.hpp"
+#define NGRAPH_OP(NAME, NAMESPACE) ID_SUFFIX(NAME),
+#include "ngraph/runtime/interpreter/opset_int_tbl.hpp"
 #undef NGRAPH_OP
                     UnknownOp
                 };
@@ -965,7 +962,7 @@ private:
                                   less_eq->get_autob());
             break;
         }
-        case OP_TYPEID::LessEqual_extra:
+        case OP_TYPEID::LessEqual_v1:
         {
             auto less_eq = static_cast<const op::v1::LessEqual*>(&node);
             reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
@@ -983,7 +980,7 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::LogicalAnd_extra:
+        case OP_TYPEID::LogicalAnd_v1:
         {
             auto logical_and = static_cast<const op::v1::LogicalAnd*>(&node);
             reference::logical_and(args[0]->get_data_ptr<const T>(),
@@ -994,7 +991,7 @@ private:
                                    logical_and->get_autob());
             break;
         }
-        case OP_TYPEID::LogicalOr_extra:
+        case OP_TYPEID::LogicalOr_v1:
         {
             auto logical_or = static_cast<const op::v1::LogicalOr*>(&node);
             reference::logical_or(args[0]->get_data_ptr<const T>(),
@@ -1005,7 +1002,7 @@ private:
                                   logical_or->get_autob());
             break;
         }
-        case OP_TYPEID::LogicalXor_extra:
+        case OP_TYPEID::LogicalXor_v1:
         {
             auto logical_xor = static_cast<const op::v1::LogicalXor*>(&node);
             reference::logical_xor(args[0]->get_data_ptr<const T>(),
@@ -1119,7 +1116,7 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::LogicalNot_extra:
+        case OP_TYPEID::LogicalNot_v1:
         case OP_TYPEID::Not:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
