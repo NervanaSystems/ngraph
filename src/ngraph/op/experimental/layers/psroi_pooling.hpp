@@ -22,13 +22,13 @@ namespace ngraph
 {
     namespace op
     {
-        class PSROIPooling : public Op
+        class DeformablePSROIPooling : public Op
         {
         public:
             NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"PSROIPooling", 0};
+            static constexpr NodeTypeInfo type_info{"DeformablePSROIPooling", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
-            PSROIPooling() = default;
+            DeformablePSROIPooling() = default;
             /// \brief Constructs a PSROIPooling operation
             ///
             /// \param input          Input feature map {N, C, ...}
@@ -39,7 +39,7 @@ namespace ngraph
             /// \param spatial_bins_x Numbers of bins to divide the input feature maps over width
             /// \param spatial_bins_y Numbers of bins to divide the input feature maps over height
             /// \param mode           Mode of pooling - Avg or Bilinear
-            PSROIPooling(const Output<Node>& input,
+            DeformablePSROIPooling(const Output<Node>& input,
                          const Output<Node>& coords,
                          const size_t output_dim,
                          const size_t group_size,
