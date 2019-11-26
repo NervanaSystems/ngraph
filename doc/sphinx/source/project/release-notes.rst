@@ -21,6 +21,27 @@ We are pleased to announce the release of version |version|.
 Core updates for |version|
 --------------------------
 
++ New ops
++ Provenance improvements from 0.25.1
++ More dynamic shape ops
++ More informative errors
+
+
+
+Latest documentation updates
+----------------------------
+
++ Additional details on quantization
++ Index updates
++ API updates
+
+.. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
+
+
+
+Changelog on Previous Releases
+==============================
+
 + All ops support ``Output<Node>`` arguments
 + Additional ops
 + ONNX handling unknown domains
@@ -31,20 +52,15 @@ Core updates for |version|
 + Negative indices/axes fixes
 + Better support for MKL-DNN 1.0 (DNNL)
 + Additional constant element types
-
-Latest documentation updates
-----------------------------
-
 + Add new Sphinx-friendly theme (can be built natively for an alternative to ngraph.ai docs). 
 + Update PaddlePaddle documentation to reflect demo directories instead of example directory.
 + Update doc regarding the validation of ``Sum`` op.
 
-.. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
+0.26.1
+------
 
++ Performance increase for ``ConstantFolding`` pass
 
-
-Changelog on Previous Releases
-==============================
 
 0.25.1
 ------
@@ -155,6 +171,7 @@ Changelog on Previous Releases
 pre-0.20
 --------
 
+
 + More dynamic shape preparation
 + Distributed interface factored out
 + fp16 and bfloat16 types
@@ -168,8 +185,6 @@ pre-0.20
 + Additional ONNX ops
 + Add graph visualization tools to doc
 + Update doxygen to be friendlier to frontends
-
-.. 0.18
 + Python formatting issue
 + mkl-dnn work-around
 + Event tracing improvements
@@ -177,16 +192,12 @@ pre-0.20
 + Begin tracking framework node names
 + ONNX quantization
 + More fusions
-
-.. 0.17
 + Allow negative padding in more places
 + Add code generation for some quantized ops
 + Preliminary dynamic shape support
 + initial distributed ops
 + Pad op takes CoordinateDiff instead of Shape pad values to allow for negative 
   padding.
-
-.. 0.16
 + NodeInput and NodeOutput classes prepare for simplifications of Node
 + Test improvements
 + Additional quantization ops

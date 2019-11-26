@@ -39,38 +39,58 @@ nGraph Compiler Stack Documentation
    introduction.rst
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Framework Support
 
-   frameworks/index.rst
-   frameworks/validated/list.rst
-
+   frameworks/overview.rst
+   frameworks/tensorflow_connect.rst
+   frameworks/onnx_integ.rst
+   frameworks/paddle_integ.rst
+   frameworks/other/index.rst
 
 .. toctree::
    :maxdepth: 1
    :caption: nGraph Core
 
-   buildlb.rst
    core/overview.rst
-   core/fusion/index.rst
-   nGraph Core Ops <ops/index.rst>
+   buildlb.rst
    core/constructing-graphs/index.rst
    core/passes/passes.rst
+   core/fusion/index.rst
+   nGraph Core Ops <ops/index.rst>
    provenance/index.rst
+   Graph Execution API <backends/executable-api/index.rst>
+   core/quantization.rst
+   dynamic/index.rst
 
    
 .. toctree::
    :maxdepth: 1
-   :caption: APIs 
+   :caption: Backend Support
 
-   python_api/index.rst
-   backends/index.rst
-   backends/cpp-api.rst
+   Basic Concepts <backends/index.rst>
+   backends/plaidml-ng-api/index.rst
+   Integrating Other Backends <backends/cpp-api.rst>
 
 
 .. toctree::
    :maxdepth: 1
-   :caption: Inspecting Graphs
+   :caption: Training
+
+   training/index.rst
+   training/qat.rst
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Validated Workloads
+
+   frameworks/validated/list.rst
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Debugging Graphs
 
    inspection/index.rst
 
