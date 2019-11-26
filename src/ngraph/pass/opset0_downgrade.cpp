@@ -156,6 +156,16 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
+    case OP_TYPEID::ConvertLike_v1:
+    {
+        const auto convert_v1 = as_type_ptr<op::v1::ConvertLike>(node);
+        auto convert_v0 = make_shared<op::Convert>(convert_v1->input_value(0),
+                                                   convert_v1->input(1).get_element_type());
+
+        replace_node(node, convert_v0);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::Convolution_v1:
     {
         auto tmp = as_type_ptr<op::v1::Convolution>(node);
