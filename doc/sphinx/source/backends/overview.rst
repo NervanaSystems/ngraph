@@ -45,7 +45,7 @@ How to use?
 #. A single iteration of the executable is executed by calling the ``call``
    method on the ``Executable`` object.
 
-.. figure:: ../graphics/execution-interface-run-graphs.svg
+.. figure:: ../graphics/execution-interface-run-graph.svg
    :width: 100%
 
    The execution interface for nGraph 
