@@ -3359,7 +3359,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Reshape_v1:
     {
         auto tmp = static_cast<const op::v1::Reshape*>(&n);
-        node["zero_flag"] = tmp->get_zero_flag();
+        node["special_zero"] = tmp->get_special_zero();
         break;
     }
     case OP_TYPEID::DynSlice:
