@@ -54,7 +54,7 @@ nGraph code in one place allows for easy maintenance.
 .. _figure-paddle-design:
 
 .. figure:: ../graphics/PaddlePaddle_DesignCLR.svg
-   :width: 555px
+   :width:
    :alt: 
 
 *Figure A* above depicts nGraph access from PaddlePaddle. The PaddlePaddle 
