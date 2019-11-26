@@ -106,5 +106,13 @@ def LSTMWeightsFormatEnumAttr: I32EnumAttr<"MLIRLSTMWeightsFormat",
                                             [LSTMWeightsFormatFICO, LSTMWeightsFormatICOF, 
                                              LSTMWeightsFormatIFCO, LSTMWeightsFormatIFOC,
                                              LSTMWeightsFormatIOFC]>;
-        
+
+def LSTMSeqDirectionFWD     : I32EnumAttrCase<"FORWARD", 0>;
+def LSTMSeqDirectionRVS     : I32EnumAttrCase<"REVERSE", 1>;
+def LSTMSeqDirectionBID     : I32EnumAttrCase<"BIDIRECTIONAL", 2>;
+            
+def LSTMSeqDirectionsEnumAttr: I32EnumAttr<"MLIRLSTMSeqDirection", 
+                                           "LSTM Sequence Direction", 
+                                            [LSTMSeqDirectionFWD, LSTMSeqDirectionRVS, 
+                                             LSTMSeqDirectionBID]>;
 #endif // NG_OP_ATTRIBUTES

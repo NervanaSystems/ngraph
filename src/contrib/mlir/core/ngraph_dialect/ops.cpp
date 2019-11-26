@@ -417,6 +417,9 @@ void mlir::NGGeluBackpropFactorOp::decompose()
 void mlir::NGLSTMCellOp::decompose()
 {
 }
+void mlir::NGLSTMSequenceOp::decompose()
+{
+}
 void mlir::NGMatMul::decompose()
 {
 }

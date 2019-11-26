@@ -152,7 +152,12 @@ def NGScaleShiftOp :
 // RNN Cell Op
 def NGRNNCellOp : 
     NG_OneResult_Op<"rnnCell", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
-    Arguments<(ins NG_TensorType:$X, NG_TensorType:$W, NG_TensorType:$R, NG_TensorType:$H_t, I64Attr:$hiddenSize)>
+    Arguments<(ins NG_TensorType:$X, NG_TensorType:$W, NG_TensorType:$R, NG_TensorType:$H_t,
+               NG_TensorType:$B, DefaultValuedAttr<StrArrayAttr, "{\"tanh\"}">:$activations,
+               DefaultValuedAttr<F32ArrayAttr, "{}">:$activationAlpha,
+               DefaultValuedAttr<F32ArrayAttr, "{}">:$activationBeta,
+               DefaultValuedAttr<F32Attr, "0.0">:$clip,
+               I64Attr:$hiddenSize)>
 {
   let summary = "RNN Cell";
   let description = [{
@@ -404,6 +409,58 @@ def NGLSTMCellOp :
   }];
 }
 
+// LSTM Sequence Op
+// 
+
+           
+
+def NGLSTMSequenceOp : 
+    NG_OneResult_Op<"lstmSeq", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    Arguments<(ins NG_TensorType:$X, NG_TensorType:$H_t, NG_TensorType:$C_t, 
+               NG_TensorType:$S_l,   NG_TensorType:$W, NG_TensorType:$R,
+               NG_TensorType:$B, Variadic<NG_TensorType>:$optionalArgs, 
+               I64Attr:$hiddenSize, 
+               LSTMSeqDirectionsEnumAttr:$direction, 
+               DefaultValuedAttr<LSTMWeightsFormatEnumAttr, 
+                                 "static_cast<int32_t>(MLIRLSTMWeightsFormat::IFCO)">:$weightFormat,
+               DefaultValuedAttr<StrArrayAttr, "{\"sigmoid\",\"tanh\",\"tanh\"}">:$activations,
+               DefaultValuedAttr<F32ArrayAttr, "{}">:$activationAlpha,
+               DefaultValuedAttr<F32ArrayAttr, "{}">:$activationBeta,
+               DefaultValuedAttr<F32Attr, "0.0">:$clip,
+               DefaultValuedAttr<BoolAttr, "false">:$inputForget)>
+{
+  let summary = "LSTM Sequence";
+  let description = [{
+        
+    Class for lstm sequence node.
+        
+    It follows notation and equations defined as in ONNX standard:
+    https://github.com/onnx/onnx/blob/master/docs/Operators.md#LSTM
+        
+    See: LSTMCell, RNNCell, GRUCell
+  }];
+
+  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+  let verifier = [{ 
+    return mlir::success(); /* TBD */ 
+  }];  
+
+  let extraClassDeclaration = [{
+    // get bias operand if present
+    Value* P() 
+    { 
+      auto varArgs = optionalArgs();
+      return varArgs.begin() != varArgs.end() ? *varArgs.begin() : nullptr;
+    }
+
+    void setHiddenSize  (const Attribute& attr)       { this->setAttr("hiddenSize", attr); }
+    void setActivations (const ArrayAttr& attr)       { this->setAttr("activation", attr); }
+    void setActivationsAlpha (const ArrayAttr& attr)  { this->setAttr("activatiAlpha", attr); }
+    void setActivationsBeta (const ArrayAttr& attr)   { this->setAttr("activatiBeta", attr); }
+    void setClip(const Attribute& attr)               { this->setAttr("clip", attr); }
+  }];
+}
+
 // GRU Cell Op
 def NGGRUCellOp : 
     NG_OneResult_Op<"gruCell", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
@@ -492,7 +549,7 @@ def NGLayerNormOp :
                DefaultValuedAttr<F32Attr, "1e-5"> :$epsilon)>
 {
   let summary = "LayerNorm Op";
-  let description = "Constructs an LayerNorm operation.";
+  let description = "Constructs a LayerNorm operation.";
     
   let builders = [
     OpBuilder<
@@ -625,19 +682,7 @@ def NGGroupConvOp :
 
   let builders = [
     OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res, Value *images,"
-      "Value *filters, ArrayAttr strides, ArrayAttr padBelow, ArrayAttr padAbove,"
-      "Attribute groups, Attribute padType",
-      [{
-        tblgen_state.addOperands({images, filters});
-        tblgen_state.addAttribute("strides", strides);
-        tblgen_state.addAttribute("padBelow", padBelow);
-        tblgen_state.addAttribute("padAbove", padAbove);
-        tblgen_state.addAttribute("groups", groups);
-        tblgen_state.addAttribute("padType", padType);
-        tblgen_state.addTypes(res);
-      }]>,
-      // Builder without padType
+    // Builder without padType
     OpBuilder<
       "Builder *builder, OperationState &tblgen_state, Type res, Value *images,"
       "Value *filters, ArrayAttr strides, ArrayAttr padBelow, ArrayAttr padAbove,"
@@ -829,6 +874,7 @@ def NGFakeQuantOp :
 
   let extraClassDeclaration = [{
     void setLevels(const Attribute& attr) { this->setAttr("levels", attr); }
+    void setAutoBroadcast(const Attriute& attr) { this->setAttr("autoBroadcast", attr); }
   }];
 }
 
