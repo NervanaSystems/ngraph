@@ -85,5 +85,5 @@ namespace ngraph
         private:
             bool has_groups_in_filters_shape() const;
         };
-    }
-}
+    } // namespace op
+} // namespace ngraph

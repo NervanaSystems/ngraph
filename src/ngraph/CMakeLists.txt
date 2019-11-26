@@ -229,6 +229,8 @@ set (SRC
     op/greater.hpp
     op/greater_eq.cpp
     op/greater_eq.hpp
+    op/group_convolution.cpp
+    op/group_convolution.hpp
     op/less.cpp
     op/less.hpp
     op/less_eq.cpp
