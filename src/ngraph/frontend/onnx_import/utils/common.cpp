@@ -16,6 +16,7 @@
 #include <onnx/onnx_pb.h> // onnx types
 
 #include "common.hpp"
+#include "validation_util.hpp"
 
 namespace ngraph
 {
@@ -60,23 +61,8 @@ namespace ngraph
                                       std::int64_t axis_range_min,
                                       std::int64_t axis_range_max)
             {
-                // Accepted range of value for axis is [axis_range_min, axis_range_max].
-                NGRAPH_CHECK(((axis >= axis_range_min) && (axis <= axis_range_max)),
-                             node.get_description(),
-                             "Parameter axis ",
-                             axis,
-                             " out of the tensor rank [-",
-                             axis_range_min,
-                             ", ",
-                             axis_range_max,
-                             "].");
-
-                if (axis < 0)
-                {
-                    axis = axis + tensor_rank;
-                }
-
-                return static_cast<size_t>(axis);
+                return ngraph::normalize_axis(
+                    node.get_description(), axis, tensor_rank, axis_range_min, axis_range_max);
             }
 
             std::vector<std::size_t> validate_axes(const ngraph::onnx_import::Node& node,
