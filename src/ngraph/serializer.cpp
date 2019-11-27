@@ -1558,6 +1558,17 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                              input_forget);
             break;
         }
+
+        
+        case OP_TYPEID::MatMulPdBackward:
+        {
+            bool transpose_a = node_js.at("transpose_a").get<bool>();
+            bool transpose_b = node_js.at("transpose_b").get<bool>();
+            bool is_dx = node_js.at("X@GRAD").get<bool>();  
+            bool is_dy = node_js.at("Y@GRAD").get<bool>();  
+            node = make_shared<op::MatMulPdBackward>(args[0],args[1],args[2],is_dx,is_dy,transpose_a,transpose_b);
+            break;
+        }
         case OP_TYPEID::MatMulPd:
         {
             bool transpose_a = node_js.at("transpose_a").get<bool>();
@@ -2967,6 +2978,15 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = static_cast<const op::MatMul*>(&n);
         node["transpose_a"] = tmp->get_transpose_a();
         node["transpose_b"] = tmp->get_transpose_b();
+        break;
+    }
+
+    case OP_TYPEID::MatMulPdBackward:
+    {
+        auto tmp = static_cast<const op::MatMulPdBackward*>(&n);
+        node["transpose_a"] = tmp->get_transpose_a();
+        node["transpose_b"] = tmp->get_transpose_b();
+
         break;
     }
     case OP_TYPEID::MatMulPd:

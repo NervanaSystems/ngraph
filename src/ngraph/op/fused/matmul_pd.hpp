@@ -56,5 +56,64 @@ namespace ngraph
             bool m_transpose_a;
             bool m_transpose_b;
         };
+
+
+
+
+     class MatMulPdBackward : public ngraph::op::util::FusedOp
+        {
+        public:
+        
+            NGRAPH_API
+            static constexpr NodeTypeInfo type_info{"MatMulPdBackward", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            MatMulPdBackward() = default;
+            /// \brief Constructs an ScaleShift operation.
+            ///
+            /// \param A Matrix A
+            /// \param B Matrix B
+            /// \param transpose_a If matrix A should be transposed.
+            /// \param transpose_b If matrix B should be transposed.
+            MatMulPdBackward(std::shared_ptr<ngraph::Node> A,
+                   std::shared_ptr<ngraph::Node> B,
+                   std::shared_ptr<ngraph::Node> OutGrad,
+                   bool is_X, bool is_Y,
+                   bool transpose_a,
+                   bool transpose_b );
+
+            virtual NodeVector decompose_op() const override;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+             bool get_transpose_a() const { return m_transpose_a; }
+             bool get_transpose_b() const { return m_transpose_b; }
+             bool get_is_Y() { return m_is_Y; }
+             bool get_is_X() { return m_is_X; }
+        private:
+            std::shared_ptr<ngraph::Node> m_A;
+            std::shared_ptr<ngraph::Node> m_B;
+            std::shared_ptr<ngraph::Node> OutGrad;
+            bool m_is_X;
+            bool m_is_Y;
+            bool m_transpose_a;
+            bool m_transpose_b;
+
+            std::shared_ptr<ngraph::Node> helper_dotOp(const std::shared_ptr<ngraph::Node>& a,
+                                    const std::shared_ptr<ngraph::Node>& b) const;
+
+           std::shared_ptr<ngraph::Node> helper_reshapeToOriginal(
+           std::shared_ptr<ngraph::Node> input, const ngraph::Shape& shape) const;
+           std::shared_ptr<ngraph::Node> helper_transposeAndFlat3D(
+           const std::shared_ptr<ngraph::Node>& input, const bool transpose,
+           bool x = true) const;
+           std::shared_ptr<ngraph::Node> helper_broadcast3D(
+           const std::shared_ptr<ngraph::Node>& input, size_t axis0) const;
+                                      
+
+        };
+
+
+
     } // namespace op
 } // namespace ngraph
