@@ -39,17 +39,17 @@ int main()
     t_in->write();
     ex->call({t_out}, {t_in})
 
-        // Call the graph again, to write a value with a different shape to
-        // t_out.
-        t_in = be->create_tensor(element::i32, Shape{2, 20});
+    // Call the graph again, to write a value with a different shape to
+    // t_out.
+    t_in = be->create_tensor(element::i32, Shape{2, 20});
     t_in->write();
     ex->call({t_out}, {t_in})
 
-        // Get the result. At this point t_out->get_shape() would return
-        // Shape{2,20},
-        // but t_out->get_partial_shape() would return "(2,?)"
+    // Get the result. At this point t_out->get_shape() would return
+    // Shape{2,20},
+    // but t_out->get_partial_shape() would return "(2,?)"
 
-        float r[2][3];
+    float r[2][3];
     t_result->read(&r, 0, sizeof(r));
 
     std::cout << "[" << std::endl;

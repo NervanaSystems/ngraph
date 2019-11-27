@@ -291,7 +291,7 @@ Create a dynamic tensor of shape ``(2,?)``
 
 .. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
    :language: cpp
-   :line: 35
+   :lines: 35
 
 At this point, ``t_out->get_shape()`` would throw an exception, while 
 ``t_out->get_partial_shape()`` would return ``"(2,?)"``.
@@ -321,7 +321,7 @@ Call the graph again, to write a value with a different shape to ``t_out``.
 
 .. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
    :language: cpp
-   :lines: 43-45
+   :lines: 44-45
 
 At this point, ``t_out->get_shape()`` would return ``Shape{2,20}``,
 while ``t_out->get_partial_shape()`` would return ``"(2,?)"``.
