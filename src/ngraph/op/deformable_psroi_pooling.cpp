@@ -74,32 +74,41 @@ op::v1::DeformablePSROIPooling::DeformablePSROIPooling(const Output<Node>& input
 
 void op::v1::DeformablePSROIPooling::validate_and_infer_types()
 {
-    auto input_et = get_input_element_type(0);
-    if (get_input_partial_shape(0).is_static() && get_input_partial_shape(1).is_static())
+    const auto& input_et = get_input_element_type(0);
+
+    const auto& input_pshape = get_input_partial_shape(0);
+    const auto& box_coords_pshape = get_input_partial_shape(1);
+
+    NODE_VALIDATION_CHECK(
+        this,
+        input_pshape.rank().is_dynamic() || static_cast<size_t>(input_pshape.rank()) == 4,
+        "Input rank must equal to 4 (input rank: ", static_cast<size_t>(input_pshape.rank()), ")");
+    NODE_VALIDATION_CHECK(
+        this,
+        box_coords_pshape.rank().is_dynamic() || static_cast<size_t>(box_coords_pshape.rank()) == 2,
+        "Box coordinates input rank must equal to 2 (input rank: ", static_cast<size_t>(box_coords_pshape.rank()), ")");
+
+    if (get_input_size() == 3) // offsets input is provided
     {
-        Shape input_shape = get_input_partial_shape(0).to_shape();
-        Shape coords_shape = get_input_partial_shape(1).to_shape();
+        const auto& offsets_pshape = get_input_partial_shape(2);
         NODE_VALIDATION_CHECK(
             this,
-            input_shape.size() >= 3,
-            "DeformablePSROIPooling expects 3 or higher dimensions for input. Got ",
-            input_shape.size());
-        NODE_VALIDATION_CHECK(
-            this,
-            coords_shape.size() == 2,
-            "DeformablePSROIPooling expects 2 dimensions for box coordinates. Got ",
-            coords_shape.size());
-        Shape output_shape{coords_shape[0], m_output_dim};
-        for (size_t i = 2; i < input_shape.size(); i++)
-        {
-            output_shape.push_back(m_group_size);
-        }
-        set_output_type(0, input_et, output_shape);
+            offsets_pshape.rank().is_dynamic() || static_cast<size_t>(offsets_pshape.rank()) == 4,
+            "Offets input rank must equal to 4 (input rank: ", static_cast<size_t>(offsets_pshape.rank()), ")");
     }
-    else
+    int64_t output_rank = 4;
+    std::vector<Dimension> output_dim_vec(output_rank, Dimension::dynamic());
+    if (box_coords_pshape[0].is_static())
     {
-        set_output_type(0, input_et, PartialShape::dynamic());
+        output_dim_vec[0] = box_coords_pshape.to_shape()[0];
     }
+    output_dim_vec[1] = m_output_dim;
+    for (int i = 2; i < 4; ++i)
+    {
+        output_dim_vec[i] = m_group_size;
+    }
+
+    set_output_type(0, input_et, PartialShape(output_dim_vec));
 }
 
 shared_ptr<Node>
