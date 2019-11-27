@@ -25,6 +25,7 @@
 #include "ngraph/assertion.hpp"
 
 #include <llvm/ADT/DenseSet.h>
+#include <llvm/ADT/BitVector.h>
 #include <map>
 #include <mlir/EDSC/Builders.h>
 #include <mlir/EDSC/Helpers.h>
@@ -66,22 +67,18 @@ namespace
     class AliasRelation
     {
     public:
-        AliasRelation();
+        /// Initialize the relationship for a number of syms
+        AliasRelation(SmallVectorImpl<Value*>& symbols);
         /// Checks if values a and b can alias
         bool canAlias(Value* a, Value* b);
         void insertNoAlias(Value* a, Value* b);
 
     private:
-        void computeTransitiveClosure();
-#ifdef NGRAPH_DEBUG_ENABLE
-        void checkInvariance();
-#endif
-    private:
-        using Row = SmallVector<int8_t, 10>;
+        using BV = llvm::BitVector;
         std::unordered_map<Value*, unsigned> m_valueToIdx;
-        SmallVector<Row, 10> m_reachability;
-        unsigned m_maxIdx;
-        bool m_needsTransitiveClosure;
+        std::unordered_map<Value*, unsigned> m_idxToValue;
+        std::unordered_mape<Value*, BV*> m_valueToSet;
+        SmallVector<BV, 10> m_sets;
     };
 
     class LivenessAnalysis
@@ -458,103 +455,60 @@ namespace
         return it != m_inplaceOps.end() ? it->second : false;
     }
 
-    AliasRelation::AliasRelation()
+    AliasRelation::AliasRelation(SmallVectorImpl<Value*>& symbols)
     {
-        for (auto i = 0; i < m_reachability.size(); i++)
+        unsigned numSyms = symbols.size();
+        m_sets.reserve(numSyms);
+
+        for (auto& bv : m_sets)
         {
-            auto& v = m_reachability[i];
-            std::fill(v.begin(), v.end(), 0);
+            bv.resize(numSyms);
         }
-        m_maxIdx = 0;
-        m_needsTransitiveClosure = false;
+        // populate id->value and value->id maps
+        for (unsigned i = 0; i < numSyms; i++)
+        {
+            m_idxToValue[i] = symbols[i];
+            m_valueToIdx[symbols[i]] = i;
+            m_valueToSet[symbols[i]] = &m_sets[i];
+            // set bit for that value
+            m_sets[i].set(i);
+        }
+        // put each value in its own set
+        
+        m_maxIdx = numSyms;
     }
     bool AliasRelation::canAlias(Value* a, Value* b)
     {
-        NGRAPH_CHECK(m_needsTransitiveClosure == false, "Relationship needs transitive closure");
-        auto a_it = m_valueToIdx.find(a);
-        auto b_it = m_valueToIdx.find(b);
-        if (a_it == m_valueToIdx.end() || b_it == m_valueToIdx.end())
-        {
-            // at least one value doesn't exist in the cannot-alias relationship
-            return true;
-        }
-        auto a_idx = a_it->second;
-        auto b_idx = b_it->second;
-        return (!m_reachability[a_idx][b_idx] && m_reachability[b_idx][a_idx]);
+        // check if a and b are in the same set
+        return m_valueToSet[a] != m_valueToSet[b]
+
     }
+
     void AliasRelation::insertNoAlias(Value* a, Value* b)
     {
-        m_needsTransitiveClosure = true;
-        int rowsToAdd = 0;
-        unsigned a_idx, b_idx;
-        auto it = m_valueToIdx.find(a);
-        if (it == m_valueToIdx.end())
+        // union the two sets that a and b belong to
+        // update the maps accordingly
+        if (!canAlias(a, b))
         {
-            rowsToAdd++;
-            a_idx = m_maxIdx++;
-            m_valueToIdx[a] = a_idx;
+            // nothing to do
+            return;
         }
-        else
+        // union the two sets of a and b
+        BV* aSet = m_valueToSets[a];
+        BV* bSet = m_valueToSets[b];
+        BV uSet = (*aSet) | (*bSet);
+        // replace aSet with union
+        auto pSet = m_valueToSet[a];
+        *pSet = *uSet;
+        
+        // update value to set maps
+        for (auto id : (*pSet))
         {
-            a_idx = it->second;
+            auto value = m_idToValue[id];
+            m_valueToSet[value] = pSet;
         }
-
-        it = m_valueToIdx.find(b);
-        if (it == m_valueToIdx.end())
-        {
-            rowsToAdd++;
-            b_idx = m_maxIdx++;
-            m_valueToIdx[b] = b_idx;
-        }
-        else
-        {
-            b_idx = it->second;
-        }
-
-        if (rowsToAdd)
-        {
-            // expand existing rows with 1 or 2 additional columns
-            for (auto i = 0; i < m_maxIdx - rowsToAdd; i++)
-            {
-                m_reachability[i].push_back(0);
-                if (rowsToAdd > 1)
-                {
-                    m_reachability[i].push_back(0);
-                }
-            }
-            // add 1 or 2 additional rows
-            m_reachability.push_back(Row(m_maxIdx /* size */, 0));
-            if (rowsToAdd > 1)
-            {
-                m_reachability.push_back(Row(m_maxIdx /* size */, 0));
-            }
-        }
-
-        m_reachability[a_idx][b_idx] = 1;
-        m_reachability[b_idx][a_idx] = 1;
-
-#ifdef NGRAPH_DEBUG_ENABLE
-        checkInvariance();
-#endif
-        computeTransitiveClosure();
     }
 
-    void AliasRelation::computeTransitiveClosure()
-    {
-        for (unsigned k = 0; k < m_maxIdx; k++)
-        {
-            for (unsigned i = 0; i < m_maxIdx; i++)
-            {
-                for (unsigned j = 0; j < m_maxIdx; j++)
-                {
-                    if (m_reachability[i][k] && m_reachability[k][j])
-                    {
-                        m_reachability[i][j] = 1;
-                    }
-                }
-            }
-        }
-        m_needsTransitiveClosure = false;
     }
 
 #ifdef NGRAPH_DEBUG_ENABLE
