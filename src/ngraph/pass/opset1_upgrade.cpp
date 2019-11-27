@@ -52,7 +52,8 @@ namespace
 
     bool op_cast(shared_ptr<op::AvgPool> node)
     {
-        auto rounding_type = static_cast<op::RoundingType>(node->get_ceil_mode());
+        auto rounding_type =
+            node->get_ceil_mode() ? op::RoundingType::CEIL : op::RoundingType::FLOOR;
         auto exclude_pad = !node->get_include_padding_in_avg_computation();
         auto auto_pad = node->get_pad_type();
         auto pads_begin = node->get_padding_below();
@@ -280,7 +281,8 @@ namespace
 
     bool op_cast(shared_ptr<op::MaxPool> node)
     {
-        auto rounding_type = static_cast<op::RoundingType>(node->get_ceil_mode());
+        auto rounding_type =
+            node->get_ceil_mode() ? op::RoundingType::CEIL : op::RoundingType::FLOOR;
         auto auto_pad = node->get_pad_type();
         auto pads_begin = node->get_padding_below();
         auto pads_end = node->get_padding_above();
