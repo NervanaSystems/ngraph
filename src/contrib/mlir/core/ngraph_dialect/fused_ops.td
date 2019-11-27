@@ -153,7 +153,8 @@ def NGScaleShiftOp :
 def NGRNNCellOp : 
     NG_OneResult_Op<"rnnCell", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$X, NG_TensorType:$W, NG_TensorType:$R, NG_TensorType:$H_t,
-               NG_TensorType:$B, DefaultValuedAttr<StrArrayAttr, "{\"tanh\"}">:$activations,
+               Variadic<NG_TensorType>:$optionalArgs, 
+               DefaultValuedAttr<StrArrayAttr, "{\"tanh\"}">:$activations,
                DefaultValuedAttr<F32ArrayAttr, "{}">:$activationAlpha,
                DefaultValuedAttr<F32ArrayAttr, "{}">:$activationBeta,
                DefaultValuedAttr<F32Attr, "0.0">:$clip,
@@ -189,6 +190,13 @@ def NGRNNCellOp :
     void setActivationAlpha(const ArrayAttr& attr)  { this->setAttr("activationAlpha", attr); }
     void setActivationBeta(const ArrayAttr& attr)   { this->setAttr("activationBeta", attr);  }
     void setClip(const Attribute& attr)             { this->setAttr("clip", attr); }
+
+    // get bias operand if present
+    Value* B() 
+    { 
+      auto varArgs = optionalArgs();
+      return varArgs.begin() != varArgs.end() ? *varArgs.begin() : nullptr;
+    }
   }];
 }
 
@@ -410,14 +418,10 @@ def NGLSTMCellOp :
 }
 
 // LSTM Sequence Op
-// 
-
-           
-
 def NGLSTMSequenceOp : 
     NG_OneResult_Op<"lstmSeq", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$X, NG_TensorType:$H_t, NG_TensorType:$C_t, 
-               NG_TensorType:$S_l,   NG_TensorType:$W, NG_TensorType:$R,
+               NG_TensorType:$S_l, NG_TensorType:$W, NG_TensorType:$R,
                NG_TensorType:$B, Variadic<NG_TensorType>:$optionalArgs, 
                I64Attr:$hiddenSize, 
                LSTMSeqDirectionsEnumAttr:$direction, 
@@ -446,18 +450,17 @@ def NGLSTMSequenceOp :
   }];  
 
   let extraClassDeclaration = [{
-    // get bias operand if present
-    Value* P() 
-    { 
-      auto varArgs = optionalArgs();
-      return varArgs.begin() != varArgs.end() ? *varArgs.begin() : nullptr;
-    }
-
     void setHiddenSize  (const Attribute& attr)       { this->setAttr("hiddenSize", attr); }
     void setActivations (const ArrayAttr& attr)       { this->setAttr("activation", attr); }
     void setActivationsAlpha (const ArrayAttr& attr)  { this->setAttr("activatiAlpha", attr); }
     void setActivationsBeta (const ArrayAttr& attr)   { this->setAttr("activatiBeta", attr); }
     void setClip(const Attribute& attr)               { this->setAttr("clip", attr); }
+
+    Value* P() 
+    { 
+      auto varArgs = optionalArgs();
+      return varArgs.begin() != varArgs.end() ? *varArgs.begin() : nullptr;
+    }
   }];
 }
 
@@ -465,7 +468,7 @@ def NGLSTMSequenceOp :
 def NGGRUCellOp : 
     NG_OneResult_Op<"gruCell", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$X, NG_TensorType:$W, NG_TensorType:$R,
-               NG_TensorType:$H_t, NG_TensorType:$B,
+               NG_TensorType:$H_t, Variadic<NG_TensorType>:$optionalArgs,
                I64Attr:$hiddenSize,
                DefaultValuedAttr<StrArrayAttr, "{\"sigmoid\",\"tanh\"}">:$activations,
                DefaultValuedAttr<F32ArrayAttr, "{}">:$activationAlpha,
@@ -483,7 +486,7 @@ def NGGRUCellOp :
     H_t               The hidden state tensor at current time step with
                       shape: [batch_size, hidden_size].
     hidden_size       The number of hidden units for recurrent cell.
-    B                 The bias tensor for input gate with shape:
+    B[Optional]       The bias tensor for input gate with shape:
                       [2 * gates_count * hidden_size].
     activations       The vector of activation functions used inside
                       recurrent cell.
@@ -532,18 +535,22 @@ def NGGRUCellOp :
       void setActivationsBeta (const ArrayAttr& attr)   { this->setAttr("activatiBeta", attr); }
       void setLinearBeforeReset(const Attribute& attr)  { this->setAttr("linearBeforeReset", attr); }
 
+      // get Bias operand if present
+      Value* P() 
+      { 
+        auto varArgs = optionalArgs();
+        return varArgs.begin() != varArgs.end() ? *varArgs.begin() : nullptr;
+      }
     }];
 }
 
 // LayerNorm Op
-
 // Op produces 3 results when keepStats is true
 // Op is defined with 3 results, 2 of which are invalid/dead if keepStats is false
-
 def NGLayerNormOp : 
     NG_Op<"layernorm", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Results<(outs NG_TensorType:$res, NG_TensorType:$mean, NG_TensorType:$var)>,
-    Arguments<(ins NG_TensorType:$data, NG_TensorType:$scale, NG_TensorType:$bias,
+    Arguments<(ins NG_TensorType:$data, Variadic<NG_TensorType>:$optionalArgs,
                DefaultValuedAttr<BoolAttr, "true">:$keepStats,
                DefaultValuedAttr<I64Attr, "1">    :$beginNormAxis,
                DefaultValuedAttr<F32Attr, "1e-5"> :$epsilon)>
@@ -564,6 +571,24 @@ def NGLayerNormOp :
   ];
 
   let extraClassDeclaration = [{
+    // get Scale operand if present
+    Value* Scale() 
+    { 
+      auto varArgs = optionalArgs();
+      return varArgs.begin() != varArgs.end() ? *varArgs.begin() : nullptr;
+    }
+    // get Bias operand if present
+    Value* Bias() 
+    { 
+      auto varArgs = optionalArgs();
+      auto it = varArgs.begin();
+      it = std::next(it);
+      if (it == varArgs.end())
+        return nullptr;
+      it = std::next(it);
+      return it == varArgs.end() ? *it : nullptr;
+    }
+
     void setKeepstats(const Attribute& attr)      { this->setAttr("keepStats", attr);    }
     void setBeginNormAxis(const Attribute& attr)  { this->setAttr("beginNormAxis", attr);}
     void setEpsilonAxis(const Attribute& attr)    { this->setAttr("epsilon", attr);      }
@@ -572,11 +597,12 @@ def NGLayerNormOp :
 
 
 // LayerNormBackprop Op
+// Scale can be optional, in which case use a constant op of 0
 def NGLayerNormBackpropOp : 
     NG_Op<"layernormBackprop", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Results<(outs NG_TensorType:$d_data, NG_TensorType:$d_scale, NG_TensorType:$d_bias)>,
-    Arguments<(ins NG_TensorType:$data, NG_TensorType:$delta, 
-               NG_TensorType:$mean, NG_TensorType:$variance, NG_TensorType:$scale,
+    Arguments<(ins NG_TensorType:$data, NG_TensorType:$delta, NG_TensorType:$scale, 
+               Variadic<NG_TensorType>:$optionalArgs, 
                DefaultValuedAttr<I64Attr, "1">:$beginNormAxis,
                DefaultValuedAttr<F32Attr, "1e-5">:$epsilon)>
 {
@@ -616,6 +642,24 @@ def NGLayerNormBackpropOp :
   ];
 
   let extraClassDeclaration = [{
+    // get Mean operand if present
+    Value* Mean() 
+    { 
+      auto varArgs = optionalArgs();
+      return varArgs.begin() != varArgs.end() ? *varArgs.begin() : nullptr;
+    }
+    // get Variance operand if present
+    Value* Variance() 
+    { 
+      auto varArgs = optionalArgs();
+      auto it = varArgs.begin();
+      it = std::next(it);
+      if (it == varArgs.end())
+        return nullptr;
+      it = std::next(it);
+      return it == varArgs.end() ? *it : nullptr;
+    }
+
     void setBeginNormAxis(const Attribute& attr)  { this->setAttr("beginNormAxis", attr);}
     void setEpsilonAxis(const Attribute& attr)    { this->setAttr("epsilon", attr);      }
   }];

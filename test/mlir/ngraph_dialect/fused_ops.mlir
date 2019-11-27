@@ -109,19 +109,26 @@ func @matmul(%arg0: !ng.tensor<2x5xf32>, %arg1: !ng.tensor<2x5xf32>) -> !ng.tens
 
 // CHECK-LABEL: func @layernorm
 func @layernorm(%arg0: !ng.tensor<2x4xf32>, %arg1: !ng.tensor<4xf32>, %arg2: !ng.tensor<4xf32>) -> !ng.tensor<2x4xf32> {
-  // CHECK: %{{[0-9]+}}:3 = "ng.layernorm"(%{{.*}}, %{{.*}}, %{{.*}}) : (!ng.tensor<2x4xf32>, !ng.tensor<4xf32>, !ng.tensor<4xf32>) -> (!ng.tensor<2x4xf32>, !ng.tensor<2xf32>, !ng.tensor<2xf32>)
+  // CHECK %{{[0-9]+}}:3 = "ng.layernorm"(%{{.*}}, %{{.*}}, %{{.*}}) : (!ng.tensor<2x4xf32>, !ng.tensor<4xf32>, !ng.tensor<4xf32>) -> (!ng.tensor<2x4xf32>, !ng.tensor<2xf32>, !ng.tensor<2xf32>)
   %0:3 = "ng.layernorm"(%arg0, %arg1, %arg2) 
          : (!ng.tensor<2x4xf32>, !ng.tensor<4xf32>, !ng.tensor<4xf32>) -> (!ng.tensor<2x4xf32>, !ng.tensor<2xf32>, !ng.tensor<2xf32>)
-   "ng.return"(%0#0) : (!ng.tensor<2x4xf32>) -> ()
+  // CHECK %{{[0-9]+}}:3 = "ng.layernorm"(%{{.*}}) : (!ng.tensor<2x4xf32>) -> (!ng.tensor<2x4xf32>, !ng.tensor<2xf32>, !ng.tensor<2xf32>)
+  %1:3 = "ng.layernorm"(%arg0) 
+           : (!ng.tensor<2x4xf32>) -> (!ng.tensor<2x4xf32>, !ng.tensor<2xf32>, !ng.tensor<2xf32>)
+  "ng.return"(%0#0) : (!ng.tensor<2x4xf32>) -> ()
 } 
 
 // -----
 
 // CHECK-LABEL: func @layernormBackprop
 func @layernormBackprop(%arg0: !ng.tensor<2x4xf32>, %arg1: !ng.tensor<2x4xf32>, %arg2: !ng.tensor<2xf32>, %arg3: !ng.tensor<2xf32>, %arg4: !ng.tensor<4xf32>) -> !ng.tensor<2x4xf32> {
-  // CHECK: %{{[0-9]+}}:3 = "ng.layernormBackprop"(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) : (!ng.tensor<2x4xf32>, !ng.tensor<2x4xf32>, !ng.tensor<2xf32>, !ng.tensor<2xf32>, !ng.tensor<4xf32>) -> (!ng.tensor<2x4xf32>, !ng.tensor<2xf32>, !ng.tensor<2xf32>)
-  %0:3 = "ng.layernormBackprop"(%arg0, %arg1, %arg2, %arg3, %arg4) 
-          : (!ng.tensor<2x4xf32>, !ng.tensor<2x4xf32>, !ng.tensor<2xf32>, !ng.tensor<2xf32>, !ng.tensor<4xf32>) -> (!ng.tensor<2x4xf32>, !ng.tensor<2xf32>, !ng.tensor<2xf32>)
+  // CHECK: %{{[0-9]+}}:3 = "ng.layernormBackprop"(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) : (!ng.tensor<2x4xf32>, !ng.tensor<2x4xf32>, !ng.tensor<4xf32>, !ng.tensor<2xf32>, !ng.tensor<2xf32>) -> (!ng.tensor<2x4xf32>, !ng.tensor<2xf32>, !ng.tensor<2xf32>)
+  %0:3 = "ng.layernormBackprop"(%arg0, %arg1, %arg4, %arg2, %arg3) 
+          : (!ng.tensor<2x4xf32>, !ng.tensor<2x4xf32>, !ng.tensor<4xf32>, !ng.tensor<2xf32>, !ng.tensor<2xf32>) -> (!ng.tensor<2x4xf32>, !ng.tensor<2xf32>, !ng.tensor<2xf32>)
+
+  // CHECK: %{{[0-9]+}}:3 = "ng.layernormBackprop"(%{{.*}}, %{{.*}}, %{{.*}}) : (!ng.tensor<2x4xf32>, !ng.tensor<2x4xf32>, !ng.tensor<4xf32>) -> (!ng.tensor<2x4xf32>, !ng.tensor<2xf32>, !ng.tensor<2xf32>)
+  %1:3 = "ng.layernormBackprop"(%arg0, %arg1, %arg4) 
+          : (!ng.tensor<2x4xf32>, !ng.tensor<2x4xf32>, !ng.tensor<4xf32>) -> (!ng.tensor<2x4xf32>, !ng.tensor<2xf32>, !ng.tensor<2xf32>)        
   "ng.return"(%0#0) : (!ng.tensor<2x4xf32>) -> ()
 } 
 
@@ -274,11 +281,16 @@ func @convBiasAdd(%arg0: !ng.tensor<1x3x2x2xf32>, %arg1: !ng.tensor<2x3x1x1xf32>
 // -----
 
 //CHECK-LABEL: func @rnnCell
-func @rnnCell(%arg0: !ng.tensor<2x3xf32>, %arg1: !ng.tensor<2x3xf32>, %arg2: !ng.tensor<2x3xf32>, %arg3: !ng.tensor<3x3xf32>) -> !ng.tensor<2x3xf32>
+func @rnnCell(%arg0: !ng.tensor<2x3xf32>, %arg1: !ng.tensor<2x3xf32>, %arg2: !ng.tensor<2x3xf32>, %arg3: !ng.tensor<3x3xf32>, %arg4: !ng.tensor<3xf32>) -> !ng.tensor<2x3xf32>
 {
   // CHECK: %{{[0-9]+}} = "ng.rnnCell"(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) {hiddenSize = 3 : i64} : (!ng.tensor<2x3xf32>, !ng.tensor<2x3xf32>, !ng.tensor<2x3xf32>, !ng.tensor<3x3xf32>) -> !ng.tensor<2x3xf32>
   %0 = "ng.rnnCell" (%arg0, %arg1, %arg2, %arg3) {hiddenSize = 3 : i64} 
        : (!ng.tensor<2x3xf32>, !ng.tensor<2x3xf32>, !ng.tensor<2x3xf32>, !ng.tensor<3x3xf32>) -> !ng.tensor<2x3xf32>
+
+  // CHECK: %{{[0-9]+}} = "ng.rnnCell"(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) {hiddenSize = 3 : i64} : (!ng.tensor<2x3xf32>, !ng.tensor<2x3xf32>, !ng.tensor<2x3xf32>, !ng.tensor<3x3xf32>, !ng.tensor<3xf32>) -> !ng.tensor<2x3xf32>
+  %1 = "ng.rnnCell" (%arg0, %arg1, %arg2, %arg3, %arg4) {hiddenSize = 3 : i64} 
+       : (!ng.tensor<2x3xf32>, !ng.tensor<2x3xf32>, !ng.tensor<2x3xf32>, !ng.tensor<3x3xf32>, !ng.tensor<3xf32>) -> !ng.tensor<2x3xf32>
+
   "ng.return" (%0) : (!ng.tensor<2x3xf32>)->()
 
 }
@@ -300,8 +312,11 @@ func @lstmCell(%arg0: !ng.tensor<2x3xf32>, %arg1: !ng.tensor<2x3xf32>, %arg2: !n
 func @gruCell(%arg0: !ng.tensor<2x3xf32>, %arg1: !ng.tensor<9x3xf32>, %arg2: !ng.tensor<9x3xf32>, %arg3: !ng.tensor<2x3xf32>, %arg4: !ng.tensor<18xf32>) -> !ng.tensor<2x3xf32>
 {
   // CHECK: %{{[0-9]+}} = "ng.gruCell"(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) {activations = ["sigmoid", "tanh"], activationsAlpha = [], clip = {{.*}} : f32, hiddenSize = 3 : i64} : (!ng.tensor<2x3xf32>, !ng.tensor<9x3xf32>, !ng.tensor<9x3xf32>, !ng.tensor<2x3xf32>, !ng.tensor<18xf32>) -> !ng.tensor<2x3xf32>
-  
   %0 = "ng.gruCell" (%arg0, %arg1, %arg2, %arg3, %arg4) {activations=["sigmoid", "tanh"], activationsAlpha = [], clip = 2.88 : f32, hiddenSize = 3 : i64} 
        : (!ng.tensor<2x3xf32>, !ng.tensor<9x3xf32>, !ng.tensor<9x3xf32>, !ng.tensor<2x3xf32>, !ng.tensor<18xf32>) -> !ng.tensor<2x3xf32>
+
+  // CHECK: %{{[0-9]+}} = "ng.gruCell"(%{{.*}}, %{{.*}}, %{{.*}}, %{{.*}}) {activations = ["sigmoid", "tanh"], activationsAlpha = [], clip = {{.*}} : f32, hiddenSize = 3 : i64} : (!ng.tensor<2x3xf32>, !ng.tensor<9x3xf32>, !ng.tensor<9x3xf32>, !ng.tensor<2x3xf32>) -> !ng.tensor<2x3xf32>
+  %1 = "ng.gruCell" (%arg0, %arg1, %arg2, %arg3) {activations=["sigmoid", "tanh"], activationsAlpha = [], clip = 2.88 : f32, hiddenSize = 3 : i64} 
+       : (!ng.tensor<2x3xf32>, !ng.tensor<9x3xf32>, !ng.tensor<9x3xf32>, !ng.tensor<2x3xf32>) -> !ng.tensor<2x3xf32>
   "ng.return" (%0) : (!ng.tensor<2x3xf32>) -> ()
 }
