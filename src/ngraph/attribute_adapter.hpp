@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <type_traits>
 #include <vector>
 
 #include "ngraph/enum_names.hpp"
@@ -94,6 +95,7 @@ namespace ngraph
             : ValueReference<float>(value)
         {
         }
+
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<float>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const double& get() override;
@@ -109,6 +111,7 @@ namespace ngraph
             : ValueReference<double>(value)
         {
         }
+
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<double>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const double& get() override;
@@ -124,6 +127,7 @@ namespace ngraph
             : ValueReference<int8_t>(value)
         {
         }
+
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<int8_t>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const int64_t& get() override;
@@ -139,6 +143,7 @@ namespace ngraph
             : ValueReference<int16_t>(value)
         {
         }
+
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<int16_t>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const int64_t& get() override;
@@ -154,6 +159,7 @@ namespace ngraph
             : ValueReference<int32_t>(value)
         {
         }
+
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<int32_t>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const int64_t& get() override;
@@ -169,6 +175,7 @@ namespace ngraph
             : ValueReference<int64_t>(value)
         {
         }
+
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<int64_t>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const int64_t& get() override;
@@ -184,6 +191,7 @@ namespace ngraph
             : ValueReference<uint8_t>(value)
         {
         }
+
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<uint8_t>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const int64_t& get() override;
@@ -199,6 +207,7 @@ namespace ngraph
             : ValueReference<uint16_t>(value)
         {
         }
+
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<uint16_t>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const int64_t& get() override;
@@ -214,6 +223,7 @@ namespace ngraph
             : ValueReference<uint32_t>(value)
         {
         }
+
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<uint32_t>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const int64_t& get() override;
@@ -229,6 +239,7 @@ namespace ngraph
             : ValueReference<uint64_t>(value)
         {
         }
+
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<uint64_t>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const int64_t& get() override;
@@ -246,6 +257,7 @@ namespace ngraph
             : ValueReference<std::vector<int64_t>>(value)
         {
         }
+
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<vector<int64_t>>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const std::vector<int64_t>& get() override;
@@ -261,107 +273,22 @@ namespace ngraph
             : ValueReference<std::vector<uint64_t>>(value)
         {
         }
+
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<vector<uint64_t>>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const std::vector<int64_t>& get() override;
         void set(const std::vector<int64_t>& value) override;
     };
 
-    class Shape;
-    template <>
-    class NGRAPH_API AttributeAdapter<Shape> : public ValueReference<Shape>,
-                                               public ValueAccessor<std::vector<int64_t>>
+    template <typename A, typename B>
+    A copy_from(B& b)
     {
-    public:
-        AttributeAdapter(Shape& value)
-            : ValueReference<Shape>(value)
+        A result(b.size());
+        for (int i = 0; i < b.size(); ++i)
         {
+            result[i] =
+                static_cast<typename std::remove_reference<decltype(result[i])>::type>(b[i]);
         }
-        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<Shape>", 0};
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-        const std::vector<int64_t>& get() override;
-        void set(const std::vector<int64_t>& value) override;
-    };
-
-    class Strides;
-    template <>
-    class NGRAPH_API AttributeAdapter<Strides> : public ValueReference<Strides>,
-                                                 public ValueAccessor<std::vector<int64_t>>
-    {
-    public:
-        AttributeAdapter(Strides& value)
-            : ValueReference<Strides>(value)
-        {
-        }
-        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<Strides>", 0};
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-        const std::vector<int64_t>& get() override;
-        void set(const std::vector<int64_t>& value) override;
-    };
-
-    class AxisSet;
-    template <>
-    class NGRAPH_API AttributeAdapter<AxisSet> : public ValueReference<AxisSet>,
-                                                 public ValueAccessor<std::vector<int64_t>>
-    {
-    public:
-        AttributeAdapter(AxisSet& value)
-            : ValueReference<AxisSet>(value)
-        {
-        }
-        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<AxisSet>", 0};
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-        const std::vector<int64_t>& get() override;
-        void set(const std::vector<int64_t>& value) override;
-    };
-
-    class PartialShape;
-    template <>
-    class NGRAPH_API AttributeAdapter<PartialShape> : public ValueReference<PartialShape>,
-                                                      public ValueAccessor<void>
-    {
-    public:
-        AttributeAdapter(PartialShape& value)
-            : ValueReference<PartialShape>(value)
-        {
-        }
-        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<PartialShape>", 0};
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-    };
-
-    namespace element
-    {
-        class Type;
+        return result;
     }
-
-    template <>
-    class NGRAPH_API AttributeAdapter<element::Type> : public ValueReference<element::Type>,
-                                                       public ValueAccessor<void>
-    {
-    public:
-        AttributeAdapter(element::Type& value)
-            : ValueReference<element::Type>(value)
-        {
-        }
-        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<element::Type>", 0};
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-    };
-
-    namespace op
-    {
-        struct AutoBroadcastSpec;
-    }
-
-    template <>
-    class NGRAPH_API AttributeAdapter<op::AutoBroadcastSpec>
-        : public ValueReference<op::AutoBroadcastSpec>, public ValueAccessor<void>
-    {
-    public:
-        AttributeAdapter(op::AutoBroadcastSpec& value)
-            : ValueReference<op::AutoBroadcastSpec>(value)
-        {
-        }
-        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::AutoBroadcastSpec>", 0};
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-    };
 }

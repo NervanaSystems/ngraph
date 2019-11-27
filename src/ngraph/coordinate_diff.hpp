@@ -20,6 +20,7 @@
 #include <ostream>
 #include <vector>
 
+#include "ngraph/attribute_adapter.hpp"
 #include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
@@ -49,6 +50,22 @@ namespace ngraph
         NGRAPH_API CoordinateDiff& operator=(const CoordinateDiff& v);
 
         NGRAPH_API CoordinateDiff& operator=(CoordinateDiff&& v) noexcept;
+    };
+
+    template <>
+    class NGRAPH_API AttributeAdapter<CoordinateDiff> : public ValueReference<CoordinateDiff>,
+                                                        public ValueAccessor<std::vector<int64_t>>
+    {
+    public:
+        AttributeAdapter(CoordinateDiff& value)
+            : ValueReference<CoordinateDiff>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<CoordinateDiff>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::vector<int64_t>& get() override;
+        void set(const std::vector<int64_t>& value) override;
     };
 
     std::ostream& operator<<(std::ostream& s, const CoordinateDiff& coordinate_diff);

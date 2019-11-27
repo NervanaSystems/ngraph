@@ -20,6 +20,7 @@
 #include <ostream>
 #include <vector>
 
+#include "ngraph/attribute_adapter.hpp"
 #include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
@@ -49,6 +50,20 @@ namespace ngraph
         NGRAPH_API Strides& operator=(Strides&& v) noexcept;
     };
 
-    NGRAPH_API
+    template <>
+    class NGRAPH_API AttributeAdapter<Strides> : public ValueReference<Strides>,
+                                                 public ValueAccessor<std::vector<int64_t>>
+    {
+    public:
+        AttributeAdapter(Strides& value)
+            : ValueReference<Strides>(value)
+        {
+        }
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<Strides>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::vector<int64_t>& get() override;
+        void set(const std::vector<int64_t>& value) override;
+    };
+
     std::ostream& operator<<(std::ostream& s, const Strides& strides);
 }

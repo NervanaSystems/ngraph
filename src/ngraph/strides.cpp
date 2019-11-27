@@ -17,6 +17,9 @@
 #include "ngraph/strides.hpp"
 #include "ngraph/util.hpp"
 
+using namespace std;
+using namespace ngraph;
+
 std::ostream& ngraph::operator<<(std::ostream& s, const Strides& strides)
 {
     s << "Strides{";
@@ -61,3 +64,21 @@ ngraph::Strides& ngraph::Strides::operator=(Strides&& v) noexcept
     static_cast<std::vector<size_t>*>(this)->operator=(v);
     return *this;
 }
+
+const vector<int64_t>& AttributeAdapter<Strides>::get()
+{
+    if (!m_buffer_valid)
+    {
+        m_buffer = copy_from<vector<int64_t>>(m_value);
+        m_buffer_valid = true;
+    }
+    return m_buffer;
+}
+
+void AttributeAdapter<Strides>::set(const vector<int64_t>& value)
+{
+    m_value = copy_from<Strides>(value);
+    m_buffer_valid = false;
+}
+
+constexpr DiscreteTypeInfo AttributeAdapter<Strides>::type_info;

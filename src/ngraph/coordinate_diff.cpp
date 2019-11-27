@@ -17,6 +17,9 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/util.hpp"
 
+using namespace std;
+using namespace ngraph;
+
 std::ostream& ngraph::operator<<(std::ostream& s, const CoordinateDiff& coordinate_diff)
 {
     s << "CoordinateDiff{";
@@ -64,3 +67,21 @@ ngraph::CoordinateDiff& ngraph::CoordinateDiff::operator=(CoordinateDiff&& v) no
     static_cast<std::vector<std::ptrdiff_t>*>(this)->operator=(v);
     return *this;
 }
+
+const vector<int64_t>& AttributeAdapter<CoordinateDiff>::get()
+{
+    if (!m_buffer_valid)
+    {
+        m_buffer = copy_from<vector<int64_t>>(m_value);
+        m_buffer_valid = true;
+    }
+    return m_buffer;
+}
+
+void AttributeAdapter<CoordinateDiff>::set(const vector<int64_t>& value)
+{
+    m_value = copy_from<CoordinateDiff>(m_value);
+    m_buffer_valid = false;
+}
+
+constexpr ngraph::DiscreteTypeInfo ngraph::AttributeAdapter<ngraph::CoordinateDiff>::type_info;

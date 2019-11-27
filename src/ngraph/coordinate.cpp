@@ -17,6 +17,9 @@
 #include "ngraph/coordinate.hpp"
 #include "ngraph/util.hpp"
 
+using namespace std;
+using namespace ngraph;
+
 std::ostream& ngraph::operator<<(std::ostream& s, const Coordinate& coordinate)
 {
     s << "Coordinate{";
@@ -69,3 +72,21 @@ ngraph::Coordinate& ngraph::Coordinate::operator=(Coordinate&& v) noexcept
     static_cast<std::vector<size_t>*>(this)->operator=(v);
     return *this;
 }
+
+const vector<uint64_t>& AttributeAdapter<Coordinate>::get()
+{
+    if (!m_buffer_valid)
+    {
+        m_buffer = copy_from<vector<uint64_t>>(m_value);
+        m_buffer_valid = true;
+    }
+    return m_buffer;
+}
+
+void AttributeAdapter<Coordinate>::set(const vector<uint64_t>& value)
+{
+    m_value = copy_from<Coordinate>(m_value);
+    m_buffer_valid = false;
+}
+
+constexpr ngraph::DiscreteTypeInfo ngraph::AttributeAdapter<ngraph::Coordinate>::type_info;

@@ -19,6 +19,7 @@
 #include <cstdio>
 #include <vector>
 
+#include "ngraph/attribute_adapter.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/strides.hpp"
@@ -49,6 +50,21 @@ namespace ngraph
 
         NGRAPH_API Shape& operator=(const Shape& v);
         NGRAPH_API Shape& operator=(Shape&& v) noexcept;
+    };
+
+    template <>
+    class NGRAPH_API AttributeAdapter<Shape> : public ValueReference<Shape>,
+                                               public ValueAccessor<std::vector<int64_t>>
+    {
+    public:
+        AttributeAdapter(Shape& value)
+            : ValueReference<Shape>(value)
+        {
+        }
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<Shape>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::vector<int64_t>& get() override;
+        void set(const std::vector<int64_t>& value) override;
     };
 
     /// Number of elements in spanned by a shape

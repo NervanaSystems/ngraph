@@ -66,3 +66,27 @@ std::ostream& ngraph::operator<<(std::ostream& s, const AxisSet& axis_set)
     s << "}";
     return s;
 }
+
+const std::vector<int64_t>& ngraph::AttributeAdapter<ngraph::AxisSet>::get()
+{
+    if (!m_buffer_valid)
+    {
+        for (auto elt : m_value)
+        {
+            m_buffer.push_back(elt);
+        }
+    }
+    return m_buffer;
+}
+
+void ngraph::AttributeAdapter<ngraph::AxisSet>::set(const std::vector<int64_t>& value)
+{
+    m_value = AxisSet();
+    for (auto elt : value)
+    {
+        m_value.insert(elt);
+    }
+    m_buffer_valid = false;
+}
+
+constexpr ngraph::DiscreteTypeInfo ngraph::AttributeAdapter<ngraph::AxisSet>::type_info;
