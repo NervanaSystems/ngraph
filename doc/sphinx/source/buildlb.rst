@@ -106,7 +106,7 @@ The process documented here will work on Ubuntu\* 16.04 (LTS) or on Ubuntu
    
    .. code-block:: console
 
-      $ cmake .. [-DNGRAPH_USE_PREBUILT_LLVM=OFF] [-DNGRAPH_TARGET_ARCH=skylake-avx512]   
+      $ cmake .. [-DNGRAPH_TARGET_ARCH=skylake-avx512]   
 
 #. Run ``$ make`` and ``make install`` to install ``libngraph.so`` and the 
    header files to ``~/ngraph_dist``:

@@ -20,6 +20,8 @@
 #include <stddef.h>
 #include <stdexcept>
 
+#include "ngraph/ngraph_visibility.hpp"
+
 namespace ngraph
 {
     /// \brief Class representing a dimension, which may be dynamic (undetermined until runtime),
@@ -29,7 +31,7 @@ namespace ngraph
     /// constructed with Dimension() or Dimension::dynamic().
     ///
     /// XXX: THIS CLASS IS NOT IN USE YET AND THE ENTIRE DESIGN IS SUBJECT TO CHANGE.
-    class Dimension
+    class NGRAPH_API Dimension
     {
     public:
         /// \brief Construct a static dimension.

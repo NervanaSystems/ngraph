@@ -27,10 +27,9 @@ namespace ngraph
     namespace op
     {
         /// \brief  Iterate a body over tensors, accumulating into tensors.
-        class TensorIterator : public util::FusedOp
+        class NGRAPH_API TensorIterator : public util::FusedOp
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"TensorIterator", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             // Forward declarations

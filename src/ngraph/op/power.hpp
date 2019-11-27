@@ -40,10 +40,9 @@ namespace ngraph
             /// | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
             /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \texttt{arg0}[i_1,\dots,i_n]^{\texttt{arg1}[i_1,\dots,i_n]}\f$ |
             // clang-format on
-            class Power : public util::BinaryElementwiseArithmetic
+            class NGRAPH_API Power : public util::BinaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Power", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Power()
@@ -86,10 +85,9 @@ namespace ngraph
             /// | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
             /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \texttt{arg0}[i_1,\dots,i_n]^{\texttt{arg1}[i_1,\dots,i_n]}\f$ |
             // clang-format on
-            class Power : public util::BinaryElementwiseArithmetic
+            class NGRAPH_API Power : public util::BinaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Power", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Power()

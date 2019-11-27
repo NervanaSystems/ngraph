@@ -31,7 +31,7 @@
 namespace ngraph
 {
     /// A user-defined function.
-    class Function : public Lambda
+    class NGRAPH_API Function : public Lambda
     {
     public:
         static constexpr DiscreteTypeInfo type_info{"Function", 0};

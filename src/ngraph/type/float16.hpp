@@ -23,11 +23,13 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/ngraph_visibility.hpp"
+
 #define ROUND_MODE_TO_NEAREST_EVEN
 
 namespace ngraph
 {
-    class float16
+    class NGRAPH_API float16
     {
     public:
         constexpr float16()
