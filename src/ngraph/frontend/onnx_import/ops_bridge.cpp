@@ -81,6 +81,7 @@
 #include "op/mean.hpp"
 #include "op/mean_variance_normalization.hpp"
 #include "op/min.hpp"
+#include "op/mod.hpp"
 #include "op/mul.hpp"
 #include "op/neg.hpp"
 #include "op/not.hpp"
@@ -272,6 +273,7 @@ namespace ngraph
             REGISTER_OPERATOR("Floor", 1, floor);
             REGISTER_OPERATOR("Gather", 1, gather);
             REGISTER_OPERATOR("Gemm", 1, gemm);
+            REGISTER_OPERATOR("Gemm", 6, gemm);
             REGISTER_OPERATOR("GlobalAveragePool", 1, global_average_pool);
             REGISTER_OPERATOR("GlobalLpPool", 1, global_lp_pool);
             REGISTER_OPERATOR("GlobalMaxPool", 1, global_max_pool);
@@ -298,6 +300,7 @@ namespace ngraph
             REGISTER_OPERATOR("MeanVarianceNormalization", 9, mean_variance_normalization);
             REGISTER_OPERATOR("Min", 1, min);
             REGISTER_OPERATOR("Min", 8, min);
+            REGISTER_OPERATOR("Mod", 1, mod);
             REGISTER_OPERATOR("Mul", 1, mul);
             REGISTER_OPERATOR("Mul", 7, mul);
             REGISTER_OPERATOR("Neg", 1, neg);

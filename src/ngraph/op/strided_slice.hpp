@@ -31,10 +31,9 @@ namespace ngraph
         {
             /// \brief Takes a slice of an input tensor, i.e., the sub-tensor that resides within a
             ///        bounding box, optionally with stride.
-            class StridedSlice : public Op
+            class NGRAPH_API StridedSlice : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Slice", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 StridedSlice() = default;
