@@ -49,6 +49,7 @@
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/op/xor.hpp"
@@ -90,7 +91,6 @@ namespace ngraph
         class Log;
         class Negative;
         class Select;
-        class Subtract;
         class Convert;
         class Constant;
         class Reshape;
