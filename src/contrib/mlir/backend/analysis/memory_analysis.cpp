@@ -24,8 +24,8 @@
 
 #include "ngraph/assertion.hpp"
 
-#include <llvm/ADT/DenseSet.h>
 #include <llvm/ADT/BitVector.h>
+#include <llvm/ADT/DenseSet.h>
 #include <map>
 #include <mlir/EDSC/Builders.h>
 #include <mlir/EDSC/Helpers.h>
@@ -63,14 +63,14 @@ namespace
     // A helper data-structure to track cannot alias relationship between tensor syms
     // If NoAlias[T] contains S, then T and S cannot alias.
     // The relationship is an equivalence (transitive, symmetric, reflexive)
-    // Initially each sym is put in its own equivalence class (set). If two syms 
+    // Initially each sym is put in its own equivalence class (set). If two syms
     // a and b are found to be non-alias (equivalent), their equivalence classes
     // are unioned
     class AliasRelation
     {
     public:
         /// Initialize the relationship for a number of syms
-        AliasRelation(SmallVectorImpl<Value*>& symbols);
+        void init(std::unordered_set<Value*>& symbols);
         /// Checks if values a and b can alias
         bool canAlias(Value* a, Value* b);
         void insertNoAlias(Value* a, Value* b);
@@ -78,8 +78,8 @@ namespace
     private:
         using BV = llvm::BitVector;
         std::unordered_map<Value*, unsigned> m_valueToIdx;
-        std::unordered_map<Value*, unsigned> m_idxToValue;
-        std::unordered_mape<Value*, BV*> m_valueToSet;
+        std::unordered_map<unsigned, Value*> m_idxToValue;
+        std::unordered_map<Value*, BV*> m_valueToSet;
         SmallVector<BV, 10> m_sets;
     };
 
@@ -176,6 +176,31 @@ namespace
             return;
         }
         auto& block = *(blocks.begin());
+
+        // count number of syms in the code and initialize alias relationship
+        std::unordered_set<Value*> syms;
+
+        for (auto it = block.begin(); it != block.end(); it++)
+        {
+            Operation* op = &(*it);
+            for (auto it : op->getResults())
+            {
+                Value* v = it;
+                if (syms.find(v) == syms.end())
+                {
+                    syms.insert(v);
+                }
+            }
+            for (auto it : op->getOperands())
+            {
+                Value* v = it;
+                if (syms.find(v) == syms.end())
+                {
+                    syms.insert(v);
+                }
+            }
+        }
+        m_aliasRelation.init(syms);
 
         // scan instructions backwards
         for (auto it = block.rbegin(); it != block.rend(); it++)
@@ -457,7 +482,7 @@ namespace
         return it != m_inplaceOps.end() ? it->second : false;
     }
 
-    AliasRelation::AliasRelation(SmallVectorImpl<Value*>& symbols)
+    void AliasRelation::init(std::unordered_set<Value*>& symbols)
     {
         unsigned numSyms = symbols.size();
         m_sets.reserve(numSyms);
@@ -467,23 +492,22 @@ namespace
             bv.resize(numSyms);
         }
         // populate id->value and value->id maps
-        for (unsigned i = 0; i < numSyms; i++)
+        unsigned i = 0;
+        for (auto v : symbols)
         {
-            m_idxToValue[i] = symbols[i];
-            m_valueToIdx[symbols[i]] = i;
-            m_valueToSet[symbols[i]] = &m_sets[i];
+            m_idxToValue[i] = v;
+            m_valueToIdx[v] = i;
+            m_valueToSet[v] = &m_sets[i];
             // set bit for that value
             m_sets[i].set(i);
+            i++;
         }
-        // put each value in its own set
-        
-        m_maxIdx = numSyms;
     }
+
     bool AliasRelation::canAlias(Value* a, Value* b)
     {
         // check if a and b are in the same set
-        return m_valueToSet[a] != m_valueToSet[b]
-
+        return m_valueToSet[a] != m_valueToSet[b];
     }
 
     void AliasRelation::insertNoAlias(Value* a, Value* b)
@@ -496,42 +520,22 @@ namespace
             return;
         }
         // union the two sets of a and b
-        BV* aSet = m_valueToSets[a];
-        BV* bSet = m_valueToSets[b];
-        BV uSet = (*aSet) | (*bSet);
+        BV* aSet = m_valueToSet[a];
+        BV* bSet = m_valueToSet[b];
+        BV uSet = (*aSet);
+        uSet |= (*bSet);
         // replace aSet with union
         auto pSet = m_valueToSet[a];
-        *pSet = *uSet;
-        
+        *pSet = uSet;
+
         // update value to set maps
-        for (auto id : (*pSet))
+        for (auto it = pSet->set_bits_begin(); it != pSet->set_bits_end(); it++)
         {
-            auto value = m_idToValue[id];
+            unsigned id = *it;
+            auto value = m_idxToValue[id];
             m_valueToSet[value] = pSet;
         }
     }
-
-    }
-
-#ifdef NGRAPH_DEBUG_ENABLE
-    void AliasRelation::checkInvariance()
-    {
-        NGRAPH_CHECK(m_reachability.size() == m_maxIdx);
-        for (auto& v : m_reachability)
-        {
-            NGRAPH_CHECK(v.size() == m_maxIdx, "Non-square matrix");
-        }
-
-        for (unsigned i = 0; i < m_maxIdx; i++)
-        {
-            for (unsigned j = 0; j < m_maxIdx; j++)
-            {
-                NGRAPH_CHECK(m_reachability[i][j] == m_reachability[j][i],
-                             "Non-symmetric relationship");
-            }
-        }
-    }
-#endif
 
     void LivenessAnalysis::reset()
     {
