@@ -17,10 +17,31 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/util.hpp"
 
+using namespace std;
+using namespace ngraph;
+
 std::ostream& ngraph::operator<<(std::ostream& s, const CoordinateDiff& coordinate_diff)
 {
     s << "CoordinateDiff{";
     s << ngraph::join(coordinate_diff);
     s << "}";
     return s;
+}
+
+NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<CoordinateDiff>::type_info;
+
+const vector<int64_t>& AttributeAdapter<CoordinateDiff>::get()
+{
+    if (!m_buffer_valid)
+    {
+        m_buffer = copy_from<vector<int64_t>>(m_value);
+        m_buffer_valid = true;
+    }
+    return m_buffer;
+}
+
+void AttributeAdapter<CoordinateDiff>::set(const vector<int64_t>& value)
+{
+    m_value = copy_from<CoordinateDiff>(m_value);
+    m_buffer_valid = false;
 }

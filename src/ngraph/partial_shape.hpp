@@ -18,6 +18,7 @@
 
 #include <stddef.h>
 
+#include "ngraph/attribute_adapter.hpp"
 #include "ngraph/dimension.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/rank.hpp"
@@ -282,4 +283,18 @@ namespace ngraph
     /// {2,3,4}
     /// \endcode
     std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
+
+    template <>
+    class AttributeAdapter<PartialShape> : public ValueReference<PartialShape>,
+                                           public ValueAccessor<void>
+    {
+    public:
+        AttributeAdapter(PartialShape& value)
+            : ValueReference<PartialShape>(value)
+        {
+        }
+        NGRAPH_API
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<PartialShape>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 }

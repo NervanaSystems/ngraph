@@ -40,6 +40,8 @@ NGRAPH_API const element::Type element::u16(element::Type_t::u16);
 NGRAPH_API const element::Type element::u32(element::Type_t::u32);
 NGRAPH_API const element::Type element::u64(element::Type_t::u64);
 
+NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<element::Type>::type_info;
+
 class TypeInfo
 {
 public:
