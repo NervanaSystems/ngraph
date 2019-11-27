@@ -42,14 +42,14 @@ namespace ngraph
                 /// \param arg1 Node that produces the second input tensor.
                 /// \param auto_broadcast Auto broadcast specification
                 Subtract(const Output<Node>& arg0,
-                        const Output<Node>& arg1,
-                        const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
+                         const Output<Node>& arg1,
+                         const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                            const NodeVector& deltas) override;
+                                               const NodeVector& deltas) override;
             };
         } // namespace v0
 
@@ -73,14 +73,15 @@ namespace ngraph
                 /// \param arg1 Node that produces the second input tensor.
                 /// \param auto_broadcast Auto broadcast specification
                 Subtract(const Output<Node>& arg0,
-                        const Output<Node>& arg1,
-                        const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec(AutoBroadcastType::NUMPY));
+                         const Output<Node>& arg1,
+                         const AutoBroadcastSpec& auto_broadcast =
+                             AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                            const NodeVector& deltas) override;
+                                               const NodeVector& deltas) override;
                 size_t get_version() const override { return 1; }
             };
         } // namespace v1

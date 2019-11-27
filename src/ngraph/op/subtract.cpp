@@ -25,8 +25,8 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::v0::Subtract::type_info;
 
 op::v0::Subtract::Subtract(const Output<Node>& arg0,
-                       const Output<Node>& arg1,
-                       const AutoBroadcastSpec& auto_broadcast)
+                           const Output<Node>& arg1,
+                           const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
@@ -64,8 +64,8 @@ shared_ptr<ngraph::Node> ngraph::operator-(const Output<Node> arg0, const Output
 constexpr NodeTypeInfo op::v1::Subtract::type_info;
 
 op::v1::Subtract::Subtract(const Output<Node>& arg0,
-                       const Output<Node>& arg1,
-                       const AutoBroadcastSpec& auto_broadcast)
+                           const Output<Node>& arg1,
+                           const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();

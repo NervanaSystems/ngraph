@@ -2632,7 +2632,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             if (op_version == 0)
             {
                 node = make_shared<op::Subtract>(
-                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+                    args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
                 break;
             }
             if (op_version == 1)
