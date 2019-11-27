@@ -48,6 +48,7 @@ op::v1::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
     constructor_validate_and_infer_types();
 }
 
+// TODO: Fix it
 void op::v1::GroupConvolution::validate_and_infer_types()
 {
     const PartialShape& data_batch_shape = get_input_partial_shape(0);
@@ -230,7 +231,7 @@ void op::v1::GroupConvolutionBackpropData::validate_and_infer_types()
             m_pads_begin.clear();
             m_pads_end.clear();
             auto filter_shape = filters_pshape.to_shape();
-            filter_shape.erase(filter_shape.begin(), filter_shape.begin() + 2); // Remove {O,I}
+            filter_shape.erase(filter_shape.begin(), filter_shape.begin() + 3); // Remove {G,O,I}
             infer_auto_padding(output_pshape.to_shape(),
                                filter_shape,
                                m_strides,
@@ -258,10 +259,12 @@ void op::v1::GroupConvolutionBackpropData::validate_and_infer_types()
         if (filters_pshape.is_static() && data_pshape.is_static())
         {
             auto filters_shape = filters_pshape.to_shape();
+            filters_shape.erase(filters_shape.begin(), filters_shape.begin() + 3); // remove {G, O, I}
             auto data_shape = data_pshape.to_shape();
+            data_shape.erase(data_shape.begin(), data_shape.begin() + 2); // remove {N, C}
 
             Shape output_shape;
-            auto data_spatial_rank = data_shape.size() - 3;
+            auto data_spatial_rank = data_shape.size();
             auto output_padding = get_output_padding();
             if (output_padding.size() == 0)
             {
@@ -269,8 +272,8 @@ void op::v1::GroupConvolutionBackpropData::validate_and_infer_types()
             }
             for (size_t i = 0; i < data_spatial_rank; ++i)
             {
-                size_t tmp = m_strides[i] * (data_shape[i + 2] - 1) +
-                             ((filters_shape[i] + 2 - 1) * m_dilations[i] + 1) - m_pads_begin[i] -
+                size_t tmp = m_strides[i] * (data_shape[i] - 1) +
+                             ((filters_shape[i] - 1) * m_dilations[i] + 1) - m_pads_begin[i] -
                              m_pads_end[i] + output_padding[i];
                 output_shape.push_back(tmp);
                 output_pshape = output_shape;
@@ -287,67 +290,7 @@ void op::v1::GroupConvolutionBackpropData::validate_and_infer_types()
 void op::v1::GroupConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints,
                                                              const NodeVector& deltas)
 {
-    auto delta = deltas.at(0);
-
-    auto x = input_value(0);
-    const auto x_shape = x.get_shape();
-
-    auto f = input_value(1);
-    const auto f_shape = f.get_shape();
-
-    auto data_conv = make_shared<op::v1::GroupConvolution>(
-        delta, f, m_strides, m_pads_begin, m_pads_end, m_dilations, m_auto_pad);
-
-    adjoints.add_delta(x, data_conv);
-
-    Strides strides = m_dilations;
-    CoordinateDiff pads_begin;
-    CoordinateDiff pads_end;
-    const Shape& filters_shape = get_input_shape(1);
-    for (size_t i = 0; i < f_shape.size() - 2; i++)
-    {
-        ptrdiff_t pads_begin_backward =
-            (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) - m_pads_begin[i];
-        pads_begin.push_back(pads_begin_backward);
-
-        ptrdiff_t pads_end_backward =
-            (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) * m_dilations[i] +
-            ((m_pads_begin[i] +
-              (static_cast<size_t>(get_output_shape()[i + 2]) - 1) * m_strides[i] + m_pads_end[i] -
-              (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) * m_dilations[i]) %
-             m_strides[i]) -
-            m_pads_end[i];
-
-        pads_end.push_back(pads_end_backward -
-                           (pads_begin_backward + (x_shape[i + 2] - 1) * m_strides[i] +
-                            pads_end_backward - (f_shape[i + 2] - 1) * m_dilations[i]) %
-                               m_strides[i]);
-    }
-
-    auto swap_NC = [](const Output<Node>& n) {
-        AxisVector ax_order = ngraph::get_default_order(n.get_shape());
-        ax_order[0] = 1;
-        ax_order[1] = 0;
-
-        auto new_shape = n.get_shape();
-        new_shape[0] = n.get_shape()[1];
-        new_shape[1] = n.get_shape()[0];
-
-        return make_shared<op::Reshape>(n, ax_order, new_shape);
-    };
-
-    delta = swap_NC(delta);
-    x = swap_NC(x);
-
-    shared_ptr<Node> filter_deconv_bprop = make_shared<op::v1::GroupConvolution>(
-        x, delta, strides, pads_begin, pads_end, Strides(x.get_shape().size() - 3, 1), m_auto_pad);
-    AxisSet axes;
-    for (size_t i = 2; i < filter_deconv_bprop->get_shape().size(); ++i)
-    {
-        axes.insert(i);
-    }
-    filter_deconv_bprop = make_shared<ngraph::op::Reverse>(filter_deconv_bprop, axes);
-    adjoints.add_delta(f, filter_deconv_bprop);
+    ngraph_error("Not Yet Implemented");
 }
 
 shared_ptr<Node>
