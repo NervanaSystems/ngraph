@@ -35,7 +35,7 @@ op::v0::Subtract::Subtract(const Output<Node>& arg0,
 shared_ptr<Node> op::v0::Subtract::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Subtract>(new_args.at(0), new_args.at(1), this->get_autob());
+    return make_shared<op::v0::Subtract>(new_args.at(0), new_args.at(1), this->get_autob());
 }
 
 void op::v0::Subtract::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
@@ -56,7 +56,7 @@ void op::v0::Subtract::generate_adjoints(autodiff::Adjoints& adjoints, const Nod
 
 shared_ptr<ngraph::Node> ngraph::operator-(const Output<Node> arg0, const Output<Node> arg1)
 {
-    return make_shared<ngraph::op::Subtract>(arg0, arg1);
+    return make_shared<op::v0::Subtract>(arg0, arg1);
 }
 
 // ------------------------------- v1 ------------------------------------------
@@ -74,7 +74,7 @@ op::v1::Subtract::Subtract(const Output<Node>& arg0,
 shared_ptr<Node> op::v1::Subtract::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Subtract>(new_args.at(0), new_args.at(1), this->get_autob());
+    return make_shared<op::v1::Subtract>(new_args.at(0), new_args.at(1), this->get_autob());
 }
 
 void op::v1::Subtract::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
