@@ -1294,6 +1294,13 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Cosh>(args[0]);
             break;
         }
+        case OP_TYPEID::CumSum:
+        {
+            auto exclusive = node_js.at("exclusive");
+            auto reverse = node_js.at("reverse");
+            node = make_shared<op::CumSum>(args[0], args[1], exclusive, reverse);
+            break;
+        }
         case OP_TYPEID::CrossEntropy:
         {
             auto soft_label = node_js.at("soft_label");
@@ -2059,6 +2066,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                     read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
             }
             break;
+        }
+        case OP_TYPEID::Mod_v1:
+        {
+            node = make_shared<op::Mod>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
         }
         case OP_TYPEID::Multiply:
         case OP_TYPEID::Multiply_v1:
@@ -3304,6 +3316,13 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Cosh:
     case OP_TYPEID::Cosh_v1: { break;
     }
+    case OP_TYPEID::CumSum:
+    {
+        auto tmp = static_cast<const op::CumSum*>(&n);
+        node["exclusive"] = tmp->is_exclusive();
+        node["reverse"] = tmp->is_reverse();
+        break;
+    }
     case OP_TYPEID::CrossEntropy:
     {
         auto tmp = static_cast<const op::CrossEntropy*>(&n);
@@ -3812,6 +3831,12 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
+        break;
+    }
+    case OP_TYPEID::Mod_v1:
+    {
+        auto tmp = static_cast<const op::Mod*>(&n);
+        node["auto_broadcast"] = write_auto_broadcast(tmp->get_auto_broadcast());
         break;
     }
     case OP_TYPEID::Multiply:

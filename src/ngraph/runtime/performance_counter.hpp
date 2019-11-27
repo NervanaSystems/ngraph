@@ -25,7 +25,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        class PerformanceCounter
+        class NGRAPH_API PerformanceCounter
         {
         public:
             PerformanceCounter(const std::shared_ptr<const Node>& n, size_t us, size_t calls)

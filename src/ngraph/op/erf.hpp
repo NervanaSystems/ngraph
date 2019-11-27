@@ -22,10 +22,9 @@ namespace ngraph
 {
     namespace op
     {
-        class Erf : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Erf : public util::UnaryElementwiseArithmetic
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Erf", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             Erf() = default;

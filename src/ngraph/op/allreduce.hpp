@@ -23,10 +23,9 @@ namespace ngraph
 {
     namespace op
     {
-        class AllReduce : public Op
+        class NGRAPH_API AllReduce : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"AllReduce", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             AllReduce() = default;

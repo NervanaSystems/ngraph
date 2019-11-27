@@ -28,7 +28,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::ConstantFolding : public ngraph::pass::GraphRewrite
+class NGRAPH_API ngraph::pass::ConstantFolding : public ngraph::pass::GraphRewrite
 {
 public:
     enum class CFTransformations

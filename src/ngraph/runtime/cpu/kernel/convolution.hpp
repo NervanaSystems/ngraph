@@ -43,12 +43,12 @@ namespace ngraph
                                  const CoordinateDiff& padding_below,
                                  const CoordinateDiff& padding_above,
                                  const Strides& data_dilation_strides,
-                                 void* input_scale = nullptr,
-                                 void* input_zero_point = nullptr,
-                                 void* filter_scale = nullptr,
-                                 void* filter_zero_point = nullptr,
-                                 void* output_scale = nullptr,
-                                 void* output_zero_point = nullptr)
+                                 void* input_scale,
+                                 void* input_zero_point,
+                                 void* filter_scale,
+                                 void* filter_zero_point,
+                                 void* output_scale,
+                                 void* output_zero_point)
                 {
                     reference::convolution<INPUT, FILTER, OUTPUT, ACCUMULATION>(
                         static_cast<const INPUT*>(input0),
