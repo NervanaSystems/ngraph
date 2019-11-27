@@ -32,7 +32,7 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::Executable
+class NGRAPH_API ngraph::runtime::Executable
 {
 public:
     Executable();

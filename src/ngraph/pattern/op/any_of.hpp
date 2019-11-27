@@ -32,12 +32,11 @@ namespace ngraph
             /// This is useful for nodes with variable number of arguments such as Concat
             /// AnyOf enables on to specify one single branch/chain. The remaining arguments
             /// can be discovered (in a callback) by simply inspecting matched node's argument.
-            class AnyOf : public Pattern
+            class NGRAPH_API AnyOf : public Pattern
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"patternAnyOf", 0};
-                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                const NodeTypeInfo& get_type_info() const override;
                 /// \brief creates a AnyOf node containing a sub-pattern described by \sa type and
                 ///        \sa shape.
                 AnyOf(const element::Type& type,
