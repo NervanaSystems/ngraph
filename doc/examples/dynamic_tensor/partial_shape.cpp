@@ -22,32 +22,34 @@ using namespace ngraph;
 
 int main()
 {
-
-    // Create and compile a graph where the provided info of shape of x is (2,?)
-    auto x_shape_info = PartialShape{2,Dimension::dynamic()};
+    // Create and compile a graph where the provided info of shape of x is
+    // (2,?)
+    auto x_shape_info = PartialShape{2, Dimension::dynamic()};
     auto x = make_shared<op::Parameter>(element::i32, x_shape_info);
     auto a = x + x;
-    auto f = make_shared<Function>({a},{x});
+    auto f = make_shared<Function>({a}, {x});
     auto be = runtime::backend::create();
     auto ex = be->compile(f);
 
     // Create a dynamic tensor of shape (2,?)
     auto t_out = be->create_dynamic_tensor(element::i32, x_shape_info);
-    
-    // Call the graph to write a value with shape (2,3) to t_out
-    auto t_in = be->create_tensor(element::i32, Shape{2,3});
-    t_in->write();
-    ex->call({t_out}, {t_in})
-    
-    // Call the graph again, to write a value with a different shape to t_out.
-    t_in = be->create_tensor(element::i32, Shape{2,20});
-    t_in->write();
-    ex->call({t_out}, {t_in})
- 
-    // Get the result. At this point t_out->get_shape() would return Shape{2,20},
-    // but t_out->get_partial_shape() would return "(2,?)"
 
-    float r[2][3];
+    // Call the graph to write a value with shape (2,3) to t_out
+    auto t_in = be->create_tensor(element::i32, Shape{2, 3});
+    t_in->write();
+    ex->call({t_out}, {t_in})
+
+        // Call the graph again, to write a value with a different shape to
+        // t_out.
+        t_in = be->create_tensor(element::i32, Shape{2, 20});
+    t_in->write();
+    ex->call({t_out}, {t_in})
+
+        // Get the result. At this point t_out->get_shape() would return
+        // Shape{2,20},
+        // but t_out->get_partial_shape() would return "(2,?)"
+
+        float r[2][3];
     t_result->read(&r, 0, sizeof(r));
 
     std::cout << "[" << std::endl;
