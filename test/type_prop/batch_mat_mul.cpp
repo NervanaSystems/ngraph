@@ -44,7 +44,7 @@ TEST(type_prop, batchmatmul_deduce_left_rank_wrong)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("shape must have rank 3"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Inputs arg0 and arg1 must have ranks"));
     }
     catch (...)
     {
@@ -65,7 +65,7 @@ TEST(type_prop, batchmatmul_deduce_right_rank_wrong)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("shape must have rank 3"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Inputs arg0 and arg1 must have ranks"));
     }
     catch (...)
     {
