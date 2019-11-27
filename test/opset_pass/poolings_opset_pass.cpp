@@ -34,7 +34,7 @@ TEST(opset_transform, opset1_avgpool_upgrade_pass)
     auto avgpool_s1_result = f->get_results().at(0);
     auto node = avgpool_s1_result->input(0).get_source_output().get_node_shared_ptr();
     auto avg_pool_v1_node = as_type_ptr<op::v1::AvgPool>(node);
-    EXPECT_TRUE(avg_pool_v1_node);
+    ASSERT_TRUE(avg_pool_v1_node);
 
     EXPECT_EQ(avg_pool_v1_node->get_pads_begin(), pads_begin);
     EXPECT_EQ(avg_pool_v1_node->get_pads_end(), pads_end);
@@ -67,7 +67,7 @@ TEST(opset_transform, opset1_maxpool_upgrade_pass)
     auto maxpool_s1_result = f->get_results().at(0);
     auto node = maxpool_s1_result->input(0).get_source_output().get_node_shared_ptr();
     auto max_pool_v1_node = as_type_ptr<op::v1::MaxPool>(node);
-    EXPECT_TRUE(max_pool_v1_node);
+    ASSERT_TRUE(max_pool_v1_node);
 
     EXPECT_EQ(max_pool_v1_node->get_pads_begin(), pads_begin);
     EXPECT_EQ(max_pool_v1_node->get_pads_end(), pads_end);
@@ -106,7 +106,7 @@ TEST(opset_transform, opset1_avgpool_downgrade_pass)
     auto avgpool_s0_result = f->get_results().at(0);
     auto node = avgpool_s0_result->input(0).get_source_output().get_node_shared_ptr();
     auto avg_pool_v0_node = as_type_ptr<op::v0::AvgPool>(node);
-    EXPECT_TRUE(avg_pool_v0_node);
+    ASSERT_TRUE(avg_pool_v0_node);
 
     EXPECT_EQ(avg_pool_v0_node->get_padding_below(), padding_below);
     EXPECT_EQ(avg_pool_v0_node->get_padding_above(), padding_above);
@@ -144,7 +144,7 @@ TEST(opset_transform, opset1_maxpool_downgrade_pass)
     auto maxpool_s0_result = f->get_results().at(0);
     auto node = maxpool_s0_result->input(0).get_source_output().get_node_shared_ptr();
     auto max_pool_v0_node = as_type_ptr<op::v0::MaxPool>(node);
-    EXPECT_TRUE(max_pool_v0_node);
+    ASSERT_TRUE(max_pool_v0_node);
 
     EXPECT_EQ(max_pool_v0_node->get_padding_below(), padding_below);
     EXPECT_EQ(max_pool_v0_node->get_padding_above(), padding_above);
@@ -182,7 +182,7 @@ TEST(opset_transform, opset1_avgpool_backprop_downgrade_pass)
     auto avgpool_backprop_s0_result = f->get_results().at(0);
     auto node = avgpool_backprop_s0_result->input(0).get_source_output().get_node_shared_ptr();
     auto avg_pool_backprop_v0_node = as_type_ptr<op::v0::AvgPoolBackprop>(node);
-    EXPECT_TRUE(avg_pool_backprop_v0_node);
+    ASSERT_TRUE(avg_pool_backprop_v0_node);
 
     EXPECT_EQ(avg_pool_backprop_v0_node->get_padding_below(), padding_below);
     EXPECT_EQ(avg_pool_backprop_v0_node->get_padding_above(), padding_above);
@@ -220,7 +220,7 @@ TEST(opset_transform, opset1_maxpool_backprop_downgrade_pass)
     auto max_pool_backprop_s0_result = f->get_results().at(0);
     auto node = max_pool_backprop_s0_result->input(0).get_source_output().get_node_shared_ptr();
     auto max_pool_backprop_v0_node = as_type_ptr<op::v0::MaxPoolBackprop>(node);
-    EXPECT_TRUE(max_pool_backprop_v0_node);
+    ASSERT_TRUE(max_pool_backprop_v0_node);
     EXPECT_EQ(max_pool_backprop_v0_node->get_padding_below(), padding_below);
     EXPECT_EQ(max_pool_backprop_v0_node->get_padding_above(), padding_above);
     EXPECT_EQ(max_pool_backprop_v0_node->get_window_movement_strides(), window_movement_strides);

@@ -42,7 +42,7 @@ TEST(opset_transform, opset1_reduce_sum_upgrade_pass)
     const auto pass_replacement_node =
         f->get_result()->input(0).get_source_output().get_node_shared_ptr();
     const auto reduce_sum_v1 = as_type_ptr<op::v1::ReduceSum>(pass_replacement_node);
-    EXPECT_TRUE(reduce_sum_v1);
+    ASSERT_TRUE(reduce_sum_v1);
     EXPECT_EQ(reduce_sum_v1->get_keep_dims(), false);
 }
 
@@ -62,11 +62,11 @@ TEST(opset_transform, opset0_reduce_sum_downgrade_pass)
     const auto reshape_replacement_node =
         f->get_result()->input(0).get_source_output().get_node_shared_ptr();
     const auto reshape = as_type_ptr<op::Reshape>(reshape_replacement_node);
-    EXPECT_TRUE(reshape);
+    ASSERT_TRUE(reshape);
     const auto sum_replace_node =
         reshape_replacement_node->input(0).get_source_output().get_node_shared_ptr();
     const auto sum_v0 = as_type_ptr<op::v0::Sum>(sum_replace_node);
-    EXPECT_TRUE(sum_v0);
+    ASSERT_TRUE(sum_v0);
 }
 
 TEST(opset_transform, opset0_reduce_sum_downgrade_pass_not_constant_axes)

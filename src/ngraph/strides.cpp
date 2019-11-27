@@ -28,7 +28,42 @@ std::ostream& ngraph::operator<<(std::ostream& s, const Strides& strides)
     return s;
 }
 
-NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<Strides>::type_info;
+ngraph::Strides::Strides()
+    : std::vector<size_t>()
+{
+}
+
+ngraph::Strides::Strides(const std::initializer_list<size_t>& axis_strides)
+    : std::vector<size_t>(axis_strides)
+{
+}
+
+ngraph::Strides::Strides(const std::vector<size_t>& axis_strides)
+    : std::vector<size_t>(axis_strides)
+{
+}
+
+ngraph::Strides::Strides(const Strides& axis_strides)
+    : std::vector<size_t>(axis_strides)
+{
+}
+
+ngraph::Strides::Strides(size_t n, size_t initial_value)
+    : std::vector<size_t>(n, initial_value)
+{
+}
+
+ngraph::Strides& ngraph::Strides::operator=(const Strides& v)
+{
+    static_cast<std::vector<size_t>*>(this)->operator=(v);
+    return *this;
+}
+
+ngraph::Strides& ngraph::Strides::operator=(Strides&& v) noexcept
+{
+    static_cast<std::vector<size_t>*>(this)->operator=(v);
+    return *this;
+}
 
 const vector<int64_t>& AttributeAdapter<Strides>::get()
 {
@@ -45,3 +80,5 @@ void AttributeAdapter<Strides>::set(const vector<int64_t>& value)
     m_value = copy_from<Strides>(value);
     m_buffer_valid = false;
 }
+
+constexpr DiscreteTypeInfo AttributeAdapter<Strides>::type_info;

@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace pass
     {
-        class Opset0Downgrade : public NodePass
+        class NGRAPH_API Opset0Downgrade : public NodePass
         {
         public:
             ///

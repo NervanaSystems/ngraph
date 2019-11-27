@@ -28,7 +28,7 @@ namespace ngraph
         {
             using Predicate = std::function<bool(std::shared_ptr<Node>)>;
 
-            class Pattern : public Node
+            class NGRAPH_API Pattern : public Node
             {
             public:
                 /// \brief \p a base class for \sa Skip and \sa Label
@@ -45,7 +45,8 @@ namespace ngraph
                     throw ngraph_error("Uncopyable");
                 }
 
-                Predicate get_predicate() const { return m_predicate; }
+                Predicate get_predicate() const;
+
             protected:
                 std::function<bool(std::shared_ptr<Node>)> m_predicate;
             };

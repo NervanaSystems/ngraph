@@ -41,10 +41,9 @@ namespace ngraph
             /// | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
             /// | \f$\texttt{bool}[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = 1\text{ if }\texttt{arg0}[i_1,\dots,i_n] = \texttt{arg1}[i_1,\dots,i_n]\text{, else } 0\f$ |
             // clang-format on
-            class Equal : public util::BinaryElementwiseComparison
+            class NGRAPH_API Equal : public util::BinaryElementwiseComparison
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Equal", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs an equal operation.
@@ -84,10 +83,9 @@ namespace ngraph
             /// | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
             /// | \f$\texttt{bool}[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = 1\text{ if }\texttt{arg0}[i_1,\dots,i_n] = \texttt{arg1}[i_1,\dots,i_n]\text{, else } 0\f$ |
             // clang-format on
-            class Equal : public util::BinaryElementwiseComparison
+            class NGRAPH_API Equal : public util::BinaryElementwiseComparison
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Equal", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs an equal operation.

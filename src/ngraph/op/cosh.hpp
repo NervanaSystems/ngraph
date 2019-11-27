@@ -23,10 +23,9 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise hyperbolic cosine (cosh) operation.
-        class Cosh : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Cosh : public util::UnaryElementwiseArithmetic
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Cosh", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a hyperbolic cosine operation.
