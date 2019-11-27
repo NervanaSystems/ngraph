@@ -104,11 +104,6 @@ void op::v1::StridedSlice::validate_and_infer_types()
 
     const auto mask_size = m_begin_mask.size();
     const auto& data_rank = get_input_partial_shape(0).rank();
-    if (data_rank.is_static())
-    {
-        NODE_VALIDATION_CHECK(
-            this, static_cast<size_t>(data_rank) == mask_size, "Data rank must be equal mask size");
-    }
     const auto& begin_shape = get_input_partial_shape(1);
     if (begin_shape.rank().is_static())
     {
