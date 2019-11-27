@@ -55,7 +55,8 @@ namespace ngraph
             };
         }
 
-        namespace v0 {
+        namespace v0
+        {
             using v1::Mod;
         }
     }
