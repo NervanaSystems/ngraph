@@ -18,6 +18,8 @@
 
 #include "ngraph/attribute_adapter.hpp"
 #include "ngraph/axis_set.hpp"
+#include "ngraph/coordinate.hpp"
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/partial_shape.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
@@ -26,20 +28,6 @@
 
 using namespace std;
 using namespace ngraph;
-
-namespace
-{
-    template <typename A, typename B>
-    A copy_from(B& b)
-    {
-        A result(b.size());
-        for (int i = 0; i < b.size(); ++i)
-        {
-            result[i] = b[i];
-        }
-        return result;
-    }
-}
 
 namespace ngraph
 {
@@ -234,68 +222,4 @@ namespace ngraph
         m_value = copy_from<vector<uint64_t>>(value);
         m_buffer_valid = false;
     }
-
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<Shape>::type_info;
-
-    const vector<int64_t>& AttributeAdapter<Shape>::get()
-    {
-        if (!m_buffer_valid)
-        {
-            m_buffer = copy_from<vector<int64_t>>(m_value);
-            m_buffer_valid = true;
-        }
-        return m_buffer;
-    }
-
-    void AttributeAdapter<Shape>::set(const vector<int64_t>& value)
-    {
-        m_value = copy_from<Shape>(value);
-        m_buffer_valid = false;
-    }
-
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<Strides>::type_info;
-
-    const vector<int64_t>& AttributeAdapter<Strides>::get()
-    {
-        if (!m_buffer_valid)
-        {
-            m_buffer = copy_from<vector<int64_t>>(m_value);
-            m_buffer_valid = true;
-        }
-        return m_buffer;
-    }
-
-    void AttributeAdapter<Strides>::set(const vector<int64_t>& value)
-    {
-        m_value = copy_from<Strides>(value);
-        m_buffer_valid = false;
-    }
-
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<AxisSet>::type_info;
-
-    const vector<int64_t>& AttributeAdapter<AxisSet>::get()
-    {
-        if (!m_buffer_valid)
-        {
-            for (auto elt : m_value)
-            {
-                m_buffer.push_back(elt);
-            }
-        }
-        return m_buffer;
-    }
-
-    void AttributeAdapter<AxisSet>::set(const vector<int64_t>& value)
-    {
-        m_value = AxisSet();
-        for (auto elt : value)
-        {
-            m_value.insert(elt);
-        }
-        m_buffer_valid = false;
-    }
-
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<PartialShape>::type_info;
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<element::Type>::type_info;
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastSpec>::type_info;
 }

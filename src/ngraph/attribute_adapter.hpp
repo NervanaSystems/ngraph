@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <type_traits>
 #include <vector>
 
 #include "ngraph/enum_names.hpp"
@@ -272,107 +273,15 @@ namespace ngraph
         void set(const std::vector<int64_t>& value) override;
     };
 
-    class Shape;
-    template <>
-    class AttributeAdapter<Shape> : public ValueReference<Shape>,
-                                    public ValueAccessor<std::vector<int64_t>>
+    template <typename A, typename B>
+    A copy_from(B& b)
     {
-    public:
-        AttributeAdapter(Shape& value)
-            : ValueReference<Shape>(value)
+        A result(b.size());
+        for (int i = 0; i < b.size(); ++i)
         {
+            result[i] =
+                static_cast<typename std::remove_reference<decltype(result[i])>::type>(b[i]);
         }
-        NGRAPH_API
-        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<Shape>", 0};
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-        const std::vector<int64_t>& get() override;
-        void set(const std::vector<int64_t>& value) override;
-    };
-
-    class Strides;
-    template <>
-    class AttributeAdapter<Strides> : public ValueReference<Strides>,
-                                      public ValueAccessor<std::vector<int64_t>>
-    {
-    public:
-        AttributeAdapter(Strides& value)
-            : ValueReference<Strides>(value)
-        {
-        }
-        NGRAPH_API
-        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<Strides>", 0};
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-        const std::vector<int64_t>& get() override;
-        void set(const std::vector<int64_t>& value) override;
-    };
-
-    class AxisSet;
-    template <>
-    class AttributeAdapter<AxisSet> : public ValueReference<AxisSet>,
-                                      public ValueAccessor<std::vector<int64_t>>
-    {
-    public:
-        AttributeAdapter(AxisSet& value)
-            : ValueReference<AxisSet>(value)
-        {
-        }
-        NGRAPH_API
-        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<AxisSet>", 0};
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-        const std::vector<int64_t>& get() override;
-        void set(const std::vector<int64_t>& value) override;
-    };
-
-    class PartialShape;
-    template <>
-    class AttributeAdapter<PartialShape> : public ValueReference<PartialShape>,
-                                           public ValueAccessor<void>
-    {
-    public:
-        AttributeAdapter(PartialShape& value)
-            : ValueReference<PartialShape>(value)
-        {
-        }
-        NGRAPH_API
-        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<PartialShape>", 0};
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-    };
-
-    namespace element
-    {
-        class Type;
+        return result;
     }
-
-    template <>
-    class AttributeAdapter<element::Type> : public ValueReference<element::Type>,
-                                            public ValueAccessor<void>
-    {
-    public:
-        AttributeAdapter(element::Type& value)
-            : ValueReference<element::Type>(value)
-        {
-        }
-        NGRAPH_API
-        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<element::Type>", 0};
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-    };
-
-    namespace op
-    {
-        struct AutoBroadcastSpec;
-    }
-
-    template <>
-    class AttributeAdapter<op::AutoBroadcastSpec> : public ValueReference<op::AutoBroadcastSpec>,
-                                                    public ValueAccessor<void>
-    {
-    public:
-        AttributeAdapter(op::AutoBroadcastSpec& value)
-            : ValueReference<op::AutoBroadcastSpec>(value)
-        {
-        }
-        NGRAPH_API
-        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::AutoBroadcastSpec>", 0};
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-    };
 }

@@ -17,10 +17,37 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/util.hpp"
 
+using namespace std;
+using namespace ngraph;
+
 std::ostream& ngraph::operator<<(std::ostream& s, const AxisSet& axis_set)
 {
     s << "AxisSet{";
     s << ngraph::join(axis_set);
     s << "}";
     return s;
+}
+
+NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<AxisSet>::type_info;
+
+const vector<int64_t>& AttributeAdapter<AxisSet>::get()
+{
+    if (!m_buffer_valid)
+    {
+        for (auto elt : m_value)
+        {
+            m_buffer.push_back(elt);
+        }
+    }
+    return m_buffer;
+}
+
+void AttributeAdapter<AxisSet>::set(const vector<int64_t>& value)
+{
+    m_value = AxisSet();
+    for (auto elt : value)
+    {
+        m_value.insert(elt);
+    }
+    m_buffer_valid = false;
 }

@@ -17,10 +17,31 @@
 #include "ngraph/strides.hpp"
 #include "ngraph/util.hpp"
 
+using namespace std;
+using namespace ngraph;
+
 std::ostream& ngraph::operator<<(std::ostream& s, const Strides& strides)
 {
     s << "Strides{";
     s << ngraph::join(strides);
     s << "}";
     return s;
+}
+
+NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<Strides>::type_info;
+
+const vector<int64_t>& AttributeAdapter<Strides>::get()
+{
+    if (!m_buffer_valid)
+    {
+        m_buffer = copy_from<vector<int64_t>>(m_value);
+        m_buffer_valid = true;
+    }
+    return m_buffer;
+}
+
+void AttributeAdapter<Strides>::set(const vector<int64_t>& value)
+{
+    m_value = copy_from<Strides>(value);
+    m_buffer_valid = false;
 }
