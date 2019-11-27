@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
 
@@ -27,18 +29,11 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector gemm(const Node& node);
-
+                NodeVector mod(const Node& node);
             } // namespace set_1
-
-            namespace set_6
-            {
-                NodeVector gemm(const Node& node);
-
-            } // namespace set_6
 
         } // namespace op
 
-    } // namespace  onnx_import
+    } // namespace onnx_import
 
-} // namespace  ngraph
+} // namespace ngraph

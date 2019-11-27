@@ -133,6 +133,8 @@ add_library(onnx_import STATIC
         op/mean_variance_normalization.cpp
         op/mean_variance_normalization.hpp
         op/min.hpp
+        op/mod.hpp
+        op/mod.cpp
         op/mul.hpp
         op/neg.hpp
         op/not.hpp
@@ -220,7 +222,7 @@ add_dependencies(onnx_import_interface onnx::libonnx onnx::libonnx_proto)
 add_dependencies(onnx_import onnx_import_interface)
 
 set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_include_directories(onnx_import 
+target_include_directories(onnx_import
     SYSTEM PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
     SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
 target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES} ${ONNX_PROTO_LIBRARY})

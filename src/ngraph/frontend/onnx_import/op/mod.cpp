@@ -13,11 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include <memory>
 
-#pragma once
-
-#include "core/node.hpp"
-#include "ngraph/node.hpp"
+#include "mod.hpp"
+#include "ngraph/frontend/onnx_import/exceptions.hpp"
+#include "ngraph/op/abs.hpp"
+#include "ngraph/op/fused/mod.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 
 namespace ngraph
 {
@@ -27,18 +29,22 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector gemm(const Node& node);
+                NodeVector mod(const Node& node)
+                {
+                    std::shared_ptr<ngraph::Node> dividend{node.get_ng_inputs().at(0)};
+                    std::shared_ptr<ngraph::Node> divisor{node.get_ng_inputs().at(1)};
+
+                    std::int64_t fmod = node.get_attribute_value<std::int64_t>("fmod", 0);
+                    ASSERT_IS_SUPPORTED(node, fmod == 1)
+                        << "Only 'fmod=1' mode is supported for mod operator.";
+
+                    return {std::make_shared<ngraph::op::Mod>(dividend, divisor)};
+                }
 
             } // namespace set_1
 
-            namespace set_6
-            {
-                NodeVector gemm(const Node& node);
-
-            } // namespace set_6
-
         } // namespace op
 
-    } // namespace  onnx_import
+    } // namespace onnx_import
 
-} // namespace  ngraph
+} // namespace ngraph
