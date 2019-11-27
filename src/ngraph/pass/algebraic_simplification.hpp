@@ -27,7 +27,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::AlgebraicSimplification : public FunctionPass
+class NGRAPH_API ngraph::pass::AlgebraicSimplification : public FunctionPass
 {
 public:
     AlgebraicSimplification()

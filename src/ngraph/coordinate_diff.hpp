@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "ngraph/attribute_adapter.hpp"
+#include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
 {
@@ -28,25 +29,13 @@ namespace ngraph
     class CoordinateDiff : public std::vector<std::ptrdiff_t>
     {
     public:
-        CoordinateDiff(const std::initializer_list<std::ptrdiff_t>& diffs)
-            : std::vector<std::ptrdiff_t>(diffs)
-        {
-        }
+        NGRAPH_API CoordinateDiff(const std::initializer_list<std::ptrdiff_t>& diffs);
 
-        CoordinateDiff(const std::vector<std::ptrdiff_t>& diffs)
-            : std::vector<std::ptrdiff_t>(diffs)
-        {
-        }
+        NGRAPH_API CoordinateDiff(const std::vector<std::ptrdiff_t>& diffs);
 
-        CoordinateDiff(const CoordinateDiff& diffs)
-            : std::vector<std::ptrdiff_t>(diffs)
-        {
-        }
+        NGRAPH_API CoordinateDiff(const CoordinateDiff& diffs);
 
-        explicit CoordinateDiff(size_t n, std::ptrdiff_t initial_value = 0)
-            : std::vector<std::ptrdiff_t>(n, initial_value)
-        {
-        }
+        NGRAPH_API explicit CoordinateDiff(size_t n, std::ptrdiff_t initial_value = 0);
 
         template <class InputIterator>
         CoordinateDiff(InputIterator first, InputIterator last)
@@ -54,29 +43,25 @@ namespace ngraph
         {
         }
 
-        CoordinateDiff() {}
-        CoordinateDiff& operator=(const CoordinateDiff& v)
-        {
-            static_cast<std::vector<std::ptrdiff_t>*>(this)->operator=(v);
-            return *this;
-        }
-        CoordinateDiff& operator=(CoordinateDiff&& v)
-        {
-            static_cast<std::vector<std::ptrdiff_t>*>(this)->operator=(v);
-            return *this;
-        }
+        NGRAPH_API ~CoordinateDiff();
+
+        NGRAPH_API CoordinateDiff();
+
+        NGRAPH_API CoordinateDiff& operator=(const CoordinateDiff& v);
+
+        NGRAPH_API CoordinateDiff& operator=(CoordinateDiff&& v) noexcept;
     };
 
     template <>
-    class AttributeAdapter<CoordinateDiff> : public ValueReference<CoordinateDiff>,
-                                             public ValueAccessor<std::vector<int64_t>>
+    class NGRAPH_API AttributeAdapter<CoordinateDiff> : public ValueReference<CoordinateDiff>,
+                                                        public ValueAccessor<std::vector<int64_t>>
     {
     public:
         AttributeAdapter(CoordinateDiff& value)
             : ValueReference<CoordinateDiff>(value)
         {
         }
-        NGRAPH_API
+
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<CoordinateDiff>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const std::vector<int64_t>& get() override;

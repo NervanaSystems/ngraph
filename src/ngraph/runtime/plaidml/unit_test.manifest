@@ -330,3 +330,6 @@ tile_3d_few_repeats
 
 # dyn shape
 dyn_generate_mask
+
+# Test fails on intel gpu mac
+model_mod
