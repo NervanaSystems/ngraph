@@ -290,6 +290,7 @@ set(MULTI_TEST_SRC
     backend/convolution.in.cpp
     backend/cos.in.cpp
     backend/cosh.in.cpp
+    backend/cum_sum.in.cpp
     backend/divide.in.cpp
     backend/dot.in.cpp
     backend/dyn_broadcast.in.cpp

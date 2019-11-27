@@ -284,4 +284,18 @@ namespace ngraph
             AutoBroadcastType type_from_string(const std::string& type) const;
         };
     }
+
+    template <>
+    class AttributeAdapter<op::AutoBroadcastSpec> : public ValueReference<op::AutoBroadcastSpec>,
+                                                    public ValueAccessor<void>
+    {
+    public:
+        AttributeAdapter(op::AutoBroadcastSpec& value)
+            : ValueReference<op::AutoBroadcastSpec>(value)
+        {
+        }
+        NGRAPH_API
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::AutoBroadcastSpec>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 }

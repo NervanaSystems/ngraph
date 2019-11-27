@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "ngraph/attribute_adapter.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/shape.hpp"
 
@@ -71,6 +72,22 @@ namespace ngraph
             static_cast<std::vector<size_t>*>(this)->operator=(v);
             return *this;
         }
+    };
+
+    template <>
+    class AttributeAdapter<Coordinate> : public ValueReference<Coordinate>,
+                                         public ValueAccessor<std::vector<uint64_t>>
+    {
+    public:
+        AttributeAdapter(Coordinate& value)
+            : ValueReference<Coordinate>(value)
+        {
+        }
+        NGRAPH_API
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<Coordinate>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::vector<uint64_t>& get() override;
+        void set(const std::vector<uint64_t>& value) override;
     };
 
     std::ostream& operator<<(std::ostream& s, const Coordinate& coordinate);
