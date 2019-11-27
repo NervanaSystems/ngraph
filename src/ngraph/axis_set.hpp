@@ -21,6 +21,8 @@
 #include <set>
 #include <vector>
 
+#include "ngraph/attribute_adapter.hpp"
+
 namespace ngraph
 {
     /// \brief A set of axes.
@@ -64,6 +66,22 @@ namespace ngraph
         {
             return std::vector<int64_t>(this->begin(), this->end());
         }
+    };
+
+    template <>
+    class AttributeAdapter<AxisSet> : public ValueReference<AxisSet>,
+                                      public ValueAccessor<std::vector<int64_t>>
+    {
+    public:
+        AttributeAdapter(AxisSet& value)
+            : ValueReference<AxisSet>(value)
+        {
+        }
+        NGRAPH_API
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<AxisSet>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::vector<int64_t>& get() override;
+        void set(const std::vector<int64_t>& value) override;
     };
 
     std::ostream& operator<<(std::ostream& s, const AxisSet& axis_set);

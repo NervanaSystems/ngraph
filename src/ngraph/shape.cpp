@@ -17,10 +17,31 @@
 #include "ngraph/shape.hpp"
 #include "ngraph/util.hpp"
 
+using namespace std;
+using namespace ngraph;
+
 std::ostream& ngraph::operator<<(std::ostream& s, const Shape& shape)
 {
     s << "Shape{";
     s << ngraph::join(shape);
     s << "}";
     return s;
+}
+
+NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<Shape>::type_info;
+
+const vector<int64_t>& AttributeAdapter<Shape>::get()
+{
+    if (!m_buffer_valid)
+    {
+        m_buffer = copy_from<vector<int64_t>>(m_value);
+        m_buffer_valid = true;
+    }
+    return m_buffer;
+}
+
+void AttributeAdapter<Shape>::set(const vector<int64_t>& value)
+{
+    m_value = copy_from<Shape>(value);
+    m_buffer_valid = false;
 }
