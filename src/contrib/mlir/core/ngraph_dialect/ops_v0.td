@@ -500,7 +500,7 @@ def NGMaxPoolBackPropOp :
 }
 
 // OneHot
-def NGOneHOtOp :
+def NGOneHotOp :
     NG_OneResult_Op<"oneHot", [NoSideEffect, OpVersion0]>,
     Arguments<(ins NG_TensorType :$arg,
                I64ArrayAttr      :$shape,
@@ -552,7 +552,7 @@ def NGPadOp :
 }
     
 // ReplaceSlice
-def NGReplaceSlice : 
+def NGReplaceSliceOp : 
     NG_OneResult_Op<"replaceSlice", [NoSideEffect, OpVersion0]>,
     Arguments<(ins NG_TensorType:$arg0,
                NG_TensorType    :$arg1,
@@ -583,7 +583,7 @@ def NGReplaceSlice :
 }
 
 // slice
-def NGSlice : 
+def NGSliceOp : 
     NG_OneResult_Op<"slice", [NoSideEffect, OpVersion0]>,
     Arguments<(ins NG_TensorType:$arg,
                I64ArrayAttr     :$lowerBounds,
@@ -611,7 +611,7 @@ def NGSlice :
 }
 
 // reshape
-def NGReshape : 
+def NGReshapeOp : 
     NG_OneResult_Op<"reshape", [NoSideEffect, OpVersion0]>,
     Arguments<(ins NG_TensorType:$arg,
                I64ArrayAttr     :$axisOrder,
@@ -636,7 +636,7 @@ def NGReshape :
 }
 
 // softmax
-def NGSoftMax : 
+def NGSoftMaxOp : 
     NG_OneResult_Op<"softmax", [NoSideEffect, OpVersion0]>,
     Arguments<(ins NG_TensorType :$arg,
                I64ArrayAttr  :$axes)>
@@ -655,7 +655,7 @@ def NGSoftMax :
 }
 
 // topk
-def NGTopK : 
+def NGTopKOp : 
     NG_OneResult_Op<"topk", [NoSideEffect, OpVersion0]>,
     Arguments<(ins NG_TensorType :$arg,
                NG_TensorType :$k,
