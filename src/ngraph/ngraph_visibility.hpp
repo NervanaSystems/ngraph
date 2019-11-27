@@ -20,8 +20,13 @@
 // NGRAPH_API is used for the public API symbols. It either DLL imports or DLL exports
 //    (or does nothing for static build)
 
-#ifdef NGRAPH_DLL_EXPORTS // defined if we are building the NGRAPH DLL (instead of using it)
+#ifdef _WIN32
+#pragma warning(disable : 4251)
+#pragma warning(disable : 4275)
+#endif
+
+#ifdef ngraph_EXPORTS // defined if we are building the NGRAPH DLL (instead of using it)
 #define NGRAPH_API NGRAPH_HELPER_DLL_EXPORT
 #else
 #define NGRAPH_API NGRAPH_HELPER_DLL_IMPORT
-#endif // NGRAPH_DLL_EXPORTS
+#endif // ngraph_EXPORTS
