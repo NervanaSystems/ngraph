@@ -21,4 +21,6 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     endif()
 endif()
 
-
+if (NGRAPH_FLUID_ENABLE)
+    add_subdirectory(fluid)
+endif()
