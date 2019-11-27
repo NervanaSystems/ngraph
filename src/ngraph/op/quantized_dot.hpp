@@ -22,10 +22,9 @@ namespace ngraph
 {
     namespace op
     {
-        class QuantizedDot : public Op
+        class NGRAPH_API QuantizedDot : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"QuantizedDot", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             QuantizedDot() = default;

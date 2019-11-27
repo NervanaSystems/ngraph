@@ -26,7 +26,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::PropagateCacheability : public FunctionPass
+class NGRAPH_API ngraph::pass::PropagateCacheability : public FunctionPass
 {
 public:
     PropagateCacheability()

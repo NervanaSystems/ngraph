@@ -34,7 +34,7 @@ namespace ngraph
     namespace descriptor
     {
         // Describes an output tensor of an op
-        class Output
+        class NGRAPH_API Output
         {
         public:
             /// \param node Node that owns this output.
@@ -60,16 +60,15 @@ namespace ngraph
             /// \return the element type of the output
             const element::Type& get_element_type() const;
 
+            Output(const Output&) = default;
+            Output(Output&&) = default;
+            Output& operator=(const Output&) = default;
+
         protected:
             Node* m_node;
             size_t m_index;
             std::shared_ptr<Tensor> m_tensor;
             std::vector<Input*> m_inputs;
-
-        private:
-            Output(const Output&) = delete;
-            Output(Output&&) = delete;
-            Output& operator=(const Output&) = delete;
         };
     }
 }

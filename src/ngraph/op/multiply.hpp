@@ -25,10 +25,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Elementwise multiplication operation.
-            class Multiply : public util::BinaryElementwiseArithmetic
+            class NGRAPH_API Multiply : public util::BinaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Multiply", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a multiplication operation.
@@ -58,10 +57,9 @@ namespace ngraph
         namespace v1
         {
             /// \brief Elementwise multiplication operation.
-            class Multiply : public util::BinaryElementwiseArithmetic
+            class NGRAPH_API Multiply : public util::BinaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Multiply", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a multiplication operation.
@@ -94,5 +92,6 @@ namespace ngraph
         using v0::Multiply;
     } // namespace op
 
+    NGRAPH_API
     std::shared_ptr<Node> operator*(const Output<Node>& arg0, const Output<Node>& arg1);
 } // namespace ngraph
