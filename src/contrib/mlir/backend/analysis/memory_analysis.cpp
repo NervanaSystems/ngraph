@@ -62,8 +62,10 @@ namespace
 
     // A helper data-structure to track cannot alias relationship between tensor syms
     // If NoAlias[T] contains S, then T and S cannot alias.
-    // The relationship is transitive and we compute transitive closure on each update to the
-    // the strucutre.
+    // The relationship is an equivalence (transitive, symmetric, reflexive)
+    // Initially each sym is put in its own equivalence class (set). If two syms 
+    // a and b are found to be non-alias (equivalent), their equivalence classes
+    // are unioned
     class AliasRelation
     {
     public:
