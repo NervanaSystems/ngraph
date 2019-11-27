@@ -149,6 +149,8 @@ namespace ngraph
                 bool can_use_mkldnn_batchnorm_fprop(const ngraph::Node* node);
                 bool can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node);
 
+                bool is_bf16_supported();
+
                 //
                 // Intel(R) MKL-DNN supports the Winograd algorithm for convolutions with the
                 // following sizes:
@@ -226,6 +228,15 @@ namespace ngraph
                     {
                         return false;
                     }
+
+                    // Check if bf16 is supported on the platform
+                    if (!is_bf16_supported() && (node->get_input_element_type(0) == element::bf16 ||
+                                                 node->get_input_element_type(1) == element::bf16 ||
+                                                 node->get_output_element_type(0) == element::bf16))
+                    {
+                        return false;
+                    }
+
                     return true;
                 }
 
