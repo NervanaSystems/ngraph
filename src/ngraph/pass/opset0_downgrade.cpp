@@ -42,7 +42,7 @@ namespace
         OTHER
     };
 #undef NGRAPH_OP
-}
+} // namespace
 
 static OP_TYPEID get_typeid(shared_ptr<Node> node)
 {
@@ -161,12 +161,8 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         auto tmp = as_type_ptr<op::v1::Convolution>(node);
         const auto data_arg = node->input(0).get_source_output();
         const auto filters_arg = node->input(1).get_source_output();
-        const PartialShape& data_arg_pshape = node->get_input_partial_shape(0);
-        NGRAPH_CHECK(data_arg_pshape.rank().is_static(),
-                     "Unable to convert Convolution:v1 to Convolution:v0 if data argument "
-                     "rank is dynamic. Node: ",
-                     *node);
-        const size_t num_spatial_dims = static_cast<size_t>(data_arg_pshape.rank()) - 2;
+        const auto strides = tmp->get_strides();
+        const size_t num_spatial_dims = strides.size();
         auto replacement_node = make_shared<op::v0::Convolution>(data_arg,
                                                                  filters_arg,
                                                                  tmp->get_strides(),
@@ -188,12 +184,8 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
                 ->get_shape_val();
         const auto filters_arg = node->input(0).get_source_output();
         const auto delta_arg = node->input(1).get_source_output();
-        const PartialShape& delta_arg_pshape = node->get_input_partial_shape(1);
-        NGRAPH_CHECK(delta_arg_pshape.rank().is_static(),
-                     "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
-                     "if delta argument rank is dynamic. Node: ",
-                     *node);
-        const size_t num_spatial_dims = static_cast<size_t>(delta_arg_pshape.rank()) - 2;
+        const auto strides = tmp->get_strides();
+        const size_t num_spatial_dims = strides.size();
         auto replacement_node =
             make_shared<op::v0::ConvolutionBackpropData>(data_batch_shape,
                                                          filters_arg,
@@ -216,12 +208,8 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
                 ->get_shape_val();
         const auto data_arg = node->input(0).get_source_output();
         const auto delta_arg = node->input(1).get_source_output();
-        const PartialShape& data_arg_pshape = node->get_input_partial_shape(0);
-        NGRAPH_CHECK(data_arg_pshape.rank().is_static(),
-                     "Unable to convert ConvolutionBackpropFilters:v1 to "
-                     "ConvolutionBackpropFilters:v0 if data argument rank is dynamic. Node: ",
-                     *node);
-        const size_t num_spatial_dims = static_cast<size_t>(data_arg_pshape.rank()) - 2;
+        const auto strides = tmp->get_strides();
+        const size_t num_spatial_dims = strides.size();
         auto replacement_node =
             make_shared<op::v0::ConvolutionBackpropFilters>(data_arg,
                                                             filters_shape,
@@ -281,6 +269,25 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
     case OP_TYPEID::GreaterEq_v1:
     {
         downgrade_binary_elementwise_node<op::v0::GreaterEq, op::v1::GreaterEq>(node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::GroupConvolution_v1:
+    {
+        auto tmp = as_type_ptr<op::v1::GroupConvolution>(node);
+        const auto data_arg = node->input(0).get_source_output();
+        const auto filters_arg = node->input(1).get_source_output();
+        const auto strides = tmp->get_strides();
+        const size_t num_spatial_dims = strides.size();
+        auto replacement_node = make_shared<op::GroupConvolution>(data_arg,
+                                                                  filters_arg,
+                                                                  tmp->get_strides(),
+                                                                  tmp->get_dilations(),
+                                                                  tmp->get_pads_begin(),
+                                                                  tmp->get_pads_end(),
+                                                                  Strides(num_spatial_dims, 1),
+                                                                  tmp->get_auto_pad());
+        replace_node(node, replacement_node);
         modified = true;
         break;
     }
