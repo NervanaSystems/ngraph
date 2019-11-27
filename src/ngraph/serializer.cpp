@@ -2629,9 +2629,20 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Subtract:
         case OP_TYPEID::Subtract_v1:
         {
-            node = make_shared<op::Subtract>(
+            if (op_version == 0)
+            {
+                node = make_shared<op::Subtract>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
-            break;
+                break;
+            }
+            if (op_version == 1)
+            {
+                node = make_shared<op::v1::Subtract>(
+                    args[0],
+                    args[1],
+                    read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+                break;
+            }
         }
         case OP_TYPEID::ReduceSum_v1:
         case OP_TYPEID::Sum:
