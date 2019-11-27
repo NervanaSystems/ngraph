@@ -288,25 +288,25 @@ TEST(serialize, constant_infinity_nan)
     {
         if (node->get_friendly_name() == "A")
         {
-            a = static_pointer_cast<op::Constant>(node);
+            a = as_type_ptr<op::Constant>(node);
         }
         else if (node->get_friendly_name() == "B")
         {
-            b = static_pointer_cast<op::Constant>(node);
+            b = as_type_ptr<op::Constant>(node);
         }
         else if (node->get_friendly_name() == "C")
         {
-            c = static_pointer_cast<op::Constant>(node);
+            c = as_type_ptr<op::Constant>(node);
         }
         else if (node->get_friendly_name() == "D")
         {
-            d = static_pointer_cast<op::Constant>(node);
+            d = as_type_ptr<op::Constant>(node);
         }
     }
-    ASSERT_NE(a, nullptr);
-    ASSERT_NE(b, nullptr);
-    ASSERT_NE(c, nullptr);
-    ASSERT_NE(d, nullptr);
+    ASSERT_TRUE(a);
+    ASSERT_TRUE(b);
+    ASSERT_TRUE(c);
+    ASSERT_TRUE(d);
     EXPECT_TRUE(test::all_close_f(a->get_vector<float>(), a_data));
     EXPECT_TRUE(test::all_close_f(b->get_vector<float>(), b_data));
     EXPECT_TRUE(test::all_close_f(c->get_vector<float>(), c_data));
@@ -335,10 +335,10 @@ TEST(serialize, non_zero_node_output)
     string s = serialize(f);
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_abs = g_result->input(0).get_source_output().get_node_shared_ptr();
-    auto topk_out = g_abs->input(0).get_source_output();
+    auto g_abs = g_result->input_value(0).get_node_shared_ptr();
+    auto topk_out = g_abs->input_value(0);
     EXPECT_EQ(topk_out.get_index(), 1);
-    EXPECT_EQ(topk_out.get_node()->description(), "TopK");
+    ASSERT_TRUE(is_type<op::TopK>(topk_out.get_node()));
 }
 
 TEST(serialize, opset1_softmax)
@@ -426,11 +426,9 @@ TEST(serialize, opset1_pad)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_pad = g_result->input(0).get_source_output().get_node_shared_ptr();
-
-    EXPECT_EQ(g_pad->description(), "Pad");
-    EXPECT_EQ(g_pad->get_version(), 1);
-    EXPECT_EQ(dynamic_cast<const op::v1::Pad*>(g_pad.get())->get_pad_mode(), pad_mode);
+    auto g_pad = as_type_ptr<op::v1::Pad>(g_result->input_value(0).get_node_shared_ptr());
+    ASSERT_TRUE(g_pad);
+    EXPECT_EQ(g_pad->get_pad_mode(), pad_mode);
 }
 
 TEST(serialize, tensor_iterator_raw)
@@ -724,8 +722,7 @@ TEST(serialize, opset1_strided_slice)
     auto g_strided_slice_v1 = g_result->input(0).get_source_output().get_node_shared_ptr();
     auto strided_slice_out = as_type_ptr<op::v1::StridedSlice>(g_strided_slice_v1);
 
-    EXPECT_EQ(strided_slice_out->description(), "Slice");
-    EXPECT_EQ(strided_slice_out->get_version(), 1);
+    ASSERT_TRUE(strided_slice_out);
     EXPECT_EQ(strided_slice_out->get_begin_mask(), begin_mask);
     EXPECT_EQ(strided_slice_out->get_end_mask(), end_mask);
     EXPECT_EQ(strided_slice_out->get_new_axis_mask(), new_axis_mask);
@@ -756,9 +753,7 @@ TEST(serialize, opset1_binary_convolution)
     auto g_result = g->get_results().at(0);
     auto g_binary_conv = g_result->input(0).get_source_output().get_node_shared_ptr();
     auto binary_conv_out = as_type_ptr<op::v1::BinaryConvolution>(g_binary_conv);
-
-    EXPECT_EQ(binary_conv_out->description(), "BinaryConvolution");
-    EXPECT_EQ(binary_conv_out->get_version(), 1);
+    ASSERT_TRUE(binary_conv_out);
 
     EXPECT_EQ(binary_conv_out->get_strides(), strides);
     EXPECT_EQ(binary_conv_out->get_pads_begin(), pads_begin);
@@ -785,9 +780,7 @@ TEST(serialize, depth_to_space)
     auto g_result = g->get_results().at(0);
     auto g_depth_to_space = g_result->input(0).get_source_output().get_node_shared_ptr();
     auto depth_to_space_out = as_type_ptr<op::DepthToSpace>(g_depth_to_space);
-
-    EXPECT_EQ(depth_to_space_out->description(), "DepthToSpace");
-    EXPECT_EQ(depth_to_space_out->get_version(), 0);
+    ASSERT_TRUE(depth_to_space_out);
     EXPECT_EQ(depth_to_space_out->get_block_size(), block_size);
     EXPECT_EQ(depth_to_space_out->get_mode(), mode);
 }
@@ -807,9 +800,7 @@ TEST(serialize, space_to_depth)
     auto g_result = g->get_results().at(0);
     auto g_space_to_depth = g_result->input(0).get_source_output().get_node_shared_ptr();
     auto depth_to_space_out = as_type_ptr<op::SpaceToDepth>(g_space_to_depth);
-
-    EXPECT_EQ(depth_to_space_out->description(), "SpaceToDepth");
-    EXPECT_EQ(depth_to_space_out->get_version(), 0);
+    ASSERT_TRUE(depth_to_space_out);
     EXPECT_EQ(depth_to_space_out->get_block_size(), block_size);
     EXPECT_EQ(depth_to_space_out->get_mode(), mode);
 }
