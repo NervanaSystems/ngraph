@@ -26,10 +26,9 @@ namespace ngraph
     namespace op
     {
         /// \brief Group Convolution
-        class GroupConvolution : public ngraph::op::util::FusedOp
+        class NGRAPH_API GroupConvolution : public ngraph::op::util::FusedOp
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"GroupConvolution", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             GroupConvolution() = default;
@@ -87,10 +86,9 @@ namespace ngraph
         };
 
         /// \brief Group Convolution data batch backprop
-        class GroupConvolutionBackpropData : public ngraph::op::util::FusedOp
+        class NGRAPH_API GroupConvolutionBackpropData : public ngraph::op::util::FusedOp
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"GroupConvolutionBackpropData", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             GroupConvolutionBackpropData() = default;
@@ -107,8 +105,6 @@ namespace ngraph
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
-            Output<Node> get_filters() { return input_value(1); }
-            Output<Node> get_data_batch() { return input_value(0); }
             size_t get_groups() const;
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -126,10 +122,9 @@ namespace ngraph
         };
 
         /// \brief Group Convolution filters backprop
-        class GroupConvolutionBackpropFilters : public ngraph::op::util::FusedOp
+        class NGRAPH_API GroupConvolutionBackpropFilters : public ngraph::op::util::FusedOp
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"GroupConvolutionBackpropFilters", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             GroupConvolutionBackpropFilters() = default;
@@ -146,8 +141,6 @@ namespace ngraph
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
-            Output<Node> get_filters() { return input_value(1); }
-            Output<Node> get_data_batch() { return input_value(0); }
             size_t get_groups() const;
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
