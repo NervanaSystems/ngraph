@@ -873,7 +873,7 @@ def NGFakeQuantOp :
 
   let extraClassDeclaration = [{
     void setLevels(const Attribute& attr) { this->setAttr("levels", attr); }
-    void setAutoBroadcast(const Attriute& attr) { this->setAttr("autoBroadcast", attr); }
+    void setAutoBroadcast(const Attribute& attr) { this->setAttr("autoBroadcast", attr); }
   }];
 }
 
