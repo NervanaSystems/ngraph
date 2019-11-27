@@ -24,10 +24,9 @@ namespace ngraph
     namespace op
     {
         /// \brief Range operation, analogous to `range()` in Python.
-        class Range : public Op
+        class NGRAPH_API Range : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Range", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs an unitialized range operation.

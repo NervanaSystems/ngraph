@@ -31,7 +31,7 @@ using namespace ngraph;
 
 namespace ngraph
 {
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<float>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<float>::type_info;
     const double& AttributeAdapter<float>::get()
     {
         if (!m_buffer_valid)
@@ -48,7 +48,7 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<double>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<double>::type_info;
     const double& AttributeAdapter<double>::get()
     {
         if (!m_buffer_valid)
@@ -65,7 +65,7 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<int8_t>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<int8_t>::type_info;
     const int64_t& AttributeAdapter<int8_t>::get()
     {
         if (!m_buffer_valid)
@@ -82,7 +82,7 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<int16_t>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<int16_t>::type_info;
     const int64_t& AttributeAdapter<int16_t>::get()
     {
         if (!m_buffer_valid)
@@ -99,7 +99,7 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<int32_t>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<int32_t>::type_info;
     const int64_t& AttributeAdapter<int32_t>::get()
     {
         if (!m_buffer_valid)
@@ -116,7 +116,7 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<int64_t>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<int64_t>::type_info;
     const int64_t& AttributeAdapter<int64_t>::get()
     {
         if (!m_buffer_valid)
@@ -133,7 +133,7 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<uint8_t>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<uint8_t>::type_info;
     const int64_t& AttributeAdapter<uint8_t>::get()
     {
         if (!m_buffer_valid)
@@ -150,7 +150,7 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<uint16_t>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<uint16_t>::type_info;
     const int64_t& AttributeAdapter<uint16_t>::get()
     {
         if (!m_buffer_valid)
@@ -167,7 +167,7 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<uint32_t>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<uint32_t>::type_info;
     const int64_t& AttributeAdapter<uint32_t>::get()
     {
         if (!m_buffer_valid)
@@ -184,7 +184,7 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<uint64_t>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<uint64_t>::type_info;
     const int64_t& AttributeAdapter<uint64_t>::get()
     {
         if (!m_buffer_valid)
@@ -201,11 +201,11 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<vector<int64_t>>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<vector<int64_t>>::type_info;
 
     const vector<int64_t>& AttributeAdapter<vector<int64_t>>::get() { return m_value; }
     void AttributeAdapter<vector<int64_t>>::set(const vector<int64_t>& value) { m_value = value; }
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<vector<uint64_t>>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<vector<uint64_t>>::type_info;
 
     const vector<int64_t>& AttributeAdapter<vector<uint64_t>>::get()
     {

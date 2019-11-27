@@ -19,10 +19,11 @@
 #include <functional>
 #include <map>
 #include <mutex>
+#include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
 {
-    std::mutex& get_registry_mutex();
+    NGRAPH_API std::mutex& get_registry_mutex();
 
     template <typename T>
     class FactoryRegistry

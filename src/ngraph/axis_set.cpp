@@ -17,8 +17,47 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/util.hpp"
 
-using namespace std;
-using namespace ngraph;
+ngraph::AxisSet::AxisSet()
+    : std::set<size_t>()
+{
+}
+
+ngraph::AxisSet::AxisSet(const std::initializer_list<size_t>& axes)
+    : std::set<size_t>(axes)
+{
+}
+
+ngraph::AxisSet::AxisSet(const std::set<size_t>& axes)
+    : std::set<size_t>(axes)
+{
+}
+
+ngraph::AxisSet::AxisSet(const std::vector<size_t>& axes)
+    : std::set<size_t>(axes.begin(), axes.end())
+{
+}
+
+ngraph::AxisSet::AxisSet(const AxisSet& axes)
+    : std::set<size_t>(axes)
+{
+}
+
+ngraph::AxisSet& ngraph::AxisSet::operator=(const AxisSet& v)
+{
+    static_cast<std::set<size_t>*>(this)->operator=(v);
+    return *this;
+}
+
+ngraph::AxisSet& ngraph::AxisSet::operator=(AxisSet&& v) noexcept
+{
+    static_cast<std::set<size_t>*>(this)->operator=(v);
+    return *this;
+}
+
+std::vector<int64_t> ngraph::AxisSet::to_vector() const
+{
+    return std::vector<int64_t>(this->begin(), this->end());
+}
 
 std::ostream& ngraph::operator<<(std::ostream& s, const AxisSet& axis_set)
 {
@@ -28,9 +67,7 @@ std::ostream& ngraph::operator<<(std::ostream& s, const AxisSet& axis_set)
     return s;
 }
 
-NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<AxisSet>::type_info;
-
-const vector<int64_t>& AttributeAdapter<AxisSet>::get()
+const std::vector<int64_t>& ngraph::AttributeAdapter<ngraph::AxisSet>::get()
 {
     if (!m_buffer_valid)
     {
@@ -42,7 +79,7 @@ const vector<int64_t>& AttributeAdapter<AxisSet>::get()
     return m_buffer;
 }
 
-void AttributeAdapter<AxisSet>::set(const vector<int64_t>& value)
+void ngraph::AttributeAdapter<ngraph::AxisSet>::set(const std::vector<int64_t>& value)
 {
     m_value = AxisSet();
     for (auto elt : value)
@@ -51,3 +88,5 @@ void AttributeAdapter<AxisSet>::set(const vector<int64_t>& value)
     }
     m_buffer_valid = false;
 }
+
+constexpr ngraph::DiscreteTypeInfo ngraph::AttributeAdapter<ngraph::AxisSet>::type_info;

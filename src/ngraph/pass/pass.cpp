@@ -51,3 +51,21 @@ void pass::PassBase::set_property(const PassPropertyMask& prop, bool value)
         m_property.clear(prop);
     }
 }
+
+// The symbols are requiered to be in cpp file to workaround RTTI issue on Android LLVM
+
+pass::ModulePass::~ModulePass()
+{
+}
+
+pass::FunctionPass::~FunctionPass()
+{
+}
+
+pass::NodePass::~NodePass()
+{
+}
+
+pass::CallGraphPass::~CallGraphPass()
+{
+}
