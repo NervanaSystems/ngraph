@@ -5,17 +5,40 @@ Execute a computation
 ######################
 
 This section explains how to manually perform the steps that would normally be 
-performed by a framework :term:`bridge` to execute a computation. The nGraph 
-library is targeted toward automatic construction; it is far easier for a 
-processing unit (GPU, CPU, or an `Intel Nervana NNP`_) to run a computation than 
-it is for a human to map out how that computation happens. Unfortunately, things 
+performed by a framework :term:`bridge` to execute a computation. nGraph graphs 
+are targeted toward automatic construction; it is far easier for a processor 
+(a CPU, GPU, or `purpose-built silicon`_) to execute a computation than it is 
+for a human to map out how that computation happens. Unfortunately, things 
 that make by-hand graph construction simpler tend to make automatic construction 
 more difficult, and vice versa.
 
-Here we will do all the bridge steps manually. The :term:`model description` 
-walk-through below is based on the :file:`abc.cpp` code in the ``/doc/examples/`` 
-directory. We'll be deconstructing the steps that must happen (either programmatically 
-or manually) in order to successfully execute a computation:
+Nevertheless, it can be helpful to break down what is happening during graph 
+construction. The documetation that follows explains two approaches frameworks 
+can use to compile with nGraph operations:
+
+* :ref:`Using complete shapes <scenario_one>`
+* :ref:`Using partial shapes <scenario_two>`
+
+The nGraph :abbr:`Intermediate Representation (IR)` uses a strong, dynamic 
+type system, including static shapes. This means that at compilation, every 
+tensor (or, equivalently, every node output) in the graph is assigned 
+**complete shape information**; that is, one and only one shape. The static 
+process by which this assignment takes place is called :term:`shape propagation`.
+
+In the :ref:`first scenario <scenario_one>`, the :term:`model description` 
+walk-through is based on the :file:`abc.cpp` code in the ``/doc/examples/abc`` 
+directory, and it deconstructs the steps that must happen (either programmatically 
+or manually) in order to successfully execute a computation given complete 
+shape information.  
+
+.. _scenario_one:
+
+Scenario One: Using Complete Shapes
+===================================
+
+A step-by-step example of how a framework might execute with complete shape 
+information is provided here. For a step-by-step example using dynamic 
+shapes, see :ref:`scenario_two`.
 
 * :ref:`define_cmp`
 * :ref:`specify_backend`
@@ -25,13 +48,11 @@ or manually) in order to successfully execute a computation:
 * :ref:`invoke_cmp`
 * :ref:`access_outputs`
 
-The full code is at the :ref:`end of this page <all_together>`.
-
 
 .. _define_cmp:
 
 Define the computation
-======================
+----------------------
 
 To a :term:`framework`, a computation is simply a transformation of inputs to 
 outputs. While a :term:`bridge` can programmatically construct the graph 
@@ -111,10 +132,10 @@ function, in the order they are to be passed to the compiled function. A
 .. _specify_backend:
 
 Specify the backend upon which to run the computation
-=====================================================
+-----------------------------------------------------
 
 For a framework bridge, a *backend* is the environment that can perform the 
-computations; it can be done with a CPU, GPU, or an Intel Nervana NNP. A 
+computations; it can be done with a CPU, GPU, or `purpose-built silicon`_. A 
 *transformer* can compile computations for a backend, allocate and deallocate 
 tensors, and invoke computations.
 
@@ -123,7 +144,7 @@ and allocate backends. A backend is somewhat analogous to a multi-threaded
 process.
 
 There are two backends for the CPU: the optimized ``"CPU"`` backend, which uses 
-the `Intel MKL-DNN`_, and the ``"INTERPRETER"`` backend, which runs reference 
+the `DNNL`_, and the ``"INTERPRETER"`` backend, which runs reference 
 versions of kernels that favor implementation clarity over speed. The 
 ``"INTERPRETER"`` backend can be slow, and is primarily intended for testing. 
 See the documentation on :doc:`runtime options for various backends <../../backends/index>` 
@@ -139,7 +160,7 @@ To continue with our original example and select the ``"CPU_Backend"``:
 .. _compile_cmp:
 
 Compile the computation 
-=======================
+-----------------------
 
 Compilation triggers something that can be used as a factory for producing a 
 ``CallFrame`` which is a *function* and its associated *state* that can run 
@@ -152,7 +173,7 @@ thread needs to execute the function at the same time, create multiple
 .. _allocate_backend_storage:
 
 Allocate backend storage for the inputs and outputs
-===================================================
+---------------------------------------------------
 
 At the graph level, functions are stateless. They do have internal state related 
 to execution, but there is no user-visible state. Variables must be passed as 
@@ -182,7 +203,7 @@ with ``Tensor``.
 .. _initialize_inputs:
 
 Initialize the inputs
-=====================
+---------------------
 
 Next we need to copy some data into the tensors.
 
@@ -196,7 +217,7 @@ copying data to/from the tensor.
 .. _invoke_cmp:
 
 Invoke the computation
-======================
+----------------------
 
 To invoke the function, we simply pass argument and resultant tensors to the 
 call frame:
@@ -209,7 +230,7 @@ call frame:
 .. _access_outputs:
 
 Access the outputs
-==================
+------------------
 
 We can use the ``read`` method to access the result:
 
@@ -217,10 +238,10 @@ We can use the ``read`` method to access the result:
    :language: cpp
    :lines: 60-77
 
-.. _all_together:
+.. _sshp:
 
-Put it all together
-===================
+Compiling with Complete Shape Information
+-----------------------------------------
 
 .. literalinclude:: ../../../../examples/abc/abc.cpp
    :language: cpp
@@ -228,7 +249,96 @@ Put it all together
    :caption: "The (a + b) * c example for executing a computation on nGraph"
 
 
+.. _scenario_two:
+
+Scenario Two: Known Partial Shape
+=================================
+
+The :ref:`second scenario <scenario_two>` involves the use of dynamic tensors. 
+A :term:`dynamic tensor` is a tensor whose shape can change from one "iteration" 
+to the next. When a dynamic tensor is created, a framework :term:`bridge` might 
+supply only *partial* shape information: it might be **all** the tensor 
+dimensions, **some** of the tensor dimensions, or **none** of the tensor 
+dimensions; furthermore, the rank of the tensor may be left unspecified. 
+The "actual" shape of the tensor is not specified until some function writes 
+some value to it. The actual shape can change when the value of the tensor 
+is overwritten. It is the backend’s responsibility to set the actual shape. 
+The :term:`model description` for the second scenario based on the 
+:file:`partial_shape.cpp` code in the ``/doc/examples/dynamic_tensor`` 
+directory, and it deconstructs the steps that must happen (either 
+programmatically or manually) in order to successfully retreive shape data.
+
+* :ref:`create_dyn_tensor`
+* :ref:`call_graph_vw_`
+* :ref:`call_graph_vwnew`
+* :ref:`kpsh`
 
 
-.. _Intel MKL-DNN: https://01.org/mkl-dnn
-.. _Intel Nervana NNP: https://ai.intel.com/intel-nervana-neural-network-processors-nnp-redefine-ai-silicon/
+Create and compile a graph for ``f(x) = x + x`` where the provided info 
+of shape ``x`` is ``(2,?)``:
+
+.. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
+   :language: cpp
+   :lines: 27-32
+
+
+.. _create_dyn_tensor:
+
+Create a dynamic tensor
+-----------------------
+
+Create a dynamic tensor of shape ``(2,?)``
+
+.. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
+   :language: cpp
+   :lines: 35
+
+At this point, ``t_out->get_shape()`` would throw an exception, while 
+``t_out->get_partial_shape()`` would return ``"(2,?)"``.
+
+
+.. _call_graph_vw_:
+
+Write shape
+-----------
+
+Call the graph to write a value with shape (2,3) to t_out
+
+.. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
+   :language: cpp
+   :lines: 38-40
+
+At this point, ``t_out->get_shape()`` would return ``Shape{2,3}``,
+while ``t_out->get_partial_shape()`` would return ``"(2,?)"``.
+
+
+.. _call_graph_vwnew:
+
+Write new shape
+---------------
+
+Call the graph again, to write a value with a different shape to ``t_out``.
+
+.. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
+   :language: cpp
+   :lines: 44-45
+
+At this point, ``t_out->get_shape()`` would return ``Shape{2,20}``,
+while ``t_out->get_partial_shape()`` would return ``"(2,?)"``.
+
+
+.. _kpsh:
+
+Compiling with Known Partial Shape
+----------------------------------
+
+.. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
+   :language: cpp
+   :linenos:
+   :caption: "Full code for compiling with dynamic tensors and partial shape"
+
+
+.. _purpose-built silicon: https://www.intel.ai/nervana-nnp
+.. _DNNL: https://intel.github.io/mkl-dnn/ 
+
+
