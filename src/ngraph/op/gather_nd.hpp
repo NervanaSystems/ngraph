@@ -25,10 +25,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Gather slices from params with shapes given by indices
-            class GatherND : public Op
+            class NGRAPH_API GatherND : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"GatherND", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 GatherND() = default;

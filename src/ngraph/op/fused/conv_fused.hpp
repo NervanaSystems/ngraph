@@ -27,10 +27,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Convolution + bias forward prop for batched convolution operation.
-            class ConvolutionBias : public ngraph::op::util::FusedOp
+            class NGRAPH_API ConvolutionBias : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ConvolutionBias", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ConvolutionBias() = default;
@@ -88,10 +87,9 @@ namespace ngraph
 
             /// \brief Filters and bias backprop for batched convolution operation. Data backprop is
             /// the same as regular convolution backprop for data.
-            class ConvolutionBiasBackpropFiltersBias : public ngraph::op::util::FusedOp
+            class NGRAPH_API ConvolutionBiasBackpropFiltersBias : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ConvolutionBiasBackpropFiltersBias", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ConvolutionBiasBackpropFiltersBias() = default;
@@ -182,10 +180,9 @@ namespace ngraph
                 Strides m_data_dilation_strides_backward;
             };
 
-            class ConvolutionBiasAdd : public ngraph::op::util::FusedOp
+            class NGRAPH_API ConvolutionBiasAdd : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ConvolutionBiasAdd", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ConvolutionBiasAdd() = default;

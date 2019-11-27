@@ -27,10 +27,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Concatenation operation.
-            class Concat : public Op
+            class NGRAPH_API Concat : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Concat", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a concatenation operation.

@@ -25,10 +25,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Elementwise negative operation.
-            class Negative : public util::UnaryElementwiseArithmetic
+            class NGRAPH_API Negative : public util::UnaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Negative", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a negative operation.
@@ -48,5 +47,6 @@ namespace ngraph
         }
         using v0::Negative;
     }
+    NGRAPH_API
     std::shared_ptr<Node> operator-(const Output<Node>& arg0);
 }

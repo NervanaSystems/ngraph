@@ -28,10 +28,9 @@ namespace ngraph
         {
             /// \brief Elementwise addition operation.
             ///
-            class Add : public util::BinaryElementwiseArithmetic
+            class NGRAPH_API Add : public util::BinaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Add", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs an uninitialized addition operation
@@ -68,10 +67,9 @@ namespace ngraph
         {
             /// \brief Elementwise addition operation.
             ///
-            class Add : public util::BinaryElementwiseArithmetic
+            class NGRAPH_API Add : public util::BinaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Add", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs an uninitialized addition operation
@@ -109,5 +107,6 @@ namespace ngraph
         using v0::Add;
     } // namespace op
 
+    NGRAPH_API
     std::shared_ptr<Node> operator+(const Output<Node>& arg0, const Output<Node>& arg1);
 } // namespace ngraph

@@ -29,10 +29,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Batchnorm for training operation
-            class BatchNormTraining : public Op
+            class NGRAPH_API BatchNormTraining : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"BatchNormTraining", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 BatchNormTraining() = default;
@@ -93,10 +92,9 @@ namespace ngraph
                 double m_epsilon;
             };
 
-            class BatchNormInference : public Op
+            class NGRAPH_API BatchNormInference : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"BatchNormInference", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 BatchNormInference() = default;
@@ -166,10 +164,9 @@ namespace ngraph
                 double m_epsilon;
             };
 
-            class BatchNormTrainingBackprop : public Op
+            class NGRAPH_API BatchNormTrainingBackprop : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"BatchNormTrainingBackprop", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 BatchNormTrainingBackprop() = default;

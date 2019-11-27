@@ -42,10 +42,9 @@ namespace ngraph
             /// \sa         LSTMCell, RNNCell, GRUCell
             ///
             ///
-            class LSTMSequence : public util::FusedOp
+            class NGRAPH_API LSTMSequence : public util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"LSTMSequence", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 LSTMSequence() = default;

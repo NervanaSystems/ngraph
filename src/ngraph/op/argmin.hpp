@@ -25,10 +25,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Computes minimum index along a specified axis for a given tensor
-            class ArgMin : public op::util::IndexReduction
+            class NGRAPH_API ArgMin : public op::util::IndexReduction
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ArgMin", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a ArgMin operation.

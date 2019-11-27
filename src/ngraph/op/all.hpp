@@ -25,10 +25,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Logical "all" reduction operation.
-            class All : public util::LogicalReduction
+            class NGRAPH_API All : public util::LogicalReduction
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"All", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs an "all" reduction operation.

@@ -56,10 +56,9 @@ namespace ngraph
 
         namespace v0
         {
-            class Proposal : public Op
+            class NGRAPH_API Proposal : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Proposal", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Proposal() = default;

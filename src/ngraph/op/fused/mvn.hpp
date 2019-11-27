@@ -28,10 +28,9 @@ namespace ngraph
         {
             /// \brief Operator performing Mean Variance Normalization
             ///
-            class MVN : public ngraph::op::util::FusedOp
+            class NGRAPH_API MVN : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"MVN", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 MVN() = default;

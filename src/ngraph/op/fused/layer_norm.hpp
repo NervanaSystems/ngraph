@@ -28,10 +28,9 @@ namespace ngraph
         {
             /// \brief Layer Normalization
             ///
-            class LayerNorm : public ngraph::op::util::FusedOp
+            class NGRAPH_API LayerNorm : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"LayerNorm", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 LayerNorm() = default;
@@ -79,10 +78,9 @@ namespace ngraph
 
             /// \brief Layer Normalization Backprop
             ///
-            class LayerNormBackprop : public ngraph::op::util::FusedOp
+            class NGRAPH_API LayerNormBackprop : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"LayerNormBackprop", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 LayerNormBackprop() = default;

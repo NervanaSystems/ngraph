@@ -27,10 +27,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Performs a SELU activation function on all elements of the input node
-            class Selu : public ngraph::op::util::FusedOp
+            class NGRAPH_API Selu : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Selu", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Selu() = default;

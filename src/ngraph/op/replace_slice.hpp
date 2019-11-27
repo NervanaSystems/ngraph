@@ -52,10 +52,9 @@ namespace ngraph
         /// | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$ where \f$T[i_1,\dots,i_n] = \texttt{arg1}[j_1,\dots,j_n]\f$ if \f$j_1,\dots,j_n\f$ is in bounds for `arg1` and for all \f$m\f$, \f$i_m = l_m + j_m s_m\f$, otherwise \f$\texttt{arg0}[i_1,\dots,i_n]\f$. |
             // clang-format on
-            class ReplaceSlice : public Op
+            class NGRAPH_API ReplaceSlice : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ReplaceSlice", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ReplaceSlice() = default;

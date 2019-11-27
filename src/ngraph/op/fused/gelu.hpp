@@ -28,10 +28,9 @@ namespace ngraph
         {
             /// \brief Gaussian Error Linear Unit
             /// f(x) = 0.5 * x * (1 + erf( x / sqrt(2) )
-            class Gelu : public ngraph::op::util::FusedOp
+            class NGRAPH_API Gelu : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Gelu", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Gelu() = default;
@@ -53,10 +52,9 @@ namespace ngraph
             };
 
             /// \brief Backprop for Gelu(x) is GeluBackprop(x) * delta
-            class GeluBackpropFactor : public util::FusedOp
+            class NGRAPH_API GeluBackpropFactor : public util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"GeluBackpropFactor", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 GeluBackpropFactor() = default;

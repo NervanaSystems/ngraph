@@ -30,10 +30,9 @@ namespace ngraph
             ///
             /// Y = Scale * Data + Shift
             ///
-            class ScaleShift : public ngraph::op::util::FusedOp
+            class NGRAPH_API ScaleShift : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ScaleShift", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ScaleShift() = default;

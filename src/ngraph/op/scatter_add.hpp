@@ -25,10 +25,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Add updates to slices from inputs addressed by indices
-            class ScatterAdd : public Op
+            class NGRAPH_API ScatterAdd : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ScatterAdd", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ScatterAdd() = default;

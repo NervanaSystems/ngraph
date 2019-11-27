@@ -29,10 +29,9 @@ namespace ngraph
     {
         namespace v0
         {
-            class Unsqueeze : public ngraph::op::util::FusedOp
+            class NGRAPH_API Unsqueeze : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Unsqueeze", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Unsqueeze() = default;

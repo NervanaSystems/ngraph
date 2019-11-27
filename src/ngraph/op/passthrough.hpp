@@ -39,10 +39,9 @@ namespace ngraph
     }
 }
 
-class ngraph::op::v0::Passthrough final : public Op
+class NGRAPH_API ngraph::op::v0::Passthrough final : public Op
 {
 public:
-    NGRAPH_API
     static constexpr NodeTypeInfo type_info{"Passthrough", 0};
     const NodeTypeInfo& get_type_info() const override { return type_info; }
     Passthrough() = default;

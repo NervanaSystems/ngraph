@@ -28,10 +28,9 @@ namespace ngraph
         {
             /// \brief pdpd slice op
             ///
-            class PartialSlice : public ngraph::op::util::FusedOp
+            class NGRAPH_API PartialSlice : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"PartialSlice", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 PartialSlice() = default;
@@ -72,10 +71,9 @@ namespace ngraph
 
             /// \brief pdpd slice backprop
             ///
-            class PartialSliceBackprop : public ngraph::op::util::FusedOp
+            class NGRAPH_API PartialSliceBackprop : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"PartialSliceBackprop", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 PartialSliceBackprop() = default;

@@ -31,10 +31,9 @@ namespace ngraph
         {
             /// \brief Elementwise Relu operation.
             ///
-            class Relu : public ngraph::op::util::UnaryElementwiseArithmetic
+            class NGRAPH_API Relu : public ngraph::op::util::UnaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Relu", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Relu() = default;
@@ -52,10 +51,9 @@ namespace ngraph
 
             /// \brief Elementwise ReluBackprop operation.
             ///
-            class ReluBackprop : public ngraph::op::util::BinaryElementwiseArithmetic
+            class NGRAPH_API ReluBackprop : public ngraph::op::util::BinaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ReluBackprop", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ReluBackprop()

@@ -35,10 +35,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Layer which performs bilinear interpolation
-            class Interpolate : public Op
+            class NGRAPH_API Interpolate : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Interpolate", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Interpolate() = default;

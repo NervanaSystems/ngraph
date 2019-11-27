@@ -64,10 +64,9 @@ namespace ngraph
         /// | ------------------------ | ------------------------------------------------------------------------------------------------------ |
         /// | \f$E[d'_1,\dots,d'_m]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with its elements rearranged as described above. |
             // clang-format on
-            class Reshape : public Op
+            class NGRAPH_API Reshape : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Reshape", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a reshape operation.
@@ -117,10 +116,9 @@ namespace ngraph
             /// "Converts" an input tensor into a new shape with the same number of elements.
             /// This op does not touch the actual data. If needed, use Transpose for that purpose.
             ///
-            class Reshape : public Op
+            class NGRAPH_API Reshape : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Reshape", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Reshape() = default;

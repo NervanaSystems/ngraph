@@ -25,10 +25,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Elementwise hyperbolic sine (sinh) operation.
-            class Sinh : public util::UnaryElementwiseArithmetic
+            class NGRAPH_API Sinh : public util::UnaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Sinh", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a hyperbolic sine operation.

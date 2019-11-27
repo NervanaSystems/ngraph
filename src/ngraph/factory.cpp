@@ -30,6 +30,8 @@ namespace ngraph
         return registry_mutex;
     }
 
+    template class NGRAPH_API FactoryRegistry<Node>;
+
     template <>
     FactoryRegistry<Node>& FactoryRegistry<Node>::get()
     {

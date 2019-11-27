@@ -25,10 +25,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Elementwise cosine operation.
-            class Cos : public util::UnaryElementwiseArithmetic
+            class NGRAPH_API Cos : public util::UnaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Cos", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a cosine operation.

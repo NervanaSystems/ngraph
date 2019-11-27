@@ -24,10 +24,9 @@ namespace ngraph
     {
         namespace v0
         {
-            class RegionYolo : public Op
+            class NGRAPH_API RegionYolo : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"RegionYolo", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 RegionYolo() = default;

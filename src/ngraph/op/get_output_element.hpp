@@ -27,10 +27,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Operation to get an output from a node.
-            class GetOutputElement : public Op
+            class NGRAPH_API GetOutputElement : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"GetOutputElement", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 GetOutputElement() = default;

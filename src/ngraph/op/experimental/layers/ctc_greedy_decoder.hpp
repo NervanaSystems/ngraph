@@ -24,10 +24,9 @@ namespace ngraph
     {
         namespace v0
         {
-            class CTCGreedyDecoder : public Op
+            class NGRAPH_API CTCGreedyDecoder : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"CTCGreedyDecoder", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 CTCGreedyDecoder() = default;

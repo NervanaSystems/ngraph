@@ -25,10 +25,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Elementwise natural log operation.
-            class Log : public util::UnaryElementwiseArithmetic
+            class NGRAPH_API Log : public util::UnaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Log", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a natural log operation.

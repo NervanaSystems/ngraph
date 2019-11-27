@@ -30,10 +30,9 @@ namespace ngraph
             /// x <  0 => f(x) = x * slope
             /// x >= 0 => f(x) = x
             ///
-            class PRelu : public ngraph::op::util::FusedOp
+            class NGRAPH_API PRelu : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"PRelu", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 PRelu() = default;

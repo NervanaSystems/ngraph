@@ -29,10 +29,9 @@ namespace ngraph
             /// \brief Generalized dot product operation, including scalar-tensor product,
             /// matrix-vector
             ///        product, and matrix multiplication.
-            class Dot : public Op
+            class NGRAPH_API Dot : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Dot", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a dot product operation.

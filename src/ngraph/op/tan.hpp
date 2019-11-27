@@ -39,10 +39,9 @@ namespace ngraph
         /// | ---------------------- | ------------------------------------------------------------------------------------ |
         /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \tan(\texttt{arg}[i_1,\dots,i_n])\f$ |
             // clang-format on
-            class Tan : public util::UnaryElementwiseArithmetic
+            class NGRAPH_API Tan : public util::UnaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Tan", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a tangent operation.

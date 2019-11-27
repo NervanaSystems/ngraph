@@ -26,10 +26,9 @@ namespace ngraph
     {
         namespace v0
         {
-            class SoftmaxCrossEntropy : public ngraph::op::util::FusedOp
+            class NGRAPH_API SoftmaxCrossEntropy : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"SoftmaxCrossEntropy", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 SoftmaxCrossEntropy() = default;
@@ -59,10 +58,9 @@ namespace ngraph
                 int64_t m_ignore_index;
             };
 
-            class SoftmaxCrossEntropyBackprop : public util::FusedOp
+            class NGRAPH_API SoftmaxCrossEntropyBackprop : public util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"SoftmaxCrossEntropyBackprop", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 SoftmaxCrossEntropyBackprop() = default;

@@ -25,10 +25,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Operation that returns the shape of its input argument as a tensor.
-            class ShapeOf : public Op
+            class NGRAPH_API ShapeOf : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ShapeOf", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ShapeOf() = default;

@@ -25,10 +25,9 @@ namespace ngraph
         namespace v1
         {
             /// \brief Elementwise less-than-or-equal operation.
-            class LessEqual : public util::BinaryElementwiseComparison
+            class NGRAPH_API LessEqual : public util::BinaryElementwiseComparison
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"LessEqual", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a less-than-or-equal operation.
@@ -52,10 +51,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Elementwise less-than-or-equal operation.
-            class LessEq : public util::BinaryElementwiseComparison
+            class NGRAPH_API LessEq : public util::BinaryElementwiseComparison
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"LessEq", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a less-than-or-equal operation.

@@ -24,10 +24,9 @@ namespace ngraph
     {
         namespace v0
         {
-            class PSROIPooling : public Op
+            class NGRAPH_API PSROIPooling : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"PSROIPooling", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 PSROIPooling() = default;

@@ -28,10 +28,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Permutes data in the channel dimension of the input
-            class ShuffleChannels : public ngraph::op::util::FusedOp
+            class NGRAPH_API ShuffleChannels : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ShuffleChannels", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ShuffleChannels() = default;

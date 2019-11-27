@@ -26,10 +26,9 @@ namespace ngraph
         {
             /// \brief Dynamic Tiling operation which repeats a tensor multiple times
             ///        along each dimension
-            class Tile : public Op
+            class NGRAPH_API Tile : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Tile", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Tile() = default;

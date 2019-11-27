@@ -27,10 +27,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief LogSoftmax operation
-            class LogSoftmax : public ngraph::op::util::FusedOp
+            class NGRAPH_API LogSoftmax : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"LogSoftmax", 0};
                 LogSoftmax() = default;
                 const NodeTypeInfo& get_type_info() const override { return type_info; }

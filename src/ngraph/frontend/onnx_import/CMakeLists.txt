@@ -218,7 +218,7 @@ add_library(onnx_import STATIC
 
 set(ONNX_IMPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 
-add_dependencies(onnx_import_interface protobuf::libprotobuf onnx::libonnx onnx::libonnx_proto)
+add_dependencies(onnx_import_interface onnx::libonnx onnx::libonnx_proto)
 add_dependencies(onnx_import onnx_import_interface)
 
 set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -243,3 +243,6 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
             -Wno-invalid-offsetof -Wno-shorten-64-to-32 -Wno-unused-macros -Wno-missing-variable-declarations
             -Wno-unused-private-field -Wno-shadow -Wno-deprecated PUBLIC -Wno-undefined-func-template)
 endif()
+
+target_compile_definitions(onnx_import PRIVATE ngraph_EXPORTS)
+target_compile_definitions(onnx_import_interface PRIVATE ngraph_EXPORTS)

@@ -39,10 +39,9 @@ namespace ngraph
         /// | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$N[n, c, d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[n, c, d_1,\dots,d_n] = \frac{N[n,i,d_1,\dots,d_n]}{ (bias + alpha * (\sum_{i=max(0,(nsize-1)/2)}^{min(C, (nsize-1)/2)+1} N[n,i,d_1,\dots,d_n]^{2}) ^ {2})}\f$ |
             // clang-format on
-            class LRN : public Op
+            class NGRAPH_API LRN : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"LRN", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a LRN operation.

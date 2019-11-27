@@ -34,7 +34,7 @@ namespace ngraph
             ///
             ///        Output node produces a tensor with shape:
             ///        [N, C/(blocksize * blocksize), H * blocksize, W * blocksize]
-            class DepthToSpace : public ngraph::op::util::FusedOp
+            class NGRAPH_API DepthToSpace : public ngraph::op::util::FusedOp
             {
             public:
                 enum class DepthToSpaceMode
@@ -45,7 +45,6 @@ namespace ngraph
                     DEPTH_FIRST
                 };
 
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"DepthToSpace", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 DepthToSpace() = default;

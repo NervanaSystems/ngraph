@@ -26,10 +26,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Returns embeddings for given indices
-            class EmbeddingLookup : public Op
+            class NGRAPH_API EmbeddingLookup : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"EmbeddingLookup", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a EmbeddingLookup operation.

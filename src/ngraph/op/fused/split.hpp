@@ -29,10 +29,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Splits the input tensor into a list of smaller tensors ("pieces")
-            class Split : public ngraph::op::util::FusedOp
+            class NGRAPH_API Split : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Split", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Split() = default;

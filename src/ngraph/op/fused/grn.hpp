@@ -29,10 +29,9 @@ namespace ngraph
         {
             /// \brief  Global Response Normalization with L2 norm (across channels only).
             ///
-            class GRN : public ngraph::op::util::FusedOp
+            class NGRAPH_API GRN : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"GRN", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 GRN() = default;

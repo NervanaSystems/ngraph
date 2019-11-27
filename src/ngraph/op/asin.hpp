@@ -28,10 +28,9 @@ namespace ngraph
         {
             /// \brief Elementwise inverse sine (arcsin) operation.
             ///
-            class Asin : public util::UnaryElementwiseArithmetic
+            class NGRAPH_API Asin : public util::UnaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Asin", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs an arcsin operation.

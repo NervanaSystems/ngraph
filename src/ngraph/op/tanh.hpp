@@ -25,10 +25,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Elementwise hyperbolic tangent operation.
-            class Tanh : public util::UnaryElementwiseArithmetic
+            class NGRAPH_API Tanh : public util::UnaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Tanh", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a hyperbolic tangent operation.

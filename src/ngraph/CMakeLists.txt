@@ -653,7 +653,6 @@ target_compile_definitions(ngraph
     PRIVATE
         SHARED_LIB_PREFIX="${CMAKE_SHARED_LIBRARY_PREFIX}"
         SHARED_LIB_SUFFIX="${CMAKE_SHARED_LIBRARY_SUFFIX}"
-        NGRAPH_DLL_EXPORTS
 )
 if(NGRAPH_LIB_VERSIONING_ENABLE)
     set_target_properties(ngraph PROPERTIES

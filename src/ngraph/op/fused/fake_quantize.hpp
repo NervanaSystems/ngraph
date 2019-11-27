@@ -40,10 +40,9 @@ namespace ngraph
             ///                 (levels-1) * (output_high - output_low) + output_low
             ///
             ///
-            class FakeQuantize : public ngraph::op::util::FusedOp
+            class NGRAPH_API FakeQuantize : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"FakeQuantize", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 FakeQuantize() = default;

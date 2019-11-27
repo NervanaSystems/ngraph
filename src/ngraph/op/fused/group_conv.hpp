@@ -28,10 +28,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Group Convolution
-            class GroupConvolution : public ngraph::op::util::FusedOp
+            class NGRAPH_API GroupConvolution : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"GroupConvolution", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 GroupConvolution() = default;

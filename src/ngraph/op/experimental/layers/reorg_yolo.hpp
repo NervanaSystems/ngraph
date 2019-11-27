@@ -24,10 +24,9 @@ namespace ngraph
     {
         namespace v0
         {
-            class ReorgYolo : public Op
+            class NGRAPH_API ReorgYolo : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ReorgYolo", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ReorgYolo() = default;

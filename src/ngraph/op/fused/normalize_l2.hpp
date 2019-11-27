@@ -30,10 +30,9 @@ namespace ngraph
         {
             /// \brief  Normalization input tensor with L2 norm.
             ///
-            class NormalizeL2 : public ngraph::op::util::FusedOp
+            class NGRAPH_API NormalizeL2 : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"NormalizeL2", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 NormalizeL2() = default;

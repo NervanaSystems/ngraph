@@ -26,10 +26,9 @@ namespace ngraph
     {
         namespace v0
         {
-            class Send : public Op
+            class NGRAPH_API Send : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Send", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs an unitialized send operation.

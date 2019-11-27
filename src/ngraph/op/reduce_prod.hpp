@@ -27,10 +27,9 @@ namespace ngraph
             /// \brief Product reduction operation.
             ///
             /// Reduces the tensor, eliminating the specified reduction axes by taking the product.
-            class ReduceProd : public util::ArithmeticReductionKeepDims
+            class NGRAPH_API ReduceProd : public util::ArithmeticReductionKeepDims
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ReduceProd", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a product reduction operation.

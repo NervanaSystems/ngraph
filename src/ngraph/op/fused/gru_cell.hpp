@@ -40,10 +40,9 @@ namespace ngraph
             ///
             ///             Note this class represents only single *cell* and not whole GRU *layer*.
             ///
-            class GRUCell : public util::FusedOp, public util::RNNCellBase
+            class NGRAPH_API GRUCell : public util::FusedOp, public util::RNNCellBase
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"GRUCell", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 GRUCell() = default;

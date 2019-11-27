@@ -69,10 +69,9 @@ namespace ngraph
             /// | Output tensor of the same type as `arg` with cumulative sums of the arg's elements
             /// |
 
-            class CumSum : public Op
+            class NGRAPH_API CumSum : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"CumSum", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a cumulative summation operation.

@@ -27,10 +27,9 @@ namespace ngraph
     {
         namespace v0
         {
-            class Sigmoid : public util::UnaryElementwiseArithmetic
+            class NGRAPH_API Sigmoid : public util::UnaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Sigmoid", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Sigmoid(const Output<Node>& arg);
@@ -43,10 +42,9 @@ namespace ngraph
 
             /// \brief Elementwise SigmoidBackprop operation.
             ///
-            class SigmoidBackprop : public util::BinaryElementwiseArithmetic
+            class NGRAPH_API SigmoidBackprop : public util::BinaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"SigmoidBackprop", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 SigmoidBackprop()
