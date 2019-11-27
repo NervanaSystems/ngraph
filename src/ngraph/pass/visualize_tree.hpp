@@ -38,7 +38,7 @@ namespace ngraph
 
 class HeightMap;
 
-class ngraph::pass::VisualizeTree : public ModulePass
+class NGRAPH_API ngraph::pass::VisualizeTree : public ModulePass
 {
 public:
     using node_modifiers_t =

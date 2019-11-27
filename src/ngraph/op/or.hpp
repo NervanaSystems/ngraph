@@ -28,10 +28,9 @@ namespace ngraph
         {
             /// \brief Elementwise logical-or operation.
             ///
-            class LogicalOr : public util::BinaryElementwiseLogical
+            class NGRAPH_API LogicalOr : public util::BinaryElementwiseLogical
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"LogicalOr", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 LogicalOr() = default;
@@ -60,10 +59,9 @@ namespace ngraph
         {
             /// \brief Elementwise logical-or operation.
             ///
-            class Or : public util::BinaryElementwiseLogical
+            class NGRAPH_API Or : public util::BinaryElementwiseLogical
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Or", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Or() = default;
