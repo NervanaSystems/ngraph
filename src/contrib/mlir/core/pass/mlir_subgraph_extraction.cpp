@@ -477,18 +477,6 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
 
 bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node)
 {
-    // Disable any op using boolean type until we have support for i1<->i8 conversion in MLIR.
-    // Otherwise, we would generate code like this:
-    //   %0 = icmp %a, %b : i1
-    //   store %0, %c[%arg1] : i8  // Type error: trying to store an i1 into an i8.
-    /*for (auto& output : node->get_outputs())
-    {
-        if (output.get_element_type() == element::boolean)
-        {
-            return false;
-        }
-    }*/
-
     if (TI(Parameter) == TI(*node) || TI(Result) == TI(*node))
     {
         return true;
