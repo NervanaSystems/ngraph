@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <type_traits>
 #include <vector>
 
 #include "ngraph/enum_names.hpp"
@@ -278,7 +279,8 @@ namespace ngraph
         A result(b.size());
         for (int i = 0; i < b.size(); ++i)
         {
-            result[i] = b[i];
+            result[i] =
+                static_cast<typename std::remove_reference<decltype(result[i])>::type>(b[i]);
         }
         return result;
     }
