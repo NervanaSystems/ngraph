@@ -681,7 +681,6 @@ def NGGroupConvOp :
   }];
 
   let builders = [
-    OpBuilder<
     // Builder without padType
     OpBuilder<
       "Builder *builder, OperationState &tblgen_state, Type res, Value *images,"
