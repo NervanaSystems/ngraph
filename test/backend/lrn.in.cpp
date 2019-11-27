@@ -294,7 +294,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lrn_6D_across_2_axes)
     EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, lrn_2d)
+NGRAPH_TEST(${BACKEND_NAME}, lrn_2d_across_empty)
 {
     Shape shape{12};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -333,7 +333,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lrn_2d)
     EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, lrn_across_all_dims_2d)
+NGRAPH_TEST(${BACKEND_NAME}, lrn_2d_across_outermost_axis)
 {
     Shape shape{6, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
