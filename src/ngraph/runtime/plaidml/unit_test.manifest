@@ -246,6 +246,10 @@ cum_sum_default
 cum_sum_2dim
 cum_sum_3d
 cum_sum_2dim_allmodes
+model_cum_sum_1d
+model_cum_sum_2d_axis_input
+model_cum_sum_2d_dynamic_axis_input
+model_cum_sum_3d_exclusive_reverse
 
 # onnx tests
 model_quant_conv_linear_2d
