@@ -27,10 +27,9 @@ namespace ngraph
     namespace op
     {
         /// \brief  Iterate a body over tensors, accumulating into tensors.
-        class TensorIterator : public util::FusedOp
+        class NGRAPH_API TensorIterator : public util::FusedOp
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"TensorIterator", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             // Forward declarations
@@ -44,6 +43,7 @@ namespace ngraph
             class BodyLambda : public Lambda
             {
             public:
+                NGRAPH_API
                 static constexpr DiscreteTypeInfo type_info{"BodyLamdba", 0};
                 const DiscreteTypeInfo& get_type_info() const { return type_info; }
                 BodyLambda(const OutputVector& outputs, const ParameterVector& parameters)
@@ -78,6 +78,7 @@ namespace ngraph
             class SliceInputDescription : public InputDescription
             {
             public:
+                NGRAPH_API
                 static constexpr DiscreteTypeInfo type_info{"SliceInputDescription", 0};
                 const DiscreteTypeInfo& get_type_info() const override { return type_info; }
                 /// \param input_index Position of the TensorIterator input
@@ -108,6 +109,7 @@ namespace ngraph
             class MergedInputDescription : public InputDescription
             {
             public:
+                NGRAPH_API
                 static constexpr DiscreteTypeInfo type_info{"MergedInputDescription", 0};
                 const DiscreteTypeInfo& get_type_info() const override { return type_info; }
                 /// \param input_index Position of the TensorIterator input supplying a value to
@@ -127,6 +129,7 @@ namespace ngraph
             class InvariantInputDescription : public InputDescription
             {
             public:
+                NGRAPH_API
                 static constexpr DiscreteTypeInfo type_info{"InvariantInputDescription", 0};
                 const DiscreteTypeInfo& get_type_info() const override { return type_info; }
                 InvariantInputDescription(uint64_t input_index, uint64_t body_parameter_index);
@@ -158,6 +161,7 @@ namespace ngraph
             class ConcatOutputDescription : public OutputDescription
             {
             public:
+                NGRAPH_API
                 static constexpr DiscreteTypeInfo type_info{"ConcatOutputDescription", 0};
                 const DiscreteTypeInfo& get_type_info() const override { return type_info; }
                 /// \param body_value_index A body value that produces the output
@@ -188,6 +192,7 @@ namespace ngraph
             class BodyOutputDescription : public OutputDescription
             {
             public:
+                NGRAPH_API
                 static constexpr DiscreteTypeInfo type_info{"BodyOutputDescription", 0};
                 const DiscreteTypeInfo& get_type_info() const override { return type_info; }
                 /// \param body_value_index A body value that produces the output

@@ -23,10 +23,9 @@ namespace ngraph
     namespace op
     {
         /// \brief Computes minimum index along a specified axis for a given tensor
-        class ArgMin : public op::util::IndexReduction
+        class NGRAPH_API ArgMin : public op::util::IndexReduction
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"ArgMin", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a ArgMin operation.
@@ -42,7 +41,7 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
-
+            bool visit_attributes(AttributeVisitor& visitor) override;
             virtual std::shared_ptr<Node> get_default_value() const override;
         };
     }

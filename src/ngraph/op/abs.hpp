@@ -26,15 +26,14 @@ namespace ngraph
     {
         /// \brief Elementwise absolute value operation.
         ///
-        class Abs : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Abs : public util::UnaryElementwiseArithmetic
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Abs", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs an absolute value operation.
             Abs() = default;
-
+            bool visit_attributes(AttributeVisitor& visitor) override { return true; }
             /// \brief Constructs an absolute value operation.
             ///
             /// \param arg Output that produces the input tensor.<br>

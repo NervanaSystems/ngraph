@@ -26,10 +26,9 @@ namespace ngraph
     {
         /// \brief Elementwise inverse cosine (arccos) operation.
         ///
-        class Acos : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Acos : public util::UnaryElementwiseArithmetic
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Acos", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs an arccos operation.
@@ -42,7 +41,7 @@ namespace ngraph
             /// Output `[d1, ...]`
             ///
             Acos(const Output<Node>& arg);
-
+            bool visit_attributes(AttributeVisitor& visitor) override { return true; }
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:

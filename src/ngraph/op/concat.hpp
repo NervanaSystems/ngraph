@@ -25,10 +25,9 @@ namespace ngraph
     namespace op
     {
         /// \brief Concatenation operation.
-        class Concat : public Op
+        class NGRAPH_API Concat : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Concat", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a concatenation operation.
@@ -44,7 +43,7 @@ namespace ngraph
             /// \param args               The nodes producing the input tensors.
             /// \param axis The axis along which to concatenate the input tensors.
             Concat(const NodeVector& args, int64_t axis);
-
+            bool visit_attributes(AttributeVisitor& visitor) override;
             void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>

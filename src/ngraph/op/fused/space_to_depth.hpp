@@ -29,20 +29,36 @@ namespace ngraph
         ///
         ///        Output node produces a tensor with shape:
         ///        [N, C * blocksize * blocksize, H / blocksize, W / blocksize]
-        class SpaceToDepth : public ngraph::op::util::FusedOp
+        class NGRAPH_API SpaceToDepth : public ngraph::op::util::FusedOp
         {
         public:
-            NGRAPH_API
+            enum class SpaceToDepthMode
+            {
+                // The output depth is gathered from [block_size, ..., block_size, C]
+                BLOCKS_FIRST,
+                // The output depth is gathered from [C, block_size, ..., block_size]
+                DEPTH_FIRST
+            };
+
             static constexpr NodeTypeInfo type_info{"SpaceToDepth", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             SpaceToDepth() = default;
             /// \brief Constructs a SpaceToDepth operation.
             ///
             /// \param data - Node producing the input tensor
+            /// \param mode Specifies how the output depth dimension is gathered
+            /// from block coordinates and the old depth dimension.
             /// \param block_size - the size of the block of values to be moved
-            SpaceToDepth(const Output<Node>& data, std::size_t block_size);
+            SpaceToDepth(const Output<Node>& data,
+                         const SpaceToDepthMode& mode,
+                         std::size_t block_size = 1);
+
+            SpaceToDepth(const Output<Node>& data,
+                         const std::string& mode,
+                         std::size_t block_size = 1);
 
             std::size_t get_block_size() const { return m_blocksize; }
+            SpaceToDepthMode get_mode() const { return m_mode; }
             virtual NodeVector decompose_op() const override;
 
             virtual std::shared_ptr<Node>
@@ -50,6 +66,8 @@ namespace ngraph
 
         protected:
             std::size_t m_blocksize;
+            SpaceToDepthMode m_mode;
+            SpaceToDepthMode mode_from_string(const std::string& mode) const;
         };
     }
 }

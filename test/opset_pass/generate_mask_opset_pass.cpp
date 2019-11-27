@@ -26,10 +26,8 @@ TEST(opset_transform, opset1_generate_mask_downgrade_pass)
     pass_manager.register_pass<pass::Opset0Downgrade>();
     pass_manager.run_passes(f);
 
-    auto generate_mask_v0 = static_pointer_cast<op::v0::GenerateMask>(
+    auto generate_mask_v0 = as_type_ptr<op::v0::GenerateMask>(
         f->get_results().at(0)->input_value(0).get_node_shared_ptr());
-
-    EXPECT_EQ(generate_mask_v0->description(), "GenerateMask");
-    EXPECT_EQ(generate_mask_v0->get_version(), 0);
+    ASSERT_TRUE(generate_mask_v0);
     EXPECT_EQ(generate_mask_v0->get_mask_shape(), (Shape{1, 128}));
 }

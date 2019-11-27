@@ -23,10 +23,9 @@ namespace ngraph
 {
     namespace op
     {
-        class AllReduce : public Op
+        class NGRAPH_API AllReduce : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"AllReduce", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             AllReduce() = default;
@@ -37,6 +36,7 @@ namespace ngraph
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
             reduction::Type get_reduce_type() const;
             void set_reduce_type(reduction::Type reduce_type);
+            bool visit_attributes(AttributeVisitor& visitor) override;
 
         private:
             reduction::Type m_reduce_type{reduction::Type::SUM};

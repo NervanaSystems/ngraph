@@ -25,10 +25,9 @@ namespace ngraph
     namespace op
     {
         /// \brief Operator performing Matrix Multiplication.
-        class MatMul : public ngraph::op::util::FusedOp
+        class NGRAPH_API MatMul : public ngraph::op::util::FusedOp
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"MatMul", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             MatMul() = default;
@@ -42,6 +41,8 @@ namespace ngraph
                    const Output<Node>& B,
                    const bool& transpose_a = 0,
                    const bool& transpose_b = 0);
+
+            virtual void pre_validate_and_infer_types() override;
 
             virtual NodeVector decompose_op() const override;
 

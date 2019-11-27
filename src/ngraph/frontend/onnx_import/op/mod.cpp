@@ -13,9 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include <memory>
 
-#include "matmul.hpp"
-#include "ngraph/builder/matmul_factory.hpp"
+#include "mod.hpp"
+#include "ngraph/frontend/onnx_import/exceptions.hpp"
+#include "ngraph/op/abs.hpp"
+#include "ngraph/op/fused/mod.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 
 namespace ngraph
 {
@@ -25,24 +29,18 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector matmul(const Node& node)
+                NodeVector mod(const Node& node)
                 {
-                    auto ng_inputs = node.get_ng_inputs();
-                    auto factory = builder::MatmulFactory(
-                        (OutputVector(std::begin(ng_inputs), std::end(ng_inputs))));
-                    std::size_t left_rank{ng_inputs.at(0)->get_shape().size()};
-                    std::size_t right_rank{ng_inputs.at(1)->get_shape().size()};
+                    std::shared_ptr<ngraph::Node> dividend{node.get_ng_inputs().at(0)};
+                    std::shared_ptr<ngraph::Node> divisor{node.get_ng_inputs().at(1)};
 
-                    if (left_rank == 0 || right_rank == 0)
-                    {
-                        NGRAPH_WARN
-                            << (node) << " "
-                            << "ONNX standard doesn't allow scalar operands, however nGraph "
-                               "accepts them. Consider use of element-wise multiplication instead "
-                               "to conform with ONNX standard.";
-                    }
-                    return factory.make_matmul_op();
+                    std::int64_t fmod = node.get_attribute_value<std::int64_t>("fmod", 0);
+                    ASSERT_IS_SUPPORTED(node, fmod == 1)
+                        << "Only 'fmod=1' mode is supported for mod operator.";
+
+                    return {std::make_shared<ngraph::op::Mod>(dividend, divisor)};
                 }
+
             } // namespace set_1
 
         } // namespace op

@@ -28,10 +28,9 @@ namespace ngraph
         {
             /// \brief Operation which "adds" axes to an input tensor, replicating elements from the
             ///        input as needed along the new axes.
-            class Broadcast : public Op
+            class NGRAPH_API Broadcast : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Broadcast", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a broadcast operation.
@@ -46,7 +45,7 @@ namespace ngraph
                 Broadcast(const Output<Node>& arg,
                           const Shape& shape,
                           const AxisSet& broadcast_axes);
-
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
@@ -74,10 +73,9 @@ namespace ngraph
             };
 
             /// \brief Broadcast arg to the same shape as like_arg.
-            class BroadcastLike : public v0::Broadcast
+            class NGRAPH_API BroadcastLike : public v0::Broadcast
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"BroadcastLike", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Broadcast arg to the same shape as like_arg.
@@ -94,7 +92,7 @@ namespace ngraph
                 BroadcastLike(const Output<Node>& arg,
                               const Output<Node>& like_arg,
                               const AxisSet& initial_broadcast_axes);
-
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -117,10 +115,9 @@ namespace ngraph
         {
             /// \brief Operation which "adds" axes to an input tensor, replicating elements from the
             ///        input as needed along the new axes.
-            class Broadcast : public Op
+            class NGRAPH_API Broadcast : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Broadcast", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a broadcast operation.
@@ -154,7 +151,7 @@ namespace ngraph
                           const Output<Node>& target_shape,
                           const AutoBroadcastSpec& broadcast_spec =
                               AutoBroadcastSpec(AutoBroadcastType::NUMPY));
-
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
 

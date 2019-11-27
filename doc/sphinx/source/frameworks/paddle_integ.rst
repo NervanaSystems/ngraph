@@ -1,7 +1,7 @@
 .. frameworks/paddle_integ.rst:
 
-PaddlePaddle integration
-========================
+PaddlePaddle\*
+==============
 
 PaddlePaddle is an open source deep learning framework developed by Baidu. It 
 aims to enable performant large-scale distributed computation for deep learning. 
@@ -47,8 +47,8 @@ nGraph code in one place allows for easy maintenance.
 
 .. _figure-paddle-design:
 
-.. figure:: ../graphics/paddlepaddle_design.png
-   :width: 555px
+.. figure:: ../graphics/paddlepaddle_design.svg
+   :width: 100%
    :alt: 
 
 *Figure A* above depicts nGraph access from PaddlePaddle. The PaddlePaddle 
@@ -65,7 +65,7 @@ is organized in the following file structure:
 .. _figure-paddle-dir:
 
 .. figure:: ../graphics/PaddlePaddleDir.svg
-   :width: 555px
+   :width: 100%
    :alt: 
 
 Compilation of nGraph is handled by the ``ngraph.cmake`` file in the 

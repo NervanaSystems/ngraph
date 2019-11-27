@@ -39,12 +39,8 @@ TEST(opset_transform, opset1_dyn_reshape_upgrade_pass)
     pass_manager.register_pass<pass::Opset1Upgrade>();
     pass_manager.run_passes(f);
 
-    const auto pass_replacement_node =
-        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
-    const auto reshape_v1 = as_type_ptr<op::v1::Reshape>(pass_replacement_node);
-
-    EXPECT_EQ(reshape_v1->description(), "DynReshape");
-    EXPECT_EQ(reshape_v1->get_version(), 1);
+    const auto pass_replacement_node = f->get_result()->input_value(0).get_node_shared_ptr();
+    EXPECT_TRUE(is_type<op::v1::Reshape>(pass_replacement_node));
 }
 
 TEST(opset_transform, opset1_reshape_downgrade_pass)
@@ -60,11 +56,8 @@ TEST(opset_transform, opset1_reshape_downgrade_pass)
     pass_manager.register_pass<pass::Opset0Downgrade>();
     pass_manager.run_passes(f);
 
-    const auto pass_replacement_node =
-        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto pass_replacement_node = f->get_result()->input_value(0).get_node_shared_ptr();
     const auto reshape_v1 = as_type_ptr<op::v0::DynReshape>(pass_replacement_node);
-
-    EXPECT_EQ(reshape_v1->description(), "DynReshape");
-    EXPECT_EQ(reshape_v1->get_version(), 0);
+    ASSERT_TRUE(reshape_v1);
     EXPECT_EQ(reshape_v1->get_zero_flag(), true);
 }

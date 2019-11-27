@@ -26,10 +26,9 @@ namespace ngraph
     {
         /// \brief Layer Normalization
         ///
-        class LayerNorm : public ngraph::op::util::FusedOp
+        class NGRAPH_API LayerNorm : public ngraph::op::util::FusedOp
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"LayerNorm", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             LayerNorm() = default;
@@ -55,7 +54,7 @@ namespace ngraph
 
             virtual NodeVector decompose_op() const override;
 
-            void pre_validate_and_infer_types() override;
+            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -77,10 +76,9 @@ namespace ngraph
 
         /// \brief Layer Normalization Backprop
         ///
-        class LayerNormBackprop : public ngraph::op::util::FusedOp
+        class NGRAPH_API LayerNormBackprop : public ngraph::op::util::FusedOp
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"LayerNormBackprop", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             LayerNormBackprop() = default;
@@ -121,7 +119,7 @@ namespace ngraph
 
             virtual NodeVector decompose_op() const override;
 
-            void pre_validate_and_infer_types() override;
+            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

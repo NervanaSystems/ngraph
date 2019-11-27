@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace op
     {
-        struct PriorBoxClusteredAttrs
+        struct NGRAPH_API PriorBoxClusteredAttrs
         {
             // widths         Desired widths of prior boxes
             // heights        Desired heights of prior boxes
@@ -42,12 +42,12 @@ namespace ngraph
 
         /// \brief Layer which generates prior boxes of specified sizes
         /// normalized to input image size
-        class PriorBoxClustered : public Op
+        class NGRAPH_API PriorBoxClustered : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"PriorBoxClustered", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            PriorBoxClustered() = default;
             /// \brief Constructs a PriorBoxClustered operation
             ///
             /// \param layer_shape    Shape of layer for which prior boxes are computed

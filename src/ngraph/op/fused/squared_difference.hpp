@@ -27,10 +27,9 @@ namespace ngraph
         /// \brief Calculates an element-wise squared difference between two tensors
         ///
         /// y[i] = (x1[i] - x2[i])^2
-        class SquaredDifference : public ngraph::op::util::FusedOp
+        class NGRAPH_API SquaredDifference : public ngraph::op::util::FusedOp
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"SquaredDifference", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             SquaredDifference() = default;
@@ -38,12 +37,24 @@ namespace ngraph
             ///
             /// \param x1 First input tensor
             /// \param x2 Second input tensor
-            SquaredDifference(const Output<Node>& x1, const Output<Node>& x2);
+            /// \param auto_broadcast Auto broadcast specification
+            SquaredDifference(const Output<Node>& x1,
+                              const Output<Node>& x2,
+                              const AutoBroadcastSpec& auto_broadcast = AutoBroadcastType::NUMPY);
 
             virtual NodeVector decompose_op() const override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+
+            const AutoBroadcastSpec& get_autob() const override { return m_autobroadcast; }
+            void set_autob(const AutoBroadcastSpec& auto_broadcast)
+            {
+                m_autobroadcast = auto_broadcast;
+            }
+
+        private:
+            AutoBroadcastSpec m_autobroadcast;
         };
-    }
-}
+    } // namespace op
+} // namespace ngraph
