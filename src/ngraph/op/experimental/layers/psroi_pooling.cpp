@@ -19,16 +19,16 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::DeformablePSROIPooling::type_info;
+constexpr NodeTypeInfo op::PSROIPooling::type_info;
 
-op::DeformablePSROIPooling::DeformablePSROIPooling(const Output<Node>& input,
-                                                   const Output<Node>& coords,
-                                                   const size_t output_dim,
-                                                   const size_t group_size,
-                                                   const float spatial_scale,
-                                                   int spatial_bins_x,
-                                                   int spatial_bins_y,
-                                                   const string& mode)
+op::PSROIPooling::PSROIPooling(const Output<Node>& input,
+                               const Output<Node>& coords,
+                               const size_t output_dim,
+                               const size_t group_size,
+                               const float spatial_scale,
+                               int spatial_bins_x,
+                               int spatial_bins_y,
+                               const string& mode)
     : Op({input, coords})
     , m_output_dim(output_dim)
     , m_group_size(group_size)
@@ -40,23 +40,21 @@ op::DeformablePSROIPooling::DeformablePSROIPooling(const Output<Node>& input,
     constructor_validate_and_infer_types();
 }
 
-void op::DeformablePSROIPooling::validate_and_infer_types()
+void op::PSROIPooling::validate_and_infer_types()
 {
     auto input_et = get_input_element_type(0);
     if (get_input_partial_shape(0).is_static() && get_input_partial_shape(1).is_static())
     {
         Shape input_shape = get_input_partial_shape(0).to_shape();
         Shape coords_shape = get_input_partial_shape(1).to_shape();
-        NODE_VALIDATION_CHECK(
-            this,
-            input_shape.size() >= 3,
-            "DeformablePSROIPooling expects 3 or higher dimensions for input. Got ",
-            input_shape.size());
-        NODE_VALIDATION_CHECK(
-            this,
-            coords_shape.size() == 2,
-            "DeformablePSROIPooling expects 2 dimensions for box coordinates. Got ",
-            coords_shape.size());
+        NODE_VALIDATION_CHECK(this,
+                              input_shape.size() >= 3,
+                              "PSROIPooling expects 3 or higher dimensions for input. Got ",
+                              input_shape.size());
+        NODE_VALIDATION_CHECK(this,
+                              coords_shape.size() == 2,
+                              "PSROIPooling expects 2 dimensions for box coordinates. Got ",
+                              coords_shape.size());
         Shape output_shape{coords_shape[0], m_output_dim};
         for (size_t i = 2; i < input_shape.size(); i++)
         {
@@ -70,15 +68,15 @@ void op::DeformablePSROIPooling::validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::DeformablePSROIPooling::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::PSROIPooling::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<DeformablePSROIPooling>(new_args.at(0),
-                                               new_args.at(1),
-                                               m_output_dim,
-                                               m_group_size,
-                                               m_spatial_scale,
-                                               m_spatial_bins_x,
-                                               m_spatial_bins_y,
-                                               m_mode);
+    return make_shared<PSROIPooling>(new_args.at(0),
+                                     new_args.at(1),
+                                     m_output_dim,
+                                     m_group_size,
+                                     m_spatial_scale,
+                                     m_spatial_bins_x,
+                                     m_spatial_bins_y,
+                                     m_mode);
 }
