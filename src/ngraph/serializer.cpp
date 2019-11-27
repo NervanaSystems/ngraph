@@ -1316,6 +1316,13 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Cosh>(args[0]);
             break;
         }
+        case OP_TYPEID::CumSum:
+        {
+            auto exclusive = node_js.at("exclusive");
+            auto reverse = node_js.at("reverse");
+            node = make_shared<op::CumSum>(args[0], args[1], exclusive, reverse);
+            break;
+        }
         case OP_TYPEID::CrossEntropy:
         {
             auto soft_label = node_js.at("soft_label");
@@ -2082,6 +2089,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             break;
         }
+        case OP_TYPEID::Mod_v1:
+        {
+            node = make_shared<op::Mod>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+        }
         case OP_TYPEID::Multiply:
         case OP_TYPEID::Multiply_v1:
         {
@@ -2145,9 +2157,18 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::OneHot:
         case OP_TYPEID::OneHot_v1:
         {
-            auto shape = node_js.at("shape").get<vector<size_t>>();
-            auto one_hot_axis = node_js.at("one_hot_axis").get<size_t>();
-            node = make_shared<op::OneHot>(args[0], read_partial_shape(shape), one_hot_axis);
+            if (op_version == 0)
+            {
+                auto shape = node_js.at("shape").get<vector<size_t>>();
+                auto one_hot_axis = node_js.at("one_hot_axis").get<size_t>();
+                node =
+                    make_shared<op::v0::OneHot>(args[0], read_partial_shape(shape), one_hot_axis);
+            }
+            if (op_version == 1)
+            {
+                auto axis = node_js.at("axis").get<int64_t>();
+                node = make_shared<op::v1::OneHot>(args[0], args[1], args[2], args[3], axis);
+            }
             break;
         }
         case OP_TYPEID::Or:
@@ -3318,6 +3339,13 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Cosh:
     case OP_TYPEID::Cosh_v1: { break;
     }
+    case OP_TYPEID::CumSum:
+    {
+        auto tmp = static_cast<const op::CumSum*>(&n);
+        node["exclusive"] = tmp->is_exclusive();
+        node["reverse"] = tmp->is_reverse();
+        break;
+    }
     case OP_TYPEID::CrossEntropy:
     {
         auto tmp = static_cast<const op::CrossEntropy*>(&n);
@@ -3828,6 +3856,12 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
+    case OP_TYPEID::Mod_v1:
+    {
+        auto tmp = static_cast<const op::Mod*>(&n);
+        node["auto_broadcast"] = write_auto_broadcast(tmp->get_auto_broadcast());
+        break;
+    }
     case OP_TYPEID::Multiply:
     case OP_TYPEID::Multiply_v1:
     {
@@ -3887,9 +3921,17 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::OneHot:
     case OP_TYPEID::OneHot_v1:
     {
-        auto tmp = static_cast<const op::OneHot*>(&n);
-        node["shape"] = write_partial_shape(tmp->get_output_partial_shape(0));
-        node["one_hot_axis"] = tmp->get_one_hot_axis();
+        if (op_version == 0)
+        {
+            auto tmp = static_cast<const op::v0::OneHot*>(&n);
+            node["shape"] = write_partial_shape(tmp->get_output_partial_shape(0));
+            node["one_hot_axis"] = tmp->get_one_hot_axis();
+        }
+        if (op_version == 1)
+        {
+            auto tmp = static_cast<const op::v1::OneHot*>(&n);
+            node["axis"] = tmp->get_axis();
+        }
         break;
     }
     case OP_TYPEID::Or:

@@ -16,7 +16,8 @@
 
 function(MODE_APPLY_FILE PATH)
     execute_process(COMMAND git update-index --add --chmod=-x ${PATH}
-        OUTPUT_VARIABLE RESULT)
+        OUTPUT_VARIABLE RESULT
+        ERROR_QUIET)
 endfunction()
 
 set(DIRECTORIES_OF_INTEREST

@@ -144,6 +144,8 @@ set (SRC
     op/cos.hpp
     op/cosh.cpp
     op/cosh.hpp
+    op/cum_sum.cpp
+    op/cum_sum.hpp
     op/crop_and_resize.cpp
     op/crop_and_resize.hpp
     op/dequantize.cpp
@@ -375,6 +377,8 @@ set (SRC
     op/fused/lstm_sequence.hpp
     op/fused/matmul.cpp
     op/fused/matmul.hpp
+    op/fused/mod.cpp
+    op/fused/mod.hpp
     op/fused/mvn.cpp
     op/fused/mvn.hpp
     op/fused/normalize_l2.cpp
@@ -464,6 +468,7 @@ set (SRC
     pass/constant_folding_unsqueeze.cpp
     pass/constant_folding_shape_of.cpp
     pass/constant_folding_slice.cpp
+    pass/constant_folding_strided_slice.cpp
     pass/constant_folding_transpose.cpp
     pass/constant_folding_unary.cpp
     pass/constant_folding.cpp
@@ -648,7 +653,6 @@ target_compile_definitions(ngraph
     PRIVATE
         SHARED_LIB_PREFIX="${CMAKE_SHARED_LIBRARY_PREFIX}"
         SHARED_LIB_SUFFIX="${CMAKE_SHARED_LIBRARY_SUFFIX}"
-        NGRAPH_DLL_EXPORTS
 )
 if(NGRAPH_LIB_VERSIONING_ENABLE)
     set_target_properties(ngraph PROPERTIES

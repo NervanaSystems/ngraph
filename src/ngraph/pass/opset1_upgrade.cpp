@@ -403,6 +403,28 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
+    case OP_TYPEID::OneHot:
+    {
+        auto tmp = as_type_ptr<op::v0::OneHot>(node);
+        const auto indices = tmp->input_value(0).get_node_shared_ptr();
+        const auto one_hot_axis = tmp->get_one_hot_axis();
+
+        const auto output_pshape = tmp->get_output_partial_shape(0);
+        NGRAPH_CHECK(output_pshape[one_hot_axis].is_static(),
+                     "OneHot:v0 one hot axis dimension must be static ",
+                     *node);
+        const auto depth = static_cast<int64_t>(output_pshape[one_hot_axis]);
+        const auto depth_node = op::Constant::create(element::i64, Shape{}, {depth});
+
+        const auto on_value = op::Constant::create(element::i64, Shape{}, {1});
+        const auto off_value = op::Constant::create(element::i64, Shape{}, {0});
+
+        auto replacement_node =
+            make_shared<op::v1::OneHot>(indices, depth_node, on_value, off_value, one_hot_axis);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::Or:
     {
         upgrade_binary_elementwise_node<op::v0::Or, op::v1::LogicalOr>(node);
