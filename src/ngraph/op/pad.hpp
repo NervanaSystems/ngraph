@@ -27,10 +27,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Generic padding operation.
-            class Pad : public Op
+            class NGRAPH_API Pad : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Pad", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a generic padding operation.
@@ -89,10 +88,9 @@ namespace ngraph
         namespace v1
         {
             /// \brief Generic padding operation.
-            class Pad : public Op
+            class NGRAPH_API Pad : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Pad", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a generic padding operation.

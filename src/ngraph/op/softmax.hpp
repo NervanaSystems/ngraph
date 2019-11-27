@@ -26,10 +26,9 @@ namespace ngraph
         {
             /// \brief Softmax operation.
             ///
-            class Softmax : public Op
+            class NGRAPH_API Softmax : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Softmax", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Softmax() = default;
@@ -70,10 +69,9 @@ namespace ngraph
 
         namespace v1
         {
-            class Softmax : public Op
+            class NGRAPH_API Softmax : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Softmax", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Softmax()
