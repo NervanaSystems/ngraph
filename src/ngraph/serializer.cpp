@@ -1653,7 +1653,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
             auto groups = node_js.at("groups").get<size_t>();
 
-            op::PadType pad_type = read_pad_type(node_js);
             node = make_shared<op::GroupConvolutionBackpropFilters>(args[0],
                                                                     args[1],
                                                                     args[2],

@@ -306,14 +306,9 @@ NodeVector op::GroupConvolutionBackpropData::decompose_op() const
     auto filters_shape = get_input_shape(1);
     auto delta_shape = get_input_shape(2);
 
-    const Strides& strides = get_window_movement_strides();
-    const Strides& dilations = get_window_dilation_strides();
-    const CoordinateDiff& paddings = get_padding_below();
-
     NodeVector sliced_inputs;
 
-    size_t groups = get_groups();
-    for (size_t i = 0; i < groups; ++i)
+    for (size_t i = 0; i < get_groups(); ++i)
     {
         size_t channel_step = filters_shape.at(1);
 
@@ -323,7 +318,7 @@ NodeVector op::GroupConvolutionBackpropData::decompose_op() const
         auto sliced_data =
             std::make_shared<op::Slice>(data_batch, data_lower_bound, data_upper_bound);
 
-        size_t filters_step = filters_shape.at(0) / groups;
+        size_t filters_step = filters_shape.at(0) / get_groups();
 
         const Coordinate filters_lower_bound{i * filters_step, 0, 0, 0};
         const Coordinate filters_upper_bound{
@@ -337,14 +332,15 @@ NodeVector op::GroupConvolutionBackpropData::decompose_op() const
         auto sliced_delta =
             std::make_shared<op::Slice>(output_delta, delta_lower_bound, delta_upper_bound);
 
-        auto sliced_conv = std::make_shared<op::ConvolutionBackpropData>(sliced_data->get_shape(),
-                                                                         sliced_filters,
-                                                                         sliced_delta,
-                                                                         strides,
-                                                                         dilations,
-                                                                         paddings,
-                                                                         paddings,
-                                                                         Strides{1, 1});
+        auto sliced_conv =
+            std::make_shared<op::ConvolutionBackpropData>(sliced_data->get_shape(),
+                                                          sliced_filters,
+                                                          sliced_delta,
+                                                          get_window_movement_strides(),
+                                                          get_window_dilation_strides(),
+                                                          get_padding_below(),
+                                                          get_padding_above(),
+                                                          Strides{1, 1});
 
         sliced_inputs.push_back(sliced_conv);
     }
@@ -429,14 +425,9 @@ NodeVector op::GroupConvolutionBackpropFilters::decompose_op() const
     auto filters_shape = get_input_shape(1);
     auto delta_shape = get_input_shape(2);
 
-    const Strides& strides = get_window_movement_strides();
-    const Strides& dilations = get_window_dilation_strides();
-    const CoordinateDiff& paddings = get_padding_below();
-
     NodeVector sliced_inputs;
 
-    size_t groups = get_groups();
-    for (size_t i = 0; i < groups; ++i)
+    for (size_t i = 0; i < get_groups(); ++i)
     {
         size_t channel_step = filters_shape.at(1);
 
@@ -446,7 +437,7 @@ NodeVector op::GroupConvolutionBackpropFilters::decompose_op() const
         auto sliced_data =
             std::make_shared<op::Slice>(data_batch, data_lower_bound, data_upper_bound);
 
-        size_t filters_step = filters_shape.at(0) / groups;
+        size_t filters_step = filters_shape.at(0) / get_groups();
 
         const Coordinate filters_lower_bound{i * filters_step, 0, 0, 0};
         const Coordinate filters_upper_bound{
@@ -464,10 +455,10 @@ NodeVector op::GroupConvolutionBackpropFilters::decompose_op() const
             std::make_shared<op::ConvolutionBackpropFilters>(sliced_data,
                                                              sliced_filters->get_shape(),
                                                              sliced_delta,
-                                                             strides,
-                                                             dilations,
-                                                             paddings,
-                                                             paddings,
+                                                             get_window_movement_strides(),
+                                                             get_window_dilation_strides(),
+                                                             get_padding_below(),
+                                                             get_padding_above(),
                                                              Strides{1, 1});
 
         sliced_inputs.push_back(sliced_conv);
