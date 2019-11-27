@@ -50,7 +50,7 @@ namespace ngraph
                 {
                     return {std::make_shared<ngraph::op::v1::Subtract>(
                         node.get_ng_inputs().at(0),
-                        node.get_ng_inputs().at(1),
+                        node.get_ng_inputs().at(1))};
                 }
 
             } // namespace set_1
