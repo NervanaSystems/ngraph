@@ -35,6 +35,7 @@ namespace ngraph
             NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Clamp", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            Clamp() = default;
             /// \brief Constructs a Clamp node.
             ///
             /// \param data - Node producing the input tensor
@@ -52,8 +53,8 @@ namespace ngraph
             double get_min() const { return m_min; }
             double get_max() const { return m_max; }
         private:
-            const double m_min;
-            const double m_max;
+            double m_min;
+            double m_max;
         };
     }
 }

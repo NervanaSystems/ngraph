@@ -36,6 +36,7 @@ namespace ngraph
             NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Constant", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            Constant() = default;
             /// \brief Constructs a tensor constant.
             ///
             /// \param type The element type of the tensor constant.
@@ -338,6 +339,7 @@ namespace ngraph
                 case element::Type_t::u64:
                     write_buffer<uint64_t, T>(target, source, target_element_count);
                     break;
+                case element::Type_t::u1: throw std::runtime_error("unsupported type");
                 case element::Type_t::undefined: throw std::runtime_error("unsupported type");
                 case element::Type_t::dynamic: throw std::runtime_error("unsupported type");
                 }
@@ -362,6 +364,7 @@ namespace ngraph
             static constexpr NodeTypeInfo type_info{"ScalarConstantLikeBase", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             std::shared_ptr<op::Constant> as_constant() const;
+            ScalarConstantLikeBase() = default;
 
         protected:
             ScalarConstantLikeBase(const OutputVector& args)

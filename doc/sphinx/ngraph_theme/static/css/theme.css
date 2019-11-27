@@ -49,24 +49,19 @@ div.menu-float {
    text-align: center;
   background: #393F4D;
   opacity: 0.9717; 
-   /* margin-left: 55%; */ 
-   /* margin-right: 3%; */
   padding: 3px;
   border-top: 1px solid #999999;
   border-left: 1px solid #999999;
   border-right: 1px solid #999999;
   margin-top: -2px;
   margin-left: -2px;
- /*  -moz-box-shadow: 2px 3px 2px #d3d3d3; */
- /* -webkit-box-shadow: 2px 3px 2px #d3d3d3 */
- /* box-shadow: 3px 4px 3px #d3d3d3; */
   -webkit-border-radius: 0.1px;
   -moz-border-radius: 0.1px;
     border-radius: 0.1px;
    z-index:1000;
 }
 
-div.menu-float a, div.floating-menu h3 {display:inline-block; margin:0 0.5em; font-size: 143%; line-height: 1.41em; color: #fcfcfc; }
+div.menu-float a, div.floating-menu h3 {display:inline-block; margin:0 0.5em; font-size: 133%; line-height: 1.31em; color: #fcfcfc; }
 
 
 #nav {
@@ -1535,7 +1530,7 @@ a:hover {
 }
 
 a:visited {
-  color: #FFA400;
+  color: #DC700D;
 }
 
 html {
@@ -1644,7 +1639,6 @@ h1 {
 
 h2 {
   font-size: 133%;
-  text-decoration: underline 4px dotted #D3D3D3;
   margin-top: -2px;
 }
 
@@ -1761,7 +1755,7 @@ div[class^='highlight'] td.code {
 
 .wy-menu-vertical p.caption {
   font-family: Nunito, 'Nunito Sans', Helvetica, 'Helvetica Neue', sans;
-  text-decoration: underline 2px #393F4D;
+  /* text-decoration: underline 2px #393F4D; */
   font-size: 110%;
   color: #23221d;
   background-color: #FAFBFD;
@@ -2215,6 +2209,10 @@ div[class^='highlight'] pre {
   padding: 6px;
   color: #FDC939;
 }
+.rst-other-versions a:hover {
+  color: #555;
+  background-color: #e0e0e0;
+}
 .rst-versions.rst-badge {
   width: auto;
   bottom: 20px;
@@ -2430,7 +2428,6 @@ div[class^='highlight'] pre {
 .rst-content tt.literal, .rst-content tt.literal, .rst-content code.literal {
   font-size: 91% !important;
   color: #152a58;
-  text-decoration: underline 2px dotted #cdcac5;
   background-color: #fff;
   line-height: 0.8955em;
 }
@@ -2666,7 +2663,7 @@ span[id*='MathJax-Span'] {
   font-family: 'Nunito Sans', Nunito, Helvetica, 'Helvetica Neue', sans;
   font-weight: bolder;
   border-top: 5px dotted #FFA400;
-  border-bottom: 29px solid #d3d3d3;
+  border-bottom: 28px solid #d3d3d3;
   font-size: 131%;
   color: #393F4D;
   width: auto;
@@ -2816,15 +2813,12 @@ span[id*='MathJax-Span'] {
 }
 .wy-menu-vertical a:hover {
   background-color: #fafbfd;
-  text-decoration: underline 1.33em dotted;
-  cursor: pointer;
 }
 .wy-menu-vertical a:hover span.toctree-expand {
   color: #e8e8e8;
 }
 .wy-menu-vertical a:active {
   background-color: #FAFBFD;
-  cursor: pointer;
   color: #555;
 }
 .wy-menu-vertical a:active span.toctree-expand {
