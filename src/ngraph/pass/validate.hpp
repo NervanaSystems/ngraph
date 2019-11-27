@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace pass
     {
-        class Validate : public FunctionPass
+        class NGRAPH_API Validate : public FunctionPass
         {
         public:
             Validate()

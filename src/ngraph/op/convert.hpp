@@ -23,10 +23,9 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise type conversion operation.
-        class Convert : public Op
+        class NGRAPH_API Convert : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Convert", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a conversion operation.
