@@ -191,8 +191,8 @@ namespace
         /// buffer   Optional buffer value to create view over
         /// offset   Optional offset into the buffer this view starts at
         ///
-        /// If buffer is null, a new allocation of a memref is created. 
-        /// Offset is ignored.  If buffer is non-null, then we create a temp 
+        /// If buffer is null, a new allocation of a memref is created.
+        /// Offset is ignored.  If buffer is non-null, then we create a temp
         /// view over a pre-allocated buffer (see createTempBuffer)
 
         Value*
