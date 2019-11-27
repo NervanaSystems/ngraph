@@ -30,22 +30,22 @@ static string s_manifest = "${MANIFEST}";
 
 NGRAPH_TEST(${BACKEND_NAME}, dyn_group_convolution_backprop_data)
 {
-    Shape shape_filter{6, 3, 3, 3};
+    Shape shape_filter{6, 1, 3, 3};
     auto filters = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     Shape shape_delta{2, 6, 3, 3};
     auto deltas = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    Shape shape_data_batch_shape{2, 3, 5, 5};
-    auto data_batch_shape =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    Shape shape_data_batch{2, 3, 5, 5};
+    auto data_batch = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto strides = Strides{1, 1};
     auto dilations = Strides{1, 1};
     auto padding_begin = CoordinateDiff{0, 0};
     auto padding_end = CoordinateDiff{0, 0};
+    size_t groups = 3;
 
-    auto conv1 = make_shared<op::v1::ConvolutionBackpropData>(
-        filters, deltas, data_batch_shape, strides, dilations, padding_begin, padding_end);
+    auto conv_bprop_data = make_shared<op::GroupConvolutionBackpropData>(
+        data_batch, filters, deltas, strides, dilations, padding_begin, padding_end, groups);
 
-    auto f = make_shared<Function>(conv1, ParameterVector{filters, deltas, data_batch_shape});
+    auto f = make_shared<Function>(conv_bprop_data, ParameterVector{data_batch, filters, deltas});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
 
@@ -53,46 +53,49 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_group_convolution_backprop_data)
 
     auto result = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
 
-    vector<float> filter, delta, expected_result;
+    vector<float> filter, delta, data, expected_result;
 
-    for (int i = 0; i < 6 * 3 * 3 * 3; i++)
+    for (int i = 0; i < 6 * 1 * 3 * 3; i++)
         filter.emplace_back(i);
 
     for (int i = 0; i < 2 * 6 * 3 * 3; i++)
         delta.emplace_back(i);
 
     for (int i = 0; i < 2 * 3 * 5 * 5; i++)
+        data.emplace_back(i);
+
+    for (int i = 0; i < 2 * 3 * 5 * 5; i++)
         expected_result.emplace_back(i);
 
-    vector<int64_t> shapes = {2, 3, 5, 5};
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape_filter);
-    copy_data(a, filter);
-    auto b = backend->create_tensor(element::f32, shape_delta);
-    copy_data(b, delta);
-    auto c = backend->create_tensor(element::i64, Shape{shapes.size()}); // dynamic data batch shape
-    copy_data(c, shapes);
+    auto a = backend->create_tensor(element::f32, shape_data_batch);
+    copy_data(a, data);
+    auto b = backend->create_tensor(element::f32, shape_filter);
+    copy_data(b, filter);
+    auto c = backend->create_tensor(element::f32, shape_delta);
+    copy_data(c, delta);
     handle->call_with_validate({result}, {a, b, c});
     EXPECT_FALSE(test::all_close_f(vector<float>{expected_result}, read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, dyn_group_convolution_backprop_filter)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_group_convolution_backprop_filters)
 {
-    Shape shape_data{64, 3, 100};
-    auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    Shape shape_delta{64, 128, 96};
+    Shape shape_filter{6, 1, 3, 3};
+    auto filters = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    Shape shape_delta{2, 6, 3, 3};
     auto deltas = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto filters_shape =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
-    auto strides = Strides{1};
-    auto dilations = Strides{1};
-    auto padding_begin = CoordinateDiff{2};
-    auto padding_end = CoordinateDiff{3};
-    auto conv1 = make_shared<op::v1::ConvolutionBackpropFilters>(
-        data, deltas, filters_shape, strides, dilations, padding_begin, padding_end);
+    Shape shape_data_batch{2, 3, 5, 5};
+    auto data_batch = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto strides = Strides{1, 1};
+    auto dilations = Strides{1, 1};
+    auto padding_begin = CoordinateDiff{0, 0};
+    auto padding_end = CoordinateDiff{0, 0};
+    size_t groups = 3;
 
-    auto f = make_shared<Function>(conv1, ParameterVector{data, deltas, filters_shape});
+    auto conv_bprop_filters = make_shared<op::GroupConvolutionBackpropFilters>(
+        data_batch, filters, deltas, strides, dilations, padding_begin, padding_end, groups);
+
+    auto f =
+        make_shared<Function>(conv_bprop_filters, ParameterVector{data_batch, filters, deltas});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
 
@@ -100,26 +103,26 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_group_convolution_backprop_filter)
 
     auto result = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
 
-    vector<float> input, delta, expected_result;
+    vector<float> filter, delta, data, expected_result;
 
-    for (int i = 0; i < 64 * 3 * 100; i++)
-        input.emplace_back(i);
+    for (int i = 0; i < 6 * 1 * 3 * 3; i++)
+        filter.emplace_back(i);
 
-    for (int i = 0; i < 64 * 128 * 96; i++)
+    for (int i = 0; i < 2 * 6 * 3 * 3; i++)
         delta.emplace_back(i);
 
-    for (int i = 0; i < 128 * 3 * 10; i++)
+    for (int i = 0; i < 2 * 3 * 5 * 5; i++)
+        data.emplace_back(i);
+
+    for (int i = 0; i < 6 * 1 * 3 * 3; i++)
         expected_result.emplace_back(i);
 
-    vector<int64_t> shapes = {128, 3, 10};
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape_data);
-    copy_data(a, input);
-    auto b = backend->create_tensor(element::f32, shape_delta);
-    copy_data(b, delta);
-    auto c = backend->create_tensor(element::i64, Shape{shapes.size()}); // dynamic data batch shape
-    copy_data(c, shapes);
+    auto a = backend->create_tensor(element::f32, shape_data_batch);
+    copy_data(a, data);
+    auto b = backend->create_tensor(element::f32, shape_filter);
+    copy_data(b, filter);
+    auto c = backend->create_tensor(element::f32, shape_delta);
+    copy_data(c, delta);
     handle->call_with_validate({result}, {a, b, c});
     EXPECT_FALSE(test::all_close_f(vector<float>{expected_result}, read_vector<float>(result)));
 }
