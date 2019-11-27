@@ -17,10 +17,31 @@
 #include "ngraph/coordinate.hpp"
 #include "ngraph/util.hpp"
 
+using namespace std;
+using namespace ngraph;
+
 std::ostream& ngraph::operator<<(std::ostream& s, const Coordinate& coordinate)
 {
     s << "Coordinate{";
     s << ngraph::join(coordinate);
     s << "}";
     return s;
+}
+
+NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<Coordinate>::type_info;
+
+const vector<uint64_t>& AttributeAdapter<Coordinate>::get()
+{
+    if (!m_buffer_valid)
+    {
+        m_buffer = copy_from<vector<uint64_t>>(m_value);
+        m_buffer_valid = true;
+    }
+    return m_buffer;
+}
+
+void AttributeAdapter<Coordinate>::set(const vector<uint64_t>& value)
+{
+    m_value = copy_from<Coordinate>(m_value);
+    m_buffer_valid = false;
 }

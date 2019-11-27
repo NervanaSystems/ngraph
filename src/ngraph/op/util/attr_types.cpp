@@ -13,9 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include <map>
 
-#include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/check.hpp"
 #include "ngraph/enum_names.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 
 using namespace ngraph;
 
@@ -126,4 +128,19 @@ namespace ngraph
     {
         return s << as_string(type);
     }
+
+    op::AutoBroadcastType op::AutoBroadcastSpec::type_from_string(const std::string& type) const
+    {
+        static const std::map<std::string, AutoBroadcastType> allowed_values = {
+            {"NONE", AutoBroadcastType::NONE},
+            {"NUMPY", AutoBroadcastType::NUMPY},
+            {"PDPD", AutoBroadcastType::PDPD},
+            {"EXPLICIT", AutoBroadcastType::EXPLICIT}};
+
+        NGRAPH_CHECK(allowed_values.count(type) > 0, "Invalid 'type' value passed in.");
+
+        return allowed_values.at(type);
+    }
+
+    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastSpec>::type_info;
 }
