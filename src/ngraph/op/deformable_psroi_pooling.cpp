@@ -79,22 +79,28 @@ void op::v1::DeformablePSROIPooling::validate_and_infer_types()
     const auto& input_pshape = get_input_partial_shape(0);
     const auto& box_coords_pshape = get_input_partial_shape(1);
 
-    NODE_VALIDATION_CHECK(
-        this,
-        input_pshape.rank().is_dynamic() || static_cast<size_t>(input_pshape.rank()) == 4,
-        "Feature map input rank must equal to 4 (input rank: ", static_cast<size_t>(input_pshape.rank()), ")");
-    NODE_VALIDATION_CHECK(
-        this,
-        box_coords_pshape.rank().is_dynamic() || static_cast<size_t>(box_coords_pshape.rank()) == 2,
-        "Box coordinates input rank must equal to 2 (input rank: ", static_cast<size_t>(box_coords_pshape.rank()), ")");
+    NODE_VALIDATION_CHECK(this,
+                          input_pshape.rank().is_dynamic() ||
+                              static_cast<size_t>(input_pshape.rank()) == 4,
+                          "Feature map input rank must equal to 4 (input rank: ",
+                          static_cast<size_t>(input_pshape.rank()),
+                          ")");
+    NODE_VALIDATION_CHECK(this,
+                          box_coords_pshape.rank().is_dynamic() ||
+                              static_cast<size_t>(box_coords_pshape.rank()) == 2,
+                          "Box coordinates input rank must equal to 2 (input rank: ",
+                          static_cast<size_t>(box_coords_pshape.rank()),
+                          ")");
 
     if (get_input_size() == 3) // offsets input is provided
     {
         const auto& offsets_pshape = get_input_partial_shape(2);
-        NODE_VALIDATION_CHECK(
-            this,
-            offsets_pshape.rank().is_dynamic() || static_cast<size_t>(offsets_pshape.rank()) == 4,
-            "Offsets input rank must equal to 4 (input rank: ", static_cast<size_t>(offsets_pshape.rank()), ")");
+        NODE_VALIDATION_CHECK(this,
+                              offsets_pshape.rank().is_dynamic() ||
+                                  static_cast<size_t>(offsets_pshape.rank()) == 4,
+                              "Offsets input rank must equal to 4 (input rank: ",
+                              static_cast<size_t>(offsets_pshape.rank()),
+                              ")");
     }
     int64_t output_rank = 4;
     std::vector<Dimension> output_dim_vec(output_rank, Dimension::dynamic());

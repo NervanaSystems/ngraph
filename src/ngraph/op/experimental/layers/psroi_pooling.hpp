@@ -40,13 +40,13 @@ namespace ngraph
             /// \param spatial_bins_y Numbers of bins to divide the input feature maps over height
             /// \param mode           Mode of pooling - Avg or Bilinear
             DeformablePSROIPooling(const Output<Node>& input,
-                         const Output<Node>& coords,
-                         const size_t output_dim,
-                         const size_t group_size,
-                         const float spatial_scale,
-                         int spatial_bins_x,
-                         int spatial_bins_y,
-                         const std::string& mode);
+                                   const Output<Node>& coords,
+                                   const size_t output_dim,
+                                   const size_t group_size,
+                                   const float spatial_scale,
+                                   int spatial_bins_x,
+                                   int spatial_bins_y,
+                                   const std::string& mode);
 
             void validate_and_infer_types() override;
 

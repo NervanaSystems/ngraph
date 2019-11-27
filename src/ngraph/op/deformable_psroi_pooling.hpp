@@ -31,19 +31,29 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"DeformablePSROIPooling", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 DeformablePSROIPooling() = default;
-                /// \brief Constructs a PSROIPooling operation
+                /// \brief Constructs a DeformablePSROIPooling operation
                 ///
-                /// \param input          Input feature map {N, C, ...}
-                /// \param coords         Coordinates of bounding boxes
-                /// \param output_dim     Output channel number
-                /// \param group_size     Number of groups to encode position-sensitive scores
-                /// \param spatial_scale  Ratio of input feature map over input image size
-                /// \param spatial_bins_x Numbers of bins to divide the input feature maps over
-                /// width
-                /// \param spatial_bins_y Numbers of bins to divide the input feature maps over
-                /// height
-                /// \param mode           Mode of pooling - Avg or Bilinear
-                // TODO
+                /// \param input           Input tensor with feature maps
+                /// \param coords          Input tensor describing box consisting
+                ///                        of five element tuples
+                /// \param offsets         Input blob with transformation values
+                /// \param output_dim      Pooled output channel number
+                /// \param group_size      Number of groups to encode position-sensitive score maps
+                /// \param spatial_scale   Multiplicative spatial scale factor to translate ROI
+                ///                        coordinates from their input scale to the scale used when
+                ///                        pooling
+                /// \param mode            Specifies mode for pooling.
+                /// \param spatial_bins_x  Specifies numbers of bins to divide the input feature
+                ///                         maps over width
+                /// \param spatial_bins_y  Specifies numbers of bins to divide the input feature
+                ///                        maps over height
+                /// \param no_trans        The flag that specifies whenever third input exists
+                ///                        and contains transformation (offset) values
+                /// \param trans_std       The value that all transformation (offset) values are
+                ///                        multiplied with
+                /// \param part_size       The number of parts the output tensor spatial dimensions
+                ///                        are divided into. Basically it is the height
+                ///                        and width of the third input
                 DeformablePSROIPooling(const Output<Node>& input,
                                        const Output<Node>& coords,
                                        const Output<Node>& offsets,

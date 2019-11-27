@@ -1339,15 +1339,32 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 
             if (args.size() == 2)
             {
-                node = make_shared<op::v1::DeformablePSROIPooling>(
-                    args[0], args[1], output_dim, group_size, spatial_scale, mode,
-                    spatial_bins_x, spatial_bins_y, no_trans, trans_std, part_size);
+                node = make_shared<op::v1::DeformablePSROIPooling>(args[0],
+                                                                   args[1],
+                                                                   output_dim,
+                                                                   group_size,
+                                                                   spatial_scale,
+                                                                   mode,
+                                                                   spatial_bins_x,
+                                                                   spatial_bins_y,
+                                                                   no_trans,
+                                                                   trans_std,
+                                                                   part_size);
             }
             else
             {
-                node = make_shared<op::v1::DeformablePSROIPooling>(
-                    args[0], args[1], args[2], output_dim, group_size, spatial_scale, mode,
-                    spatial_bins_x, spatial_bins_y, no_trans, trans_std, part_size);
+                node = make_shared<op::v1::DeformablePSROIPooling>(args[0],
+                                                                   args[1],
+                                                                   args[2],
+                                                                   output_dim,
+                                                                   group_size,
+                                                                   spatial_scale,
+                                                                   mode,
+                                                                   spatial_bins_x,
+                                                                   spatial_bins_y,
+                                                                   no_trans,
+                                                                   trans_std,
+                                                                   part_size);
             }
             break;
         }

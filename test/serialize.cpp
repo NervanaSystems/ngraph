@@ -824,9 +824,9 @@ TEST(serialize, space_to_depth)
 
 TEST(serialize, deformable_psroi_pooling)
 {
-    auto input = make_shared<op::Parameter>(element::f32, Shape{ 1, 2, 3, 4 });
-    auto coords = make_shared<op::Parameter>(element::f32, Shape{ 1, 1 });
-    auto offsets = make_shared<op::Parameter>(element::f32, Shape{ 1, 2, 3, 4 });
+    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto coords = make_shared<op::Parameter>(element::f32, Shape{1, 1});
+    auto offsets = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
     const int64_t output_dim = 1;
     const int64_t group_size = 2;
     const float spatial_scale = 3;
@@ -837,12 +837,21 @@ TEST(serialize, deformable_psroi_pooling)
     float trans_std = 6.1f;
     int64_t part_size = 7;
 
-    auto def_psroi_pool_in = make_shared<op::v1::DeformablePSROIPooling>(
-        input, coords, offsets, output_dim, group_size, spatial_scale, mode,
-        spatial_bins_x, spatial_bins_y, no_trans, trans_std, part_size);
+    auto def_psroi_pool_in = make_shared<op::v1::DeformablePSROIPooling>(input,
+                                                                         coords,
+                                                                         offsets,
+                                                                         output_dim,
+                                                                         group_size,
+                                                                         spatial_scale,
+                                                                         mode,
+                                                                         spatial_bins_x,
+                                                                         spatial_bins_y,
+                                                                         no_trans,
+                                                                         trans_std,
+                                                                         part_size);
 
     auto result = make_shared<op::Result>(def_psroi_pool_in);
-    auto f = make_shared<Function>(ResultVector{ result }, ParameterVector{ input, coords, offsets });
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{input, coords, offsets});
     string s = serialize(f);
 
     shared_ptr<Function> g = deserialize(s);
