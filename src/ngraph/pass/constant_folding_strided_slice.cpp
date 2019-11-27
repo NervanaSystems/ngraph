@@ -101,94 +101,96 @@ void pass::ConstantFolding::construct_constant_strided_slice()
                                                               std::vector<int64_t>{},
                                                               std::vector<int64_t>{});
 
-    auto constant_strided_slice_callback = [data_label, begin_label, end_label, strides_label](
-        pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In callback for constant_dyn_slice_callback against node = "
-                     << m.get_match_root()->get_name();
+    auto constant_strided_slice_callback =
+        [data_label, begin_label, end_label, strides_label](pattern::Matcher& m) {
+            NGRAPH_DEBUG << "In callback for constant_strided_slice_callback against node = "
+                         << m.get_match_root()->get_name();
 
-        auto pattern_map = m.get_pattern_map();
+            auto pattern_map = m.get_pattern_map();
 
-        auto data_node = static_pointer_cast<op::Constant>(pattern_map[data_label]);
-        auto begin_node = static_pointer_cast<op::Constant>(pattern_map[begin_label]);
-        auto end_node = static_pointer_cast<op::Constant>(pattern_map[end_label]);
-        auto strides_node = static_pointer_cast<op::Constant>(pattern_map[strides_label]);
-        auto strided_slice = static_pointer_cast<op::v1::StridedSlice>(m.get_match_root());
+            auto data_node = static_pointer_cast<op::Constant>(pattern_map[data_label]);
+            auto begin_node = static_pointer_cast<op::Constant>(pattern_map[begin_label]);
+            auto end_node = static_pointer_cast<op::Constant>(pattern_map[end_label]);
+            auto strides_node = static_pointer_cast<op::Constant>(pattern_map[strides_label]);
+            auto strided_slice = static_pointer_cast<op::v1::StridedSlice>(m.get_match_root());
 
-        NGRAPH_CHECK(revalidate_and_ensure_static(strided_slice));
+            NGRAPH_CHECK(revalidate_and_ensure_static(strided_slice));
 
-        std::shared_ptr<op::Constant> replacement;
+            std::shared_ptr<op::Constant> replacement;
 
-        switch (strided_slice->get_output_element_type(0))
-        {
-        case element::Type_t::undefined:
-            NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_dyn_slice");
-            break;
-        case element::Type_t::dynamic:
-            NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_dyn_slice");
-            break;
-        case element::Type_t::u1:
-            NGRAPH_CHECK(false, "Encountered 'u1' element type in fold_constant_dyn_slice");
-            break;
-        case element::Type_t::boolean:
-            replacement = fold_constant_strided_slice<char>(
-                data_node, begin_node, end_node, strides_node, strided_slice);
-            break;
-        case element::Type_t::bf16:
-            replacement = fold_constant_strided_slice<bfloat16>(
-                data_node, begin_node, end_node, strides_node, strided_slice);
-            break;
-        case element::Type_t::f16:
-            replacement = fold_constant_strided_slice<float16>(
-                data_node, begin_node, end_node, strides_node, strided_slice);
-            break;
-        case element::Type_t::f32:
-            replacement = fold_constant_strided_slice<float>(
-                data_node, begin_node, end_node, strides_node, strided_slice);
-            break;
-        case element::Type_t::f64:
-            replacement = fold_constant_strided_slice<double>(
-                data_node, begin_node, end_node, strides_node, strided_slice);
-            break;
-        case element::Type_t::i8:
-            replacement = fold_constant_strided_slice<int8_t>(
-                data_node, begin_node, end_node, strides_node, strided_slice);
-            break;
-        case element::Type_t::i16:
-            replacement = fold_constant_strided_slice<int16_t>(
-                data_node, begin_node, end_node, strides_node, strided_slice);
-            break;
-        case element::Type_t::i32:
-            replacement = fold_constant_strided_slice<int32_t>(
-                data_node, begin_node, end_node, strides_node, strided_slice);
-            break;
-        case element::Type_t::i64:
-            replacement = fold_constant_strided_slice<int64_t>(
-                data_node, begin_node, end_node, strides_node, strided_slice);
-            break;
-        case element::Type_t::u8:
-            replacement = fold_constant_strided_slice<uint8_t>(
-                data_node, begin_node, end_node, strides_node, strided_slice);
-            break;
-        case element::Type_t::u16:
-            replacement = fold_constant_strided_slice<uint16_t>(
-                data_node, begin_node, end_node, strides_node, strided_slice);
-            break;
-        case element::Type_t::u32:
-            replacement = fold_constant_strided_slice<uint32_t>(
-                data_node, begin_node, end_node, strides_node, strided_slice);
-            break;
-        case element::Type_t::u64:
-            replacement = fold_constant_strided_slice<uint64_t>(
-                data_node, begin_node, end_node, strides_node, strided_slice);
-            break;
-        }
+            switch (strided_slice->get_output_element_type(0))
+            {
+            case element::Type_t::undefined:
+                NGRAPH_CHECK(false,
+                             "Encountered 'undefined' element type in fold_constant_strided_slice");
+                break;
+            case element::Type_t::dynamic:
+                NGRAPH_CHECK(false,
+                             "Encountered 'dynamic' element type in fold_constant_strided_slice");
+                break;
+            case element::Type_t::u1:
+                NGRAPH_CHECK(false, "Encountered 'u1' element type in fold_constant_strided_slice");
+                break;
+            case element::Type_t::boolean:
+                replacement = fold_constant_strided_slice<char>(
+                    data_node, begin_node, end_node, strides_node, strided_slice);
+                break;
+            case element::Type_t::bf16:
+                replacement = fold_constant_strided_slice<bfloat16>(
+                    data_node, begin_node, end_node, strides_node, strided_slice);
+                break;
+            case element::Type_t::f16:
+                replacement = fold_constant_strided_slice<float16>(
+                    data_node, begin_node, end_node, strides_node, strided_slice);
+                break;
+            case element::Type_t::f32:
+                replacement = fold_constant_strided_slice<float>(
+                    data_node, begin_node, end_node, strides_node, strided_slice);
+                break;
+            case element::Type_t::f64:
+                replacement = fold_constant_strided_slice<double>(
+                    data_node, begin_node, end_node, strides_node, strided_slice);
+                break;
+            case element::Type_t::i8:
+                replacement = fold_constant_strided_slice<int8_t>(
+                    data_node, begin_node, end_node, strides_node, strided_slice);
+                break;
+            case element::Type_t::i16:
+                replacement = fold_constant_strided_slice<int16_t>(
+                    data_node, begin_node, end_node, strides_node, strided_slice);
+                break;
+            case element::Type_t::i32:
+                replacement = fold_constant_strided_slice<int32_t>(
+                    data_node, begin_node, end_node, strides_node, strided_slice);
+                break;
+            case element::Type_t::i64:
+                replacement = fold_constant_strided_slice<int64_t>(
+                    data_node, begin_node, end_node, strides_node, strided_slice);
+                break;
+            case element::Type_t::u8:
+                replacement = fold_constant_strided_slice<uint8_t>(
+                    data_node, begin_node, end_node, strides_node, strided_slice);
+                break;
+            case element::Type_t::u16:
+                replacement = fold_constant_strided_slice<uint16_t>(
+                    data_node, begin_node, end_node, strides_node, strided_slice);
+                break;
+            case element::Type_t::u32:
+                replacement = fold_constant_strided_slice<uint32_t>(
+                    data_node, begin_node, end_node, strides_node, strided_slice);
+                break;
+            case element::Type_t::u64:
+                replacement = fold_constant_strided_slice<uint64_t>(
+                    data_node, begin_node, end_node, strides_node, strided_slice);
+                break;
+            }
 
-        replace_node(m.get_match_root(), replacement);
-        return true;
-    };
+            replace_node(m.get_match_root(), replacement);
+            return true;
+        };
 
-    auto dyn_slice_matcher =
+    auto strided_slice_matcher =
         make_shared<pattern::Matcher>(strided_slice_op, "ConstantFolding.ConstantStridedSlice");
     this->add_matcher(
-        dyn_slice_matcher, constant_strided_slice_callback, PassProperty::CHANGE_DYNAMIC_STATE);
+        strided_slice_matcher, constant_strided_slice_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
