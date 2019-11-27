@@ -59,7 +59,7 @@ void op::BatchMatMul::validate_and_infer_types()
                           arg1_shape.rank(),
                           ".");
 
-    //arg_0 and  arg_1 must be of the same rank
+    // arg_0 and  arg_1 must be of the same rank
     NODE_VALIDATION_CHECK(this,
                           arg0_shape.rank().compatible(arg1_shape.rank()),
                           "Inputs arg0 and arg1 must have ranks.");
@@ -77,14 +77,15 @@ void op::BatchMatMul::validate_and_infer_types()
                               "Batch size dimensions are not equal while creating BatchMatMul.");
 
         NODE_VALIDATION_CHECK(this,
-                              (arg0_shape.rank().compatible(4) ?
-                                arg0_shape[3].compatible(arg1_shape[2]) :
-                                arg0_shape[2].compatible(arg1_shape[1])),
+                              (arg0_shape.rank().compatible(4)
+                                   ? arg0_shape[3].compatible(arg1_shape[2])
+                                   : arg0_shape[2].compatible(arg1_shape[1])),
                               "Product dimensions are not equal while creating BatchMatMul.");
 
-        output_shape = arg0_shape.rank().compatible(4) ?
-            PartialShape{arg0_shape[0], arg0_shape[1], arg0_shape[2], arg1_shape[3]} :
-                PartialShape{arg0_shape[0], arg0_shape[1], arg0_shape[2]};
+        output_shape =
+            arg0_shape.rank().compatible(4)
+                ? PartialShape{arg0_shape[0], arg0_shape[1], arg0_shape[2], arg1_shape[3]}
+                : PartialShape{arg0_shape[0], arg0_shape[1], arg0_shape[2]};
     }
     auto output_et = arg0_et.is_dynamic() ? arg1_et : arg0_et;
     set_output_type(0, output_et, output_shape);
