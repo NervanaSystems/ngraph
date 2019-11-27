@@ -298,33 +298,59 @@ shared_ptr<Node>
 
 NodeVector op::GroupConvolutionBackpropData::decompose_op() const
 {
-    auto data = input_value(0);
+    auto data_batch = input_value(0);
     auto filters = input_value(1);
     auto output_delta = input_value(2);
-    auto filters_shape = get_input_shape(1);
-    // Split one convolution op to N ops where N is the number of groups
-    // and concat results after computation.
-    NodeVector convolution_nodes;
 
-    // slice data
-    auto sliced_data = builder::split(data, get_groups(), 1);
-    // slice filters
-    auto sliced_filters = builder::split(filters, get_groups(), 0);
-    for (std::size_t group{0}; group < get_groups(); ++group)
+    auto data_shape = get_input_shape(0);
+    auto filters_shape = get_input_shape(1);
+    auto delta_shape = get_input_shape(2);
+
+    const Strides& strides = get_window_movement_strides();
+    const Strides& dilations = get_window_dilation_strides();
+    const CoordinateDiff& paddings = get_padding_below();
+
+    NodeVector sliced_inputs;
+
+    size_t groups = get_groups();
+    for (size_t i = 0; i < groups; ++i)
     {
-        auto sliced_filter = sliced_filters[group];
-        convolution_nodes.push_back(
-            std::make_shared<ngraph::op::ConvolutionBackpropData>(sliced_data[group]->get_shape(),
-                                                                  sliced_filter,
-                                                                  output_delta,
-                                                                  m_window_movement_strides,
-                                                                  m_window_dilation_strides,
-                                                                  m_padding_below,
-                                                                  m_padding_above,
-                                                                  m_window_movement_strides));
+        size_t channel_step = filters_shape.at(1);
+
+        const Coordinate data_lower_bound{0, i * channel_step, 0, 0};
+        const Coordinate data_upper_bound{
+            data_shape.at(0), (i + 1) * channel_step, data_shape.at(2), data_shape.at(3)};
+        auto sliced_data =
+            std::make_shared<op::Slice>(data_batch, data_lower_bound, data_upper_bound);
+
+        size_t filters_step = filters_shape.at(0) / groups;
+
+        const Coordinate filters_lower_bound{i * filters_step, 0, 0, 0};
+        const Coordinate filters_upper_bound{
+            (i + 1) * filters_step, filters_shape.at(1), filters_shape.at(2), filters_shape.at(3)};
+        auto sliced_filters =
+            std::make_shared<op::Slice>(filters, filters_lower_bound, filters_upper_bound);
+
+        const Coordinate delta_lower_bound{0, i * filters_step, 0, 0};
+        const Coordinate delta_upper_bound{
+            delta_shape.at(0), (i + 1) * filters_step, delta_shape.at(2), delta_shape.at(3)};
+        auto sliced_delta =
+            std::make_shared<op::Slice>(output_delta, delta_lower_bound, delta_upper_bound);
+
+        auto sliced_conv = std::make_shared<op::ConvolutionBackpropData>(sliced_data->get_shape(),
+                                                                         sliced_filters,
+                                                                         sliced_delta,
+                                                                         strides,
+                                                                         dilations,
+                                                                         paddings,
+                                                                         paddings,
+                                                                         Strides{1, 1});
+
+        sliced_inputs.push_back(sliced_conv);
     }
-    std::size_t concatenation_axis = 1;
-    return {std::make_shared<ngraph::op::Concat>(convolution_nodes, concatenation_axis)};
+
+    size_t concatenation_axis = 1;
+    return {std::make_shared<ngraph::op::Concat>(sliced_inputs, concatenation_axis)};
 }
 
 constexpr NodeTypeInfo op::GroupConvolutionBackpropFilters::type_info;
@@ -395,31 +421,58 @@ shared_ptr<Node>
 
 NodeVector op::GroupConvolutionBackpropFilters::decompose_op() const
 {
-    auto data = input_value(0);
+    auto data_batch = input_value(0);
     auto filters = input_value(1);
     auto output_delta = input_value(2);
-    auto filters_shape = get_input_shape(1);
-    // Split one convolution op to N ops where N is the number of groups
-    // and concat results after computation.
-    NodeVector convolution_nodes;
 
-    // slice data
-    auto sliced_data = builder::split(data, get_groups(), 1);
-    // slice filters
-    auto sliced_filters = builder::split(filters, get_groups(), 0);
-    for (std::size_t group{0}; group < get_groups(); ++group)
+    auto data_shape = get_input_shape(0);
+    auto filters_shape = get_input_shape(1);
+    auto delta_shape = get_input_shape(2);
+
+    const Strides& strides = get_window_movement_strides();
+    const Strides& dilations = get_window_dilation_strides();
+    const CoordinateDiff& paddings = get_padding_below();
+
+    NodeVector sliced_inputs;
+
+    size_t groups = get_groups();
+    for (size_t i = 0; i < groups; ++i)
     {
-        auto sliced_filter = sliced_filters[group];
-        convolution_nodes.push_back(
-            std::make_shared<ngraph::op::ConvolutionBackpropFilters>(sliced_data[group],
-                                                                     sliced_filter->get_shape(),
-                                                                     output_delta,
-                                                                     m_window_movement_strides,
-                                                                     m_window_dilation_strides,
-                                                                     m_padding_below,
-                                                                     m_padding_above,
-                                                                     m_window_movement_strides));
+        size_t channel_step = filters_shape.at(1);
+
+        const Coordinate data_lower_bound{0, i * channel_step, 0, 0};
+        const Coordinate data_upper_bound{
+            data_shape.at(0), (i + 1) * channel_step, data_shape.at(2), data_shape.at(3)};
+        auto sliced_data =
+            std::make_shared<op::Slice>(data_batch, data_lower_bound, data_upper_bound);
+
+        size_t filters_step = filters_shape.at(0) / groups;
+
+        const Coordinate filters_lower_bound{i * filters_step, 0, 0, 0};
+        const Coordinate filters_upper_bound{
+            (i + 1) * filters_step, filters_shape.at(1), filters_shape.at(2), filters_shape.at(3)};
+        auto sliced_filters =
+            std::make_shared<op::Slice>(filters, filters_lower_bound, filters_upper_bound);
+
+        const Coordinate delta_lower_bound{0, i * filters_step, 0, 0};
+        const Coordinate delta_upper_bound{
+            delta_shape.at(0), (i + 1) * filters_step, delta_shape.at(2), delta_shape.at(3)};
+        auto sliced_delta =
+            std::make_shared<op::Slice>(output_delta, delta_lower_bound, delta_upper_bound);
+
+        auto sliced_conv =
+            std::make_shared<op::ConvolutionBackpropFilters>(sliced_data,
+                                                             sliced_filters->get_shape(),
+                                                             sliced_delta,
+                                                             strides,
+                                                             dilations,
+                                                             paddings,
+                                                             paddings,
+                                                             Strides{1, 1});
+
+        sliced_inputs.push_back(sliced_conv);
     }
-    std::size_t concatenation_axis = 1;
-    return {std::make_shared<ngraph::op::Concat>(convolution_nodes, concatenation_axis)};
+
+    size_t concatenation_axis = 0;
+    return {std::make_shared<ngraph::op::Concat>(sliced_inputs, concatenation_axis)};
 }
