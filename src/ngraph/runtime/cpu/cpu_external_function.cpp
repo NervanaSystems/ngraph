@@ -1227,13 +1227,10 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
             return false;
 #endif
         }
-        else if (typeid(ngraph::op::GroupConvolution) == typeid(node))
+        else if (auto conv = as_type<ngraph::op::GroupConvolution>(const_cast<Node*>(&node)))
         {
             Strides stride_1{1, 1};
-            Node* p_node = const_cast<Node*>(&node);
-            auto conv = as_type<ngraph::op::GroupConvolution>(p_node);
-            return conv->get_window_dilation_strides() == stride_1 &&
-                   conv->get_data_dilation_strides() == stride_1;
+            return conv->get_data_dilation_strides() == stride_1;
         }
 
         if (dex)
