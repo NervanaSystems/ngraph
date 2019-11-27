@@ -613,7 +613,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
     }
     case OP_TYPEID::Subtract_v1:
     {
-        upgrade_binary_elementwise_node<op::v0::Subtract, op::v1::Subtract>(node);
+        downgrade_binary_elementwise_node<op::v0::Subtract, op::v1::Subtract>(node);
         modified = true;
         break;
     }
