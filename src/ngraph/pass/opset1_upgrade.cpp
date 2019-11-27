@@ -52,7 +52,7 @@ namespace
 
     bool op_cast(shared_ptr<op::AvgPool> node)
     {
-        auto rounding_type =
+        auto rounding_mode =
             node->get_ceil_mode() ? op::RoundingType::CEIL : op::RoundingType::FLOOR;
         auto exclude_pad = !node->get_include_padding_in_avg_computation();
         auto auto_pad = node->get_pad_type();
@@ -67,8 +67,19 @@ namespace
                                                              pads_end,
                                                              kernel,
                                                              exclude_pad,
-                                                             rounding_type,
+                                                             rounding_mode,
                                                              auto_pad);
+#if defined(__clang__) && __clang_major__ == 3
+        // There are some really by clang 3.9 bugs
+        if (node->get_ceil_mode())
+        {
+            replacement_node->set_rounding_type(op::RoundingType::CEIL);
+        }
+        else
+        {
+            replacement_node->set_rounding_type(op::RoundingType::FLOOR);
+        }
+#endif
         replace_node(node, replacement_node);
         return true;
     }
@@ -291,6 +302,17 @@ namespace
 
         auto replacement_node = make_shared<op::v1::MaxPool>(
             node->input_value(0), strides, pads_begin, pads_end, kernel, rounding_type, auto_pad);
+#if defined(__clang__) && __clang_major__ == 3
+        // There are some really by clang 3.9 bugs
+        if (node->get_ceil_mode())
+        {
+            replacement_node->set_rounding_type(op::RoundingType::CEIL);
+        }
+        else
+        {
+            replacement_node->set_rounding_type(op::RoundingType::FLOOR);
+        }
+#endif
         replace_node(node, replacement_node);
         return true;
     }
