@@ -281,7 +281,7 @@ size_t ngraph::op::GroupConvolutionBackpropData::get_groups() const
 shared_ptr<Node>
     op::GroupConvolutionBackpropData::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2)
+    if (new_args.size() != 3)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
@@ -404,7 +404,7 @@ size_t ngraph::op::GroupConvolutionBackpropFilters::get_groups() const
 shared_ptr<Node>
     op::GroupConvolutionBackpropFilters::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2)
+    if (new_args.size() != 3)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
