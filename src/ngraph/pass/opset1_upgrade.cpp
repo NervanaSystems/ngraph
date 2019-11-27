@@ -531,6 +531,12 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
+    case OP_TYPEID::Subtract:
+    {
+        upgrade_binary_elementwise_node<op::v0::Subtract, op::v1::Subtract>(node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::Sum:
     {
         bool keep_dims = false;
