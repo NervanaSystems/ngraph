@@ -1914,6 +1914,7 @@ private:
         case OP_TYPEID::MaxPool_v1:
         case OP_TYPEID::Maximum_v1:
         case OP_TYPEID::Minimum_v1:
+        case OP_TYPEID::Mod_v1:
         case OP_TYPEID::Multiply_v1:
         case OP_TYPEID::MVN:
         case OP_TYPEID::Negative_v1:
