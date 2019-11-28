@@ -44,6 +44,18 @@ op::Split::Split(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
+// TODO TO REMOVE. INTRODUCED TO PROVIDE CI COMPATIBILITY
+op::Split::Split(const Output<Node>& data, int axis, const std::vector<size_t>& splits)
+    : FusedOp({data})
+    , m_split_evenly{false}
+    , m_axis{axis}
+    , m_num_split{0}
+    , m_splits{splits}
+{
+    set_arguments({op::Constant::create(element::i64, Shape{}, {axis})->output(0)});
+    constructor_validate_and_infer_types();
+}
+
 void op::Split::pre_validate_and_infer_types()
 {
     const auto axis_shape = input(1).get_shape();
