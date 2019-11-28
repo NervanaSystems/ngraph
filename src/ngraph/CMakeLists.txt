@@ -150,6 +150,8 @@ set (SRC
     op/cum_sum.hpp
     op/crop_and_resize.cpp
     op/crop_and_resize.hpp
+    op/deformable_convolution.cpp
+    op/deformable_convolution.hpp
     op/dequantize.cpp
     op/dequantize.hpp
     op/divide.cpp
