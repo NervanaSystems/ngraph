@@ -436,6 +436,7 @@ set (SRC
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
     ops.hpp
+    opsets/opset.cpp
     partial_shape.cpp
     partial_shape.hpp
     pass/algebraic_simplification.cpp
@@ -468,6 +469,7 @@ set (SRC
     pass/constant_folding_unsqueeze.cpp
     pass/constant_folding_shape_of.cpp
     pass/constant_folding_slice.cpp
+    pass/constant_folding_strided_slice.cpp
     pass/constant_folding_transpose.cpp
     pass/constant_folding_unary.cpp
     pass/constant_folding.cpp
