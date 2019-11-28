@@ -120,7 +120,7 @@ void op::v1::NonMaxSuppression::validate_and_infer_types()
                           num_boxes_scores);
 
     NODE_VALIDATION_CHECK(this,
-                          boxes_ps[3].is_static() && static_cast<size_t>(boxes_ps[4]) == 4u,
+                          boxes_ps[2].is_static() && static_cast<size_t>(boxes_ps[2]) == 4u,
                           "The last dimension of the 'boxes' input must be equal to 4. Got:",
-                          boxes_ps[4]);
+                          boxes_ps[2]);
 }
