@@ -33,12 +33,12 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 GatherTree() = default;
                 /// \param step_ids     Tensor of shape [MAX_TIME, BATCH_SIZE, BEAM_WIDTH] with
-                /// indices from per each step
+                ///                     indices from per each step
                 /// \param parent_idx   Tensor of shape [MAX_TIME, BATCH_SIZE, BEAM_WIDTH] with
-                /// parent beam indices
+                ///                     parent beam indices
                 /// \param max_seq_len  Tensor of shape [BATCH_SIZE] with maximum lengths for each
-                /// sequence in the batch
-                /// \param end_token   Tensor of shape [MAX_TIME, BATCH_SIZE, BEAM_WIDTH]
+                ///                     sequence in the batch
+                /// \param end_token    Tensor of shape [MAX_TIME, BATCH_SIZE, BEAM_WIDTH]
                 GatherTree(const Output<Node>& step_ids,
                            const Output<Node>& parent_idx,
                            const Output<Node>& max_seq_len,
