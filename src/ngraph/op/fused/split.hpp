@@ -75,7 +75,7 @@ namespace ngraph
                 /// contains lengths of chunks that the input tensor will be split into
                 std::vector<size_t> m_splits;
             };
-            using v0::Split;
         }
+        using v0::Split;
     }
 }
