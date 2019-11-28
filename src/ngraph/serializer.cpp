@@ -1495,6 +1495,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::GatherND>(args[0], args[1]);
             break;
         }
+        case OP_TYPEID::GatherTree_v1:
+        {
+            node = make_shared<op::v1::GatherTree>(args[0], args[1], args[2], args[3]);
+            break;
+        }
         case OP_TYPEID::Gelu:
         {
             node = make_shared<op::Gelu>(args[0]);
@@ -3423,6 +3428,8 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Gather_v1: { break;
     }
     case OP_TYPEID::GatherND: { break;
+    }
+    case OP_TYPEID::GatherTree_v1: { break;
     }
     case OP_TYPEID::GetOutputElement:
     {
