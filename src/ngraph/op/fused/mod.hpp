@@ -24,31 +24,39 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Mod returns an element-wise division reminder with two given tensors applying
-        /// multi-directional broadcast rules.
-        class Mod : public ngraph::op::util::FusedOp
+        namespace v1
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Mod", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a Mod node.
-            ///
-            /// \param A - Dividend tensor
-            /// \param B - Divisor tensor
-            /// \param auto_broadcast Auto broadcast specification
-            Mod(const Output<Node>& A,
-                const Output<Node>& B,
-                const AutoBroadcastSpec& auto_broadcast = AutoBroadcastType::NUMPY);
+            /// \brief Mod returns an element-wise division reminder with two given tensors applying
+            /// multi-directional broadcast rules.
+            class NGRAPH_API Mod : public ngraph::op::util::FusedOp
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Mod", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Mod() = default;
+                /// \brief Constructs a Mod node.
+                ///
+                /// \param A - Dividend tensor
+                /// \param B - Divisor tensor
+                /// \param auto_broadcast Auto broadcast specification
+                Mod(const Output<Node>& A,
+                    const Output<Node>& B,
+                    const AutoBroadcastSpec& auto_broadcast = AutoBroadcastType::NUMPY);
 
-            virtual NodeVector decompose_op() const override;
+                virtual NodeVector decompose_op() const override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            const AutoBroadcastSpec& get_auto_broadcast() const { return m_auto_broadcast; }
-        private:
-            AutoBroadcastSpec m_auto_broadcast;
-        };
+                const AutoBroadcastSpec& get_auto_broadcast() const { return m_auto_broadcast; }
+            private:
+                AutoBroadcastSpec m_auto_broadcast;
+            };
+        }
+
+        namespace v0
+        {
+            using v1::Mod;
+        }
     }
 }

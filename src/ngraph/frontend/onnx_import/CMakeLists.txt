@@ -75,6 +75,8 @@ add_library(onnx_import STATIC
         op/conv_integer.hpp
         op/conv_transpose.cpp
         op/conv_transpose.hpp
+        op/cum_sum.cpp
+        op/cum_sum.hpp
         op/depth_to_space.cpp
         op/depth_to_space.hpp
         op/dequantize_linear.cpp

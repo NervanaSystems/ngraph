@@ -136,14 +136,8 @@ namespace ngraph
                 // ...
                 enum class OP_TYPEID
                 {
-#define NGRAPH_OP(a, b) a,
-#include "ngraph/op/op_v0_tbl.hpp"
-#ifdef INTERPRETER_USE_HYBRID
-#include "ngraph/runtime/hybrid/op/op_tbl.hpp"
-#endif
-#undef NGRAPH_OP
-#define NGRAPH_OP(a, b) a##_v1,
-#include "ngraph/op/op_v1_tbl.hpp"
+#define NGRAPH_OP(NAME, NAMESPACE) ID_SUFFIX(NAME),
+#include "ngraph/runtime/interpreter/opset_int_tbl.hpp"
 #undef NGRAPH_OP
                     UnknownOp
                 };
@@ -376,11 +370,6 @@ private:
                                    avg_pool->get_padding_below(),
                                    avg_pool->get_padding_above(),
                                    avg_pool->get_include_padding_in_avg_computation());
-            break;
-        }
-        case OP_TYPEID::BinaryConvolution_v1:
-        {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
             break;
         }
         case OP_TYPEID::GenerateMask:
@@ -1054,7 +1043,7 @@ private:
                                    logical_xor->get_autob());
             break;
         }
-        case OP_TYPEID::LRN_v1:
+        case OP_TYPEID::LRN:
         {
             const op::LRN* lrn = static_cast<const op::LRN*>(&node);
             reference::lrn<T>(args[0]->get_data_ptr<const T>(),
@@ -1854,121 +1843,57 @@ private:
                                    logical_xor->get_autob());
             break;
         }
+
+        // Fused Ops are not supported in interpreter. They need to be decomposed before execution
+        case OP_TYPEID::Clamp:
+        case OP_TYPEID::MatMul:
+        case OP_TYPEID::Split:
         case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::Transpose:
         case OP_TYPEID::DynPad:
         case OP_TYPEID::Tile:
         case OP_TYPEID::DynReplaceSlice:
-        case OP_TYPEID::Abs_v1:
-        case OP_TYPEID::Acos_v1:
-        case OP_TYPEID::Add_v1:
-        case OP_TYPEID::Asin_v1:
-        case OP_TYPEID::Atan_v1:
-        case OP_TYPEID::AvgPool_v1:
         case OP_TYPEID::BatchMatMulTranspose:
-        case OP_TYPEID::BatchNormInference_v1:
-        case OP_TYPEID::Broadcast_v1:
-        case OP_TYPEID::Ceiling_v1:
-        case OP_TYPEID::Clamp_v1:
-        case OP_TYPEID::Concat_v1:
-        case OP_TYPEID::Constant_v1:
-        case OP_TYPEID::Convert_v1:
-        case OP_TYPEID::Convolution_v1:
-        case OP_TYPEID::ConvolutionBackpropData_v1:
         case OP_TYPEID::ConvolutionBias:
         case OP_TYPEID::ConvolutionBiasAdd:
         case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
-        case OP_TYPEID::Cos_v1:
-        case OP_TYPEID::Cosh_v1:
         case OP_TYPEID::CrossEntropy:
         case OP_TYPEID::CrossEntropyBackprop:
-        case OP_TYPEID::DepthToSpace_v1:
-        case OP_TYPEID::Divide_v1:
-        case OP_TYPEID::Elu_v1:
-        case OP_TYPEID::Erf_v1:
-        case OP_TYPEID::Equal_v1:
-        case OP_TYPEID::Exp_v1:
-        case OP_TYPEID::FakeQuantize_v1:
-        case OP_TYPEID::Floor_v1:
-        case OP_TYPEID::FloorMod_v1:
-        case OP_TYPEID::Gather_v1:
-        case OP_TYPEID::Greater_v1:
-        case OP_TYPEID::GreaterEq_v1:
-        case OP_TYPEID::GroupConvolution_v1:
+        case OP_TYPEID::DepthToSpace:
+        case OP_TYPEID::Elu:
+        case OP_TYPEID::FakeQuantize:
+        case OP_TYPEID::GroupConvolution:
         case OP_TYPEID::GRN:
         case OP_TYPEID::GRUCell:
         case OP_TYPEID::Gelu:
         case OP_TYPEID::GeluBackpropFactor:
         case OP_TYPEID::Gemm:
         case OP_TYPEID::GroupConvolutionTranspose:
-        case OP_TYPEID::HardSigmoid_v1:
-        case OP_TYPEID::Interpolate_v1:
+        case OP_TYPEID::HardSigmoid:
+        case OP_TYPEID::Interpolate:
         case OP_TYPEID::LayerNorm:
         case OP_TYPEID::LayerNormBackprop:
-        case OP_TYPEID::Less_v1:
-        case OP_TYPEID::Log_v1:
         case OP_TYPEID::LogSoftmax:
-        case OP_TYPEID::LSTMCell_v1:
-        case OP_TYPEID::LSTMSequence_v1:
-        case OP_TYPEID::MatMul_v1:
-        case OP_TYPEID::MaxPool_v1:
-        case OP_TYPEID::Maximum_v1:
-        case OP_TYPEID::Minimum_v1:
-        case OP_TYPEID::Mod_v1:
-        case OP_TYPEID::Multiply_v1:
+        case OP_TYPEID::LSTMCell:
+        case OP_TYPEID::LSTMSequence:
         case OP_TYPEID::MVN:
-        case OP_TYPEID::Negative_v1:
-        case OP_TYPEID::NormalizeL2_v1:
-        case OP_TYPEID::NotEqual_v1:
-        case OP_TYPEID::OneHot_v1:
-        case OP_TYPEID::PRelu_v1:
-        case OP_TYPEID::Pad_v1:
-        case OP_TYPEID::Parameter_v1:
+        case OP_TYPEID::NormalizeL2:
+        case OP_TYPEID::PRelu:
         case OP_TYPEID::PartialSlice:
         case OP_TYPEID::PartialSliceBackprop:
-        case OP_TYPEID::Power_v1:
-        case OP_TYPEID::Range_v1:
-        case OP_TYPEID::Relu_v1:
-        case OP_TYPEID::ReduceMax_v1:
-        case OP_TYPEID::ReduceMin_v1:
-        case OP_TYPEID::ReduceProd_v1:
-        case OP_TYPEID::ReduceSum_v1:
-        case OP_TYPEID::Reshape_v1:
-        case OP_TYPEID::Result_v1:
-        case OP_TYPEID::Reverse_v1:
-        case OP_TYPEID::ReverseSequence_v1:
-        case OP_TYPEID::RNNCell_v1:
+        case OP_TYPEID::RNNCell:
         case OP_TYPEID::ScaleShift:
         case OP_TYPEID::Selu:
-        case OP_TYPEID::ShapeOf_v1:
-        case OP_TYPEID::ShuffleChannels_v1:
-        case OP_TYPEID::Sign_v1:
-        case OP_TYPEID::Sigmoid_v1:
-        case OP_TYPEID::Sin_v1:
-        case OP_TYPEID::Sinh_v1:
-        case OP_TYPEID::Softmax_v1:
+        case OP_TYPEID::ShuffleChannels:
         case OP_TYPEID::SoftmaxCrossEntropy:
         case OP_TYPEID::SoftmaxCrossEntropyBackprop:
-        case OP_TYPEID::Sqrt_v1:
-        case OP_TYPEID::SpaceToDepth_v1:
-        case OP_TYPEID::Split_v1:
-        case OP_TYPEID::SquaredDifference_v1:
-        case OP_TYPEID::StridedSlice_v1:
-        case OP_TYPEID::Subtract_v1:
-        case OP_TYPEID::Tan_v1:
-        case OP_TYPEID::Tanh_v1:
-        case OP_TYPEID::TensorIterator_v1:
-        case OP_TYPEID::Tile_v1:
-        case OP_TYPEID::TopK_v1:
-        case OP_TYPEID::Transpose_v1:
-        case OP_TYPEID::Unsqueeze_v1:
-        case OP_TYPEID::AvgPoolBackprop_v1:
-        case OP_TYPEID::ConvolutionBackpropFilters_v1:
-        case OP_TYPEID::MaxPoolBackprop_v1:
-        case OP_TYPEID::Squeeze_v1:
-        case OP_TYPEID::GenerateMask_v1:
+        case OP_TYPEID::SpaceToDepth:
+        case OP_TYPEID::SquaredDifference:
+        case OP_TYPEID::Squeeze:
+        case OP_TYPEID::Unsqueeze:
+        // Tensor Iterator not yet supported
+        case OP_TYPEID::TensorIterator:
         case OP_TYPEID::UnknownOp:
-        case OP_TYPEID::VariadicSplit_v1:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop

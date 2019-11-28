@@ -87,7 +87,7 @@ TEST(opset_transform, opset1_convolution_backprop_data_downgrade_pass)
     auto padding_end = CoordinateDiff{3};
 
     auto conv = make_shared<op::v1::ConvolutionBackpropData>(
-        filters, delta, data_batch_shape, strides, dilations, padding_begin, padding_end);
+        delta, filters, data_batch_shape, strides, padding_begin, padding_end, dilations);
     auto result = make_shared<op::Result>(conv);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{filters, delta});
 
