@@ -1849,7 +1849,6 @@ private:
         case OP_TYPEID::Tile:
         case OP_TYPEID::DynReplaceSlice:
         case OP_TYPEID::BatchMatMulTranspose:
-        case OP_TYPEID::ConvertLike_v1:
         case OP_TYPEID::ConvolutionBias:
         case OP_TYPEID::ConvolutionBiasAdd:
         case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
