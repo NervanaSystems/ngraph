@@ -82,7 +82,7 @@ void op::GroupConvolution::pre_validate_and_infer_types()
         // Update groups
         if (has_groups_in_filters_shape())
         {
-            m_groups = get_input_partial_shape(1)[0];
+            m_groups = static_cast<size_t>(get_input_partial_shape(1)[0]);
         }
 
         // Data channels
@@ -150,14 +150,6 @@ Shape op::GroupConvolution::get_weights_dimensions() const
     // push_front the number of groups
     weights_shape_groups.insert(weights_shape_groups.begin(), get_groups());
     return weights_shape_groups;
-}
-
-size_t ngraph::op::GroupConvolution::get_groups() const
-{
-    NODE_VALIDATION_CHECK(this,
-                          m_groups.is_static(),
-                          "get_groups() can only be called if the number of groups is static.");
-    return static_cast<size_t>(m_groups);
 }
 
 shared_ptr<Node> op::GroupConvolution::copy_with_new_args(const NodeVector& new_args) const
@@ -270,14 +262,6 @@ void op::GroupConvolutionBackpropData::pre_validate_and_infer_types()
     }
 }
 
-size_t ngraph::op::GroupConvolutionBackpropData::get_groups() const
-{
-    NODE_VALIDATION_CHECK(this,
-                          m_groups.is_static(),
-                          "get_groups() can only be called if the number of groups is static.");
-    return static_cast<size_t>(m_groups);
-}
-
 shared_ptr<Node>
     op::GroupConvolutionBackpropData::copy_with_new_args(const NodeVector& new_args) const
 {
@@ -387,14 +371,6 @@ void op::GroupConvolutionBackpropFilters::pre_validate_and_infer_types()
     {
         set_output_type(0, filters_element_type, PartialShape::dynamic());
     }
-}
-
-size_t ngraph::op::GroupConvolutionBackpropFilters::get_groups() const
-{
-    NODE_VALIDATION_CHECK(this,
-                          m_groups.is_static(),
-                          "get_groups() can only be called if the number of groups is static.");
-    return static_cast<size_t>(m_groups);
 }
 
 shared_ptr<Node>
