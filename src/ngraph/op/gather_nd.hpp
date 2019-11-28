@@ -22,32 +22,35 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Gather slices from params with shapes given by indices
-        class GatherND : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"GatherND", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            GatherND() = default;
-            /// \param params The tensor from which slices are gathered
-            /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
-            GatherND(const Output<Node>& params, const Output<Node>& indices)
-                : Op({params, indices})
+            /// \brief Gather slices from params with shapes given by indices
+            class NGRAPH_API GatherND : public Op
             {
-                constructor_validate_and_infer_types();
-            }
+            public:
+                static constexpr NodeTypeInfo type_info{"GatherND", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                GatherND() = default;
+                /// \param params The tensor from which slices are gathered
+                /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
+                GatherND(const Output<Node>& params, const Output<Node>& indices)
+                    : Op({params, indices})
+                {
+                    constructor_validate_and_infer_types();
+                }
 
-            void validate_and_infer_types() override;
+                void validate_and_infer_types() override;
 
-            void generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                   const NodeVector& /* deltas */) override
-            {
-                throw ngraph_error("Not yet implemented");
-            }
+                void generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                       const NodeVector& /* deltas */) override
+                {
+                    throw ngraph_error("Not yet implemented");
+                }
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        }
+        using v0::GatherND;
     }
 }

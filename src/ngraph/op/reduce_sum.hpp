@@ -74,11 +74,10 @@ namespace ngraph
             /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
             /// | \f$N[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by summation. |
             // clang-format off
-            class ReduceSum : public util::ArithmeticReductionKeepDims
+            class NGRAPH_API ReduceSum : public util::ArithmeticReductionKeepDims
             {
             public:
-                NGRAPH_API
-                static constexpr NodeTypeInfo type_info{"Sum", 1};
+                static constexpr NodeTypeInfo type_info{"ReduceSum", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a summation operation.
                 ReduceSum() = default;

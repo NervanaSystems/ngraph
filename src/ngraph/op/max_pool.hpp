@@ -26,10 +26,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Batched max pooling operation, with optional padding and window stride.
-            class MaxPool : public Op
+            class NGRAPH_API MaxPool : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"MaxPool", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a batched max pooling operation.
@@ -147,10 +146,9 @@ namespace ngraph
                 bool m_ceil_mode{false};
             };
 
-            class MaxPoolBackprop : public Op
+            class NGRAPH_API MaxPoolBackprop : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"MaxPoolBackprop", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 MaxPoolBackprop() = default;
@@ -207,10 +205,9 @@ namespace ngraph
         namespace v1
         {
             /// \brief Batched max pooling operation.
-            class MaxPool : public Op
+            class NGRAPH_API MaxPool : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"MaxPool", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a batched max pooling operation.
@@ -292,10 +289,9 @@ namespace ngraph
                 op::RoundingType m_rounding_type{op::RoundingType::FLOOR};
             };
 
-            class MaxPoolBackprop : public Op
+            class NGRAPH_API MaxPoolBackprop : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"MaxPoolBackprop", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 MaxPoolBackprop() = default;

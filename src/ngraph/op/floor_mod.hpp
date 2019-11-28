@@ -28,10 +28,9 @@ namespace ngraph
         {
             /// \brief Elementwise FloorMod operation.
             ///
-            class FloorMod : public util::BinaryElementwiseArithmetic
+            class NGRAPH_API FloorMod : public util::BinaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"FloorMod", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs an uninitialized addition operation
