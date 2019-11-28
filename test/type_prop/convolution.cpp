@@ -16,7 +16,6 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/op/util/attr_types.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;
@@ -2864,7 +2863,7 @@ TEST(type_prop, conv_v1_partial_rank)
     ASSERT_TRUE(conv->get_output_partial_shape(0).is_dynamic());
 }
 
-TEST(type_prop, deformable_conv_incorrect_groups)
+TEST(type_prop, deformable_conv_incorrect_group)
 {
     const PartialShape data_batch_shape{1, 3, 96, 96};
     const PartialShape deformable_values_shape{1, 50, 5, 5};
@@ -2886,7 +2885,7 @@ TEST(type_prop, deformable_conv_incorrect_groups)
                                                    op::PadType::EXPLICIT,
                                                    2);
 
-        FAIL() << "DeformableConvolution created with incorrect 'groups' value";
+        FAIL() << "DeformableConvolution created with incorrect 'group' value";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -2905,10 +2904,41 @@ TEST(type_prop, deformable_conv_incorrect_groups)
                                                    op::PadType::EXPLICIT,
                                                    3);
 
-        FAIL() << "DeformableConvolution created with incorrect 'groups' value";
+        FAIL() << "DeformableConvolution created with incorrect 'group' value";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "weights shape must be evenly divisible");
+    }
+}
+
+TEST(type_prop, deformable_conv_incorrect_deformable_group)
+{
+    const PartialShape data_batch_shape{1, 3, 96, 96};
+    const PartialShape deformable_values_shape{1, 50, 5, 5};
+    const PartialShape filters_shape{3, 3, 5, 5};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, deformable_values_shape);
+    auto param2 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        make_shared<op::v1::DeformableConvolution>(param0,
+                                                   param1,
+                                                   param2,
+                                                   Strides{},
+                                                   CoordinateDiff{},
+                                                   CoordinateDiff{},
+                                                   Strides{},
+                                                   op::PadType::EXPLICIT,
+                                                   1,
+                                                   7);
+
+        FAIL() << "DeformableConvolution created with incorrect 'deformable group' value";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "deformable values input must be evenly divisible");
     }
 }
