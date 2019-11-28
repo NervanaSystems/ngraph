@@ -14,31 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/generic_cpu/node_wrapper.hpp"
+#include "ngraph/opsets/opset.hpp"
+#include "ngraph/ops.hpp"
 
-using namespace ngraph;
-using namespace std;
-
-runtime::gcpu::NodeWrapper::NodeWrapper(const shared_ptr<const Node>& node)
-    : m_node{node}
+const ngraph::OpSet& ngraph::get_opset0()
 {
-// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
-// {"Abs", runtime::gcpu::OP_TYPEID::Abs},
-// {"Acos", runtime::gcpu::OP_TYPEID::Acos},
-// ...
-#define NGRAPH_OP(a, b) {#a, runtime::gcpu::OP_TYPEID::a},
-    static unordered_map<string, runtime::gcpu::OP_TYPEID> typeid_map{
-#include "ngraph/op/op_tbl.hpp"
-    };
+    static OpSet opset({
+#define NGRAPH_OP(NAME, NAMESPACE) NAMESPACE::NAME::type_info,
+#include "ngraph/opsets/opset1_tbl.hpp"
 #undef NGRAPH_OP
+    });
+    return opset;
+}
 
-    auto it = typeid_map.find(m_node->description());
-    if (it != typeid_map.end())
-    {
-        m_typeid = it->second;
-    }
-    else
-    {
-        throw unsupported_op("Unsupported op '" + m_node->description() + "'");
-    }
+const ngraph::OpSet& ngraph::get_opset1()
+{
+    static OpSet opset({
+#define NGRAPH_OP(NAME, NAMESPACE) NAMESPACE::NAME::type_info,
+#include "ngraph/opsets/opset1_tbl.hpp"
+#undef NGRAPH_OP
+    });
+    return opset;
 }

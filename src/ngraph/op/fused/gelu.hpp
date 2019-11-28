@@ -24,49 +24,52 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Gaussian Error Linear Unit
-        /// f(x) = 0.5 * x * (1 + erf( x / sqrt(2) )
-        class Gelu : public ngraph::op::util::FusedOp
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Gelu", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            Gelu() = default;
-            /// \brief Constructs an Gelu operation.
-            ///
-            /// \param data Input tensor
-            Gelu(const Output<Node>& data);
+            /// \brief Gaussian Error Linear Unit
+            /// f(x) = 0.5 * x * (1 + erf( x / sqrt(2) )
+            class NGRAPH_API Gelu : public ngraph::op::util::FusedOp
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Gelu", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Gelu() = default;
+                /// \brief Constructs an Gelu operation.
+                ///
+                /// \param data Input tensor
+                Gelu(const Output<Node>& data);
 
-            virtual NodeVector decompose_op() const override;
+                virtual NodeVector decompose_op() const override;
 
-            void pre_validate_and_infer_types() override;
+                void pre_validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+            };
 
-        /// \brief Backprop for Gelu(x) is GeluBackprop(x) * delta
-        class GeluBackpropFactor : public util::FusedOp
-        {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"GeluBackpropFactor", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            GeluBackpropFactor() = default;
+            /// \brief Backprop for Gelu(x) is GeluBackprop(x) * delta
+            class NGRAPH_API GeluBackpropFactor : public util::FusedOp
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"GeluBackpropFactor", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                GeluBackpropFactor() = default;
 
-            GeluBackpropFactor(const Output<Node>& x);
+                GeluBackpropFactor(const Output<Node>& x);
 
-            virtual NodeVector decompose_op() const override;
+                virtual NodeVector decompose_op() const override;
 
-            void pre_validate_and_infer_types() override;
+                void pre_validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        }
+        using v0::Gelu;
+        using v0::GeluBackpropFactor;
     }
 }
