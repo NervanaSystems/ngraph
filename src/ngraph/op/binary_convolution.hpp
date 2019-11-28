@@ -26,7 +26,7 @@ namespace ngraph
     {
         namespace v1
         {
-            class BinaryConvolution : public Op
+            class NGRAPH_API BinaryConvolution : public Op
             {
             public:
                 enum class BinaryConvolutionMode
@@ -35,7 +35,6 @@ namespace ngraph
                     XNOR_POPCOUNT
                 };
 
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"BinaryConvolution", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a binary convolution operation.

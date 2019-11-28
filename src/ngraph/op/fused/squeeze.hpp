@@ -27,19 +27,22 @@ namespace ngraph
 {
     namespace op
     {
-        class Squeeze : public ngraph::op::util::FusedOp
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Squeeze", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            Squeeze() = default;
-            Squeeze(const Output<Node>& data, const Output<Node>& axes);
+            class NGRAPH_API Squeeze : public ngraph::op::util::FusedOp
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Squeeze", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Squeeze() = default;
+                Squeeze(const Output<Node>& data, const Output<Node>& axes);
 
-            virtual NodeVector decompose_op() const override;
+                virtual NodeVector decompose_op() const override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        }
+        using v0::Squeeze;
     }
 }
