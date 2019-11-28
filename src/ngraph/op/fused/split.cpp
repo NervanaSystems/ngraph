@@ -133,6 +133,12 @@ NodeVector op::Split::decompose_op() const
 
 shared_ptr<Node> op::Split::copy_with_new_args(const NodeVector& new_args) const
 {
-    check_new_args_count(this, new_args);
-    return make_shared<Split>(new_args.at(0), new_args.at(1), m_splits);
+    if (new_args.size() == 2)
+    {
+        check_new_args_count(this, new_args);
+        return make_shared<Split>(new_args.at(0), new_args.at(1), m_splits);
+    }
+
+    // TODO REMOVE THIS RETURN AND IF ABOVE. INTRODUCED TO PROVIDE CI COMPATIBILITY
+    return make_shared<Split>(new_args.at(0), m_axis, m_splits);
 }
