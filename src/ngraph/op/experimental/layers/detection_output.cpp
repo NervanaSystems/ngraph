@@ -61,12 +61,15 @@ shared_ptr<Node> op::DetectionOutput::copy_with_new_args(const NodeVector& new_a
 {
     check_new_args_count(this, new_args);
 
-    if (new_args.size() == 3)
+    auto num_args = new_args.size();
+
+    NODE_VALIDATION_CHECK(
+        this, num_args == 3 || num_args == 5, "DetectionOutput accepts 3 or 5 inputs.");
+
+    if (num_args == 3)
     {
-        return make_shared<DetectionOutput>(new_args.at(0),
-                                            new_args.at(1),
-                                            new_args.at(2),
-                                            m_attrs);
+        return make_shared<DetectionOutput>(
+            new_args.at(0), new_args.at(1), new_args.at(2), m_attrs);
     }
     else
     {
