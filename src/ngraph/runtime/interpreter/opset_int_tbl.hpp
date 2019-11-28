@@ -14,28 +14,14 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#define ID_SUFFIX(NAME) NAME
+#include "ngraph/opsets/opset0_tbl.hpp"
+#undef ID_SUFFIX
 
-#include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
-
-namespace ngraph
-{
-    namespace op
-    {
-        namespace v0
-        {
-            class NGRAPH_API Erf : public util::UnaryElementwiseArithmetic
-            {
-            public:
-                static constexpr NodeTypeInfo type_info{"Erf", 0};
-                const NodeTypeInfo& get_type_info() const override { return type_info; }
-                Erf() = default;
-                Erf(const Output<Node>& arg);
-
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
-            };
-        }
-        using v0::Erf;
-    }
-}
+#define ID_SUFFIX(NAME) NAME##_v1
+NGRAPH_OP(LessEqual, op::v1)
+NGRAPH_OP(LogicalAnd, op::v1)
+NGRAPH_OP(LogicalOr, op::v1)
+NGRAPH_OP(LogicalXor, op::v1)
+NGRAPH_OP(LogicalNot, op::v1)
+#undef ID_SUFFIX

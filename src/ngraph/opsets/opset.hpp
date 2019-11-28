@@ -16,26 +16,35 @@
 
 #pragma once
 
-#include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include <set>
+
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
-    namespace op
+    class OpSet
     {
-        namespace v0
+    public:
+        OpSet(const std::set<NodeTypeInfo>& op_types)
+            : m_op_types(op_types)
         {
-            class NGRAPH_API Erf : public util::UnaryElementwiseArithmetic
-            {
-            public:
-                static constexpr NodeTypeInfo type_info{"Erf", 0};
-                const NodeTypeInfo& get_type_info() const override { return type_info; }
-                Erf() = default;
-                Erf(const Output<Node>& arg);
-
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
-            };
         }
-        using v0::Erf;
-    }
+
+        template <typename T>
+        bool contains_type() const
+        {
+            return m_op_types.find(T::type_info) != m_op_types.end();
+        }
+
+        bool contains_op_type(Node* node) const
+        {
+            return m_op_types.find(node->get_type_info()) != m_op_types.end();
+        }
+
+    protected:
+        std::set<NodeTypeInfo> m_op_types;
+    };
+
+    const OpSet& get_opset0();
+    const OpSet& get_opset1();
 }
