@@ -137,22 +137,34 @@ namespace
 
     bool op_cast(shared_ptr<op::v1::ConvolutionBackpropData> node)
     {
-        NGRAPH_CHECK(node->input_value(2).get_node_shared_ptr()->is_constant());
-        auto data_batch_shape =
-            static_pointer_cast<op::Constant>(node->input_value(2).get_node_shared_ptr())
-                ->get_shape_val();
-        const auto filters_arg = node->input_value(0);
-        const auto delta_arg = node->input_value(1);
+        auto output_shape = as_type_ptr<op::Constant>(node->input_value(2).get_node_shared_ptr());
+        const auto data_arg = node->input(0).get_source_output();
+        const auto filters_arg = node->input(1).get_source_output();
         const PartialShape& delta_arg_pshape = node->get_input_partial_shape(1);
         NGRAPH_CHECK(delta_arg_pshape.rank().is_static(),
                      "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
                      "if delta argument rank is dynamic. Node: ",
                      *node);
+        NGRAPH_CHECK(output_shape,
+                     "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
+                     "if output_shape is not constant. Node: ",
+                     *node);
         const size_t num_spatial_dims = static_cast<size_t>(delta_arg_pshape.rank()) - 2;
+
+        auto output_padding = node->get_output_padding();
+
+        bool is_op_valid = all_of(
+            output_padding.begin(), output_padding.end(), [](size_t value) { return value == 0; });
+
+        NGRAPH_CHECK(is_op_valid,
+                     "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
+                     "with output padding other than `0`. Node: ",
+                     *node);
+
         auto replacement_node =
-            make_shared<op::v0::ConvolutionBackpropData>(data_batch_shape,
+            make_shared<op::v0::ConvolutionBackpropData>(output_shape->get_shape_val(),
                                                          filters_arg,
-                                                         delta_arg,
+                                                         data_arg,
                                                          node->get_strides(),
                                                          node->get_dilations(),
                                                          node->get_pads_begin(),

@@ -1147,9 +1147,30 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto dilations = node_js.at("dilations").get<vector<size_t>>();
             auto pads_begin = node_js.at("pads_begin").get<vector<std::ptrdiff_t>>();
             auto pads_end = node_js.at("pads_end").get<vector<std::ptrdiff_t>>();
-            node = make_shared<op::v1::ConvolutionBackpropData>(
-                args[0], args[1], args[2], strides, dilations, pads_begin, pads_end);
-
+            auto output_padding = node_js.at("output_padding").get<vector<std::ptrdiff_t>>();
+            if (args.size() == 3)
+            {
+                node = make_shared<op::v1::ConvolutionBackpropData>(args[0],
+                                                                    args[1],
+                                                                    args[2],
+                                                                    strides,
+                                                                    pads_begin,
+                                                                    pads_end,
+                                                                    dilations,
+                                                                    read_pad_type(node_js),
+                                                                    output_padding);
+            }
+            else
+            {
+                node = make_shared<op::v1::ConvolutionBackpropData>(args[0],
+                                                                    args[1],
+                                                                    strides,
+                                                                    pads_begin,
+                                                                    pads_end,
+                                                                    dilations,
+                                                                    read_pad_type(node_js),
+                                                                    output_padding);
+            }
             break;
         }
         case OP_TYPEID::ConvolutionBackpropFilters:
@@ -3149,11 +3170,12 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::ConvolutionBackpropData_v1:
     {
         auto tmp = static_cast<const op::v1::ConvolutionBackpropData*>(&n);
-        node["data_batch_shape"] = tmp->get_data_batch_shape();
         node["strides"] = tmp->get_strides();
         node["dilations"] = tmp->get_dilations();
         node["pads_begin"] = tmp->get_pads_begin();
         node["pads_end"] = tmp->get_pads_end();
+        node["auto_pad"] = tmp->get_auto_pad();
+        node["output_padding"] = tmp->get_output_padding();
         break;
     }
     case OP_TYPEID::ConvolutionBackpropFilters:

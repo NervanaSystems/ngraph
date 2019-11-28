@@ -179,13 +179,14 @@ namespace
                      "other than `1`. Node: ",
                      *node);
 
-        auto replacement_node = make_shared<op::v1::ConvolutionBackpropData>(node->input_value(0),
-                                                                             node->input_value(1),
-                                                                             node->input_value(2),
-                                                                             strides,
-                                                                             dilations,
-                                                                             pads_begin,
-                                                                             pads_end);
+        auto replacement_node = make_shared<op::v1::ConvolutionBackpropData>(
+            node->input_value(1), // data
+            node->input_value(0), // filters
+            op::Constant::create(element::i64, Shape{data_batch_shape.size()}, data_batch_shape),
+            strides,
+            pads_begin,
+            pads_end,
+            dilations);
         replace_node(node, replacement_node);
         return true;
     }
@@ -199,11 +200,9 @@ namespace
         auto pads_end = node->get_padding_above_forward();
         auto data_dilation_strides = node->get_data_dilation_strides_forward();
 
-        bool is_dds_valid = true;
-        for (auto value : data_dilation_strides)
-        {
-            is_dds_valid = is_dds_valid && (value == 1);
-        }
+        bool is_dds_valid = all_of(data_dilation_strides.begin(),
+                                   data_dilation_strides.end(),
+                                   [](size_t value) { return value == 1; });
 
         NGRAPH_CHECK(
             is_dds_valid,

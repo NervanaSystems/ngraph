@@ -103,22 +103,49 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a batched-convolution data batch-backprop operation.
                 ConvolutionBackpropData() = default;
+                // clang-format off
                 /// \brief Constructs a batched-convolution data batch-backprop operation.
                 ///
-                /// \param data_batch_shape The shape of the data batch from forward-prop.
-                /// \param filters The node producing the filters from forward-prop.
-                /// \param output_delta The node producing output delta.
-                /// \param strides The strides from forward-prop.
-                /// \param dilations The dilations from forward-prop.
-                /// \param pads_begin The padding-below sizes from forward-prop.
-                /// \param pads_end The padding-above sizes from forward-prop.
-                ConvolutionBackpropData(const Output<Node>& filters,
-                                        const Output<Node>& output_delta,
-                                        const Output<Node>& data_batch_shape,
+                /// \param data            The node producing data from forward-prop.
+                /// \param filters         The node producing the filters from forward-prop.
+                /// \param output_shape    The shape of the data batch from forward-prop.
+                /// \param strides         The strides from forward-prop.
+                /// \param pads_begin      The padding-below sizes from forward-prop.
+                /// \param pads_end        The padding-above sizes from forward-prop.
+                /// \param dilations       The dilations from forward-prop.
+                /// \param auto_pad        The pad type for automatically computing padding sizes.
+                /// \param output_padding  The output padding adds additional amount of paddings per each spatial axis in the output tensor.
+                // clang-format on
+                ConvolutionBackpropData(const Output<Node>& data,
+                                        const Output<Node>& filters,
+                                        const Output<Node>& output_shape,
                                         const Strides& strides,
-                                        const Strides& dilations,
                                         const CoordinateDiff& pads_begin,
-                                        const CoordinateDiff& pads_end);
+                                        const CoordinateDiff& pads_end,
+                                        const Strides& dilations,
+                                        const PadType& auto_pad = PadType::EXPLICIT,
+                                        const CoordinateDiff& output_padding = {});
+
+                // clang-format off
+                /// \brief Constructs a batched-convolution data batch-backprop operation.
+                ///
+                /// \param data            The node producing data from forward-prop.
+                /// \param filters         The node producing the filters from forward-prop.
+                /// \param strides         The strides from forward-prop.
+                /// \param pads_begin      The padding-below sizes from forward-prop.
+                /// \param pads_end        The padding-above sizes from forward-prop.
+                /// \param dilations       The dilations from forward-prop.
+                /// \param auto_pad        The pad type for automatically computing padding sizes.
+                /// \param output_padding  The output padding adds additional amount of paddings per each spatial axis in the output tensor.
+                // clang-format on
+                ConvolutionBackpropData(const Output<Node>& data,
+                                        const Output<Node>& filters,
+                                        const Strides& strides,
+                                        const CoordinateDiff& pads_begin,
+                                        const CoordinateDiff& pads_end,
+                                        const Strides& dilations,
+                                        const PadType& auto_pad = PadType::EXPLICIT,
+                                        const CoordinateDiff& output_padding = {});
 
                 void validate_and_infer_types() override;
 
@@ -128,8 +155,8 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 /// \return The data batch shape.
-                const Shape get_data_batch_shape() const;
-                void set_data_batch_shape(const Shape& data_batch_shape);
+                const PartialShape get_output_shape() const;
+                void set_output_shape(const Shape& output_shape);
                 /// \return The strides from the forward prop.
                 const Strides& get_strides() const { return m_strides; }
                 void set_strides(const Strides& strides) { m_strides = strides; }
@@ -142,15 +169,23 @@ namespace ngraph
                 /// \return The padding-above sizes (possibly negative) from the forward prop.
                 const CoordinateDiff& get_pads_end() const { return m_pads_end; }
                 void set_pads_end(const CoordinateDiff& pads_end) { m_pads_end = pads_end; }
-                // Compute the pad_above values to be used if in a convolution
-                CoordinateDiff compute_backward_delta_out_pad_above() const;
-                CoordinateDiff compute_backward_delta_out_pad_below() const;
+                /// \return The auto pad.
+                const PadType& get_auto_pad() const { return m_auto_pad; }
+                void set_auto_pad(const PadType& auto_pad) { m_auto_pad = auto_pad; }
+                /// \return The output padding.
+                const CoordinateDiff& get_output_padding() const { return m_output_padding; }
+                void set_output_padding(const CoordinateDiff& output_padding)
+                {
+                    m_output_padding = output_padding;
+                }
 
             protected:
                 Strides m_strides;
                 Strides m_dilations;
                 CoordinateDiff m_pads_begin;
                 CoordinateDiff m_pads_end;
+                PadType m_auto_pad;
+                CoordinateDiff m_output_padding;
             };
 
             /// \brief Filters backprop for batched convolution operation.
@@ -398,7 +433,7 @@ namespace ngraph
                 ///
                 /// \param data_batch_shape The shape of the data batch from forward-prop.
                 /// \param filters The node producing the filters from forward-prop.
-                /// \param output_delta The node producing output delta.
+                /// \param data The node producing output delta.
                 /// \param window_movement_strides_forward The window movement strides from
                 ///                                        forward-prop.
                 /// \param window_dilation_strides_forward The window dilation strides from
@@ -409,7 +444,7 @@ namespace ngraph
                 /// forward-prop.
                 ConvolutionBackpropData(const Shape& data_batch_shape,
                                         const Output<Node>& filters,
-                                        const Output<Node>& output_delta,
+                                        const Output<Node>& data,
                                         const Strides& window_movement_strides_forward,
                                         const Strides& window_dilation_strides_forward,
                                         const CoordinateDiff& padding_below_forward,
