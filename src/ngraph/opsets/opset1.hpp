@@ -16,26 +16,14 @@
 
 #pragma once
 
-#include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/ngraph.hpp"
 
 namespace ngraph
 {
-    namespace op
+    namespace opset1
     {
-        namespace v0
-        {
-            class NGRAPH_API Erf : public util::UnaryElementwiseArithmetic
-            {
-            public:
-                static constexpr NodeTypeInfo type_info{"Erf", 0};
-                const NodeTypeInfo& get_type_info() const override { return type_info; }
-                Erf() = default;
-                Erf(const Output<Node>& arg);
-
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
-            };
-        }
-        using v0::Erf;
+#define NGRAPH_OP(a, b) using b::a;
+#include "ngraph/opsets/opset1_tbl.hpp"
+#undef NGRAPH_OP
     }
 }

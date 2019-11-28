@@ -11,18 +11,6 @@
 using namespace std;
 using namespace ngraph;
 
-// Temporary until opset PR merges
-namespace ngraph
-{
-    namespace op
-    {
-        namespace v1
-        {
-            using GreaterEqual = GreaterEq;
-        }
-    }
-}
-
 //------------------------------------------------------------------------------
 //
 //                  Helper Functions

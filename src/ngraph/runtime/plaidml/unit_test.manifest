@@ -15,6 +15,7 @@ min_3d_eliminate_zero_dim               # Out-of-range for PlaidML
 reverse_sequence_n2c3h4w2               # No plans to implement ReverseSequence
 reverse_sequence_n4c3h2w2               # No plans to implement ReverseSequence
 reverse_sequence_n4d2c3h2w2             # No plans to implement ReverseSequence
+reverse_sequence_negative_axes          # No plans to implement ReverseSequence
 topk_1d_max_all                         # No plans to implement TopK
 topk_1d_max_partial                     # No plans to implement TopK
 topk_1d_max_one                         # No plans to implement TopK
