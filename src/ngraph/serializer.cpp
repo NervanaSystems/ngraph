@@ -4177,6 +4177,15 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
+    case OP_TYPEID::Subtract_v1:
+    {
+        auto tmp = static_cast<const op::v1::Subtract*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
+    }
     case OP_TYPEID::Sum: { break;
     }
     case OP_TYPEID::ReduceSum_v1:
