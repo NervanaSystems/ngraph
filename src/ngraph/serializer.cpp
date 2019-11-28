@@ -2370,8 +2370,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::ReverseSequence:
         {
-            auto batch_axis = node_js.at("batch_axis").get<size_t>();
-            auto sequence_axis = node_js.at("sequence_axis").get<size_t>();
+            auto batch_axis = node_js.at("batch_axis").get<int64_t>();
+            auto sequence_axis = node_js.at("sequence_axis").get<int64_t>();
             node = make_shared<op::ReverseSequence>(args[0], args[1], batch_axis, sequence_axis);
             break;
         }
@@ -4033,8 +4033,8 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::ReverseSequence:
     {
         auto tmp = static_cast<const op::ReverseSequence*>(&n);
-        node["batch_axis"] = tmp->get_batch_axis();
-        node["sequence_axis"] = tmp->get_sequence_axis();
+        node["batch_axis"] = tmp->get_origin_batch_axis();
+        node["sequence_axis"] = tmp->get_origin_sequence_axis();
         break;
     }
     case OP_TYPEID::RNNCell:
