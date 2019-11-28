@@ -61,7 +61,7 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"Subtract", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Subtract()
-                    : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NONE)
+                    : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NUMPY)
                 {
                 }
 
