@@ -1325,6 +1325,30 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::CTCGreedyDecoder: { break;
         }
+        case OP_TYPEID::DeformableConvolution_v1:
+        {
+            const auto strides = node_js.at("strides").get<vector<size_t>>();
+            const auto dilations = node_js.at("dilations").get<vector<size_t>>();
+            const auto pads_begin = node_js.at("pads_begin").get<vector<std::ptrdiff_t>>();
+            const auto pads_end = node_js.at("pads_end").get<vector<std::ptrdiff_t>>();
+            const auto group = node_js.at("group").get<size_t>();
+            const auto deformable_group = node_js.at("deformable_group").get<size_t>();
+
+            const op::PadType auto_pad = read_pad_type(node_js);
+
+            node = make_shared<op::v1::DeformableConvolution>(args[0],
+                                                              args[1],
+                                                              args[2],
+                                                              strides,
+                                                              pads_begin,
+                                                              pads_end,
+                                                              dilations,
+                                                              auto_pad,
+                                                              group,
+                                                              deformable_group);
+
+            break;
+        }
         case OP_TYPEID::DepthToSpace_v1:
         {
             auto mode = node_js.at("mode").get<op::DepthToSpace::DepthToSpaceMode>();
@@ -3290,7 +3314,18 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::ReorgYolo: { break;
     }
-
+    case OP_TYPEID::DeformableConvolution_v1:
+    {
+        const auto tmp = static_cast<const op::v1::DeformableConvolution*>(&n);
+        node["strides"] = tmp->get_strides();
+        node["dilations"] = tmp->get_dilations();
+        node["pads_begin"] = tmp->get_pads_begin();
+        node["pads_end"] = tmp->get_pads_end();
+        node["auto_pad"] = tmp->get_auto_pad();
+        node["group"] = tmp->get_group();
+        node["deformable_group"] = tmp->get_deformable_group();
+        break;
+    }
     case OP_TYPEID::Dequantize:
     {
         auto tmp = static_cast<const op::Dequantize*>(&n);
