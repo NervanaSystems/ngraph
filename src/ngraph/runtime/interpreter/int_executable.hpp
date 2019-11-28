@@ -717,11 +717,6 @@ private:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
             break;
         }
-        case OP_TYPEID::DeformablePSROIPooling_v1:
-        {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
-            break;
-        }
         case OP_TYPEID::Dequantize:
         {
             const op::Dequantize* dequantize = static_cast<const op::Dequantize*>(&node);
