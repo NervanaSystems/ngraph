@@ -86,7 +86,14 @@ namespace ngraph
                 ngraph::NodeVector outputs(outputs_number);
                 for (int i = 0; i < outputs_number; ++i)
                 {
-                    outputs[i] = std::make_shared<ngraph::op::GetOutputElement>(node, i);
+                    if (node->output(i).get_node_shared_ptr()->get_output_size() == 1)
+                    {
+                        outputs[i] = node->get_output_as_single_output_node(i);
+                    }
+                    else
+                    {
+                        outputs[i] = std::make_shared<ngraph::op::GetOutputElement>(node, i);
+                    }
                 }
                 return outputs;
             }
