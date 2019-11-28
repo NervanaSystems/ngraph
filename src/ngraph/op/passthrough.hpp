@@ -26,16 +26,20 @@ namespace ngraph
 {
     namespace op
     {
-        /// An op directly representing backend-specific code.
-        ///
-        /// N.B. Not all backends support all operation languages; a
-        /// given backend might only support a given passthrough
-        /// operation language in certain modes.
-        class Passthrough;
+        namespace v0
+        {
+            /// An op directly representing backend-specific code.
+            ///
+            /// N.B. Not all backends support all operation languages; a
+            /// given backend might only support a given passthrough
+            /// operation language in certain modes.
+            class Passthrough;
+        }
+        using v0::Passthrough;
     }
 }
 
-class NGRAPH_API ngraph::op::Passthrough final : public Op
+class NGRAPH_API ngraph::op::v0::Passthrough final : public Op
 {
 public:
     static constexpr NodeTypeInfo type_info{"Passthrough", 0};

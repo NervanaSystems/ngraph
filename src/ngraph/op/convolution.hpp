@@ -62,7 +62,6 @@ namespace ngraph
                             const Strides& dilations,
                             const PadType& auto_pad = PadType::EXPLICIT);
 
-                size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
@@ -148,7 +147,6 @@ namespace ngraph
                                         const PadType& auto_pad = PadType::EXPLICIT,
                                         const CoordinateDiff& output_padding = {});
 
-                size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
 
                 void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -215,7 +213,6 @@ namespace ngraph
                                            const CoordinateDiff& pads_begin,
                                            const CoordinateDiff& pads_end);
 
-                size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
