@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <numeric>
 
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
@@ -532,9 +533,10 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
     case OP_TYPEID::Reshape_v1:
     {
         auto tmp = as_type_ptr<op::v1::Reshape>(node);
-        auto replacement_node = make_shared<op::v0::DynReshape>(node->input(0).get_source_output(),
-                                                                node->input(1).get_source_output(),
-                                                                tmp->get_zero_flag());
+        shared_ptr<Node> replacement_node =
+            make_shared<op::v0::DynReshape>(node->input(0).get_source_output(),
+                                            node->input(1).get_source_output(),
+                                            tmp->get_zero_flag());
         replace_node(node, replacement_node);
         modified = true;
         break;

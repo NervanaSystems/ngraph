@@ -48,54 +48,70 @@ op::v1::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
     constructor_validate_and_infer_types();
 }
 
-// TODO: Fix it
 void op::v1::GroupConvolution::validate_and_infer_types()
 {
-    const PartialShape& data_batch_shape = get_input_partial_shape(0);
+    const PartialShape& data_batch_pshape = get_input_partial_shape(0);
     element::Type data_batch_et = get_input_element_type(0);
-    const PartialShape& filters_shape = get_input_partial_shape(1);
+    const PartialShape& filters_pshape = get_input_partial_shape(1);
     element::Type filters_et = get_input_element_type(1);
 
-    if (m_strides.size() == 0)
-    {
-        m_strides = conv_default_strides(this, data_batch_shape, filters_shape);
-    }
+    PartialShape result_shape{PartialShape::dynamic()};
 
-    if (m_dilations.size() == 0)
+    // we need to adjust filters_shape to reuse helpers for normal convolution
+    if (filters_pshape.is_static() && data_batch_pshape.is_static())
     {
-        m_dilations = conv_default_strides(this, data_batch_shape, filters_shape);
-    }
+        auto filters_shape = filters_pshape.to_shape();
+        auto groups = filters_shape[0];
+        filters_shape[1] *= groups;
+        filters_shape.erase(filters_shape.begin());
+        auto data_batch_shape = data_batch_pshape.to_shape();
+        data_batch_shape[1] /= groups;
 
-    if (m_pads_begin.size() == 0)
-    {
-        m_pads_begin = conv_default_padding(this, data_batch_shape, filters_shape);
-    }
+        if (m_strides.size() == 0)
+        {
+            m_strides = conv_default_strides(this, data_batch_shape, filters_shape);
+        }
 
-    if (m_pads_end.size() == 0)
-    {
-        m_pads_end = conv_default_padding(this, data_batch_shape, filters_shape);
-    }
+        if (m_dilations.size() == 0)
+        {
+            m_dilations = conv_default_strides(this, data_batch_shape, filters_shape);
+        }
 
-    if (m_auto_pad == PadType::SAME_UPPER || m_auto_pad == PadType::SAME_LOWER)
-    {
-        if (data_batch_shape.is_static() && filters_shape.is_static())
+        if (m_pads_begin.size() == 0)
+        {
+            m_pads_begin = conv_default_padding(this, data_batch_shape, filters_shape);
+        }
+
+        if (m_pads_end.size() == 0)
+        {
+            m_pads_end = conv_default_padding(this, data_batch_shape, filters_shape);
+        }
+
+        if (m_auto_pad == PadType::SAME_UPPER || m_auto_pad == PadType::SAME_LOWER)
         {
             m_pads_begin.clear();
             m_pads_end.clear();
-            auto filter_shape = filters_shape.to_shape();
-            filter_shape.erase(filter_shape.begin(), filter_shape.begin() + 3); // Remove {G,O,I}
-            infer_auto_padding(data_batch_shape.to_shape(),
-                               filter_shape,
+            filters_shape.erase(filters_shape.begin(), filters_shape.begin() + 2); // Remove {O,I}
+            infer_auto_padding(data_batch_shape,
+                               filters_shape,
                                m_strides,
                                m_dilations,
                                m_auto_pad,
                                m_pads_end,
                                m_pads_begin);
         }
-    }
 
+        result_shape =
+            infer_convolution_forward(this,
+                                      data_batch_shape,
+                                      Strides(m_strides.size(), 1), // dummy data dilations
+                                      m_pads_begin,
+                                      m_pads_end,
+                                      filters_shape,
+                                      m_strides,
+                                      m_dilations);
+    }
     element::Type result_et;
-    PartialShape result_shape;
 
     NODE_VALIDATION_CHECK(
         this,
@@ -105,15 +121,6 @@ void op::v1::GroupConvolution::validate_and_infer_types()
         ", filters element type: ",
         filters_et,
         ").");
-
-    result_shape = infer_convolution_forward(this,
-                                             data_batch_shape,
-                                             Strides(m_strides.size(), 1), // dummy data dilations
-                                             m_pads_begin,
-                                             m_pads_end,
-                                             filters_shape,
-                                             m_strides,
-                                             m_dilations);
 
     set_output_type(0, result_et, result_shape);
 }
@@ -259,7 +266,8 @@ void op::v1::GroupConvolutionBackpropData::validate_and_infer_types()
         if (filters_pshape.is_static() && data_pshape.is_static())
         {
             auto filters_shape = filters_pshape.to_shape();
-            filters_shape.erase(filters_shape.begin(), filters_shape.begin() + 3); // remove {G, O, I}
+            filters_shape.erase(filters_shape.begin(),
+                                filters_shape.begin() + 3); // remove {G, O, I}
             auto data_shape = data_pshape.to_shape();
             data_shape.erase(data_shape.begin(), data_shape.begin() + 2); // remove {N, C}
 

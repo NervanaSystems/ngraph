@@ -18,6 +18,7 @@
 #include <memory>
 #include <vector>
 
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/frontend/onnx_import/exceptions.hpp"
 #include "ngraph/frontend/onnx_import/op/conv.hpp"
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
@@ -27,7 +28,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/group_convolution.hpp"
-#include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
@@ -55,15 +55,11 @@ namespace ngraph
                         if (groups > 1)
                         {
                             auto filters_shape = filters->get_shape();
-                            auto filters_channels{filters_shape.at(1)};
-                            filters_shape.at(1) = filters_shape.at(1) / groups;
+                            filters_shape.at(0) = filters_shape.at(0) / groups;
                             filters_shape.insert(filters_shape.begin(), groups);
 
-                            auto new_shape = ngraph::op::Constant::create(
-                                element::i64, Shape{filters_shape.size()}, filters_shape);
-
                             auto reshaped_filters =
-                                std::make_shared<ngraph::op::v1::Reshape>(filters, new_shape);
+                                ngraph::builder::reshape(filters, filters_shape);
 
                             return std::make_shared<ngraph::op::v1::GroupConvolution>(
                                 data,
