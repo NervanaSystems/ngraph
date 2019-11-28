@@ -80,7 +80,6 @@ namespace ngraph
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const NodeVector& deltas) override;
-                size_t get_version() const override { return 1; }
             };
         } // namespace v1
 
