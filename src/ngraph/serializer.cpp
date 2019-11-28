@@ -2641,6 +2641,10 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[1],
                 args[2],
                 read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+        case OP_TYPEID::Stack:
+        {
+            auto axis = node_js.at("axis").get<size_t>();
+            node = make_shared<op::Stack>(static_cast<OutputVector>(args), axis);
             break;
         }
         case OP_TYPEID::Selu:
@@ -4508,11 +4512,17 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Softmax: { break;
     }
-
+    
     case OP_TYPEID::Softmax_v1:
     {
         auto tmp = static_cast<const op::v1::Softmax*>(&n);
         node["softmax_axis"] = tmp->get_axis();
+        break;
+    }
+    case OP_TYPEID::Stack:
+    {
+        auto tmp = static_cast<const op::Stack*>(&n);
+        node["axis"] = tmp->get_concatenation_axis();
         break;
     }
     case OP_TYPEID::SoftmaxCrossEntropy:
