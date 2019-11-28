@@ -19,6 +19,8 @@
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/reduce_logical_and.hpp"
+#include "ngraph/op/reduce_logical_or.hpp"
 #include "ngraph/op/reduce_mean.hpp"
 #include "ngraph/op/reduce_prod.hpp"
 #include "ngraph/op/reduce_sum.hpp"
@@ -64,6 +66,42 @@ static shared_ptr<op::Constant>
                                    constant->get_output_shape(0),
                                    shape_no_keep_dims,
                                    reduce_max->get_reduction_axes());
+    }
+    else if (auto reduce_logical_and = as_type_ptr<op::v1::ReduceLogicalAnd>(reduction_node))
+    {
+        auto reduction_axes = reduce_logical_and->get_reduction_axes();
+        auto input_shape = reduce_logical_and->get_input_shape(0);
+        Shape shape_no_keep_dims;
+        for (size_t i = 0; i < input_shape.size(); i++)
+        {
+            if (reduction_axes.count(i) == 0)
+            {
+                shape_no_keep_dims.push_back(input_shape[i]);
+            }
+        }
+        runtime::reference::max<T>(constant->get_vector<T>().data(),
+                                   out_vec.data(),
+                                   constant->get_output_shape(0),
+                                   shape_no_keep_dims,
+                                   reduce_logical_and->get_reduction_axes());
+    }
+    else if (auto reduce_logical_or = as_type_ptr<op::v1::ReduceLogicalOr>(reduction_node))
+    {
+        auto reduction_axes = reduce_logical_or->get_reduction_axes();
+        auto input_shape = reduce_logical_or->get_input_shape(0);
+        Shape shape_no_keep_dims;
+        for (size_t i = 0; i < input_shape.size(); i++)
+        {
+            if (reduction_axes.count(i) == 0)
+            {
+                shape_no_keep_dims.push_back(input_shape[i]);
+            }
+        }
+        runtime::reference::max<T>(constant->get_vector<T>().data(),
+                                   out_vec.data(),
+                                   constant->get_output_shape(0),
+                                   shape_no_keep_dims,
+                                   reduce_logical_or->get_reduction_axes());
     }
     else if (auto min = as_type_ptr<op::Min>(reduction_node))
     {
