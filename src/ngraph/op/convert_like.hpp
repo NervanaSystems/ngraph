@@ -22,44 +22,31 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v0
+        namespace v1
         {
-            class NGRAPH_API ReverseSequence : public Op
+            /// \brief Elementwise type conversion operation.
+            class ConvertLike : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"ReverseSequence", 0};
+                NGRAPH_API
+                static constexpr NodeTypeInfo type_info{"ConvertLike", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
-                ReverseSequence() = default;
-                /// \brief Constructs an arcsin operation.
-                ///
-                /// \param arg Node that produces the input tensor.
-                ReverseSequence(const Output<Node>& arg,
-                                const Output<Node>& seq_lengths,
-                                int64_t batch_axis,
-                                int64_t seq_axis);
+                /// \brief Constructs a conversion operation.
+                ConvertLike() = default;
+                /// \brief Constructs a conversion operation.
+                /// \param data  Node that produces the input tensor.
+                /// \param like  Node which provides the target type information for the conversion.
+                ConvertLike(const Output<Node>& data, const Output<Node>& like);
 
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
-                size_t get_batch_axis() const { return m_normalized_batch_axis; }
-                int64_t get_origin_batch_axis() const { return m_batch_axis; }
-                void set_batch_axis(int64_t batch_axis) { m_batch_axis = batch_axis; }
-                size_t get_sequence_axis() const { return m_normalized_seq_axis; }
-                int64_t get_origin_sequence_axis() const { return m_seq_axis; }
-                void set_sequence_axis(int64_t sequence_axis) { m_seq_axis = sequence_axis; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const NodeVector& deltas) override;
-
-            private:
-                int64_t m_batch_axis;
-                int64_t m_seq_axis;
-                size_t m_normalized_batch_axis;
-                size_t m_normalized_seq_axis;
             };
         }
-        using v0::ReverseSequence;
     }
 }
