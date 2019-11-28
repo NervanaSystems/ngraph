@@ -80,9 +80,9 @@ namespace ngraph
                 return new_axes;
             }
 
-            ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node,
-                                           int64_t outputs_number)
+            ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node)
             {
+                const auto outputs_number = node->get_output_size();
                 ngraph::NodeVector outputs(outputs_number);
                 for (int i = 0; i < outputs_number; ++i)
                 {

@@ -37,7 +37,7 @@ namespace ngraph
                     const auto axis_node =
                         ngraph::op::Constant::create(element::i64, Shape{}, {axis});
 
-                    std::shared_ptr<ngraph::op::Split> fused_split;
+                    std::shared_ptr<ngraph::Node> fused_split;
                     if (node.has_attribute("split"))
                     {
                         const auto length_parts =
@@ -51,7 +51,7 @@ namespace ngraph
                         fused_split =
                             std::make_shared<ngraph::op::Split>(input, axis_node, outputs_number);
                     }
-                    return common::get_outputs(fused_split, fused_split->get_splits().size());
+                    return common::get_outputs(fused_split);
                 }
 
             } // namespace set_1

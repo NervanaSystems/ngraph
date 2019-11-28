@@ -118,11 +118,9 @@ namespace ngraph
             /// \brief Return the outputs of the node as vector.
             ///
             /// \param[in] node            Node with multiple outputs.
-            /// \param[in] outputs_number  Number of outputs in returned vector.
             ///
             /// \return                    Vector of outputs of input node.
-            ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node,
-                                           int64_t outputs_number);
+            ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node);
 
             /// \brief Creates a shifted square identity matrix.
             /// \note Shifting in the context of this operator means that
