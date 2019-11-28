@@ -1337,8 +1337,7 @@ NGRAPH_TEST(${BACKEND_NAME}, shuffle_channels_simple)
 NGRAPH_TEST(${BACKEND_NAME}, shuffle_channels_negative_axis)
 {
     // in this test the output is the same as in shuffle_channels_simple but
-    // the axis value is negative and the C(channels) value is in a different dimension(0) of
-    // the
+    // the axis value is negative and the C(channels) value is in a different dimension(0) of the
     // shape
     const auto data = make_shared<op::Parameter>(element::i32, Shape{15, 2, 1, 2});
     auto tested_op = make_shared<op::ShuffleChannels>(data, -4, 5);
