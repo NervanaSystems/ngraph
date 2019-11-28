@@ -24,15 +24,15 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v1
+        namespace v0
         {
             /// \brief Performs a SELU activation function on all elements of the input node
-            class Selu : public ngraph::op::util::FusedOp
+            class NGRAPH_API Selu : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
-                static constexpr NodeTypeInfo type_info{"Selu", 1};
+                static constexpr NodeTypeInfo type_info{"Selu", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Selu() = default;
                 /// \brief Constructs a Selu node.
                 ///
                 /// \param data - Node producing the input tensor
@@ -48,6 +48,6 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
             };
         }
-        using v1::Selu;
+        using v0::Selu;
     } // namespace op
 } // namespace ngraph

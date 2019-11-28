@@ -18,9 +18,7 @@
 #include "ngraph/cpio.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
-#include "ngraph/op/convert.hpp"
-#include "ngraph/op/select.hpp"
-#include "ngraph/op/util/binary_elementwise_comparison.hpp"
+#include "ngraph/ops.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
@@ -39,6 +37,27 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorLayout;
 
+runtime::gcpu::OP_TYPEID runtime::gcpu::GCPUExecutable::get_typeid(const NodeTypeInfo& type_info)
+{
+    // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
+    // {Abs::type_info, OP_TYPEID::Abs},
+    // {Acos::type_info, OP_TYPEID::Acos},
+    // ...
+    static const map<NodeTypeInfo, OP_TYPEID> type_info_map{
+#define NGRAPH_OP(NAME, NAMESPACE) {NAMESPACE::NAME::type_info, OP_TYPEID::NAME},
+#include "ngraph/opsets/opset0_tbl.hpp"
+#undef NGRAPH_OP
+    };
+    OP_TYPEID rc = OP_TYPEID::UnknownOp;
+
+    auto it = type_info_map.find(type_info);
+    if (it != type_info_map.end())
+    {
+        rc = it->second;
+    }
+    return rc;
+}
+
 runtime::gcpu::GCPUExecutable::GCPUExecutable(const shared_ptr<Function>& function,
                                               bool enable_performance_collection)
     : m_is_compiled{true}
@@ -54,9 +73,9 @@ runtime::gcpu::GCPUExecutable::GCPUExecutable(const shared_ptr<Function>& functi
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.run_passes(m_function);
 
-    for (const shared_ptr<Node>& node : m_function->get_ordered_ops())
+    for (auto node : m_function->get_ordered_ops())
     {
-        m_wrapped_nodes.emplace_back(node);
+        m_nodes.push_back(node);
     }
     set_parameters_and_results(*m_function);
 }
@@ -66,9 +85,9 @@ runtime::gcpu::GCPUExecutable::GCPUExecutable(const std::string& model_string)
     , m_performance_counters_enabled{false}
 {
     m_function = deserialize(model_string);
-    for (const shared_ptr<Node>& node : m_function->get_ordered_ops())
+    for (auto& node : m_function->get_ordered_ops())
     {
-        m_wrapped_nodes.emplace_back(node);
+        m_nodes.push_back(node);
     }
     set_parameters_and_results(*m_function);
 }
@@ -121,10 +140,9 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
     }
 
     // for each ordered op in the graph
-    for (const NodeWrapper& wrapped : m_wrapped_nodes)
+    for (auto& op : m_nodes)
     {
-        auto op = wrapped.get_node();
-        auto type_id = wrapped.get_typeid();
+        auto type_id = get_typeid(op->get_type_info());
         if (type_id == OP_TYPEID::Parameter)
         {
             continue;
@@ -195,7 +213,7 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
         {
             m_timer_map[op].start();
         }
-        generate_calls(type, wrapped, op_outputs, op_inputs);
+        generate_calls(type, *op, op_outputs, op_inputs);
         if (m_performance_counters_enabled)
         {
             m_timer_map[op].stop();
@@ -210,7 +228,7 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
 }
 
 void runtime::gcpu::GCPUExecutable::generate_calls(const element::Type& type,
-                                                   const NodeWrapper& op,
+                                                   const Node& op,
                                                    const vector<shared_ptr<HostTensor>>& out,
                                                    const vector<shared_ptr<HostTensor>>& in)
 {
@@ -230,9 +248,10 @@ void runtime::gcpu::GCPUExecutable::generate_calls(const element::Type& type,
     case element::Type_t::u64: op_engine<uint64_t>(op, out, in); break;
     case element::Type_t::undefined:
     case element::Type_t::dynamic:
+    case element::Type_t::u1:
     case element::Type_t::bf16:
     case element::Type_t::f16:
-        ss << "unsupported element type " << type << " op " << op.get_node()->get_name();
+        ss << "unsupported element type " << type << " op " << op.get_name();
         throw ngraph_error(ss.str());
     }
 }

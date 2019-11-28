@@ -23,23 +23,28 @@ namespace ngraph
 {
     namespace op
     {
-        class AllReduce : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"AllReduce", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            AllReduce() = default;
-            AllReduce(const Output<Node>& arg, reduction::Type reduce_type = reduction::Type::SUM);
+            class NGRAPH_API AllReduce : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"AllReduce", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                AllReduce() = default;
+                AllReduce(const Output<Node>& arg,
+                          reduction::Type reduce_type = reduction::Type::SUM);
 
-            void validate_and_infer_types() override;
+                void validate_and_infer_types() override;
 
-            std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
-            reduction::Type get_reduce_type() const;
-            void set_reduce_type(reduction::Type reduce_type);
+                std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+                reduction::Type get_reduce_type() const;
+                void set_reduce_type(reduction::Type reduce_type);
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
-        private:
-            reduction::Type m_reduce_type{reduction::Type::SUM};
-        };
+            private:
+                reduction::Type m_reduce_type{reduction::Type::SUM};
+            };
+        }
+        using v0::AllReduce;
     }
 }

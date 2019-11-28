@@ -24,7 +24,9 @@ namespace ngraph
 {
     namespace op
     {
-        // clang-format off
+        namespace v0
+        {
+            // clang-format off
         /// \brief Tensor reshape operation.
         ///
         /// "Converts" an input tensor into a new shape with the same number of elements.
@@ -61,50 +63,51 @@ namespace ngraph
         /// | Type                     | Description                                                                                            |
         /// | ------------------------ | ------------------------------------------------------------------------------------------------------ |
         /// | \f$E[d'_1,\dots,d'_m]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with its elements rearranged as described above. |
-        // clang-format on
-        class Reshape : public Op
-        {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Reshape", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a reshape operation.
-            Reshape() = default;
-            /// \brief Constructs a reshape operation.
-            ///
-            /// \param arg The tensor to be reshaped.
-            /// \param input_order The order in which to iterate over input axes. This must be a
-            ///                    permutation of the sequence \f$(0,\dots,n-1)\f$ where \f$n\f$ is
-            ///                    the rank of the input tensor.
-            /// \param output_shape The output shape. If the input shape is
-            ///                     \f$(a_0,\dots,a_{k-1})\f$ then the output shape must
-            ///                     be of the form \f$(b_0,\dots,b_{j-1})\f$ where
-            ///                     \f$\Pi(a_i) = \Pi(b_i)\f$.
-            Reshape(const Output<Node>& arg,
-                    const AxisVector& input_order,
-                    const Shape& output_shape);
+            // clang-format on
+            class NGRAPH_API Reshape : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Reshape", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a reshape operation.
+                Reshape() = default;
+                /// \brief Constructs a reshape operation.
+                ///
+                /// \param arg The tensor to be reshaped.
+                /// \param input_order The order in which to iterate over input axes. This must be a
+                ///                    permutation of the sequence \f$(0,\dots,n-1)\f$ where \f$n\f$
+                ///                    is
+                ///                    the rank of the input tensor.
+                /// \param output_shape The output shape. If the input shape is
+                ///                     \f$(a_0,\dots,a_{k-1})\f$ then the output shape must
+                ///                     be of the form \f$(b_0,\dots,b_{j-1})\f$ where
+                ///                     \f$\Pi(a_i) = \Pi(b_i)\f$.
+                Reshape(const Output<Node>& arg,
+                        const AxisVector& input_order,
+                        const Shape& output_shape);
 
-            void validate_and_infer_types() override;
+                void validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            /// \return The order in which to iterate over input axes.
-            const AxisVector& get_input_order() const { return m_input_order; }
-            void set_input_order(const AxisVector& input_order) { m_input_order = input_order; }
-            /// \return The shape of the output tensor.
-            const Shape& get_output_shape() const { return m_output_shape; }
-            void set_output_shape(const Shape& output_shape) { m_output_shape = output_shape; }
-            bool get_is_transpose() const { return m_is_transpose; }
-            void set_is_transpose(bool is_transpose) { m_is_transpose = is_transpose; }
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+                /// \return The order in which to iterate over input axes.
+                const AxisVector& get_input_order() const { return m_input_order; }
+                void set_input_order(const AxisVector& input_order) { m_input_order = input_order; }
+                /// \return The shape of the output tensor.
+                const Shape& get_output_shape() const { return m_output_shape; }
+                void set_output_shape(const Shape& output_shape) { m_output_shape = output_shape; }
+                bool get_is_transpose() const { return m_is_transpose; }
+                void set_is_transpose(bool is_transpose) { m_is_transpose = is_transpose; }
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
 
-            AxisVector m_input_order;
-            Shape m_output_shape;
-            bool m_is_transpose{false};
-        };
+                AxisVector m_input_order;
+                Shape m_output_shape;
+                bool m_is_transpose{false};
+            };
+        }
 
         namespace v1
         {
@@ -113,11 +116,10 @@ namespace ngraph
             /// "Converts" an input tensor into a new shape with the same number of elements.
             /// This op does not touch the actual data. If needed, use Transpose for that purpose.
             ///
-            class Reshape : public Op
+            class NGRAPH_API Reshape : public Op
             {
             public:
-                NGRAPH_API
-                static constexpr NodeTypeInfo type_info{"DynReshape", 1};
+                static constexpr NodeTypeInfo type_info{"Reshape", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Reshape() = default;
                 /// \brief Constructs a dynamic reshape operation. This operation does not perform
@@ -152,5 +154,6 @@ namespace ngraph
                 bool m_zero_flag;
             };
         }
+        using v0::Reshape;
     }
 }

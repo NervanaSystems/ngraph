@@ -2836,7 +2836,29 @@ TEST(type_prop, conv_bprop_data_v1_output_partial_shape_dynamic)
     auto padding_end = CoordinateDiff{0, 0};
 
     auto conv1 = make_shared<op::v1::ConvolutionBackpropData>(
-        filters, deltas, data_batch_shape, strides, dilations, padding_begin, padding_end);
+        deltas, filters, data_batch_shape, strides, padding_begin, padding_end, dilations);
 
     ASSERT_TRUE(conv1->get_output_partial_shape(0).is_dynamic());
+}
+
+TEST(type_prop, conv_v1_partial_rank)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape filters_shape{PartialShape::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    auto conv = make_shared<op::v1::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 window_dilation_strides);
+
+    ASSERT_TRUE(conv->get_output_partial_shape(0).is_dynamic());
 }

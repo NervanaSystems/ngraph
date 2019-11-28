@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <cstdint>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <utility>
@@ -31,18 +33,36 @@ namespace ngraph
 
     /// Type information for a type system without inheritance; instances have exactly one type not
     /// related to any other type.
-    NGRAPH_API
-    struct DiscreteTypeInfo
+    struct NGRAPH_API DiscreteTypeInfo
     {
         const char* name;
         uint64_t version;
 
-        bool is_castable(const DiscreteTypeInfo& target_type) const { return this == &target_type; }
+        bool is_castable(const DiscreteTypeInfo& target_type) const { return *this == target_type; }
         // For use as a key
         bool operator<(const DiscreteTypeInfo& b) const
         {
-            return version < b.version ||
-                   (version == b.version && std::string(name) < std::string(b.name));
+            return version < b.version || (version == b.version && strcmp(name, b.name) < 0);
+        }
+        bool operator<=(const DiscreteTypeInfo& b) const
+        {
+            return version < b.version || (version == b.version && strcmp(name, b.name) <= 0);
+        }
+        bool operator>(const DiscreteTypeInfo& b) const
+        {
+            return version < b.version || (version == b.version && strcmp(name, b.name) > 0);
+        }
+        bool operator>=(const DiscreteTypeInfo& b) const
+        {
+            return version < b.version || (version == b.version && strcmp(name, b.name) >= 0);
+        }
+        bool operator==(const DiscreteTypeInfo& b) const
+        {
+            return version == b.version && strcmp(name, b.name) == 0;
+        }
+        bool operator!=(const DiscreteTypeInfo& b) const
+        {
+            return version != b.version || strcmp(name, b.name) != 0;
         }
     };
 

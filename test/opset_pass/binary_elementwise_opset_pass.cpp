@@ -35,11 +35,10 @@ void test_type_prop_opset0_downgrade_pass(const element::Type& output_type,
     pass_manager.run_passes(f);
 
     auto v0_result = f->get_results().at(0);
-    auto node = v0_result->input(0).get_source_output().get_node_shared_ptr();
-    auto v0_node = static_pointer_cast<OpV0>(node);
+    auto node = v0_result->input_value(0).get_node_shared_ptr();
+    auto v0_node = as_type_ptr<OpV0>(node);
 
-    EXPECT_EQ(v0_node->description(), (node_name.empty() ? v1_node->description() : node_name));
-    EXPECT_EQ(v0_node->get_version(), 0);
+    ASSERT_TRUE(v0_node);
     EXPECT_EQ(v0_node->get_autob(), np_auto_b);
     EXPECT_EQ(v0_node->output(0).get_element_type(), output_type);
     EXPECT_EQ(v0_node->output(0).get_shape(), (Shape{1, 3, 2}));
@@ -76,10 +75,8 @@ void test_type_prop_opset1_upgrade_pass(const element::Type& output_type,
 
     auto v1_result = f->get_results().at(0);
     auto node = v1_result->input(0).get_source_output().get_node_shared_ptr();
-    auto v1_node = static_pointer_cast<OpV1>(node);
-
-    EXPECT_EQ(v1_node->description(), (node_name.empty() ? v0_node->description() : node_name));
-    EXPECT_EQ(v1_node->get_version(), 1);
+    auto v1_node = as_type_ptr<OpV1>(node);
+    ASSERT_TRUE(v1_node);
     EXPECT_EQ(v1_node->get_autob(), none_auto_b);
     EXPECT_EQ(v1_node->output(0).get_element_type(), output_type);
     EXPECT_EQ(v1_node->output(0).get_shape(), (Shape{1, 3, 2}));
@@ -131,10 +128,8 @@ TEST(opset_transform, opset0_divide_downgrade_pass)
 
     auto divide_v0_result = f->get_results().at(0);
     auto node = divide_v0_result->input(0).get_source_output().get_node_shared_ptr();
-    auto divide_v0_node = static_pointer_cast<op::v0::Divide>(node);
-
-    EXPECT_EQ(divide_v0_node->description(), "Divide");
-    EXPECT_EQ(divide_v0_node->get_version(), 0);
+    auto divide_v0_node = as_type_ptr<op::v0::Divide>(node);
+    ASSERT_TRUE(divide_v0_node);
     EXPECT_EQ(divide_v0_node->is_pythondiv(), pydiv);
     EXPECT_EQ(divide_v0_node->get_autob(), np_auto_b);
     EXPECT_EQ(divide_v0_node->output(0).get_element_type(), element::f32);
@@ -158,10 +153,8 @@ TEST(opset_transform, opset1_divide_upgrade_pass)
 
     auto divide_v1_result = f->get_results().at(0);
     auto node = divide_v1_result->input(0).get_source_output().get_node_shared_ptr();
-    auto divide_v1_node = static_pointer_cast<op::v1::Divide>(node);
-
-    EXPECT_EQ(divide_v1_node->description(), "Divide");
-    EXPECT_EQ(divide_v1_node->get_version(), 1);
+    auto divide_v1_node = as_type_ptr<op::v1::Divide>(node);
+    ASSERT_TRUE(divide_v1_node);
     EXPECT_EQ(divide_v1_node->is_pythondiv(), pydiv);
     EXPECT_EQ(divide_v1_node->get_autob(), none_auto_b);
     EXPECT_EQ(divide_v1_node->output(0).get_element_type(), element::f32);
@@ -190,12 +183,12 @@ TEST(opset_transform, opset1_greater_upgrade_pass)
 
 TEST(opset_transform, opset0_greater_eq_downgrade_pass)
 {
-    test_opset0_comparison_downgrade_pass<op::v0::GreaterEq, op::v1::GreaterEq>();
+    test_opset0_comparison_downgrade_pass<op::v0::GreaterEq, op::v1::GreaterEqual>();
 }
 
 TEST(opset_transform, opset1_greater_eq_upgrade_pass)
 {
-    test_opset1_comparison_upgrade_pass<op::v0::GreaterEq, op::v1::GreaterEq>();
+    test_opset1_comparison_upgrade_pass<op::v0::GreaterEq, op::v1::GreaterEqual>();
 }
 
 TEST(opset_transform, opset0_less_downgrade_pass)

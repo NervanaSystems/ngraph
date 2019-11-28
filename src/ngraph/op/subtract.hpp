@@ -22,29 +22,36 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise subtraction operation.
-        class Subtract : public util::BinaryElementwiseArithmetic
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Subtract", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            Subtract() = default;
-            /// \brief Constructs a subtraction operation.
-            ///
-            /// \param arg0 Node that produces the first input tensor.
-            /// \param arg1 Node that produces the second input tensor.
-            /// \param auto_broadcast Auto broadcast specification
-            Subtract(const Output<Node>& arg0,
-                     const Output<Node>& arg1,
-                     const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
+            /// \brief Elementwise subtraction operation.
+            class NGRAPH_API Subtract : public util::BinaryElementwiseArithmetic
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Subtract", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Subtract()
+                    : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NONE)
+                {
+                }
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                /// \brief Constructs a subtraction operation.
+                ///
+                /// \param arg0 Node that produces the first input tensor.
+                /// \param arg1 Node that produces the second input tensor.
+                /// \param auto_broadcast Auto broadcast specification
+                Subtract(const Output<Node>& arg0,
+                         const Output<Node>& arg1,
+                         const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+            };
+        }
+        using v0::Subtract;
     }
     std::shared_ptr<ngraph::Node> operator-(const Output<ngraph::Node> arg0,
                                             const Output<ngraph::Node> arg1);

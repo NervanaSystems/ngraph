@@ -286,8 +286,7 @@ void op::v1::Pad::validate_and_infer_types()
     {
         NODE_VALIDATION_CHECK(
             this,
-            static_cast<size_t>(pads_begin_shape[0]) >= 0 &&
-                static_cast<size_t>(pads_begin_shape[0]) <= static_cast<size_t>(arg_shape_rank),
+            static_cast<size_t>(pads_begin_shape[0]) <= static_cast<size_t>(arg_shape_rank),
             "Number of elements of pads_begin must be >= 0 and <= arg rank (pads_begin_shape[0]: ",
             pads_begin_shape[0],
             ").");
@@ -296,8 +295,7 @@ void op::v1::Pad::validate_and_infer_types()
     {
         NODE_VALIDATION_CHECK(
             this,
-            static_cast<size_t>(pads_end_shape[0]) >= 0 &&
-                static_cast<size_t>(pads_end_shape[0]) <= static_cast<size_t>(arg_shape_rank),
+            static_cast<size_t>(pads_end_shape[0]) <= static_cast<size_t>(arg_shape_rank),
             "Number of elements of pads_end must be >= 0 and <= arg rank (pads_end_shape[0]: ",
             pads_end_shape[0],
             ").");

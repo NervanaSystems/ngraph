@@ -28,14 +28,13 @@ namespace ngraph
         /// Parameters are nodes that represent the arguments that will be passed to user-defined
         /// functions. Function creation requires a sequence of parameters. Basic graph operations
         /// do not need parameters attached to a function.
-        class Parameter : public op::Op
+        class NGRAPH_API Parameter : public op::Op
         {
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
 
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Parameter", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructions a tensor-typed parameter node.
@@ -48,6 +47,8 @@ namespace ngraph
             Parameter(const ngraph::element::Type& element_type,
                       const PartialShape& pshape,
                       const bool cacheable = false);
+
+            bool visit_attributes(AttributeVisitor& visitor) override;
 
             bool is_parameter() const override { return true; }
             void validate_and_infer_types() override;

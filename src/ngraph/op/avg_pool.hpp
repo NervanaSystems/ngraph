@@ -27,10 +27,9 @@ namespace ngraph
         {
             /// \brief Batched average pooling operation, with optional padding and window stride.
             ///
-            class AvgPool : public Op
+            class NGRAPH_API AvgPool : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"AvgPool", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a batched average pooling operation.
@@ -130,6 +129,8 @@ namespace ngraph
                 /// `[n]`
                 AvgPool(const Output<Node>& arg, const Shape& window_shape);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
@@ -171,10 +172,9 @@ namespace ngraph
                 bool m_ceil_mode{false};
             };
 
-            class AvgPoolBackprop : public Op
+            class NGRAPH_API AvgPoolBackprop : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"AvgPoolBackprop", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 AvgPoolBackprop() = default;
@@ -187,6 +187,7 @@ namespace ngraph
                                 bool include_padding_in_avg_computation);
 
                 void validate_and_infer_types() override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
@@ -219,10 +220,9 @@ namespace ngraph
         {
             /// \brief Batched average pooling operation.
             ///
-            class AvgPool : public Op
+            class NGRAPH_API AvgPool : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"AvgPool", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a batched average pooling operation.
@@ -281,6 +281,7 @@ namespace ngraph
 
                 size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
@@ -320,10 +321,9 @@ namespace ngraph
                 op::RoundingType m_rounding_type{op::RoundingType::FLOOR};
             };
 
-            class AvgPoolBackprop : public Op
+            class NGRAPH_API AvgPoolBackprop : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"AvgPoolBackprop", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 AvgPoolBackprop() = default;
@@ -337,6 +337,7 @@ namespace ngraph
 
                 size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;

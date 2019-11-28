@@ -24,33 +24,34 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief      Parameterized, bounded sigmoid-like, piecewise linear
-        ///             function. min(max(alpha*x + beta, 0), 1)
-        ///
-        class HardSigmoid : public ngraph::op::util::FusedOp
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"HardSigmoid", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            HardSigmoid() = default;
-            /// \brief      Constructs a HardSigmoid operation.
+            /// \brief      Parameterized, bounded sigmoid-like, piecewise linear
+            ///             function. min(max(alpha*x + beta, 0), 1)
             ///
-            /// \param      data   Input tensor.
-            /// \param[in]  alpha  The alpha parameter.
-            /// \param[in]  beta   The beta parameter.
-            ///
-            HardSigmoid(const Output<Node>& data, float alpha, float beta);
+            class NGRAPH_API HardSigmoid : public ngraph::op::util::FusedOp
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"HardSigmoid", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                HardSigmoid() = default;
 
-            virtual NodeVector decompose_op() const override;
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                /// \brief      Constructs a HardSigmoid operation.
+                ///
+                /// \param      data   Input tensor.
+                /// \param[in]  alpha  A scalar value representing the alpha parameter.
+                /// \param[in]  beta   A scalar value representing the beta parameter.
+                ///
+                HardSigmoid(const Output<Node>& data,
+                            const Output<Node>& alpha,
+                            const Output<Node>& beta);
 
-            float get_alpha() const { return m_alpha; }
-            float get_beta() const { return m_beta; }
-        private:
-            float m_alpha;
-            float m_beta;
-        };
+                virtual void pre_validate_and_infer_types() override;
+                virtual NodeVector decompose_op() const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        }
+        using v0::HardSigmoid;
     }
 }

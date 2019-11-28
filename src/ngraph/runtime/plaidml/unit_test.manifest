@@ -15,6 +15,7 @@ min_3d_eliminate_zero_dim               # Out-of-range for PlaidML
 reverse_sequence_n2c3h4w2               # No plans to implement ReverseSequence
 reverse_sequence_n4c3h2w2               # No plans to implement ReverseSequence
 reverse_sequence_n4d2c3h2w2             # No plans to implement ReverseSequence
+reverse_sequence_negative_axes          # No plans to implement ReverseSequence
 topk_1d_max_all                         # No plans to implement TopK
 topk_1d_max_partial                     # No plans to implement TopK
 topk_1d_max_one                         # No plans to implement TopK
@@ -147,6 +148,7 @@ pad_reflect_1d_multi_reflect
 pad_reflect_2d
 pad_reflect_2d_with_neg
 pad_symmetric
+cross_entropy_with_one_hot
 
 # No double precision FP support in PlaidML
 sum_trivial_in_double
@@ -240,6 +242,16 @@ gather_no_axis_bool
 batch_mat_mul_forward
 backwards_batchmatmul_tensor2_tensor2
 
+# unsupported op: `CumSum`
+cum_sum_default
+cum_sum_2dim
+cum_sum_3d
+cum_sum_2dim_allmodes
+model_cum_sum_1d
+model_cum_sum_2d_axis_input
+model_cum_sum_2d_dynamic_axis_input
+model_cum_sum_3d_exclusive_reverse
+
 # onnx tests
 model_quant_conv_linear_2d
 model_quant_conv_linear_3d
@@ -319,3 +331,6 @@ tile_3d_few_repeats
 
 # dyn shape
 dyn_generate_mask
+
+# Test fails on intel gpu mac
+model_mod
