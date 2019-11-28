@@ -55,10 +55,9 @@ namespace ngraph
         namespace v1
         {
             /// \brief Elementwise subtraction operation.
-            class Subtract : public util::BinaryElementwiseArithmetic
+            class NGRAPH_API Subtract : public util::BinaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Subtract", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Subtract()
