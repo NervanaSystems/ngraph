@@ -67,5 +67,60 @@ shared_ptr<Node> op::v1::NonMaxSuppression::copy_with_new_args(const NodeVector&
 
 void op::v1::NonMaxSuppression::validate_and_infer_types()
 {
-    // TODO
+    const auto boxes_ps = get_input_partial_shape(0);
+    const auto scores_ps = get_input_partial_shape(1);
+
+    NODE_VALIDATION_CHECK(this,
+                          boxes_ps.rank().is_static() && static_cast<size_t>(boxes_ps.rank()) == 3,
+                          "Expected a 3D tensor for the 'boxes' input. Got: ",
+                          boxes_ps);
+
+    NODE_VALIDATION_CHECK(this,
+                          scores_ps.rank().is_static() &&
+                              static_cast<size_t>(scores_ps.rank()) == 3,
+                          "Expected a 3D tensor for the 'scores' input. Got: ",
+                          scores_ps);
+
+    const auto max_boxes_ps = get_input_partial_shape(2);
+    NODE_VALIDATION_CHECK(this,
+                          max_boxes_ps.is_dynamic() || is_scalar(max_boxes_ps.to_shape()),
+                          "Expected a scalar for the 'max_output_boxes_per_class' input. Got: ",
+                          max_boxes_ps);
+
+    const auto iou_threshold_ps = get_input_partial_shape(3);
+    NODE_VALIDATION_CHECK(this,
+                          iou_threshold_ps.is_dynamic() || is_scalar(iou_threshold_ps.to_shape()),
+                          "Expected a scalar for the 'iou_threshold' input. Got: ",
+                          iou_threshold_ps);
+
+    const auto score_threshold_ps = get_input_partial_shape(4);
+    NODE_VALIDATION_CHECK(this,
+                          score_threshold_ps.is_dynamic() ||
+                              is_scalar(score_threshold_ps.to_shape()),
+                          "Expected a scalar for the 'score_threshold' input. Got: ",
+                          score_threshold_ps);
+
+    const auto num_batches_boxes = boxes_ps[0];
+    const auto num_batches_scores = scores_ps[0];
+    NODE_VALIDATION_CHECK(this,
+                          num_batches_boxes.same_scheme(num_batches_scores),
+                          "The first dimension of both 'boxes' and 'scores' must match. Boxes: ",
+                          num_batches_boxes,
+                          "; Scores: ",
+                          num_batches_scores);
+
+    const auto num_boxes_boxes = boxes_ps[1];
+    const auto num_boxes_scores = scores_ps[2];
+    NODE_VALIDATION_CHECK(this,
+                          num_boxes_boxes.same_scheme(num_boxes_scores),
+                          "'boxes' and 'scores' input shapes must match at the second and third "
+                          "dimension respectively. Boxes: ",
+                          num_boxes_boxes,
+                          "; Scores: ",
+                          num_boxes_scores);
+
+    NODE_VALIDATION_CHECK(this,
+                          boxes_ps[3].is_static() && static_cast<size_t>(boxes_ps[4]) == 4u,
+                          "The last dimension of the 'boxes' input must be equal to 4. Got:",
+                          boxes_ps[4]);
 }
