@@ -26,7 +26,7 @@ namespace ngraph
     {
         namespace v0
         {
-            /// \brief Operator performing Matrix Multiplication.
+            /// \brief Operator performing Stack.
             class NGRAPH_API Stack : public ngraph::op::util::FusedOp
             {
             public:
@@ -34,11 +34,18 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Stack() = default;
 
-                /// \brief Constructs a concatenation operation.
+                /// \brief Constructs a stack operation.
                 ///
-                /// \param args               The outputs producing the input tensors.
-                /// \param axis The axis along which to concatenate the input tensors.
+                /// \param args The outputs producing the input tensors.
+                /// \param axis The axis in the result array along which the input arrays are
+                /// stacked.
                 Stack(const OutputVector& args, int64_t axis);
+
+                /// \brief Constructs a stack operation.
+                ///
+                /// \param args The nodes producing the input tensors.
+                /// \param axis The axis in the result array along which the input arrays are
+                /// stacked.
                 Stack(const NodeVector& args, int64_t axis);
 
                 virtual void pre_validate_and_infer_types() override;
@@ -48,17 +55,16 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
-                /// \return The concatenation axis.
-                int64_t get_concatenation_axis() const { return m_concat_axis; }
-                void set_concatenation_axis(const int64_t concatenation_axis)
-                {
-                    m_concat_axis = concatenation_axis;
-                }
+                /// \return The stack axis.
+                int64_t get_stack_axis() const { return m_stack_axis; }
+                /// \set The stack axis
+                void set_stack_axis(const int64_t stack_axis) { m_stack_axis = stack_axis; }
+                /// \return The stack axis
                 int64_t get_axis() const { return m_axis; }
                 void set_axis(int64_t axis) { m_axis = axis; }
             private:
                 int64_t m_axis;
-                int64_t m_concat_axis = -1;
+                int64_t m_stack_axis = -1;
             };
         }
         using v0::Stack;
