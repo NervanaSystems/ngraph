@@ -4504,6 +4504,12 @@ json JSONSerializer::serialize_node(const Node& n)
         node["reduction_axes"] = tmp->get_reduction_axes();
         break;
     }
+    case OP_TYPEID::Stack:
+    {
+        auto tmp = static_cast<const op::Stack*>(&n);
+        node["axis"] = tmp->get_concatenation_axis();
+        break;
+    }
     case OP_TYPEID::ReduceSum_v1:
     {
         auto tmp = static_cast<const op::v1::ReduceSum*>(&n);
