@@ -22,7 +22,9 @@ namespace ngraph
 {
     namespace op
     {
-        // clang-format off
+        namespace v0
+        {
+            // clang-format off
         /// \brief Elementwise selection operation.
         ///
         /// ## Inputs
@@ -38,29 +40,32 @@ namespace ngraph
         /// | Type                   | Description                                                                                                                                                             |
         /// | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \texttt{arg1}[i_1,\dots,i_n]\text{ if }\texttt{arg0}[i_1,\dots,i_n] \neq 0\text{, else }\texttt{arg2}[i_1,\dots,i_n]\f$ |
-        // clang-format on
-        class Select : public Op
-        {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Select", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a selection operation.
-            Select() = default;
-            /// \brief Constructs a selection operation.
-            ///
-            /// \param arg0 Node that produces the first input tensor.
-            /// \param arg1 Node that produces the second input tensor.
-            /// \param arg2 Node that produces the third input tensor.
-            Select(const Output<Node>& arg0, const Output<Node>& arg1, const Output<Node>& arg2);
+            // clang-format on
+            class NGRAPH_API Select : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Select", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a selection operation.
+                Select() = default;
+                /// \brief Constructs a selection operation.
+                ///
+                /// \param arg0 Node that produces the first input tensor.
+                /// \param arg1 Node that produces the second input tensor.
+                /// \param arg2 Node that produces the third input tensor.
+                Select(const Output<Node>& arg0,
+                       const Output<Node>& arg1,
+                       const Output<Node>& arg2);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-            void validate_and_infer_types() override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+                void validate_and_infer_types() override;
 
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+            };
+        }
+        using v0::Select;
     }
 }

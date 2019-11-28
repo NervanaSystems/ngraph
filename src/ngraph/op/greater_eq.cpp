@@ -39,18 +39,18 @@ shared_ptr<Node> op::v0::GreaterEq::copy_with_new_args(const NodeVector& new_arg
 
 //---------------------------------- v1 ----------------------------------------
 
-constexpr NodeTypeInfo op::v1::GreaterEq::type_info;
+constexpr NodeTypeInfo op::v1::GreaterEqual::type_info;
 
-op::v1::GreaterEq::GreaterEq(const Output<Node>& arg0,
-                             const Output<Node>& arg1,
-                             const AutoBroadcastSpec& auto_broadcast)
+op::v1::GreaterEqual::GreaterEqual(const Output<Node>& arg0,
+                                   const Output<Node>& arg1,
+                                   const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseComparison(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::v1::GreaterEq::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::GreaterEqual::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<op::v1::GreaterEq>(new_args.at(0), new_args.at(1), this->get_autob());
+    return make_shared<op::v1::GreaterEqual>(new_args.at(0), new_args.at(1), this->get_autob());
 }

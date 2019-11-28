@@ -27,10 +27,9 @@ namespace ngraph
         ///        input as needed along the new axes.
         ///
         /// This is basically the "dynamic shape" version of the static Broadcast op.
-        class DynBroadcast : public Op
+        class NGRAPH_API DynBroadcast : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"DynBroadcast", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             DynBroadcast() = default;
