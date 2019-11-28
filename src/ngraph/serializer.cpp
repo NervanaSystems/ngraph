@@ -2073,6 +2073,17 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Negative>(args[0]);
             break;
         }
+        case OP_TYPEID::NonMaxSuppression_v1:
+        {
+            const auto box_encoding =
+                node_js.at("box_encoding").get<op::v1::NonMaxSuppression::BoxEncodingType>();
+            const auto sort_result_descending = node_js.at("sort_result_descending").get<bool>();
+
+            node = make_shared<op::v1::NonMaxSuppression>(
+                args[0], args[1], args[2], args[3], args[4], box_encoding, sort_result_descending);
+
+            break;
+        }
         case OP_TYPEID::NormalizeL2:
         {
             float eps = node_js.at("eps").get<float>();
@@ -3818,6 +3829,13 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Negative: { break;
+    }
+    case OP_TYPEID::NonMaxSuppression_v1:
+    {
+        const auto tmp = static_cast<const op::v1::NonMaxSuppression*>(&n);
+        node["box_encoding"] = tmp->get_box_encoding();
+        node["sort_result_descending"] = tmp->get_sort_result_descending();
+        break;
     }
     case OP_TYPEID::NormalizeL2:
     {
