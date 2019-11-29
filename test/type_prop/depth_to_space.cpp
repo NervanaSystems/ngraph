@@ -33,7 +33,7 @@ TEST(type_prop, depth_to_space)
 
 TEST(type_prop, depth_to_space_input_rank_not_supported)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 8, 8, 8, 4});
+    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 8});
     try
     {
         auto space_to_depth =
@@ -42,7 +42,9 @@ TEST(type_prop, depth_to_space_input_rank_not_supported)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "The provided tensor shape: ");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "The input tensor with rank lower than 3 is not supported (input rank: 2)");
     }
     catch (...)
     {
