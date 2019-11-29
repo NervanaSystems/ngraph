@@ -163,8 +163,22 @@ void op::v1::OneHot::validate_and_infer_types()
         m_axis =
             ngraph::normalize_axis(this, m_axis, indices_rank + 1, -indices_rank - 1, indices_rank);
 
+        NODE_VALIDATION_CHECK(this,
+                              is_scalar(depth->get_shape()),
+                              "A scalar input should be provided as 'depth' to OneHot",
+                              " (got ",
+                              depth->get_shape(),
+                              " elements).");
+
+
         int64_t depth_val = read_scalar_int_from_constant_node(depth);
 
+        NODE_VALIDATION_CHECK(this,
+                              depth_val > 0,
+                              "The value of 'depth' must be a positive number.",
+                              " (got ",
+                              depth_val,
+                              ").");
 
 
         out_dims.insert(out_dims.begin() + m_axis, Dimension(depth_val));
@@ -218,20 +232,5 @@ template <typename T>
 size_t op::v1::OneHot::validate_and_get_int(const shared_ptr<op::Constant>& k_constant) const
 {
     const auto k_const_contents = k_constant->get_vector<T>();
-
-    NODE_VALIDATION_CHECK(this,
-                          k_const_contents.size() == 1,
-                          "Only one value (scalar) should be provided as the 'depth' input to OneHot",
-                          " (got ",
-                          k_const_contents.size(),
-                          " elements).");
-
-    NODE_VALIDATION_CHECK(this,
-                          k_const_contents[0] > 0,
-                          "The value of 'depth' must be a positive number.",
-                          " (got ",
-                          k_const_contents[0],
-                          ").");
-
     return static_cast<size_t>(k_const_contents[0]);
 }
