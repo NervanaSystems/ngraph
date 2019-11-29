@@ -228,7 +228,6 @@ gather_nd_batch_1d_from_2d
 gather_nd_batch_scalar_from_3d
 gather_nd_batch_1d_from_3d
 gather_nd_batch_2d_from_3d
-
 gather_no_axis_int8
 gather_no_axis_int16
 gather_no_axis_int32
