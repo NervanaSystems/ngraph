@@ -17,6 +17,7 @@
 #include "constant_folding.hpp"
 #include "ngraph/op/all.hpp"
 #include "ngraph/op/any.hpp"
+#include "ngraph/op/reduce_logical_and.hpp"
 #include "ngraph/runtime/reference/all.hpp"
 #include "ngraph/runtime/reference/any.hpp"
 
@@ -44,6 +45,25 @@ static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::C
                                 reduction_node->get_shape(),
                                 any->get_reduction_axes());
     }
+    else if (auto reduce_and = as_type_ptr<::ngraph::op::v1::ReduceLogicalAnd>(reduction_node))
+    {
+        const auto reduction_axes = reduce_and->get_reduction_axes();
+        const auto input_shape = reduce_and->get_input_shape(0);
+        Shape shape_no_keep_dims;
+        for (size_t i = 0; i < input_shape.size(); i++)
+        {
+            if (reduction_axes.count(i) == 0)
+            {
+                shape_no_keep_dims.push_back(input_shape[i]);
+            }
+        }
+
+        runtime::reference::all(constant->get_vector<char>().data(),
+                                out_vec.data(),
+                                constant->get_output_shape(0),
+                                shape_no_keep_dims,
+                                reduce_and->get_reduction_axes());
+    }
     else
     {
         NGRAPH_CHECK(false,
@@ -64,7 +84,8 @@ void pass::ConstantFolding::construct_constant_logical_reduction()
         make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
     auto is_supported_reduction = [](std::shared_ptr<Node> n) {
         return (pattern::has_class<::ngraph::op::All>()(n) ||
-                pattern::has_class<::ngraph::op::Any>()(n));
+                pattern::has_class<::ngraph::op::Any>()(n) ||
+                pattern::has_class<::ngraph::op::v1::ReduceLogicalAnd>()(n));
     };
     auto reduction =
         std::make_shared<pattern::op::Any>(element::i32,
