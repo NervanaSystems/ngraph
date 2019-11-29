@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/op/util/arithmetic_reductions_keep_dims.hpp"
+#include "ngraph/op/util/logical_reduction_keep_dims.hpp"
 
 namespace ngraph
 {
@@ -28,7 +28,7 @@ namespace ngraph
             ///
             /// The reduction is performed over slices of the first input. The slices shape depends
             /// on the values passed to the second input - the axes.
-            class ReduceLogicalOr : public util::ArithmeticReductionKeepDims
+            class ReduceLogicalOr : public util::LogicalReductionKeepDims
             {
             public:
                 NGRAPH_API
@@ -43,7 +43,7 @@ namespace ngraph
                 /// \param keep_dims - Indicates if the axes used for reduction should be held/kept
                 ReduceLogicalOr(const Output<Node>& data,
                                 const Output<Node>& reduction_axes,
-                                bool keep_dims = false);
+                                const bool keep_dims = false);
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;

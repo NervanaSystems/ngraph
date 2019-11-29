@@ -23,8 +23,8 @@ constexpr NodeTypeInfo op::v1::ReduceLogicalAnd::type_info;
 
 op::v1::ReduceLogicalAnd::ReduceLogicalAnd(const Output<Node>& data,
                                            const Output<Node>& reduction_axes,
-                                           bool keep_dims)
-    : ArithmeticReductionKeepDims(data, reduction_axes, keep_dims)
+                                           const bool keep_dims)
+    : LogicalReductionKeepDims(data, reduction_axes, keep_dims)
 {
     constructor_validate_and_infer_types();
 }

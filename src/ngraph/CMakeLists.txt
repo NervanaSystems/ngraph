@@ -435,6 +435,8 @@ set (SRC
     op/util/fused_op.hpp
     op/util/index_reduction.cpp
     op/util/index_reduction.hpp
+    op/util/logical_reduction_keep_dims.hpp
+    op/util/logical_reduction_keep_dims.cpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
     op/util/rnn_cell_base.cpp
