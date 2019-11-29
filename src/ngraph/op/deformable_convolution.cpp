@@ -97,13 +97,13 @@ void op::v1::DeformableConvolution::validate_and_infer_types()
         }
     }
 
-    if (deformable_values_shape.is_static())
+    if (deformable_values_shape.rank().is_static())
     {
         NODE_VALIDATION_CHECK(
             this,
-            deformable_values_shape.to_shape().size() >= 3,
+            static_cast<size_t>(deformable_values_shape.rank()) >= 3u,
             "The deformable values tensor rank is expected to be at least 3, got: ",
-            deformable_values_shape.to_shape().size());
+            deformable_values_shape.rank());
     }
 
     if (m_group > 1 && data_batch_shape[1].is_static() && filters_shape[0].is_static())
