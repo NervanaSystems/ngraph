@@ -1131,6 +1131,7 @@ TEST(constant_folding, const_reduce_logical_and__keepdims_3d)
 
     const Shape expected_out_shape{1, 2, 1};
     ASSERT_EQ(new_const->get_shape(), expected_out_shape);
+    std::cout << new_const->get_shape() << std::endl;
 
     const auto values_out = new_const->get_vector<char>();
 
@@ -1160,6 +1161,36 @@ TEST(constant_folding, const_any)
     auto values_out = new_const->get_vector<char>();
 
     vector<char> values_expected{1, 1, 0};
+
+    ASSERT_EQ(values_expected, values_out);
+}
+
+TEST(constant_folding, const_reduce_logical_or__no_keepdims)
+{
+    const Shape input_shape{3, 3};
+
+    const vector<char> values_in{1, 0, 0, 1, 0, 1, 0, 0, 0};
+    const auto data = op::Constant::create(element::boolean, input_shape, values_in);
+    const auto axes = op::Constant::create(element::i64, {1}, {1});
+    const auto convert = make_shared<op::v1::ReduceLogicalOr>(data, axes, false);
+    auto f = make_shared<Function>(convert, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::ReduceLogicalAnd>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    const auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+
+    const Shape expected_out_shape{3};
+    ASSERT_EQ(new_const->get_shape(), expected_out_shape);
+
+    const auto values_out = new_const->get_vector<char>();
+
+    const vector<char> values_expected{1, 1, 0};
 
     ASSERT_EQ(values_expected, values_out);
 }
