@@ -107,6 +107,12 @@ namespace ngraph
                 void set_axis(int64_t axis) { m_axis = axis; }
             protected:
                 int64_t m_axis;
+
+                size_t read_scalar_int_from_constant_node(const std::shared_ptr<Node>& node) const;
+
+                template <typename T>
+                size_t validate_and_get_int(const std::shared_ptr<op::Constant>& k_constant) const;
+
             };
         }
         // default opset version
