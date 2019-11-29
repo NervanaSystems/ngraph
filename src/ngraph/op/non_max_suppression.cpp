@@ -123,4 +123,12 @@ void op::v1::NonMaxSuppression::validate_and_infer_types()
                           boxes_ps[2].is_static() && static_cast<size_t>(boxes_ps[2]) == 4u,
                           "The last dimension of the 'boxes' input must be equal to 4. Got:",
                           boxes_ps[2]);
+
+    // NonMaxSuppression produces triplets
+    // that have the following format: [batch_index, class_index, box_index]
+    // The number of returned triplets depends entirely on the computation, thus one dynamic dim
+    const PartialShape out_shape = {Dimension::dynamic(), 3};
+
+    set_output_size(1);
+    set_output_type(0, element::i64, out_shape);
 }
