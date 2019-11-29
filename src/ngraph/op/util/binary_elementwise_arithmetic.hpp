@@ -51,7 +51,7 @@ namespace ngraph
             /// | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
             /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg0}[i_1,\dots,i_n],\texttt{arg1}[i_1,\dots,i_n])\f$. This will always have the same shape and element type as the input tensors (after auto broadcasting). |
             // clang-format on
-            class BinaryElementwiseArithmetic : public Op
+            class NGRAPH_API BinaryElementwiseArithmetic : public Op
             {
             protected:
                 BinaryElementwiseArithmetic(const AutoBroadcastSpec& autob);

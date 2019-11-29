@@ -22,26 +22,29 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise hyperbolic cosine (cosh) operation.
-        class Cosh : public util::UnaryElementwiseArithmetic
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Cosh", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a hyperbolic cosine operation.
-            Cosh() = default;
-            /// \brief Constructs a hyperbolic cosine operation.
-            ///
-            /// \param arg Node that produces the input tensor.
-            Cosh(const Output<Node>& arg);
+            /// \brief Elementwise hyperbolic cosine (cosh) operation.
+            class NGRAPH_API Cosh : public util::UnaryElementwiseArithmetic
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Cosh", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a hyperbolic cosine operation.
+                Cosh() = default;
+                /// \brief Constructs a hyperbolic cosine operation.
+                ///
+                /// \param arg Node that produces the input tensor.
+                Cosh(const Output<Node>& arg);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+            };
+        }
+        using v0::Cosh;
     }
 }

@@ -64,7 +64,6 @@
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
 #include <mlir/Dialect/LLVMIR/LLVMDialect.h>
 #include <mlir/ExecutionEngine/ExecutionEngine.h>
-#include <mlir/ExecutionEngine/MemRefUtils.h>
 #include <mlir/ExecutionEngine/OptUtils.h>
 #include <mlir/Pass/PassManager.h>
 #include <mlir/Target/LLVMIR.h>

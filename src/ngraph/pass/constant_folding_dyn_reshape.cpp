@@ -79,6 +79,9 @@ void pass::ConstantFolding::construct_constant_dyn_reshape()
             NGRAPH_CHECK(false,
                          "Encountered 'dynamic' element type in constant_dyn_reshape_callback");
             break;
+        case element::Type_t::u1:
+            NGRAPH_CHECK(false, "Encountered 'u1' element type in constant_dyn_reshape_callback");
+            break;
         case element::Type_t::boolean:
             replacement = fold_constant_dyn_reshape<char>(constant_data_match, dyn_reshape_match);
             break;

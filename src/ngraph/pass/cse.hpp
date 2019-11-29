@@ -26,7 +26,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::CommonSubexpressionElimination : public FunctionPass
+class NGRAPH_API ngraph::pass::CommonSubexpressionElimination : public FunctionPass
 {
 public:
     CommonSubexpressionElimination()

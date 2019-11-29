@@ -24,35 +24,39 @@ namespace ngraph
     {
         NodeVector get_output_elements(const std::shared_ptr<Node>& mon);
 
-        /// \brief Operation to get an output from a node.
-        class GetOutputElement : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"GetOutputElement", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a get-tuple-element operation.
-            ///
-            /// \param arg The input tuple.
-            /// \param n The index of the tuple element to get.
-            GetOutputElement(const std::shared_ptr<Node>& arg, size_t n);
+            /// \brief Operation to get an output from a node.
+            class NGRAPH_API GetOutputElement : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"GetOutputElement", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                GetOutputElement() = default;
+                /// \brief Constructs a get-tuple-element operation.
+                ///
+                /// \param arg The input tuple.
+                /// \param n The index of the tuple element to get.
+                GetOutputElement(const std::shared_ptr<Node>& arg, size_t n);
 
-            /// Return the equilent Output<Node>
-            Output<Node> get_as_output() const;
+                /// Return the equilent Output<Node>
+                Output<Node> get_as_output() const;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-            void validate_and_infer_types() override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+                void validate_and_infer_types() override;
 
-            /// \return The index of the tuple element to get.
-            size_t get_n() const { return m_n; }
-            virtual NodeVector get_arguments() const override;
+                /// \return The index of the tuple element to get.
+                size_t get_n() const { return m_n; }
+                virtual NodeVector get_arguments() const override;
 
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-            size_t m_n;
-        };
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+                size_t m_n;
+            };
+        }
+        using v0::GetOutputElement;
     }
 
     inline std::shared_ptr<Node> get_output_element(const Output<Node>& output,

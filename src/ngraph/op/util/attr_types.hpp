@@ -40,7 +40,7 @@ namespace ngraph
     }
 
     template <>
-    class AttributeAdapter<op::PadMode> : public EnumAttributeAdapterBase<op::PadMode>
+    class NGRAPH_API AttributeAdapter<op::PadMode> : public EnumAttributeAdapterBase<op::PadMode>
     {
     public:
         AttributeAdapter(op::PadMode& value)
@@ -48,7 +48,6 @@ namespace ngraph
         {
         }
 
-        NGRAPH_API
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::PadMode>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
@@ -81,7 +80,7 @@ namespace ngraph
     }
 
     template <>
-    class AttributeAdapter<op::PadType> : public EnumAttributeAdapterBase<op::PadType>
+    class NGRAPH_API AttributeAdapter<op::PadType> : public EnumAttributeAdapterBase<op::PadType>
     {
     public:
         AttributeAdapter(op::PadType& value)
@@ -89,7 +88,6 @@ namespace ngraph
         {
         }
 
-        NGRAPH_API
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::PadType>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
@@ -107,7 +105,8 @@ namespace ngraph
     }
 
     template <>
-    class AttributeAdapter<op::RoundingType> : public EnumAttributeAdapterBase<op::RoundingType>
+    class NGRAPH_API AttributeAdapter<op::RoundingType>
+        : public EnumAttributeAdapterBase<op::RoundingType>
     {
     public:
         AttributeAdapter(op::RoundingType& value)
@@ -115,7 +114,6 @@ namespace ngraph
         {
         }
 
-        NGRAPH_API
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::RoundingType>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
@@ -172,7 +170,7 @@ namespace ngraph
     }
 
     template <>
-    class AttributeAdapter<op::AutoBroadcastType>
+    class NGRAPH_API AttributeAdapter<op::AutoBroadcastType>
         : public EnumAttributeAdapterBase<op::AutoBroadcastType>
     {
     public:
@@ -181,7 +179,6 @@ namespace ngraph
         {
         }
 
-        NGRAPH_API
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::AutoBroadcastType>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
@@ -201,7 +198,7 @@ namespace ngraph
     }
 
     template <>
-    class AttributeAdapter<op::EpsMode> : public EnumAttributeAdapterBase<op::EpsMode>
+    class NGRAPH_API AttributeAdapter<op::EpsMode> : public EnumAttributeAdapterBase<op::EpsMode>
     {
     public:
         AttributeAdapter(op::EpsMode& value)
@@ -209,7 +206,6 @@ namespace ngraph
         {
         }
 
-        NGRAPH_API
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::EpsMode>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
@@ -229,7 +225,8 @@ namespace ngraph
     }
 
     template <>
-    class AttributeAdapter<op::TopKSortType> : public EnumAttributeAdapterBase<op::TopKSortType>
+    class NGRAPH_API AttributeAdapter<op::TopKSortType>
+        : public EnumAttributeAdapterBase<op::TopKSortType>
     {
     public:
         AttributeAdapter(op::TopKSortType& value)
@@ -237,7 +234,6 @@ namespace ngraph
         {
         }
 
-        NGRAPH_API
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::TopKSortType>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
@@ -245,7 +241,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Implicit broadcast specification
-        struct AutoBroadcastSpec
+        struct NGRAPH_API AutoBroadcastSpec
         {
             AutoBroadcastSpec()
                 : m_type(AutoBroadcastType::NONE)
@@ -255,6 +251,10 @@ namespace ngraph
             AutoBroadcastSpec(AutoBroadcastType type)
                 : m_type(type)
                 , m_axis(0)
+            {
+            }
+            AutoBroadcastSpec(const char* type)
+                : AutoBroadcastSpec(type_from_string(type))
             {
             }
             AutoBroadcastSpec(AutoBroadcastType type, int64_t axis)
@@ -271,10 +271,25 @@ namespace ngraph
                 return a.m_type == m_type && a.m_axis == m_axis;
             }
 
-            NGRAPH_API
             static const AutoBroadcastSpec NUMPY;
-            NGRAPH_API
             static const AutoBroadcastSpec NONE;
+
+        private:
+            AutoBroadcastType type_from_string(const std::string& type) const;
         };
     }
+
+    template <>
+    class AttributeAdapter<op::AutoBroadcastSpec> : public ValueReference<op::AutoBroadcastSpec>,
+                                                    public ValueAccessor<void>
+    {
+    public:
+        AttributeAdapter(op::AutoBroadcastSpec& value)
+            : ValueReference<op::AutoBroadcastSpec>(value)
+        {
+        }
+        NGRAPH_API
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::AutoBroadcastSpec>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 }

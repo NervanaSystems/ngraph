@@ -30,12 +30,12 @@ namespace ngraph
     namespace op
     {
         /// \brief Class for constants.
-        class Constant : public Op
+        class NGRAPH_API Constant : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Constant", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            Constant() = default;
             /// \brief Constructs a tensor constant.
             ///
             /// \param type The element type of the tensor constant.
@@ -338,6 +338,7 @@ namespace ngraph
                 case element::Type_t::u64:
                     write_buffer<uint64_t, T>(target, source, target_element_count);
                     break;
+                case element::Type_t::u1: throw std::runtime_error("unsupported type");
                 case element::Type_t::undefined: throw std::runtime_error("unsupported type");
                 case element::Type_t::dynamic: throw std::runtime_error("unsupported type");
                 }
@@ -355,13 +356,13 @@ namespace ngraph
             Constant operator=(const Constant&) = delete;
         };
 
-        class ScalarConstantLikeBase : public Constant
+        class NGRAPH_API ScalarConstantLikeBase : public Constant
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"ScalarConstantLikeBase", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             std::shared_ptr<op::Constant> as_constant() const;
+            ScalarConstantLikeBase() = default;
 
         protected:
             ScalarConstantLikeBase(const OutputVector& args)
@@ -371,7 +372,7 @@ namespace ngraph
         };
 
         /// \brief A scalar constant whose element type is the same as like.
-        class ScalarConstantLike : public ScalarConstantLikeBase
+        class NGRAPH_API ScalarConstantLike : public ScalarConstantLikeBase
         {
         public:
             /// \brief A scalar constant whose element type is the same as like.

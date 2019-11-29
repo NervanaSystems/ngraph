@@ -54,6 +54,7 @@ set(SRC
     constant_folding.cpp
     concat_fusion.cpp
     control_dependencies.cpp
+    convert_u1_to_string.cpp
     coordinate.cpp
     copy.cpp
     cpio.cpp
@@ -70,6 +71,7 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
+    opset1.cpp
     opset_pass/binary_elementwise_opset_pass.cpp
     opset_pass/broadcast_opset_pass.cpp
     opset_pass/convolution_opset_pass.cpp
@@ -78,6 +80,7 @@ set(SRC
     opset_pass/logical_not_opset_pass.cpp
     opset_pass/logical_or_opset_pass.cpp
     opset_pass/logical_xor_opset_pass.cpp
+    opset_pass/one_hot_opset_pass.cpp
     opset_pass/gather_opset_pass.cpp
     opset_pass/generate_mask_opset_pass.cpp
     opset_pass/pad_opset_pass.cpp
@@ -106,6 +109,7 @@ set(SRC
     type_prop/any.cpp
     type_prop/avg_pool.cpp
     type_prop/batch_mat_mul.cpp
+    type_prop/batch_mat_mul_transpose.cpp
     type_prop/batch_norm.cpp
     type_prop/binary_elementwise.cpp
     type_prop/broadcast.cpp
@@ -115,6 +119,7 @@ set(SRC
     type_prop/convert.cpp
     type_prop/convolution.cpp
     type_prop/convolution_bias.cpp
+    type_prop/crop_and_resize.cpp
     type_prop/depth_to_space.cpp
     type_prop/dequantize.cpp
     type_prop/dot.cpp
@@ -285,6 +290,7 @@ set(MULTI_TEST_SRC
     backend/convolution.in.cpp
     backend/cos.in.cpp
     backend/cosh.in.cpp
+    backend/cum_sum.in.cpp
     backend/divide.in.cpp
     backend/dot.in.cpp
     backend/dyn_broadcast.in.cpp
@@ -350,7 +356,6 @@ set(MULTI_TEST_SRC
     backend/sum.in.cpp
     backend/tan.in.cpp
     backend/tanh.in.cpp
-    backend/tensorview_custom_mem.in.cpp
     backend/tile.in.cpp
     backend/topk.in.cpp
     backend/transpose.in.cpp
@@ -432,7 +437,6 @@ if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
             backend/subtract.in.cpp
             backend/tan.in.cpp
             backend/tanh.in.cpp
-            backend/tensorview_custom_mem.in.cpp
             backend/transpose.in.cpp
             backend/validate_call.in.cpp
             backend/zero_sized.in.cpp
@@ -545,9 +549,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(unit-test PRIVATE -Wno-undef -Wno-reserved-id-macro)
 endif()
 
-# So many type_prop tests these days that we need to set /bigobj flag for MSVS.
+# So many type_prop tests these days that we need to set /bigobj flag for MSVC.
 # We should probably split up type_prop.cpp.
-if (MSVS)
+if (MSVC)
     target_compile_options(unit-test PRIVATE "/bigobj")
 endif()
 
@@ -603,7 +607,7 @@ endif()
 
 if (NOT NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
     # If all the runtime libraries are installed into one location, that will make life easier.
-    if (MSVS)
+    if (MSVC)
         add_custom_target(unit-test-check
             COMMAND set "PATH=${EXTERNAL_PROJECTS_ROOT}/src/ngraph/Release;${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/;${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/;${EXTERNAL_PROJECTS_ROOT}/ext_tbb-prefix/src/ext_tbb/tbb2019_20181203oss/bin/intel64/vc14;%PATH%"
             COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}

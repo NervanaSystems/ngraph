@@ -24,54 +24,57 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Operator performing General Matrix multiplication.
-        ///
-        /// \note More information:
-        ///       https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms#Level_3
-        ///
-        /// A' = transpose(A) if transA else A
-        /// B' = transpose(B) if transB else B
-        ///
-        /// Compute Y = alpha * A' * B' + beta * C
-        ///
-        class Gemm : public ngraph::op::util::FusedOp
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Gemm", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            Gemm() = default;
-            /// \brief Constructs an Gemm operation.
+            /// \brief Operator performing General Matrix multiplication.
             ///
-            /// \param A Input tensor A
-            /// \param B Input tensor B
-            /// \param C Input tensor C
-            /// \param alpha Scalar multiplier for the product of input tensors A * B
-            /// \param beta Scalar multiplier for input tensor C
-            /// \param transA Whether A should be transposed
-            /// \param transB Whether B should be transposed
-            Gemm(const Output<Node>& A,
-                 const Output<Node>& B,
-                 const Output<Node>& C,
-                 double alpha = 1.0,
-                 double beta = 1.0,
-                 bool transA = false,
-                 bool transB = false);
+            /// \note More information:
+            ///       https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms#Level_3
+            ///
+            /// A' = transpose(A) if transA else A
+            /// B' = transpose(B) if transB else B
+            ///
+            /// Compute Y = alpha * A' * B' + beta * C
+            ///
+            class NGRAPH_API Gemm : public ngraph::op::util::FusedOp
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Gemm", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Gemm() = default;
+                /// \brief Constructs an Gemm operation.
+                ///
+                /// \param A Input tensor A
+                /// \param B Input tensor B
+                /// \param C Input tensor C
+                /// \param alpha Scalar multiplier for the product of input tensors A * B
+                /// \param beta Scalar multiplier for input tensor C
+                /// \param transA Whether A should be transposed
+                /// \param transB Whether B should be transposed
+                Gemm(const Output<Node>& A,
+                     const Output<Node>& B,
+                     const Output<Node>& C,
+                     double alpha = 1.0,
+                     double beta = 1.0,
+                     bool transA = false,
+                     bool transB = false);
 
-            virtual NodeVector decompose_op() const override;
+                virtual NodeVector decompose_op() const override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            double get_alpha() const { return m_alpha; }
-            double get_beta() const { return m_beta; }
-            bool get_transA() const { return m_transA; }
-            bool get_transB() const { return m_transB; }
-        private:
-            double m_alpha;
-            double m_beta;
-            bool m_transA;
-            bool m_transB;
-        };
+                double get_alpha() const { return m_alpha; }
+                double get_beta() const { return m_beta; }
+                bool get_transA() const { return m_transA; }
+                bool get_transB() const { return m_transB; }
+            private:
+                double m_alpha;
+                double m_beta;
+                bool m_transA;
+                bool m_transB;
+            };
+        }
+        using v0::Gemm;
     }
 }

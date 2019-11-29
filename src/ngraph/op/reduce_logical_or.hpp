@@ -35,7 +35,7 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"ReduceLogicalOr", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ReduceLogicalOr() = default;
-                /// \brief Constructs a ReduceLogicalAnd node.
+                /// \brief Constructs a ReduceLogicalOr node.
                 ///
                 /// \param data - The input tensor with data to be reduced
                 /// \param reduction_axes - The input tensor with information about axes over which

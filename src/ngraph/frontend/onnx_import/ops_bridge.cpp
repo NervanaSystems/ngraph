@@ -45,6 +45,7 @@
 #include "op/conv_transpose.hpp"
 #include "op/cos.hpp"
 #include "op/cosh.hpp"
+#include "op/cum_sum.hpp"
 #include "op/depth_to_space.hpp"
 #include "op/dequantize_linear.hpp"
 #include "op/div.hpp"
@@ -81,6 +82,7 @@
 #include "op/mean.hpp"
 #include "op/mean_variance_normalization.hpp"
 #include "op/min.hpp"
+#include "op/mod.hpp"
 #include "op/mul.hpp"
 #include "op/neg.hpp"
 #include "op/not.hpp"
@@ -257,6 +259,7 @@ namespace ngraph
             REGISTER_OPERATOR("ConvTranspose", 1, conv_transpose);
             REGISTER_OPERATOR("Cos", 1, cos);
             REGISTER_OPERATOR("Cosh", 1, cosh);
+            REGISTER_OPERATOR("CumSum", 1, cum_sum);
             REGISTER_OPERATOR("DepthToSpace", 1, depth_to_space);
             REGISTER_OPERATOR("DequantizeLinear", 1, dequantize_linear);
             REGISTER_OPERATOR("Div", 1, div);
@@ -272,6 +275,7 @@ namespace ngraph
             REGISTER_OPERATOR("Floor", 1, floor);
             REGISTER_OPERATOR("Gather", 1, gather);
             REGISTER_OPERATOR("Gemm", 1, gemm);
+            REGISTER_OPERATOR("Gemm", 6, gemm);
             REGISTER_OPERATOR("GlobalAveragePool", 1, global_average_pool);
             REGISTER_OPERATOR("GlobalLpPool", 1, global_lp_pool);
             REGISTER_OPERATOR("GlobalMaxPool", 1, global_max_pool);
@@ -298,6 +302,7 @@ namespace ngraph
             REGISTER_OPERATOR("MeanVarianceNormalization", 9, mean_variance_normalization);
             REGISTER_OPERATOR("Min", 1, min);
             REGISTER_OPERATOR("Min", 8, min);
+            REGISTER_OPERATOR("Mod", 1, mod);
             REGISTER_OPERATOR("Mul", 1, mul);
             REGISTER_OPERATOR("Mul", 7, mul);
             REGISTER_OPERATOR("Neg", 1, neg);

@@ -67,6 +67,9 @@ void pass::ConstantFolding::construct_constant_slice()
         case element::Type_t::dynamic:
             NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_slice");
             break;
+        case element::Type_t::u1:
+            NGRAPH_CHECK(false, "Encountered 'u1' element type in fold_constant_slice");
+            break;
         case element::Type_t::boolean:
             replacement = fold_constant_slice<char>(data_node, slice);
             break;
