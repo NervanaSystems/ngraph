@@ -163,13 +163,21 @@ void op::v1::OneHot::validate_and_infer_types()
         m_axis =
             ngraph::normalize_axis(this, m_axis, indices_rank + 1, -indices_rank - 1, indices_rank);
 
+        auto depth_element_type = depth->get_output_element_type(0);
+        NODE_VALIDATION_CHECK(this,
+                              depth_element_type == element::i8 ||
+                                  depth_element_type == element::i32 ||
+                                  depth_element_type == element::i64,
+                              "'depth' input element type must be i8, i32 or i64 (got ",
+                              depth_element_type,
+                              ").");
+
         NODE_VALIDATION_CHECK(this,
                               is_scalar(depth->get_shape()),
                               "A scalar input should be provided as 'depth' to OneHot",
                               " (got ",
                               depth->get_shape(),
                               " elements).");
-
 
         int64_t depth_val = read_scalar_int_from_constant_node(depth);
 
@@ -179,7 +187,6 @@ void op::v1::OneHot::validate_and_infer_types()
                               " (got ",
                               depth_val,
                               ").");
-
 
         out_dims.insert(out_dims.begin() + m_axis, Dimension(depth_val));
         result_shape = out_dims;
@@ -197,40 +204,35 @@ shared_ptr<Node> op::v1::OneHot::copy_with_new_args(const NodeVector& new_args) 
 
 size_t op::v1::OneHot::read_scalar_int_from_constant_node(const shared_ptr<Node>& node) const
 {
-    auto k_element_type = node->get_output_element_type(0);
-
-    NODE_VALIDATION_CHECK(this,
-                          k_element_type == element::i8 || k_element_type == element::i32 ||
-                          k_element_type == element::i64,
-                          "K input element type must be i8, i32 or i64 (got ",
-                          k_element_type,
-                          ").");
-
-    const auto k_constant = as_type_ptr<op::Constant>(node);
-
-    size_t k = 0;
+    size_t scalar;
+    auto node_element_type = node->get_output_element_type(0);
+    const auto constant = as_type_ptr<op::Constant>(node);
 
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
 #endif
-    switch (static_cast<element::Type_t>(k_element_type))
+    switch (static_cast<element::Type_t>(node_element_type))
     {
-        case element::Type_t::i8: k = validate_and_get_int<int8_t>(k_constant); break;
-        case element::Type_t::i32: k = validate_and_get_int<int32_t>(k_constant); break;
-        case element::Type_t::i64: k = validate_and_get_int<int64_t>(k_constant); break;
-        default: break;
+    case element::Type_t::i8:
+        scalar = static_cast<size_t>(constant->get_vector<int8_t>()[0]);
+        break;
+    case element::Type_t::i32:
+        scalar = static_cast<size_t>(constant->get_vector<int32_t>()[0]);
+        break;
+    case element::Type_t::i64:
+        scalar = static_cast<size_t>(constant->get_vector<int64_t>()[0]);
+        break;
+    default:
+        NODE_VALIDATION_CHECK(node.get(),
+                              false,
+                              "Expected integer input of element type i8, i32 or i64 (got ",
+                              node_element_type,
+                              ").");
     }
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif
 
-    return k;
-}
-
-template <typename T>
-size_t op::v1::OneHot::validate_and_get_int(const shared_ptr<op::Constant>& k_constant) const
-{
-    const auto k_const_contents = k_constant->get_vector<T>();
-    return static_cast<size_t>(k_const_contents[0]);
+    return scalar;
 }
