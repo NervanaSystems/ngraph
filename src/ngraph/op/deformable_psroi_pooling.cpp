@@ -109,7 +109,7 @@ void op::v1::DeformablePSROIPooling::validate_and_infer_types()
         output_dim_vec[0] = box_coords_pshape.to_shape()[0];
     }
     output_dim_vec[1] = m_output_dim;
-    for (int i = 2; i < 4; ++i)
+    for (int i = 2; i < output_rank; ++i)
     {
         output_dim_vec[i] = m_group_size;
     }
