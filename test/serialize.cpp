@@ -816,7 +816,6 @@ TEST(serialize, deformable_psroi_pooling)
     std::string mode = "bilinear_deformable";
     int64_t spatial_bins_x = 4;
     int64_t spatial_bins_y = 5;
-    bool no_trans = true;
     float trans_std = 6.1f;
     int64_t part_size = 7;
 
@@ -824,12 +823,11 @@ TEST(serialize, deformable_psroi_pooling)
                                                                          coords,
                                                                          offsets,
                                                                          output_dim,
-                                                                         group_size,
                                                                          spatial_scale,
+                                                                         group_size,
                                                                          mode,
                                                                          spatial_bins_x,
                                                                          spatial_bins_y,
-                                                                         no_trans,
                                                                          trans_std,
                                                                          part_size);
 
@@ -851,7 +849,6 @@ TEST(serialize, deformable_psroi_pooling)
     EXPECT_EQ(def_psroi_pool_out->get_mode(), mode);
     EXPECT_EQ(def_psroi_pool_out->get_spatial_bins_x(), spatial_bins_x);
     EXPECT_EQ(def_psroi_pool_out->get_spatial_bins_y(), spatial_bins_y);
-    EXPECT_EQ(def_psroi_pool_out->get_no_trans(), no_trans);
     EXPECT_EQ(def_psroi_pool_out->get_trans_std(), trans_std);
     EXPECT_EQ(def_psroi_pool_out->get_part_size(), part_size);
 }

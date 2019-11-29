@@ -57,24 +57,11 @@ namespace ngraph
                                        const Output<Node>& coords,
                                        const Output<Node>& offsets,
                                        const int64_t output_dim,
-                                       const int64_t group_size,
                                        const float spatial_scale,
+                                       const int64_t group_size = 1,
                                        const std::string mode = "bilinear_deformable",
                                        int64_t spatial_bins_x = 1,
                                        int64_t spatial_bins_y = 1,
-                                       bool no_trans = true,
-                                       float trans_std = 1,
-                                       int64_t part_size = 1);
-
-                DeformablePSROIPooling(const Output<Node>& input,
-                                       const Output<Node>& coords,
-                                       const int64_t output_dim,
-                                       const int64_t group_size,
-                                       const float spatial_scale,
-                                       const std::string mode = "bilinear_deformable",
-                                       int64_t spatial_bins_x = 1,
-                                       int64_t spatial_bins_y = 1,
-                                       bool no_trans = true,
                                        float trans_std = 1,
                                        int64_t part_size = 1);
 
@@ -89,17 +76,15 @@ namespace ngraph
                 const std::string& get_mode() const { return m_mode; }
                 int64_t get_spatial_bins_x() const { return m_spatial_bins_x; }
                 int64_t get_spatial_bins_y() const { return m_spatial_bins_y; }
-                bool get_no_trans() const { return m_no_trans; }
                 float get_trans_std() const { return m_trans_std; }
                 int64_t get_part_size() const { return m_part_size; }
             private:
                 int64_t m_output_dim;
-                int64_t m_group_size;
                 float m_spatial_scale;
+                int64_t m_group_size;
                 std::string m_mode;
                 int64_t m_spatial_bins_x;
                 int64_t m_spatial_bins_y;
-                bool m_no_trans;
                 float m_trans_std;
                 int64_t m_part_size;
             };
