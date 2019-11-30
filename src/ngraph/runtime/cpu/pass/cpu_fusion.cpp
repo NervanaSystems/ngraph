@@ -1761,7 +1761,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
             return false;
         }
 
-        if (conv_m->get_groups() == 0)
+        if (conv_m->get_static_groups() == 0)
         {
             return false;
         }
@@ -1797,7 +1797,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
             conv_m->get_padding_below(),
             conv_m->get_padding_above(),
             conv_m->get_data_dilation_strides(),
-            conv_m->get_groups(),
+            conv_m->get_static_groups(),
             conv_m->get_output_shape(0),
             false,
             1.0);

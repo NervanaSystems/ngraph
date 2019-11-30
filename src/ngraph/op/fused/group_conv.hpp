@@ -60,7 +60,8 @@ namespace ngraph
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
             Output<Node> get_filters() { return input_value(1); }
             Output<Node> get_data_batch() { return input_value(0); }
-            size_t get_groups() const;
+            Dimension get_groups() const { return m_groups; }
+            size_t get_static_groups() const;
             const PadType& get_pad_type() const { return m_pad_type; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -73,6 +74,7 @@ namespace ngraph
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
 
+            bool has_groups_in_filters() const { return m_groups_in_filters; }
         protected:
             Strides m_window_movement_strides;
             Strides m_window_dilation_strides;
@@ -83,7 +85,7 @@ namespace ngraph
             PadType m_pad_type{PadType::NOTSET};
 
         private:
-            bool has_groups_in_filters_shape() const;
+            bool m_groups_in_filters;
         };
     } // namespace op
 } // namespace ngraph

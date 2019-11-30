@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 #include "ngraph/pass/opset1_upgrade.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/ops.hpp"
 
@@ -32,7 +33,7 @@ namespace
 #undef NGRAPH_OP
         OTHER
     };
-}
+} // namespace
 
 static OP_TYPEID get_typeid(shared_ptr<Node> node)
 {
@@ -165,11 +166,9 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         auto data_dilation_strides = tmp->get_data_dilation_strides();
         auto auto_pad = tmp->get_pad_type();
 
-        bool is_dds_valid = true;
-        for (auto value : data_dilation_strides)
-        {
-            is_dds_valid = is_dds_valid && (value == 1);
-        }
+        bool is_dds_valid = all_of(data_dilation_strides.begin(),
+                                   data_dilation_strides.end(),
+                                   [](size_t value) { return value == 1; });
 
         NGRAPH_CHECK(is_dds_valid,
                      "Unable to convert Convolution:0 to Convolution:1 with data dilation strides "
@@ -197,11 +196,9 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         auto pads_end = tmp->get_padding_above_forward();
         auto data_dilation_strides = tmp->get_data_dilation_strides_forward();
 
-        bool is_dds_valid = true;
-        for (auto value : data_dilation_strides)
-        {
-            is_dds_valid = is_dds_valid && (value == 1);
-        }
+        bool is_dds_valid = all_of(data_dilation_strides.begin(),
+                                   data_dilation_strides.end(),
+                                   [](size_t value) { return value == 1; });
 
         NGRAPH_CHECK(is_dds_valid,
                      "Unable to convert ConvolutionBackpropData:0 to ConvolutionBackpropData:1 "
@@ -303,6 +300,64 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
     case OP_TYPEID::GreaterEq:
     {
         upgrade_binary_elementwise_node<op::v0::GreaterEq, op::v1::GreaterEq>(node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::GroupConvolution:
+    {
+        auto tmp = dynamic_cast<const op::GroupConvolution*>(node.get());
+        auto strides = tmp->get_window_movement_strides();
+        auto dilations = tmp->get_window_dilation_strides();
+        auto pads_begin = tmp->get_padding_below();
+        auto pads_end = tmp->get_padding_above();
+        auto data_dilation_strides = tmp->get_data_dilation_strides();
+        auto auto_pad = tmp->get_pad_type();
+
+        bool is_dds_valid = all_of(data_dilation_strides.begin(),
+                                   data_dilation_strides.end(),
+                                   [](size_t value) { return value == 1; });
+
+        NGRAPH_CHECK(is_dds_valid,
+                     "Unable to convert GroupConvolution:0 to GroupConvolution:1"
+                     "with data dilation strides other than `1`. Node: ",
+                     *node);
+
+        shared_ptr<Node> replacement_node;
+        if (tmp->has_groups_in_filters())
+        {
+            replacement_node =
+                make_shared<op::v1::GroupConvolution>(node->input(0).get_source_output(),
+                                                      node->input(1).get_source_output(),
+                                                      strides,
+                                                      pads_begin,
+                                                      pads_end,
+                                                      dilations,
+                                                      auto_pad);
+        }
+        else
+        {
+            NGRAPH_CHECK(node->get_input_partial_shape(1).is_static(),
+                         "Unable to convert GroupConvolution:0 to GroupConvolution:1"
+                         "with dynamic filters shape. Node: ",
+                         *node);
+
+            auto filters_shape = node->get_input_shape(1);
+            auto groups = tmp->get_static_groups();
+            filters_shape[0] /= groups;
+            filters_shape.insert(filters_shape.begin(), groups);
+
+            auto reshaped_filters = builder::reshape(node->input_value(1), filters_shape);
+
+            replacement_node =
+                make_shared<op::v1::GroupConvolution>(node->input(0).get_source_output(),
+                                                      reshaped_filters,
+                                                      strides,
+                                                      pads_begin,
+                                                      pads_end,
+                                                      dilations,
+                                                      auto_pad);
+        }
+        replace_node(node, replacement_node);
         modified = true;
         break;
     }
