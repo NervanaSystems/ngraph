@@ -138,6 +138,8 @@ set (SRC
     op/constant.hpp
     op/convert.cpp
     op/convert.hpp
+    op/convert_like.cpp
+    op/convert_like.hpp
     op/convolution.cpp
     op/convolution.hpp
     op/cos.cpp
