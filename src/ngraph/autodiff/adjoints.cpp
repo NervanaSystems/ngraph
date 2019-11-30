@@ -196,11 +196,6 @@ void autodiff::Adjoints::add_delta_to_slice(const Output<Node>& x,
     }
 }
 
-Output<Node> autodiff::Adjoints::backprop_node(const Output<Node>& x)
-{
-    return backprop_output(x);
-}
-
 Output<Node> autodiff::Adjoints::backprop_output(const Output<Node>& x)
 {
     return get(x).at(x.get_index());
