@@ -129,12 +129,7 @@ autodiff::Adjoints::Adjoints(const OutputVector& ys, const OutputVector& cs)
             }
         }
         OutputVector deltas = get(node);
-        NodeVector delta_nodes;
-        for (auto delta : deltas)
-        {
-            delta_nodes.push_back(get_output_element(delta));
-        }
-        node->generate_adjoints(*this, delta_nodes);
+        node->generate_adjoints(*this, deltas);
     }
 }
 

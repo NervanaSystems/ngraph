@@ -226,7 +226,8 @@ NodeVector op::ConvolutionBias::decompose_op() const
     }
 }
 
-void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
+                                            const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
     if (m_with_relu)

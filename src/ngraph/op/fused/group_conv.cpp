@@ -218,7 +218,7 @@ NodeVector op::GroupConvolution::decompose_op() const
 }
 
 void op::GroupConvolution::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                             const NodeVector& /* deltas */)
+                                             const OutputVector& /* deltas */)
 {
     throw ngraph_error("NYI");
 }

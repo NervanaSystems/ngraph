@@ -36,7 +36,7 @@ shared_ptr<Node> op::Subtract::copy_with_new_args(const NodeVector& new_args) co
     return make_shared<Subtract>(new_args.at(0), new_args.at(1), this->get_autob());
 }
 
-void op::Subtract::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Subtract::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     if (get_autob().m_type != op::AutoBroadcastType::NONE)
     {
