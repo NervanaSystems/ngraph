@@ -196,9 +196,9 @@ void autodiff::Adjoints::add_delta_to_slice(const Output<Node>& x,
     }
 }
 
-std::shared_ptr<Node> autodiff::Adjoints::backprop_node(const Output<Node>& x)
+Output<Node> autodiff::Adjoints::backprop_node(const Output<Node>& x)
 {
-    return get_output_element(backprop_output(x));
+    return backprop_output(x);
 }
 
 Output<Node> autodiff::Adjoints::backprop_output(const Output<Node>& x)

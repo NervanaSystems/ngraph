@@ -514,7 +514,7 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
     auto d_bias = adjoints.backprop_node(conv_test.bias);
 
     auto df = make_shared<Function>(
-        NodeVector{d_data, d_weights, d_bias},
+        OutputVector{d_data, d_weights, d_bias},
         ParameterVector{conv_test.data, conv_test.weights, conv_test.bias, conv_test.delta});
     auto handle = backend->compile(df);
     handle->call_with_validate(
@@ -552,7 +552,7 @@ TEST(cpu_fusion, conv_bias_bprop)
     auto d_weights = adjoints.backprop_node(filters);
     auto d_bias = adjoints.backprop_node(bias);
 
-    auto df = make_shared<Function>(NodeVector{d_data, d_weights, d_bias},
+    auto df = make_shared<Function>(OutputVector{d_data, d_weights, d_bias},
                                     ParameterVector{data_batch, filters, bias, delta});
 
     pass_manager.run_passes(df);
@@ -1522,7 +1522,7 @@ TEST(cpu_fusion, max_pool_with_indices)
 
     auto dinput = adjoints.backprop_node(input);
 
-    auto df = std::make_shared<Function>(NodeVector{dinput}, ParameterVector{input, C});
+    auto df = std::make_shared<Function>(OutputVector{dinput}, ParameterVector{input, C});
 
     auto f = std::make_shared<Function>(NodeVector{max_pool}, ParameterVector{input});
 
@@ -2401,7 +2401,7 @@ void sigmoid_multiply_fusion_backward_compute(runtime::Backend* backend,
     ngraph::autodiff::Adjoints adjoints(OutputVector{sigmoid_mul}, OutputVector{delta_param});
     auto d_input_0 = adjoints.backprop_node(input_0_adjoint);
     auto d_input_1 = adjoints.backprop_node(input_1_adjoint);
-    auto df = make_shared<Function>(NodeVector{d_input_0, d_input_1}, back_params);
+    auto df = make_shared<Function>(OutputVector{d_input_0, d_input_1}, back_params);
     auto handle = backend->compile(df);
     handle->call_with_validate({d_input_0_tensor, d_input_1_tensor}, input_tensors);
     EXPECT_TRUE(test::all_close(read_vector<float>(d_input_0_tensor), expected_0));

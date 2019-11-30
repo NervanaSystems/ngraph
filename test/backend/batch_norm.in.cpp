@@ -740,7 +740,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_bprop_n4c3h2w2)
     auto dgamma = adjoints.backprop_node(gamma);
     auto dbeta = adjoints.backprop_node(beta);
 
-    auto df = make_shared<Function>(NodeVector{dinput, dgamma, dbeta},
+    auto df = make_shared<Function>(OutputVector{dinput, dgamma, dbeta},
                                     ParameterVector{mean, var, input, gamma, beta, C});
 
 #ifndef NGRAPH_JSON_DISABLE
