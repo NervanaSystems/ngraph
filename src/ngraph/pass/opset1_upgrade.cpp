@@ -342,7 +342,7 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
                          *node);
 
             auto filters_shape = node->get_input_shape(1);
-            auto groups = tmp->get_static_groups();
+            auto groups = tmp->get_groups();
             filters_shape[0] /= groups;
             filters_shape.insert(filters_shape.begin(), groups);
 

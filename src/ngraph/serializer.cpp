@@ -3644,7 +3644,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
         node["data_dilation_strides"] = tmp->get_data_dilation_strides();
-        node["groups"] = tmp->get_static_groups();
+        node["groups"] = tmp->get_groups();
         node["pad_type"] = tmp->get_pad_type();
         break;
     }
