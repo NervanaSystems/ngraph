@@ -102,9 +102,6 @@ autodiff::Adjoints::Adjoints(const OutputVector& ys, const OutputVector& cs)
     // before a node is visited.
     for (size_t i = 0; i < ys.size(); i++)
     {
-        Node* n = ys.at(i).get_node();
-        OutputVector t{cs.at(i)};
-        std::pair<Node*, OutputVector> pair = std::make_pair(n, t);
         m_adjoint_map.insert(std::make_pair(ys.at(i).get_node(), OutputVector{cs.at(i)}));
     }
 
