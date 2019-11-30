@@ -150,7 +150,7 @@ namespace ngraph
             for (auto x : indep_params)
             {
                 // add df/dx to df/dX*
-                df_output_params.push_back(adjoints.backprop_node(x));
+                df_output_params.push_back(adjoints.backprop_output(x));
             }
 
             // (c, X)
