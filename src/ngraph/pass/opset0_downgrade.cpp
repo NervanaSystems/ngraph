@@ -23,6 +23,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/ops.hpp"
+#include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/slice_plan.hpp"
 #include "ngraph/type.hpp"
@@ -479,6 +480,15 @@ namespace
         }
         auto replacement_node = make_shared<op::v0::Reverse>(node->input_value(0), axes);
 
+        replace_node(node, replacement_node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::Select> node)
+    {
+        ngraph::pass::ImplicitBroadcastElimination().run_on_node(node);
+        auto replacement_node = make_shared<op::v0::Select>(
+            node->input_value(0), node->input_value(1), node->input_value(2));
         replace_node(node, replacement_node);
         return true;
     }

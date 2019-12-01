@@ -2453,6 +2453,15 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Select>(args[0], args[1], args[2]);
             break;
         }
+        case OP_TYPEID::Select_v1:
+        {
+            node = make_shared<op::v1::Select>(
+                args[0],
+                args[1],
+                args[2],
+                read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+            break;
+        }
         case OP_TYPEID::Selu:
         {
             node = make_shared<op::Selu>(args[0], args[1], args[2]);
@@ -4091,6 +4100,12 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::ScatterNDAdd: { break;
     }
     case OP_TYPEID::Select: { break;
+    }
+    case OP_TYPEID::Select_v1:
+    {
+        auto tmp = static_cast<const op::v1::Select*>(&n);
+        node["auto_broadcast"] = write_auto_broadcast(tmp->get_auto_broadcast());
+        break;
     }
     case OP_TYPEID::Selu: { break;
     }
