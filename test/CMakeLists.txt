@@ -308,6 +308,7 @@ set(MULTI_TEST_SRC
     backend/gather.in.cpp
     backend/gelu.in.cpp
     backend/generate_mask.in.cpp
+    backend/group_convolution.in.cpp
     backend/layer_norm.in.cpp
     backend/log.in.cpp
     backend/logical_and.in.cpp
