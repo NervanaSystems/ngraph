@@ -284,6 +284,12 @@ lstm_cell_activaction_functions
 divide_python_rounding_int32
 backwards_batchmatmul_tensor2_tensor2
 
+# unsupported op: `CumSum`
+cum_sum_default
+cum_sum_2dim
+cum_sum_3d
+cum_sum_2dim_allmodes
+
 # unsupported ops: 'QuantizedConvolution', 'QuantizedDot', 'TopK', 'Erf', 'EmbeddingLookup'
 model_quant_conv_linear
 model_conv_integer_no_zero_point

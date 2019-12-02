@@ -233,6 +233,7 @@ set(MULTI_TEST_SRC
     backend/convert.in.cpp
     backend/convolution.in.cpp
     backend/convolution_reference.in.cpp
+    backend/cum_sum.in.cpp
     backend/dot.in.cpp
     backend/dyn_broadcast.in.cpp
     backend/dyn_replace_slice_reference.in.cpp
