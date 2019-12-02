@@ -16,23 +16,36 @@
 #include <numeric>
 
 #include "ngraph/builder/split.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/split.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 constexpr NodeTypeInfo op::Split::type_info;
 
-op::Split::Split(const Output<Node>& data, const int axis, const size_t num_split)
-    : FusedOp({data})
+op::Split::Split(const Output<Node>& data, const Output<Node>& axis, const size_t num_split)
+    : FusedOp({data, axis})
     , m_split_evenly{true}
-    , m_axis{axis}
     , m_num_split{num_split}
 {
     constructor_validate_and_infer_types();
 }
 
-op::Split::Split(const Output<Node>& data, const int axis, const std::vector<size_t>& splits)
+op::Split::Split(const Output<Node>& data,
+                 const Output<Node>& axis,
+                 const std::vector<size_t>& splits)
+    : FusedOp({data, axis})
+    , m_split_evenly{false}
+    , m_num_split{0}
+    , m_splits{splits}
+{
+    constructor_validate_and_infer_types();
+}
+
+// TODO REMOVE THIS CONSTRUCTOR. INTRODUCED TO PROVIDE CI COMPATIBILITY
+op::Split::Split(const Output<Node>& data, int axis, const std::vector<size_t>& splits)
     : FusedOp({data})
     , m_split_evenly{false}
     , m_axis{axis}
@@ -42,8 +55,30 @@ op::Split::Split(const Output<Node>& data, const int axis, const std::vector<siz
     constructor_validate_and_infer_types();
 }
 
+// TODO REMOVE THIS CONSTRUCTOR. INTRODUCED TO PROVIDE CI COMPATIBILITY
+op::Split::Split(const Output<Node>& data, int axis, size_t num_split)
+    : FusedOp({data})
+    , m_split_evenly{true}
+    , m_axis{axis}
+    , m_num_split{num_split}
+{
+    constructor_validate_and_infer_types();
+}
+
 void op::Split::pre_validate_and_infer_types()
 {
+    // TODO REMOVE IF CHECK. INTRODUCED TO PROVIDE CI COMPATIBILITY
+    if (get_input_size() == 2)
+    {
+        const auto axis_shape = input(1).get_shape();
+        NODE_VALIDATION_CHECK(this, is_scalar(axis_shape), "The 'axis' input node must be scalar");
+
+        const auto axis_node = input_value(1).get_node_shared_ptr();
+        NODE_VALIDATION_CHECK(
+            this, axis_node->is_constant(), "The 'axis' input node must be constant");
+        const auto axis_node_const = as_type_ptr<op::Constant>(axis_node);
+        m_axis = axis_node_const->get_vector<int64_t>()[0];
+    }
     // Create dynamic-typed outputs. Actual shape/type will be computed during shape inference
     for (size_t i = 0; i < std::max(m_splits.size(), m_num_split); i++)
     {
@@ -57,11 +92,7 @@ void op::Split::pre_validate_and_infer_types()
 
     const auto shape = input(0).get_shape();
 
-    m_axis = adjust_axis_value(m_axis, shape.size());
-    NODE_VALIDATION_CHECK(this,
-                          m_axis >= 0 && m_axis < static_cast<int64_t>(shape.size()),
-                          "The 'axis' parameter for Split has to point to one of the "
-                          "input tensor's shape dimensions.");
+    m_axis = ngraph::normalize_axis(this, m_axis, shape.size());
 
     const auto dimension_at_axis = shape.at(m_axis);
     if (m_split_evenly)
@@ -92,6 +123,7 @@ void op::Split::pre_validate_and_infer_types()
                               all_splits_positive == true,
                               "All values of the 'splits' attribute must be greater than zero");
     }
+    set_input_is_relevant_to_shape(0);
 }
 
 NodeVector op::Split::decompose_op() const
@@ -101,18 +133,12 @@ NodeVector op::Split::decompose_op() const
 
 shared_ptr<Node> op::Split::copy_with_new_args(const NodeVector& new_args) const
 {
-    check_new_args_count(this, new_args);
-    return make_shared<Split>(new_args.at(0), m_axis, m_splits);
-}
+    if (new_args.size() == 2)
+    {
+        check_new_args_count(this, new_args);
+        return make_shared<Split>(new_args.at(0), new_args.at(1), m_splits);
+    }
 
-size_t op::Split::adjust_axis_value(const int axis, const size_t input_tensor_rank) const
-{
-    if (axis < 0)
-    {
-        return axis + input_tensor_rank;
-    }
-    else
-    {
-        return axis;
-    }
+    // TODO REMOVE THIS RETURN AND IF ABOVE. INTRODUCED TO PROVIDE CI COMPATIBILITY
+    return make_shared<Split>(new_args.at(0), m_axis, m_splits);
 }
