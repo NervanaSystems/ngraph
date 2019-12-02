@@ -35,6 +35,12 @@ if(WIN32)
     )
 endif()
 
+if(CMAKE_BUILD_TYPE)
+    list(APPEND GTEST_CMAKE_ARGS
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    )
+endif()
+
 if(UNIX)
     # workaround for compile error
     # related: https://github.com/intel/mkl-dnn/issues/55
