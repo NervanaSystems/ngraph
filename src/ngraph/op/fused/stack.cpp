@@ -44,9 +44,14 @@ shared_ptr<Node> op::Stack::copy_with_new_args(const NodeVector& new_args) const
     return make_shared<Stack>(new_args, m_axis);
 }
 
+void op::Stack::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+{
+    ngraph_error("Not Yet Implemented");
+}
+
 void op::Stack::pre_validate_and_infer_types()
 {
-    for (uint64_t i = 0; i < get_input_size(); ++i)
+    for (size_t i = 0; i < get_input_size(); ++i)
     {
         element::Type input_element_type = get_input_element_type(i);
 
@@ -56,25 +61,41 @@ void op::Stack::pre_validate_and_infer_types()
                               input_element_type,
                               ").");
     }
+    element::Type input_element_type = get_input_element_type(0);
+    PartialShape input_pshape = get_input_partial_shape(0);
+
+    if (input_element_type.is_dynamic())
+    {
+        set_output_type(0, input_element_type, input_pshape);
+    }
 }
 
 NodeVector op::Stack::decompose_op() const
 {
     auto axis = get_axis();
     std::vector<std::shared_ptr<ngraph::Node>> args;
-    for (uint64_t i = 0; i < get_input_size(); ++i)
+    PartialShape inputs_shape_scheme{PartialShape::dynamic()};
+    for (size_t i = 0; i < get_input_size(); ++i)
     {
-        const PartialShape data_pshape = get_input_partial_shape(i);
-        {
-            auto data = input_value(i);
-            auto data_shape = data.get_shape();
-            axis = (axis < 0) ? axis + data_shape.size() + 1 : axis;
-            data_shape.insert(data_shape.begin() + axis, 1);
-            std::vector<size_t> input_order(data_shape.size() - 1);
-            std::iota(std::begin(input_order), std::end(input_order), 0);
-            args.push_back(
-                std::make_shared<op::Reshape>(data, AxisVector(input_order), data_shape));
-        }
+        PartialShape this_input_shape = get_input_partial_shape(i);
+        NODE_VALIDATION_CHECK(
+            this,
+            PartialShape::merge_into(inputs_shape_scheme, this_input_shape),
+            "Argument shapes are inconsistent; they must have the same rank, and must have ",
+            "equal dimension everywhere except on the concatenation axis (axis ",
+            axis,
+            ").");
+    }
+
+    for (size_t i = 0; i < get_input_size(); ++i)
+    {
+        auto data = input_value(i);
+        auto data_shape = data.get_shape();
+        axis = (axis < 0) ? axis + data_shape.size() + 1 : axis;
+        data_shape.insert(data_shape.begin() + axis, 1);
+        std::vector<size_t> input_order(data_shape.size() - 1);
+        std::iota(std::begin(input_order), std::end(input_order), 0);
+        args.push_back(std::make_shared<op::Reshape>(data, AxisVector(input_order), data_shape));
     }
     auto concat = std::make_shared<op::Concat>(args, axis);
     return {concat};
