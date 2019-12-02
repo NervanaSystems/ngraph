@@ -227,6 +227,8 @@ set (SRC
     op/gather.hpp
     op/gather_nd.cpp
     op/gather_nd.hpp
+    op/gather_tree.cpp
+    op/gather_tree.hpp
     op/get_output_element.cpp
     op/get_output_element.hpp
     op/greater.cpp
