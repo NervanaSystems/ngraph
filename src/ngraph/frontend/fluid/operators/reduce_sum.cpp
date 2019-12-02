@@ -15,9 +15,12 @@
 //*****************************************************************************
 
 #include <cmath>
+#include <cstring>
+#include <numeric>
 
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/frontend/fluid/operators/reduce_sum.hpp"
+#include "ngraph/op/reduce_sum.hpp"
 
 using namespace std;
 using namespace ngraph::fluid;
@@ -25,17 +28,40 @@ using namespace ngraph::fluid;
 constexpr NodeTypeInfo ReduceSum::type_info;
 
 ReduceSum::ReduceSum(const Output<Node>& x, const vector<int>& dim, bool reduce_all, bool keep_dim)
-    : FusedOp({x}),
-    m_dim(dim),
-    m_reduce_all(reduce_all),
-    m_keep_dim(keep_dim)
+    : FusedOp({x})
+    , m_dim(dim)
+    , m_reduce_all(reduce_all)
+    , m_keep_dim(keep_dim)
 {
     constructor_validate_and_infer_types();
 }
 
 NodeVector ReduceSum::decompose_op() const
 {
-    return {};
+    NodeVector retval;
+    // Use reduce_sum v1 to support keep_dim
+    if (m_reduce_all)
+    {
+        auto input_shape = get_input_partial_shape(0);
+        if (input_shape.is_dynamic())
+        {
+            throw ngraph_error("Input needs to have static shape to decompose");
+        }
+        auto shape = input_shape.to_shape();
+        vector<int64_t> axes;
+        iota(axes.begin(), axes.end(), 0);
+        auto axes_node = make_shared<ngraph::op::Constant>(element::i64, shape, axes);
+        auto node = make_shared<ngraph::op::v1::ReduceSum>(input_value(0), axes_node, m_keep_dim);
+        retval.emplace_back(node);
+    }
+    else
+    {
+        auto axes_node =
+            make_shared<ngraph::op::Constant>(element::i64, Shape(m_dim.size()), m_dim);
+        auto node = make_shared<ngraph::op::v1::ReduceSum>(input_value(0), axes_node, m_keep_dim);
+        retval.emplace_back(node);
+    }
+    return retval;
 }
 
 shared_ptr<Node> ReduceSum::copy_with_new_args(const NodeVector& new_args) const
@@ -47,37 +73,18 @@ shared_ptr<Node> ReduceSum::copy_with_new_args(const NodeVector& new_args) const
     return make_shared<ReduceSum>(new_args.at(0), m_dim, m_reduce_all, m_keep_dim);
 }
 
-void ReduceSum::validate_and_infer_types()
-{
-    element::Type input_element_type = get_input_element_type(0);
-
-    NODE_VALIDATION_CHECK(this,
-                          input_element_type.is_dynamic() || input_element_type.is_real(),
-                          "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
-                          input_element_type,
-                          ").");
-}
-
 constexpr NodeTypeInfo ReduceSumGrad::type_info;
 
-ReduceSumGrad::ReduceSumGrad(const Output<Node>& x, const vector<int>& dim, bool reduce_all, bool keep_dim)
-    : FusedOp({x}),
-    m_dim(dim),
-    m_reduce_all(reduce_all),
-    m_keep_dim(keep_dim)
+ReduceSumGrad::ReduceSumGrad(const Output<Node>& x,
+                             const vector<int>& dim,
+                             bool reduce_all,
+                             bool keep_dim)
+    : FusedOp({x})
+    , m_dim(dim)
+    , m_reduce_all(reduce_all)
+    , m_keep_dim(keep_dim)
 {
     constructor_validate_and_infer_types();
-}
-
-void ReduceSumGrad::validate_and_infer_types()
-{
-    element::Type input_element_type = get_input_element_type(0);
-
-    NODE_VALIDATION_CHECK(this,
-                          input_element_type.is_dynamic() || input_element_type.is_real(),
-                          "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
-                          input_element_type,
-                          ").");
 }
 
 shared_ptr<Node> ReduceSumGrad::copy_with_new_args(const NodeVector& new_args) const
@@ -88,14 +95,5 @@ shared_ptr<Node> ReduceSumGrad::copy_with_new_args(const NodeVector& new_args) c
 
 NodeVector ReduceSumGrad::decompose_op() const
 {
-    //auto one = builder::make_constant(x.get_element_type(), x.get_shape(), 1.0);
-    //auto pi = 4.0 * std::atan(1);
-    //auto inv_sqrt_two_pi =
-    //    builder::make_constant(x.get_element_type(), x.get_shape(), 1.0 / std::sqrt(2.0 * pi));
-    //auto sqrt_half = builder::make_constant(x.get_element_type(), x.get_shape(), std::sqrt(0.5));
-
-    //auto e1 = half * (one + make_shared<op::Erf>(x * sqrt_half));
-    //auto e2 = x * make_shared<op::Exp>(x * x * (-half)) * inv_sqrt_two_pi;
-    //return {e1 + e2};
     return {};
 }

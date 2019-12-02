@@ -38,11 +38,12 @@ namespace ngraph
             /// \brief Constructs a ReduceSum operation.
             ///
             /// \param data Input tensor
-            ReduceSum(const Output<Node>& data, const vector<int>& dim, bool reduce_all, bool keep_dim);
+            ReduceSum(const Output<Node>& data,
+                      const vector<int>& dim,
+                      bool reduce_all,
+                      bool keep_dim);
 
             virtual NodeVector decompose_op() const override;
-
-            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -66,11 +67,12 @@ namespace ngraph
             /// \brief Constructs a ReduceSumGrad operation.
             ///
             /// \param data Input tensor
-            ReduceSumGrad(const Output<Node>& x, const vector<int>& dim, bool reduce_all, bool keep_dim);
+            ReduceSumGrad(const Output<Node>& x,
+                          const vector<int>& dim,
+                          bool reduce_all,
+                          bool keep_dim);
 
             virtual NodeVector decompose_op() const override;
-
-            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
