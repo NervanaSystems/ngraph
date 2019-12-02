@@ -1633,6 +1633,46 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                      pad_type);
             break;
         }
+        case OP_TYPEID::GroupConvolutionBackpropData:
+        {
+            auto window_movement_strides =
+                node_js.at("window_movement_strides").get<vector<size_t>>();
+            auto window_dilation_strides =
+                node_js.at("window_dilation_strides").get<vector<size_t>>();
+            auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
+            auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
+            auto groups = node_js.at("groups").get<size_t>();
+
+            node = make_shared<op::GroupConvolutionBackpropData>(args[0],
+                                                                 args[1],
+                                                                 args[2],
+                                                                 window_movement_strides,
+                                                                 window_dilation_strides,
+                                                                 padding_below,
+                                                                 padding_above,
+                                                                 groups);
+            break;
+        }
+        case OP_TYPEID::GroupConvolutionBackpropFilters:
+        {
+            auto window_movement_strides =
+                node_js.at("window_movement_strides").get<vector<size_t>>();
+            auto window_dilation_strides =
+                node_js.at("window_dilation_strides").get<vector<size_t>>();
+            auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
+            auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
+            auto groups = node_js.at("groups").get<size_t>();
+
+            node = make_shared<op::GroupConvolutionBackpropFilters>(args[0],
+                                                                    args[1],
+                                                                    args[2],
+                                                                    window_movement_strides,
+                                                                    window_dilation_strides,
+                                                                    padding_below,
+                                                                    padding_above,
+                                                                    groups);
+            break;
+        }
         case OP_TYPEID::GroupConvolutionTranspose:
         {
             auto strides = node_js.at("strides").get<vector<size_t>>();
@@ -2373,6 +2413,18 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 
             break;
         }
+        case OP_TYPEID::ReduceLogicalAnd_v1:
+        {
+            const auto keep_dims = node_js.at("keep_dims").get<bool>();
+            node = make_shared<op::v1::ReduceLogicalAnd>(args[0], args[1], keep_dims);
+            break;
+        }
+        case OP_TYPEID::ReduceLogicalOr_v1:
+        {
+            const auto keep_dims = node_js.at("keep_dims").get<bool>();
+            node = make_shared<op::v1::ReduceLogicalOr>(args[0], args[1], keep_dims);
+            break;
+        }
         case OP_TYPEID::Relu:
         {
             node = make_shared<op::Relu>(args[0]);
@@ -2598,9 +2650,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Split:
         {
-            const auto axis = node_js.at("axis").get<size_t>();
             const auto splits = node_js.at("splits").get<vector<size_t>>();
-            node = make_shared<op::Split>(args[0], axis, splits);
+            node = make_shared<op::Split>(args[0], args[1], splits);
             break;
         }
         case OP_TYPEID::Sqrt:
@@ -3575,6 +3626,26 @@ json JSONSerializer::serialize_node(const Node& n)
         node["pad_type"] = tmp->get_pad_type();
         break;
     }
+    case OP_TYPEID::GroupConvolutionBackpropData:
+    {
+        auto tmp = static_cast<const op::GroupConvolutionBackpropData*>(&n);
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["window_dilation_strides"] = tmp->get_window_dilation_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+        node["groups"] = tmp->get_groups();
+        break;
+    }
+    case OP_TYPEID::GroupConvolutionBackpropFilters:
+    {
+        auto tmp = static_cast<const op::GroupConvolutionBackpropFilters*>(&n);
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["window_dilation_strides"] = tmp->get_window_dilation_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+        node["groups"] = tmp->get_groups();
+        break;
+    }
     case OP_TYPEID::GroupConvolutionTranspose:
     {
         auto tmp = static_cast<const op::GroupConvolutionTranspose*>(&n);
@@ -4037,12 +4108,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["output_axes"] = tmp->get_output_axes();
         break;
     }
-    case OP_TYPEID::Recv:
-    {
-        auto tmp = static_cast<const op::Recv*>(&n);
-        node["source_id"] = tmp->get_src_id();
-        break;
-    }
     case OP_TYPEID::RandomUniform:
     {
         auto tmp = static_cast<const op::RandomUniform*>(&n);
@@ -4052,6 +4117,24 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Range: { break;
     }
     case OP_TYPEID::Reciprocal: { break;
+    }
+    case OP_TYPEID::Recv:
+    {
+        auto tmp = static_cast<const op::Recv*>(&n);
+        node["source_id"] = tmp->get_src_id();
+        break;
+    }
+    case OP_TYPEID::ReduceLogicalAnd_v1:
+    {
+        const auto tmp = static_cast<const op::v1::ReduceLogicalAnd*>(&n);
+        node["keep_dims"] = tmp->get_keep_dims();
+        break;
+    }
+    case OP_TYPEID::ReduceLogicalOr_v1:
+    {
+        const auto tmp = static_cast<const op::v1::ReduceLogicalOr*>(&n);
+        node["keep_dims"] = tmp->get_keep_dims();
+        break;
     }
     case OP_TYPEID::ReduceMean_v1:
     {
@@ -4185,7 +4268,6 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Split:
     {
         auto tmp = static_cast<const op::Split*>(&n);
-        node["axis"] = tmp->get_axis();
         node["splits"] = tmp->get_splits();
         break;
     }
