@@ -1548,7 +1548,7 @@ TEST(constant_folding, constant_dyn_reshape)
 
     auto constant_in = make_shared<op::Constant>(element::f32, shape_in, values_in);
     auto constant_shape = make_shared<op::Constant>(element::i64, shape_shape, values_shape);
-    auto dyn_reshape = make_shared<op::v1::Reshape>(constant_in, constant_shape);
+    auto dyn_reshape = make_shared<op::v1::Reshape>(constant_in, constant_shape, false);
     auto f = make_shared<Function>(dyn_reshape, ParameterVector{});
 
     pass::Manager pass_manager;
@@ -1582,7 +1582,7 @@ TEST(constant_folding, constant_dyn_reshape_shape_not_originally_constant)
     auto constant_shape_a = make_shared<op::Constant>(element::i64, shape_shape, values_shape_a);
     auto constant_shape_b = make_shared<op::Constant>(element::i64, shape_shape, values_shape_b);
     auto dyn_reshape =
-        make_shared<op::v1::Reshape>(constant_in, constant_shape_a + constant_shape_b);
+        make_shared<op::v1::Reshape>(constant_in, constant_shape_a + constant_shape_b, false);
     auto f = make_shared<Function>(dyn_reshape, ParameterVector{});
 
     ASSERT_TRUE(dyn_reshape->output(0).get_partial_shape().is_dynamic());

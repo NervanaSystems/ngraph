@@ -1609,6 +1609,46 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                      pad_type);
             break;
         }
+        case OP_TYPEID::GroupConvolutionBackpropData:
+        {
+            auto window_movement_strides =
+                node_js.at("window_movement_strides").get<vector<size_t>>();
+            auto window_dilation_strides =
+                node_js.at("window_dilation_strides").get<vector<size_t>>();
+            auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
+            auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
+            auto groups = node_js.at("groups").get<size_t>();
+
+            node = make_shared<op::GroupConvolutionBackpropData>(args[0],
+                                                                 args[1],
+                                                                 args[2],
+                                                                 window_movement_strides,
+                                                                 window_dilation_strides,
+                                                                 padding_below,
+                                                                 padding_above,
+                                                                 groups);
+            break;
+        }
+        case OP_TYPEID::GroupConvolutionBackpropFilters:
+        {
+            auto window_movement_strides =
+                node_js.at("window_movement_strides").get<vector<size_t>>();
+            auto window_dilation_strides =
+                node_js.at("window_dilation_strides").get<vector<size_t>>();
+            auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
+            auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
+            auto groups = node_js.at("groups").get<size_t>();
+
+            node = make_shared<op::GroupConvolutionBackpropFilters>(args[0],
+                                                                    args[1],
+                                                                    args[2],
+                                                                    window_movement_strides,
+                                                                    window_dilation_strides,
+                                                                    padding_below,
+                                                                    padding_above,
+                                                                    groups);
+            break;
+        }
         case OP_TYPEID::GroupConvolutionTranspose:
         {
             auto strides = node_js.at("strides").get<vector<size_t>>();
@@ -3359,7 +3399,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Reshape_v1:
     {
         auto tmp = static_cast<const op::v1::Reshape*>(&n);
-        node["zero_flag"] = tmp->get_zero_flag();
+        node["special_zero"] = tmp->get_special_zero();
         break;
     }
     case OP_TYPEID::DynSlice:
@@ -3536,6 +3576,26 @@ json JSONSerializer::serialize_node(const Node& n)
         node["data_dilation_strides"] = tmp->get_data_dilation_strides();
         node["groups"] = tmp->get_groups();
         node["pad_type"] = tmp->get_pad_type();
+        break;
+    }
+    case OP_TYPEID::GroupConvolutionBackpropData:
+    {
+        auto tmp = static_cast<const op::GroupConvolutionBackpropData*>(&n);
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["window_dilation_strides"] = tmp->get_window_dilation_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+        node["groups"] = tmp->get_groups();
+        break;
+    }
+    case OP_TYPEID::GroupConvolutionBackpropFilters:
+    {
+        auto tmp = static_cast<const op::GroupConvolutionBackpropFilters*>(&n);
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["window_dilation_strides"] = tmp->get_window_dilation_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+        node["groups"] = tmp->get_groups();
         break;
     }
     case OP_TYPEID::GroupConvolutionTranspose:
