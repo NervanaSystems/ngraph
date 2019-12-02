@@ -454,13 +454,13 @@ std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& n
             if (input_description->m_input_index == input_index)
             {
                 new_shapes[input_description->m_body_parameter_index] =
-                    new_args[input_index]->get_shape();
+                        new_args[input_index]->get_output_partial_shape(0);
+
                 if (auto slice_in =
                         ::ngraph::as_type_ptr<ngraph::op::TensorIterator::SliceInputDescription>(
-                            input_description))
-                {
+                                input_description)) {
                     new_shapes[slice_in->m_body_parameter_index][slice_in->m_axis] =
-                        slice_in->m_part_size;
+                            slice_in->m_part_size;
                 }
             }
         }
@@ -468,9 +468,13 @@ std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& n
 
     auto func = std::make_shared<Function>(m_body->get_results(), m_body->get_parameters());
     auto spec_func = specialize_function(
-        func, types, new_shapes, std::vector<void*>(new_args.size(), nullptr), false, true);
+            func, types, new_shapes, std::vector<void *>(new_args.size(), nullptr), false, true);
     op->m_body =
-        std::make_shared<BodyLambda>(spec_func->get_results(), spec_func->get_parameters());
+            std::make_shared<BodyLambda>(spec_func->get_results(), spec_func->get_parameters());
+
+//    Function func(m_body->get_results(), m_body->get_parameters());
+//    auto deep_cp_func = clone_function(func);
+//    op->m_body = make_shared<BodyLambda>(deep_cp_func->get_results(), deep_cp_func->get_parameters());
 
     for (auto& input_description : m_input_descriptions)
     {
