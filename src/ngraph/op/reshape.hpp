@@ -132,11 +132,10 @@ namespace ngraph
                 ///        be of the form \f$(b_0,\dots,b_{j-1})\f$ where \f$\Pi(a_i) = \Pi(b_i)\f$.
                 ///        A value of -1 is allowed for at most one dimension, in which case the
                 ///        dimension size is inferred based on element count of input tensor.
-                /// \param zero_flag Treats zeros in `pattern` as wildcard flags indicating a copy
+                /// \param special_zero Treats zeros in `pattern` as wildcard flags indicating a
+                /// copy
                 /// from input shape at the same index.
-                Reshape(const Output<Node>& arg,
-                        const Output<Node>& pattern,
-                        bool zero_flag = false);
+                Reshape(const Output<Node>& arg, const Output<Node>& pattern, bool special_zero);
 
                 void validate_and_infer_types() override;
 
@@ -144,14 +143,14 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
-                bool get_zero_flag() const { return m_zero_flag; }
-                void set_zero_flag(bool zero_flag) { m_zero_flag = zero_flag; }
+                bool get_special_zero() const { return m_special_zero; }
+                void set_special_zero(bool special_zero) { m_special_zero = special_zero; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const NodeVector& deltas) override;
 
             private:
-                bool m_zero_flag;
+                bool m_special_zero;
             };
         }
         using v0::Reshape;
