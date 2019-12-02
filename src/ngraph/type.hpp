@@ -33,8 +33,7 @@ namespace ngraph
 
     /// Type information for a type system without inheritance; instances have exactly one type not
     /// related to any other type.
-    NGRAPH_API
-    struct DiscreteTypeInfo
+    struct NGRAPH_API DiscreteTypeInfo
     {
         const char* name;
         uint64_t version;

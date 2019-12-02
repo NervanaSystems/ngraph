@@ -22,37 +22,44 @@ namespace ngraph
 {
     namespace op
     {
-        class ReverseSequence : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"ReverseSequence", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            ReverseSequence() = default;
-            /// \brief Constructs an arcsin operation.
-            ///
-            /// \param arg Node that produces the input tensor.
-            ReverseSequence(const Output<Node>& arg,
-                            const Output<Node>& seq_lengths,
-                            size_t batch_axis,
-                            size_t seq_axis);
+            class NGRAPH_API ReverseSequence : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"ReverseSequence", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                ReverseSequence() = default;
+                /// \brief Constructs an arcsin operation.
+                ///
+                /// \param arg Node that produces the input tensor.
+                ReverseSequence(const Output<Node>& arg,
+                                const Output<Node>& seq_lengths,
+                                int64_t batch_axis,
+                                int64_t seq_axis);
 
-            void validate_and_infer_types() override;
+                void validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            size_t get_batch_axis() const { return m_batch_axis; }
-            void set_batch_axis(size_t batch_axis) { m_batch_axis = batch_axis; }
-            size_t get_sequence_axis() const { return m_seq_axis; }
-            void set_sequence_axis(size_t sequence_axis) { m_seq_axis = sequence_axis; }
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+                size_t get_batch_axis() const { return m_normalized_batch_axis; }
+                int64_t get_origin_batch_axis() const { return m_batch_axis; }
+                void set_batch_axis(int64_t batch_axis) { m_batch_axis = batch_axis; }
+                size_t get_sequence_axis() const { return m_normalized_seq_axis; }
+                int64_t get_origin_sequence_axis() const { return m_seq_axis; }
+                void set_sequence_axis(int64_t sequence_axis) { m_seq_axis = sequence_axis; }
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
 
-        private:
-            size_t m_batch_axis{0};
-            size_t m_seq_axis{0};
-        };
+            private:
+                int64_t m_batch_axis;
+                int64_t m_seq_axis;
+                size_t m_normalized_batch_axis;
+                size_t m_normalized_seq_axis;
+            };
+        }
+        using v0::ReverseSequence;
     }
 }

@@ -21,6 +21,7 @@
 
 #include "ngraph/attribute_adapter.hpp"
 #include "ngraph/axis_set.hpp"
+#include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/strides.hpp"
 
 namespace ngraph
@@ -29,25 +30,17 @@ namespace ngraph
     class Shape : public std::vector<size_t>
     {
     public:
-        Shape(const std::initializer_list<size_t>& axis_lengths)
-            : std::vector<size_t>(axis_lengths)
-        {
-        }
+        NGRAPH_API Shape();
 
-        Shape(const std::vector<size_t>& axis_lengths)
-            : std::vector<size_t>(axis_lengths)
-        {
-        }
+        NGRAPH_API Shape(const std::initializer_list<size_t>& axis_lengths);
 
-        Shape(const Shape& axis_lengths)
-            : std::vector<size_t>(axis_lengths)
-        {
-        }
+        NGRAPH_API Shape(const std::vector<size_t>& axis_lengths);
 
-        explicit Shape(size_t n, size_t initial_value = 0)
-            : std::vector<size_t>(n, initial_value)
-        {
-        }
+        NGRAPH_API Shape(const Shape& axis_lengths);
+
+        NGRAPH_API explicit Shape(size_t n, size_t initial_value = 0);
+
+        NGRAPH_API ~Shape();
 
         template <class InputIterator>
         Shape(InputIterator first, InputIterator last)
@@ -55,29 +48,19 @@ namespace ngraph
         {
         }
 
-        Shape() {}
-        Shape& operator=(const Shape& v)
-        {
-            static_cast<std::vector<size_t>*>(this)->operator=(v);
-            return *this;
-        }
-        Shape& operator=(Shape&& v)
-        {
-            static_cast<std::vector<size_t>*>(this)->operator=(v);
-            return *this;
-        }
+        NGRAPH_API Shape& operator=(const Shape& v);
+        NGRAPH_API Shape& operator=(Shape&& v) noexcept;
     };
 
     template <>
-    class AttributeAdapter<Shape> : public ValueReference<Shape>,
-                                    public ValueAccessor<std::vector<int64_t>>
+    class NGRAPH_API AttributeAdapter<Shape> : public ValueReference<Shape>,
+                                               public ValueAccessor<std::vector<int64_t>>
     {
     public:
         AttributeAdapter(Shape& value)
             : ValueReference<Shape>(value)
         {
         }
-        NGRAPH_API
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<Shape>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const std::vector<int64_t>& get() override;
@@ -123,5 +106,6 @@ namespace ngraph
         return 1 == shape.size();
     }
 
+    NGRAPH_API
     std::ostream& operator<<(std::ostream& s, const Shape& shape);
 }

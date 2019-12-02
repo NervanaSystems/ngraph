@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace pass
     {
-        class NopElimination : public FunctionPass
+        class NGRAPH_API NopElimination : public FunctionPass
         {
         public:
             NopElimination() { set_property(PassProperty::REQUIRE_STATIC_SHAPE, true); }
