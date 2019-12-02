@@ -38,30 +38,36 @@ ReduceSum::ReduceSum(const Output<Node>& x, const vector<int>& dim, bool reduce_
 
 NodeVector ReduceSum::decompose_op() const
 {
+    auto shape = get_input_partial_shape(0);
+    if (shape.is_dynamic())
+    {
+        throw ngraph_error("Input needs to have static shape to decompose");
+    }
+    auto input_shape = shape.to_shape();
+    int input_rank = static_cast<int>(input_shape.size());
     NodeVector retval;
+    vector<int64_t> axes;
     // Use reduce_sum v1 to support keep_dim
     if (m_reduce_all)
     {
-        auto input_shape = get_input_partial_shape(0);
-        if (input_shape.is_dynamic())
-        {
-            throw ngraph_error("Input needs to have static shape to decompose");
-        }
-        auto shape = input_shape.to_shape();
-        vector<int64_t> axes;
         iota(axes.begin(), axes.end(), 0);
-        auto axes_node = make_shared<ngraph::op::Constant>(element::i64, shape, axes);
-        auto node = make_shared<ngraph::op::v1::ReduceSum>(input_value(0), axes_node, m_keep_dim);
-        retval.emplace_back(node);
     }
     else
     {
-        auto axes_node =
-            make_shared<ngraph::op::Constant>(element::i64, Shape(m_dim.size()), m_dim);
-        auto node = make_shared<ngraph::op::v1::ReduceSum>(input_value(0), axes_node, m_keep_dim);
-        retval.emplace_back(node);
+        for (int axis : m_dim)
+        {
+            axes.emplace_back(axis < 0 ? axis + input_rank : axis);
+        }
     }
+    auto axes_node = make_shared<ngraph::op::Constant>(element::i64, Shape{axes.size()}, axes);
+    auto node = make_shared<ngraph::op::v1::ReduceSum>(input_value(0), axes_node, m_keep_dim);
+    retval.emplace_back(node);
     return retval;
+}
+
+void ReduceSum::validate_and_infer_types()
+{
+    set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
 shared_ptr<Node> ReduceSum::copy_with_new_args(const NodeVector& new_args) const
