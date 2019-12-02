@@ -108,7 +108,7 @@ TEST(type_prop, select_elem_mismatch_a)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Argument 0 does not have boolean element type"));
+                             std::string("Argument 0 must have boolean element type"));
     }
     catch (...)
     {

@@ -43,7 +43,7 @@ void op::v1::Select::validate_and_infer_types()
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(0).is_dynamic() ||
                               get_input_element_type(0) == element::boolean,
-                          "Argument 0 does not have boolean element type (element type: ",
+                          "Argument 0 must have boolean element type (element type: ",
                           get_input_element_type(0),
                           ").");
 
@@ -128,7 +128,7 @@ void op::v0::Select::validate_and_infer_types()
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(0).is_dynamic() ||
                               get_input_element_type(0) == element::boolean,
-                          "Argument 0 does not have boolean element type (element type: ",
+                          "Argument 0 must have boolean element type (element type: ",
                           get_input_element_type(0),
                           ").");
 
