@@ -139,6 +139,6 @@ TEST(opset, check_opset1)
     CHECK_OPSET(op::v1::TopK, opset1::TopK)
     CHECK_OPSET(op::v0::Transpose, opset1::Transpose)
     CHECK_OPSET(op::v0::Unsqueeze, opset1::Unsqueeze)
-    // TODO using op::v0::VariadicSplit
+    CHECK_OPSET(op::v1::VariadicSplit, opset1::VariadicSplit)
     CHECK_OPSET(op::v0::Xor, opset1::Xor)
 }
