@@ -215,7 +215,7 @@ namespace
     bool op_cast(shared_ptr<op::v1::Reshape> node)
     {
         auto replacement_node = make_shared<op::v0::DynReshape>(
-            node->input_value(0), node->input_value(1), node->get_zero_flag());
+            node->input_value(0), node->input_value(1), node->get_special_zero());
         replace_node(node, replacement_node);
         return true;
     }
@@ -558,6 +558,12 @@ namespace
         std::iota(std::begin(axes), std::end(axes), axis);
         auto replacement_node = make_shared<op::v0::Softmax>(node->input_value(0), axes);
         replace_node(node, replacement_node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::Subtract> node)
+    {
+        op_cast_binary_elementwise_node<op::v0::Subtract, op::v1::Subtract>(node);
         return true;
     }
 
