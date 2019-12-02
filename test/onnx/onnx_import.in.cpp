@@ -1776,3 +1776,35 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_mod)
 
     test_case.run();
 }
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_scatterND)
+{
+    const auto scatterND_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/scatterND.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(scatterND_fn, "${BACKEND_NAME}");
+
+    test_case.add_input<float>({1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f,
+                                8.f, 7.f, 6.f, 5.f, 4.f, 3.f, 2.f, 1.f,
+                                1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f,
+                                8.f, 7.f, 6.f, 5.f, 4.f, 3.f, 2.f, 1.f,
+                                8.f, 7.f, 6.f, 5.f, 4.f, 3.f, 2.f, 1.f,
+                                1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f,
+                                8.f, 7.f, 6.f, 5.f, 4.f, 3.f, 2.f, 1.f,
+                                1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f});
+    test_case.add_input<int64_t>({0, 2});
+    test_case.add_input<float>({5.f, 5.f, 5.f, 5.f, 6.f, 6.f, 6.f, 6.f,
+                                7.f, 7.f, 7.f, 7.f, 8.f, 8.f, 8.f, 8.f,
+                                1.f, 1.f, 1.f, 1.f, 2.f, 2.f, 2.f, 2.f,
+                                3.f, 3.f, 3.f, 3.f, 4.f, 4.f, 4.f, 4.f});
+    test_case.add_expected_output<float>(Shape{4, 4, 4, 4}, 
+                                {5.f, 5.f, 5.f, 5.f, 6.f, 6.f, 6.f, 6.f,
+                                 7.f, 7.f, 7.f, 7.f, 8.f, 8.f, 8.f, 8.f,
+                                 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f,
+                                 8.f, 7.f, 6.f, 5.f, 4.f, 3.f, 2.f, 1.f,
+                                 1.f, 1.f, 1.f, 1.f, 2.f, 2.f, 2.f, 2.f,
+                                 3.f, 3.f, 3.f, 3.f, 4.f, 4.f, 4.f, 4.f,
+                                 8.f, 7.f, 6.f, 5.f, 4.f, 3.f, 2.f, 1.f,
+                                 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f});
+
+    test_case.run();
+}
