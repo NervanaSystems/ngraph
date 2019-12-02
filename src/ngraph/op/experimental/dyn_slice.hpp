@@ -25,12 +25,11 @@ namespace ngraph
     {
         /// \brief Takes a slice of an input tensor, i.e., the sub-tensor that resides within a
         ///        bounding box, optionally with stride.
-        class DynSlice : public Op
+        class NGRAPH_API DynSlice : public Op
         {
         public:
-            NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"DynSlice", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             DynSlice() = default;
             /// \brief Constructs a dynamic tensor slice operation.
             ///

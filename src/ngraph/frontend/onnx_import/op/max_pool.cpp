@@ -29,15 +29,14 @@ namespace ngraph
             {
                 NodeVector max_pool(const Node& node)
                 {
-                    auto max_pool =
-                        pooling::PoolingFactory(node).make_pooling_op<ngraph::op::MaxPool>();
+                    auto max_pool = pooling::PoolingFactory(node).make_max_pool();
                     max_pool.emplace_back(std::make_shared<NullNode>()); // Indices (optional)
                     return max_pool;
                 }
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

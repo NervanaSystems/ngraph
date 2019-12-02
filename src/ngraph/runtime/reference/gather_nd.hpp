@@ -83,6 +83,8 @@ namespace ngraph
                     for (size_t i = 0; i < slice_rank; i++)
                     {
                         U index = indices[indices_index];
+                        // take care of negative indices
+                        index = index >= 0 ? index : index + params_shape[i];
                         params_start_corner[i] = index;
                         params_end_corner[i] = index + 1;
                         indices_index++;

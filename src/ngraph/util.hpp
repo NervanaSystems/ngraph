@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <cstdlib> // llvm 8.1 gets confused about `malloc` otherwise
@@ -29,7 +30,6 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
-
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
@@ -45,6 +45,7 @@ namespace ngraph
     {
         class Backend;
         class Value;
+        class Tensor;
     }
 
     std::string to_cplusplus_sourcecode_literal(bool val);
@@ -165,13 +166,10 @@ namespace ngraph
     template <typename T>
     std::vector<T> parse_string(const std::vector<std::string>& ss)
     {
-        std::vector<T> result;
-
-        for (auto s : ss)
-        {
-            result.push_back(parse_string<T>(s));
-        }
-
+        std::vector<T> result(ss.size());
+        std::transform(ss.begin(), ss.end(), result.begin(), [](const std::string& s) {
+            return parse_string<T>(s);
+        });
         return result;
     }
 
@@ -201,6 +199,7 @@ namespace ngraph
     T apply_permutation(T input, ngraph::AxisVector order);
 
     AxisVector get_default_order(size_t rank);
+    NGRAPH_API
     AxisVector get_default_order(const Shape& shape);
 
     AxisVector get_permutation_to_default_order(const AxisVector& axis_order);
@@ -360,5 +359,10 @@ namespace ngraph
     void parse_version_string(
         std::string version, size_t& major, size_t& minor, size_t& patch, std::string& extra);
 } // end namespace ngraph
+
+template <typename T>
+std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv);
+
+std::vector<float> read_float_vector(std::shared_ptr<ngraph::runtime::Tensor> tv);
 
 std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);

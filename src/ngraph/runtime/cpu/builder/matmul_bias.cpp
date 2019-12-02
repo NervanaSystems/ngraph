@@ -15,10 +15,11 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
+
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
+#include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
-#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -80,7 +81,7 @@ namespace ngraph
                                    arg0_buffer_index,
                                    arg1_buffer_index,
                                    out0_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                     cblas::cblas_sgemm(
                         cblas::Layout::RowMajor,
                         transpose_A ? cblas::Transpose::Transpose : cblas::Transpose::None,
@@ -98,8 +99,8 @@ namespace ngraph
                         max<size_t>(1, arg2_shape[1]));
                 };
 
-                CPUKernelFunctor bias_functor = [](CPURuntimeContext* ctx,
-                                                   CPUExecutionContext* ectx) {};
+                CPUKernelFunctor bias_functor = [](CPURuntimeContext* /* ctx */,
+                                                   CPUExecutionContext* /* ectx */) {};
 
                 if (args.size() > 2)
                 {
@@ -114,7 +115,7 @@ namespace ngraph
                             vector<float> ones_row(arg2_shape[0], 1.0f);
                             bias_functor =
                                 [&, ones_row, arg2_shape, arg2_buffer_index, out0_buffer_index](
-                                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                    CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                                     cblas::cblas_sgemm(
                                         cblas::Layout::RowMajor,
                                         cblas::Transpose::None,
@@ -137,7 +138,7 @@ namespace ngraph
                             vector<float> ones_col(arg2_shape[1], 1.0f);
                             bias_functor =
                                 [&, ones_col, arg2_shape, arg2_buffer_index, out0_buffer_index](
-                                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                    CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                                     cblas::cblas_sgemm(
                                         cblas::Layout::RowMajor,
                                         cblas::Transpose::None,
@@ -167,7 +168,7 @@ namespace ngraph
 
                         bias_functor =
                             [&, ones_scalar, arg2_shape, arg2_buffer_index, out0_buffer_index](
-                                CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                                 vector<float> bias(
                                     arg2_shape[1],
                                     *static_cast<float*>(ctx->buffer_data[arg2_buffer_index]));
@@ -226,7 +227,7 @@ namespace ngraph
                 size_t data_c_index;
                 int64_t group_count;
 
-                void call(CPURuntimeContext* ctx, CPUExecutionContext* ectx)
+                void call(CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */)
                 {
                     std::vector<float*> a_array(group_sizes[0]);
                     std::vector<float*> b_array(group_sizes[0]);
@@ -236,7 +237,7 @@ namespace ngraph
                                              void* data,
                                              int64_t size,
                                              size_t offset) {
-                        for (size_t i = 0; i < size; ++i)
+                        for (int64_t i = 0; i < size; ++i)
                         {
                             offsets_vector.at(i) = static_cast<float*>(data) + (i * offset);
                         }
@@ -393,12 +394,12 @@ namespace ngraph
                             cg->get_transpose_arg1());
             }
 
-            REGISTER_OP_BUILDER(MatmulBias);
-            REGISTER_OP_BUILDER(BatchMatMul);
-            REGISTER_OP_BUILDER(BatchMatMulTranspose);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_matmul_bias_cpp() {}
-#endif
+            void register_builders_matmul_bias_cpp()
+            {
+                REGISTER_OP_BUILDER(MatmulBias);
+                REGISTER_OP_BUILDER(BatchMatMul);
+                REGISTER_OP_BUILDER(BatchMatMulTranspose);
+            }
         }
     }
 }

@@ -46,7 +46,7 @@ namespace ngraph
 /// Patterns can be added by using \sa add_matcher
 /// Callbacks should use \sa replace_node to transform matched sub graphs
 
-class ngraph::pass::GraphRewrite : public FunctionPass
+class NGRAPH_API ngraph::pass::GraphRewrite : public FunctionPass
 {
 public:
     GraphRewrite()
@@ -70,6 +70,7 @@ public:
 
 protected:
     bool is_enabled(const std::shared_ptr<pattern::Matcher>& m) const;
+    bool m_enable_shape_inference = false;
 
 private:
     struct MatchClosure
@@ -81,7 +82,7 @@ private:
     std::vector<MatchClosure> m_matchers;
 };
 
-class ngraph::pass::RecurrentGraphRewrite : public FunctionPass
+class NGRAPH_API ngraph::pass::RecurrentGraphRewrite : public FunctionPass
 {
 public:
     RecurrentGraphRewrite(size_t num_iters = 10)

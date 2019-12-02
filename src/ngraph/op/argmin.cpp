@@ -15,16 +15,23 @@
 //*****************************************************************************
 
 #include "ngraph/op/argmin.hpp"
+#include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-const string op::ArgMin::type_name{"ArgMin"};
+constexpr NodeTypeInfo op::ArgMin::type_info;
 
 op::ArgMin::ArgMin(const Output<Node>& arg, size_t axis, const element::Type& index_element_type)
     : op::util::IndexReduction(arg, axis, index_element_type)
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::ArgMin::visit_attributes(AttributeVisitor& visitor)
+{
+    IndexReduction::visit_attributes(visitor);
+    return true;
 }
 
 shared_ptr<Node> op::ArgMin::copy_with_new_args(const NodeVector& new_args) const

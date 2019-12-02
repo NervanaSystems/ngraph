@@ -28,9 +28,11 @@ namespace ngraph
             /// \brief Labels are used in patterns to express repeating nodes in an input graph
             /// and bind them to specific nodes from the graph
             ///
-            class Label : public Pattern
+            class NGRAPH_API Label : public Pattern
             {
             public:
+                static constexpr NodeTypeInfo type_info{"patternLabel", 0};
+                const NodeTypeInfo& get_type_info() const override;
                 /// \brief creates a Label node containing a sub-pattern described by \sa type and
                 ///        \sa shape.
                 ///
@@ -73,12 +75,6 @@ namespace ngraph
                             pred,
                             wrapped_nodes)
                 {
-                }
-
-                const std::string& description() const override
-                {
-                    static std::string desc = "Label";
-                    return desc;
                 }
             };
         }

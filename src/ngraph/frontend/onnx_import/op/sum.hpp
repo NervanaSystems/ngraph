@@ -40,12 +40,12 @@ namespace ngraph
             {
                 inline NodeVector sum(const Node& node)
                 {
-                    return variadic::make_ng_variadic_op_with_broadcast<ngraph::op::Add>(node);
+                    return variadic::make_ng_variadic_op<ngraph::op::v1::Add>(node);
                 }
 
             } // namespace set_8
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

@@ -23,7 +23,12 @@ include(ExternalProject)
 
 # This version of PROTOBUF is required by Microsoft ONNX Runtime.
 set(NGRAPH_PROTOBUF_GIT_REPO_URL "https://github.com/protocolbuffers/protobuf")
-set(NGRAPH_PROTOBUF_GIT_TAG "v3.5.2")
+
+if(NGRAPH_ONNX_IMPORT_ENABLE)
+    set(NGRAPH_PROTOBUF_GIT_TAG "v3.5.2")
+else()
+    set(NGRAPH_PROTOBUF_GIT_TAG "v3.6.1")
+endif()
 
 if (WIN32)
     ExternalProject_Add(
@@ -38,7 +43,7 @@ if (WIN32)
         CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
         CMAKE_ARGS
             ${NGRAPH_FORWARD_CMAKE_ARGS}
-            -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+            -DCMAKE_CXX_FLAGS=${CMAKE_ORIGINAL_CXX_FLAGS}
             -Dprotobuf_MSVC_STATIC_RUNTIME=OFF
             -Dprotobuf_WITH_ZLIB=OFF
             -Dprotobuf_BUILD_TESTS=OFF
@@ -103,22 +108,41 @@ if (WIN32)
 else()
     set(Protobuf_LIBRARY ${Protobuf_INSTALL_PREFIX}/lib/libprotobuf.a)
 endif()
-set(Protobuf_LIBRARIES ${Protobuf_LIBRARY})
 
-if (NOT TARGET protobuf::libprotobuf)
-    add_library(protobuf::libprotobuf UNKNOWN IMPORTED)
-    set_target_properties(protobuf::libprotobuf PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "${Protobuf_INCLUDE_DIR}"
-        IMPORTED_LOCATION "${Protobuf_LIBRARY}")
-    add_dependencies(protobuf::libprotobuf ext_protobuf)
+if(NGRAPH_ONNX_IMPORT_ENABLE)
+    if (NOT TARGET libprotobuf)
+        add_library(libprotobuf INTERFACE)
+        if (WIN32)
+            target_link_libraries(libprotobuf INTERFACE
+                debug ${Protobuf_INSTALL_PREFIX}/lib/libprotobufd.lib
+                optimized ${Protobuf_INSTALL_PREFIX}/lib/libprotobuf.lib)
+        else()
+            target_link_libraries(libprotobuf INTERFACE
+                ${Protobuf_INSTALL_PREFIX}/lib/libprotobuf.a)
+        endif()
+        set_target_properties(libprotobuf PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${Protobuf_INCLUDE_DIR}")
+        add_dependencies(libprotobuf ext_protobuf)
+    endif()
+    set(Protobuf_LIBRARIES libprotobuf)
+else()
+    if (NOT TARGET protobuf::libprotobuf)
+        add_library(protobuf::libprotobuf UNKNOWN IMPORTED)
+        set_target_properties(protobuf::libprotobuf PROPERTIES
+            INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${Protobuf_INCLUDE_DIR}"
+            IMPORTED_LOCATION "${Protobuf_LIBRARY}")
+        add_dependencies(protobuf::libprotobuf ext_protobuf)
+    endif()
+    set(Protobuf_LIBRARIES protobuf::libprotobuf)
 endif()
 
 if (NOT TARGET protobuf::protoc)
     add_executable(protobuf::protoc IMPORTED)
     set_target_properties(protobuf::protoc PROPERTIES
+        INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${Protobuf_PROTOC_EXECUTABLE}"
         IMPORTED_LOCATION "${Protobuf_PROTOC_EXECUTABLE}")
     add_dependencies(protobuf::protoc ext_protobuf)
 endif()
 
-set(Protobuf_FOUND)
-set(PROTOBUF_FOUND)
+set(Protobuf_FOUND TRUE)
+set(PROTOBUF_FOUND TRUE)

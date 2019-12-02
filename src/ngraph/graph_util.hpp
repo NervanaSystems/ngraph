@@ -71,12 +71,9 @@ namespace ngraph
                         bool include_control_deps,
                         const NodeVector& subgraph_params = {});
 
-    inline void traverse_functions(std::shared_ptr<Function> p,
-                                   std::function<void(std::shared_ptr<Function>)> f)
-        NGRAPH_DEPRECATED("Replace with f(p)")
-    {
-        f(p);
-    };
+    void traverse_functions(std::shared_ptr<Function> p,
+                            std::function<void(std::shared_ptr<Function>)> f)
+        NGRAPH_DEPRECATED("Replace with f(p)");
 
     /// \brief Replace the node `target` with the node `replacement`, i.e.,
     ///        redirect all users and control dependencies of `target` to
@@ -84,6 +81,7 @@ namespace ngraph
     ///
     /// \param target Node to be replaced.
     /// \param replacement Node to replace `target` with.
+    /// \param output_order Vector determines order of replacement node's outputs.
     ///
     /// This is primarily used in graph-rewriting passes. For example, we
     /// might "fuse" two Concat operations as follows:
@@ -212,7 +210,40 @@ namespace ngraph
     ///        auto new_N = N->copy_with_new_args(N->get_arguments());
     ///        shared_ptr<Node> M = make_shared<SomeUnaryOp>(new_N);
     ///        replace_node(N, M);
+    NGRAPH_API
+    void replace_node(std::shared_ptr<Node> target,
+                      std::shared_ptr<Node> replacement,
+                      const std::vector<int64_t>& output_order);
+    NGRAPH_API
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
+
+    /// \brief Replace multiple nodes in a function.
+    /// \param f Function where replacement is taking place.
+    /// \param parameter_replacement_map A mapping from parameter shared pointers to parameter
+    ///                                  shared pointers. For each pair (k,v) in the map, parameter
+    ///                                  k is replaced by parameter v, except if k==v or k is not a
+    ///                                  parameter bound by f, in which case the pair (k,v) is
+    ///                                  ignored.
+    /// \param body_replacement_map A mapping from node shared pointers to node shared pointers.
+    ///                             For each pair (k,v) in the map, node k is replaced by node v,
+    ///                             except if k==v, the pair (k,v) is ignored.
+    ///                             Note that if k is a parameter, its users will be redirected to
+    ///                             v, but k will _not_ be replaced in the function's parameter
+    ///                             list.
+    ///
+    /// Limitations:
+    ///
+    ///    - No check is made that the replaced nodes in `parameter_replacement_map` are actually
+    ///      among the bound parameters of `f`. (If a parameter appears in the map that is not
+    ///      bound by `f`, it will be silently ignored.)
+    ///    - If a parameter node appears as a key in both `parameter_replacement_map` _and_ in
+    ///      `body_replacement_map`, behavior is unspecified.
+    void replace_nodes(
+        const std::shared_ptr<Function>& f,
+        const std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<op::Parameter>>&
+            parameter_replacement_map,
+        const std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>>&
+            body_replacement_map);
 
     NodeVector find_common_args(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
@@ -299,7 +330,7 @@ namespace ngraph
                 for (size_t i = 0; i < arg_count; ++i)
                 {
                     Node* dep = node->input(arg_count - i - 1).get_source_output().get_node();
-                    if (nodes_done.count(dep) == 0)
+                    if (nodes_done.count(dep) == 0 && nodes_to_emit.count(node) != 0)
                     {
                         can_add = false;
                         nodes_to_do.push(dep);
@@ -425,4 +456,11 @@ namespace ngraph
     /// \return A vector containing a handle for each output of src that is connected to an input
     ///         of `dst`.
     std::vector<Output<Node>> get_outputs_to(Node& src, Node& dst);
+
+    /// Checks the func for graph cycles starting from results going backwards, then from parameters
+    /// going forward.
+    /// It returns true if a cycle is found and the first cycle encountered.
+    bool check_for_cycles(const ngraph::Function* func,
+                          ngraph::NodeVector& cycle_nodes,
+                          bool& is_bkwd_cycle);
 }

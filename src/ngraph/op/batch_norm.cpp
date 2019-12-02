@@ -23,7 +23,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::BatchNormTraining::type_name{"BatchNormTraining"};
+constexpr NodeTypeInfo op::BatchNormTraining::type_info;
 
 op::BatchNormTraining::BatchNormTraining(const Output<Node>& input,
                                          const Output<Node>& gamma,
@@ -44,6 +44,12 @@ op::BatchNormTraining::BatchNormTraining(double eps,
     , m_epsilon(eps)
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::BatchNormTraining::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("epsilon", m_epsilon);
+    return true;
 }
 
 void op::BatchNormTraining::validate_and_infer_types()
@@ -102,7 +108,7 @@ void op::BatchNormTraining::generate_adjoints(autodiff::Adjoints& adjoints,
     adjoints.add_delta(beta, dbeta);
 }
 
-const string op::BatchNormInference::type_name{"BatchNormInference"};
+constexpr NodeTypeInfo op::BatchNormInference::type_info;
 
 op::BatchNormInference::BatchNormInference(const Output<Node>& input,
                                            const Output<Node>& gamma,
@@ -127,6 +133,12 @@ op::BatchNormInference::BatchNormInference(double eps,
     , m_epsilon(eps)
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::BatchNormInference::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("epsilon", m_epsilon);
+    return true;
 }
 
 void op::BatchNormInference::validate_and_infer_types()
@@ -159,7 +171,7 @@ std::shared_ptr<Node> op::BatchNormInference::copy_with_new_args(const NodeVecto
         new_args.at(2), new_args.at(0), new_args.at(1), new_args.at(3), new_args.at(4), m_epsilon);
 }
 
-const string op::BatchNormTrainingBackprop::type_name{"BatchNormTrainingBackprop"};
+constexpr NodeTypeInfo op::BatchNormTrainingBackprop::type_info;
 
 op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(const Output<Node>& input,
                                                          const Output<Node>& gamma,
@@ -189,6 +201,12 @@ op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(double epsilon,
 {
     set_output_size(3);
     constructor_validate_and_infer_types();
+}
+
+bool op::BatchNormTrainingBackprop::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("epsilon", m_epsilon);
+    return true;
 }
 
 void op::BatchNormTrainingBackprop::validate_and_infer_types()

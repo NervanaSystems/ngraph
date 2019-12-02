@@ -51,22 +51,22 @@ namespace ngraph
                     Eigen::array<Eigen::Index, Input1Rank> in1_dims;
                     Eigen::array<Eigen::IndexPair<Eigen::Index>, DotDims> dot_dims;
 
-                    for (int i = 0; i < OutRank; i++)
+                    for (size_t i = 0; i < OutRank; i++)
                     {
                         out_dims[i] = output_shape[i];
                     }
 
-                    for (int i = 0; i < Input0Rank; i++)
+                    for (size_t i = 0; i < Input0Rank; i++)
                     {
                         in0_dims[i] = input0_shape[i];
                     }
 
-                    for (int i = 0; i < Input1Rank; i++)
+                    for (size_t i = 0; i < Input1Rank; i++)
                     {
                         in1_dims[i] = input1_shape[i];
                     }
 
-                    for (int i = 0; i < DotDims; i++)
+                    for (size_t i = 0; i < DotDims; i++)
                     {
                         dot_dims[i].first = Input0Rank - DotDims + i;
                         dot_dims[i].second = i;
@@ -180,12 +180,12 @@ namespace ngraph
                              const Shape& arg1_shape,
                              const Shape& out_shape,
                              size_t reduction_axes_count,
-                             void* input0_scale = nullptr,
-                             void* input0_zero_point = nullptr,
-                             void* input1_scale = nullptr,
-                             void* input1_zero_point = nullptr,
-                             void* output_scale = nullptr,
-                             void* output_zero_point = nullptr)
+                             void* input0_scale,
+                             void* input0_zero_point,
+                             void* input1_scale,
+                             void* input1_zero_point,
+                             void* output_scale,
+                             void* output_zero_point)
                 {
                     reference::dot<INPUT0, INPUT1, OUTPUT, ACCUMULATION>(
                         static_cast<const INPUT0*>(arg0),

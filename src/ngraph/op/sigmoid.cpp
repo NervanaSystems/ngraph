@@ -21,8 +21,8 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Sigmoid::type_name{"Sigmoid"};
-const string op::SigmoidBackprop::type_name{"SigmoidBackprop"};
+constexpr NodeTypeInfo op::Sigmoid::type_info;
+constexpr NodeTypeInfo op::SigmoidBackprop::type_info;
 
 shared_ptr<Node> op::Sigmoid::copy_with_new_args(const NodeVector& new_args) const
 {
@@ -37,7 +37,7 @@ op::Sigmoid::Sigmoid(const Output<Node>& arg)
 }
 
 op::SigmoidBackprop::SigmoidBackprop(const Output<Node>& arg, const Output<Node>& delta)
-    : BinaryElementwiseArithmetic(arg, delta)
+    : BinaryElementwiseArithmetic(arg, delta, AutoBroadcastSpec::NONE)
 {
     constructor_validate_and_infer_types();
 }

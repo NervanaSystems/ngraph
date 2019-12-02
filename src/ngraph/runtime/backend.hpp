@@ -40,7 +40,7 @@ namespace ngraph
 /// \brief Interface to a generic backend.
 ///
 /// Backends are responsible for function execution and value allocation.
-class ngraph::runtime::Backend
+class NGRAPH_API ngraph::runtime::Backend
 {
 public:
     virtual ~Backend();
@@ -159,7 +159,7 @@ public:
     virtual Allocator* get_host_memory_allocator() { return nullptr; }
     /// \brief Set the host memory allocator to be used by the backend
     /// \param allocator is pointer to host memory allocator object
-    virtual void set_host_memory_allocator(Allocator* allocator) {}
+    virtual void set_host_memory_allocator(Allocator* allocator) { (void)allocator; }
     /// \brief Returns memory allocator used by backend for device allocations
     virtual Allocator* get_device_memory_allocator()
     {

@@ -51,7 +51,7 @@ namespace ngraph
             /// | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
             /// | \f$\texttt{bool}[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg0}[i_1,\dots,i_n],\texttt{arg1}[i_1,\dots,i_n])\f$. This will always have the same shape as the input tensors, and the element type `bool`. |
             // clang-format on
-            class BinaryElementwiseComparison : public Op
+            class NGRAPH_API BinaryElementwiseComparison : public Op
             {
             protected:
                 /// \brief Constructs a binary elementwise comparison operation.
@@ -88,8 +88,12 @@ namespace ngraph
             public:
                 void validate_and_infer_types() override;
 
-                const AutoBroadcastSpec& get_autob() const { return m_autob; }
+                const AutoBroadcastSpec& get_autob() const override { return m_autob; }
                 void set_autob(const AutoBroadcastSpec& autob) { m_autob = autob; }
+                bool supports_auto_broadcast() const override { return true; }
+                bool is_binary_elementwise_comparison() const override { return true; }
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
             private:
                 AutoBroadcastSpec m_autob;
             };

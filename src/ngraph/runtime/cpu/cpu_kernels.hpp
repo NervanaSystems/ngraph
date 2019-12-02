@@ -21,6 +21,8 @@
 #include <random>
 #include <vector>
 
+#include "ngraph/op/pad.hpp"
+
 // CBLAS types and wrappers
 
 namespace cblas
@@ -146,6 +148,7 @@ namespace ngraph
                                     const Shape& output_shape,
                                     const CoordinateDiff& padding_below,
                                     const CoordinateDiff& padding_above,
+                                    const ngraph::op::PadMode pad_mode,
                                     int arena);
 
                 void reduce_sum_all_1d_float32(float* input,
@@ -272,6 +275,14 @@ namespace ngraph
                                       const double value,
                                       const std::vector<std::minstd_rand>& vmsr,
                                       const bool use_seed);
+
+                template <typename InputElementType, typename AxisElementType>
+                void reference_cumsum(void* input_tensor,
+                                      void* axis_tensor,
+                                      void* out,
+                                      const Shape& tensor_shape,
+                                      const bool exclusive,
+                                      const bool reverse);
             }
         }
     }

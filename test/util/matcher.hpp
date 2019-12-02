@@ -22,10 +22,9 @@ class TestMatcher : public ngraph::pattern::Matcher
                             const std::shared_ptr<ngraph::Node>& graph_node,
                             PatternMap& pattern_map) override
     {
-        if (std::dynamic_pointer_cast<::ngraph::op::Parameter>(pattern_node))
+        if (ngraph::as_type_ptr<::ngraph::op::Parameter>(pattern_node))
         {
-            bool result =
-                pattern_node.get() == dynamic_cast<::ngraph::op::Parameter*>(graph_node.get());
+            bool result = pattern_node == ngraph::as_type_ptr<::ngraph::op::Parameter>(graph_node);
             if (result)
             {
                 m_matched_list.push_back(graph_node);

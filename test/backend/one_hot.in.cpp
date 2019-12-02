@@ -94,27 +94,6 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
     EXPECT_EQ((vector<int32_t>{1, 0, 0}), read_vector<int32_t>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
-{
-    Shape shape_a{};
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
-    Shape shape_r{3};
-    auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
-    auto f = make_shared<Function>(r, ParameterVector{A});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::i32, shape_a);
-    copy_data(a, vector<int32_t>{3});
-    vector<int32_t> r_data(4);
-    auto result = backend->create_tensor(element::i32, shape_r, r_data.data());
-
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a});
-    EXPECT_EQ(r_data[3], 0);
-}
-
 NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_0)
 {
     Shape shape_a{8};

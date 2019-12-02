@@ -19,13 +19,14 @@ if (NGRAPH_GENERIC_CPU_ENABLE)
     # if (OPENMP_FOUND)
     #     add_compile_options(${OpenMP_CXX_FLAGS})
     # endif()
-    add_library(gcpu_backend SHARED gcpu_backend.cpp gcpu_executable.cpp node_wrapper.cpp)
+    add_library(gcpu_backend SHARED gcpu_backend.cpp gcpu_executable.cpp)
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(gcpu_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
     endif()
     target_link_libraries(gcpu_backend PRIVATE ngraph libeigen)
+    target_compile_definitions(gcpu_backend PRIVATE GCPU_BACKEND_DLL_EXPORTS)
 
     install(TARGETS gcpu_backend
         LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"

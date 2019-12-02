@@ -34,7 +34,7 @@ size_t descriptor::layout::DenseTensorLayout::get_index_offset(const std::vector
         throw ngraph_error("Indices have the incorrect rank.");
     }
     size_t result = 0;
-    for (int i = 0; i < indices.size(); i++)
+    for (uint64_t i = 0; i < indices.size(); i++)
     {
         result += strides[i] * indices[i];
     }

@@ -35,7 +35,8 @@ using namespace std;
 
 shared_ptr<Node> builder::reshape(const Output<Node>& value, const Shape& shape)
 {
-    return make_shared<op::Reshape>(value, get_default_order(value.get_shape().size()), shape);
+    return make_shared<op::Reshape>(value, get_default_order(value.get_shape().size()), shape)
+        ->add_provenance_group_members_above({value});
 }
 
 shared_ptr<Node> builder::reorder_axes(const Output<Node>& value, vector<size_t> axes_order)
@@ -55,7 +56,8 @@ shared_ptr<Node> builder::reorder_axes(const Output<Node>& value, vector<size_t>
     }
 
     auto axis_vector = AxisVector{begin(axes_order), end(axes_order)};
-    return make_shared<op::Reshape>(value, axis_vector, out_shape);
+    return make_shared<op::Reshape>(value, axis_vector, out_shape)
+        ->add_provenance_group_members_above({value});
 }
 
 shared_ptr<Node> builder::transpose(const Output<Node>& value)
@@ -80,7 +82,8 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, int axis)
         accumulate(next(begin(data_shape), axis), end(data_shape), 1UL, multiplies<size_t>());
 
     return make_shared<op::Reshape>(
-        value, get_default_order(data_shape.size()), Shape{first_dim_size, last_dim_size});
+               value, get_default_order(data_shape.size()), Shape{first_dim_size, last_dim_size})
+        ->add_provenance_group_members_above({value});
 }
 
 // Dynamic version of "flatten".
@@ -118,5 +121,55 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, const Output<Node>&
     auto flattened_dims = make_shared<op::Concat>(NodeVector{row_dims_prod, col_dims_prod}, 0);
 
     // result := DynReshape(value, flattened_dims)
-    return make_shared<op::DynReshape>(value, flattened_dims);
+    return make_shared<op::DynReshape>(value, flattened_dims)
+        ->add_provenance_group_members_above({value});
+}
+
+shared_ptr<Node> builder::squeeze(const Output<Node>& value, vector<size_t> axes)
+{
+    if (axes.empty())
+    {
+        return value.get_node_shared_ptr();
+    }
+
+    Shape in_shape{value.get_shape()};
+    for (size_t idx = 0; idx < axes.size(); ++idx)
+    {
+        in_shape.at(idx) = 0;
+    }
+    Shape output_shape;
+    for (auto axis : in_shape)
+    {
+        if (axis != 0)
+        {
+            output_shape.push_back(axis);
+        }
+    }
+    return builder::reshape(value, output_shape);
+}
+
+shared_ptr<Node>
+    builder::collapse(const Output<Node>& value, const size_t start_axis, const size_t end_axis)
+{
+    auto shape = value.get_shape();
+    size_t collapsed_axis_size = accumulate(next(begin(shape), start_axis),
+                                            next(begin(shape), end_axis + 1),
+                                            1UL,
+                                            multiplies<size_t>());
+
+    Shape output_shape{collapsed_axis_size};
+    output_shape.insert(end(output_shape), next(begin(shape), end_axis + 1), end(shape));
+    return builder::reshape(value, output_shape);
+}
+
+shared_ptr<Node> builder::expand_dims(const Output<Node>& value, size_t axis)
+{
+    Shape output_shape(value.get_shape());
+    // Add empty axis at specified position.
+    auto empty_axis_it = begin(output_shape);
+    advance(empty_axis_it, axis);
+    output_shape.insert(empty_axis_it, 1);
+    return make_shared<op::Reshape>(
+               value, get_default_order(value.get_shape().size()), output_shape)
+        ->add_provenance_group_members_above({value});
 }
