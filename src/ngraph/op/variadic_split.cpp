@@ -18,6 +18,7 @@
 
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/variadic_split.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -63,13 +64,7 @@ void ngraph::op::v1::VariadicSplit::validate_and_infer_types()
             auto axis_val = as_type_ptr<op::Constant>(axis_input)->get_vector<int64_t>()[0];
 
             // Adjust split axis in case of negatives
-            int64_t axis = (axis_val < 0) ? data_rank + axis_val : axis_val;
-            NODE_VALIDATION_CHECK(this,
-                                  axis >= 0 && axis < data_rank,
-                                  "Provided axis: ",
-                                  axis_val,
-                                  " exceeds input data rank: ",
-                                  data_rank);
+            int64_t axis = ngraph::normalize_axis(this, axis_val, data_rank);
 
             auto split_lengths =
                 as_type_ptr<op::Constant>(split_lengths_input)->get_vector<int64_t>();
@@ -100,16 +95,18 @@ void ngraph::op::v1::VariadicSplit::validate_and_infer_types()
                 }
             }
 
-            NODE_VALIDATION_CHECK(this,
-                                  sum_of_splits <= static_cast<size_t>(data_shape[axis]),
-                                  "Total length of splits: ",
-                                  sum_of_splits,
-                                  " exceeds the length of the chosen axis: ",
-                                  static_cast<size_t>(data_shape[axis]));
             if (negative_one > 0)
             {
                 split_lengths[negative_one] = static_cast<size_t>(data_shape[axis]) - sum_of_splits;
+                sum_of_splits += split_lengths[negative_one];
             }
+
+            NODE_VALIDATION_CHECK(this,
+                                  sum_of_splits == static_cast<size_t>(data_shape[axis]),
+                                  "Total length of splits: ",
+                                  sum_of_splits,
+                                  " must match the length of the chosen axis: ",
+                                  static_cast<size_t>(data_shape[axis]));
 
             for (size_t output{0}; output < num_outputs; ++output)
             {

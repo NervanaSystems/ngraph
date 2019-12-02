@@ -91,7 +91,7 @@ TEST(type_prop, variadic_split_incorrect_sum)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Total length of splits: 7 exceeds the length of the chosen axis: 6"));
+            std::string("Total length of splits: 7 must match the length of the chosen axis: 6"));
     }
 }
 
@@ -106,10 +106,10 @@ TEST(type_prop, variadic_split_incorrect_axis)
         const auto split = make_shared<op::v1::VariadicSplit>(data, axis, splits);
         FAIL() << "Split node was created with incorrect data.";
     }
-    catch (const NodeValidationFailure& error)
+    catch (const ngraph_error& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Provided axis: -5 exceeds input data rank: 2"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("Parameter axis -5 out of the tensor rank range [-2, 1]."));
     }
 }
 
