@@ -58,16 +58,11 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
-                /// \return The stack axis.
-                int64_t get_stack_axis() const { return m_stack_axis; }
-                /// \set The stack axis
-                void set_stack_axis(const int64_t stack_axis) { m_stack_axis = stack_axis; }
                 /// \return The stack axis
                 int64_t get_axis() const { return m_axis; }
                 void set_axis(int64_t axis) { m_axis = axis; }
             private:
                 int64_t m_axis;
-                int64_t m_stack_axis = -1;
             };
         }
         using v0::Stack;
