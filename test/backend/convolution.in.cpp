@@ -154,9 +154,9 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_convolution_backprop_data)
     auto padding_end = CoordinateDiff{0, 0};
 
     auto conv1 = make_shared<op::v1::ConvolutionBackpropData>(
-        filters, deltas, data_batch_shape, strides, dilations, padding_begin, padding_end);
+        deltas, filters, data_batch_shape, strides, padding_begin, padding_end, dilations);
 
-    auto f = make_shared<Function>(conv1, ParameterVector{filters, deltas, data_batch_shape});
+    auto f = make_shared<Function>(conv1, ParameterVector{deltas, filters, data_batch_shape});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
 
@@ -178,10 +178,10 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_convolution_backprop_data)
     vector<int64_t> shapes = {2, 3, 5, 5};
 
     // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape_filter);
-    copy_data(a, filter);
-    auto b = backend->create_tensor(element::f32, shape_delta);
-    copy_data(b, delta);
+    auto a = backend->create_tensor(element::f32, shape_delta);
+    copy_data(a, delta);
+    auto b = backend->create_tensor(element::f32, shape_filter);
+    copy_data(b, filter);
     auto c = backend->create_tensor(element::i64, Shape{shapes.size()}); // dynamic data batch shape
     copy_data(c, shapes);
     handle->call_with_validate({result}, {a, b, c});

@@ -30,7 +30,7 @@ namespace ngraph
             class NGRAPH_API ReduceProd : public util::ArithmeticReductionKeepDims
             {
             public:
-                static constexpr NodeTypeInfo type_info{"Product", 1};
+                static constexpr NodeTypeInfo type_info{"ReduceProd", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a product reduction operation.
                 ReduceProd() = default;
