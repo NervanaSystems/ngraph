@@ -1131,7 +1131,6 @@ TEST(constant_folding, const_reduce_logical_and__keepdims_3d)
 
     const Shape expected_out_shape{1, 2, 1};
     ASSERT_EQ(new_const->get_shape(), expected_out_shape);
-    std::cout << new_const->get_shape() << std::endl;
 
     const auto values_out = new_const->get_vector<char>();
 
