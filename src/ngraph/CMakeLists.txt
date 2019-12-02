@@ -273,6 +273,10 @@ set (SRC
     op/power.hpp
     op/product.cpp
     op/product.hpp
+    op/reduce_logical_and.cpp
+    op/reduce_logical_and.hpp
+    op/reduce_logical_or.cpp
+    op/reduce_logical_or.hpp
     op/reduce_prod.cpp
     op/reduce_prod.hpp
     op/reduce_mean.cpp
@@ -431,6 +435,8 @@ set (SRC
     op/util/fused_op.hpp
     op/util/index_reduction.cpp
     op/util/index_reduction.hpp
+    op/util/logical_reduction_keep_dims.hpp
+    op/util/logical_reduction_keep_dims.cpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
     op/util/rnn_cell_base.cpp
