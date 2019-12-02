@@ -2836,7 +2836,7 @@ TEST(type_prop, conv_bprop_data_v1_output_partial_shape_dynamic)
     auto padding_end = CoordinateDiff{0, 0};
 
     auto conv1 = make_shared<op::v1::ConvolutionBackpropData>(
-        filters, deltas, data_batch_shape, strides, dilations, padding_begin, padding_end);
+        deltas, filters, data_batch_shape, strides, padding_begin, padding_end, dilations);
 
     ASSERT_TRUE(conv1->get_output_partial_shape(0).is_dynamic());
 }
