@@ -21,6 +21,10 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     endif()
 endif()
 
+option(NGRAPH_FLUID_ENABLE "Enable build for PaddlePaddle Fluid support" OFF)
+NORMALIZE_BOOL(NGRAPH_FLUID_ENABLE)
+message(STATUS "NGRAPH_FLUID_ENABLE:                  ${NGRAPH_FLUID_ENABLE}")
+
 if (NGRAPH_FLUID_ENABLE)
     add_subdirectory(fluid)
 endif()
