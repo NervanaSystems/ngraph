@@ -22,25 +22,28 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise hyperbolic tangent operation.
-        class Tanh : public util::UnaryElementwiseArithmetic
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Tanh", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a hyperbolic tangent operation.
-            ///
-            /// \param arg Node that produces the input tensor.
-            Tanh(const Output<Node>& arg);
-            Tanh() = default;
+            /// \brief Elementwise hyperbolic tangent operation.
+            class NGRAPH_API Tanh : public util::UnaryElementwiseArithmetic
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Tanh", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a hyperbolic tangent operation.
+                ///
+                /// \param arg Node that produces the input tensor.
+                Tanh(const Output<Node>& arg);
+                Tanh() = default;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+            };
+        }
+        using v0::Tanh;
     }
 }

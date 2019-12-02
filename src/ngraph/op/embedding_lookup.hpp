@@ -23,39 +23,43 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Returns embeddings for given indices
-        class EmbeddingLookup : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"EmbeddingLookup", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a EmbeddingLookup operation.
-            EmbeddingLookup() = default;
-            /// \brief Constructs a EmbeddingLookup operation.
-            ///
-            /// EmbeddingLookup constructs an output tensor by replacing every index in a given
-            /// input tensor with a row (from the weights matrix) at that index
-            ///
-            /// \param data The input indices for tokens to be translated into embeddings
-            /// \param weights is a dense matrix [N,M] where each row 0..N
-            /// corresponds to an embedding (i.e. typically, a vector of real numbers) of length M
-            EmbeddingLookup(const Output<Node>& data, const Output<Node>& weights)
-                : Op({data, weights})
+            /// \brief Returns embeddings for given indices
+            class NGRAPH_API EmbeddingLookup : public Op
             {
-                constructor_validate_and_infer_types();
-            }
+            public:
+                static constexpr NodeTypeInfo type_info{"EmbeddingLookup", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a EmbeddingLookup operation.
+                EmbeddingLookup() = default;
+                /// \brief Constructs a EmbeddingLookup operation.
+                ///
+                /// EmbeddingLookup constructs an output tensor by replacing every index in a given
+                /// input tensor with a row (from the weights matrix) at that index
+                ///
+                /// \param data The input indices for tokens to be translated into embeddings
+                /// \param weights is a dense matrix [N,M] where each row 0..N
+                /// corresponds to an embedding (i.e. typically, a vector of real numbers) of length
+                /// M
+                EmbeddingLookup(const Output<Node>& data, const Output<Node>& weights)
+                    : Op({data, weights})
+                {
+                    constructor_validate_and_infer_types();
+                }
 
-            void validate_and_infer_types() override;
+                void validate_and_infer_types() override;
 
-            void generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                   const NodeVector& /* deltas */) override
-            {
-                throw ngraph_error("Not yet implemented");
-            }
+                void generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                       const NodeVector& /* deltas */) override
+                {
+                    throw ngraph_error("Not yet implemented");
+                }
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        }
+        using v0::EmbeddingLookup;
     }
 }

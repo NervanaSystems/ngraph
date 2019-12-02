@@ -30,10 +30,9 @@ namespace ngraph
     namespace op
     {
         /// \brief Class for constants.
-        class Constant : public Op
+        class NGRAPH_API Constant : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Constant", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             Constant() = default;
@@ -357,10 +356,9 @@ namespace ngraph
             Constant operator=(const Constant&) = delete;
         };
 
-        class ScalarConstantLikeBase : public Constant
+        class NGRAPH_API ScalarConstantLikeBase : public Constant
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"ScalarConstantLikeBase", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             std::shared_ptr<op::Constant> as_constant() const;
@@ -374,7 +372,7 @@ namespace ngraph
         };
 
         /// \brief A scalar constant whose element type is the same as like.
-        class ScalarConstantLike : public ScalarConstantLikeBase
+        class NGRAPH_API ScalarConstantLike : public ScalarConstantLikeBase
         {
         public:
             /// \brief A scalar constant whose element type is the same as like.

@@ -29,10 +29,9 @@ namespace ngraph
         /// For example, for `a` with shape `(batch_size, n, k)`, and `b` with
         /// shape `(batch_size, k, m)`, the result of BatchMatMul will have shape
         /// `(batch_size, n, m)`, and `BatchMatMul(a, b)[i] = Dot(a[i], b[i])`.
-        class BatchMatMul : public Op
+        class NGRAPH_API BatchMatMul : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"BatchMatMul", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             BatchMatMul() = default;
