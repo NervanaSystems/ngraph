@@ -72,8 +72,8 @@ namespace ngraph
             class NGRAPH_API CumSum : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"CumSum", 0};
-                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                static const std::string type_name;
+                const std::string& description() const override { return type_name; }
                 /// \brief Constructs a cumulative summation operation.
                 CumSum() = default;
 

@@ -273,14 +273,13 @@ namespace ngraph
                                       const std::vector<std::minstd_rand>& vmsr,
                                       const bool use_seed);
 
-
-                 template <typename InputElementType, typename AxisElementType>
-                 void reference_cumsum(void* input_tensor,
-                                       void* axis_tensor,
-                                       void* out,
-                                       const Shape& tensor_shape,
-                                       const bool exclusive,
-                                       const bool reverse);
+                template <typename InputElementType, typename AxisElementType>
+                void reference_cumsum(void* input_tensor,
+                                      void* axis_tensor,
+                                      void* out,
+                                      const Shape& tensor_shape,
+                                      const bool exclusive,
+                                      const bool reverse);
             }
         }
     }

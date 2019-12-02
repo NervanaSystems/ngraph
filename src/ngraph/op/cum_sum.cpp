@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::CumSum::type_info;
+const string op::CumSum::type_name{"CumSum"};
 
 op::CumSum::CumSum(const Output<Node>& arg,
                    const Output<Node>& axis,

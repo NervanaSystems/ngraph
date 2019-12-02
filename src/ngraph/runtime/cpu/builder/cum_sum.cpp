@@ -151,8 +151,10 @@ namespace ngraph
                     FUNCTOR_CUMSUM(uint64_t, int64_t);
                 }
             }
-
-            void register_builders_cumsum_cpp() { REGISTER_OP_BUILDER(CumSum); }
+            REGISTER_OP_BUILDER(CumSum);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_cumsum_cpp() {}
+#endif
         }
     }
 }
