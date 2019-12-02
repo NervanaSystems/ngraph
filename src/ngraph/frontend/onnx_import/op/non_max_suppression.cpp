@@ -66,7 +66,8 @@ namespace ngraph
                     }
                     else
                     {
-                        score_threshold = ngraph::op::Constant::create(element::f32, Shape{}, {.0f});
+                        score_threshold =
+                            ngraph::op::Constant::create(element::f32, Shape{}, {.0f});
                     }
 
                     const auto center_point_box =
