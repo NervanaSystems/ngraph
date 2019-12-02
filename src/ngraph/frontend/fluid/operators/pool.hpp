@@ -27,65 +27,63 @@ namespace ngraph
 {
     namespace fluid
     {
-        /// \brief Fluid reduce_sum
-        class ReduceSum : public ngraph::op::util::FusedOp
+        /// \brief Fluid pool
+        class NGRAPH_API Pool : public ngraph::op::util::FusedOp
         {
         public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"FluidReduceSum", 0};
+            static constexpr NodeTypeInfo type_info{"FluidPool", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
-            ReduceSum() = default;
-            /// \brief Constructs a ReduceSum operation.
+            Pool() = default;
+            /// \brief Constructs a Pool operation.
             ///
-            /// \param data Input tensor
-            ReduceSum(const Output<Node>& data,
-                      const vector<int>& dim,
-                      bool reduce_all,
-                      bool keep_dim);
+            /// \param x Input x
+            Pool(const Output<Node>& x,
+                 const Shape& window_shape,
+                 const Strides& window_movement_strides,
+                 const Shape& padding,
+                 string pool_type);
 
             virtual NodeVector decompose_op() const override;
 
-            void validate_and_infer_types() override;
+            void pre_validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
-            vector<int> m_dim;
-            AxisSet m_reduction_axes;
-            bool m_reduce_all;
-            bool m_keep_dim;
+            Shape m_window_shape, Strides m_window_movement_strides, Shape m_padding,
+                string pool_type;
         };
 
         /// \brief Fluid reduce_sum_grad
-        class ReduceSumGrad : public ngraph::op::util::FusedOp
+        class NGRAPH_API PoolGrad : public ngraph::op::util::FusedOp
         {
         public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"FluidReduceSumGrad", 0};
+            static constexpr NodeTypeInfo type_info{"FluidPoolGrad", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
-            ReduceSumGrad() = default;
+            PoolGrad() = default;
 
-            /// \brief Constructs a ReduceSumGrad operation.
+            /// \brief Constructs a PoolGrad operation.
             ///
-            /// \param data Input tensor
-            ReduceSumGrad(const Output<Node>& x,
-                          const vector<int>& dim,
-                          bool reduce_all,
-                          bool keep_dim);
+            /// \param x Input tensor
+            PoolGrad(const Output<Node>& x,
+                     const Output<Node>& output,
+                     const Output<Node>& output_delta,
+                     const Shape& window_shape,
+                     const Strides& window_movement_strides,
+                     const Shape& padding,
+                     string pool_type);
 
             virtual NodeVector decompose_op() const override;
 
-            void validate_and_infer_types() override;
+            void pre_validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
-            vector<int> m_dim;
-            AxisSet m_reduction_axes;
-            bool m_reduce_all;
-            bool m_keep_dim;
+            Shape m_window_shape, Strides m_window_movement_strides, Shape m_padding,
+                string pool_type;
         };
     }
 }

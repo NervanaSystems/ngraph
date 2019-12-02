@@ -25,10 +25,10 @@ using namespace ngraph::fluid;
 constexpr NodeTypeInfo ReduceSum::type_info;
 
 ReduceSum::ReduceSum(const Output<Node>& x, const vector<int>& dim, bool reduce_all, bool keep_dim)
-    : FusedOp({x}),
-    m_dim(dim),
-    m_reduce_all(reduce_all),
-    m_keep_dim(keep_dim)
+    : FusedOp({x})
+    , m_dim(dim)
+    , m_reduce_all(reduce_all)
+    , m_keep_dim(keep_dim)
 {
     constructor_validate_and_infer_types();
 }
@@ -60,11 +60,14 @@ void ReduceSum::validate_and_infer_types()
 
 constexpr NodeTypeInfo ReduceSumGrad::type_info;
 
-ReduceSumGrad::ReduceSumGrad(const Output<Node>& x, const vector<int>& dim, bool reduce_all, bool keep_dim)
-    : FusedOp({x}),
-    m_dim(dim),
-    m_reduce_all(reduce_all),
-    m_keep_dim(keep_dim)
+ReduceSumGrad::ReduceSumGrad(const Output<Node>& x,
+                             const vector<int>& dim,
+                             bool reduce_all,
+                             bool keep_dim)
+    : FusedOp({x})
+    , m_dim(dim)
+    , m_reduce_all(reduce_all)
+    , m_keep_dim(keep_dim)
 {
     constructor_validate_and_infer_types();
 }
@@ -88,14 +91,14 @@ shared_ptr<Node> ReduceSumGrad::copy_with_new_args(const NodeVector& new_args) c
 
 NodeVector ReduceSumGrad::decompose_op() const
 {
-    //auto one = builder::make_constant(x.get_element_type(), x.get_shape(), 1.0);
-    //auto pi = 4.0 * std::atan(1);
-    //auto inv_sqrt_two_pi =
+    // auto one = builder::make_constant(x.get_element_type(), x.get_shape(), 1.0);
+    // auto pi = 4.0 * std::atan(1);
+    // auto inv_sqrt_two_pi =
     //    builder::make_constant(x.get_element_type(), x.get_shape(), 1.0 / std::sqrt(2.0 * pi));
-    //auto sqrt_half = builder::make_constant(x.get_element_type(), x.get_shape(), std::sqrt(0.5));
+    // auto sqrt_half = builder::make_constant(x.get_element_type(), x.get_shape(), std::sqrt(0.5));
 
-    //auto e1 = half * (one + make_shared<op::Erf>(x * sqrt_half));
-    //auto e2 = x * make_shared<op::Exp>(x * x * (-half)) * inv_sqrt_two_pi;
-    //return {e1 + e2};
+    // auto e1 = half * (one + make_shared<op::Erf>(x * sqrt_half));
+    // auto e2 = x * make_shared<op::Exp>(x * x * (-half)) * inv_sqrt_two_pi;
+    // return {e1 + e2};
     return {};
 }
