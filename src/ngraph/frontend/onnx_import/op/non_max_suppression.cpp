@@ -38,25 +38,35 @@ namespace ngraph
                     const std::shared_ptr<ngraph::Node> boxes = ng_inputs.at(0);
                     const std::shared_ptr<ngraph::Node> scores = ng_inputs.at(1);
 
-                    std::shared_ptr<ngraph::Node> max_output_boxes_per_class =
-                        ngraph::op::Constant::create(element::i64, Shape{}, {0});
+                    std::shared_ptr<ngraph::Node> max_output_boxes_per_class;
                     if (ng_inputs.size() > 2)
                     {
                         max_output_boxes_per_class = ng_inputs.at(2);
                     }
+                    else
+                    {
+                        max_output_boxes_per_class =
+                            ngraph::op::Constant::create(element::i64, Shape{}, {0});
+                    }
 
-                    std::shared_ptr<ngraph::Node> iou_threshold =
-                        ngraph::op::Constant::create(element::f32, Shape{}, {.0f});
+                    std::shared_ptr<ngraph::Node> iou_threshold;
                     if (ng_inputs.size() > 3)
                     {
                         iou_threshold = ng_inputs.at(3);
                     }
+                    else
+                    {
+                        iou_threshold = ngraph::op::Constant::create(element::f32, Shape{}, {.0f});
+                    }
 
-                    std::shared_ptr<ngraph::Node> score_threshold =
-                        ngraph::op::Constant::create(element::f32, Shape{}, {.0f});
+                    std::shared_ptr<ngraph::Node> score_threshold;
                     if (ng_inputs.size() > 4)
                     {
                         score_threshold = ng_inputs.at(4);
+                    }
+                    else
+                    {
+                        score_threshold = ngraph::op::Constant::create(element::f32, Shape{}, {.0f});
                     }
 
                     const auto center_point_box =
