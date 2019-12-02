@@ -163,6 +163,7 @@ namespace
                                DialectLoweringPass& pass);
 
     ValueHandle createZeroConstant(mlir::Type type);
+    ValueHandle createOneConstant(mlir::Type type);
 
     /// Conversion from types in the nGraph dialect to the Standard dialect.
     class NGraphTypeConverter : public TypeConverter
@@ -1198,6 +1199,8 @@ namespace
         auto pivs = makeIndexHandlePointers(ivs);
         // Steps
         auto steps = vLHS.getSteps();
+        // element type of the operand
+        Type elemTy = result->getType().dyn_cast<MemRefType>().getElementType();
         AffineLoopNestBuilder(pivs, lbs, ubs, steps)(
             // single stmt body
             [&] {
@@ -1217,35 +1220,52 @@ namespace
                 {
                     iRes(ivs) = iLHS(ivs) / iRHS(ivs);
                 }
+                // TODO(pthoreho) For all comparision operators, use
+                // edsc::intrinsics::zero_extendi(ValueHandle(iLHS(ivs)) !=
+                // ValueHandle(iRHS(ivs)), IntegerType::get(8, op->getContext()));
+                // instead of edsc::intrinsics::select once `zero_extendi` is
+                // made available in the edsc::intrinsics namescope in MLIR repo.
                 else if (isa<NGGreaterOp>(op))
                 {
-                    iRes(ivs) = edsc::intrinsics::select(
-                        ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs)), 1, 0);
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
                 }
                 else if (isa<NGLessOp>(op))
                 {
-                    iRes(ivs) = edsc::intrinsics::select(
-                        ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs)), 1, 0);
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
                 }
                 else if (isa<NGGreaterEqOp>(op))
                 {
-                    iRes(ivs) = edsc::intrinsics::select(
-                        ValueHandle(iLHS(ivs)) >= ValueHandle(iRHS(ivs)), 1, 0);
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) >= ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
                 }
                 else if (isa<NGLessEqOp>(op))
                 {
-                    iRes(ivs) = edsc::intrinsics::select(
-                        ValueHandle(iLHS(ivs)) <= ValueHandle(iRHS(ivs)), 1, 0);
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) <= ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
                 }
                 else if (isa<NGEqOp>(op))
                 {
-                    iRes(ivs) = edsc::intrinsics::select(
-                        ValueHandle(iLHS(ivs)) == ValueHandle(iRHS(ivs)), 1, 0);
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) == ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
                 }
                 else if (isa<NGNotEqOp>(op))
                 {
-                    iRes(ivs) = edsc::intrinsics::select(
-                        ValueHandle(iLHS(ivs)) != ValueHandle(iRHS(ivs)), 1, 0);
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) != ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
                 }
                 else if (isa<NGMaxOp>(op))
                 {
@@ -1382,6 +1402,30 @@ namespace
         else if (auto intTy = type.dyn_cast<IntegerType>())
         {
             return intrinsics::constant_int(0, intTy.getWidth());
+        }
+        NGRAPH_UNREACHABLE("Unsupported type");
+    }
+
+    ValueHandle createOneConstant(mlir::Type type)
+    {
+        if (auto floatTy = type.dyn_cast<FloatType>())
+        {
+            if (floatTy.isF32())
+            {
+                return intrinsics::constant_float(llvm::APFloat(1.0f), floatTy);
+            }
+            else if (floatTy.isF64())
+            {
+                return intrinsics::constant_float(llvm::APFloat(1.0f), floatTy);
+            }
+            else
+            {
+                NGRAPH_UNREACHABLE("Unsupported floating-point precision");
+            }
+        }
+        else if (auto intTy = type.dyn_cast<IntegerType>())
+        {
+            return intrinsics::constant_int(1, intTy.getWidth());
         }
         NGRAPH_UNREACHABLE("Unsupported type");
     }
