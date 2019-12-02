@@ -27,7 +27,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::Liveness : public FunctionPass
+class NGRAPH_API ngraph::pass::Liveness : public FunctionPass
 {
 public:
     bool run_on_function(std::shared_ptr<ngraph::Function>) override;

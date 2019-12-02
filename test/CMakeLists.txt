@@ -71,6 +71,7 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
+    opset1.cpp
     opset_pass/binary_elementwise_opset_pass.cpp
     opset_pass/broadcast_opset_pass.cpp
     opset_pass/convolution_opset_pass.cpp
@@ -119,6 +120,7 @@ set(SRC
     type_prop/convolution.cpp
     type_prop/convolution_bias.cpp
     type_prop/crop_and_resize.cpp
+    type_prop/deformable_psroi_pooling.cpp
     type_prop/depth_to_space.cpp
     type_prop/dequantize.cpp
     type_prop/dot.cpp
@@ -289,6 +291,7 @@ set(MULTI_TEST_SRC
     backend/convolution.in.cpp
     backend/cos.in.cpp
     backend/cosh.in.cpp
+    backend/cum_sum.in.cpp
     backend/divide.in.cpp
     backend/dot.in.cpp
     backend/dyn_broadcast.in.cpp
@@ -306,6 +309,7 @@ set(MULTI_TEST_SRC
     backend/gather.in.cpp
     backend/gelu.in.cpp
     backend/generate_mask.in.cpp
+    backend/group_convolution.in.cpp
     backend/layer_norm.in.cpp
     backend/log.in.cpp
     backend/logical_and.in.cpp
@@ -547,9 +551,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(unit-test PRIVATE -Wno-undef -Wno-reserved-id-macro)
 endif()
 
-# So many type_prop tests these days that we need to set /bigobj flag for MSVS.
+# So many type_prop tests these days that we need to set /bigobj flag for MSVC.
 # We should probably split up type_prop.cpp.
-if (MSVS)
+if (MSVC)
     target_compile_options(unit-test PRIVATE "/bigobj")
 endif()
 
@@ -605,7 +609,7 @@ endif()
 
 if (NOT NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
     # If all the runtime libraries are installed into one location, that will make life easier.
-    if (MSVS)
+    if (MSVC)
         add_custom_target(unit-test-check
             COMMAND set "PATH=${EXTERNAL_PROJECTS_ROOT}/src/ngraph/Release;${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/;${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/;${EXTERNAL_PROJECTS_ROOT}/ext_tbb-prefix/src/ext_tbb/tbb2019_20181203oss/bin/intel64/vc14;%PATH%"
             COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}

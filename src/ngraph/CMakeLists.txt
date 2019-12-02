@@ -138,14 +138,20 @@ set (SRC
     op/constant.hpp
     op/convert.cpp
     op/convert.hpp
+    op/convert_like.cpp
+    op/convert_like.hpp
     op/convolution.cpp
     op/convolution.hpp
     op/cos.cpp
     op/cos.hpp
     op/cosh.cpp
     op/cosh.hpp
+    op/cum_sum.cpp
+    op/cum_sum.hpp
     op/crop_and_resize.cpp
     op/crop_and_resize.hpp
+    op/deformable_psroi_pooling.cpp
+    op/deformable_psroi_pooling.hpp
     op/dequantize.cpp
     op/dequantize.hpp
     op/divide.cpp
@@ -269,6 +275,10 @@ set (SRC
     op/power.hpp
     op/product.cpp
     op/product.hpp
+    op/reduce_logical_and.cpp
+    op/reduce_logical_and.hpp
+    op/reduce_logical_or.cpp
+    op/reduce_logical_or.hpp
     op/reduce_prod.cpp
     op/reduce_prod.hpp
     op/reduce_mean.cpp
@@ -375,6 +385,8 @@ set (SRC
     op/fused/lstm_sequence.hpp
     op/fused/matmul.cpp
     op/fused/matmul.hpp
+    op/fused/mod.cpp
+    op/fused/mod.hpp
     op/fused/mvn.cpp
     op/fused/mvn.hpp
     op/fused/normalize_l2.cpp
@@ -425,6 +437,8 @@ set (SRC
     op/util/fused_op.hpp
     op/util/index_reduction.cpp
     op/util/index_reduction.hpp
+    op/util/logical_reduction_keep_dims.hpp
+    op/util/logical_reduction_keep_dims.cpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
     op/util/rnn_cell_base.cpp
@@ -432,6 +446,7 @@ set (SRC
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
     ops.hpp
+    opsets/opset.cpp
     partial_shape.cpp
     partial_shape.hpp
     pass/algebraic_simplification.cpp
@@ -464,6 +479,7 @@ set (SRC
     pass/constant_folding_unsqueeze.cpp
     pass/constant_folding_shape_of.cpp
     pass/constant_folding_slice.cpp
+    pass/constant_folding_strided_slice.cpp
     pass/constant_folding_transpose.cpp
     pass/constant_folding_unary.cpp
     pass/constant_folding.cpp
@@ -648,7 +664,6 @@ target_compile_definitions(ngraph
     PRIVATE
         SHARED_LIB_PREFIX="${CMAKE_SHARED_LIBRARY_PREFIX}"
         SHARED_LIB_SUFFIX="${CMAKE_SHARED_LIBRARY_SUFFIX}"
-        NGRAPH_DLL_EXPORTS
 )
 if(NGRAPH_LIB_VERSIONING_ENABLE)
     set_target_properties(ngraph PROPERTIES

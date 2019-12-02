@@ -22,21 +22,24 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief create StopGrdient op
-        class StopGradient : public util::UnaryElementwiseArithmetic
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"StopGradient", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs StopGradient
-            ///
-            /// \param arg Node that produces the input tensor.
-            StopGradient(const Output<Node>& arg);
-            StopGradient() = default;
+            /// \brief create StopGrdient op
+            class NGRAPH_API StopGradient : public util::UnaryElementwiseArithmetic
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"StopGradient", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs StopGradient
+                ///
+                /// \param arg Node that produces the input tensor.
+                StopGradient(const Output<Node>& arg);
+                StopGradient() = default;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        }
+        using v0::StopGradient;
     }
 }

@@ -26,7 +26,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::ConstantToBroadcast : public NodePass
+class NGRAPH_API ngraph::pass::ConstantToBroadcast : public NodePass
 {
 public:
     bool run_on_node(std::shared_ptr<ngraph::Node>) override;

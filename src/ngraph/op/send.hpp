@@ -24,28 +24,31 @@ namespace ngraph
 {
     namespace op
     {
-        class Send : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Send", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs an unitialized send operation.
-            Send() = default;
-            /// \brief Constructs a send operation.
-            ///
-            /// \param arg The node for input tensor
-            /// \param dest_id the target id which could be rank of node id.
-            Send(const Output<Node>& arg, int dest_id);
+            class NGRAPH_API Send : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Send", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs an unitialized send operation.
+                Send() = default;
+                /// \brief Constructs a send operation.
+                ///
+                /// \param arg The node for input tensor
+                /// \param dest_id the target id which could be rank of node id.
+                Send(const Output<Node>& arg, int dest_id);
 
-            void validate_and_infer_types() override;
+                void validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-            int get_dest_id() const;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+                int get_dest_id() const;
 
-        private:
-            int m_dest_id;
-        };
+            private:
+                int m_dest_id;
+            };
+        }
+        using v0::Send;
     }
 }
