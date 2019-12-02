@@ -40,10 +40,8 @@ TEST(opset_transform, opset1_gather_upgrade_pass)
     pass_manager.run_passes(f);
 
     auto gather_s1_result = f->get_results().at(0);
-    auto node = gather_s1_result->input(0).get_source_output().get_node_shared_ptr();
-    auto gather_v1_node = static_pointer_cast<op::v1::Gather>(node);
-
-    EXPECT_EQ(gather_v1_node->description(), "Gather");
-    EXPECT_EQ(gather_v1_node->get_version(), 1);
+    auto gather_v1_node = as_type_ptr<op::v1::Gather>(
+        gather_s1_result->input(0).get_source_output().get_node_shared_ptr());
+    ASSERT_TRUE(gather_v1_node);
     EXPECT_EQ(gather_v1_node->get_axis(), axis);
 }

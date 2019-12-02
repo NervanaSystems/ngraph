@@ -22,37 +22,41 @@ namespace ngraph
 {
     namespace op
     {
-        class ROIPooling : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"ROIPooling", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a ROIPooling operation
-            ///
-            /// \param input          Input feature map {N, C, ...}
-            /// \param coords         Coordinates of bounding boxes
-            /// \param output_size    Height/Width of ROI output features
-            /// \param spatial_scale  Ratio of input feature map over input image size
-            /// \param method         Method of pooling - Max or Bilinear
-            ROIPooling(const Output<Node>& input,
-                       const Output<Node>& coords,
-                       const Shape& output_size,
-                       const float spatial_scale,
-                       const std::string& method);
+            class NGRAPH_API ROIPooling : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"ROIPooling", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                ROIPooling() = default;
+                /// \brief Constructs a ROIPooling operation
+                ///
+                /// \param input          Input feature map {N, C, ...}
+                /// \param coords         Coordinates of bounding boxes
+                /// \param output_size    Height/Width of ROI output features
+                /// \param spatial_scale  Ratio of input feature map over input image size
+                /// \param method         Method of pooling - Max or Bilinear
+                ROIPooling(const Output<Node>& input,
+                           const Output<Node>& coords,
+                           const Shape& output_size,
+                           const float spatial_scale,
+                           const std::string& method);
 
-            void validate_and_infer_types() override;
+                void validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            const Shape& get_output_size() const { return m_output_size; }
-            float get_spatial_scale() const { return m_spatial_scale; }
-            const std::string& get_method() const { return m_method; }
-        private:
-            Shape m_output_size;
-            float m_spatial_scale;
-            std::string m_method;
-        };
+                const Shape& get_output_size() const { return m_output_size; }
+                float get_spatial_scale() const { return m_spatial_scale; }
+                const std::string& get_method() const { return m_method; }
+            private:
+                Shape m_output_size;
+                float m_spatial_scale;
+                std::string m_method;
+            };
+        }
+        using v0::ROIPooling;
     }
 }

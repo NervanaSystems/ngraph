@@ -183,7 +183,20 @@ namespace
         void runOnModule() override;
 
         SmallVector<Value*, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
-        Value* createTempTensor(Type type, PatternRewriter& rewriter);
+        /// Allocates a linear buffer for a temporary tensor
+        Value* createTempBuffer(Type type, PatternRewriter& rewriter);
+
+        /// Creates an allocation or view of a memref.
+        /// type     MemRef Type
+        /// buffer   Optional buffer value to create view over
+        /// offset   Optional offset into the buffer this view starts at
+        ///
+        /// If buffer is null, a new allocation of a memref is created.
+        /// Offset is ignored.  If buffer is non-null, then we create a temp
+        /// view over a pre-allocated buffer (see createTempBuffer)
+
+        Value*
+            createTempMemref(Type type, Value* buffer, unsigned offset, PatternRewriter& rewriter);
 
         /// Inserts dealloc Ops for each temporary allocated by AllocOp
         void insertDeallocs(PatternRewriter& rewriter);
@@ -313,44 +326,63 @@ namespace
             }
             else
             {
+                // For temporaries, we create two instructions:
+                // 1. Linear buffer allocation: If the ng value already has a buffer ID assigned,
+                //    we re-use that linear buffer SSA value, else generate an AllocOp.
+                // 2. View creation: Create a view with the tensor shape and an N-D to 1 map over
+                //    the linear buffer.
+                // If two memrefs are defined via 2 Views over the same buffer, then they share and
+                // will re-use the same buffer.
                 auto tensorType = origResult->getType().cast<NGTensorType>();
-                Value* newResult;
+                Value* newResult = nullptr;
                 Attribute bufferIdAttr = getBufferId(op);
+                Type memRefType = typeConverter.convertType(tensorType);
+
+                Value* bufferValue = nullptr;
                 if (!bufferIdAttr)
                 {
                     // Allocate new memref
-                    newResult = createTempTensor(typeConverter.convertType(tensorType), rewriter);
+                    newResult = createTempMemref(memRefType, nullptr, 0, rewriter);
                 }
                 else
                 {
                     unsigned bufferId = bufferIdAttr.cast<IntegerAttr>().getInt();
-                    // Re-use a memref if it exist, else create a new one and update map
+                    // Re-use a buffer if it exist, else create a new one and update map
                     IdToMemRefMap::iterator it = m_id_to_memref.find(bufferId);
                     if (it == m_id_to_memref.end())
                     {
-                        // create a new memref
-                        newResult =
-                            createTempTensor(typeConverter.convertType(tensorType), rewriter);
-                        m_id_to_memref[bufferId] = newResult;
+                        // create a new buffer
+                        bufferValue = createTempBuffer(memRefType, rewriter);
+                        m_id_to_memref[bufferId] = bufferValue;
                     }
                     else
                     {
-                        newResult = it->second;
+                        bufferValue = it->second;
                     }
+                    // Create a temp view over the linear buffer
+                    newResult = createTempMemref(memRefType, bufferValue, 0, rewriter);
                 }
+                NGRAPH_CHECK(newResult != nullptr, "Temp memref value is not set");
                 newResults.push_back(newResult);
             }
         }
         return newResults;
     }
 
-    Value* DialectLoweringPass::createTempTensor(Type type, PatternRewriter& rewriter)
+    Value* DialectLoweringPass::createTempBuffer(Type type, PatternRewriter& rewriter)
     {
         MemRefType memRefType = type.cast<MemRefType>();
 
         NGRAPH_CHECK(memRefType.hasStaticShape(), "Dynamic shapes are not supported");
 
-        Value* alloc = rewriter.create<mlir::AllocOp>(rewriter.getUnknownLoc(), memRefType);
+        // deduce linear buffer shape
+        unsigned sizeInBytes = memRefType.getSizeInBits() / 8;
+
+        MemRefType bufferType =
+            MemRefType::get({sizeInBytes}, IntegerType::get(8, type.getContext()), {});
+
+        Value* alloc = rewriter.create<mlir::AllocOp>(rewriter.getUnknownLoc(), bufferType);
+
         memRefsToDealloc.push_back(alloc);
 
         // TODO:
@@ -363,6 +395,45 @@ namespace
         // This is better be done via std.AllocOp but we need to make it hookable to nGraph
         // allocator call-back.
 
+        return alloc;
+    }
+
+    Value* DialectLoweringPass::createTempMemref(Type type,
+                                                 Value* buffer,
+                                                 unsigned offset,
+                                                 PatternRewriter& rewriter)
+    {
+        NGRAPH_CHECK(offset == 0, "Only zero offset is supported");
+        MemRefType memRefType = type.cast<MemRefType>();
+        if (buffer)
+        {
+            // We have a buffer to map to. Create a view over it.
+
+            // Create the N-D to 1D affine expression mapping the memref shape to the underlying
+            // linear
+            // buffer
+            // This is simply (d0, d1, d2, .. dN-1) --> d0 * S0 + d1 * S1 ... + dN-1 * SN-1
+            // Where Si is the stride along the i_th dimension
+            auto shape = memRefType.getShape();
+            SmallVector<int64_t, 4> strides(shape.size(), 0);
+            strides[shape.size() - 1] = 1;
+            for (int64_t i = shape.size() - 2; i >= 0; i--)
+            {
+                strides[i] = strides[i + 1] * shape[i + 1];
+            }
+
+            auto map = makeStridedLinearLayoutMap(strides, offset, rewriter.getContext());
+            MemRefType newMemRefType = MemRefType::get(shape, memRefType.getElementType(), map);
+            auto viewOp = rewriter.create<mlir::ViewOp>(
+                buffer->getDefiningOp()->getLoc(), newMemRefType, buffer, llvm::None);
+            return viewOp.getResult();
+        }
+
+        // No buffer, create an atomic memref without underlying buffer
+        NGRAPH_CHECK(memRefType.hasStaticShape(), "Dynamic shapes are not supported");
+
+        Value* alloc = rewriter.create<mlir::AllocOp>(rewriter.getUnknownLoc(), memRefType);
+        memRefsToDealloc.push_back(alloc);
         return alloc;
     }
 
@@ -521,7 +592,7 @@ namespace
         NGRAPH_CHECK(lhs->getType().isa<MemRefType>());
         Type elemTy = lhs->getType().dyn_cast<MemRefType>().getElementType();
 
-        LoopNestBuilder(pivs, lbs, ubs, steps)([&] {
+        AffineLoopNestBuilder(pivs, lbs, ubs, steps)([&] {
             ValueHandle val = iLHS(ivs);
             ValueHandle zero = createZeroConstant(elemTy);
             iRes(ivs) = intrinsics::select(val > zero, val, zero);
@@ -591,12 +662,14 @@ namespace
 
         {
             IndexHandle n, k;
-            LoopBuilder(&n, nLb, nUb, nStep)(
-                [&] { LoopBuilder(&k, kLb, kUb, kStep)([&] { iRes(n, k) = zeroInit; }); });
+            LoopBuilder::makeAffine(&n, nLb, nUb, nStep)([&] {
+                LoopBuilder::makeAffine(&k, kLb, kUb, kStep)([&] { iRes(n, k) = zeroInit; });
+            });
         }
-        LoopBuilder(&n, nLb, nUb, nStep)([&] {
-            LoopBuilder(&m, mLb, mUb, mStep)([&] {
-                LoopBuilder(&k, kLb, kUb, kStep)([&] { iRes(n, k) += iLhs(n, m) * iRhs(m, k); });
+        LoopBuilder::makeAffine(&n, nLb, nUb, nStep)([&] {
+            LoopBuilder::makeAffine(&m, mLb, mUb, mStep)([&] {
+                LoopBuilder::makeAffine(&k, kLb, kUb, kStep)(
+                    [&] { iRes(n, k) += iLhs(n, m) * iRhs(m, k); });
             });
         });
 
@@ -658,7 +731,7 @@ namespace
                 indexVarSteps.push_back(vOperand.step(i));
             }
 
-            LoopNestBuilder(indexVarPtrs, indexVarLbs, indexVarUbs, indexVarSteps)([&] {
+            AffineLoopNestBuilder(indexVarPtrs, indexVarLbs, indexVarUbs, indexVarSteps)([&] {
                 IndexedValue ivRes(result);
                 IndexedValue ivOperand(operand);
 
@@ -758,12 +831,12 @@ namespace
         //                   params[P_0, P_1, .. P_(A-1), indices[I_0, .., I_(M-1)],
         //                          P_(A+1), ... P_(N-1)];
 
-        LoopNestBuilder(indicesIVPtrs, indicesLbs, indicesUbs, indicesSteps)([&] {
+        AffineLoopNestBuilder(indicesIVPtrs, indicesLbs, indicesUbs, indicesSteps)([&] {
             // Load axis value from indices array and cast it to Index Type
             ValueHandle axisIdx = ValueHandle::create<IndexCastOp>(
                 (ValueHandle)iIndices(indicesIVs), rewriter.getIndexType());
 
-            LoopNestBuilder(paramsIVPtrs, paramsLbs, paramsUbs, paramsSteps)([&] {
+            AffineLoopNestBuilder(paramsIVPtrs, paramsLbs, paramsUbs, paramsSteps)([&] {
                 // construct indices for param
                 // [P_0, P_1, .. P_axis-1, Indices[I0, I1, .. I_k-1], P_axis+1, P_axis+2, .. P_n-1]
                 for (auto i = 0, j = 0; i < vParams.rank(); i++)
@@ -965,8 +1038,7 @@ namespace
 
             NGRAPH_CHECK(affineExprs.size() == isEq.size() && isEq.size() == 2 * spatialRank,
                          "Invalid number of expressions in the IntegerSet");
-            nonPaddedRange =
-                rewriter.getIntegerSet(spatialRank, 2 * spatialRank, affineExprs, isEq);
+            nonPaddedRange = IntegerSet::get(spatialRank, 2 * spatialRank, affineExprs, isEq);
         }
 
         // Initialize output to zero
@@ -975,9 +1047,9 @@ namespace
             auto resSpatialIndices = makeIndexHandles(spatialRank);
             auto resSpatialIndicesPtrs = makeIndexHandlePointers(resSpatialIndices);
 
-            LoopBuilder(&n, batchLb, batchUb, 1)([&] {
-                LoopBuilder(&k, numFiltersLb, numFiltersUb, 1)([&] {
-                    LoopNestBuilder(
+            LoopBuilder::makeAffine(&n, batchLb, batchUb, 1)([&] {
+                LoopBuilder::makeAffine(&k, numFiltersLb, numFiltersUb, 1)([&] {
+                    AffineLoopNestBuilder(
                         resSpatialIndicesPtrs, resSpatialLbs, resSpatialUbs, resSteps)([&] {
                         SmallVector<IndexHandle, 4> resIndices;
                         // Result indices
@@ -994,13 +1066,13 @@ namespace
 
         IndexHandle n, k, c;
         // Convolution loop
-        LoopBuilder(&n, batchLb, batchUb, 1)([&] {
+        LoopBuilder::makeAffine(&n, batchLb, batchUb, 1)([&] {
             // Number of filters loop
-            LoopBuilder(&k, numFiltersLb, numFiltersUb, 1)([&] {
+            LoopBuilder::makeAffine(&k, numFiltersLb, numFiltersUb, 1)([&] {
                 // Channels loop
-                LoopBuilder(&c, numChannelsLb, numChannelsUb, 1)([&] {
+                LoopBuilder::makeAffine(&c, numChannelsLb, numChannelsUb, 1)([&] {
                     // Results loop
-                    LoopNestBuilder(
+                    AffineLoopNestBuilder(
                         resSpatialIndicesPtrs, resSpatialLbs, resSpatialUbs, resSteps)([&] {
                         // Compute image start indices
                         SmallVector<IndexHandle, 4> imgStartIndices;
@@ -1017,10 +1089,10 @@ namespace
                         resIndices.insert(
                             resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
                         // Filters spatial loop
-                        LoopNestBuilder(filtersSpatialIndicesPtrs,
-                                        filtersSpatialLbs,
-                                        filtersSpatialUbs,
-                                        filtersSteps)([&] {
+                        AffineLoopNestBuilder(filtersSpatialIndicesPtrs,
+                                              filtersSpatialLbs,
+                                              filtersSpatialUbs,
+                                              filtersSteps)([&] {
                             SmallVector<IndexHandle, 4> imgIndices, filtersIndices;
                             // Image indices
                             // Here we compute the virtual start index into the padded image.
@@ -1131,7 +1203,7 @@ namespace
         NGRAPH_CHECK(lhs->getType().isa<MemRefType>());
         Type elemTy = lhs->getType().cast<MemRefType>().getElementType();
 
-        LoopNestBuilder(pivs, lbs, ubs, steps)([&] {
+        AffineLoopNestBuilder(pivs, lbs, ubs, steps)([&] {
             ValueHandle val = iLHS(ivs);
             if (isa<NGNegOp>(op))
             {
@@ -1173,7 +1245,7 @@ namespace
         auto pivs = makeIndexHandlePointers(ivs);
         // Steps
         auto steps = vLHS.getSteps();
-        LoopNestBuilder(pivs, lbs, ubs, steps)(
+        AffineLoopNestBuilder(pivs, lbs, ubs, steps)(
             // single stmt body
             [&] {
                 if (isa<NGAddOp>(op))
@@ -1266,7 +1338,7 @@ namespace
             auto pivs = makeIndexHandlePointers(ivs);
             auto steps = vRes.getSteps();
             auto initVal = vArg.lb(axis);
-            LoopNestBuilder(pivs, resLbs, resUbs, steps)(
+            AffineLoopNestBuilder(pivs, resLbs, resUbs, steps)(
                 [&] { iRes(ivs) = ValueHandle::create<IndexCastOp>(initVal, resTy); });
         }
 
@@ -1282,7 +1354,7 @@ namespace
                          "Expected integer result type in index reduction");
 
             // iterate over all argument dimensions
-            LoopNestBuilder(pAllIVs, argLbs, argUbs, steps)([&] {
+            AffineLoopNestBuilder(pAllIVs, argLbs, argUbs, steps)([&] {
                 // build a list of non-reduction IVs
                 for (auto i = 0; i < vArg.rank(); i++)
                 {

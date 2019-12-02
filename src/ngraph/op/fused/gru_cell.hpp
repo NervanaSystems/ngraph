@@ -30,137 +30,152 @@ namespace ngraph
 {
     namespace op
     {
-        ///
-        /// \brief      Class for GRU cell node.
-        ///
-        /// \note       It follows notation and equations defined as in ONNX standard:
-        ///             https://github.com/onnx/onnx/blob/master/docs/Operators.md#GRU
-        ///
-        ///             Note this class represents only single *cell* and not whole GRU *layer*.
-        ///
-        class GRUCell : public util::FusedOp, public util::RNNCellBase
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"GRUCell", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
             ///
-            /// \brief      Constructs GRUCell node.
+            /// \brief      Class for GRU cell node.
             ///
-            /// \param[in]  X                     The input tensor with shape: [batch_size,
-            /// input_size].
-            /// \param[in]  W                     The weight tensor with shape:
-            ///                                   [gates_count * hidden_size, input_size].
-            /// \param[in]  R                     The recurrence weight tensor with shape:
-            ///                                   [gates_count * hidden_size, hidden_size].
-            /// \param[in]  initial_hidden_state  The hidden state tensor at current time step with
-            ///                                   shape: [batch_size, hidden_size].
-            /// \param[in]  hidden_size           The number of hidden units for recurrent cell.
+            /// \note       It follows notation and equations defined as in ONNX standard:
+            ///             https://github.com/onnx/onnx/blob/master/docs/Operators.md#GRU
             ///
-            GRUCell(const Output<Node>& X,
-                    const Output<Node>& W,
-                    const Output<Node>& R,
-                    const Output<Node>& initial_hidden_state,
-                    std::size_t hidden_size);
+            ///             Note this class represents only single *cell* and not whole GRU *layer*.
+            ///
+            class NGRAPH_API GRUCell : public util::FusedOp, public util::RNNCellBase
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"GRUCell", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                GRUCell() = default;
+                ///
+                /// \brief      Constructs GRUCell node.
+                ///
+                /// \param[in]  X                     The input tensor with shape: [batch_size,
+                /// input_size].
+                /// \param[in]  W                     The weight tensor with shape:
+                ///                                   [gates_count * hidden_size, input_size].
+                /// \param[in]  R                     The recurrence weight tensor with shape:
+                ///                                   [gates_count * hidden_size, hidden_size].
+                /// \param[in]  initial_hidden_state  The hidden state tensor at current time step
+                /// with
+                ///                                   shape: [batch_size, hidden_size].
+                /// \param[in]  hidden_size           The number of hidden units for recurrent cell.
+                ///
+                GRUCell(const Output<Node>& X,
+                        const Output<Node>& W,
+                        const Output<Node>& R,
+                        const Output<Node>& initial_hidden_state,
+                        std::size_t hidden_size);
 
-            ///
-            /// \brief      Constructs GRUCell node.
-            ///
-            /// \param[in]  X                     The input tensor with shape: [batch_size,
-            ///                                   input_size].
-            /// \param[in]  W                     The weight tensor with shape:
-            ///                                   [gates_count * hidden_size, input_size].
-            /// \param[in]  R                     The recurrence weight tensor with shape:
-            ///                                   [gates_count * hidden_size, hidden_size].
-            /// \param[in]  initial_hidden_state  The hidden state tensor at current time step with
-            ///                                   shape: [batch_size, hidden_size].
-            /// \param[in]  hidden_size           The number of hidden units for recurrent cell.
-            /// \param[in]  activations           The vector of activation functions used inside
-            ///                                   recurrent cell.
-            /// \param[in]  activations_alpha     The vector of alpha parameters for activation
-            ///                                   functions in order respective to activation list.
-            /// \param[in]  activations_beta      The vector of beta parameters for activation
-            ///                                   functions in order respective to activation list.
-            /// \param[in]  clip                  The value defining clipping range [-clip, clip] on
-            ///                                   input of activation functions.
-            ///
-            GRUCell(const Output<Node>& X,
-                    const Output<Node>& W,
-                    const Output<Node>& R,
-                    const Output<Node>& initial_hidden_state,
-                    std::size_t hidden_size,
-                    const std::vector<std::string>& activations,
-                    const std::vector<float>& activations_alpha,
-                    const std::vector<float>& activations_beta,
-                    float clip,
-                    bool linear_before_reset);
+                ///
+                /// \brief      Constructs GRUCell node.
+                ///
+                /// \param[in]  X                     The input tensor with shape: [batch_size,
+                ///                                   input_size].
+                /// \param[in]  W                     The weight tensor with shape:
+                ///                                   [gates_count * hidden_size, input_size].
+                /// \param[in]  R                     The recurrence weight tensor with shape:
+                ///                                   [gates_count * hidden_size, hidden_size].
+                /// \param[in]  initial_hidden_state  The hidden state tensor at current time step
+                /// with
+                ///                                   shape: [batch_size, hidden_size].
+                /// \param[in]  hidden_size           The number of hidden units for recurrent cell.
+                /// \param[in]  activations           The vector of activation functions used inside
+                ///                                   recurrent cell.
+                /// \param[in]  activations_alpha     The vector of alpha parameters for activation
+                ///                                   functions in order respective to activation
+                ///                                   list.
+                /// \param[in]  activations_beta      The vector of beta parameters for activation
+                ///                                   functions in order respective to activation
+                ///                                   list.
+                /// \param[in]  clip                  The value defining clipping range [-clip,
+                /// clip] on
+                ///                                   input of activation functions.
+                ///
+                GRUCell(const Output<Node>& X,
+                        const Output<Node>& W,
+                        const Output<Node>& R,
+                        const Output<Node>& initial_hidden_state,
+                        std::size_t hidden_size,
+                        const std::vector<std::string>& activations,
+                        const std::vector<float>& activations_alpha,
+                        const std::vector<float>& activations_beta,
+                        float clip,
+                        bool linear_before_reset);
 
-            ///
-            /// \brief      Constructs GRUCell node.
-            ///
-            /// \param[in]  X                     The input tensor with shape: [batch_size,
-            /// input_size].
-            /// \param[in]  W                     The weight tensor with shape: [gates_count *
-            ///                                   hidden_size, input_size].
-            /// \param[in]  R                     The recurrence weight tensor with shape:
-            ///                                   [gates_count * hidden_size, hidden_size].
-            /// \param[in]  initial_hidden_state  The hidden state tensor at current time step with
-            ///                                   shape: [batch_size, hidden_size].
-            /// \param[in]  hidden_size           The number of hidden units for recurrent cell.
-            /// \param[in]  B                     The bias tensor for input gate with shape:
-            ///                                   [2 * gates_count * hidden_size].
-            /// \param[in]  activations           The vector of activation functions used inside
-            ///                                   recurrent cell.
-            /// \param[in]  activations_alpha     The vector of alpha parameters for activation
-            ///                                   functions in order respective to activation list.
-            /// \param[in]  activations_beta      The vector of beta parameters for activation
-            ///                                   functions in order respective to activation list.
-            /// \param[in]  clip                  The value defining clipping range [-clip, clip] on
-            ///                                   input of activation functions.
-            /// \param[in]  linear_before_reset   Whether or not to apply the linear transformation
-            ///                                   before multiplying by the output of the reset
-            ///                                   gate.
-            ///
-            GRUCell(const Output<Node>& X,
-                    const Output<Node>& W,
-                    const Output<Node>& R,
-                    const Output<Node>& initial_hidden_state,
-                    std::size_t hidden_size,
-                    const Output<Node>& B,
-                    const std::vector<std::string>& activations =
-                        std::vector<std::string>{"sigmoid", "tanh"},
-                    const std::vector<float>& activations_alpha = {},
-                    const std::vector<float>& activations_beta = {},
-                    float clip = 0.f,
-                    bool linear_before_reset = false);
+                ///
+                /// \brief      Constructs GRUCell node.
+                ///
+                /// \param[in]  X                     The input tensor with shape: [batch_size,
+                /// input_size].
+                /// \param[in]  W                     The weight tensor with shape: [gates_count *
+                ///                                   hidden_size, input_size].
+                /// \param[in]  R                     The recurrence weight tensor with shape:
+                ///                                   [gates_count * hidden_size, hidden_size].
+                /// \param[in]  initial_hidden_state  The hidden state tensor at current time step
+                /// with
+                ///                                   shape: [batch_size, hidden_size].
+                /// \param[in]  hidden_size           The number of hidden units for recurrent cell.
+                /// \param[in]  B                     The bias tensor for input gate with shape:
+                ///                                   [2 * gates_count * hidden_size].
+                /// \param[in]  activations           The vector of activation functions used inside
+                ///                                   recurrent cell.
+                /// \param[in]  activations_alpha     The vector of alpha parameters for activation
+                ///                                   functions in order respective to activation
+                ///                                   list.
+                /// \param[in]  activations_beta      The vector of beta parameters for activation
+                ///                                   functions in order respective to activation
+                ///                                   list.
+                /// \param[in]  clip                  The value defining clipping range [-clip,
+                /// clip] on
+                ///                                   input of activation functions.
+                /// \param[in]  linear_before_reset   Whether or not to apply the linear
+                /// transformation
+                ///                                   before multiplying by the output of the reset
+                ///                                   gate.
+                ///
+                GRUCell(const Output<Node>& X,
+                        const Output<Node>& W,
+                        const Output<Node>& R,
+                        const Output<Node>& initial_hidden_state,
+                        std::size_t hidden_size,
+                        const Output<Node>& B,
+                        const std::vector<std::string>& activations =
+                            std::vector<std::string>{"sigmoid", "tanh"},
+                        const std::vector<float>& activations_alpha = {},
+                        const std::vector<float>& activations_beta = {},
+                        float clip = 0.f,
+                        bool linear_before_reset = false);
 
-            virtual void pre_validate_and_infer_types() override;
-            virtual NodeVector decompose_op() const override;
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual void pre_validate_and_infer_types() override;
+                virtual NodeVector decompose_op() const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            bool get_linear_before_reset() const { return m_linear_before_reset; }
-        private:
-            /// brief Add and initialize bias input to all zeros.
-            void add_default_bias_input();
+                bool get_linear_before_reset() const { return m_linear_before_reset; }
+            private:
+                /// brief Add and initialize bias input to all zeros.
+                void add_default_bias_input();
 
-            ///
-            /// \brief The Activation function f.
-            ///
-            util::ActivationFunction m_activation_f;
-            ///
-            /// \brief The Activation function g.
-            ///
-            util::ActivationFunction m_activation_g;
+                ///
+                /// \brief The Activation function f.
+                ///
+                util::ActivationFunction m_activation_f;
+                ///
+                /// \brief The Activation function g.
+                ///
+                util::ActivationFunction m_activation_g;
 
-            static constexpr std::size_t s_gates_count{3};
-            ///
-            /// \brief Control whether or not apply the linear transformation.
-            ///
-            /// \note The linear transformation may be applied when computing the output of hidden
-            ///       gate. It's done before multiplying by the output of the reset gate.
-            ///
-            bool m_linear_before_reset;
-        };
+                static constexpr std::size_t s_gates_count{3};
+                ///
+                /// \brief Control whether or not apply the linear transformation.
+                ///
+                /// \note The linear transformation may be applied when computing the output of
+                /// hidden
+                ///       gate. It's done before multiplying by the output of the reset gate.
+                ///
+                bool m_linear_before_reset;
+            };
+        }
+        using v0::GRUCell;
     }
 }

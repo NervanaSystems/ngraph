@@ -50,6 +50,7 @@ namespace ngraph
     template <typename NodeType>
     class Output;
 
+    class AttributeVisitor;
     class Variant;
     class Node;
     using NodeVector = std::vector<std::shared_ptr<Node>>;
@@ -71,16 +72,18 @@ namespace ngraph
         class Adjoints;
     }
 
+    NGRAPH_API
     std::string node_validation_failure_loc_string(const Node* node);
 
     const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
                                                          size_t i);
+    NGRAPH_API
     const NodeVector& check_single_output_args(const NodeVector& args);
 
     const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
                                                          size_t i);
-    const NodeVector& check_single_output_args(const NodeVector& args);
 
+    NGRAPH_API
     OutputVector as_output_vector(const NodeVector& args);
     NodeVector as_node_vector(const OutputVector& values);
     /// Returns a ResultVector referencing values.
@@ -94,7 +97,7 @@ namespace ngraph
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// or a (possibly empty) tuple of values.
-    class Node : public std::enable_shared_from_this<Node>
+    class NGRAPH_API Node : public std::enable_shared_from_this<Node>
     {
         // For access to generate_adjoints.
         friend class autodiff::Adjoints;
@@ -110,13 +113,14 @@ namespace ngraph
         template <typename NodeType>
         friend class Output;
 
-    protected:
+    public:
         /// Throws if the node is invalid.
         virtual void validate_and_infer_types();
 
         // Called in constructors during transition
         void constructor_validate_and_infer_types();
 
+    protected:
         std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args(
             const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec());
         void validate_and_infer_elementwise_arithmetic(
@@ -152,11 +156,11 @@ namespace ngraph
         void safe_delete(NodeVector& nodes, bool recurse);
 
     public:
-        NGRAPH_API
         static constexpr NodeTypeInfo type_info{"Node", 0};
 
         virtual ~Node();
 
+        virtual bool visit_attributes(AttributeVisitor& visitor) { return false; }
         virtual bool is_unary_elementwise_arithmetic() const { return false; }
         virtual bool is_binary_elementwise_arithmetic() const { return false; }
         virtual bool is_binary_elementwise_comparison() const { return false; }
@@ -175,7 +179,7 @@ namespace ngraph
         /// Returns the NodeTypeInfo for the node's class.
         /// During transition to type_info, returns a dummy type_info for Node if the class
         /// has not been updated yet.
-        virtual const NodeTypeInfo& get_type_info() const { return type_info; }
+        virtual const NodeTypeInfo& get_type_info() const = 0;
         virtual const char* get_type_name() const
         {
             auto& info = get_type_info();
@@ -267,7 +271,7 @@ namespace ngraph
         virtual bool is_dynamic() const;
         virtual bool has_state() const { return false; }
         size_t get_instance_id() const { return m_instance_id; }
-        friend std::ostream& operator<<(std::ostream&, const Node&);
+        friend NGRAPH_API std::ostream& operator<<(std::ostream&, const Node&);
         virtual std::ostream& write_short_description(std::ostream&) const;
         virtual std::ostream& write_long_description(std::ostream&) const;
 
@@ -515,7 +519,6 @@ namespace ngraph
         size_t m_instance_id{m_next_instance_id.fetch_add(1)};
         std::string m_friendly_name;
         std::string m_unique_name;
-        NGRAPH_API
         static std::atomic<size_t> m_next_instance_id;
         std::unordered_set<std::string> m_provenance_tags;
         std::set<std::shared_ptr<Node>> m_provenance_group;
@@ -715,6 +718,9 @@ namespace ngraph
         std::shared_ptr<NodeType> m_node;
         size_t m_index{0};
     };
+
+    template class NGRAPH_API Input<Node>;
+    template class NGRAPH_API Output<Node>;
 
     inline Input<Node> Node::input(size_t input_index)
     {

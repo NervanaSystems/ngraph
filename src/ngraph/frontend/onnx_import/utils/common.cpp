@@ -16,6 +16,8 @@
 #include <onnx/onnx_pb.h> // onnx types
 
 #include "common.hpp"
+#include "ngraph/op/get_output_element.hpp"
+#include "validation_util.hpp"
 
 namespace ngraph
 {
@@ -60,23 +62,8 @@ namespace ngraph
                                       std::int64_t axis_range_min,
                                       std::int64_t axis_range_max)
             {
-                // Accepted range of value for axis is [axis_range_min, axis_range_max].
-                NGRAPH_CHECK(((axis >= axis_range_min) && (axis <= axis_range_max)),
-                             node.get_description(),
-                             "Parameter axis ",
-                             axis,
-                             " out of the tensor rank [-",
-                             axis_range_min,
-                             ", ",
-                             axis_range_max,
-                             "].");
-
-                if (axis < 0)
-                {
-                    axis = axis + tensor_rank;
-                }
-
-                return static_cast<size_t>(axis);
+                return ngraph::normalize_axis(
+                    node.get_description(), axis, tensor_rank, axis_range_min, axis_range_max);
             }
 
             std::vector<std::size_t> validate_axes(const ngraph::onnx_import::Node& node,
@@ -91,6 +78,24 @@ namespace ngraph
                 }
 
                 return new_axes;
+            }
+
+            ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node)
+            {
+                const auto outputs_number = node->get_output_size();
+                ngraph::NodeVector outputs(outputs_number);
+                for (int i = 0; i < outputs_number; ++i)
+                {
+                    if (node->output(i).get_node_shared_ptr()->get_output_size() == 1)
+                    {
+                        outputs[i] = node->get_output_as_single_output_node(i);
+                    }
+                    else
+                    {
+                        outputs[i] = std::make_shared<ngraph::op::GetOutputElement>(node, i);
+                    }
+                }
+                return outputs;
             }
 
         } // namespace  common

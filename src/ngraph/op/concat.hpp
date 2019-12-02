@@ -24,48 +24,52 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Concatenation operation.
-        class Concat : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Concat", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a concatenation operation.
-            Concat() = default;
-            /// \brief Constructs a concatenation operation.
-            ///
-            /// \param args               The outputs producing the input tensors.
-            /// \param axis The axis along which to concatenate the input tensors.
-            Concat(const OutputVector& args, int64_t axis);
-
-            /// \brief Constructs a concatenation operation.
-            ///
-            /// \param args               The nodes producing the input tensors.
-            /// \param axis The axis along which to concatenate the input tensors.
-            Concat(const NodeVector& args, int64_t axis);
-
-            void validate_and_infer_types() override;
-
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-
-            /// \return The concatenation axis.
-            int64_t get_concatenation_axis() const { return m_concat_axis; }
-            void set_concatenation_axis(int64_t concatenation_axis)
+            /// \brief Concatenation operation.
+            class NGRAPH_API Concat : public Op
             {
-                m_concat_axis = concatenation_axis;
-            }
-            /// \return The concatenation axis.
-            int64_t get_axis() const { return m_axis; }
-            void set_axis(int64_t axis) { m_axis = axis; }
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-            /// \ brief m_axis stores default value for all iterations
-            int64_t m_axis;
-            /// \brief m_concat_axis stores m_axis plus the number of rank for each iteration
-            int64_t m_concat_axis = -1;
-        };
+            public:
+                static constexpr NodeTypeInfo type_info{"Concat", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a concatenation operation.
+                Concat() = default;
+                /// \brief Constructs a concatenation operation.
+                ///
+                /// \param args               The outputs producing the input tensors.
+                /// \param axis The axis along which to concatenate the input tensors.
+                Concat(const OutputVector& args, int64_t axis);
+
+                /// \brief Constructs a concatenation operation.
+                ///
+                /// \param args               The nodes producing the input tensors.
+                /// \param axis The axis along which to concatenate the input tensors.
+                Concat(const NodeVector& args, int64_t axis);
+
+                bool visit_attributes(AttributeVisitor& visitor) override;
+                void validate_and_infer_types() override;
+
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+                /// \return The concatenation axis.
+                int64_t get_concatenation_axis() const { return m_concat_axis; }
+                void set_concatenation_axis(int64_t concatenation_axis)
+                {
+                    m_concat_axis = concatenation_axis;
+                }
+                /// \return The concatenation axis.
+                int64_t get_axis() const { return m_axis; }
+                void set_axis(int64_t axis) { m_axis = axis; }
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+                /// \ brief m_axis stores default value for all iterations
+                int64_t m_axis;
+                /// \brief m_concat_axis stores m_axis plus the number of rank for each iteration
+                int64_t m_concat_axis = -1;
+            };
+        }
+        using v0::Concat;
     }
 }

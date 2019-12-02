@@ -89,12 +89,17 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
             runtime::reference::floor<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
+        else if (is_type<op::v1::LogicalNot>(unary))
+        {
+            runtime::reference::logical_not<T>(
+                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+        }
         else if (is_type<op::Negative>(unary))
         {
             runtime::reference::negate<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-        else if (is_type<op::Not>(unary))
+        else if (is_type<op::v0::Not>(unary))
         {
             runtime::reference::logical_not<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
@@ -168,6 +173,9 @@ void pass::ConstantFolding::construct_constant_unary()
             break;
         case element::Type_t::dynamic:
             NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_unary_callback");
+            break;
+        case element::Type_t::u1:
+            NGRAPH_CHECK(false, "Encountered 'u1' element type in constant_unary_callback");
             break;
         case element::Type_t::boolean:
             replacement = fold_constant_unary<char>(constant_match, unary_match, func);

@@ -27,42 +27,50 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise Relu operation.
-        ///
-        class Relu : public ngraph::op::util::UnaryElementwiseArithmetic
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Relu", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            Relu() = default;
-            /// \brief Constructs a Relu operation.
+            /// \brief Elementwise Relu operation.
             ///
-            /// \param arg Node that produces the input tensor.
-            Relu(const Output<ngraph::Node>& arg);
+            class NGRAPH_API Relu : public ngraph::op::util::UnaryElementwiseArithmetic
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Relu", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Relu() = default;
+                /// \brief Constructs a Relu operation.
+                ///
+                /// \param arg Node that produces the input tensor.
+                Relu(const Output<ngraph::Node>& arg);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+            };
 
-        /// \brief Elementwise ReluBackprop operation.
-        ///
-        class ReluBackprop : public ngraph::op::util::BinaryElementwiseArithmetic
-        {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"ReluBackprop", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a ReluBackprop operation.
+            /// \brief Elementwise ReluBackprop operation.
             ///
-            /// \param arg Node that produces the relu forward input tensor.
-            ReluBackprop(std::shared_ptr<ngraph::Node> arg, std::shared_ptr<ngraph::Node> delta);
+            class NGRAPH_API ReluBackprop : public ngraph::op::util::BinaryElementwiseArithmetic
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"ReluBackprop", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                ReluBackprop()
+                    : BinaryElementwiseArithmetic(AutoBroadcastSpec::NONE)
+                {
+                }
+                /// \brief Constructs a ReluBackprop operation.
+                ///
+                /// \param arg Node that produces the relu forward input tensor.
+                ReluBackprop(std::shared_ptr<ngraph::Node> arg,
+                             std::shared_ptr<ngraph::Node> delta);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        }
+        using v0::Relu;
+        using v0::ReluBackprop;
     }
 }

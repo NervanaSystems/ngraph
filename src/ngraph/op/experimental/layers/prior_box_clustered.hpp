@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace op
     {
-        struct PriorBoxClusteredAttrs
+        struct NGRAPH_API PriorBoxClusteredAttrs
         {
             // widths         Desired widths of prior boxes
             // heights        Desired heights of prior boxes
@@ -40,31 +40,35 @@ namespace ngraph
             std::vector<float> variances;
         };
 
-        /// \brief Layer which generates prior boxes of specified sizes
-        /// normalized to input image size
-        class PriorBoxClustered : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"PriorBoxClustered", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a PriorBoxClustered operation
-            ///
-            /// \param layer_shape    Shape of layer for which prior boxes are computed
-            /// \param image_shape    Shape of image to which prior boxes are scaled
-            /// \param attrs          PriorBoxClustered attributes
-            PriorBoxClustered(const Output<Node>& layer_shape,
-                              const Output<Node>& image_shape,
-                              const PriorBoxClusteredAttrs& attrs);
+            /// \brief Layer which generates prior boxes of specified sizes
+            /// normalized to input image size
+            class NGRAPH_API PriorBoxClustered : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"PriorBoxClustered", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                PriorBoxClustered() = default;
+                /// \brief Constructs a PriorBoxClustered operation
+                ///
+                /// \param layer_shape    Shape of layer for which prior boxes are computed
+                /// \param image_shape    Shape of image to which prior boxes are scaled
+                /// \param attrs          PriorBoxClustered attributes
+                PriorBoxClustered(const Output<Node>& layer_shape,
+                                  const Output<Node>& image_shape,
+                                  const PriorBoxClusteredAttrs& attrs);
 
-            void validate_and_infer_types() override;
+                void validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            const PriorBoxClusteredAttrs& get_attrs() const { return m_attrs; }
-        private:
-            PriorBoxClusteredAttrs m_attrs;
-        };
+                const PriorBoxClusteredAttrs& get_attrs() const { return m_attrs; }
+            private:
+                PriorBoxClusteredAttrs m_attrs;
+            };
+        }
+        using v0::PriorBoxClustered;
     }
 }

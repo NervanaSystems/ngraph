@@ -22,27 +22,32 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Computes minimum index along a specified axis for a given tensor
-        class ArgMax : public op::util::IndexReduction
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"ArgMax", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a ArgMax operation.
-            ArgMax() = default;
-            /// \brief Constructs a ArgMax operation.
-            ///
-            /// \param arg The input tensor
-            /// \param axis The axis along which to compute an index for maximum
-            /// \param index_element_type produce indices. Currently, only int64 or int32 are
-            ///                           supported
-            ArgMax(const Output<Node>& arg, size_t axis, const element::Type& index_element_type);
+            /// \brief Computes minimum index along a specified axis for a given tensor
+            class NGRAPH_API ArgMax : public op::util::IndexReduction
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"ArgMax", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a ArgMax operation.
+                ArgMax() = default;
+                /// \brief Constructs a ArgMax operation.
+                ///
+                /// \param arg The input tensor
+                /// \param axis The axis along which to compute an index for maximum
+                /// \param index_element_type produce indices. Currently, only int64 or int32 are
+                ///                           supported
+                ArgMax(const Output<Node>& arg,
+                       size_t axis,
+                       const element::Type& index_element_type);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-
-            virtual std::shared_ptr<Node> get_default_value() const override;
-        };
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
+                virtual std::shared_ptr<Node> get_default_value() const override;
+            };
+        }
+        using v0::ArgMax;
     }
 }

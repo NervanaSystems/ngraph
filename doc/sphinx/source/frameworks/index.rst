@@ -1,3 +1,5 @@
+:orphan:
+
 .. frameworks/index.rst
 
 Working with Frameworks
@@ -11,4 +13,4 @@ Working with Frameworks
    onnx_integ.rst 
    paddle_integ.rst
    tensorflow_connect.rst
-   other.rst
+   other/index.rst

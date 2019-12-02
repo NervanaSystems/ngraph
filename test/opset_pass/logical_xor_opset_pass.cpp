@@ -40,10 +40,8 @@ TEST(opset_transform, opset1_logical_xor_upgrade_pass)
 
     const auto pass_replacement_node =
         f->get_result()->input(0).get_source_output().get_node_shared_ptr();
-    const auto xor_v1 = static_pointer_cast<op::v1::LogicalXor>(pass_replacement_node);
-
-    EXPECT_EQ(xor_v1->description(), "LogicalXor");
-    EXPECT_EQ(xor_v1->get_version(), 1);
+    const auto xor_v1 = as_type_ptr<op::v1::LogicalXor>(pass_replacement_node);
+    ASSERT_TRUE(xor_v1);
 
     const auto values_out_element_type = xor_v1->output(0).get_element_type();
     EXPECT_EQ(values_out_element_type, element::boolean);
@@ -63,10 +61,8 @@ TEST(opset_transform, opset1_logical_xor_downgrade_pass)
 
     const auto pass_replacement_node =
         f->get_result()->input(0).get_source_output().get_node_shared_ptr();
-    const auto xor_v0 = static_pointer_cast<op::v0::Xor>(pass_replacement_node);
-
-    EXPECT_EQ(xor_v0->description(), "Xor");
-    EXPECT_EQ(xor_v0->get_version(), 0);
+    const auto xor_v0 = as_type_ptr<op::v0::Xor>(pass_replacement_node);
+    ASSERT_TRUE(xor_v0);
 
     const auto values_out_element_type = xor_v0->output(0).get_element_type();
     EXPECT_EQ(values_out_element_type, element::boolean);

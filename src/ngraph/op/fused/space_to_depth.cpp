@@ -25,11 +25,19 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::SpaceToDepth::type_info;
 
-op::SpaceToDepth::SpaceToDepth(const Output<Node>& data, const size_t block_size)
+op::SpaceToDepth::SpaceToDepth(const Output<Node>& data,
+                               const SpaceToDepthMode& mode,
+                               size_t block_size)
     : FusedOp({data})
     , m_blocksize(block_size)
+    , m_mode(mode)
 {
     constructor_validate_and_infer_types();
+}
+
+op::SpaceToDepth::SpaceToDepth(const Output<Node>& data, const std::string& mode, size_t block_size)
+    : SpaceToDepth(data, mode_from_string(mode), block_size)
+{
 }
 
 NodeVector op::SpaceToDepth::decompose_op() const
@@ -74,7 +82,17 @@ NodeVector op::SpaceToDepth::decompose_op() const
     // rearrange them so as appropriate chunks of data where close to their
     // destination place. Finally squeeze data from respective dimensions.
     Output<Node> flat_node = builder::reshape(data, Shape{n, c, h_flat, bs, w_flat, bs});
-    flat_node = builder::reorder_axes(flat_node, {0, 3, 5, 1, 2, 4});
+    switch (m_mode)
+    {
+    case SpaceToDepthMode::DEPTH_FIRST:
+    {
+        flat_node = builder::reorder_axes(flat_node, {0, 1, 3, 5, 2, 4});
+        break;
+    }
+    case SpaceToDepthMode::BLOCKS_FIRST:
+    default: { flat_node = builder::reorder_axes(flat_node, {0, 3, 5, 1, 2, 4});
+    }
+    }
     return NodeVector{builder::reshape(flat_node, Shape{n, c_high, h_flat, w_flat})};
 }
 
@@ -84,5 +102,17 @@ shared_ptr<Node> op::SpaceToDepth::copy_with_new_args(const NodeVector& new_args
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<SpaceToDepth>(new_args.at(0), m_blocksize);
+    return make_shared<SpaceToDepth>(new_args.at(0), m_mode, m_blocksize);
+}
+
+op::SpaceToDepth::SpaceToDepthMode op::SpaceToDepth::mode_from_string(const std::string& mode) const
+{
+    static const std::map<std::string, SpaceToDepthMode> allowed_values = {
+        {"blocks_first", SpaceToDepthMode::BLOCKS_FIRST},
+        {"depth_first", SpaceToDepthMode::DEPTH_FIRST}};
+
+    NODE_VALIDATION_CHECK(
+        this, allowed_values.count(mode) > 0, "Invalid 'depth_to_space_mode' value passed in.");
+
+    return allowed_values.at(mode);
 }

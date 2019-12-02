@@ -34,7 +34,7 @@ namespace ngraph
             ///
             /// \note       It holds all common attributes.
             ///
-            class RNNCellBase
+            class NGRAPH_API RNNCellBase
             {
             public:
                 ///
@@ -55,6 +55,8 @@ namespace ngraph
                             const std::vector<std::string>& activations,
                             const std::vector<float>& activations_alpha,
                             const std::vector<float>& activations_beta);
+
+                RNNCellBase() = default;
 
                 std::size_t get_hidden_size() const { return m_hidden_size; }
                 float get_clip() const { return m_clip; }
@@ -117,12 +119,12 @@ namespace ngraph
                 ///
                 std::shared_ptr<Node> clip(const Output<Node>& data) const;
 
-            private:
-                const std::size_t m_hidden_size;
-                const float m_clip;
-                const std::vector<std::string> m_activations;
-                const std::vector<float> m_activations_alpha;
-                const std::vector<float> m_activations_beta;
+            protected:
+                std::size_t m_hidden_size;
+                float m_clip;
+                std::vector<std::string> m_activations;
+                std::vector<float> m_activations_alpha;
+                std::vector<float> m_activations_beta;
             };
         } // namespace util
     }     // namespace op

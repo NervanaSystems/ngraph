@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/attribute_adapter.hpp"
 #include "ngraph/deprecated.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/ngraph_visibility.hpp"
@@ -49,13 +50,14 @@ namespace ngraph
             i16,
             i32,
             i64,
+            u1,
             u8,
             u16,
             u32,
             u64
         };
 
-        class Type
+        class NGRAPH_API Type
         {
         public:
             Type()
@@ -95,7 +97,7 @@ namespace ngraph
             bool operator==(const Type& other) const;
             bool operator!=(const Type& other) const { return !(*this == other); }
             bool operator<(const Type& other) const;
-            friend std::ostream& operator<<(std::ostream&, const Type&);
+            friend NGRAPH_API std::ostream& operator<<(std::ostream&, const Type&);
             static std::vector<const Type*> get_known_types();
 
             /// \brief Checks whether this element type is merge-compatible with `t`.
@@ -139,6 +141,7 @@ namespace ngraph
         extern NGRAPH_API const Type i16;
         extern NGRAPH_API const Type i32;
         extern NGRAPH_API const Type i64;
+        extern NGRAPH_API const Type u1;
         extern NGRAPH_API const Type u8;
         extern NGRAPH_API const Type u16;
         extern NGRAPH_API const Type u32;
@@ -150,34 +153,48 @@ namespace ngraph
             throw std::invalid_argument("Unknown type");
         }
         template <>
-        Type from<char>();
+        NGRAPH_API Type from<char>();
         template <>
-        Type from<bool>();
+        NGRAPH_API Type from<bool>();
         template <>
-        Type from<float>();
+        NGRAPH_API Type from<float>();
         template <>
-        Type from<double>();
+        NGRAPH_API Type from<double>();
         template <>
-        Type from<int8_t>();
+        NGRAPH_API Type from<int8_t>();
         template <>
-        Type from<int16_t>();
+        NGRAPH_API Type from<int16_t>();
         template <>
-        Type from<int32_t>();
+        NGRAPH_API Type from<int32_t>();
         template <>
-        Type from<int64_t>();
+        NGRAPH_API Type from<int64_t>();
         template <>
-        Type from<uint8_t>();
+        NGRAPH_API Type from<uint8_t>();
         template <>
-        Type from<uint16_t>();
+        NGRAPH_API Type from<uint16_t>();
         template <>
-        Type from<uint32_t>();
+        NGRAPH_API Type from<uint32_t>();
         template <>
-        Type from<uint64_t>();
+        NGRAPH_API Type from<uint64_t>();
         template <>
-        Type from<ngraph::bfloat16>();
+        NGRAPH_API Type from<ngraph::bfloat16>();
         template <>
-        Type from<ngraph::float16>();
+        NGRAPH_API Type from<ngraph::float16>();
 
+        NGRAPH_API
         std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
     }
+    template <>
+    class AttributeAdapter<element::Type> : public ValueReference<element::Type>,
+                                            public ValueAccessor<void>
+    {
+    public:
+        AttributeAdapter(element::Type& value)
+            : ValueReference<element::Type>(value)
+        {
+        }
+        NGRAPH_API
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<element::Type>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 }
