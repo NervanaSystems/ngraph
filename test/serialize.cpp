@@ -804,3 +804,51 @@ TEST(serialize, space_to_depth)
     EXPECT_EQ(depth_to_space_out->get_block_size(), block_size);
     EXPECT_EQ(depth_to_space_out->get_mode(), mode);
 }
+
+TEST(serialize, deformable_psroi_pooling)
+{
+    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto coords = make_shared<op::Parameter>(element::f32, Shape{1, 1});
+    auto offsets = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    const int64_t output_dim = 1;
+    const int64_t group_size = 2;
+    const float spatial_scale = 3;
+    std::string mode = "bilinear_deformable";
+    int64_t spatial_bins_x = 4;
+    int64_t spatial_bins_y = 5;
+    float trans_std = 6.1f;
+    int64_t part_size = 7;
+
+    auto def_psroi_pool_in = make_shared<op::v1::DeformablePSROIPooling>(input,
+                                                                         coords,
+                                                                         offsets,
+                                                                         output_dim,
+                                                                         spatial_scale,
+                                                                         group_size,
+                                                                         mode,
+                                                                         spatial_bins_x,
+                                                                         spatial_bins_y,
+                                                                         trans_std,
+                                                                         part_size);
+
+    auto result = make_shared<op::Result>(def_psroi_pool_in);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{input, coords, offsets});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_def_psroi_pool = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto def_psroi_pool_out = as_type_ptr<op::v1::DeformablePSROIPooling>(g_def_psroi_pool);
+
+    EXPECT_EQ(def_psroi_pool_out->description(), "DeformablePSROIPooling");
+    EXPECT_EQ(def_psroi_pool_out->get_version(), 1);
+
+    EXPECT_EQ(def_psroi_pool_out->get_output_dim(), output_dim);
+    EXPECT_EQ(def_psroi_pool_out->get_group_size(), group_size);
+    EXPECT_EQ(def_psroi_pool_out->get_spatial_scale(), spatial_scale);
+    EXPECT_EQ(def_psroi_pool_out->get_mode(), mode);
+    EXPECT_EQ(def_psroi_pool_out->get_spatial_bins_x(), spatial_bins_x);
+    EXPECT_EQ(def_psroi_pool_out->get_spatial_bins_y(), spatial_bins_y);
+    EXPECT_EQ(def_psroi_pool_out->get_trans_std(), trans_std);
+    EXPECT_EQ(def_psroi_pool_out->get_part_size(), part_size);
+}
