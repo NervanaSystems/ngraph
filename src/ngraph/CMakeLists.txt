@@ -729,16 +729,21 @@ endif()
 #-----------------------------------------------------------------------------------------------
 
 # nGraph
-install(TARGETS ngraph DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT ngraphTargets)  # libngraph.so
-install(DIRECTORY
-    ${CMAKE_CURRENT_SOURCE_DIR}/
-    DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph"
+install(TARGETS ngraph EXPORT ngraphTargets
+        RUNTIME DESTINATION ${NGRAPH_INSTALL_LIB}
+        ARCHIVE DESTINATION ${NGRAPH_INSTALL_LIB}
+        LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB}
+        COMPONENT ngraph)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
+    DESTINATION ${NGRAPH_INSTALL_INCLUDE}/ngraph
+    COMPONENT ngraph
     FILES_MATCHING
         PATTERN "*.hpp"
         PATTERN "*.h"
 )
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/version.hpp
-    DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph")
+    DESTINATION ${NGRAPH_INSTALL_INCLUDE}/ngraph
+    COMPONENT ngraph)
 
 set(CPACK_GENERATOR "DEB")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
