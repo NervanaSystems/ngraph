@@ -42,7 +42,7 @@ op::v1::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
                                            const CoordinateDiff& pads_end,
                                            const Strides& dilations,
                                            const PadType& auto_pad)
-    : FusedOp({data_batch, filters})
+    : Op({data_batch, filters})
     , m_strides(strides)
     , m_dilations(dilations)
     , m_pads_begin(pads_begin)
@@ -159,7 +159,7 @@ op::v1::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
     const Strides& dilations,
     const PadType& auto_pad,
     const CoordinateDiff& output_padding)
-    : FusedOp({data, filters, output_shape})
+    : Op({data, filters, output_shape})
     , m_strides(strides)
     , m_dilations(dilations)
     , m_pads_begin(pads_begin)
@@ -179,7 +179,7 @@ op::v1::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
     const Strides& dilations,
     const PadType& auto_pad,
     const CoordinateDiff& output_padding)
-    : FusedOp({data, filters})
+    : Op({data, filters})
     , m_strides(strides)
     , m_dilations(dilations)
     , m_pads_begin(pads_begin)

@@ -28,7 +28,7 @@ namespace ngraph
         namespace v1
         {
             /// \brief Batched convolution operation, with optional window dilation and stride.
-            class NGRAPH_API GroupConvolution : public ngraph::op::util::FusedOp
+            class NGRAPH_API GroupConvolution : public Op
             {
             public:
                 static constexpr NodeTypeInfo type_info{"GroupConvolution", 1};
@@ -87,10 +87,6 @@ namespace ngraph
                 /// \return The default value for Convolution.
                 virtual std::shared_ptr<Node> get_default_value() const override;
 
-                virtual NodeVector decompose_op() const override
-                {
-                    // fake fused
-                }
             protected:
                 Strides m_strides;
                 Strides m_dilations;
@@ -100,7 +96,7 @@ namespace ngraph
             };
 
             /// \brief Data batch backprop for batched convolution operation.
-            class NGRAPH_API GroupConvolutionBackpropData : public ngraph::op::util::FusedOp
+            class NGRAPH_API GroupConvolutionBackpropData : public Op
             {
             public:
                 static constexpr NodeTypeInfo type_info{"GroupConvolutionBackpropData", 1};
@@ -183,10 +179,6 @@ namespace ngraph
                     m_output_padding = output_padding;
                 }
 
-                virtual NodeVector decompose_op() const override
-                {
-                    // fake fused
-                }
             protected:
                 Strides m_strides;
                 Strides m_dilations;
