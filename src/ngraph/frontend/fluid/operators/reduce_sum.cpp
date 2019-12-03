@@ -67,7 +67,15 @@ NodeVector ReduceSum::decompose_op() const
 
 void ReduceSum::validate_and_infer_types()
 {
-    set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
+    auto shape = get_input_partial_shape(0);
+    if (shape.is_dynamic())
+    {
+        set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
+    }
+    else
+    {
+        FusedOp::validate_and_infer_types();
+    }
 }
 
 shared_ptr<Node> ReduceSum::copy_with_new_args(const NodeVector& new_args) const
