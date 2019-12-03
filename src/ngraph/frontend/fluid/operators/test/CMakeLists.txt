@@ -24,7 +24,7 @@ if(NOT NGRAPH_CPU_ENABLE)
     return()
 endif()
 
-message(STATUS "unit tests enabled")
+message(STATUS "fluid tests enabled")
 
 if(LINUX)
     set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
