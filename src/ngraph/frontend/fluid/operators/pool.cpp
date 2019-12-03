@@ -14,13 +14,17 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cmath>
-
-#include "ngraph/builder/make_constant.hpp"
 #include "ngraph/frontend/fluid/operators/pool.hpp"
+#include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/max_pool.hpp"
 
 using namespace std;
 using namespace ngraph::fluid;
+
+static size_t calculate_adaptive(size_t input_dim, size_t window_dim)
+{
+    return floor(input_dim / window_dim);
+}
 
 constexpr NodeTypeInfo Pool::type_info;
 
@@ -29,12 +33,18 @@ Pool::Pool(const Output<Node>& x,
            const Strides& window_movement_strides,
            const Shape& padding,
            const bool global_pooling,
+           const bool ceil_mode,
+           const bool exclusive,
+           const bool adaptive,
            const string pooling_type)
     : FusedOp({x})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding(padding)
     , m_global_pooling(global_pooling)
+    , m_ceil_mode(ceil_mode)
+    , m_exclusive(exclusive)
+    , m_adaptive(adaptive)
     , m_pooling_type(pooling_type)
 {
     constructor_validate_and_infer_types();
@@ -44,42 +54,88 @@ NodeVector Pool::decompose_op() const
 {
     auto x = input_value(0);
     auto x_shape = get_input_shape(0);
+    Shape window_shape = get_window_shape();
+    Strides strides = get_window_movement_strides();
+    Shape padding = get_padding();
+    bool global_pooling = get_global_pooling();
+    bool ceil_mode = get_ceil_mode();
+    bool exclusive = get_exclusive();
+    bool adaptive = get_adaptive();
+    string pooling_type = get_pooling_type();
 
     NODE_VALIDATION_CHECK(
-        this, x_shape.size() - 2 == m_window_shape.size(), "Supporting 2d pooling only");
+        this, x_shape.size() - 2 == window_shape.size(), "Supporting 2d pooling only");
 
-    return {};
+    if (global_pooling)
+    {
+        for (size_t i = 0; i < window_shape.size(); ++i)
+        {
+            padding[i] = 0;
+            window_shape[i] = x_shape[i + 2];
+        }
+    }
+
+    shared_ptr<Node> pool;
+
+    if (pooling_type == "max")
+    {
+        pool = make_shared<op::MaxPool>(x, window_shape, strides, padding, padding);
+    }
+    else if (pooling_type == "avg")
+    {
+        if (adaptive)
+        {
+            if (x_shape.size() == 4)
+            {
+                strides[0] = calculate_adaptive(x_shape[2], window_shape[0]);
+                strides[1] = calculate_adaptive(x_shape[3], window_shape[1]);
+            }
+
+            pool = make_shared<op::AvgPool>(x, window_shape, strides);
+        }
+        else
+        {
+            if (padding[0] == 0 && padding[1] == 0)
+            {
+                exclusive = false;
+            }
+
+            pool = make_shared<op::AvgPool>(x, window_shape, strides, padding, padding, !exclusive);
+        }
+    }
+    else
+    {
+        throw ngraph_error("Unsupported pooling type");
+    }
+
+    return {pool};
 }
 
 shared_ptr<Node> Pool::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
 
     return make_shared<Pool>(new_args.at(0),
-                             m_window_shape,
-                             m_window_movement_strides,
-                             m_padding,
-                             m_global_pooling,
-                             m_pooling_type);
+                             get_window_shape(),
+                             get_window_movement_strides(),
+                             get_padding(),
+                             get_global_pooling(),
+                             get_ceil_mode(),
+                             get_exclusive(),
+                             get_adaptive(),
+                             get_pooling_type());
 }
 
-void Pool::pre_validate_and_infer_types()
+void Pool::validate_and_infer_types()
 {
-    element::Type input_element_type = get_input_element_type(0);
-    PartialShape input_pshape = get_input_partial_shape(0);
-
-    NODE_VALIDATION_CHECK(this,
-                          input_element_type.is_dynamic() || input_element_type.is_real(),
-                          "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
-                          input_element_type,
-                          ").");
-
-    if (input_pshape.is_dynamic())
+    auto shape = get_input_partial_shape(0);
+    if (shape.is_dynamic())
     {
-        set_output_type(0, input_element_type, input_pshape);
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
+    }
+    else
+    {
+        FusedOp::validate_and_infer_types();
     }
 }
 
@@ -103,15 +159,18 @@ PoolGrad::PoolGrad(const Output<Node>& x,
     constructor_validate_and_infer_types();
 }
 
-void PoolGrad::pre_validate_and_infer_types()
+void PoolGrad::validate_and_infer_types()
 {
-    element::Type input_element_type = get_input_element_type(0);
-
-    NODE_VALIDATION_CHECK(this,
-                          input_element_type.is_dynamic() || input_element_type.is_real(),
-                          "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
-                          input_element_type,
-                          ").");
+    auto shape = get_input_partial_shape(0);
+    if (get_input_partial_shape(0).is_dynamic() || get_input_partial_shape(1).is_dynamic() ||
+        get_input_partial_shape(2).is_dynamic())
+    {
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
+    }
+    else
+    {
+        FusedOp::validate_and_infer_types();
+    }
 }
 
 shared_ptr<Node> PoolGrad::copy_with_new_args(const NodeVector& new_args) const

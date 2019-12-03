@@ -42,20 +42,40 @@ namespace ngraph
                  const Strides& window_movement_strides,
                  const Shape& padding,
                  const bool global_pooling,
+                 const bool ceil_mode,
+                 const bool exclusive,
+                 const bool adaptive,
                  const string pooling_type);
 
             virtual NodeVector decompose_op() const override;
 
-            void pre_validate_and_infer_types() override;
+            virtual void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            const Shape& get_window_shape() const { return m_window_shape; }
+            void set_window_shape(const Shape& window_shape) { m_window_shape = window_shape; }
+            const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
+            void set_window_movement_strides(const Strides& window_movement_strides)
+            {
+                m_window_movement_strides = window_movement_strides;
+            }
+            const Shape& get_padding() const { return m_padding; }
+            void set_padding(const Shape& padding) { m_padding = padding; }
+            const bool get_global_pooling() const { return m_global_pooling; }
+            const bool get_ceil_mode() const { return m_ceil_mode; }
+            const bool get_exclusive() const { return m_exclusive; }
+            const bool get_adaptive() const { return m_adaptive; }
+            const string get_pooling_type() const { return m_pooling_type; }
         protected:
             Shape m_window_shape;
             Strides m_window_movement_strides;
             Shape m_padding;
             bool m_global_pooling;
+            bool m_ceil_mode;
+            bool m_exclusive;
+            bool m_adaptive;
             string m_pooling_type;
         };
 
@@ -81,7 +101,7 @@ namespace ngraph
 
             virtual NodeVector decompose_op() const override;
 
-            void pre_validate_and_infer_types() override;
+            virtual void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
