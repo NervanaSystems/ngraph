@@ -29,12 +29,11 @@ namespace ngraph
         {
             // \brief Computes indices of top k maximum/minimum index along a specified axis for a
             //        given tensor
-            class TopK : public Op
+            class NGRAPH_API TopK : public Op
             {
             public:
                 using SortType = TopKSortType;
 
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"TopK", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a TopK operation
@@ -114,7 +113,7 @@ namespace ngraph
         {
             /// \brief Computes indices and values of the k maximum/minimum values
             ///        for each slice along specified axis.
-            class TopK : public Op
+            class NGRAPH_API TopK : public Op
             {
             public:
                 using SortType = TopKSortType;
@@ -125,7 +124,6 @@ namespace ngraph
                     MIN
                 };
 
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"TopK", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a TopK operation

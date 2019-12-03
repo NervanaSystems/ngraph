@@ -24,10 +24,9 @@ namespace ngraph
     namespace op
     {
         /// \brief Convolution + bias forward prop for batched convolution operation.
-        class QuantizedConvolutionBias : public Op
+        class NGRAPH_API QuantizedConvolutionBias : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"QuantizedConvolutionBias", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             QuantizedConvolutionBias() = default;
@@ -63,12 +62,12 @@ namespace ngraph
             bool m_with_relu;
         };
 
-        class QuantizedConvolutionBiasAdd : public Op
+        class NGRAPH_API QuantizedConvolutionBiasAdd : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"QuantizedConvolutionBiasAdd", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            QuantizedConvolutionBiasAdd() = default;
             QuantizedConvolutionBiasAdd(const Output<Node>& data_batch,
                                         const Output<Node>& filters,
                                         const Output<Node>& bias,
@@ -103,12 +102,12 @@ namespace ngraph
             bool m_with_relu;
         };
 
-        class QuantizedConvolutionBiasSignedAdd : public Op
+        class NGRAPH_API QuantizedConvolutionBiasSignedAdd : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"QuantizedConvolutionBiasSignedAdd", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            QuantizedConvolutionBiasSignedAdd() = default;
             QuantizedConvolutionBiasSignedAdd(const Output<Node>& data_batch,
                                               const Output<Node>& filters,
                                               const Output<Node>& bias,

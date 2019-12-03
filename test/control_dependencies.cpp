@@ -47,6 +47,8 @@ using namespace std;
 class ControlDependencyOp : public ngraph::op::Op
 {
 public:
+    static constexpr NodeTypeInfo type_info{"ControlDependencyOp", 0};
+    const NodeTypeInfo& get_type_info() const override { return type_info; }
     virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override
     {
         auto clone = make_shared<ControlDependencyOp>(new_args, std::set<std::shared_ptr<Node>>{});
@@ -77,6 +79,7 @@ public:
         }
     }
 };
+constexpr NodeTypeInfo ControlDependencyOp::type_info;
 
 TEST(control_dependencies, cdep_ops)
 {

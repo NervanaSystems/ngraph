@@ -54,31 +54,35 @@ namespace ngraph
             std::string framework;
         };
 
-        class Proposal : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Proposal", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a Proposal operation
-            ///
-            /// \param class_probs     Class probability scores
-            /// \param class_logits    Class prediction logits
-            /// \param image_shape     Shape of image
-            /// \param attrs           Proposal op attributes
-            Proposal(const Output<Node>& class_probs,
-                     const Output<Node>& class_logits,
-                     const Output<Node>& image_shape,
-                     const ProposalAttrs& attrs);
+            class NGRAPH_API Proposal : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Proposal", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Proposal() = default;
+                /// \brief Constructs a Proposal operation
+                ///
+                /// \param class_probs     Class probability scores
+                /// \param class_logits    Class prediction logits
+                /// \param image_shape     Shape of image
+                /// \param attrs           Proposal op attributes
+                Proposal(const Output<Node>& class_probs,
+                         const Output<Node>& class_logits,
+                         const Output<Node>& image_shape,
+                         const ProposalAttrs& attrs);
 
-            void validate_and_infer_types() override;
+                void validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            const ProposalAttrs& get_attrs() const { return m_attrs; }
-        private:
-            ProposalAttrs m_attrs;
-        };
+                const ProposalAttrs& get_attrs() const { return m_attrs; }
+            private:
+                ProposalAttrs m_attrs;
+            };
+        }
+        using v0::Proposal;
     }
 }

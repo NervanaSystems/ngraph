@@ -41,10 +41,8 @@ TEST(opset_transform, opset1_product_upgrade_pass)
 
     const auto pass_replacement_node =
         f->get_result()->input(0).get_source_output().get_node_shared_ptr();
-    const auto reduce_prod_v1 = static_pointer_cast<op::v1::ReduceProd>(pass_replacement_node);
-
-    EXPECT_EQ(reduce_prod_v1->description(), "Product");
-    EXPECT_EQ(reduce_prod_v1->get_version(), 1);
+    const auto reduce_prod_v1 = as_type_ptr<op::v1::ReduceProd>(pass_replacement_node);
+    ASSERT_TRUE(reduce_prod_v1);
     EXPECT_EQ(reduce_prod_v1->get_keep_dims(), false);
 }
 
@@ -63,15 +61,12 @@ TEST(opset_transform, opset0_reduce_prod_downgrade_pass)
 
     const auto reshape_replacement_node =
         f->get_result()->input(0).get_source_output().get_node_shared_ptr();
-    const auto reshape = static_pointer_cast<op::Reshape>(reshape_replacement_node);
+    const auto reshape = as_type_ptr<op::Reshape>(reshape_replacement_node);
+    ASSERT_TRUE(reshape);
     const auto product_replace_node =
         reshape_replacement_node->input(0).get_source_output().get_node_shared_ptr();
-    const auto product_v0 = static_pointer_cast<op::v0::Product>(product_replace_node);
-
-    EXPECT_EQ(reshape->description(), "Reshape");
-    EXPECT_EQ(reshape->get_version(), 0);
-    EXPECT_EQ(product_v0->description(), "Product");
-    EXPECT_EQ(product_v0->get_version(), 0);
+    const auto product_v0 = as_type_ptr<op::v0::Product>(product_replace_node);
+    ASSERT_TRUE(product_v0);
 }
 
 TEST(opset_transform, opset0_reduce_prod_downgrade_pass_axes_not_constant)

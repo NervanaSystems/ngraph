@@ -45,16 +45,17 @@ TEST(opset_transform, opset1_dyn_slice_upgrade_pass)
     const auto pass_replacement_node =
         f->get_result()->input(0).get_source_output().get_node_shared_ptr();
     const auto strided_slice_v1 = as_type_ptr<op::v1::StridedSlice>(pass_replacement_node);
-
+    ASSERT_TRUE(strided_slice_v1);
     auto begin_const =
         as_type_ptr<op::Constant>(strided_slice_v1->input_value(1).get_node_shared_ptr());
+    ASSERT_TRUE(begin_const);
     auto end_const =
         as_type_ptr<op::Constant>(strided_slice_v1->input_value(2).get_node_shared_ptr());
+    ASSERT_TRUE(end_const);
     auto strides_const =
         as_type_ptr<op::Constant>(strided_slice_v1->input_value(3).get_node_shared_ptr());
+    ASSERT_TRUE(strides_const);
 
-    EXPECT_EQ(strided_slice_v1->description(), "Slice");
-    EXPECT_EQ(strided_slice_v1->get_version(), 1);
     EXPECT_EQ(strided_slice_v1->get_begin_mask(), vector<int64_t>(4, 0));
     EXPECT_EQ(strided_slice_v1->get_end_mask(), vector<int64_t>(4, 0));
     EXPECT_EQ(begin_const->get_vector<int64_t>(),
@@ -84,9 +85,7 @@ TEST(opset_transform, opset1_strided_slice_downgrade_pass)
     const auto pass_replacement_node =
         f->get_result()->input(0).get_source_output().get_node_shared_ptr();
     const auto slice_v0 = as_type_ptr<op::v0::Slice>(pass_replacement_node);
-
-    EXPECT_EQ(slice_v0->description(), "Slice");
-    EXPECT_EQ(slice_v0->get_version(), 0);
+    ASSERT_TRUE(slice_v0);
     EXPECT_EQ(slice_v0->get_lower_bounds(), Coordinate({1, 2, 0, 2}));
     EXPECT_EQ(slice_v0->get_upper_bounds(), Coordinate({5, 4, 5, 6}));
     EXPECT_EQ(slice_v0->get_strides(), Strides({1, 1, 1, 1}));

@@ -25,10 +25,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Elementwise not-equal operation.
-            class NotEqual : public util::BinaryElementwiseComparison
+            class NGRAPH_API NotEqual : public util::BinaryElementwiseComparison
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"NotEqual", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a not-equal operation.
@@ -52,10 +51,9 @@ namespace ngraph
         namespace v1
         {
             /// \brief Elementwise not-equal operation.
-            class NotEqual : public util::BinaryElementwiseComparison
+            class NGRAPH_API NotEqual : public util::BinaryElementwiseComparison
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"NotEqual", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a not-equal operation.

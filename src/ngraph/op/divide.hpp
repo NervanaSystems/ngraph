@@ -25,14 +25,16 @@ namespace ngraph
         namespace v0
         {
             /// \brief Elementwise division operation.
-            class Divide : public util::BinaryElementwiseArithmetic
+            class NGRAPH_API Divide : public util::BinaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Divide", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a division operation.
-                Divide() = default;
+                Divide()
+                    : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NONE)
+                {
+                }
                 /// \brief Constructs a division operation.
                 ///
                 /// \param arg0 Node that produces the first input tensor.
@@ -69,14 +71,17 @@ namespace ngraph
         namespace v1
         {
             /// \brief Elementwise division operation.
-            class Divide : public util::BinaryElementwiseArithmetic
+            class NGRAPH_API Divide : public util::BinaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Divide", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a division operation.
-                Divide() = default;
+                Divide()
+                    : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NUMPY)
+                {
+                }
+
                 /// \brief Constructs a division operation.
                 ///
                 /// \param arg0 Node that produces the first input tensor.

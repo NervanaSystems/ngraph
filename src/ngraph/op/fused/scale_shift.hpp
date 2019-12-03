@@ -24,30 +24,33 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Operator performing Scale Shift transformation.
-        ///
-        /// Y = Scale * Data + Shift
-        ///
-        class ScaleShift : public ngraph::op::util::FusedOp
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"ScaleShift", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            ScaleShift() = default;
-            /// \brief Constructs an ScaleShift operation.
+            /// \brief Operator performing Scale Shift transformation.
             ///
-            /// \param data Input tensor
-            /// \param scale Input tensor that scale input data
-            /// \param shift Input tensor that shift input data
-            ScaleShift(const Output<Node>& data,
-                       const Output<Node>& scale,
-                       const Output<Node>& shift);
+            /// Y = Scale * Data + Shift
+            ///
+            class NGRAPH_API ScaleShift : public ngraph::op::util::FusedOp
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"ScaleShift", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                ScaleShift() = default;
+                /// \brief Constructs an ScaleShift operation.
+                ///
+                /// \param data Input tensor
+                /// \param scale Input tensor that scale input data
+                /// \param shift Input tensor that shift input data
+                ScaleShift(const Output<Node>& data,
+                           const Output<Node>& scale,
+                           const Output<Node>& shift);
 
-            virtual NodeVector decompose_op() const override;
+                virtual NodeVector decompose_op() const override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        }
+        using v0::ScaleShift;
     }
 }

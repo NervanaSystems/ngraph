@@ -32,30 +32,34 @@ namespace ngraph
             std::vector<size_t> pads_end;
         } InterpolateAttrs;
 
-        /// \brief Layer which performs bilinear interpolation
-        class Interpolate : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Interpolate", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a Interpolate operation
-            ///
-            /// \param image	    Input image
-            /// \param output_shape Output shape of spatial axes
-            /// \param attrs        Interpolation attributes
-            Interpolate(const Output<Node>& image,
-                        const Output<Node>& output_shape,
-                        const InterpolateAttrs& attrs);
+            /// \brief Layer which performs bilinear interpolation
+            class NGRAPH_API Interpolate : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Interpolate", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Interpolate() = default;
+                /// \brief Constructs a Interpolate operation
+                ///
+                /// \param image	    Input image
+                /// \param output_shape Output shape of spatial axes
+                /// \param attrs        Interpolation attributes
+                Interpolate(const Output<Node>& image,
+                            const Output<Node>& output_shape,
+                            const InterpolateAttrs& attrs);
 
-            void validate_and_infer_types() override;
+                void validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            const InterpolateAttrs& get_attrs() const { return m_attrs; }
-        private:
-            InterpolateAttrs m_attrs;
-        };
+                const InterpolateAttrs& get_attrs() const { return m_attrs; }
+            private:
+                InterpolateAttrs m_attrs;
+            };
+        }
+        using v0::Interpolate;
     }
 }

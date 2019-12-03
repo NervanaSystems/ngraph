@@ -42,37 +42,52 @@ namespace ngraph
             float objectness_score = 0;
         } DetectionOutputAttrs;
 
-        /// \brief Layer which performs non-max suppression to
-        /// generate detection output using location and confidence predictions
-        class DetectionOutput : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"DetectionOutput", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a DetectionOutput operation
-            ///
-            /// \param box_logits			Box logits
-            /// \param class_preds			Class predictions
-            /// \param proposals			Proposals
-            /// \param aux_class_preds		Auxilary class predictions
-            /// \param aux_box_preds		Auxilary box predictions
-            /// \param attrs				Detection Output attributes
-            DetectionOutput(const Output<Node>& box_logits,
-                            const Output<Node>& class_preds,
-                            const Output<Node>& proposals,
-                            const Output<Node>& aux_class_preds,
-                            const Output<Node>& aux_box_preds,
-                            const DetectionOutputAttrs& attrs);
+            /// \brief Layer which performs non-max suppression to
+            /// generate detection output using location and confidence predictions
+            class NGRAPH_API DetectionOutput : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"DetectionOutput", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                DetectionOutput() = default;
+                /// \brief Constructs a DetectionOutput operation
+                ///
+                /// \param box_logits			Box logits
+                /// \param class_preds			Class predictions
+                /// \param proposals			Proposals
+                /// \param aux_class_preds		Auxilary class predictions
+                /// \param aux_box_preds		Auxilary box predictions
+                /// \param attrs				Detection Output attributes
+                DetectionOutput(const Output<Node>& box_logits,
+                                const Output<Node>& class_preds,
+                                const Output<Node>& proposals,
+                                const Output<Node>& aux_class_preds,
+                                const Output<Node>& aux_box_preds,
+                                const DetectionOutputAttrs& attrs);
 
-            void validate_and_infer_types() override;
+                /// \brief Constructs a DetectionOutput operation
+                ///
+                /// \param box_logits			Box logits
+                /// \param class_preds			Class predictions
+                /// \param proposals			Proposals
+                /// \param attrs				Detection Output attributes
+                DetectionOutput(const Output<Node>& box_logits,
+                                const Output<Node>& class_preds,
+                                const Output<Node>& proposals,
+                                const DetectionOutputAttrs& attrs);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                void validate_and_infer_types() override;
 
-            const DetectionOutputAttrs& get_attrs() const { return m_attrs; }
-        private:
-            DetectionOutputAttrs m_attrs;
-        };
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+                const DetectionOutputAttrs& get_attrs() const { return m_attrs; }
+            private:
+                DetectionOutputAttrs m_attrs;
+            };
+        }
+        using v0::DetectionOutput;
     }
 }

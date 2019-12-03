@@ -27,7 +27,7 @@ namespace ngraph
             /// \brief Abstract base class for fused ops, i.e ops that can be broken down into core
             ///        ngraph ops
             ///
-            class FusedOp : public Op
+            class NGRAPH_API FusedOp : public Op
             {
             public:
                 bool supports_decompose() const override { return true; }

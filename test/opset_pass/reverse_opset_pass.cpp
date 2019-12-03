@@ -41,11 +41,9 @@ TEST(opset_transform, opset1_reverse_upgrade_pass)
 
     const auto pass_replacement_node =
         f->get_result()->input(0).get_source_output().get_node_shared_ptr();
-    const auto reverse_v1 = static_pointer_cast<op::v1::Reverse>(pass_replacement_node);
-
+    const auto reverse_v1 = as_type_ptr<op::v1::Reverse>(pass_replacement_node);
+    ASSERT_TRUE(reverse_v1);
     EXPECT_EQ(reverse_v1->get_mode(), op::v1::Reverse::Mode::INDEX);
-    EXPECT_EQ(reverse_v1->description(), "Reverse");
-    EXPECT_EQ(reverse_v1->get_version(), 1);
 
     const auto& rev_axes_input_shape = reverse_v1->get_input_shape(1);
     // should match the number of elements of v0::Reverse reverse_axes attribute
@@ -69,10 +67,8 @@ TEST(opset_transform, opset0_reverse_downgrade_pass_index_mode)
 
     const auto pass_replacement_node =
         f->get_result()->input(0).get_source_output().get_node_shared_ptr();
-    const auto reverse_v0 = static_pointer_cast<op::v0::Reverse>(pass_replacement_node);
-
-    EXPECT_EQ(reverse_v0->description(), "Reverse");
-    EXPECT_EQ(reverse_v0->get_version(), 0);
+    const auto reverse_v0 = as_type_ptr<op::v0::Reverse>(pass_replacement_node);
+    ASSERT_TRUE(reverse_v0);
     EXPECT_EQ(reverse_v0->get_reversed_axes(), AxisSet({1, 2}));
 }
 
@@ -93,10 +89,8 @@ TEST(opset_transform, opset0_reverse_downgrade_pass_mask_mode)
 
     const auto pass_replacement_node =
         f->get_result()->input(0).get_source_output().get_node_shared_ptr();
-    const auto reverse_v0 = static_pointer_cast<op::v0::Reverse>(pass_replacement_node);
-
-    EXPECT_EQ(reverse_v0->description(), "Reverse");
-    EXPECT_EQ(reverse_v0->get_version(), 0);
+    const auto reverse_v0 = as_type_ptr<op::v0::Reverse>(pass_replacement_node);
+    ASSERT_TRUE(reverse_v0);
     EXPECT_EQ(reverse_v0->get_reversed_axes(), AxisSet({0, 2}));
 }
 

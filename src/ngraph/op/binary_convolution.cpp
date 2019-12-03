@@ -114,18 +114,7 @@ void op::v1::BinaryConvolution::validate_and_infer_types()
         }
     }
 
-    element::Type result_et;
     PartialShape result_shape;
-
-    NODE_VALIDATION_CHECK(
-        this,
-        element::Type::merge(result_et, data_batch_et, filters_et),
-        "Element types for data batch and filters do not match (data batch element type: ",
-        data_batch_et,
-        ", filters element type: ",
-        filters_et,
-        ").");
-
     result_shape =
         infer_convolution_forward(this,
                                   data_batch_shape,
@@ -136,7 +125,7 @@ void op::v1::BinaryConvolution::validate_and_infer_types()
                                   m_strides,
                                   m_dilations);
 
-    set_output_type(0, result_et, result_shape);
+    set_output_type(0, data_batch_et, result_shape);
 }
 
 shared_ptr<Node> op::v1::BinaryConvolution::copy_with_new_args(const NodeVector& new_args) const

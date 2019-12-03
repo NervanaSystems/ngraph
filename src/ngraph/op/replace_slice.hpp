@@ -24,7 +24,9 @@ namespace ngraph
 {
     namespace op
     {
-        // clang-format off
+        namespace v0
+        {
+            // clang-format off
         /// \brief Takes two input tensors of identical rank, with the second tensor no larger than
         ///        the first in any dimension, and returns a copy of the first input tensor with
         ///        the specified slice overwritten by the second input tensor.
@@ -49,64 +51,69 @@ namespace ngraph
         /// | Type                   | Description                                                                                                                                                                                                                 |
         /// | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$ where \f$T[i_1,\dots,i_n] = \texttt{arg1}[j_1,\dots,j_n]\f$ if \f$j_1,\dots,j_n\f$ is in bounds for `arg1` and for all \f$m\f$, \f$i_m = l_m + j_m s_m\f$, otherwise \f$\texttt{arg0}[i_1,\dots,i_n]\f$. |
-        // clang-format on
-        class ReplaceSlice : public Op
-        {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"ReplaceSlice", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            ReplaceSlice() = default;
-            /// \brief Constructs a tensor slice replacement operation.
-            ///
-            /// \param arg0 The tensor to overwrite into.
-            /// \param arg1 The tensor to write into `arg0`.
-            /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).
-            /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
-            /// \param strides The slicing strides; for example, strides of `{n,m}` means to take
-            ///                every nth row and every mth column of `arg0` as part of the
-            ///                slice to be replaced.
-            ReplaceSlice(const Output<Node>& arg0,
-                         const Output<Node>& arg1,
-                         const Coordinate& lower_bounds,
-                         const Coordinate& upper_bounds,
-                         const Strides& strides);
-
-            /// \brief Constructs a tensor slice replacement operation with unit strides; i.e.,
-            ///        every element inside the bounding box will be overwritten.
-            ///
-            /// \param arg0 The tensor to overwrite into.
-            /// \param arg1 The tensor to write into `arg0`.
-            /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).
-            /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
-            ReplaceSlice(const Output<Node>& arg0,
-                         const Output<Node>& arg1,
-                         const Coordinate& lower_bounds,
-                         const Coordinate& upper_bounds);
-
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-            void validate_and_infer_types() override;
-
-            /// \return The inclusive lower-bound coordinates.
-            const Coordinate& get_lower_bounds() const { return m_lower_bounds; }
-            void set_lower_bounds(const Coordinate& lower_bounds) { m_lower_bounds = lower_bounds; }
-            /// \return The exclusive upper-bound coordinates.
-            const Coordinate& get_upper_bounds() const { return m_upper_bounds; }
-            void set_uppper_bounds(const Coordinate& upper_bounds)
+            // clang-format on
+            class NGRAPH_API ReplaceSlice : public Op
             {
-                m_upper_bounds = upper_bounds;
-            }
-            /// \return The slicing strides.
-            const Strides& get_strides() const { return m_strides; }
-            void set_strides(const Strides& strides) { m_strides = strides; }
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+            public:
+                static constexpr NodeTypeInfo type_info{"ReplaceSlice", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                ReplaceSlice() = default;
+                /// \brief Constructs a tensor slice replacement operation.
+                ///
+                /// \param arg0 The tensor to overwrite into.
+                /// \param arg1 The tensor to write into `arg0`.
+                /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).
+                /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
+                /// \param strides The slicing strides; for example, strides of `{n,m}` means to
+                /// take
+                ///                every nth row and every mth column of `arg0` as part of the
+                ///                slice to be replaced.
+                ReplaceSlice(const Output<Node>& arg0,
+                             const Output<Node>& arg1,
+                             const Coordinate& lower_bounds,
+                             const Coordinate& upper_bounds,
+                             const Strides& strides);
 
-            Coordinate m_lower_bounds;
-            Coordinate m_upper_bounds;
-            Strides m_strides;
-        };
+                /// \brief Constructs a tensor slice replacement operation with unit strides; i.e.,
+                ///        every element inside the bounding box will be overwritten.
+                ///
+                /// \param arg0 The tensor to overwrite into.
+                /// \param arg1 The tensor to write into `arg0`.
+                /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).
+                /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
+                ReplaceSlice(const Output<Node>& arg0,
+                             const Output<Node>& arg1,
+                             const Coordinate& lower_bounds,
+                             const Coordinate& upper_bounds);
+
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+                void validate_and_infer_types() override;
+
+                /// \return The inclusive lower-bound coordinates.
+                const Coordinate& get_lower_bounds() const { return m_lower_bounds; }
+                void set_lower_bounds(const Coordinate& lower_bounds)
+                {
+                    m_lower_bounds = lower_bounds;
+                }
+                /// \return The exclusive upper-bound coordinates.
+                const Coordinate& get_upper_bounds() const { return m_upper_bounds; }
+                void set_uppper_bounds(const Coordinate& upper_bounds)
+                {
+                    m_upper_bounds = upper_bounds;
+                }
+                /// \return The slicing strides.
+                const Strides& get_strides() const { return m_strides; }
+                void set_strides(const Strides& strides) { m_strides = strides; }
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+
+                Coordinate m_lower_bounds;
+                Coordinate m_upper_bounds;
+                Strides m_strides;
+            };
+        }
+        using v0::ReplaceSlice;
     }
 }

@@ -68,6 +68,9 @@ void pass::ConstantFolding::construct_constant_range()
         case element::Type_t::dynamic:
             NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_range_callback");
             break;
+        case element::Type_t::u1:
+            NGRAPH_CHECK(false, "Encountered 'u1' element type in constant_range_callback");
+            break;
         case element::Type_t::boolean:
             replacement = fold_constant_range<char>(start_node, step_node, range);
             break;

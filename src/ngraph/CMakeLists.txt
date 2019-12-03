@@ -16,6 +16,9 @@
 
 set (SRC
     assertion.hpp
+    attribute_adapter.cpp
+    attribute_adapter.hpp
+    attribute_visitor.hpp
     autodiff/adjoints.cpp
     autodiff/adjoints.hpp
     axis_set.cpp
@@ -77,7 +80,10 @@ set (SRC
     dimension.hpp
     distributed.cpp
     distributed.hpp
+    enum_names.hpp
     except.hpp
+    factory.cpp
+    factory.hpp
     file_util.cpp
     file_util.hpp
     function.cpp
@@ -132,12 +138,20 @@ set (SRC
     op/constant.hpp
     op/convert.cpp
     op/convert.hpp
+    op/convert_like.cpp
+    op/convert_like.hpp
     op/convolution.cpp
     op/convolution.hpp
     op/cos.cpp
     op/cos.hpp
     op/cosh.cpp
     op/cosh.hpp
+    op/cum_sum.cpp
+    op/cum_sum.hpp
+    op/crop_and_resize.cpp
+    op/crop_and_resize.hpp
+    op/deformable_psroi_pooling.cpp
+    op/deformable_psroi_pooling.hpp
     op/dequantize.cpp
     op/dequantize.hpp
     op/divide.cpp
@@ -207,10 +221,14 @@ set (SRC
     op/strided_slice.hpp
     op/floor.cpp
     op/floor.hpp
+    op/floor_mod.cpp
+    op/floor_mod.hpp
     op/gather.cpp
     op/gather.hpp
     op/gather_nd.cpp
     op/gather_nd.hpp
+    op/gather_tree.cpp
+    op/gather_tree.hpp
     op/get_output_element.cpp
     op/get_output_element.hpp
     op/greater.cpp
@@ -259,6 +277,10 @@ set (SRC
     op/power.hpp
     op/product.cpp
     op/product.hpp
+    op/reduce_logical_and.cpp
+    op/reduce_logical_and.hpp
+    op/reduce_logical_or.cpp
+    op/reduce_logical_or.hpp
     op/reduce_prod.cpp
     op/reduce_prod.hpp
     op/reduce_mean.cpp
@@ -315,6 +337,8 @@ set (SRC
     op/subtract.hpp
     op/sum.cpp
     op/sum.hpp
+    op/variadic_split.cpp
+    op/variadic_split.hpp
     op/tan.cpp
     op/tan.hpp
     op/tanh.cpp
@@ -325,10 +349,14 @@ set (SRC
     op/topk.hpp
     op/xor.cpp
     op/xor.hpp
+    op/fused/batch_mat_mul_transpose.cpp
+    op/fused/batch_mat_mul_transpose.hpp
     op/fused/clamp.cpp
     op/fused/clamp.hpp
     op/fused/conv_fused.cpp
     op/fused/conv_fused.hpp
+    op/fused/crossentropy.cpp
+    op/fused/crossentropy.hpp
     op/fused/hard_sigmoid.cpp
     op/fused/hard_sigmoid.hpp
     op/fused/depth_to_space.cpp
@@ -351,12 +379,16 @@ set (SRC
     op/fused/gru_cell.hpp
     op/fused/layer_norm.cpp
     op/fused/layer_norm.hpp
+    op/fused/log_softmax.cpp
+    op/fused/log_softmax.hpp
     op/fused/lstm_cell.cpp
     op/fused/lstm_cell.hpp
     op/fused/lstm_sequence.cpp
     op/fused/lstm_sequence.hpp
     op/fused/matmul.cpp
     op/fused/matmul.hpp
+    op/fused/mod.cpp
+    op/fused/mod.hpp
     op/fused/mvn.cpp
     op/fused/mvn.hpp
     op/fused/normalize_l2.cpp
@@ -365,6 +397,8 @@ set (SRC
     op/fused/partial_slice.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
+    op/fused/reciprocal.cpp
+    op/fused/reciprocal.hpp
     op/fused/rnn_cell.cpp
     op/fused/rnn_cell.hpp
     op/fused/scale_shift.cpp
@@ -405,12 +439,16 @@ set (SRC
     op/util/fused_op.hpp
     op/util/index_reduction.cpp
     op/util/index_reduction.hpp
+    op/util/logical_reduction_keep_dims.hpp
+    op/util/logical_reduction_keep_dims.cpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
     op/util/rnn_cell_base.cpp
     op/util/rnn_cell_base.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
+    ops.hpp
+    opsets/opset.cpp
     partial_shape.cpp
     partial_shape.hpp
     pass/algebraic_simplification.cpp
@@ -443,6 +481,7 @@ set (SRC
     pass/constant_folding_unsqueeze.cpp
     pass/constant_folding_shape_of.cpp
     pass/constant_folding_slice.cpp
+    pass/constant_folding_strided_slice.cpp
     pass/constant_folding_transpose.cpp
     pass/constant_folding_unary.cpp
     pass/constant_folding.cpp
@@ -555,6 +594,7 @@ set (SRC
     type/float16.cpp
     type/float16.hpp
     type/element_type.cpp
+    type.hpp
     util.cpp
     util.hpp
     validation_util.cpp
@@ -626,7 +666,6 @@ target_compile_definitions(ngraph
     PRIVATE
         SHARED_LIB_PREFIX="${CMAKE_SHARED_LIBRARY_PREFIX}"
         SHARED_LIB_SUFFIX="${CMAKE_SHARED_LIBRARY_SUFFIX}"
-        NGRAPH_DLL_EXPORTS
 )
 if(NGRAPH_LIB_VERSIONING_ENABLE)
     set_target_properties(ngraph PROPERTIES

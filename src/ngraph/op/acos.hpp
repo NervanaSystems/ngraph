@@ -24,30 +24,33 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise inverse cosine (arccos) operation.
-        ///
-        class Acos : public util::UnaryElementwiseArithmetic
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Acos", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs an arccos operation.
-            Acos() = default;
-            /// \brief Constructs an arccos operation.
+            /// \brief Elementwise inverse cosine (arccos) operation.
             ///
-            /// \param arg Output that produces the input tensor.<br>
-            /// `[d1, ...]`
-            ///
-            /// Output `[d1, ...]`
-            ///
-            Acos(const Output<Node>& arg);
+            class NGRAPH_API Acos : public util::UnaryElementwiseArithmetic
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Acos", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs an arccos operation.
+                Acos() = default;
+                /// \brief Constructs an arccos operation.
+                ///
+                /// \param arg Output that produces the input tensor.<br>
+                /// `[d1, ...]`
+                ///
+                /// Output `[d1, ...]`
+                ///
+                Acos(const Output<Node>& arg);
+                bool visit_attributes(AttributeVisitor& visitor) override { return true; }
+                std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
-            std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
-
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+            };
+        }
+        using v0::Acos;
     }
 }

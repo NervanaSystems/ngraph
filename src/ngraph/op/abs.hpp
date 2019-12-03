@@ -24,31 +24,34 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise absolute value operation.
-        ///
-        class Abs : public util::UnaryElementwiseArithmetic
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Abs", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs an absolute value operation.
-            Abs() = default;
-
-            /// \brief Constructs an absolute value operation.
+            /// \brief Elementwise absolute value operation.
             ///
-            /// \param arg Output that produces the input tensor.<br>
-            /// `[d1, ...]`
-            ///
-            /// Output `[d1, ...]`
-            ///
-            Abs(const Output<Node>& arg);
+            class NGRAPH_API Abs : public util::UnaryElementwiseArithmetic
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Abs", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs an absolute value operation.
+                Abs() = default;
+                bool visit_attributes(AttributeVisitor& visitor) override { return true; }
+                /// \brief Constructs an absolute value operation.
+                ///
+                /// \param arg Output that produces the input tensor.<br>
+                /// `[d1, ...]`
+                ///
+                /// Output `[d1, ...]`
+                ///
+                Abs(const Output<Node>& arg);
 
-            std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+            };
+        }
+        using v0::Abs;
     }
 }

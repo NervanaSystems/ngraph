@@ -25,36 +25,43 @@ namespace ngraph
 {
     namespace op
     {
-        class Sigmoid : public util::UnaryElementwiseArithmetic
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Sigmoid", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            Sigmoid(const Output<Node>& arg);
-            Sigmoid() = default;
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+            class NGRAPH_API Sigmoid : public util::UnaryElementwiseArithmetic
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Sigmoid", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Sigmoid(const Output<Node>& arg);
+                Sigmoid() = default;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+            };
 
-        /// \brief Elementwise SigmoidBackprop operation.
-        ///
-        class SigmoidBackprop : public util::BinaryElementwiseArithmetic
-        {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"SigmoidBackprop", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            SigmoidBackprop() = default;
-            /// \brief Constructs a SigmoidBackprop operation.
+            /// \brief Elementwise SigmoidBackprop operation.
             ///
-            /// \param arg Node that produces the Sigmoid forward input tensor.
-            SigmoidBackprop(const Output<Node>& arg, const Output<Node>& delta);
+            class NGRAPH_API SigmoidBackprop : public util::BinaryElementwiseArithmetic
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"SigmoidBackprop", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                SigmoidBackprop()
+                    : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NONE)
+                {
+                }
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
+                /// \brief Constructs a SigmoidBackprop operation.
+                ///
+                /// \param arg Node that produces the Sigmoid forward input tensor.
+                SigmoidBackprop(const Output<Node>& arg, const Output<Node>& delta);
+
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        }
+        using v0::Sigmoid;
+        using v0::SigmoidBackprop;
     }
 }

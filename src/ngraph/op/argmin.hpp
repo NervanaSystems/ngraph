@@ -22,28 +22,33 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Computes minimum index along a specified axis for a given tensor
-        class ArgMin : public op::util::IndexReduction
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"ArgMin", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a ArgMin operation.
-            ArgMin() = default;
+            /// \brief Computes minimum index along a specified axis for a given tensor
+            class NGRAPH_API ArgMin : public op::util::IndexReduction
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"ArgMin", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a ArgMin operation.
+                ArgMin() = default;
 
-            /// \brief Constructs a ArgMin operation.
-            ///
-            /// \param arg The input tensor
-            /// \param axis The axis along which to compute an index for minimum
-            /// \param index_element_type produce indices. Currently, only int64 or int32 are
-            ///                           supported
-            ArgMin(const Output<Node>& arg, size_t axis, const element::Type& index_element_type);
+                /// \brief Constructs a ArgMin operation.
+                ///
+                /// \param arg The input tensor
+                /// \param axis The axis along which to compute an index for minimum
+                /// \param index_element_type produce indices. Currently, only int64 or int32 are
+                ///                           supported
+                ArgMin(const Output<Node>& arg,
+                       size_t axis,
+                       const element::Type& index_element_type);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-
-            virtual std::shared_ptr<Node> get_default_value() const override;
-        };
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
+                virtual std::shared_ptr<Node> get_default_value() const override;
+            };
+        }
+        using v0::ArgMin;
     }
 }
