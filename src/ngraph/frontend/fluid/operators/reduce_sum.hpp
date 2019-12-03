@@ -28,10 +28,9 @@ namespace ngraph
     namespace fluid
     {
         /// \brief Fluid reduce_sum
-        class ReduceSum : public ngraph::op::util::FusedOp
+        class NGRAPH_API ReduceSum : public ngraph::op::util::FusedOp
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"FluidReduceSum", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             ReduceSum() = default;
@@ -45,7 +44,7 @@ namespace ngraph
 
             virtual NodeVector decompose_op() const override;
 
-            void validate_and_infer_types() override;
+            virtual void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -58,10 +57,9 @@ namespace ngraph
         };
 
         /// \brief Fluid reduce_sum_grad
-        class ReduceSumGrad : public ngraph::op::util::FusedOp
+        class NGRAPH_API ReduceSumGrad : public ngraph::op::util::FusedOp
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"FluidReduceSumGrad", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             ReduceSumGrad() = default;
@@ -70,13 +68,14 @@ namespace ngraph
             ///
             /// \param data Input tensor
             ReduceSumGrad(const Output<Node>& x,
+                          const Output<Node>& y,
                           const vector<int>& dim,
                           bool reduce_all,
                           bool keep_dim);
 
             virtual NodeVector decompose_op() const override;
 
-            void validate_and_infer_types() override;
+            virtual void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
