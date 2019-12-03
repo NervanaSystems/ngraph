@@ -37,7 +37,7 @@ static std::mt19937_64 random_generator;
 using namespace std;
 using namespace ngraph;
 
-static string s_manifest = "unit_test.manifest";
+static string s_manifest = "test.manifest";
 
 NGRAPH_TEST(CPU, fluid_reduce_sum_dynamic)
 {
