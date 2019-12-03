@@ -26,7 +26,7 @@ namespace ngraph
     }
 }
 
-class NGRAPH_API ngraph::pass::GetOutputElementElimination : public NodePass
+class NGRAPH_API ngraph::pass::GetOutputElementElimination : public FunctionPass
 {
 public:
     bool run_on_function(std::shared_ptr<ngraph::Function> f) override;
