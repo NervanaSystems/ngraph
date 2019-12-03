@@ -38,8 +38,9 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     auto backend = runtime::Backend::create(backend_name);
     auto exec = backend->compile(f, timing_detail);
     timer.stop();
-    cout.imbue(locale(""));
-    cout << "compile time: " << timer.get_milliseconds() << "ms" << endl;
+    stringstream ss;
+    ss.imbue(locale(""));
+    ss << "compile time: " << timer.get_milliseconds() << "ms" << endl;
 
     vector<shared_ptr<runtime::HostTensor>> arg_data;
     vector<shared_ptr<runtime::Tensor>> args;
@@ -111,7 +112,8 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     }
     t1.stop();
     float time = t1.get_milliseconds();
-    cout << time / iterations << "ms per iteration" << endl;
+    ss << time / iterations << "ms per iteration" << endl;
+    cout << ss.str();
 
     vector<runtime::PerformanceCounter> perf_data = exec->get_performance_data();
     return perf_data;
