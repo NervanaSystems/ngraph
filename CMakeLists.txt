@@ -621,6 +621,7 @@ endif()
 add_subdirectory(src)
 
 add_subdirectory(test)
+add_subdirectory(doc/examples)
 
 if (NGRAPH_DOC_BUILD_ENABLE)
     add_subdirectory(doc)
