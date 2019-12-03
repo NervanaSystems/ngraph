@@ -97,8 +97,8 @@ group before finally concatenating the result back together.
    :width: 100%
    :alt: MobileNet example
 
-   Figure B: Each of these grouped convolution complexes -- the 
-   operations within the rectangles on the left -- is very wide; each is too 
+   Figure B: Each grouped convolution—the 
+   operations within the rectangles on the left—is very wide; each is too 
    wide to fit legibly on the illustration.  
 
 The group convolution fusion is able to replace each of those giant subgraphs 
