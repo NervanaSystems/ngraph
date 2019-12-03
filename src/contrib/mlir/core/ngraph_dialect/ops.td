@@ -140,7 +140,9 @@ class NG_Terminator_Op<string mnemonic, list<OpTrait> traits = []> :
     NG_Op<mnemonic, !listconcat(traits, [Terminator])>,
     Arguments<(ins Variadic<NG_TensorType>:$args)>, Results<(outs)> {}
 
-
+class NG_Variadic_Result_Op<string mnemonic, list<OpTrait> traits = []> :
+    NG_Op<mnemonic, !listconcat(traits, [])>,
+    Results<(outs Variadic<NG_TensorType>:$args)> {}
 
 // Terminator Ops
 def NGReturnOp : NG_Terminator_Op<"return">;

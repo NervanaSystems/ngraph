@@ -45,6 +45,7 @@
 #include "op/conv_transpose.hpp"
 #include "op/cos.hpp"
 #include "op/cosh.hpp"
+#include "op/cum_sum.hpp"
 #include "op/depth_to_space.hpp"
 #include "op/dequantize_linear.hpp"
 #include "op/div.hpp"
@@ -84,6 +85,7 @@
 #include "op/mod.hpp"
 #include "op/mul.hpp"
 #include "op/neg.hpp"
+#include "op/non_max_suppression.hpp"
 #include "op/not.hpp"
 #include "op/onehot.hpp"
 #include "op/or.hpp"
@@ -258,6 +260,7 @@ namespace ngraph
             REGISTER_OPERATOR("ConvTranspose", 1, conv_transpose);
             REGISTER_OPERATOR("Cos", 1, cos);
             REGISTER_OPERATOR("Cosh", 1, cosh);
+            REGISTER_OPERATOR("CumSum", 1, cum_sum);
             REGISTER_OPERATOR("DepthToSpace", 1, depth_to_space);
             REGISTER_OPERATOR("DequantizeLinear", 1, dequantize_linear);
             REGISTER_OPERATOR("Div", 1, div);
@@ -304,6 +307,7 @@ namespace ngraph
             REGISTER_OPERATOR("Mul", 1, mul);
             REGISTER_OPERATOR("Mul", 7, mul);
             REGISTER_OPERATOR("Neg", 1, neg);
+            REGISTER_OPERATOR("NonMaxSuppression", 1, non_max_suppression);
             REGISTER_OPERATOR("Not", 1, logical_not);
             REGISTER_OPERATOR("Or", 1, logical_or);
             REGISTER_OPERATOR("OneHot", 1, onehot);

@@ -75,6 +75,8 @@ add_library(onnx_import STATIC
         op/conv_integer.hpp
         op/conv_transpose.cpp
         op/conv_transpose.hpp
+        op/cum_sum.cpp
+        op/cum_sum.hpp
         op/depth_to_space.cpp
         op/depth_to_space.hpp
         op/dequantize_linear.cpp
@@ -138,6 +140,8 @@ add_library(onnx_import STATIC
         op/mul.hpp
         op/neg.hpp
         op/not.hpp
+        op/non_max_suppression.cpp
+        op/non_max_suppression.hpp
         op/onehot.cpp
         op/onehot.hpp
         op/or.hpp
