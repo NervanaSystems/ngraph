@@ -97,9 +97,7 @@ group before finally concatenating the result back together.
    :width: 100%
    :alt: MobileNet example
 
-   Figure B: Each grouped convolution—the 
-   operations within the rectangles on the left—is very wide; each is too 
-   wide to fit legibly on the illustration.  
+   Figure B: Infographic of MobileNet Group Convolution
 
 The group convolution fusion is able to replace each of those giant subgraphs 
 with a single CPU group convolution node. This ends up being beneficial in 
