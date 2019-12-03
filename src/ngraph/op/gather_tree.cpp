@@ -68,8 +68,8 @@ void op::v1::GatherTree::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(this,
                           end_token_rank.rank().is_dynamic() ||
-                              static_cast<size_t>(end_token_rank.rank()) == 3,
-                          "end_token input rank must equal to 3 (end_token rank: ",
+                              static_cast<size_t>(end_token_rank.rank()) == 0,
+                          "end_token input rank must be scalar (end_token rank: ",
                           static_cast<size_t>(end_token_rank.rank()),
                           ")");
 
