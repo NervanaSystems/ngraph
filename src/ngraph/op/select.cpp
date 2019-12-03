@@ -52,7 +52,7 @@ void op::v1::Select::validate_and_infer_types()
     NODE_VALIDATION_CHECK(
         this,
         element::Type::merge(result_et, get_input_element_type(1), get_input_element_type(2)),
-        "Argument 1 and 2 element types are inconsistent.");
+        "Argument 1 and 2 element types must match.");
 
     PartialShape result_shape = get_input_partial_shape(2);
     for (int i = 1; i >= 0; i--)
@@ -78,7 +78,6 @@ void op::v1::Select::validate_and_infer_types()
             NODE_VALIDATION_CHECK(this, false, "Unsupported auto broadcast specification");
         }
     }
-
     set_output_type(0, result_et, result_shape);
 }
 

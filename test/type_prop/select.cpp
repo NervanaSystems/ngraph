@@ -360,3 +360,111 @@ INSTANTIATE_TEST_CASE_P(
                                    {element::boolean, element::f32, element::dynamic, element::f32},
                                    {op::AutoBroadcastType::PDPD, 1})),
     PrintToDummyParamName());
+
+TEST(type_prop, select_v1_partial_shape)
+{
+    auto a = make_shared<op::Parameter>(element::boolean, PartialShape::dynamic());
+    auto b = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto c = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+
+    auto select = make_shared<op::v1::Select>(a, b, c, op::AutoBroadcastType::NONE);
+    ASSERT_EQ(select->get_shape(), (Shape{2, 4}));
+}
+
+TEST(type_prop, select_v1_partial_shape_autob)
+{
+    auto a = make_shared<op::Parameter>(element::boolean, PartialShape{Dimension::dynamic()});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic()});
+    auto c = make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic()});
+
+    auto select = make_shared<op::v1::Select>(a, b, c);
+    ASSERT_TRUE(
+        select->get_output_partial_shape(0).same_scheme(PartialShape{2, Dimension::dynamic()}));
+}
+
+TEST(type_prop, select_v1_wrong_et)
+{
+    auto param0 = make_shared<op::Parameter>(element::i8, Shape{2, 4});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+
+    try
+    {
+        auto sel = make_shared<op::v1::Select>(param0, param1, param2);
+        FAIL() << "Did not detect wrong element type";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Argument 0 must have boolean element type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_v1_et_mismatch)
+{
+    auto param0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto param2 = make_shared<op::Parameter>(element::i8, Shape{2, 4});
+
+    try
+    {
+        auto sel = make_shared<op::v1::Select>(param0, param1, param2);
+        FAIL() << "Did not detect element type mismatch";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Argument 1 and 2 element types must match."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_v1_shape_mismatch)
+{
+    auto param0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+
+    try
+    {
+        auto sel = make_shared<op::v1::Select>(param0, param1, param2);
+        FAIL() << "Did not detect shape mismatch";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument shapes are inconsistent."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_v1_partial_shape_mismatch)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::boolean, PartialShape{3, Dimension::dynamic()});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic()});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+
+    try
+    {
+        auto sel = make_shared<op::v1::Select>(param0, param1, param2);
+        FAIL() << "Did not detect shape mismatch";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument shapes are inconsistent."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
