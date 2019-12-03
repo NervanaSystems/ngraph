@@ -24,200 +24,215 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Convolution + bias forward prop for batched convolution operation.
-        class ConvolutionBias : public ngraph::op::util::FusedOp
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"ConvolutionBias", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            ConvolutionBias() = default;
-            ConvolutionBias(const std::shared_ptr<op::Convolution>& conv,
-                            const Output<Node>& bias,
-                            const bool with_relu = false);
-
-            ConvolutionBias(const Output<Node>& data_batch,
-                            const Output<Node>& filters,
-                            const Output<Node>& bias,
-                            const Strides& window_movement_strides,
-                            const Strides& window_dilation_strides,
-                            const CoordinateDiff& padding_below,
-                            const CoordinateDiff& padding_above,
-                            const Strides& data_dilation_strides,
-                            const bool with_relu = false);
-
-            ConvolutionBias(const Output<Node>& data_batch,
-                            const Output<Node>& filters,
-                            const Output<Node>& bias);
-
-            const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
-            const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
-            const CoordinateDiff& get_padding_below() const { return m_padding_below; }
-            const CoordinateDiff& get_padding_above() const { return m_padding_above; }
-            const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
-            Output<Node> get_bias() { return input_value(2); }
-            Output<Node> get_filters() { return input_value(1); }
-            Output<Node> get_data_batch() { return input_value(0); }
-            bool with_relu() const { return m_with_relu; }
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-
-            virtual NodeVector decompose_op() const override;
-
-            virtual void validate_and_infer_types() override;
-
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-
-        protected:
-            Strides m_window_movement_strides;
-            Strides m_window_dilation_strides;
-            CoordinateDiff m_padding_below;
-            CoordinateDiff m_padding_above;
-            Strides m_data_dilation_strides;
-            bool m_with_relu;
-        };
-
-        /// \brief Filters and bias backprop for batched convolution operation. Data backprop is
-        /// the same as regular convolution backprop for data.
-        class ConvolutionBiasBackpropFiltersBias : public ngraph::op::util::FusedOp
-        {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"ConvolutionBiasBackpropFiltersBias", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            ConvolutionBiasBackpropFiltersBias() = default;
-            ConvolutionBiasBackpropFiltersBias(const Output<Node>& data_batch,
-                                               const Shape& filters_shape,
-                                               const Shape& bias_shape,
-                                               const Output<Node>& output_delta,
-                                               const Strides& window_movement_strides_forward,
-                                               const Strides& window_dilation_strides_forward,
-                                               const CoordinateDiff& padding_below_forward,
-                                               const CoordinateDiff& padding_above_forward,
-                                               const Strides& data_dilation_strides_forward);
-
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-
-            /// \return The filters tensor shape.
-            const Shape& get_filters_shape() const { return m_filters_shape; }
-            /// \return The bias tensor shape.
-            const Shape& get_bias_shape() const { return m_bias_shape; }
-            /// \return The window movement strides from the forward prop.
-            const Strides& get_window_movement_strides_forward() const
+            /// \brief Convolution + bias forward prop for batched convolution operation.
+            class NGRAPH_API ConvolutionBias : public ngraph::op::util::FusedOp
             {
-                return m_window_movement_strides_forward;
-            }
-            /// \return The window dilation strides from the forward prop.
-            const Strides& get_window_dilation_strides_forward() const
+            public:
+                static constexpr NodeTypeInfo type_info{"ConvolutionBias", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                ConvolutionBias() = default;
+                ConvolutionBias(const std::shared_ptr<op::Convolution>& conv,
+                                const Output<Node>& bias,
+                                const bool with_relu = false);
+
+                ConvolutionBias(const Output<Node>& data_batch,
+                                const Output<Node>& filters,
+                                const Output<Node>& bias,
+                                const Strides& window_movement_strides,
+                                const Strides& window_dilation_strides,
+                                const CoordinateDiff& padding_below,
+                                const CoordinateDiff& padding_above,
+                                const Strides& data_dilation_strides,
+                                const bool with_relu = false);
+
+                ConvolutionBias(const Output<Node>& data_batch,
+                                const Output<Node>& filters,
+                                const Output<Node>& bias);
+
+                const Strides& get_window_movement_strides() const
+                {
+                    return m_window_movement_strides;
+                }
+                const Strides& get_window_dilation_strides() const
+                {
+                    return m_window_dilation_strides;
+                }
+                const CoordinateDiff& get_padding_below() const { return m_padding_below; }
+                const CoordinateDiff& get_padding_above() const { return m_padding_above; }
+                const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
+                Output<Node> get_bias() { return input_value(2); }
+                Output<Node> get_filters() { return input_value(1); }
+                Output<Node> get_data_batch() { return input_value(0); }
+                bool with_relu() const { return m_with_relu; }
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+                virtual NodeVector decompose_op() const override;
+
+                virtual void validate_and_infer_types() override;
+
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+
+            protected:
+                Strides m_window_movement_strides;
+                Strides m_window_dilation_strides;
+                CoordinateDiff m_padding_below;
+                CoordinateDiff m_padding_above;
+                Strides m_data_dilation_strides;
+                bool m_with_relu;
+            };
+
+            /// \brief Filters and bias backprop for batched convolution operation. Data backprop is
+            /// the same as regular convolution backprop for data.
+            class NGRAPH_API ConvolutionBiasBackpropFiltersBias : public ngraph::op::util::FusedOp
             {
-                return m_window_dilation_strides_forward;
-            }
-            /// \return The padding-below sizes (possibly negative) from the forward prop.
-            const CoordinateDiff& get_padding_below_forward() const
+            public:
+                static constexpr NodeTypeInfo type_info{"ConvolutionBiasBackpropFiltersBias", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                ConvolutionBiasBackpropFiltersBias() = default;
+                ConvolutionBiasBackpropFiltersBias(const Output<Node>& data_batch,
+                                                   const Shape& filters_shape,
+                                                   const Shape& bias_shape,
+                                                   const Output<Node>& output_delta,
+                                                   const Strides& window_movement_strides_forward,
+                                                   const Strides& window_dilation_strides_forward,
+                                                   const CoordinateDiff& padding_below_forward,
+                                                   const CoordinateDiff& padding_above_forward,
+                                                   const Strides& data_dilation_strides_forward);
+
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+                /// \return The filters tensor shape.
+                const Shape& get_filters_shape() const { return m_filters_shape; }
+                /// \return The bias tensor shape.
+                const Shape& get_bias_shape() const { return m_bias_shape; }
+                /// \return The window movement strides from the forward prop.
+                const Strides& get_window_movement_strides_forward() const
+                {
+                    return m_window_movement_strides_forward;
+                }
+                /// \return The window dilation strides from the forward prop.
+                const Strides& get_window_dilation_strides_forward() const
+                {
+                    return m_window_dilation_strides_forward;
+                }
+                /// \return The padding-below sizes (possibly negative) from the forward prop.
+                const CoordinateDiff& get_padding_below_forward() const
+                {
+                    return m_padding_below_forward;
+                }
+                /// \return The padding-above sizes (possibly negative) from the forward prop.
+                const CoordinateDiff& get_padding_above_forward() const
+                {
+                    return m_padding_above_forward;
+                }
+                /// \return The data dilation strides from the forward prop.
+                const Strides& get_data_dilation_strides_forward() const
+                {
+                    return m_data_dilation_strides_forward;
+                }
+
+                /// \return The window movement strides for the backward prop.
+                const Strides& get_window_movement_strides_backward() const
+                {
+                    return m_window_movement_strides_backward;
+                }
+                /// \return The window dilation strides for the backward prop.
+                const Strides& get_window_dilation_strides_backward() const
+                {
+                    return m_window_dilation_strides_backward;
+                }
+                /// \return The padding-below sizes (possibly negative) for the backward prop.
+                const CoordinateDiff& get_padding_below_backward() const
+                {
+                    return m_padding_below_backward;
+                }
+                /// \return The padding-above sizes (possibly negative) for the backward prop.
+                const CoordinateDiff& get_padding_above_backward() const
+                {
+                    return m_padding_above_backward;
+                }
+                /// \return The data dilation strides for the backward prop.
+                const Strides& get_data_dilation_strides_backward() const
+                {
+                    return m_data_dilation_strides_backward;
+                }
+
+                virtual NodeVector decompose_op() const override;
+
+            protected:
+                Shape m_filters_shape;
+                Shape m_bias_shape;
+                Strides m_window_movement_strides_forward;
+                Strides m_window_dilation_strides_forward;
+                CoordinateDiff m_padding_below_forward;
+                CoordinateDiff m_padding_above_forward;
+                Strides m_data_dilation_strides_forward;
+
+                Strides m_window_movement_strides_backward;
+                Strides m_window_dilation_strides_backward;
+                CoordinateDiff m_padding_below_backward;
+                CoordinateDiff m_padding_above_backward;
+                Strides m_data_dilation_strides_backward;
+            };
+
+            class NGRAPH_API ConvolutionBiasAdd : public ngraph::op::util::FusedOp
             {
-                return m_padding_below_forward;
-            }
-            /// \return The padding-above sizes (possibly negative) from the forward prop.
-            const CoordinateDiff& get_padding_above_forward() const
-            {
-                return m_padding_above_forward;
-            }
-            /// \return The data dilation strides from the forward prop.
-            const Strides& get_data_dilation_strides_forward() const
-            {
-                return m_data_dilation_strides_forward;
-            }
+            public:
+                static constexpr NodeTypeInfo type_info{"ConvolutionBiasAdd", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                ConvolutionBiasAdd() = default;
+                ConvolutionBiasAdd(const std::shared_ptr<op::v0::ConvolutionBias>& conv,
+                                   const Output<Node>& sum_input,
+                                   bool with_relu = false);
 
-            /// \return The window movement strides for the backward prop.
-            const Strides& get_window_movement_strides_backward() const
-            {
-                return m_window_movement_strides_backward;
-            }
-            /// \return The window dilation strides for the backward prop.
-            const Strides& get_window_dilation_strides_backward() const
-            {
-                return m_window_dilation_strides_backward;
-            }
-            /// \return The padding-below sizes (possibly negative) for the backward prop.
-            const CoordinateDiff& get_padding_below_backward() const
-            {
-                return m_padding_below_backward;
-            }
-            /// \return The padding-above sizes (possibly negative) for the backward prop.
-            const CoordinateDiff& get_padding_above_backward() const
-            {
-                return m_padding_above_backward;
-            }
-            /// \return The data dilation strides for the backward prop.
-            const Strides& get_data_dilation_strides_backward() const
-            {
-                return m_data_dilation_strides_backward;
-            }
+                ConvolutionBiasAdd(const Output<Node>& data_batch,
+                                   const Output<Node>& filters,
+                                   const Output<Node>& bias,
+                                   const Output<Node>& sum_input,
+                                   const Strides& window_movement_strides,
+                                   const Strides& window_dilation_strides,
+                                   const CoordinateDiff& padding_below,
+                                   const CoordinateDiff& padding_above,
+                                   const Strides& data_dilation_strides,
+                                   bool with_relu = false);
 
-            virtual NodeVector decompose_op() const override;
+                const Strides& get_window_movement_strides() const
+                {
+                    return m_window_movement_strides;
+                }
+                const Strides& get_window_dilation_strides() const
+                {
+                    return m_window_dilation_strides;
+                }
+                const CoordinateDiff& get_padding_below() const { return m_padding_below; }
+                const CoordinateDiff& get_padding_above() const { return m_padding_above; }
+                const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
+                Output<Node> get_filters() { return input_value(1); }
+                Output<Node> get_data_batch() { return input_value(0); }
+                bool with_relu() const { return m_with_relu; }
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-        protected:
-            Shape m_filters_shape;
-            Shape m_bias_shape;
-            Strides m_window_movement_strides_forward;
-            Strides m_window_dilation_strides_forward;
-            CoordinateDiff m_padding_below_forward;
-            CoordinateDiff m_padding_above_forward;
-            Strides m_data_dilation_strides_forward;
+                virtual NodeVector decompose_op() const override;
 
-            Strides m_window_movement_strides_backward;
-            Strides m_window_dilation_strides_backward;
-            CoordinateDiff m_padding_below_backward;
-            CoordinateDiff m_padding_above_backward;
-            Strides m_data_dilation_strides_backward;
-        };
+                virtual void validate_and_infer_types() override;
 
-        class ConvolutionBiasAdd : public ngraph::op::util::FusedOp
-        {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"ConvolutionBiasAdd", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            ConvolutionBiasAdd() = default;
-            ConvolutionBiasAdd(const std::shared_ptr<op::ConvolutionBias>& conv,
-                               const Output<Node>& sum_input,
-                               bool with_relu = false);
-
-            ConvolutionBiasAdd(const Output<Node>& data_batch,
-                               const Output<Node>& filters,
-                               const Output<Node>& bias,
-                               const Output<Node>& sum_input,
-                               const Strides& window_movement_strides,
-                               const Strides& window_dilation_strides,
-                               const CoordinateDiff& padding_below,
-                               const CoordinateDiff& padding_above,
-                               const Strides& data_dilation_strides,
-                               bool with_relu = false);
-
-            const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
-            const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
-            const CoordinateDiff& get_padding_below() const { return m_padding_below; }
-            const CoordinateDiff& get_padding_above() const { return m_padding_above; }
-            const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
-            Output<Node> get_filters() { return input_value(1); }
-            Output<Node> get_data_batch() { return input_value(0); }
-            bool with_relu() const { return m_with_relu; }
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-
-            virtual NodeVector decompose_op() const override;
-
-            virtual void validate_and_infer_types() override;
-
-        protected:
-            Strides m_window_movement_strides;
-            Strides m_window_dilation_strides;
-            CoordinateDiff m_padding_below;
-            CoordinateDiff m_padding_above;
-            Strides m_data_dilation_strides;
-            bool m_with_relu;
-        };
+            protected:
+                Strides m_window_movement_strides;
+                Strides m_window_dilation_strides;
+                CoordinateDiff m_padding_below;
+                CoordinateDiff m_padding_above;
+                Strides m_data_dilation_strides;
+                bool m_with_relu;
+            };
+        }
+        using v0::ConvolutionBias;
+        using v0::ConvolutionBiasBackpropFiltersBias;
+        using v0::ConvolutionBiasAdd;
     }
 }

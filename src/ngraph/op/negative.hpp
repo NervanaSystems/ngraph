@@ -22,27 +22,31 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise negative operation.
-        class Negative : public util::UnaryElementwiseArithmetic
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Negative", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a negative operation.
-            Negative() = default;
-            /// \brief Constructs a negative operation.
-            ///
-            /// \param arg Node that produces the input tensor.
-            Negative(const Output<Node>& arg);
+            /// \brief Elementwise negative operation.
+            class NGRAPH_API Negative : public util::UnaryElementwiseArithmetic
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Negative", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a negative operation.
+                Negative() = default;
+                /// \brief Constructs a negative operation.
+                ///
+                /// \param arg Node that produces the input tensor.
+                Negative(const Output<Node>& arg);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+            };
+        }
+        using v0::Negative;
     }
+    NGRAPH_API
     std::shared_ptr<Node> operator-(const Output<Node>& arg0);
 }

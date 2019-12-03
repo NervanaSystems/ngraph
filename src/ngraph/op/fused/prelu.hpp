@@ -24,27 +24,30 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Parametrized Relu
-        /// x <  0 => f(x) = x * slope
-        /// x >= 0 => f(x) = x
-        ///
-        class PRelu : public ngraph::op::util::FusedOp
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"PRelu", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            PRelu() = default;
-            /// \brief Constructs a PRelu operation.
+            /// \brief Parametrized Relu
+            /// x <  0 => f(x) = x * slope
+            /// x >= 0 => f(x) = x
             ///
-            /// \param data Input tensor
-            /// \param slope Multipliers for negative values
-            PRelu(const Output<Node>& data, const Output<Node>& slope);
+            class NGRAPH_API PRelu : public ngraph::op::util::FusedOp
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"PRelu", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                PRelu() = default;
+                /// \brief Constructs a PRelu operation.
+                ///
+                /// \param data Input tensor
+                /// \param slope Multipliers for negative values
+                PRelu(const Output<Node>& data, const Output<Node>& slope);
 
-            virtual NodeVector decompose_op() const override;
+                virtual NodeVector decompose_op() const override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        }
+        using v0::PRelu;
     }
 }
