@@ -94,7 +94,7 @@ group before finally concatenating the result back together.
 .. _figure-mobilenet-gc:
 
 .. figure:: ../../graphics/mobilenet-group-conv.svg
-   :width: 700px
+   :width: 100%
    :alt: MobileNet example
 
    Figure B: Each of these grouped convolution complexes -- the 
