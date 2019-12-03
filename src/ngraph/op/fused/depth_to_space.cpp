@@ -17,6 +17,7 @@
 #include <memory>
 
 #include <iterator> //TODO
+#include <cmath>
 
 #include "depth_to_space.hpp"
 #include "ngraph/builder/reshape.hpp"
@@ -66,12 +67,9 @@ NodeVector op::DepthToSpace::decompose_op() const
     auto data = input_value(0);
     auto data_shape = data.get_shape();
 
-    // TODO REMOVE h and w
-    size_t n{1}, c{1}, h{1}, w{1};
-
     NGRAPH_CHECK((data_shape.size() >= 3),
                  "The input tensor with rank lower than 3 is not supported (input rank: ",
-                 data_shape,
+                  data_shape.size(),
                  ")");
 
     if (data_shape.size() == 3)
@@ -79,40 +77,39 @@ NodeVector op::DepthToSpace::decompose_op() const
         // Insert batch axis
         data_shape.insert(data_shape.begin(), 1);
         data = builder::reshape(data, data_shape);
-        c = data_shape.at(0);
-        h = data_shape.at(1);
-        w = data_shape.at(2);
     }
+    const size_t n_dim = data_shape.at(0);
+    const size_t c_dim = data_shape.at(1);
+    const size_t spatial_dims = data_shape.size() - 2;
+    const auto c_dim_divider = static_cast<int>(std::pow(m_blocksize, spatial_dims));
 
-    n = data_shape.at(0);
-    c = data_shape.at(1);
-    h = data_shape.at(2);
-    w = data_shape.at(3);
+    //TODO REMOVE
+    size_t n = data_shape.at(0);
+    size_t c = data_shape.at(1);
+    size_t h = data_shape.at(2);
+    size_t w = data_shape.at(3);
 
-    NGRAPH_CHECK((c % (m_blocksize * m_blocksize) == 0 && m_blocksize > 0),
+    NGRAPH_CHECK(m_blocksize > 0 &&
+        c_dim % c_dim_divider == 0,
                  "SpaceToDepth: The depth axis size must be a multiple of ",
-                 "squared block_size attribute value.");
+                 "block_size^spatial_dims attribute value.");
 
     auto bs = static_cast<size_t>(m_blocksize);
-    size_t c_flat = c / (bs * bs);
-    const auto spatial_dims = data_shape.size() - 2;
+    size_t c_flat = c_dim / c_dim_divider;
 
     // First we have to disperse the data from depth channel, then rearrange them
     // so as appropriate chunks of data where close to their destination place.
     // Finally squeeze data from respective dimensions.
     shared_ptr<Node> flat_node;
-
-    Shape dispersed_shape{n};
-    for (int i = 0; i < data_shape.size(); ++i)
+    Shape dispersed_shape{n_dim};
+    for (int i = 0; i < spatial_dims; ++i)
     {
-        if (i < spatial_dims)
-        {
-            dispersed_shape.push_back(bs);
-        }
-        else
-        {
-            dispersed_shape.push_back(data_shape.at(i));
-        }
+        dispersed_shape.push_back(bs);
+    }
+    const auto no_spatial_dims = data_shape.size() - spatial_dims;
+    for (int i = 0; i < spatial_dims; ++i)
+    {
+        dispersed_shape.push_back(data_shape.at(no_spatial_dims + i));
     }
     vector<size_t> axes_order{0};
     switch (m_mode)
@@ -166,7 +163,7 @@ NodeVector op::DepthToSpace::decompose_op() const
     // reshape(x'', [N, C / (block_size ^ K), D1 * block_size, D2 * block_size, D3 * block_size,
     // ..., DK * block_size])
     Shape squeezed_shape{n, c_flat};
-    for (int i = spatial_dims; i < data_shape.size(); ++i)
+    for (int i = no_spatial_dims; i < data_shape.size(); ++i)
     {
         squeezed_shape.push_back(data_shape.at(i) * bs);
     }

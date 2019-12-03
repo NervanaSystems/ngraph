@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(type_prop, depth_to_space)
+TEST(type_prop, depth_to_space_output_shape_block_first_4D)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{1, 128, 8, 8});
     auto space_to_depth =
@@ -29,6 +29,46 @@ TEST(type_prop, depth_to_space)
 
     ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
     ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 2, 64, 64}));
+}
+
+TEST(type_prop, depth_to_space_output_shape_block_first_4D_2)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{ 1, 12, 1080, 1616 });
+    auto space_to_depth =
+        make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST, 2);
+
+    ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
+    ASSERT_EQ(space_to_depth->get_shape(), (Shape{ 1, 3, 2 * 1080, 2 * 1616 }));
+}
+
+TEST(type_prop, depth_to_space_output_shape_block_first_5D)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{ 1, 16, 3, 1080, 1616 });
+    auto space_to_depth =
+        make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST, 2);
+
+    ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
+    ASSERT_EQ(space_to_depth->get_shape(), (Shape{ 1, 2, 2*3, 2 * 1080, 2 * 1616 }));
+}
+
+TEST(type_prop, depth_to_space_output_shape_depth_first_4D)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{ 1, 12, 1080, 1616 });
+    auto space_to_depth =
+        make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST, 2);
+
+    ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
+    ASSERT_EQ(space_to_depth->get_shape(), (Shape{ 1, 3, 2 * 1080, 2 * 1616 }));
+}
+
+TEST(type_prop, depth_to_space_output_shape_depth_first_5D)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{ 1, 16, 3, 1080, 1616 });
+    auto space_to_depth =
+        make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST, 2);
+
+    ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
+    ASSERT_EQ(space_to_depth->get_shape(), (Shape{ 1, 2, 2 * 3, 2 * 1080, 2 * 1616 }));
 }
 
 TEST(type_prop, depth_to_space_input_rank_not_supported)
