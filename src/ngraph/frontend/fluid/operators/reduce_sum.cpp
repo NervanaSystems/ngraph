@@ -48,17 +48,21 @@ NodeVector ReduceSum::decompose_op() const
     auto input_shape = shape.to_shape();
     int input_rank = static_cast<int>(input_shape.size());
     NodeVector retval;
-    vector<int64_t> axes;
+    vector<size_t> axes;
     // Use reduce_sum v1 to support keep_dim
     if (m_reduce_all)
     {
-        iota(axes.begin(), axes.end(), 0);
+        for (size_t axis = 0; axis < input_rank; axis++)
+        {
+            axes.emplace_back(axis);
+        }
     }
     else
     {
         for (int axis : m_dim)
         {
-            axes.emplace_back(axis < 0 ? axis + input_rank : axis);
+            axes.emplace_back(axis < 0 ? static_cast<size_t>(axis + input_rank)
+                                       : static_cast<size_t>(axis));
         }
     }
     auto axes_node = make_shared<ngraph::op::Constant>(element::i64, Shape{axes.size()}, axes);
@@ -115,7 +119,10 @@ NodeVector ReduceSumGrad::decompose_op() const
     vector<size_t> axes;
     if (m_reduce_all)
     {
-        iota(axes.begin(), axes.end(), 0);
+        for (size_t axis = 0; axis < input_rank; axis++)
+        {
+            axes.emplace_back(axis);
+        }
     }
     else
     {
