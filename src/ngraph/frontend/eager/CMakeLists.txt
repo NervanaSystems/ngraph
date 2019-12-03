@@ -15,7 +15,11 @@
 # ******************************************************************************
 
 # Add files here
-#target_sources (ngraph PRIVATE
-#    ${CMAKE_CURRENT_SOURCE_DIR}/operators/reduce_sum.cpp
-#    ${CMAKE_CURRENT_SOURCE_DIR}/operators/reduce_sum.hpp
-#    )
+target_sources (ngraph PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/dummy.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dummy.hpp
+    )
+
+if (NGRAPH_EAGER_TEST_ENABLE)
+    add_subdirectory(test)
+endif()

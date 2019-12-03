@@ -36,5 +36,8 @@ if (NGRAPH_FLUID_ENABLE)
 endif()
 
 if (NGRAPH_EAGER_ENABLE)
+    option(NGRAPH_EAGER_TEST_ENABLE "Enable eager helper tests" OFF)
+    NORMALIZE_BOOL(NGRAPH_EAGER_TEST_ENABLE)
+    message(STATUS "NGRAPH_EAGER_TEST_ENABLE:             ${NGRAPH_EAGER_TEST_ENABLE}")
     add_subdirectory(eager)
 endif()
