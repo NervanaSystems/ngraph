@@ -74,7 +74,6 @@ void pass::ConstantFolding::construct_constant_select()
             static_pointer_cast<op::Constant>(pattern_map[selection_label]);
         const auto& t_node = static_pointer_cast<op::Constant>(pattern_map[t_label]);
         const auto& f_node = static_pointer_cast<op::Constant>(pattern_map[f_label]);
-        // auto select = static_pointer_cast<op::Select>(m.get_match_root());
         const auto& select = m.get_match_root();
 
         NGRAPH_CHECK(revalidate_and_ensure_static(select));
