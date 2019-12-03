@@ -150,6 +150,8 @@ set (SRC
     op/cum_sum.hpp
     op/crop_and_resize.cpp
     op/crop_and_resize.hpp
+    op/deformable_convolution.cpp
+    op/deformable_convolution.hpp
     op/deformable_psroi_pooling.cpp
     op/deformable_psroi_pooling.hpp
     op/dequantize.cpp
@@ -257,6 +259,8 @@ set (SRC
     op/multiply.hpp
     op/negative.cpp
     op/negative.hpp
+    op/non_max_suppression.cpp
+    op/non_max_suppression.hpp
     op/not.cpp
     op/not.hpp
     op/not_equal.cpp
@@ -727,16 +731,21 @@ endif()
 #-----------------------------------------------------------------------------------------------
 
 # nGraph
-install(TARGETS ngraph DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT ngraphTargets)  # libngraph.so
-install(DIRECTORY
-    ${CMAKE_CURRENT_SOURCE_DIR}/
-    DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph"
+install(TARGETS ngraph EXPORT ngraphTargets
+        RUNTIME DESTINATION ${NGRAPH_INSTALL_LIB}
+        ARCHIVE DESTINATION ${NGRAPH_INSTALL_LIB}
+        LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB}
+        COMPONENT ngraph)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
+    DESTINATION ${NGRAPH_INSTALL_INCLUDE}/ngraph
+    COMPONENT ngraph
     FILES_MATCHING
         PATTERN "*.hpp"
         PATTERN "*.h"
 )
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/version.hpp
-    DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph")
+    DESTINATION ${NGRAPH_INSTALL_INCLUDE}/ngraph
+    COMPONENT ngraph)
 
 set(CPACK_GENERATOR "DEB")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
