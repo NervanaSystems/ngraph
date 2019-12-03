@@ -67,9 +67,10 @@ namespace ngraph
         /// | Output tensor of the same type as `arg` with cumulative sums of the arg's elements
         /// |
 
-        class NGRAPH_API CumSum : public Op
+        class CumSum : public Op
         {
         public:
+            NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Constructs a cumulative summation operation.
