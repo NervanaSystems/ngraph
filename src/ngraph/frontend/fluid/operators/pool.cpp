@@ -17,7 +17,7 @@
 #include <cmath>
 
 #include "ngraph/builder/make_constant.hpp"
-#include "ngraph/frontend/fluid/operators/reduce_sum.hpp"
+#include "ngraph/frontend/fluid/operators/pool.hpp"
 
 using namespace std;
 using namespace ngraph::fluid;
@@ -28,8 +28,8 @@ Pool::Pool(const Output<Node>& x,
            const Shape& window_shape,
            const Strides& window_movement_strides,
            const Shape& padding,
-           string pool_type);
-    : FusedOp({x, output, output_delta})
+           string pool_type)
+    : FusedOp({x})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding(padding)
@@ -53,7 +53,7 @@ Pool::Pool(const Output<Node>& x,
             new_args.at(0), m_window_shape, m_window_movement_strides, m_padding, m_pool_type);
     }
 
-    void Pool::validate_and_infer_types()
+    void Pool::pre_validate_and_infer_types()
     {
         element::Type input_element_type = get_input_element_type(0);
 
@@ -72,7 +72,7 @@ Pool::Pool(const Output<Node>& x,
                        const Shape& window_shape,
                        const Strides& window_movement_strides,
                        const Shape& padding,
-                       string pool_type);
+                       string pool_type)
     : FusedOp({x, output, output_delta})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)

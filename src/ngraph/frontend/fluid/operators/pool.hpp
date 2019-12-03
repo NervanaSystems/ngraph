@@ -51,8 +51,10 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
-            Shape m_window_shape, Strides m_window_movement_strides, Shape m_padding,
-                string pool_type;
+            Shape m_window_shape;
+            Strides m_window_movement_strides;
+            Shape m_padding;
+            string m_pool_type;
         };
 
         /// \brief Fluid reduce_sum_grad
@@ -82,8 +84,10 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
-            Shape m_window_shape, Strides m_window_movement_strides, Shape m_padding,
-                string pool_type;
+            Shape m_window_shape;
+            Strides m_window_movement_strides;
+            Shape m_padding;
+            string m_pool_type;
         };
     }
 }
