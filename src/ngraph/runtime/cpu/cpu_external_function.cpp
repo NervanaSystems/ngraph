@@ -1230,10 +1230,11 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
             return false;
 #endif
         }
-        else if (auto conv = as_type<ngraph::op::GroupConvolution>(const_cast<Node*>(&node)))
+        // GroupConvolution is only supported with MKLDNN
+        else if (!mkldnn_utils::can_use_mkldnn_conv<ngraph::op::GroupConvolution>(
+                     const_cast<Node*>(&node)))
         {
-            Strides stride_1{1, 1};
-            return conv->get_data_dilation_strides() == stride_1;
+            return false;
         }
 
         if (dex)
