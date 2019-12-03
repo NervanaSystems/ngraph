@@ -20,7 +20,9 @@
 
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/frontend/fluid/operators/reduce_sum.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/reduce_sum.hpp"
+#include "ngraph/op/reshape.hpp"
 
 using namespace std;
 using namespace ngraph::fluid;
@@ -80,20 +82,18 @@ void ReduceSum::validate_and_infer_types()
 
 shared_ptr<Node> ReduceSum::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<ReduceSum>(new_args.at(0), m_dim, m_reduce_all, m_keep_dim);
 }
 
 constexpr NodeTypeInfo ReduceSumGrad::type_info;
 
 ReduceSumGrad::ReduceSumGrad(const Output<Node>& x,
+                             const Output<Node>& y,
                              const vector<int>& dim,
                              bool reduce_all,
                              bool keep_dim)
-    : FusedOp({x})
+    : FusedOp({x, y})
     , m_dim(dim)
     , m_reduce_all(reduce_all)
     , m_keep_dim(keep_dim)
@@ -101,13 +101,61 @@ ReduceSumGrad::ReduceSumGrad(const Output<Node>& x,
     constructor_validate_and_infer_types();
 }
 
+NodeVector ReduceSumGrad::decompose_op() const
+{
+    auto shape = get_input_partial_shape(0);
+    auto grad_shape = get_input_partial_shape(1);
+    if (shape.is_dynamic() || grad_shape.is_dynamic())
+    {
+        throw ngraph_error("All input needs to have static shape to decompose");
+    }
+    auto input_shape = shape.to_shape();
+    int input_rank = static_cast<int>(input_shape.size());
+    NodeVector retval;
+    vector<size_t> axes;
+    if (m_reduce_all)
+    {
+        iota(axes.begin(), axes.end(), 0);
+    }
+    else
+    {
+        for (int axis : m_dim)
+        {
+            axes.emplace_back(axis < 0 ? static_cast<size_t>(axis + input_rank)
+                                       : static_cast<size_t>(axis));
+        }
+    }
+    AxisSet red_axes(axes);
+    auto grad = input_value(1);
+    // restore reduced dim in y
+    if (!m_keep_dim)
+    {
+        AxisVector axis_vec(grad_shape.to_shape().size());
+        iota(axis_vec.begin(), axis_vec.end(), 0);
+        grad = make_shared<ngraph::op::v0::Reshape>(grad, axis_vec, input_shape);
+    }
+    // broadcast the reduced axes
+    auto node = make_shared<ngraph::op::v0::Broadcast>(grad, input_shape, red_axes);
+    retval.emplace_back(node);
+    return retval;
+}
+
+void ReduceSumGrad::validate_and_infer_types()
+{
+    auto shape = get_input_partial_shape(0);
+    if (shape.is_dynamic())
+    {
+        set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
+    }
+    else
+    {
+        FusedOp::validate_and_infer_types();
+    }
+}
+
 shared_ptr<Node> ReduceSumGrad::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<ReduceSumGrad>(new_args.at(0), m_dim, m_reduce_all, m_keep_dim);
-}
-
-NodeVector ReduceSumGrad::decompose_op() const
-{
-    return {};
+    return make_shared<ReduceSumGrad>(
+        new_args.at(0), new_args.at(1), m_dim, m_reduce_all, m_keep_dim);
 }
