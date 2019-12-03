@@ -103,13 +103,13 @@ ReduceSumGrad::ReduceSumGrad(const Output<Node>& x,
 
 NodeVector ReduceSumGrad::decompose_op() const
 {
-    auto shape = get_input_partial_shape(0);
-    auto grad_shape = get_input_partial_shape(1);
-    if (shape.is_dynamic() || grad_shape.is_dynamic())
+    auto x_shape = get_input_partial_shape(0);
+    auto y_shape = get_input_partial_shape(1);
+    if (x_shape.is_dynamic() || y_shape.is_dynamic())
     {
         throw ngraph_error("All input needs to have static shape to decompose");
     }
-    auto input_shape = shape.to_shape();
+    auto input_shape = x_shape.to_shape();
     int input_rank = static_cast<int>(input_shape.size());
     NodeVector retval;
     vector<size_t> axes;
@@ -127,12 +127,26 @@ NodeVector ReduceSumGrad::decompose_op() const
     }
     AxisSet red_axes(axes);
     auto grad = input_value(1);
-    // restore reduced dim in y
-    if (!m_keep_dim)
+    // squeeze kept dim in y
+    if (m_keep_dim)
     {
-        AxisVector axis_vec(grad_shape.to_shape().size());
+        auto grad_shape = y_shape.to_shape();
+        AxisVector axis_vec(grad_shape.size());
         iota(axis_vec.begin(), axis_vec.end(), 0);
-        grad = make_shared<ngraph::op::v0::Reshape>(grad, axis_vec, input_shape);
+        for (size_t axis : axes)
+        {
+            grad_shape[axis] = 0;
+        }
+        vector<size_t> squeezed;
+        for (size_t dim : grad_shape)
+        {
+            if (dim != 0)
+            {
+                squeezed.emplace_back(dim);
+            }
+        }
+        Shape squeezed_grad_shape(squeezed);
+        grad = make_shared<ngraph::op::v0::Reshape>(grad, axis_vec, squeezed_grad_shape);
     }
     // broadcast the reduced axes
     auto node = make_shared<ngraph::op::v0::Broadcast>(grad, input_shape, red_axes);
