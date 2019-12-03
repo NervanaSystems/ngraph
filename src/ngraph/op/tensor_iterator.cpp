@@ -472,11 +472,11 @@ std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& n
 //    op->m_body =
 //            std::make_shared<BodyLambda>(spec_func->get_results(), spec_func->get_parameters());
 
-//    Function func(m_body->get_results(), m_body->get_parameters());
-//    auto deep_cp_func = clone_function(func);
-//    op->m_body = make_shared<BodyLambda>(deep_cp_func->get_results(), deep_cp_func->get_parameters());
+    Function func(m_body->get_results(), m_body->get_parameters());
+    auto deep_cp_func = clone_function(func);
+    op->m_body = make_shared<BodyLambda>(deep_cp_func->get_results(), deep_cp_func->get_parameters());
 
-    op->m_body = m_body;
+//    op->m_body = std::make_shared<BodyLambda>(m_body->get_results(), m_body->get_parameters());
     for (auto& input_description : m_input_descriptions)
     {
         op->m_input_descriptions.push_back(input_description->copy());
