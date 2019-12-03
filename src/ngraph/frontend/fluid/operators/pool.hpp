@@ -41,7 +41,8 @@ namespace ngraph
                  const Shape& window_shape,
                  const Strides& window_movement_strides,
                  const Shape& padding,
-                 string pool_type);
+                 const bool global_pooling,
+                 const string pooling_type);
 
             virtual NodeVector decompose_op() const override;
 
@@ -54,7 +55,8 @@ namespace ngraph
             Shape m_window_shape;
             Strides m_window_movement_strides;
             Shape m_padding;
-            string m_pool_type;
+            bool m_global_pooling;
+            string m_pooling_type;
         };
 
         /// \brief Fluid reduce_sum_grad
@@ -74,7 +76,8 @@ namespace ngraph
                      const Shape& window_shape,
                      const Strides& window_movement_strides,
                      const Shape& padding,
-                     string pool_type);
+                     const bool global_pooling,
+                     const string pooling_type);
 
             virtual NodeVector decompose_op() const override;
 
@@ -87,7 +90,8 @@ namespace ngraph
             Shape m_window_shape;
             Strides m_window_movement_strides;
             Shape m_padding;
-            string m_pool_type;
+            bool m_global_pooling;
+            string m_pooling_type;
         };
     }
 }

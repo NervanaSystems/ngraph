@@ -28,84 +28,106 @@ Pool::Pool(const Output<Node>& x,
            const Shape& window_shape,
            const Strides& window_movement_strides,
            const Shape& padding,
-           string pool_type)
+           const bool global_pooling,
+           const string pooling_type)
     : FusedOp({x})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding(padding)
-    , m_pool_type(pool_type)
+    , m_global_pooling(global_pooling)
+    , m_pooling_type(pooling_type)
+{
+    constructor_validate_and_infer_types();
+}
+
+NodeVector Pool::decompose_op() const
+{
+    auto x = input_value(0);
+    auto x_shape = get_input_shape(0);
+
+    NODE_VALIDATION_CHECK(
+        this, x_shape.size() - 2 == m_window_shape.size(), "Supporting 2d pooling only");
+
+    return {};
+}
+
+shared_ptr<Node> Pool::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
     {
-        constructor_validate_and_infer_types();
+        throw ngraph_error("Incorrect number of new arguments");
     }
 
-    NodeVector Pool::decompose_op() const
+    return make_shared<Pool>(new_args.at(0),
+                             m_window_shape,
+                             m_window_movement_strides,
+                             m_padding,
+                             m_global_pooling,
+                             m_pooling_type);
+}
+
+void Pool::pre_validate_and_infer_types()
+{
+    element::Type input_element_type = get_input_element_type(0);
+    PartialShape input_pshape = get_input_partial_shape(0);
+
+    NODE_VALIDATION_CHECK(this,
+                          input_element_type.is_dynamic() || input_element_type.is_real(),
+                          "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
+                          input_element_type,
+                          ").");
+
+    if (input_pshape.is_dynamic())
     {
-        return {};
+        set_output_type(0, input_element_type, input_pshape);
     }
+}
 
-    shared_ptr<Node> Pool::copy_with_new_args(const NodeVector& new_args) const
-    {
-        if (new_args.size() != 1)
-        {
-            throw ngraph_error("Incorrect number of new arguments");
-        }
-        return make_shared<Pool>(
-            new_args.at(0), m_window_shape, m_window_movement_strides, m_padding, m_pool_type);
-    }
+constexpr NodeTypeInfo PoolGrad::type_info;
 
-    void Pool::pre_validate_and_infer_types()
-    {
-        element::Type input_element_type = get_input_element_type(0);
-
-        NODE_VALIDATION_CHECK(this,
-                              input_element_type.is_dynamic() || input_element_type.is_real(),
-                              "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
-                              input_element_type,
-                              ").");
-    }
-
-    constexpr NodeTypeInfo PoolGrad::type_info;
-
-    PoolGrad::PoolGrad(const Output<Node>& x,
-                       const Output<Node>& output,
-                       const Output<Node>& output_delta,
-                       const Shape& window_shape,
-                       const Strides& window_movement_strides,
-                       const Shape& padding,
-                       string pool_type)
+PoolGrad::PoolGrad(const Output<Node>& x,
+                   const Output<Node>& output,
+                   const Output<Node>& output_delta,
+                   const Shape& window_shape,
+                   const Strides& window_movement_strides,
+                   const Shape& padding,
+                   const bool global_pooling,
+                   const string pooling_type)
     : FusedOp({x, output, output_delta})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding(padding)
-    , m_pool_type(pool_type)
-    {
-        constructor_validate_and_infer_types();
-    }
+    , m_global_pooling(global_pooling)
+    , m_pooling_type(pooling_type)
+{
+    constructor_validate_and_infer_types();
+}
 
-    void PoolGrad::pre_validate_and_infer_types()
-    {
-        element::Type input_element_type = get_input_element_type(0);
+void PoolGrad::pre_validate_and_infer_types()
+{
+    element::Type input_element_type = get_input_element_type(0);
 
-        NODE_VALIDATION_CHECK(this,
-                              input_element_type.is_dynamic() || input_element_type.is_real(),
-                              "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
-                              input_element_type,
-                              ").");
-    }
+    NODE_VALIDATION_CHECK(this,
+                          input_element_type.is_dynamic() || input_element_type.is_real(),
+                          "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
+                          input_element_type,
+                          ").");
+}
 
-    shared_ptr<Node> PoolGrad::copy_with_new_args(const NodeVector& new_args) const
-    {
-        check_new_args_count(this, new_args);
-        return make_shared<PoolGrad>(new_args.at(0),
-                                     new_args.at(1),
-                                     new_args.at(2),
-                                     m_window_shape,
-                                     m_window_movement_strides,
-                                     m_padding,
-                                     m_pool_type);
-    }
+shared_ptr<Node> PoolGrad::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<PoolGrad>(new_args.at(0),
+                                 new_args.at(1),
+                                 new_args.at(2),
+                                 m_window_shape,
+                                 m_window_movement_strides,
+                                 m_padding,
+                                 m_global_pooling,
+                                 m_pooling_type);
+}
 
-    NodeVector PoolGrad::decompose_op() const
-    {
-        return {};
-    }
+NodeVector PoolGrad::decompose_op() const
+{
+    return {};
+}
