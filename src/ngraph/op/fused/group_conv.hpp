@@ -28,7 +28,7 @@ namespace ngraph
         namespace v1
         {
             /// \brief Batched convolution operation, with optional window dilation and stride.
-            class NGRAPH_API GroupConvolution : public Op
+            class NGRAPH_API GroupConvolution : public op::util::FusedOp
             {
             public:
                 static constexpr NodeTypeInfo type_info{"GroupConvolution", 1};
@@ -61,7 +61,9 @@ namespace ngraph
                                  const CoordinateDiff& pads_end,
                                  const Strides& dilations,
                                  const PadType& auto_pad = PadType::EXPLICIT);
-
+                // TODO - Remove supports_decompose and validate_and_infer_type once op supports
+                // decomposition
+                bool supports_decompose() const override { return false; }
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
@@ -96,7 +98,7 @@ namespace ngraph
             };
 
             /// \brief Data batch backprop for batched convolution operation.
-            class NGRAPH_API GroupConvolutionBackpropData : public Op
+            class NGRAPH_API GroupConvolutionBackpropData : public op::util::FusedOp
             {
             public:
                 static constexpr NodeTypeInfo type_info{"GroupConvolutionBackpropData", 1};
@@ -147,6 +149,9 @@ namespace ngraph
                                              const PadType& auto_pad = PadType::EXPLICIT,
                                              const CoordinateDiff& output_padding = {});
 
+                // TODO - Remove supports_decompose and validate_and_infer_type once op supports
+                // decomposition
+                bool supports_decompose() const override { return false; }
                 void validate_and_infer_types() override;
 
                 void generate_adjoints(autodiff::Adjoints& adjoints,
