@@ -1370,6 +1370,30 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::CTCGreedyDecoder: { break;
         }
+        case OP_TYPEID::DeformablePSROIPooling_v1:
+        {
+            const auto output_dim = node_js.at("output_dim").get<int64_t>();
+            const auto spatial_scale = node_js.at("spatial_scale").get<float>();
+            const auto group_size = node_js.at("group_size").get<int64_t>();
+            const auto mode = node_js.at("mode").get<std::string>();
+            const auto spatial_bins_x = node_js.at("spatial_bins_x").get<int64_t>();
+            const auto spatial_bins_y = node_js.at("spatial_bins_y").get<int64_t>();
+            const auto trans_std = node_js.at("trans_std").get<float>();
+            const auto part_size = node_js.at("part_size").get<int64_t>();
+
+            node = make_shared<op::v1::DeformablePSROIPooling>(args[0],
+                                                               args[1],
+                                                               args[2],
+                                                               output_dim,
+                                                               spatial_scale,
+                                                               group_size,
+                                                               mode,
+                                                               spatial_bins_x,
+                                                               spatial_bins_y,
+                                                               trans_std,
+                                                               part_size);
+            break;
+        }
         case OP_TYPEID::DepthToSpace_v1:
         {
             auto mode = node_js.at("mode").get<op::DepthToSpace::DepthToSpaceMode>();
@@ -1543,6 +1567,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::GatherND:
         {
             node = make_shared<op::GatherND>(args[0], args[1]);
+            break;
+        }
+        case OP_TYPEID::GatherTree_v1:
+        {
+            node = make_shared<op::v1::GatherTree>(args[0], args[1], args[2], args[3]);
             break;
         }
         case OP_TYPEID::Gelu:
@@ -2434,6 +2463,18 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 
             break;
         }
+        case OP_TYPEID::ReduceLogicalAnd_v1:
+        {
+            const auto keep_dims = node_js.at("keep_dims").get<bool>();
+            node = make_shared<op::v1::ReduceLogicalAnd>(args[0], args[1], keep_dims);
+            break;
+        }
+        case OP_TYPEID::ReduceLogicalOr_v1:
+        {
+            const auto keep_dims = node_js.at("keep_dims").get<bool>();
+            node = make_shared<op::v1::ReduceLogicalOr>(args[0], args[1], keep_dims);
+            break;
+        }
         case OP_TYPEID::Relu:
         {
             node = make_shared<op::Relu>(args[0]);
@@ -2659,9 +2700,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Split:
         {
-            const auto axis = node_js.at("axis").get<size_t>();
             const auto splits = node_js.at("splits").get<vector<size_t>>();
-            node = make_shared<op::Split>(args[0], axis, splits);
+            node = make_shared<op::Split>(args[0], args[1], splits);
             break;
         }
         case OP_TYPEID::Sqrt:
@@ -2684,6 +2724,14 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             node = make_shared<op::Subtract>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            break;
+        }
+        case OP_TYPEID::Subtract_v1:
+        {
+            node = make_shared<op::v1::Subtract>(
+                args[0],
+                args[1],
+                read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
             break;
         }
         case OP_TYPEID::ReduceSum_v1:
@@ -3397,6 +3445,19 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::ReorgYolo: { break;
     }
 
+    case OP_TYPEID::DeformablePSROIPooling_v1:
+    {
+        auto tmp = static_cast<const op::v1::DeformablePSROIPooling*>(&n);
+        node["output_dim"] = tmp->get_output_dim();
+        node["group_size"] = tmp->get_group_size();
+        node["spatial_scale"] = tmp->get_spatial_scale();
+        node["mode"] = tmp->get_mode();
+        node["spatial_bins_x"] = tmp->get_spatial_bins_x();
+        node["spatial_bins_y"] = tmp->get_spatial_bins_y();
+        node["trans_std"] = tmp->get_trans_std();
+        node["part_size"] = tmp->get_part_size();
+        break;
+    }
     case OP_TYPEID::Dequantize:
     {
         auto tmp = static_cast<const op::Dequantize*>(&n);
@@ -3536,6 +3597,8 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Gather_v1: { break;
     }
     case OP_TYPEID::GatherND: { break;
+    }
+    case OP_TYPEID::GatherTree_v1: { break;
     }
     case OP_TYPEID::GetOutputElement:
     {
@@ -4126,12 +4189,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["output_axes"] = tmp->get_output_axes();
         break;
     }
-    case OP_TYPEID::Recv:
-    {
-        auto tmp = static_cast<const op::Recv*>(&n);
-        node["source_id"] = tmp->get_src_id();
-        break;
-    }
     case OP_TYPEID::RandomUniform:
     {
         auto tmp = static_cast<const op::RandomUniform*>(&n);
@@ -4141,6 +4198,24 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Range: { break;
     }
     case OP_TYPEID::Reciprocal: { break;
+    }
+    case OP_TYPEID::Recv:
+    {
+        auto tmp = static_cast<const op::Recv*>(&n);
+        node["source_id"] = tmp->get_src_id();
+        break;
+    }
+    case OP_TYPEID::ReduceLogicalAnd_v1:
+    {
+        const auto tmp = static_cast<const op::v1::ReduceLogicalAnd*>(&n);
+        node["keep_dims"] = tmp->get_keep_dims();
+        break;
+    }
+    case OP_TYPEID::ReduceLogicalOr_v1:
+    {
+        const auto tmp = static_cast<const op::v1::ReduceLogicalOr*>(&n);
+        node["keep_dims"] = tmp->get_keep_dims();
+        break;
     }
     case OP_TYPEID::ReduceMean_v1:
     {
@@ -4274,7 +4349,6 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Split:
     {
         auto tmp = static_cast<const op::Split*>(&n);
-        node["axis"] = tmp->get_axis();
         node["splits"] = tmp->get_splits();
         break;
     }
@@ -4296,6 +4370,15 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Subtract:
     {
         auto tmp = static_cast<const op::Subtract*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
+    }
+    case OP_TYPEID::Subtract_v1:
+    {
+        auto tmp = static_cast<const op::v1::Subtract*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
