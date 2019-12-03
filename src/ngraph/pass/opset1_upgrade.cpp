@@ -18,6 +18,7 @@
 #include <limits>
 #include <numeric>
 
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/pass/opset1_upgrade.hpp"
@@ -136,11 +137,9 @@ namespace
         auto data_dilation_strides = node->get_data_dilation_strides();
         auto auto_pad = node->get_pad_type();
 
-        bool is_dds_valid = true;
-        for (auto value : data_dilation_strides)
-        {
-            is_dds_valid = is_dds_valid && (value == 1);
-        }
+        bool is_dds_valid = all_of(data_dilation_strides.begin(),
+                                   data_dilation_strides.end(),
+                                   [](size_t value) { return value == 1; });
 
         NGRAPH_CHECK(is_dds_valid,
                      "Unable to convert Convolution:0 to Convolution:1 with data dilation strides "
@@ -167,11 +166,9 @@ namespace
         auto pads_end = node->get_padding_above_forward();
         auto data_dilation_strides = node->get_data_dilation_strides_forward();
 
-        bool is_dds_valid = true;
-        for (auto value : data_dilation_strides)
-        {
-            is_dds_valid = is_dds_valid && (value == 1);
-        }
+        bool is_dds_valid = all_of(data_dilation_strides.begin(),
+                                   data_dilation_strides.end(),
+                                   [](size_t value) { return value == 1; });
 
         NGRAPH_CHECK(is_dds_valid,
                      "Unable to convert ConvolutionBackpropData:0 to ConvolutionBackpropData:1 "
@@ -268,6 +265,62 @@ namespace
     bool op_cast(shared_ptr<op::GreaterEq> node)
     {
         op_cast_binary_elementwise_node<op::v0::GreaterEq, op::v1::GreaterEqual>(node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v0::GroupConvolution> node)
+    {
+        auto strides = node->get_window_movement_strides();
+        auto dilations = node->get_window_dilation_strides();
+        auto pads_begin = node->get_padding_below();
+        auto pads_end = node->get_padding_above();
+        auto data_dilation_strides = node->get_data_dilation_strides();
+        auto auto_pad = node->get_pad_type();
+
+        bool is_dds_valid = all_of(data_dilation_strides.begin(),
+                                   data_dilation_strides.end(),
+                                   [](size_t value) { return value == 1; });
+
+        NGRAPH_CHECK(is_dds_valid,
+                     "Unable to convert GroupConvolution:0 to GroupConvolution:1"
+                     "with data dilation strides other than `1`. Node: ",
+                     *node);
+
+        shared_ptr<Node> replacement_node;
+        if (node->has_groups_in_filters())
+        {
+            replacement_node = make_shared<op::v1::GroupConvolution>(node->input_value(0),
+                                                                     node->input_value(1),
+                                                                     strides,
+                                                                     pads_begin,
+                                                                     pads_end,
+                                                                     dilations,
+                                                                     auto_pad);
+        }
+        else
+        {
+            NGRAPH_CHECK(node->get_input_partial_shape(1).is_static(),
+                         "Unable to convert GroupConvolution:0 to GroupConvolution:1"
+                         "with dynamic filters shape. Node: ",
+                         *node);
+
+            auto filters_shape = node->get_input_shape(1);
+            auto groups = node->get_groups();
+            filters_shape[0] /= groups;
+            filters_shape.insert(filters_shape.begin(), groups);
+
+            auto reshaped_filters = builder::reshape(node->input_value(1), filters_shape);
+
+            replacement_node =
+                make_shared<op::v1::GroupConvolution>(node->input(0).get_source_output(),
+                                                      reshaped_filters,
+                                                      strides,
+                                                      pads_begin,
+                                                      pads_end,
+                                                      dilations,
+                                                      auto_pad);
+        }
+        replace_node(node, replacement_node);
         return true;
     }
 
