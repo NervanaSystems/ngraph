@@ -24,10 +24,9 @@ namespace ngraph
 {
     namespace op
     {
-        class CrossEntropy : public ngraph::op::util::FusedOp
+        class NGRAPH_API CrossEntropy : public ngraph::op::util::FusedOp
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"CrossEntropy", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             CrossEntropy() = default;
@@ -57,10 +56,9 @@ namespace ngraph
             int64_t m_ignore_index;
         };
 
-        class CrossEntropyBackprop : public util::FusedOp
+        class NGRAPH_API CrossEntropyBackprop : public util::FusedOp
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"CrossEntropyBackprop", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             CrossEntropyBackprop() = default;

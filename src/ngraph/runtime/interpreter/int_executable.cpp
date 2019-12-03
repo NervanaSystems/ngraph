@@ -45,11 +45,8 @@ runtime::interpreter::OP_TYPEID
     // {Acos::type_info, OP_TYPEID::Acos},
     // ...
     static const map<NodeTypeInfo, OP_TYPEID> type_info_map{
-#define NGRAPH_OP(a, b) {b::a::type_info, OP_TYPEID::a},
-#include "ngraph/op/op_v0_tbl.hpp"
-#undef NGRAPH_OP
-#define NGRAPH_OP(a, b) {b::a::type_info, OP_TYPEID::a##_v1},
-#include "ngraph/op/op_v1_tbl.hpp"
+#define NGRAPH_OP(NAME, NAMESPACE) {NAMESPACE::NAME::type_info, OP_TYPEID::ID_SUFFIX(NAME)},
+#include "ngraph/runtime/interpreter/opset_int_tbl.hpp"
 #undef NGRAPH_OP
     };
     OP_TYPEID rc = OP_TYPEID::UnknownOp;
