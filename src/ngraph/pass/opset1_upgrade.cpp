@@ -494,6 +494,12 @@ namespace
         return true;
     }
 
+    bool op_cast(shared_ptr<op::Subtract> node)
+    {
+        op_cast_binary_elementwise_node<op::v0::Subtract, op::v1::Subtract>(node);
+        return true;
+    }
+
     bool op_cast(shared_ptr<op::Sum> node)
     {
         bool keep_dims = false;
