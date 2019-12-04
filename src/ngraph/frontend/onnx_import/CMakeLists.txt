@@ -140,6 +140,8 @@ add_library(onnx_import STATIC
         op/mul.hpp
         op/neg.hpp
         op/not.hpp
+        op/non_max_suppression.cpp
+        op/non_max_suppression.hpp
         op/onehot.cpp
         op/onehot.hpp
         op/or.hpp
