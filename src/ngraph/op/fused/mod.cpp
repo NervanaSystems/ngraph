@@ -49,7 +49,7 @@ NodeVector op::v1::Mod::decompose_op() const
     // truncated(a / b) * b
     const auto multiplication = make_shared<op::v1::Multiply>(division, divisor, m_auto_broadcast);
     // a mod b = a - truncated(a / b) * b
-    const auto mod = make_shared<op::Subtract>(dividend, multiplication, m_auto_broadcast);
+    const auto mod = make_shared<op::v1::Subtract>(dividend, multiplication, m_auto_broadcast);
 
     // apply sign of dividend
     return {make_shared<op::v1::Multiply>(dividend_sign, mod, m_auto_broadcast)};

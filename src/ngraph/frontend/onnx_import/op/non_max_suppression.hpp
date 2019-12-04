@@ -16,14 +16,23 @@
 
 #pragma once
 
-#include "ngraph/ops.hpp"
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/and.hpp"
 
 namespace ngraph
 {
-    namespace opset1
+    namespace onnx_import
     {
-#define NGRAPH_OP(a, b) using b::a;
-#include "ngraph/opsets/opset1_tbl.hpp"
-#undef NGRAPH_OP
-    }
-}
+        namespace op
+        {
+            namespace set_1
+            {
+                NodeVector non_max_suppression(const Node& node);
+            } // namespace set_1
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph
