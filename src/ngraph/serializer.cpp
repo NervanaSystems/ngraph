@@ -61,7 +61,7 @@ namespace
 #undef NGRAPH_OP
         UnknownOp
     };
-} // namespace
+}
 
 static OP_TYPEID get_typeid(const NodeTypeInfo& type_info)
 {
