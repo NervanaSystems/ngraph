@@ -58,7 +58,6 @@ NodeVector Pool::decompose_op() const
     Strides strides = get_window_movement_strides();
     Shape padding = get_padding();
     bool global_pooling = get_global_pooling();
-    bool ceil_mode = get_ceil_mode();
     bool exclusive = get_exclusive();
     bool adaptive = get_adaptive();
     string pooling_type = get_pooling_type();
