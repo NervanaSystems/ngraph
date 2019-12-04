@@ -270,7 +270,7 @@ programmatically or manually) in order to successfully retreive shape data.
 
 * :ref:`create_dyn_tensor`
 * :ref:`call_graph_vw_`
-* :ref:`dyn_ten_result`
+* :ref:`dyn_ten_resultgit`
 * :ref:`kpsh`
 
 
