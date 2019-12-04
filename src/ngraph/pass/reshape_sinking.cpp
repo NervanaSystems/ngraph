@@ -175,6 +175,20 @@ void swim(Input<Node> input, shared_ptr<op::Reshape> reshape)
         auto csw = work_queue.front();
         work_queue.pop_front();
         auto n = csw.input.get_source_output().get_node_shared_ptr();
+
+        auto materialize = [csw, n]() {
+            auto new_reshape = csw.reshape->copy_with_new_args({n});
+            new_reshape->merge_provenance_tags_from(n);
+            NGRAPH_DEBUG << "Materializing new reshape " << describe_reshape(new_reshape);
+            csw.input.replace_source_output(new_reshape->output(0));
+        };
+
+        // Only swim past nodes which have a single user
+        if (n->get_users(true) > 1)
+        {
+            materialize();
+            continue;
+        }
         NGRAPH_DEBUG << "Processing (swimming) " << n->get_name();
         if (auto unary = dynamic_pointer_cast<op::util::UnaryElementwiseArithmetic>(n))
         {
@@ -240,10 +254,7 @@ void swim(Input<Node> input, shared_ptr<op::Reshape> reshape)
         else
         {
             //materialize
-            auto new_reshape = csw.reshape->copy_with_new_args({n});
-            new_reshape->merge_provenance_tags_from(n);
-            NGRAPH_DEBUG << "Materializing new reshape " << describe_reshape(new_reshape);
-            csw.input.replace_source_output(new_reshape->output(0));
+            materialize();
         }
     }
 }
