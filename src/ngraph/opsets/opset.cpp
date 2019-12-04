@@ -31,7 +31,7 @@ ngraph::Node* ngraph::OpSet::create(const std::string& name) const
                : FactoryRegistry<Node>::get().create(type_info_it->second);
 }
 
-ngraph::OpSet& ngraph::get_opset0()
+const ngraph::OpSet& ngraph::get_opset0()
 {
     static std::mutex init_mutex;
     static OpSet opset;
@@ -48,7 +48,7 @@ ngraph::OpSet& ngraph::get_opset0()
     return opset;
 }
 
-ngraph::OpSet& ngraph::get_opset1()
+const ngraph::OpSet& ngraph::get_opset1()
 {
     static std::mutex init_mutex;
     static OpSet opset;

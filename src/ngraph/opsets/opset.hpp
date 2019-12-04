@@ -21,12 +21,13 @@
 #include <set>
 
 #include "ngraph/factory.hpp"
+#include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/node.hpp"
 
 namespace ngraph
 {
     /// \brief Run-time opset information
-    class OpSet
+    class NGRAPH_API OpSet
     {
         static std::mutex& get_mutex();
 
@@ -97,6 +98,6 @@ namespace ngraph
         std::map<std::string, NodeTypeInfo> m_name_type_info_map;
     };
 
-    OpSet& get_opset0();
-    OpSet& get_opset1();
+    const OpSet& get_opset0();
+    const OpSet& get_opset1();
 }
