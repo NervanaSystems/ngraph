@@ -542,7 +542,6 @@ private:
                                  concat->get_concatenation_axis());
             break;
         }
-        case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::Constant:
         {
             const op::Constant* c = static_cast<const op::Constant*>(&node);
@@ -1879,6 +1878,7 @@ private:
         case OP_TYPEID::PartialSlice:
         case OP_TYPEID::PartialSliceBackprop:
         case OP_TYPEID::RNNCell:
+        case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::ScaleShift:
         case OP_TYPEID::Selu:
         case OP_TYPEID::ShuffleChannels:
