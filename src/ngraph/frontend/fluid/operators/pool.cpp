@@ -148,12 +148,16 @@ PoolGrad::PoolGrad(const Output<Node>& x,
                    const Strides& window_movement_strides,
                    const Shape& padding,
                    const bool global_pooling,
+                   const bool exclusive,
+                   const bool adaptive,
                    const string pooling_type)
     : FusedOp({x, output, output_delta})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding(padding)
     , m_global_pooling(global_pooling)
+    , m_exclusive(exclusive)
+    , m_adaptive(adaptive)
     , m_pooling_type(pooling_type)
 {
     constructor_validate_and_infer_types();
@@ -179,14 +183,68 @@ shared_ptr<Node> PoolGrad::copy_with_new_args(const NodeVector& new_args) const
     return make_shared<PoolGrad>(new_args.at(0),
                                  new_args.at(1),
                                  new_args.at(2),
-                                 m_window_shape,
-                                 m_window_movement_strides,
-                                 m_padding,
-                                 m_global_pooling,
-                                 m_pooling_type);
+                                 get_window_shape(),
+                                 get_window_movement_strides(),
+                                 get_padding(),
+                                 get_global_pooling(),
+                                 get_exclusive(),
+                                 get_adaptive(),
+                                 get_pooling_type());
 }
 
 NodeVector PoolGrad::decompose_op() const
 {
-    return {};
+    auto x = input_value(0);
+    auto x_shape = get_input_shape(0);
+    auto output = input_value(1);
+    auto output_delta = input_value(2);
+    Shape window_shape = get_window_shape();
+    Strides strides = get_window_movement_strides();
+    Shape padding = get_padding();
+    bool global_pooling = get_global_pooling();
+    bool exclusive = get_exclusive();
+    bool adaptive = get_adaptive();
+    string pooling_type = get_pooling_type();
+
+    NODE_VALIDATION_CHECK(
+        this, x_shape.size() - 2 == window_shape.size(), "Supporting 2d pooling only");
+
+    if (global_pooling)
+    {
+        for (size_t i = 0; i < window_shape.size(); ++i)
+        {
+            padding[i] = 0;
+            window_shape[i] = x_shape[i + 2];
+        }
+    }
+
+    shared_ptr<Node> pool_grad;
+
+    if (pooling_type == "max")
+    {
+        pool_grad = make_shared<op::MaxPoolBackprop>(
+            x, output_delta, output, window_shape, strides, padding, padding);
+    }
+    else if (pooling_type == "avg")
+    {
+        if (adaptive && x_shape.size() == 4)
+        {
+            strides[0] = calculate_adaptive(x_shape[2], window_shape[0]);
+            strides[1] = calculate_adaptive(x_shape[3], window_shape[1]);
+        }
+
+        else if (padding[0] == 0 && padding[1] == 0)
+        {
+            exclusive = false;
+        }
+
+        pool_grad = make_shared<op::AvgPoolBackprop>(
+            x.get_shape(), output_delta, window_shape, strides, padding, padding, !exclusive);
+    }
+    else
+    {
+        throw ngraph_error("Unsupported pooling type");
+    }
+
+    return {pool_grad};
 }
