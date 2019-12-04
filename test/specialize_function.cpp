@@ -362,3 +362,28 @@ TEST(specialize_function, share_constants_with_cf)
     ASSERT_EQ(add_const_1->output(0).get_target_inputs().size(), 1);
     ASSERT_EQ(add_const_2->output(0).get_target_inputs().size(), 1);
 }
+
+TEST(specialize_function, copy_network_with_split)
+{
+    auto p0 = std::make_shared<op::Parameter>(element::f32, PartialShape{1, 3, 64, 64});
+    auto split = std::make_shared<op::Split>(p0, 1, 3);
+    auto res1 = std::make_shared<op::Result>(split->output(0));
+    auto res2 = std::make_shared<op::Result>(split->output(1));
+    auto res3 = std::make_shared<op::Result>(split->output(2));
+    ResultVector res = {res1, res2, res3};
+
+    auto f = std::make_shared<Function>(res, ParameterVector{p0});
+
+    auto f_specialized = specialize_function(
+        f, {element::f32}, {PartialShape{1, 3, 64, 64}}, {nullptr}, false, false);
+    for (const auto& op : f->get_ops())
+    {
+        ASSERT_FALSE(is_type<op::GetOutputElement>(op));
+    }
+    for (const auto& op : f_specialized->get_ops())
+    {
+        ASSERT_FALSE(is_type<op::GetOutputElement>(op));
+    }
+    ASSERT_EQ(5, f->get_ops().size());
+    ASSERT_EQ(f_specialized->get_ops().size(), f->get_ops().size());
+}
