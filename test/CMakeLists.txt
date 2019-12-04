@@ -152,6 +152,7 @@ set(SRC
     type_prop/matmul.cpp
     type_prop/max_pool.cpp
     type_prop/mvn.cpp
+    type_prop/non_max_suppression.cpp
     type_prop/normalize.cpp
     type_prop/one_hot.cpp
     type_prop/pad.cpp
@@ -187,6 +188,7 @@ set(SRC
     type_prop/transpose.cpp
     type_prop/unary_elementwise.cpp
     type_prop/unsqueeze.cpp
+    type_prop/variadic_split.cpp
     type_prop_benchmark.cpp
     type_prop_layers.cpp
     util.cpp

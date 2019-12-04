@@ -14,20 +14,14 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_ONNX_IMPORT_ENABLE)
-    add_subdirectory(onnx_import)
-    if (NGRAPH_ONNXIFI_ENABLE)
-        add_subdirectory(onnxifi)
-    endif()
-endif()
+# Add files here
+target_sources (ngraph PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/operators/pool.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/operators/pool.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/operators/reduce_sum.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/operators/reduce_sum.hpp
+    )
 
-option(NGRAPH_FLUID_ENABLE "Enable build for PaddlePaddle Fluid support" ON)
-NORMALIZE_BOOL(NGRAPH_FLUID_ENABLE)
-message(STATUS "NGRAPH_FLUID_ENABLE:                  ${NGRAPH_FLUID_ENABLE}")
-
-if (NGRAPH_FLUID_ENABLE)
-    option(NGRAPH_FLUID_TEST_ENABLE "Enable PaddlePaddle Fluid operator tests" OFF)
-    NORMALIZE_BOOL(NGRAPH_FLUID_TEST_ENABLE)
-    message(STATUS "NGRAPH_FLUID_TEST_ENABLE:             ${NGRAPH_FLUID_TEST_ENABLE}")
-    add_subdirectory(fluid)
+if (NGRAPH_FLUID_TEST_ENABLE)
+    add_subdirectory(operators/test)
 endif()
