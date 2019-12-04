@@ -21,7 +21,7 @@ const ngraph::OpSet& ngraph::get_opset0()
 {
     static OpSet opset({
 #define NGRAPH_OP(NAME, NAMESPACE) NAMESPACE::NAME::type_info,
-#include "ngraph/opsets/opset1_tbl.hpp"
+#include "ngraph/opsets/opset0_tbl.hpp"
 #undef NGRAPH_OP
     });
     return opset;
