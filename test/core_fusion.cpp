@@ -830,12 +830,11 @@ TEST(core_fusion, softmax_crossentropy_bprop_with_ignore_mask)
 }
 #endif
 
-// TODO(pthoreho): MLIR currently doesnot support all the op's needed for CrossEntropy+Softmax
+// TODO(pthoreho): MLIR currently does not support all the op's needed for CrossEntropy+Softmax
 // this results in multiple CompiledKernels and we cannot able to safely check for certain op's
 // from the function created by user.
 // Note: remove this gaurds once we have full support for CE and Softmax through MLIR
 
-#ifndef NGRAPH_MLIR_ENABLE
 void test_softmax_crossentropy(Shape input_shape,
                                Shape label_shape,
                                bool soft_label,
@@ -870,7 +869,7 @@ void test_softmax_crossentropy(Shape input_shape,
     }
 }
 
-TEST(core_fusion, softmax_crossentropy)
+TEST(core_fusion, MLIR_DISABLE_TEST(softmax_crossentropy))
 {
     test_softmax_crossentropy(Shape{41, 37}, Shape{41, 37}, true, -1);
     test_softmax_crossentropy(Shape{41, 37}, Shape{41, 1}, false, 5);
@@ -907,11 +906,10 @@ void test_crossentropy(Shape input_shape, Shape label_shape, bool soft_label, in
     }
 }
 
-TEST(core_fusion, crossentropy)
+TEST(core_fusion, MLIR_DISBALE_TEST(crossentropy))
 {
     test_crossentropy(Shape{41, 37}, Shape{41, 37}, true, -1);
     test_crossentropy(Shape{41, 37}, Shape{41, 1}, false, 5);
     test_crossentropy(Shape{10, 2, 4, 10}, Shape{10, 2, 4, 1}, false, 5);
     test_crossentropy(Shape{4, 3, 2, 4}, Shape{4, 3, 2, 4}, true, -1);
 }
-#endif
