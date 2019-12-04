@@ -2587,7 +2587,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::ReorgYolo: { break;
         }
 
-        case OP_TYPEID::ScalarConstantLikeBase:
+        case OP_TYPEID::ScalarConstantLike:
         {
             double value = node_js.at("value").get<double>();
             node = make_shared<op::ScalarConstantLike>(args[0], value);
@@ -4329,7 +4329,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["activations_beta"] = tmp->get_activations_beta();
         break;
     }
-    case OP_TYPEID::ScalarConstantLikeBase:
+    case OP_TYPEID::ScalarConstantLike:
     {
         auto tmp = static_cast<const op::ScalarConstantLikeBase*>(&n);
         auto constant = tmp->as_constant();
