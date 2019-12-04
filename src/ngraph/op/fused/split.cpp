@@ -152,13 +152,84 @@ op::v1::Split::Split(const Output<Node>& data, const Output<Node>& axis, const s
     constructor_validate_and_infer_types();
 }
 
-void op::v1::Split::validate_and_infer_types() {
-    // TODO
-    throw 1;
+void op::v1::Split::validate_and_infer_types()
+{
+    const auto data_ps = input_value(0).get_partial_shape();
+    const auto axis_ps = input_value(1).get_partial_shape();
+    const auto axis_et = input_value(1).get_element_type();
+
+    NODE_VALIDATION_CHECK(this,
+                          axis_ps.rank().is_static() && (size_t)axis_ps.rank() == 0,
+                          "The 'axis' input is expected to be a scalar. Got: ",
+                          axis_ps);
+
+    NODE_VALIDATION_CHECK(
+        this, axis_et.is_integral(), "The 'axis' input only accepts integral types");
+
+    if (input_value(1).get_node_shared_ptr()->is_constant())
+    {
+        auto axis = axis_value_from_input();
+
+        if (data_ps.is_static())
+        {
+            const auto data_shape = data_ps.to_shape();
+            axis = ngraph::normalize_axis(this, axis, data_shape.size());
+
+            const auto dimension_at_axis = data_shape.at(axis);
+
+            NODE_VALIDATION_CHECK(this,
+                                  dimension_at_axis % m_num_splits == 0,
+                                  "The input tensor's dimension pointed by the 'axis' parameter: ",
+                                  dimension_at_axis,
+                                  " has to be a multiple of the 'num_splits' attribute value: ",
+                                  m_num_splits);
+
+            Shape each_output_shape{data_shape};
+            each_output_shape.at(axis) = dimension_at_axis / m_num_splits;
+
+            for (size_t i = 0; i < m_num_splits; ++i)
+            {
+                set_output_type(i, input(0).get_element_type(), each_output_shape);
+            }
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < m_num_splits; ++i)
+        {
+            set_output_type(i, input(0).get_element_type(), PartialShape::dynamic());
+        }
+
+        set_input_is_relevant_to_shape(0);
+    }
 }
 
 shared_ptr<Node> op::v1::Split::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::Split>(new_args.at(0), new_args.at(1), m_num_splits);
+}
+
+int64_t op::v1::Split::axis_value_from_input() const
+{
+    int64_t axis_value{0};
+
+    const auto axis_input = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr());
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+#endif
+    switch (static_cast<element::Type_t>(axis_input->get_element_type()))
+    {
+    case element::Type_t::i8: axis_value = axis_input->get_vector<int8_t>().at(0); break;
+    case element::Type_t::i32: axis_value = axis_input->get_vector<int32_t>().at(0); break;
+    case element::Type_t::i64: axis_value = axis_input->get_vector<int64_t>().at(0); break;
+    default: break;
+    }
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+
+    return axis_value;
 }

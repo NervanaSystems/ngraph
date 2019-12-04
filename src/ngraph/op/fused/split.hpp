@@ -107,10 +107,12 @@ namespace ngraph
 
                 size_t get_num_splits() const { return m_num_splits; }
                 void set_num_splits(const size_t num_splits) { m_num_splits = num_splits; }
-
                 bool supports_decompose() const override { return false; }
             protected:
                 size_t m_num_splits;
+
+            private:
+                int64_t axis_value_from_input() const;
             };
         }
 
