@@ -16,18 +16,23 @@
 
 #pragma once
 
-#include "ngraph/pass/pass.hpp"
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/and.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace onnx_import
     {
-        class GetOutputElementElimination;
-    }
-}
+        namespace op
+        {
+            namespace set_1
+            {
+                NodeVector non_max_suppression(const Node& node);
+            } // namespace set_1
 
-class NGRAPH_API ngraph::pass::GetOutputElementElimination : public FunctionPass
-{
-public:
-    bool run_on_function(std::shared_ptr<ngraph::Function> f) override;
-};
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

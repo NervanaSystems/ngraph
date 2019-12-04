@@ -259,6 +259,8 @@ set (SRC
     op/multiply.hpp
     op/negative.cpp
     op/negative.hpp
+    op/non_max_suppression.cpp
+    op/non_max_suppression.hpp
     op/not.cpp
     op/not.hpp
     op/not_equal.cpp
