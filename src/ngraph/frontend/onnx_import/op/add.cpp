@@ -45,11 +45,10 @@ namespace ngraph
                 NodeVector add(const Node& node)
                 {
                     return {std::make_shared<Add>(node.get_ng_inputs().at(0),
-                                                                  node.get_ng_inputs().at(1))};
+                                                  node.get_ng_inputs().at(1))};
                 }
 
             } // namespace set_7
-
 
         } // namespace op
 
