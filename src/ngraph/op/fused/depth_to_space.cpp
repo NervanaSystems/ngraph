@@ -91,11 +91,13 @@ NodeVector op::DepthToSpace::decompose_op() const
 
     NGRAPH_CHECK(m_blocksize > 0 &&
         c_dim % c_dim_divider == 0,
-                 "SpaceToDepth: The depth axis size must be a multiple of ",
-                 "block_size^spatial_dims attribute value.");
+                 "The color axis size: ", c_dim, " must be a multiple of ",
+                 "block_size^spatial_dims: ", c_dim_divider," attribute value");
 
     auto bs = static_cast<size_t>(m_blocksize);
     size_t c_flat = c_dim / c_dim_divider;
+
+    //TODO
 
     // First we have to disperse the data from depth channel, then rearrange them
     // so as appropriate chunks of data where close to their destination place.
@@ -169,7 +171,8 @@ NodeVector op::DepthToSpace::decompose_op() const
     }
     std::cout << "3. Expected: " << Shape{n, c_flat, h * bs, w * bs} << " is: " << squeezed_shape
               << "\n";
-    return NodeVector{builder::reshape(flat_node, squeezed_shape)};
+    flat_node = builder::reshape(flat_node, squeezed_shape);
+    return NodeVector{flat_node};
 }
 
 shared_ptr<Node> op::DepthToSpace::copy_with_new_args(const NodeVector& new_args) const

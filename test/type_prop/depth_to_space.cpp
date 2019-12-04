@@ -91,3 +91,24 @@ TEST(type_prop, depth_to_space_input_rank_not_supported)
         FAIL() << "DepthToSpace decomposition failed for unexpected reason";
     }
 }
+
+TEST(type_prop, depth_to_space_blocksize_not_matched)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{ 1, 7, 4, 4 });
+    try
+    {
+        auto space_to_depth =
+            make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST, 2);
+        FAIL() << "Not matched blocksize for DepthToSpace exception not thrown";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "The color axis size: 7 must be a multiple of block_size^spatial_dims: 4 attribute value");
+    }
+    catch (...)
+    {
+        FAIL() << "DepthToSpace decomposition failed for unexpected reason";
+    }
+}
