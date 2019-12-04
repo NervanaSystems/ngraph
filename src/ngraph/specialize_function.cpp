@@ -16,6 +16,7 @@
 
 #include "ngraph/specialize_function.hpp"
 #include <pass/constant_folding.hpp>
+#include <pass/get_output_element_elimination.hpp>
 #include "ngraph/op/constant.hpp"
 
 using namespace ngraph;
@@ -120,5 +121,8 @@ std::shared_ptr<Function>
     {
         ngraph::pass::ConstantFolding().run_on_function(function);
     }
+
+    ngraph::pass::GetOutputElementElimination().run_on_function(function);
+
     return function;
 }
