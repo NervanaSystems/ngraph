@@ -113,65 +113,13 @@ void MLIRCPURuntime::bindArguments(std::vector<void*>& externalTensors,
     // Assign external tensor pointers to invocation arguments.
     for (size_t i = 0, numArgs = m_invokeArgs.size(); i < numArgs; ++i)
     {
-        if (shapeVec[i].size() == 0)
+        auto* memRefArg = *(reinterpret_cast<StaticMemRef**>(m_invokeArgs[i]));
+        memRefArg->basePtr = reinterpret_cast<float*>((*m_externalTensors)[i]);
+        auto rank = m_ranks[i];
+        for (auto j = 0; j < rank; j++)
         {
-            auto* memRefArg = *(reinterpret_cast<StridedMemRef<0>**>(m_invokeArgs[i]));
-            memRefArg->basePtr = reinterpret_cast<float*>((*m_externalTensors)[i]);
-        }
-        else if (shapeVec[i].size() == 1)
-        {
-            auto* memRefArg = *(reinterpret_cast<StridedMemRef<1>**>(m_invokeArgs[i]));
-            memRefArg->basePtr = reinterpret_cast<float*>((*m_externalTensors)[i]);
-
-            for (auto j = 0; j < 1; j++)
-            {
-                memRefArg->shape[j] = shapeVec[i][j];
-                memRefArg->strides[j] = stridesVec[i][j];
-            }
-        }
-        else if (shapeVec[i].size() == 2)
-        {
-            auto* memRefArg = *(reinterpret_cast<StridedMemRef<2>**>(m_invokeArgs[i]));
-            memRefArg->basePtr = reinterpret_cast<float*>((*m_externalTensors)[i]);
-
-            for (auto j = 0; j < 2; j++)
-            {
-                memRefArg->shape[j] = shapeVec[i][j];
-                memRefArg->strides[j] = stridesVec[i][j];
-            }
-        }
-        if (shapeVec[i].size() == 3)
-        {
-            auto* memRefArg = *(reinterpret_cast<StridedMemRef<3>**>(m_invokeArgs[i]));
-            memRefArg->basePtr = reinterpret_cast<float*>((*m_externalTensors)[i]);
-
-            for (auto j = 0; j < 3; j++)
-            {
-                memRefArg->shape[j] = shapeVec[i][j];
-                memRefArg->strides[j] = stridesVec[i][j];
-            }
-        }
-        if (shapeVec[i].size() == 4)
-        {
-            auto* memRefArg = *(reinterpret_cast<StridedMemRef<4>**>(m_invokeArgs[i]));
-            memRefArg->basePtr = reinterpret_cast<float*>((*m_externalTensors)[i]);
-
-            for (auto j = 0; j < 4; j++)
-            {
-                memRefArg->shape[j] = shapeVec[i][j];
-                memRefArg->strides[j] = stridesVec[i][j];
-            }
-        }
-        if (shapeVec[i].size() == 5)
-        {
-            auto* memRefArg = *(reinterpret_cast<StridedMemRef<5>**>(m_invokeArgs[i]));
-            memRefArg->basePtr = reinterpret_cast<float*>((*m_externalTensors)[i]);
-
-            for (auto j = 0; j < 5; j++)
-            {
-                memRefArg->shape[j] = shapeVec[i][j];
-                memRefArg->strides[j] = stridesVec[i][j];
-            }
+            memRefArg->shapeAndStrides[j] = shapeVec[i][j];
+            memRefArg->shapeAndStrides[rank + j] = stridesVec[i][j];
         }
     }
 }
@@ -199,37 +147,8 @@ void MLIRCPURuntime::cleanup()
     int i = 0;
     for (auto* arg : m_invokeArgs)
     {
-        if (m_ranks[i] == 0)
-        {
-            auto* memRefArg = *(reinterpret_cast<StridedMemRef<0>**>(arg));
-            free(memRefArg);
-        }
-        else if (m_ranks[i] == 1)
-        {
-            auto* memRefArg = *(reinterpret_cast<StridedMemRef<1>**>(arg));
-            free(memRefArg);
-        }
-        else if (m_ranks[i] == 2)
-        {
-            auto* memRefArg = *(reinterpret_cast<StridedMemRef<2>**>(arg));
-            free(memRefArg);
-        }
-        else if (m_ranks[i] == 3)
-        {
-            auto* memRefArg = *(reinterpret_cast<StridedMemRef<3>**>(arg));
-            free(memRefArg);
-        }
-        else if (m_ranks[i] == 4)
-        {
-            auto* memRefArg = *(reinterpret_cast<StridedMemRef<4>**>(arg));
-            free(memRefArg);
-        }
-        else if (m_ranks[i] == 5)
-        {
-            auto* memRefArg = *(reinterpret_cast<StridedMemRef<5>**>(arg));
-            free(memRefArg);
-        }
-
+        auto* memRefArg = *(reinterpret_cast<StaticMemRef**>(arg));
+        free(memRefArg);
         free(arg);
     }
 }
@@ -246,64 +165,20 @@ SmallVector<void*, 8> MLIRCPURuntime::allocateMemrefArgs()
     SmallVector<void*, 8> args;
     for (auto i = 0; i < m_externalTensors->size(); i++)
     {
-        if (m_ranks[i] == 0)
-        {
-            auto descriptor = allocateMemrefDescriptor<0>();
-            StridedMemRef<0>** arg =
-                reinterpret_cast<StridedMemRef<0>**>(malloc(sizeof(StridedMemRef<0>*)));
-            *arg = descriptor;
-            args.push_back(arg);
-        }
-        else if (m_ranks[i] == 1)
-        {
-            auto descriptor = allocateMemrefDescriptor<1>();
-            StridedMemRef<1>** arg =
-                reinterpret_cast<StridedMemRef<1>**>(malloc(sizeof(StridedMemRef<1>*)));
-            *arg = descriptor;
-            args.push_back(arg);
-        }
-        else if (m_ranks[i] == 2)
-        {
-            auto descriptor = allocateMemrefDescriptor<2>();
-            StridedMemRef<2>** arg =
-                reinterpret_cast<StridedMemRef<2>**>(malloc(sizeof(StridedMemRef<2>*)));
-            *arg = descriptor;
-            args.push_back(arg);
-        }
-        else if (m_ranks[i] == 3)
-        {
-            auto descriptor = allocateMemrefDescriptor<3>();
-            StridedMemRef<3>** arg =
-                reinterpret_cast<StridedMemRef<3>**>(malloc(sizeof(StridedMemRef<3>*)));
-            *arg = descriptor;
-            args.push_back(arg);
-        }
-        else if (m_ranks[i] == 4)
-        {
-            auto descriptor = allocateMemrefDescriptor<4>();
-            StridedMemRef<4>** arg =
-                reinterpret_cast<StridedMemRef<4>**>(malloc(sizeof(StridedMemRef<4>*)));
-            *arg = descriptor;
-            args.push_back(arg);
-        }
-        else if (m_ranks[i] == 5)
-        {
-            auto descriptor = allocateMemrefDescriptor<5>();
-            StridedMemRef<5>** arg =
-                reinterpret_cast<StridedMemRef<5>**>(malloc(sizeof(StridedMemRef<5>*)));
-            *arg = descriptor;
-            args.push_back(arg);
-        }
+        auto descriptor = allocateMemrefDescriptor(m_ranks[i]);
+        StaticMemRef** arg = reinterpret_cast<StaticMemRef**>(malloc(sizeof(StaticMemRef*)));
+        *arg = descriptor;
+        args.push_back(arg);
     }
     return args;
 }
 
-template <int N>
-StridedMemRef<N>* MLIRCPURuntime::allocateMemrefDescriptor()
+StaticMemRef* MLIRCPURuntime::allocateMemrefDescriptor(size_t rank)
 {
     // We only use StaticMemRef because that's what MLIR currently offers.
     // We should expand this with different types and dynamic MemRefs
-    auto* descriptor = reinterpret_cast<StridedMemRef<N>*>(malloc(sizeof(StridedMemRef<N>)));
+    auto* descriptor =
+        reinterpret_cast<StaticMemRef*>(malloc(sizeof(StaticMemRef) + 2 * rank * sizeof(int64_t)));
     NGRAPH_CHECK(descriptor != nullptr, "NULL MemRef descriptor");
     descriptor->basePtr = nullptr;
     descriptor->offset = 0;

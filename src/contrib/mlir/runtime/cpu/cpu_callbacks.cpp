@@ -28,17 +28,16 @@ using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
 
 /// Callback for Softmax
-template <int N>
-static void __mlir_mkldnn_softmax(void* input, void* output, const size_t softmax_axis)
+static void __mlir_mkldnn_softmax(size_t rank, void* input, void* output, const size_t softmax_axis)
 {
-    auto memRefInput = reinterpret_cast<StridedMemRef<N>*>(input);
-    auto memRefOutput = reinterpret_cast<StridedMemRef<N>*>(output);
-    mkldnn::memory::dims dims(N);
-    mkldnn::memory::dims strides(N);
-    for (auto i = 0; i < N; i++)
+    auto memRefInput = reinterpret_cast<StaticMemRef*>(input);
+    auto memRefOutput = reinterpret_cast<StaticMemRef*>(output);
+    mkldnn::memory::dims dims(rank);
+    mkldnn::memory::dims strides(rank);
+    for (auto i = 0; i < rank; i++)
     {
-        dims[i] = memRefInput->shape[i];
-        strides[i] = memRefInput->strides[i];
+        dims[i] = memRefInput->shapeAndStrides[i];
+        strides[i] = memRefInput->shapeAndStrides[rank + i];
     }
 
     // build mkldnn primitive and execute
@@ -71,42 +70,38 @@ static void __mlir_mkldnn_softmax(void* input, void* output, const size_t softma
     }
 }
 
-extern "C" NGRAPH_API void __mlir_mkldnn_softmax_2d(StridedMemRef<1>* input,
-                                                    StridedMemRef<1>* output,
-                                                    const size_t softmax_axis)
+extern "C" void __mlir_mkldnn_softmax_2d(void* input, void* output, const size_t softmax_axis)
 {
-    __mlir_mkldnn_softmax<2>(input, output, softmax_axis);
+    __mlir_mkldnn_softmax(2, input, output, softmax_axis);
 }
 
-extern "C" NGRAPH_API void __mlir_mkldnn_softmax_4d(StridedMemRef<1>* input,
-                                                    StridedMemRef<1>* output,
-                                                    const size_t softmax_axis)
+extern "C" void __mlir_mkldnn_softmax_4d(void* input, void* output, const size_t softmax_axis)
 {
-    __mlir_mkldnn_softmax<4>(input, output, softmax_axis);
+    __mlir_mkldnn_softmax(4, input, output, softmax_axis);
 }
 
 /// Callback for MatMul
-extern "C" NGRAPH_API void __mlir_cblas_sgemm(
+extern "C" void __mlir_cblas_sgemm(
     void* matAPtr, void* matBPtr, void* matCPtr, const bool transposeA, const bool transposeB)
 {
-    auto memRefmatA = reinterpret_cast<StridedMemRef<2>*>(matAPtr);
-    auto memRefmatB = reinterpret_cast<StridedMemRef<2>*>(matBPtr);
-    auto memRefmatC = reinterpret_cast<StridedMemRef<2>*>(matCPtr);
+    auto memRefmatA = reinterpret_cast<StaticMemRef*>(matAPtr);
+    auto memRefmatB = reinterpret_cast<StaticMemRef*>(matBPtr);
+    auto memRefmatC = reinterpret_cast<StaticMemRef*>(matCPtr);
 
-    auto m = memRefmatA->shape[0];
-    auto k = memRefmatA->shape[1];
-    auto n = memRefmatB->shape[1];
-    auto lda = memRefmatA->shape[1];
-    auto ldb = memRefmatB->shape[1];
+    auto m = memRefmatA->shapeAndStrides[0];
+    auto k = memRefmatA->shapeAndStrides[1];
+    auto n = memRefmatB->shapeAndStrides[1];
+    auto lda = memRefmatA->shapeAndStrides[1];
+    auto ldb = memRefmatB->shapeAndStrides[1];
 
     if (transposeA)
     {
-        m = memRefmatA->shape[1];
-        k = memRefmatA->shape[0];
+        m = memRefmatA->shapeAndStrides[1];
+        k = memRefmatA->shapeAndStrides[0];
     }
     if (transposeB)
     {
-        n = memRefmatB->shape[0];
+        n = memRefmatB->shapeAndStrides[0];
     }
 
     auto ldc = n;
@@ -128,21 +123,21 @@ extern "C" NGRAPH_API void __mlir_cblas_sgemm(
 }
 
 /// Callback for Gemm
-extern "C" NGRAPH_API void __mlir_cblas_sgemm_with_bias(void* matAPtr,
-                                                        void* matBPtr,
-                                                        void* matCPtr,
-                                                        void* matOutPtr,
-                                                        const bool transposeA,
-                                                        const bool transposeB,
-                                                        const size_t m,
-                                                        const size_t n,
-                                                        const size_t k,
-                                                        const size_t lda,
-                                                        const size_t ldb,
-                                                        const size_t ldc,
-                                                        const float alpha,
-                                                        const float beta,
-                                                        const int broadcastHint)
+extern "C" void __mlir_cblas_sgemm_with_bias(void* matAPtr,
+                                             void* matBPtr,
+                                             void* matCPtr,
+                                             void* matOutPtr,
+                                             const bool transposeA,
+                                             const bool transposeB,
+                                             const size_t m,
+                                             const size_t n,
+                                             const size_t k,
+                                             const size_t lda,
+                                             const size_t ldb,
+                                             const size_t ldc,
+                                             const float alpha,
+                                             const float beta,
+                                             const int broadcastHint)
 {
     auto* matA = *(reinterpret_cast<float**>(matAPtr));
     auto* matB = *(reinterpret_cast<float**>(matBPtr));
@@ -243,21 +238,21 @@ extern "C" NGRAPH_API void __mlir_cblas_sgemm_with_bias(void* matAPtr,
     }
 }
 
-extern "C" NGRAPH_API void __mlir_cblas_sgemm_scalar_bias(void* matAPtr,
-                                                          void* matBPtr,
-                                                          void* matCPtr,
-                                                          void* matOutPtr,
-                                                          const bool transposeA,
-                                                          const bool transposeB,
-                                                          const size_t m,
-                                                          const size_t n,
-                                                          const size_t k,
-                                                          const size_t lda,
-                                                          const size_t ldb,
-                                                          const size_t ldc,
-                                                          const float alpha,
-                                                          const float beta,
-                                                          const int broadcastHint)
+extern "C" void __mlir_cblas_sgemm_scalar_bias(void* matAPtr,
+                                               void* matBPtr,
+                                               void* matCPtr,
+                                               void* matOutPtr,
+                                               const bool transposeA,
+                                               const bool transposeB,
+                                               const size_t m,
+                                               const size_t n,
+                                               const size_t k,
+                                               const size_t lda,
+                                               const size_t ldb,
+                                               const size_t ldc,
+                                               const float alpha,
+                                               const float beta,
+                                               const int broadcastHint)
 {
     __mlir_cblas_sgemm_with_bias(matAPtr,
                                  matBPtr,
@@ -276,21 +271,21 @@ extern "C" NGRAPH_API void __mlir_cblas_sgemm_scalar_bias(void* matAPtr,
                                  broadcastHint);
 }
 
-extern "C" NGRAPH_API void __mlir_cblas_sgemm_1d_bias(void* matAPtr,
-                                                      void* matBPtr,
-                                                      void* matCPtr,
-                                                      void* matOutPtr,
-                                                      const bool transposeA,
-                                                      const bool transposeB,
-                                                      const size_t m,
-                                                      const size_t n,
-                                                      const size_t k,
-                                                      const size_t lda,
-                                                      const size_t ldb,
-                                                      const size_t ldc,
-                                                      const float alpha,
-                                                      const float beta,
-                                                      const int broadcastHint)
+extern "C" void __mlir_cblas_sgemm_1d_bias(void* matAPtr,
+                                           void* matBPtr,
+                                           void* matCPtr,
+                                           void* matOutPtr,
+                                           const bool transposeA,
+                                           const bool transposeB,
+                                           const size_t m,
+                                           const size_t n,
+                                           const size_t k,
+                                           const size_t lda,
+                                           const size_t ldb,
+                                           const size_t ldc,
+                                           const float alpha,
+                                           const float beta,
+                                           const int broadcastHint)
 {
     __mlir_cblas_sgemm_with_bias(matAPtr,
                                  matBPtr,
@@ -309,21 +304,21 @@ extern "C" NGRAPH_API void __mlir_cblas_sgemm_1d_bias(void* matAPtr,
                                  broadcastHint);
 }
 
-extern "C" NGRAPH_API void __mlir_cblas_sgemm_2d_bias(void* matAPtr,
-                                                      void* matBPtr,
-                                                      void* matCPtr,
-                                                      void* matOutPtr,
-                                                      const bool transposeA,
-                                                      const bool transposeB,
-                                                      const size_t m,
-                                                      const size_t n,
-                                                      const size_t k,
-                                                      const size_t lda,
-                                                      const size_t ldb,
-                                                      const size_t ldc,
-                                                      const float alpha,
-                                                      const float beta,
-                                                      const int broadcastHint)
+extern "C" void __mlir_cblas_sgemm_2d_bias(void* matAPtr,
+                                           void* matBPtr,
+                                           void* matCPtr,
+                                           void* matOutPtr,
+                                           const bool transposeA,
+                                           const bool transposeB,
+                                           const size_t m,
+                                           const size_t n,
+                                           const size_t k,
+                                           const size_t lda,
+                                           const size_t ldb,
+                                           const size_t ldc,
+                                           const float alpha,
+                                           const float beta,
+                                           const int broadcastHint)
 {
     __mlir_cblas_sgemm_with_bias(matAPtr,
                                  matBPtr,

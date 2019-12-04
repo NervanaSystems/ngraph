@@ -33,13 +33,11 @@ namespace ngraph
     {
         namespace ngmlir
         {
-            template <int N>
-            struct StridedMemRef
+            struct StaticMemRef
             {
                 float* basePtr;
                 int64_t offset;
-                int64_t shape[N];
-                int64_t strides[N];
+                int64_t shapeAndStrides[];
             };
 
             /// A CPU Runtime is an MLIR runtime that owns an MLIR context and a module
@@ -71,8 +69,7 @@ namespace ngraph
                 llvm::SmallVector<void*, 8> allocateMemrefArgs();
 
                 /// Helper to allocate a mem ref object. Handles static shapes only for now.
-                template <int N>
-                StridedMemRef<N>* allocateMemrefDescriptor();
+                StaticMemRef* allocateMemrefDescriptor(size_t);
 
             private:
                 // Pointers to externally allocated memory for sub-graph's input and output tensors.
