@@ -82,6 +82,38 @@ namespace ngraph
                 std::vector<size_t> m_splits;
             };
         }
+
+        namespace v1
+        {
+            /// \brief Splits the input tensor into a list of equal sized tensors
+            class NGRAPH_API Split : public ngraph::op::util::FusedOp
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Split", 1};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a split operation.
+                Split() = default;
+                /// \brief Constructs a split operation.
+                /// \param data        The tensor to be split.
+                /// \param axis        The index of an axis in "data" along which to perform
+                ///                    the split.
+                /// \param num_splits  The number of pieces that the data tensor should be
+                ///                    split into.
+                Split(const Output<Node>& data, const Output<Node>& axis, const size_t num_splits);
+
+                void validate_and_infer_types() override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+                size_t get_num_splits() const { return m_num_splits; }
+                void set_num_splits(const size_t num_splits) { m_num_splits = num_splits; }
+
+                bool supports_decompose() const override { return false; }
+            protected:
+                size_t m_num_splits;
+            };
+        }
+
         using v0::Split;
     }
 }

@@ -23,9 +23,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Split::type_info;
+constexpr NodeTypeInfo op::v0::Split::type_info;
 
-op::Split::Split(const Output<Node>& data, const Output<Node>& axis, const size_t num_split)
+op::v0::Split::Split(const Output<Node>& data, const Output<Node>& axis, const size_t num_split)
     : FusedOp({data, axis})
     , m_split_evenly{true}
     , m_num_split{num_split}
@@ -33,9 +33,9 @@ op::Split::Split(const Output<Node>& data, const Output<Node>& axis, const size_
     constructor_validate_and_infer_types();
 }
 
-op::Split::Split(const Output<Node>& data,
-                 const Output<Node>& axis,
-                 const std::vector<size_t>& splits)
+op::v0::Split::Split(const Output<Node>& data,
+                     const Output<Node>& axis,
+                     const std::vector<size_t>& splits)
     : FusedOp({data, axis})
     , m_split_evenly{false}
     , m_num_split{0}
@@ -45,7 +45,7 @@ op::Split::Split(const Output<Node>& data,
 }
 
 // TODO REMOVE THIS CONSTRUCTOR. INTRODUCED TO PROVIDE CI COMPATIBILITY
-op::Split::Split(const Output<Node>& data, int axis, const std::vector<size_t>& splits)
+op::v0::Split::Split(const Output<Node>& data, int axis, const std::vector<size_t>& splits)
     : FusedOp({data})
     , m_split_evenly{false}
     , m_axis{axis}
@@ -56,7 +56,7 @@ op::Split::Split(const Output<Node>& data, int axis, const std::vector<size_t>& 
 }
 
 // TODO REMOVE THIS CONSTRUCTOR. INTRODUCED TO PROVIDE CI COMPATIBILITY
-op::Split::Split(const Output<Node>& data, int axis, size_t num_split)
+op::v0::Split::Split(const Output<Node>& data, int axis, size_t num_split)
     : FusedOp({data})
     , m_split_evenly{true}
     , m_axis{axis}
@@ -65,7 +65,7 @@ op::Split::Split(const Output<Node>& data, int axis, size_t num_split)
     constructor_validate_and_infer_types();
 }
 
-void op::Split::pre_validate_and_infer_types()
+void op::v0::Split::pre_validate_and_infer_types()
 {
     // TODO REMOVE IF CHECK. INTRODUCED TO PROVIDE CI COMPATIBILITY
     if (get_input_size() == 2)
@@ -126,12 +126,12 @@ void op::Split::pre_validate_and_infer_types()
     set_input_is_relevant_to_shape(0);
 }
 
-NodeVector op::Split::decompose_op() const
+NodeVector op::v0::Split::decompose_op() const
 {
     return builder::split(input_value(0), m_splits, m_axis);
 }
 
-shared_ptr<Node> op::Split::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Split::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() == 2)
     {
@@ -140,5 +140,25 @@ shared_ptr<Node> op::Split::copy_with_new_args(const NodeVector& new_args) const
     }
 
     // TODO REMOVE THIS RETURN AND IF ABOVE. INTRODUCED TO PROVIDE CI COMPATIBILITY
-    return make_shared<Split>(new_args.at(0), m_axis, m_splits);
+    return make_shared<op::v0::Split>(new_args.at(0), m_axis, m_splits);
+}
+
+constexpr NodeTypeInfo op::v1::Split::type_info;
+
+op::v1::Split::Split(const Output<Node>& data, const Output<Node>& axis, const size_t num_splits)
+    : FusedOp({data, axis})
+    , m_num_splits{num_splits}
+{
+    constructor_validate_and_infer_types();
+}
+
+void op::v1::Split::validate_and_infer_types() {
+    // TODO
+    throw 1;
+}
+
+shared_ptr<Node> op::v1::Split::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<v1::Split>(new_args.at(0), new_args.at(1), m_num_splits);
 }
