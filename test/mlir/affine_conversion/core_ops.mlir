@@ -18,6 +18,108 @@ func @simple_gather(%arg0: !ng.tensor<16x!ng.i64>, %arg1: !ng.tensor<512x32xf32>
 
 // -----
 
+// Equal Op
+// CHECK:       affine.for %[[I:.*]] = 0 to 2
+// CHECK-NEXT:  affine.for %[[J:.*]] = 0 to 2
+// CHECK-NEXT:  %[[C1:.*]] = constant
+// CHECK-NEXT: 	%[[C2:.*]] = constant
+// CHECK:	%[[O1:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]]
+// CHECK:	%[[O2:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]]
+// CHECK-NEXT:	%[[R1:.*]] = cmpf "oeq"
+// CHECK:       %[[R2:.*]] = select
+// CHECK-NEXT:  affine.store %[[R2]], %{{.*}}[%[[I]], %[[J]]]
+func @simple_equal(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>{
+%0 = "ng.equal"(%arg1, %arg0) : (!ng.tensor<2x2xf32>, !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>
+   "ng.return"(%0) : (!ng.tensor<2x2x!ng.u8>) -> ()
+}
+
+// -----
+
+// NotEqual Op
+// CHECK:       affine.for %[[I:.*]] = 0 to 2
+// CHECK-NEXT:  affine.for %[[J:.*]] = 0 to 2
+// CHECK-NEXT:  %[[C1:.*]] = constant
+// CHECK-NEXT: 	%[[C2:.*]] = constant
+// CHECK:	%[[O1:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]]
+// CHECK:	%[[O2:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]]
+// CHECK-NEXT:	%[[R1:.*]] = cmpf "one"
+// CHECK:       %[[R2:.*]] = select
+// CHECK-NEXT:  affine.store %[[R2]], %{{.*}}[%[[I]], %[[J]]]
+func @simple_notequal(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>{
+%0 = "ng.not.equal"(%arg1, %arg0) : (!ng.tensor<2x2xf32>, !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>
+   "ng.return"(%0) : (!ng.tensor<2x2x!ng.u8>) -> ()
+}
+
+// -----
+
+// Greater Op
+// CHECK:       affine.for %[[I:.*]] = 0 to 2
+// CHECK-NEXT:  affine.for %[[J:.*]] = 0 to 2
+// CHECK-NEXT:  %[[C1:.*]] = constant
+// CHECK-NEXT: 	%[[C2:.*]] = constant
+// CHECK:	%[[O1:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]]
+// CHECK:	%[[O2:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]]
+// CHECK-NEXT:	%[[R1:.*]] = cmpf "ogt"
+// CHECK:       %[[R2:.*]] = select
+// CHECK-NEXT:  affine.store %[[R2]], %{{.*}}[%[[I]], %[[J]]]
+func @simple_greater(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>{
+%0 = "ng.greater"(%arg1, %arg0) : (!ng.tensor<2x2xf32>, !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>
+   "ng.return"(%0) : (!ng.tensor<2x2x!ng.u8>) -> ()
+}
+
+// -----
+
+// GreaterEq Op
+// CHECK:       affine.for %[[I:.*]] = 0 to 2
+// CHECK-NEXT:  affine.for %[[J:.*]] = 0 to 2
+// CHECK-NEXT:  %[[C1:.*]] = constant
+// CHECK-NEXT: 	%[[C2:.*]] = constant
+// CHECK:	%[[O1:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]]
+// CHECK:	%[[O2:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]]
+// CHECK-NEXT:	%[[R1:.*]] = cmpf "oge"
+// CHECK:       %[[R2:.*]] = select
+// CHECK-NEXT:  affine.store %[[R2]], %{{.*}}[%[[I]], %[[J]]]
+func @simple_greatereq(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>{
+%0 = "ng.greater.eq"(%arg1, %arg0) : (!ng.tensor<2x2xf32>, !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>
+   "ng.return"(%0) : (!ng.tensor<2x2x!ng.u8>) -> ()
+}
+
+// -----
+
+// Less Op
+// CHECK:       affine.for %[[I:.*]] = 0 to 2
+// CHECK-NEXT:  affine.for %[[J:.*]] = 0 to 2
+// CHECK-NEXT:  %[[C1:.*]] = constant
+// CHECK-NEXT: 	%[[C2:.*]] = constant
+// CHECK:	%[[O1:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]]
+// CHECK:	%[[O2:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]]
+// CHECK-NEXT:	%[[R1:.*]] = cmpf "olt"
+// CHECK:       %[[R2:.*]] = select
+// CHECK-NEXT:  affine.store %[[R2]], %{{.*}}[%[[I]], %[[J]]]
+func @simple_less(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>{
+%0 = "ng.less"(%arg1, %arg0) : (!ng.tensor<2x2xf32>, !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>
+   "ng.return"(%0) : (!ng.tensor<2x2x!ng.u8>) -> ()
+}
+
+// -----
+
+// LessEq Op
+// CHECK:       affine.for %[[I:.*]] = 0 to 2
+// CHECK-NEXT:  affine.for %[[J:.*]] = 0 to 2
+// CHECK-NEXT:  %[[C1:.*]] = constant
+// CHECK-NEXT: 	%[[C2:.*]] = constant
+// CHECK:	%[[O1:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]]
+// CHECK:	%[[O2:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]]
+// CHECK-NEXT:	%[[R1:.*]] = cmpf "ole"
+// CHECK:       %[[R2:.*]] = select
+// CHECK-NEXT:  affine.store %[[R2]], %{{.*}}[%[[I]], %[[J]]]
+func @simple_lesseq(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>{
+%0 = "ng.less.eq"(%arg1, %arg0) : (!ng.tensor<2x2xf32>, !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>
+   "ng.return"(%0) : (!ng.tensor<2x2x!ng.u8>) -> ()
+}
+
+// -----
+
 // Dot Op
 // CHECK:       affine.for %[[I:.*]] = 0 to 16
 // CHECK-NEXT:  affine.for %[[J:.*]] = 0 to 32
