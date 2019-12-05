@@ -19,9 +19,9 @@
 #include <memory>
 
 #include "core/node.hpp"
-#include "ngraph/opsets/opset1.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/acos.hpp"
+#include "ngraph/opsets/opset1.hpp"
 
 namespace ngraph
 {

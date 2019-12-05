@@ -39,8 +39,8 @@ namespace ngraph
                     NodeVector ng_inputs{ngraph::op::legacy_style_broadcast_for_binary_operation(
                         node.get_ng_inputs().at(0), node.get_ng_inputs().at(1), axis)};
 
-                    return {
-                        std::make_shared<ngraph::opset0::Subtract>(ng_inputs.at(0), ng_inputs.at(1))};
+                    return {std::make_shared<ngraph::opset0::Subtract>(ng_inputs.at(0),
+                                                                       ng_inputs.at(1))};
                 }
 
             } // namespace set_1
@@ -50,7 +50,7 @@ namespace ngraph
                 inline NodeVector sub(const Node& node)
                 {
                     return {std::make_shared<Subtract>(node.get_ng_inputs().at(0),
-                                                                       node.get_ng_inputs().at(1))};
+                                                       node.get_ng_inputs().at(1))};
                 }
 
             } // namespace set_1
