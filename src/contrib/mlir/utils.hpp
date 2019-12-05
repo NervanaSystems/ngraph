@@ -26,6 +26,16 @@ namespace ngraph
     {
         namespace ngmlir
         {
+            template <int N>
+            struct poolAttrs
+            {
+                bool includePaddingInAvgComputation;
+                int64_t windowShape[N];
+                int64_t windowStrides[N];
+                int64_t padBelow[N];
+                int64_t padAbove[N];
+            };
+
             /// Common nGraph dialect initialization code. Used by nGraph compiler and tools that
             /// require nGraph dialect initialization.
             void initializeNGraphMLIR();

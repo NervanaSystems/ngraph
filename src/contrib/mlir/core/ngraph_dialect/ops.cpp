@@ -327,6 +327,13 @@ mlir::LogicalResult verifyOp(NGSoftMaxOp* op)
     return mlir::success();
 }
 
+template <>
+mlir::LogicalResult verifyOp(NGAvgPoolOp* op)
+{
+    // TODO(ayzhuang): Improve verification: proper shapes, etc.
+    return mlir::success();
+}
+
 static std::string getBufferIdAttrName()
 {
     return "ng.buffer_id";

@@ -18,6 +18,7 @@
 // Follows nGraph naming convention for public APIs only, else MLIR naming convention.
 
 #include "contrib/mlir/backend/cpu/cpu_backend.hpp"
+#include "contrib/mlir/utils.hpp"
 #include "cpu_runtime.hpp"
 #include "ngraph/check.hpp"
 
@@ -26,6 +27,97 @@
 
 using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
+
+/// Callback for AvgPool
+static void __mlir_mkldnn_avgpool(size_t rank, void* input, void* output, void* attrs)
+{
+    auto memRefInput = reinterpret_cast<StaticMemRef*>(input);
+    auto memRefOutput = reinterpret_cast<StaticMemRef*>(output);
+    mkldnn::memory::dims dims(rank);
+    mkldnn::memory::dims strides(rank);
+    for (auto i = 0; i < rank; i++)
+    {
+        dims[i] = memRefInput->shapeAndStrides[i];
+        strides[i] = memRefInput->shapeAndStrides[rank + i];
+    }
+    mkldnn::memory::dims outDims(rank);
+    for (auto i = 0; i < rank; i++)
+    {
+        outDims[i] = memRefOutput->shapeAndStrides[i];
+    }
+
+    // build mkldnn primitive and execute
+    mkldnn::memory::data_type dtype = mkldnn::memory::data_type::f32;
+    auto input_desc = mkldnn::memory::desc(dims, dtype, strides);
+    auto result_desc = mkldnn::memory::desc(outDims, dtype, mkldnn::memory::format_tag::any);
+    mkldnn::primitive_attr attr;
+    mkldnn::engine cpu_engine(mkldnn::engine::kind::cpu, 0);
+    mkldnn::pooling_forward::primitive_desc avgpool_pd;
+    if (rank == 4)
+    {
+        auto pAttrs = reinterpret_cast<poolAttrs<2>*>(attrs);
+        auto avgpool_desc = mkldnn::pooling_forward::desc(
+            mkldnn::prop_kind::forward_inference,
+            (pAttrs->includePaddingInAvgComputation
+                 ? mkldnn::algorithm::pooling_avg_include_padding
+                 : mkldnn::algorithm::pooling_avg_exclude_padding),
+            input_desc,
+            result_desc,
+            mkldnn::memory::dims{pAttrs->windowStrides[0], pAttrs->windowStrides[1]},
+            mkldnn::memory::dims{pAttrs->windowShape[0], pAttrs->windowShape[1]},
+            mkldnn::memory::dims{pAttrs->padBelow[0], pAttrs->padBelow[1]},
+            mkldnn::memory::dims{pAttrs->padAbove[0], pAttrs->padAbove[1]});
+        avgpool_pd = mkldnn::pooling_forward::primitive_desc(avgpool_desc, attr, cpu_engine);
+    }
+    else if (rank == 5)
+    {
+        auto pAttrs = reinterpret_cast<poolAttrs<3>*>(attrs);
+        auto avgpool_desc = mkldnn::pooling_forward::desc(
+            mkldnn::prop_kind::forward_inference,
+            (pAttrs->includePaddingInAvgComputation
+                 ? mkldnn::algorithm::pooling_avg_include_padding
+                 : mkldnn::algorithm::pooling_avg_exclude_padding),
+            input_desc,
+            result_desc,
+            mkldnn::memory::dims{
+                pAttrs->windowStrides[0], pAttrs->windowStrides[1], pAttrs->windowStrides[2]},
+            mkldnn::memory::dims{
+                pAttrs->windowShape[0], pAttrs->windowShape[1], pAttrs->windowShape[2]},
+            mkldnn::memory::dims{pAttrs->padBelow[0], pAttrs->padBelow[1], pAttrs->padBelow[2]},
+            mkldnn::memory::dims{pAttrs->padAbove[0], pAttrs->padAbove[1], pAttrs->padAbove[2]});
+        avgpool_pd = mkldnn::pooling_forward::primitive_desc(avgpool_desc, attr, cpu_engine);
+    }
+
+    mkldnn::pooling_forward avgpool(avgpool_pd);
+    mkldnn::memory in{
+        avgpool_pd.src_desc(), cpu_engine, memRefInput->basePtr + memRefInput->offset};
+    mkldnn::memory out{
+        avgpool_pd.dst_desc(), cpu_engine, memRefOutput->basePtr + memRefOutput->offset};
+
+    std::unordered_map<int, mkldnn::memory> exec_args = {{MKLDNN_ARG_SRC, in},
+                                                         {MKLDNN_ARG_DST, out}};
+
+    mkldnn::stream s(cpu_engine);
+    try
+    {
+        avgpool.execute(s, exec_args);
+        s.wait();
+    }
+    catch (const mkldnn::error& e)
+    {
+        throw ngraph_error("Could not run mkdnn primitive " + std::string(e.message));
+    }
+}
+
+extern "C" void __mlir_mkldnn_avgpool_4d(void* input, void* output, void* attrs)
+{
+    __mlir_mkldnn_avgpool(4, input, output, attrs);
+}
+
+extern "C" void __mlir_mkldnn_avgpool_5d(void* input, void* output, void* attrs)
+{
+    __mlir_mkldnn_avgpool(5, input, output, attrs);
+}
 
 /// Callback for Softmax
 static void __mlir_mkldnn_softmax(size_t rank, void* input, void* output, const size_t softmax_axis)

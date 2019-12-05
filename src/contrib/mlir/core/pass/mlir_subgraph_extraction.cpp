@@ -24,6 +24,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
+#include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
@@ -556,6 +557,23 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
 
         return (arg0_rank == 4 || arg0_rank == 2) &&
                node->get_input_element_type(0) == element::f32 && softmax->get_axes().size() == 1;
+    }
+
+    if (TI(ngraph::op::AvgPool) == TI(*node))
+    {
+        // AvgPool is only supported through callback
+        if (std::getenv("NGRAPH_MLIR_CALLBACK") == nullptr)
+        {
+            return false;
+        }
+        auto avg_pool = static_cast<ngraph::op::AvgPool*>(node.get());
+
+        auto arg0_shape = node->get_input_shape(0);
+        auto arg0_rank = arg0_shape.size();
+
+        return ((arg0_rank == 4 && avg_pool->get_window_shape().size() == 2) ||
+                (arg0_rank == 5 && avg_pool->get_window_shape().size() == 3)) &&
+               node->get_input_element_type(0) == element::f32;
     }
 
     if (TI(ngraph::op::MatMul) == TI(*node))

@@ -29,6 +29,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
+#include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
@@ -449,6 +450,31 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Convolutio
 
     attr = NgDialectObj.getShapeAsAttr(convNode->get_padding_above());
     convOp.setPadAbove(attr);
+    return op;
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::AvgPool)
+{
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGAvgPoolOp>(ngNode);
+    auto avgPoolNode = static_cast<const ngraph::op::AvgPool*>(ngNode);
+    auto avgPoolOp = llvm::cast<mlir::NGAvgPoolOp>(op);
+
+    mlir::BoolAttr boolAttr =
+        NgDialectObj.m_builder.getBoolAttr(avgPoolNode->get_include_padding_in_avg_computation());
+    avgPoolOp.setIncludePadding(boolAttr);
+
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(avgPoolNode->get_window_shape());
+    avgPoolOp.setWindowShape(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolNode->get_window_movement_strides());
+    avgPoolOp.setWindowMovementStrides(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolNode->get_padding_below());
+    avgPoolOp.setPadBelow(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolNode->get_padding_above());
+    avgPoolOp.setPadAbove(attr);
     return op;
 }
 

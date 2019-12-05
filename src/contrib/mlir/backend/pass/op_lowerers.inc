@@ -27,6 +27,7 @@
 MLIR_OP(NGAddOp             , true                  )
 MLIR_OP(NGArgMaxRedOp       , false                 )
 MLIR_OP(NGArgMinRedOp       , false                 )
+MLIR_OP(NGAvgPoolOp         , false                 )
 MLIR_OP(NGConcatOp          , false                 )
 MLIR_OP(NGConvolutionOp     , false                 )
 MLIR_OP(NGDivOp             , true                  )

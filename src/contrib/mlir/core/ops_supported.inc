@@ -6,6 +6,7 @@
 MLIR_OP(Add)
 MLIR_OP(ArgMin)
 MLIR_OP(ArgMax)
+MLIR_OP(AvgPool)
 MLIR_OP(Divide)
 MLIR_OP(Dot)
 MLIR_OP(Concat)
