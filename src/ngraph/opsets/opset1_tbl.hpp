@@ -53,7 +53,6 @@
 NGRAPH_OP(Abs, ngraph::op::v0)
 NGRAPH_OP(Acos, ngraph::op::v0)
 NGRAPH_OP(Add, ngraph::op::v1)
-NGRAPH_OP(ArgMax, ngraph::op::v0) // ArgMax is not in opset1 spec
 NGRAPH_OP(Asin, ngraph::op::v0)
 NGRAPH_OP(Atan, ngraph::op::v0)
 NGRAPH_OP(AvgPool, ngraph::op::v1)
