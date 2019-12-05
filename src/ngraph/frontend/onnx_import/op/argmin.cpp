@@ -15,9 +15,9 @@
 //*****************************************************************************
 
 #include "argmin.hpp"
-#include "ngraph/op/argmin.hpp"
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "utils/reduction.hpp"
 
 namespace ngraph
