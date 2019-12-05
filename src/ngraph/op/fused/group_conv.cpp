@@ -95,14 +95,14 @@ void op::v1::GroupConvolution::validate_and_infer_types()
         {
             m_pads_begin.clear();
             m_pads_end.clear();
-            filters_shape.erase(filters_shape.begin(), filters_shape.begin() + 2); // Remove {O,I}
-            infer_auto_padding(data_batch_shape,
-                               filters_shape,
-                               m_strides,
-                               m_dilations,
-                               m_auto_pad,
-                               m_pads_end,
-                               m_pads_begin);
+            infer_auto_padding(
+                data_batch_shape,
+                Shape(filters_shape.begin() + 2, filters_shape.end()), // Remove {O,I}
+                m_strides,
+                m_dilations,
+                m_auto_pad,
+                m_pads_end,
+                m_pads_begin);
         }
 
         result_shape =
