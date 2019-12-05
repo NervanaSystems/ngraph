@@ -184,7 +184,7 @@ void swim(Input<Node> input, shared_ptr<op::Reshape> reshape)
         };
 
         // Only swim past nodes which have a single user
-        if (n->get_users(true) > 1)
+        if (n->get_users(true).size() > 1)
         {
             materialize();
             continue;
