@@ -27,8 +27,8 @@
 #include "utils/common.hpp"
 #include "utils/reshape.hpp"
 
-namespace {
-
+namespace
+{
     /// \return Parse node attribute value for axis and adjust for negative value if needed.
     std::int64_t get_axis(const ngraph::onnx_import::Node& node)
     {
@@ -53,8 +53,10 @@ namespace {
     /// \return Return the outputs of the TopK node.
     ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node)
     {
-        std::shared_ptr<ngraph::Node> values = std::make_shared<ngraph::op::GetOutputElement>(node, 0);
-        std::shared_ptr<ngraph::Node> indices = std::make_shared<ngraph::op::GetOutputElement>(node, 1);
+        std::shared_ptr<ngraph::Node> values =
+            std::make_shared<ngraph::op::GetOutputElement>(node, 0);
+        std::shared_ptr<ngraph::Node> indices =
+            std::make_shared<ngraph::op::GetOutputElement>(node, 1);
 
         return {values, indices};
     }
