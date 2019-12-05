@@ -34,7 +34,7 @@ graph {
             dim_value: 2
           }
           dim {
-            dim_value: 2
+            dim_value: 1
           }
         }
       }
@@ -46,6 +46,9 @@ graph {
       tensor_type {
         elem_type: 6
         shape {
+          dim {
+            dim_value: 2
+          }
           dim {
             dim_value: 2
           }
