@@ -30,7 +30,6 @@
 #include "ngraph/shape.hpp"
 #include "utils/convpool.hpp"
 
-
 namespace ngraph
 {
     namespace onnx_import

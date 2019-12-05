@@ -14,9 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <memory>
+
 #include "eye_like.hpp"
 #include "exceptions.hpp"
-#include "ngraph/frontend/onnx_import/utils/common.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
