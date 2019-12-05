@@ -343,14 +343,14 @@ namespace
                 Type memRefType = typeConverter.convertType(tensorType);
 
                 Value* bufferValue = nullptr;
-                if (!bufferIdAttr)
+                if (!bufferInfo.isValid())
                 {
                     // Allocate new memref
                     newResult = createTempMemref(memRefType, nullptr, 0, rewriter);
                 }
                 else
                 {
-		    unsigned bufferId = bufferInfo.m_bufferId;
+		            unsigned bufferId = bufferInfo.m_bufferId;
                     // Re-use a buffer if it exist, else create a new one and update map
                     IdToMemRefMap::iterator it = m_id_to_memref.find(bufferId);
                     if (it == m_id_to_memref.end())
