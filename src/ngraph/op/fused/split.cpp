@@ -55,16 +55,6 @@ op::v0::Split::Split(const Output<Node>& data, int axis, const std::vector<size_
     constructor_validate_and_infer_types();
 }
 
-// TODO REMOVE THIS CONSTRUCTOR. INTRODUCED TO PROVIDE CI COMPATIBILITY
-op::v0::Split::Split(const Output<Node>& data, int axis, size_t num_split)
-    : FusedOp({data})
-    , m_split_evenly{true}
-    , m_axis{axis}
-    , m_num_split{num_split}
-{
-    constructor_validate_and_infer_types();
-}
-
 void op::v0::Split::pre_validate_and_infer_types()
 {
     // TODO REMOVE IF CHECK. INTRODUCED TO PROVIDE CI COMPATIBILITY
