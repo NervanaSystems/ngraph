@@ -560,16 +560,16 @@ namespace
         std::shared_ptr<Node> replacement_node;
         if (split_evenly)
         {
+            replacement_node = make_shared<op::v1::Split>(
+                node->input_value(0), node->input_value(1), splits_vec.front());
+        }
+        else
+        {
             const auto split_lengths =
                 ngraph::op::Constant::create(element::u64, Shape{splits_vec.size()}, splits_vec);
 
             replacement_node = make_shared<op::v1::VariadicSplit>(
                 node->input_value(0), node->input_value(1), split_lengths);
-        }
-        else
-        {
-            replacement_node = make_shared<op::v1::Split>(
-                node->input_value(0), node->input_value(1), splits_vec.front());
         }
 
         replace_node(node, replacement_node);
