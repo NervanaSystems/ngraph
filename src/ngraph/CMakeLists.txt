@@ -128,6 +128,8 @@ set (SRC
     op/cos.hpp
     op/cosh.cpp
     op/cosh.hpp
+    op/cum_sum.cpp
+    op/cum_sum.hpp
     op/crop_and_resize.cpp
     op/crop_and_resize.hpp
     op/dequantize.cpp
@@ -391,6 +393,8 @@ set (SRC
     pass/implicit_broadcast_elimination.cpp
     pass/batch_fusion.hpp
     pass/batch_fusion.cpp
+    pass/collapse_dims.cpp
+    pass/collapse_dims.hpp
     pass/common_function_collection.cpp
     pass/common_function_collection.hpp
     pass/constant_folding.cpp

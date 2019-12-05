@@ -46,6 +46,7 @@
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
 #include "ngraph/op/crop_and_resize.hpp"
+#include "ngraph/op/cum_sum.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
@@ -1116,6 +1117,13 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Cosh:
         {
             node = make_shared<op::Cosh>(args[0]);
+            break;
+        }
+        case OP_TYPEID::CumSum:
+        {
+            auto exclusive = node_js.at("exclusive");
+            auto reverse = node_js.at("reverse");
+            node = make_shared<op::CumSum>(args[0], args[1], exclusive, reverse);
             break;
         }
         case OP_TYPEID::CropAndResize:
@@ -2372,6 +2380,13 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Cos: { break;
     }
     case OP_TYPEID::Cosh: { break;
+    }
+    case OP_TYPEID::CumSum:
+    {
+        auto tmp = static_cast<const op::CumSum*>(&n);
+        node["exclusive"] = tmp->is_exclusive();
+        node["reverse"] = tmp->is_reverse();
+        break;
     }
     case OP_TYPEID::CropAndResize:
     {

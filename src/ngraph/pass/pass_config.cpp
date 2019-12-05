@@ -29,8 +29,8 @@ pass::PassConfig::PassConfig()
     // Parses the semi-colon separated environment string passed through NGRAPH_PASS_ENABLES
     // and returns the pass names and whether they should be enabled or disabled in the
     // provided unordered_map. Implementation of pass selection is up to the backend
-    // E.g., NGRAPH_PASS_ENABLES="CoreFusion:0;LikeReplacement:1;CPUCollapseDims" would
-    //       set disables on CoreFusion and enables on LikeReplacement and CPUCollapseDims
+    // E.g., NGRAPH_PASS_ENABLES="CoreFusion:0;LikeReplacement:1;CollapseDims" would
+    //       set disables on CoreFusion and enables on LikeReplacement and CollapseDims
     //
     const char* env_str = getenv("NGRAPH_PASS_ENABLES");
     if (env_str)
@@ -78,6 +78,11 @@ pass::PassConfig::PassConfig()
             }
         }
     }
+}
+
+bool pass::PassConfig::is_pass_configured(const string& name) const
+{
+    return (m_pass_enables.find(name) != m_pass_enables.end());
 }
 
 void pass::PassConfig::set_pass_enable(const string& name, bool enable)

@@ -52,6 +52,7 @@ set(SRC
     builder/convert.cpp
     builder/convert_layout.cpp
     builder/convolution.cpp
+    builder/cum_sum.cpp
     builder/dot.cpp
     builder/dropout.cpp
     builder/embedding_lookup.cpp
@@ -120,7 +121,6 @@ set(SRC
     op/sigmoid_mul.cpp
     op/update_slice.cpp
     pass/cpu_assignment.cpp
-    pass/cpu_collapse_dims.cpp
     pass/cpu_fusion.cpp
     pass/cpu_horizontal_fusion.cpp
     pass/cpu_layout.cpp

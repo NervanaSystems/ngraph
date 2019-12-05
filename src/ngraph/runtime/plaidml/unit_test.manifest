@@ -250,6 +250,9 @@ model_argmax_int32
 model_argmin_int32
 model_lp_norm_default
 model_instance_normalization
+model_qlinear_matmul_3d
+model_matmul_integer_4d
+model_matmul_integer_4d_zero_point
 
 # failings on plaidml_nGPU
 argmin_4D_i64
@@ -280,6 +283,12 @@ lstm_cell_bias_peepholes_clip_input_forget
 lstm_cell_activaction_functions
 divide_python_rounding_int32
 backwards_batchmatmul_tensor2_tensor2
+
+# unsupported op: `CumSum`
+cum_sum_default
+cum_sum_2dim
+cum_sum_3d
+cum_sum_2dim_allmodes
 
 # unsupported ops: 'QuantizedConvolution', 'QuantizedDot', 'TopK', 'Erf', 'EmbeddingLookup'
 model_quant_conv_linear
