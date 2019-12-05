@@ -26,21 +26,21 @@
 namespace ngraph
 {
     /// \brief Coordinates for a tensor element
-    class NGRAPH_API Coordinate : public std::vector<size_t>
+    class Coordinate : public std::vector<size_t>
     {
     public:
-        Coordinate();
-        Coordinate(const std::initializer_list<size_t>& axes);
+        NGRAPH_API Coordinate();
+        NGRAPH_API Coordinate(const std::initializer_list<size_t>& axes);
 
-        Coordinate(const Shape& shape);
+        NGRAPH_API Coordinate(const Shape& shape);
 
-        Coordinate(const std::vector<size_t>& axes);
+        NGRAPH_API Coordinate(const std::vector<size_t>& axes);
 
-        Coordinate(const Coordinate& axes);
+        NGRAPH_API Coordinate(const Coordinate& axes);
 
-        Coordinate(size_t n, size_t initial_value = 0);
+        NGRAPH_API Coordinate(size_t n, size_t initial_value = 0);
 
-        ~Coordinate();
+        NGRAPH_API ~Coordinate();
 
         template <class InputIterator>
         Coordinate(InputIterator first, InputIterator last)
@@ -48,9 +48,9 @@ namespace ngraph
         {
         }
 
-        Coordinate& operator=(const Coordinate& v);
+        NGRAPH_API Coordinate& operator=(const Coordinate& v);
 
-        Coordinate& operator=(Coordinate&& v) noexcept;
+        NGRAPH_API Coordinate& operator=(Coordinate&& v) noexcept;
     };
 
     template <>

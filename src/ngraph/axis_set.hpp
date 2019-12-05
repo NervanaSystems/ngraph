@@ -27,24 +27,24 @@
 namespace ngraph
 {
     /// \brief A set of axes.
-    class NGRAPH_API AxisSet : public std::set<size_t>
+    class AxisSet : public std::set<size_t>
     {
     public:
-        AxisSet();
+        NGRAPH_API AxisSet();
 
-        AxisSet(const std::initializer_list<size_t>& axes);
+        NGRAPH_API AxisSet(const std::initializer_list<size_t>& axes);
 
-        AxisSet(const std::set<size_t>& axes);
+        NGRAPH_API AxisSet(const std::set<size_t>& axes);
 
-        AxisSet(const std::vector<size_t>& axes);
+        NGRAPH_API AxisSet(const std::vector<size_t>& axes);
 
-        AxisSet(const AxisSet& axes);
+        NGRAPH_API AxisSet(const AxisSet& axes);
 
-        AxisSet& operator=(const AxisSet& v);
+        NGRAPH_API AxisSet& operator=(const AxisSet& v);
 
-        AxisSet& operator=(AxisSet&& v) noexcept;
+        NGRAPH_API AxisSet& operator=(AxisSet&& v) noexcept;
 
-        std::vector<int64_t> to_vector() const;
+        NGRAPH_API std::vector<int64_t> to_vector() const;
     };
 
     template <>
