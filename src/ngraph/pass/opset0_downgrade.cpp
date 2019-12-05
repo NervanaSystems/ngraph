@@ -135,11 +135,12 @@ namespace
 
     bool op_cast(shared_ptr<op::v1::ConvolutionBackpropData> node)
     {
-        auto output_shape = as_type_ptr<op::Constant>(node->input_value(2).get_node_shared_ptr());
+        auto output_shape_node =
+            as_type_ptr<op::Constant>(node->input_value(2).get_node_shared_ptr());
         const auto data_arg = node->input(0).get_source_output();
         const auto filters_arg = node->input(1).get_source_output();
         const auto strides = node->get_strides();
-        NGRAPH_CHECK(output_shape,
+        NGRAPH_CHECK(output_shape_node,
                      "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
                      "if output_shape is not constant. Node: ",
                      *node);
@@ -155,8 +156,22 @@ namespace
                      "with output padding other than `0`. Node: ",
                      *node);
 
+        auto data_pshape = data_arg.get_partial_shape();
+        auto filters_pshape = filters_arg.get_partial_shape();
+
+        NGRAPH_CHECK(data_pshape.rank().is_static() && data_pshape[0].is_static() &&
+                         filters_pshape.rank().is_static() && filters_pshape[1].is_static(),
+                     "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
+                     "if data shape N and filters shape C dimensions are not static. Node: ",
+                     *node);
+
+        // Add N and C dimenstions to output_shape
+        auto output_shape = output_shape_node->get_shape_val();
+        output_shape.insert(output_shape.begin(), static_cast<size_t>(filters_pshape[1]));
+        output_shape.insert(output_shape.begin(), static_cast<size_t>(data_pshape[0]));
+
         auto replacement_node =
-            make_shared<op::v0::ConvolutionBackpropData>(output_shape->get_shape_val(),
+            make_shared<op::v0::ConvolutionBackpropData>(output_shape,
                                                          filters_arg,
                                                          data_arg,
                                                          node->get_strides(),

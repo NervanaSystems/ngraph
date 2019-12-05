@@ -192,13 +192,28 @@ op::v1::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
 
 const PartialShape op::v1::GroupConvolutionBackpropData::get_output_shape() const
 {
-    PartialShape shape{PartialShape::dynamic()};
+    PartialShape shape{vector<Dimension>(m_strides.size() + 2)};
+    auto data_pshape = get_input_partial_shape(0);
+    if (data_pshape.rank().is_static())
+    {
+        shape[0] = data_pshape[0]; // N
+    }
+    auto filters_pshape = get_input_partial_shape(1);
+    if (filters_pshape.rank().is_static())
+    {
+        shape[1] = filters_pshape[1]; // C
+    }
     bool is_output_shape_present = get_inputs().size() == 3;
     if (is_output_shape_present)
     {
         if (auto const_op = as_type<op::Constant>(input_value(2).get_node()))
         {
-            shape = const_op->get_shape_val();
+            auto output_shape = const_op->get_shape_val();
+            // Populate spatials
+            for (int i = 0; i < output_shape.size(); ++i)
+            {
+                shape[i + 2] = output_shape[i];
+            }
         }
     }
     return shape;
@@ -257,13 +272,6 @@ void op::v1::GroupConvolutionBackpropData::validate_and_infer_types()
     if (is_output_shape_present)
     {
         set_input_is_relevant_to_shape(2);
-        if (output_pshape.is_static() && data_pshape.is_static())
-        {
-            auto data_shape = data_pshape.to_shape();
-            auto output_shape = output_pshape.to_shape();
-            output_shape.insert(output_shape.begin(), data_shape.begin(), data_shape.begin() + 1);
-            output_pshape = output_shape;
-        }
     }
     else
     {
@@ -290,7 +298,8 @@ void op::v1::GroupConvolutionBackpropData::validate_and_infer_types()
                 output_shape.push_back(tmp);
                 output_pshape = output_shape;
             }
-            output_shape.insert(output_shape.begin(), data_shape.begin(), data_shape.begin() + 1);
+            output_shape.insert(output_shape.begin(), filters_shape.at(1));
+            output_shape.insert(output_shape.begin(), data_shape.at(0));
         }
     }
 
