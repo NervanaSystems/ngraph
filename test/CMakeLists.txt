@@ -87,6 +87,7 @@ set(SRC
     opset_pass/poolings_opset_pass.cpp
     opset_pass/product_opset_pass.cpp
     opset_pass/reverse_opset_pass.cpp
+    opset_pass/select_opset_pass.cpp
     opset_pass/slice_opset_pass.cpp
     opset_pass/softmax_opset_pass.cpp
     opset_pass/sum_opset_pass.cpp
@@ -152,6 +153,7 @@ set(SRC
     type_prop/matmul.cpp
     type_prop/max_pool.cpp
     type_prop/mvn.cpp
+    type_prop/non_max_suppression.cpp
     type_prop/normalize.cpp
     type_prop/one_hot.cpp
     type_prop/pad.cpp
