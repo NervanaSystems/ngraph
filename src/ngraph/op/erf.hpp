@@ -22,16 +22,20 @@ namespace ngraph
 {
     namespace op
     {
-        class NGRAPH_API Erf : public util::UnaryElementwiseArithmetic
+        namespace v0
         {
-        public:
-            static constexpr NodeTypeInfo type_info{"Erf", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            Erf() = default;
-            Erf(const Output<Node>& arg);
+            class NGRAPH_API Erf : public util::UnaryElementwiseArithmetic
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Erf", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Erf() = default;
+                Erf(const Output<Node>& arg);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        }
+        using v0::Erf;
     }
 }

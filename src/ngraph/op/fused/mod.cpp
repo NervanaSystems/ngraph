@@ -25,15 +25,17 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Mod::type_info;
+constexpr NodeTypeInfo op::v1::Mod::type_info;
 
-op::Mod::Mod(const Output<Node>& A, const Output<Node>& B, const AutoBroadcastSpec& auto_broadcast)
+op::v1::Mod::Mod(const Output<Node>& A,
+                 const Output<Node>& B,
+                 const AutoBroadcastSpec& auto_broadcast)
     : FusedOp({A, B})
     , m_auto_broadcast(auto_broadcast)
 {
 }
 
-NodeVector op::Mod::decompose_op() const
+NodeVector op::v1::Mod::decompose_op() const
 {
     const auto dividend = make_shared<op::Abs>(input_value(0));
     const auto dividend_sign = make_shared<op::Sign>(input_value(0));
@@ -47,13 +49,13 @@ NodeVector op::Mod::decompose_op() const
     // truncated(a / b) * b
     const auto multiplication = make_shared<op::v1::Multiply>(division, divisor, m_auto_broadcast);
     // a mod b = a - truncated(a / b) * b
-    const auto mod = make_shared<op::Subtract>(dividend, multiplication, m_auto_broadcast);
+    const auto mod = make_shared<op::v1::Subtract>(dividend, multiplication, m_auto_broadcast);
 
     // apply sign of dividend
     return {make_shared<op::v1::Multiply>(dividend_sign, mod, m_auto_broadcast)};
 }
 
-shared_ptr<Node> op::Mod::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::Mod::copy_with_new_args(const NodeVector& new_args) const
 {
     return make_shared<Mod>(new_args.at(0), new_args.at(1), m_auto_broadcast);
 }

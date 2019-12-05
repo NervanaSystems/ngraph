@@ -14,31 +14,23 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/generic_cpu/node_wrapper.hpp"
+#include "ngraph/op/reduce_logical_or.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-runtime::gcpu::NodeWrapper::NodeWrapper(const shared_ptr<const Node>& node)
-    : m_node{node}
-{
-// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
-// {"Abs", runtime::gcpu::OP_TYPEID::Abs},
-// {"Acos", runtime::gcpu::OP_TYPEID::Acos},
-// ...
-#define NGRAPH_OP(a, b) {#a, runtime::gcpu::OP_TYPEID::a},
-    static unordered_map<string, runtime::gcpu::OP_TYPEID> typeid_map{
-#include "ngraph/op/op_tbl.hpp"
-    };
-#undef NGRAPH_OP
+constexpr NodeTypeInfo op::v1::ReduceLogicalOr::type_info;
 
-    auto it = typeid_map.find(m_node->description());
-    if (it != typeid_map.end())
-    {
-        m_typeid = it->second;
-    }
-    else
-    {
-        throw unsupported_op("Unsupported op '" + m_node->description() + "'");
-    }
+op::v1::ReduceLogicalOr::ReduceLogicalOr(const Output<Node>& data,
+                                         const Output<Node>& reduction_axes,
+                                         const bool keep_dims)
+    : LogicalReductionKeepDims(data, reduction_axes, keep_dims)
+{
+    constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::v1::ReduceLogicalOr::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<op::v1::ReduceLogicalOr>(new_args.at(0), new_args.at(1), get_keep_dims());
 }

@@ -33,6 +33,16 @@ op::DetectionOutput::DetectionOutput(const Output<Node>& box_logits,
     constructor_validate_and_infer_types();
 }
 
+op::DetectionOutput::DetectionOutput(const Output<Node>& box_logits,
+                                     const Output<Node>& class_preds,
+                                     const Output<Node>& proposals,
+                                     const DetectionOutputAttrs& attrs)
+    : Op({box_logits, class_preds, proposals})
+    , m_attrs(attrs)
+{
+    constructor_validate_and_infer_types();
+}
+
 void op::DetectionOutput::validate_and_infer_types()
 {
     if (get_input_partial_shape(0).is_static())
@@ -50,6 +60,24 @@ void op::DetectionOutput::validate_and_infer_types()
 shared_ptr<Node> op::DetectionOutput::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<DetectionOutput>(
-        new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), new_args.at(4), m_attrs);
+
+    auto num_args = new_args.size();
+
+    NODE_VALIDATION_CHECK(
+        this, num_args == 3 || num_args == 5, "DetectionOutput accepts 3 or 5 inputs.");
+
+    if (num_args == 3)
+    {
+        return make_shared<DetectionOutput>(
+            new_args.at(0), new_args.at(1), new_args.at(2), m_attrs);
+    }
+    else
+    {
+        return make_shared<DetectionOutput>(new_args.at(0),
+                                            new_args.at(1),
+                                            new_args.at(2),
+                                            new_args.at(3),
+                                            new_args.at(4),
+                                            m_attrs);
+    }
 }
