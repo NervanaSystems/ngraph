@@ -15,8 +15,8 @@
 //*****************************************************************************
 
 #include "argmax.hpp"
-#include "default_opset.hpp"
 #include "utils/reduction.hpp"
+#include "ngraph/opsets/opset0.hpp"
 
 namespace ngraph
 {
@@ -28,7 +28,7 @@ namespace ngraph
             {
                 NodeVector argmax(const Node& node)
                 {
-                    return {reduction::make_ng_index_reduction_op<ArgMax>(node)};
+                    return {reduction::make_ng_index_reduction_op<ngraph::opset0::ArgMax>(node)};
                 }
 
             } // namespace set_1

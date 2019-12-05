@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "core/node.hpp"
+#include "default_opset.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 
@@ -32,7 +33,7 @@ namespace ngraph
             {
                 inline NodeVector abs(const Node& node)
                 {
-                    return {std::make_shared<ngraph::op::Abs>(node.get_ng_inputs().at(0))};
+                    return {std::make_shared<Abs>(node.get_ng_inputs().at(0))};
                 }
 
             } // namespace set_1
