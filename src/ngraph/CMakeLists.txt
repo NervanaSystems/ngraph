@@ -150,6 +150,10 @@ set (SRC
     op/cum_sum.hpp
     op/crop_and_resize.cpp
     op/crop_and_resize.hpp
+    op/deformable_convolution.cpp
+    op/deformable_convolution.hpp
+    op/deformable_psroi_pooling.cpp
+    op/deformable_psroi_pooling.hpp
     op/dequantize.cpp
     op/dequantize.hpp
     op/divide.cpp
@@ -225,6 +229,8 @@ set (SRC
     op/gather.hpp
     op/gather_nd.cpp
     op/gather_nd.hpp
+    op/gather_tree.cpp
+    op/gather_tree.hpp
     op/get_output_element.cpp
     op/get_output_element.hpp
     op/greater.cpp
@@ -253,6 +259,8 @@ set (SRC
     op/multiply.hpp
     op/negative.cpp
     op/negative.hpp
+    op/non_max_suppression.cpp
+    op/non_max_suppression.hpp
     op/not.cpp
     op/not.hpp
     op/not_equal.cpp
@@ -273,6 +281,10 @@ set (SRC
     op/power.hpp
     op/product.cpp
     op/product.hpp
+    op/reduce_logical_and.cpp
+    op/reduce_logical_and.hpp
+    op/reduce_logical_or.cpp
+    op/reduce_logical_or.hpp
     op/reduce_prod.cpp
     op/reduce_prod.hpp
     op/reduce_mean.cpp
@@ -431,6 +443,8 @@ set (SRC
     op/util/fused_op.hpp
     op/util/index_reduction.cpp
     op/util/index_reduction.hpp
+    op/util/logical_reduction_keep_dims.hpp
+    op/util/logical_reduction_keep_dims.cpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
     op/util/rnn_cell_base.cpp
@@ -717,16 +731,21 @@ endif()
 #-----------------------------------------------------------------------------------------------
 
 # nGraph
-install(TARGETS ngraph DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT ngraphTargets)  # libngraph.so
-install(DIRECTORY
-    ${CMAKE_CURRENT_SOURCE_DIR}/
-    DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph"
+install(TARGETS ngraph EXPORT ngraphTargets
+        RUNTIME DESTINATION ${NGRAPH_INSTALL_LIB}
+        ARCHIVE DESTINATION ${NGRAPH_INSTALL_LIB}
+        LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB}
+        COMPONENT ngraph)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
+    DESTINATION ${NGRAPH_INSTALL_INCLUDE}/ngraph
+    COMPONENT ngraph
     FILES_MATCHING
         PATTERN "*.hpp"
         PATTERN "*.h"
 )
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/version.hpp
-    DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph")
+    DESTINATION ${NGRAPH_INSTALL_INCLUDE}/ngraph
+    COMPONENT ngraph)
 
 set(CPACK_GENERATOR "DEB")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
