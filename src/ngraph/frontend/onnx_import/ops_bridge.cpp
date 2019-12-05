@@ -86,6 +86,7 @@
 #include "op/mod.hpp"
 #include "op/mul.hpp"
 #include "op/neg.hpp"
+#include "op/non_max_suppression.hpp"
 #include "op/not.hpp"
 #include "op/onehot.hpp"
 #include "op/or.hpp"
@@ -308,6 +309,7 @@ namespace ngraph
             REGISTER_OPERATOR("Mul", 1, mul);
             REGISTER_OPERATOR("Mul", 7, mul);
             REGISTER_OPERATOR("Neg", 1, neg);
+            REGISTER_OPERATOR("NonMaxSuppression", 1, non_max_suppression);
             REGISTER_OPERATOR("Not", 1, logical_not);
             REGISTER_OPERATOR("Or", 1, logical_or);
             REGISTER_OPERATOR("OneHot", 1, onehot);
