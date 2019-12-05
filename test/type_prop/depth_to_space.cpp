@@ -33,42 +33,42 @@ TEST(type_prop, depth_to_space_output_shape_block_first_4D)
 
 TEST(type_prop, depth_to_space_output_shape_block_first_4D_2)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{ 1, 12, 1080, 1616 });
+    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 12, 1080, 1616});
     auto space_to_depth =
         make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST, 2);
 
     ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
-    ASSERT_EQ(space_to_depth->get_shape(), (Shape{ 1, 3, 2 * 1080, 2 * 1616 }));
+    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 3, 2 * 1080, 2 * 1616}));
 }
 
 TEST(type_prop, depth_to_space_output_shape_block_first_5D)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{ 1, 16, 3, 1080, 1616 });
+    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 16, 3, 1080, 1616});
     auto space_to_depth =
         make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST, 2);
 
     ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
-    ASSERT_EQ(space_to_depth->get_shape(), (Shape{ 1, 2, 2*3, 2 * 1080, 2 * 1616 }));
+    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 2, 2 * 3, 2 * 1080, 2 * 1616}));
 }
 
 TEST(type_prop, depth_to_space_output_shape_depth_first_4D)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{ 1, 12, 1080, 1616 });
+    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 12, 1080, 1616});
     auto space_to_depth =
         make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST, 2);
 
     ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
-    ASSERT_EQ(space_to_depth->get_shape(), (Shape{ 1, 3, 2 * 1080, 2 * 1616 }));
+    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 3, 2 * 1080, 2 * 1616}));
 }
 
 TEST(type_prop, depth_to_space_output_shape_depth_first_5D)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{ 1, 16, 3, 1080, 1616 });
+    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 16, 3, 1080, 1616});
     auto space_to_depth =
         make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST, 2);
 
     ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
-    ASSERT_EQ(space_to_depth->get_shape(), (Shape{ 1, 2, 2 * 3, 2 * 1080, 2 * 1616 }));
+    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 2, 2 * 3, 2 * 1080, 2 * 1616}));
 }
 
 TEST(type_prop, depth_to_space_input_rank_not_supported)
@@ -94,7 +94,7 @@ TEST(type_prop, depth_to_space_input_rank_not_supported)
 
 TEST(type_prop, depth_to_space_blocksize_not_matched)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{ 1, 7, 4, 4 });
+    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 7, 4, 4});
     try
     {
         auto space_to_depth =
@@ -103,9 +103,9 @@ TEST(type_prop, depth_to_space_blocksize_not_matched)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "The color axis size: 7 must be a multiple of block_size^spatial_dims: 4 attribute value");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "The color axis size: 7 must be a multiple of "
+                             "block_size^spatial_dims: 4 attribute value");
     }
     catch (...)
     {

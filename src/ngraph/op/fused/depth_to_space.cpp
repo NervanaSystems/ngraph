@@ -13,11 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include <cmath>
 #include <cstddef>
 #include <memory>
-
-#include <iterator> //TODO
-#include <cmath>
 
 #include "depth_to_space.hpp"
 #include "ngraph/builder/reshape.hpp"
@@ -46,22 +44,6 @@ op::DepthToSpace::DepthToSpace(const Output<Node>& data,
 {
 }
 
-static string vec_to_string(vector<size_t> in)
-{
-    std::ostringstream vts;
-
-    if (!in.empty())
-    {
-        // Convert all but the last element to avoid a trailing ","
-        std::copy(in.begin(), in.end() - 1, std::ostream_iterator<int>(vts, ", "));
-
-        // Now add the last element with no delimiter
-        vts << in.back();
-
-        return vts.str();
-    }
-}
-
 NodeVector op::DepthToSpace::decompose_op() const
 {
     auto data = input_value(0);
@@ -69,7 +51,7 @@ NodeVector op::DepthToSpace::decompose_op() const
 
     NGRAPH_CHECK((data_shape.size() >= 3),
                  "The input tensor with rank lower than 3 is not supported (input rank: ",
-                  data_shape.size(),
+                 data_shape.size(),
                  ")");
 
     if (data_shape.size() == 3)
@@ -83,21 +65,16 @@ NodeVector op::DepthToSpace::decompose_op() const
     const size_t spatial_dims = data_shape.size() - 2;
     const auto c_dim_divider = static_cast<int>(std::pow(m_blocksize, spatial_dims));
 
-    //TODO REMOVE
-    size_t n = data_shape.at(0);
-    size_t c = data_shape.at(1);
-    size_t h = data_shape.at(2);
-    size_t w = data_shape.at(3);
-
-    NGRAPH_CHECK(m_blocksize > 0 &&
-        c_dim % c_dim_divider == 0,
-                 "The color axis size: ", c_dim, " must be a multiple of ",
-                 "block_size^spatial_dims: ", c_dim_divider," attribute value");
+    NGRAPH_CHECK(m_blocksize > 0 && c_dim % c_dim_divider == 0,
+                 "The color axis size: ",
+                 c_dim,
+                 " must be a multiple of ",
+                 "block_size^spatial_dims: ",
+                 c_dim_divider,
+                 " attribute value");
 
     auto bs = static_cast<size_t>(m_blocksize);
     size_t c_flat = c_dim / c_dim_divider;
-
-    //TODO
 
     // First we have to disperse the data from depth channel, then rearrange them
     // so as appropriate chunks of data where close to their destination place.
@@ -116,16 +93,16 @@ NodeVector op::DepthToSpace::decompose_op() const
     vector<size_t> axes_order{0};
     switch (m_mode)
     {
+    // x' = reshape(data, [N, C / (block_size ^ K), block_size, block_size, ..., block_size, D1, D2,
+    // ..., DK])
+    // x'' = transpose(x', [0,  1,  K + 2, 2, K + 3, 3, K + 4, 4, ..., K + (K + 1), K + 1])
+    // y = reshape(x'', [N, C / (block_size ^ K), D1 * block_size, D2 * block_size, D3 * block_size,
+    // ..., DK * block_size])
     case DepthToSpaceMode::DEPTH_FIRST:
     {
-        // reshape(data, [N, C / (block_size ^ K), block_size, block_size, ..., block_size, D1, D2,
-        // ..., DK])
         dispersed_shape.insert(dispersed_shape.begin() + 1, c_flat);
-        std::cout << "1. DF: Expected: " << Shape{n, c_flat, bs, bs, h, w}
-                  << " is: " << dispersed_shape << "\n";
         flat_node = builder::reshape(data, dispersed_shape);
 
-        // transpose(x', [0,  1,  K + 2, 2, K + 3, 3, K + 4, 4, ..., K + (K + 1), K + 1])
         axes_order.push_back(1);
         for (int i = 2; i < data_shape.size(); ++i)
         {
@@ -133,45 +110,36 @@ NodeVector op::DepthToSpace::decompose_op() const
             axes_order.push_back(i);
         }
 
-        std::cout << "2. DF: Expected: "
-                  << "{0, 1, 4, 2, 5, 3}"
-                  << " is: " << vec_to_string(axes_order) << "\n";
         flat_node = builder::reorder_axes(flat_node, axes_order);
         break;
     }
+    // x' = reshape(data, [N, block_size, block_size, ..., block_size, C / (block_size ^ K), D1, D2,
+    // ..., DK])
+    // x'' = transpose(x', [0,  K + 1,  K + 2, 1, K + 3, 2, K + 4, 3, ..., K + (K + 1), K])
+    // y = reshape(x'', [N, C / (block_size ^ K), D1 * block_size, D2 * block_size, D3 * block_size,
+    // ..., DK * block_size])
     case DepthToSpaceMode::BLOCKS_FIRST:
     default:
     {
-        // reshape(data, [N, block_size, block_size, ..., block_size, C / (block_size ^ K), D1, D2,
-        // ..., DK])
         dispersed_shape.insert(dispersed_shape.begin() + spatial_dims, c_flat);
-        std::cout << "1. BF: Expected: " << Shape{n, bs, bs, c_flat, h, w}
-                  << " is: " << dispersed_shape << "\n";
         flat_node = builder::reshape(data, dispersed_shape);
 
-        // transpose(x', [0,  K + 1,  K + 2, 1, K + 3, 2, K + 4, 3, ..., K + (K + 1), K])
         axes_order.push_back(spatial_dims + 1);
         for (int i = 2; i < data_shape.size(); ++i)
         {
             axes_order.push_back(spatial_dims + i);
             axes_order.push_back(i - 1);
         }
-        std::cout << "2. BF: Expected: "
-                  << "{0, 3, 4, 1, 5, 2}"
-                  << " is: " << vec_to_string(axes_order) << "\n";
         flat_node = builder::reorder_axes(flat_node, axes_order);
     }
     }
-    // reshape(x'', [N, C / (block_size ^ K), D1 * block_size, D2 * block_size, D3 * block_size,
-    // ..., DK * block_size])
-    Shape squeezed_shape{n, c_flat};
+    Shape squeezed_shape{n_dim, c_flat};
     for (int i = no_spatial_dims; i < data_shape.size(); ++i)
     {
         squeezed_shape.push_back(data_shape.at(i) * bs);
     }
-    std::cout << "3. Expected: " << Shape{n, c_flat, h * bs, w * bs} << " is: " << squeezed_shape
-              << "\n";
     flat_node = builder::reshape(flat_node, squeezed_shape);
+
     return NodeVector{flat_node};
 }
 
