@@ -2587,7 +2587,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::ReorgYolo: { break;
         }
 
-        case OP_TYPEID::ScalarConstantLikeBase:
+        case OP_TYPEID::ScalarConstantLike:
         {
             double value = node_js.at("value").get<double>();
             node = make_shared<op::ScalarConstantLike>(args[0], value);
@@ -2611,6 +2611,15 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Select:
         {
             node = make_shared<op::Select>(args[0], args[1], args[2]);
+            break;
+        }
+        case OP_TYPEID::Select_v1:
+        {
+            node = make_shared<op::v1::Select>(
+                args[0],
+                args[1],
+                args[2],
+                read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
             break;
         }
         case OP_TYPEID::Selu:
@@ -2736,6 +2745,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             const auto splits = node_js.at("splits").get<vector<size_t>>();
             node = make_shared<op::Split>(args[0], args[1], splits);
+            break;
+        }
+        case OP_TYPEID::Split_v1:
+        {
+            const auto num_splits = node_js.at("num_splits").get<size_t>();
+            node = make_shared<op::Split>(args[0], args[1], num_splits);
             break;
         }
         case OP_TYPEID::Sqrt:
@@ -4329,7 +4344,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["activations_beta"] = tmp->get_activations_beta();
         break;
     }
-    case OP_TYPEID::ScalarConstantLikeBase:
+    case OP_TYPEID::ScalarConstantLike:
     {
         auto tmp = static_cast<const op::ScalarConstantLikeBase*>(&n);
         auto constant = tmp->as_constant();
@@ -4344,6 +4359,12 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::ScatterNDAdd: { break;
     }
     case OP_TYPEID::Select: { break;
+    }
+    case OP_TYPEID::Select_v1:
+    {
+        auto tmp = static_cast<const op::v1::Select*>(&n);
+        node["auto_broadcast"] = write_auto_broadcast(tmp->get_auto_broadcast());
+        break;
     }
     case OP_TYPEID::Selu: { break;
     }
@@ -4400,8 +4421,14 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Split:
     {
-        auto tmp = static_cast<const op::Split*>(&n);
+        const auto tmp = static_cast<const op::Split*>(&n);
         node["splits"] = tmp->get_splits();
+        break;
+    }
+    case OP_TYPEID::Split_v1:
+    {
+        const auto tmp = static_cast<const op::v1::Split*>(&n);
+        node["num_splits"] = tmp->get_num_splits();
         break;
     }
     case OP_TYPEID::Sqrt: { break;
