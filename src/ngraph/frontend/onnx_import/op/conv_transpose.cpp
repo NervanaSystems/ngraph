@@ -20,6 +20,7 @@
 #include <memory>
 #include <vector>
 
+#include "conv_transpose.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/frontend/onnx_import/exceptions.hpp"
 #include "ngraph/frontend/onnx_import/op/conv_transpose.hpp"

@@ -18,6 +18,7 @@
 #include <memory>
 #include <vector>
 
+#include "conv.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/frontend/onnx_import/exceptions.hpp"
 #include "ngraph/frontend/onnx_import/op/conv.hpp"

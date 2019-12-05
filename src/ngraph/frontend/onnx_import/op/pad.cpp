@@ -18,11 +18,11 @@
 
 #include "exceptions.hpp"
 #include "ngraph/coordinate_diff.hpp"
-#include "ngraph/frontend/onnx_import/op/pad.hpp"
-#include "ngraph/frontend/onnx_import/utils/convpool.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/shape.hpp"
+#include "pad.hpp"
+#include "utils/convpool.hpp"
 
 namespace ngraph
 {

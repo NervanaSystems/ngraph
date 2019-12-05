@@ -19,7 +19,7 @@
 
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/split.hpp"
-#include "op/split.hpp"
+#include "split.hpp"
 #include "utils/common.hpp"
 
 namespace ngraph
