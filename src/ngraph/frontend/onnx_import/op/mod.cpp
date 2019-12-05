@@ -16,8 +16,8 @@
 
 #include <memory>
 
-#include "mod.hpp"
 #include "exceptions.hpp"
+#include "mod.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/fused/mod.hpp"
 #include "ngraph/op/util/attr_types.hpp"

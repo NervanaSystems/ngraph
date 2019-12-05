@@ -16,8 +16,8 @@
 
 #include <memory>
 
-#include "eye_like.hpp"
 #include "exceptions.hpp"
+#include "eye_like.hpp"
 #include "utils/common.hpp"
 
 namespace ngraph

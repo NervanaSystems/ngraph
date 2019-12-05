@@ -16,8 +16,8 @@
 
 #include <memory>
 
-#include "max_pool.hpp"
 #include "core/null_node.hpp"
+#include "max_pool.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "utils/pooling_factory.hpp"
 
