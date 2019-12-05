@@ -533,7 +533,7 @@ namespace ngraph
 
     /// \brief A handle for one of a node's inputs.
     template <typename NodeType>
-    class Input
+    class NGRAPH_API Input
     {
     public:
         /// \brief Constructs a Input.
@@ -610,7 +610,7 @@ namespace ngraph
 
     /// \brief A handle for one of a node's outputs.
     template <typename NodeType = Node>
-    class Output
+    class NGRAPH_API Output
     {
     public:
         /// \brief Constructs a Output.
@@ -861,7 +861,7 @@ namespace ngraph
         return result;
     }
 
-    class NodeValidationFailure : public CheckFailure
+    class NGRAPH_API NodeValidationFailure : public CheckFailure
     {
     public:
         NodeValidationFailure(const CheckLocInfo& check_loc_info,
@@ -872,7 +872,7 @@ namespace ngraph
         }
     };
 
-    class NodeDescription
+    class NGRAPH_API NodeDescription
     {
     public:
         NodeDescription(const Node& node, bool is_short)

@@ -26,18 +26,18 @@
 namespace ngraph
 {
     /// \brief Strides for a tensor.
-    class Strides : public std::vector<size_t>
+    class NGRAPH_API Strides : public std::vector<size_t>
     {
     public:
-        NGRAPH_API Strides();
+        Strides();
 
-        NGRAPH_API Strides(const std::initializer_list<size_t>& axis_strides);
+        Strides(const std::initializer_list<size_t>& axis_strides);
 
-        NGRAPH_API Strides(const std::vector<size_t>& axis_strides);
+        Strides(const std::vector<size_t>& axis_strides);
 
-        NGRAPH_API Strides(const Strides& axis_strides);
+        Strides(const Strides& axis_strides);
 
-        NGRAPH_API explicit Strides(size_t n, size_t initial_value = 0);
+        explicit Strides(size_t n, size_t initial_value = 0);
 
         template <class InputIterator>
         Strides(InputIterator first, InputIterator last)
@@ -45,9 +45,9 @@ namespace ngraph
         {
         }
 
-        NGRAPH_API Strides& operator=(const Strides& v);
+        Strides& operator=(const Strides& v);
 
-        NGRAPH_API Strides& operator=(Strides&& v) noexcept;
+        Strides& operator=(Strides&& v) noexcept;
     };
 
     template <>
