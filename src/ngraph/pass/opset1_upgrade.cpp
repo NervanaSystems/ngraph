@@ -497,6 +497,16 @@ namespace
         return true;
     }
 
+    bool op_cast(shared_ptr<op::Select> node)
+    {
+        auto replacement_node = make_shared<op::v1::Select>(node->input_value(0),
+                                                            node->input_value(1),
+                                                            node->input_value(2),
+                                                            op::AutoBroadcastSpec());
+        replace_node(node, replacement_node);
+        return true;
+    }
+
     bool op_cast(shared_ptr<op::Softmax> node)
     {
         NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant(),
