@@ -1837,6 +1837,35 @@ TEST(constant_folding, constant_select)
     ASSERT_EQ(values_expected, values_out);
 }
 
+TEST(constant_folding, constant_v1_select)
+{
+    Shape shape{2, 4};
+    vector<char> values_selection{0, 1, 1, 0};
+    vector<int64_t> values_t{1, 2, 3, 4};
+    vector<int64_t> values_f{11, 12, 13, 14, 15, 16, 17, 18};
+
+    auto constant_selection =
+        make_shared<op::Constant>(element::boolean, Shape{4}, values_selection);
+    auto constant_t = make_shared<op::Constant>(element::i64, Shape{4}, values_t);
+    auto constant_f = make_shared<op::Constant>(element::i64, Shape{2, 4}, values_f);
+    auto select = make_shared<op::v1::Select>(constant_selection, constant_t, constant_f);
+    auto f = make_shared<Function>(select, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Select>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int64_t>();
+
+    vector<int64_t> values_expected{11, 2, 3, 14, 15, 2, 3, 18};
+    ASSERT_EQ(values_expected, values_out);
+}
+
 TEST(constant_folding, pass_property)
 {
     auto pass = std::make_shared<ngraph::pass::ConstantFolding>();
