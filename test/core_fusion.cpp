@@ -906,7 +906,7 @@ void test_crossentropy(Shape input_shape, Shape label_shape, bool soft_label, in
     }
 }
 
-TEST(core_fusion, MLIR_DISBALE_TEST(crossentropy))
+TEST(core_fusion, MLIR_DISABLE_TEST(crossentropy))
 {
     test_crossentropy(Shape{41, 37}, Shape{41, 37}, true, -1);
     test_crossentropy(Shape{41, 37}, Shape{41, 1}, false, 5);
