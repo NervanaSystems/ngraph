@@ -163,7 +163,7 @@ namespace
         }
         SmallVector<FuncOp, 2> funcOps(module->getOps<FuncOp>());
 
-        if (funcOps.size() > 1)
+        if (funcOps.size() > 1 || funcOps.empty())
         {
             // single func for now
             return;
@@ -274,7 +274,7 @@ namespace
                 }
             }
 
-            // calculate offsets
+            // calculate relative offsets in the output buffer
             int opndOffset = 0;
             for (auto i = 0; i < op->getNumOperands(); i++)
             {
@@ -309,7 +309,7 @@ namespace
                     auto opnd = op->getOperand(i);
                     auto defOp = opnd->getDefiningOp();
                     NGRAPH_CHECK(defOp != nullptr, "Defining operation expected");
-                    // expected absolute offset in the buffer
+                    // calculate expected absolute offset in the buffer
                     bufferOffset = baseOffset + opndOffsets[i];
 
                     bufferInfo = m_memAnalysis->getBufferInfo(defOp);
@@ -335,7 +335,7 @@ namespace
                 //    b. is unassigned a buffer/offset, and the computed offset is valid
                 //    (non-negative),
                 //       and no other live tensor aliases the chunk of the buffer we want to assign.
-                //       To achieve this, we need to track buffers->{tensors,offset,size} and
+                //       To achieve this, we need to track buffer->{tensor,offset,size} and
                 //       perform the check
                 //
                 // Example:
@@ -355,8 +355,7 @@ namespace
                 // R2   = ...
                 // V2   = Concat    R0, S1{0,16}, R2
                 // Reusing assignment of S1 in the first concat will cause S0 anr R0 to alias. And
-                // since R0 is alive
-                // the write to R0 will overwrite S0.
+                // since R0 is alive the write to R0 will overwrite S0.
 
                 // For now, assign only if all srcs have no prior assignments
                 for (auto opnd : op->getOperands())
@@ -367,7 +366,7 @@ namespace
                     }
                 }
             }
-            // We didn't find any pre-existing buffer assignment, create a new one
+            // We didn't find any pre-existing buffer assignment, create a new buffer
             if (bufferId == -1)
             {
                 bufferId = m_bufferId++;
@@ -485,7 +484,7 @@ namespace
     void AliasRelation::init(std::unordered_set<Value*>& symbols)
     {
         unsigned numSyms = symbols.size();
-        m_sets.reserve(numSyms);
+        m_sets.resize(numSyms);
 
         for (auto& bv : m_sets)
         {

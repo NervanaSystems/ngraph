@@ -165,6 +165,8 @@ namespace
 
     ValueHandle createZeroConstant(mlir::Type type);
 
+    bool isInPlaceConcat(mlir::Operation* op, DialectLoweringPass& pass);
+
     /// Conversion from types in the nGraph dialect to the Standard dialect.
     class NGraphTypeConverter : public TypeConverter
     {
@@ -203,6 +205,7 @@ namespace
         void insertDeallocs(PatternRewriter& rewriter);
 
         NGraphTypeConverter& getTypeConverter() { return typeConverter; }
+        MemoryAnalysis* getMemAnalysis() const { return m_memAnalysis; }
     private:
         /// Collect a set of patterns to convert from the nGraph dialect to Affine dialect.
         void populateNGraphToAffineConversionPatterns(OwningRewritePatternList& patterns);
@@ -341,8 +344,8 @@ namespace
                 Value* newResult = nullptr;
                 auto bufferInfo = m_memAnalysis->getBufferInfo(op);
                 Type memRefType = typeConverter.convertType(tensorType);
-
                 Value* bufferValue = nullptr;
+
                 if (!bufferInfo.isValid())
                 {
                     // Allocate new memref
@@ -350,7 +353,8 @@ namespace
                 }
                 else
                 {
-		            unsigned bufferId = bufferInfo.m_bufferId;
+                    unsigned bufferId = bufferInfo.m_bufferId;
+                    unsigned offset = bufferInfo.m_offset;
                     // Re-use a buffer if it exist, else create a new one and update map
                     IdToMemRefMap::iterator it = m_id_to_memref.find(bufferId);
                     if (it == m_id_to_memref.end())
@@ -364,7 +368,7 @@ namespace
                         bufferValue = it->second;
                     }
                     // Create a temp view over the linear buffer
-                    newResult = createTempMemref(memRefType, bufferValue, 0, rewriter);
+                    newResult = createTempMemref(memRefType, bufferValue, offset, rewriter);
                 }
                 NGRAPH_CHECK(newResult != nullptr, "Temp memref value is not set");
                 newResults.push_back(newResult);
@@ -407,7 +411,6 @@ namespace
                                                  unsigned offset,
                                                  PatternRewriter& rewriter)
     {
-        NGRAPH_CHECK(offset == 0, "Only zero offset is supported");
         MemRefType memRefType = type.cast<MemRefType>();
         if (buffer)
         {
@@ -417,7 +420,7 @@ namespace
             // linear
             // buffer
             // This is simply (d0, d1, d2, .. dN-1) --> d0 * S0 + d1 * S1 ... + dN-1 * SN-1
-            // Where Si is the stride along the i_th dimension
+            // Where Si is the stride along the i_th dimension in elements
             auto shape = memRefType.getShape();
             SmallVector<int64_t, 4> strides(shape.size(), 0);
             strides[shape.size() - 1] = 1;
@@ -692,6 +695,11 @@ namespace
         Value* result = pass.buildOutputDefs(op, rewriter)[0];
         NGRAPH_CHECK(result, "Unexpected null result in ConcatOp");
 
+        if (isInPlaceConcat(concat, pass))
+        {
+            rewriter.replaceOp(op, {result});
+            return matchSuccess();
+        }
         // Create view to write into result.
         MemRefView vRes(result);
         auto rank = vRes.rank();
@@ -1413,6 +1421,49 @@ namespace
             return intrinsics::constant_int(0, intTy.getWidth());
         }
         NGRAPH_UNREACHABLE("Unsupported type");
+    }
+
+    // Given a concat op, it will check if dst and operands have
+    // a valid buffer/offset assignment that will make this op
+    // valid in-place
+    bool isInPlaceConcat(mlir::Operation* op, DialectLoweringPass& pass)
+    {
+        NGRAPH_CHECK(isa<NGConcatOp>(op), "Expecting concat operation");
+        auto concat = cast<NGConcatOp>(op);
+        auto concatAxis = concat.concatenation_axis();
+        auto result = concat.getResult();
+        auto shape = (result->getType().cast<NGTensorType>()).getShape();
+        auto memAnalysis = pass.getMemAnalysis();
+        BufferInfo bufferInfo = memAnalysis->getBufferInfo(op);
+        auto dstBufferId = bufferInfo.m_bufferId;
+        auto dstBufferOffset = bufferInfo.m_offset;
+
+        for (auto i = 0; i < shape.size(); i++)
+        {
+            if (i == concatAxis)
+            {
+                break;
+            }
+            if (shape[i] != 1)
+            {
+                return false;
+            }
+        }
+        // relative offset in the buffer
+        int opndOffset = 0;
+        for (auto opnd : op->getOperands())
+        {
+            bufferInfo = memAnalysis->getBufferInfo(opnd->getDefiningOp());
+            if (!bufferInfo.isValid() || bufferInfo.m_bufferId != dstBufferId ||
+                bufferInfo.m_offset != (opndOffset + dstBufferOffset))
+            {
+                // mismatch in buffer IDs or offsets
+                return false;
+            }
+            auto tensorType = opnd->getType().cast<NGTensorType>();
+            opndOffset += tensorType.getNumElements();
+        }
+        return true;
     }
 }
 
