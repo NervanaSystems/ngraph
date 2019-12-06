@@ -62,16 +62,16 @@ NodeVector op::DepthToSpace::decompose_op() const
     }
     const size_t n_dim = data_shape.at(0);
     const size_t c_dim = data_shape.at(1);
-    const size_t spatial_dims = data_shape.size() - 2;
+    const size_t spatial_dim_index = 2;
+    const size_t spatial_dims = data_shape.size() - spatial_dim_index;
     const auto c_dim_divider = static_cast<int>(std::pow(m_blocksize, spatial_dims));
 
     NGRAPH_CHECK(m_blocksize > 0 && c_dim % c_dim_divider == 0,
-                 "The color axis size: ",
+                 "DepthToSpace: The input data's 'channels' axis size: ",
                  c_dim,
-                 " must be a multiple of ",
-                 "block_size^spatial_dims: ",
-                 c_dim_divider,
-                 " attribute value");
+                 " must be a equivalent to ",
+                 "'block_size'^'spatial_dims': ",
+                 c_dim_divider);
 
     auto bs = static_cast<size_t>(m_blocksize);
     size_t c_flat = c_dim / c_dim_divider;
@@ -85,10 +85,9 @@ NodeVector op::DepthToSpace::decompose_op() const
     {
         dispersed_shape.push_back(bs);
     }
-    const auto no_spatial_dims = data_shape.size() - spatial_dims;
     for (int i = 0; i < spatial_dims; ++i)
     {
-        dispersed_shape.push_back(data_shape.at(no_spatial_dims + i));
+        dispersed_shape.push_back(data_shape.at(spatial_dim_index + i));
     }
     vector<size_t> axes_order{0};
     switch (m_mode)
@@ -104,7 +103,7 @@ NodeVector op::DepthToSpace::decompose_op() const
         flat_node = builder::reshape(data, dispersed_shape);
 
         axes_order.push_back(1);
-        for (int i = 2; i < data_shape.size(); ++i)
+        for (int i = spatial_dim_index; i < data_shape.size(); ++i)
         {
             axes_order.push_back(spatial_dims + i);
             axes_order.push_back(i);
@@ -134,7 +133,7 @@ NodeVector op::DepthToSpace::decompose_op() const
     }
     }
     Shape squeezed_shape{n_dim, c_flat};
-    for (int i = no_spatial_dims; i < data_shape.size(); ++i)
+    for (int i = spatial_dim_index; i < data_shape.size(); ++i)
     {
         squeezed_shape.push_back(data_shape.at(i) * bs);
     }

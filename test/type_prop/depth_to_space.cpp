@@ -104,8 +104,8 @@ TEST(type_prop, depth_to_space_blocksize_not_matched)
     catch (const ngraph_error& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "The color axis size: 7 must be a multiple of "
-                             "block_size^spatial_dims: 4 attribute value");
+                             "DepthToSpace: The input data's 'channels' axis size: 7"
+                             " must be a equivalent to 'block_size'^'spatial_dims': 4");
     }
     catch (...)
     {

@@ -62,10 +62,10 @@ NodeVector op::SpaceToDepth::decompose_op() const
 
     const size_t n_dim = data_shape.at(0);
     const size_t c_dim = data_shape.at(1);
-    const size_t no_spatial_dims = 2;
-    const size_t spatial_dims = data_shape.size() - no_spatial_dims;
+    const size_t spatial_dim_index = 2;
+    const size_t spatial_dims = data_shape.size() - spatial_dim_index;
 
-    for (int i = no_spatial_dims; i < data_shape.size(); ++i)
+    for (int i = spatial_dim_index; i < data_shape.size(); ++i)
     {
         NGRAPH_CHECK(m_blocksize > 0 && data_shape.at(i) % m_blocksize == 0,
                      "The dimension on position: ",
@@ -76,13 +76,13 @@ NodeVector op::SpaceToDepth::decompose_op() const
                      m_blocksize);
     }
 
-    // First we have to disperse the data from spatial channels, then
+    // First we have to disperse the data from spatial dimensions, then
     // rearrange them so as appropriate chunks of data where close to their
     // destination place. Finally squeeze data from respective dimensions.
     Shape dispersed_shape{n_dim, c_dim};
     for (int i = 0; i < spatial_dims; ++i)
     {
-        dispersed_shape.push_back(data_shape.at(i + no_spatial_dims) / m_blocksize);
+        dispersed_shape.push_back(data_shape.at(i + spatial_dim_index) / m_blocksize);
         dispersed_shape.push_back(m_blocksize);
     }
     auto flat_node = builder::reshape(data, dispersed_shape);
@@ -121,7 +121,7 @@ NodeVector op::SpaceToDepth::decompose_op() const
     Shape squeezed_shape{n_dim};
     for (int i = 0; i < spatial_dims; ++i)
     {
-        squeezed_shape.push_back(data_shape.at(no_spatial_dims + i) / m_blocksize);
+        squeezed_shape.push_back(data_shape.at(spatial_dim_index + i) / m_blocksize);
     }
     squeezed_shape.insert(squeezed_shape.begin() + 1, c_dim * std::pow(m_blocksize, spatial_dims));
     flat_node = builder::reshape(flat_node, squeezed_shape);
