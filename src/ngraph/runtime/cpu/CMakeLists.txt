@@ -180,8 +180,6 @@ set(NGRAPH_CPU_COMMON_DATATYPES
 
 
 if (NGRAPH_CPU_ENABLE)
-    set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
-
     set(NGRAPH_CPU_OPTIMIZED_DATATYPES "common"
         CACHE STRING "Semicolon-separated list of datatypes to optimize for, or \"common\" or \"all\".")
 

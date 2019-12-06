@@ -1227,6 +1227,11 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
             return false;
 #endif
         }
+        // GroupConvolution is only supported with MKLDNN
+        else if (auto conv = as_type<ngraph::op::GroupConvolution>(const_cast<Node*>(&node)))
+        {
+            return mkldnn_utils::can_use_mkldnn_conv<ngraph::op::GroupConvolution>(conv);
+        }
 
         if (dex)
         {
