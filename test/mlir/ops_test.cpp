@@ -115,7 +115,7 @@ TEST(MLIR, ops_attributes)
             .getOperation();
 
     auto avgPool = cast<NGAvgPoolOp>(operation);
-    auto padType = static_cast<MLIRPadType>(avgPool.padType().getSExtValue());
+    auto padType = avgPool.padType();
     EXPECT_TRUE(padType == MLIRPadType::SAME_LOWER);
 
     operation =
@@ -131,7 +131,7 @@ TEST(MLIR, ops_attributes)
             .getOperation();
 
     avgPool = cast<NGAvgPoolOp>(operation);
-    padType = static_cast<MLIRPadType>(avgPool.padType().getSExtValue());
+    padType = avgPool.padType();
     EXPECT_TRUE(padType == MLIRPadType::EXPLICIT);
 
     auto ceilMode = avgPool.ceilMode();
