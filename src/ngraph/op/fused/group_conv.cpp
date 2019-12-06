@@ -296,10 +296,10 @@ void op::v1::GroupConvolutionBackpropData::validate_and_infer_types()
                              ((filters_shape[i] - 1) * m_dilations[i] + 1) - m_pads_begin[i] -
                              m_pads_end[i] + output_padding[i];
                 output_shape.push_back(tmp);
-                output_pshape = output_shape;
             }
             output_shape.insert(output_shape.begin(), filters_shape.at(1));
             output_shape.insert(output_shape.begin(), data_shape.at(0));
+            output_pshape = output_shape;
         }
     }
 
