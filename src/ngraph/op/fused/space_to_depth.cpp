@@ -86,6 +86,8 @@ NodeVector op::SpaceToDepth::decompose_op() const
         dispersed_shape.push_back(m_blocksize);
     }
     auto flat_node = builder::reshape(data, dispersed_shape);
+    // calculate axes to transpose
+    // [0, 3, 5, ..., spatial_dims + (spatial_dims + 1), 2, 4, ..., K + K])
     vector<size_t> axes_order{0};
     for (size_t i = 0, j = 3; i < spatial_dims; ++i, j += 2)
     {
