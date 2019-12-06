@@ -78,7 +78,7 @@ TEST(opset_transform, opset1_convolution_downgrade_pass)
 
 TEST(opset_transform, opset1_convolution_backprop_data_downgrade_pass)
 {
-    auto data_batch_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {64, 3, 100});
+    auto data_batch_shape = op::Constant::create<int64_t>(element::i64, Shape{1}, {100});
     auto filters = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});
     auto delta = make_shared<op::Parameter>(element::f32, Shape{64, 128, 96});
     auto strides = Strides{1};

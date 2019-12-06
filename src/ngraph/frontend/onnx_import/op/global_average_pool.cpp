@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "global_average_pool.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "utils/pooling_factory.hpp"
