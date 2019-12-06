@@ -1,5 +1,8 @@
 :orphan:
 
+Sitemap
+#######
+
 * :ref:`Getting Started <introduction>`
 
   .. toctree::
