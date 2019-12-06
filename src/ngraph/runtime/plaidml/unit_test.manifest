@@ -132,6 +132,7 @@ batch_norm_fprop_b1c2h2w2
 batch_norm_fprop_b2c2h2w1
 batch_norm_fprop_b2c2d2h1w1
 batch_norm_fprop_inference_b2c2h2w1
+dyn_batch_norm_fprop_b1c2h2w2
 pad_edge_1d
 pad_edge_1d_top_neg
 pad_edge_1d_top_neg_bigger_than_tensor
