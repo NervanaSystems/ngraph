@@ -294,7 +294,8 @@ void op::v1::GroupConvolutionBackpropData::validate_and_infer_types()
                              m_pads_end[i] + output_padding[i];
                 output_shape.push_back(tmp);
             }
-            output_shape.insert(output_shape.begin(), filters_shape.at(0) * filters_shape.at(2)); // GROUP * C_OUTPUT
+            output_shape.insert(output_shape.begin(),
+                                filters_shape.at(0) * filters_shape.at(2)); // GROUP * C_OUTPUT
             output_shape.insert(output_shape.begin(), data_shape.at(0));
             output_pshape = output_shape;
         }
