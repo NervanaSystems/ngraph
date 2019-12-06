@@ -21,6 +21,7 @@
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "reverse_sequence.hpp"
 #include "utils/common.hpp"
 
 namespace ngraph

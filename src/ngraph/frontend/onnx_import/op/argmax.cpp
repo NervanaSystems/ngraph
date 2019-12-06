@@ -14,9 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/argmax.hpp"
+#include "argmax.hpp"
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/argmax.hpp"
 #include "utils/reduction.hpp"
 
 namespace ngraph
