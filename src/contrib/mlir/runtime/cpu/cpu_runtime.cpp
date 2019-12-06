@@ -103,7 +103,8 @@ void MLIRCPURuntime::bindArguments(std::vector<void*>& externalTensors)
     for (size_t i = 0, numArgs = m_invokeArgs.size(); i < numArgs; ++i)
     {
         auto* memRefArg = *(reinterpret_cast<StaticMemRef**>(m_invokeArgs[i]));
-        memRefArg->data = reinterpret_cast<float*>((*m_externalTensors)[i]);
+        memRefArg->allocatedPtr = (*m_externalTensors)[i];
+        memRefArg->alignedPtr = (*m_externalTensors)[i];
     }
 }
 
@@ -161,6 +162,7 @@ StaticMemRef* MLIRCPURuntime::allocateMemrefDescriptor()
     // We should expand this with different types and dynamic MemRefs
     auto* descriptor = reinterpret_cast<StaticMemRef*>(malloc(sizeof(StaticMemRef)));
     NGRAPH_CHECK(descriptor != nullptr, "NULL MemRef descriptor");
-    descriptor->data = nullptr;
+    descriptor->allocatedPtr = nullptr;
+    descriptor->alignedPtr = nullptr;
     return descriptor;
 }

@@ -89,12 +89,17 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
             runtime::reference::floor<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
+        else if (is_type<op::v1::LogicalNot>(unary))
+        {
+            runtime::reference::logical_not<T>(
+                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+        }
         else if (is_type<op::Negative>(unary))
         {
             runtime::reference::negate<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-        else if (is_type<op::Not>(unary))
+        else if (is_type<op::v0::Not>(unary))
         {
             runtime::reference::logical_not<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
