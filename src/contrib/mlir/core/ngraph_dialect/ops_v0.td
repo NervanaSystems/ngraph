@@ -188,7 +188,7 @@ def NGAvgPoolOp :
                I64ArrayAttr     :$padBelow,
                I64ArrayAttr     :$padAbove,
                DefaultValuedAttr<BoolAttr, "false">:$includePadding,
-               DefaultValuedAttr<PadTypeEnumAttr, "static_cast<int64_t>(MLIRPadType::EXPLICIT)"> :$padType,
+               DefaultValuedAttr<PadTypeEnumAttr, "MLIRPadType::EXPLICIT"> :$padType,
                DefaultValuedAttr<BoolAttr, "false"> :$ceilMode
                )>
 {
@@ -398,7 +398,7 @@ def NGMaxPoolOp :
                I64ArrayAttr     :$windowMovementStrides,
                I64ArrayAttr     :$padBelow,
                I64ArrayAttr     :$padAbove,
-               DefaultValuedAttr<PadTypeEnumAttr, "static_cast<int64_t>(MLIRPadType::EXPLICIT)"> :$padType,
+               DefaultValuedAttr<PadTypeEnumAttr, "MLIRPadType::EXPLICIT"> :$padType,
                DefaultValuedAttr<BoolAttr, "false"> :$ceilMode
                )>
 {
@@ -525,7 +525,7 @@ def NGPadOp :
                NG_TensorType    :$padValue,
                I64ArrayAttr     :$padBelow,
                I64ArrayAttr     :$padAbove,
-               DefaultValuedAttr<PadModeEnumAttr, "static_cast<int64_t>(MLIRPadMode::CONSTANT)"> :$padMode)>
+               DefaultValuedAttr<PadModeEnumAttr, "MLIRPadMode::CONSTANT"> :$padMode)>
 {
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
     let verifier = [{ return verifyOp(this); }];
@@ -662,7 +662,7 @@ def NGTopKOp :
                I64Attr       :$axis,
                TypeAttr      :$indexType,
                DefaultValuedAttr<BoolAttr, "true"> :$computeMax,
-               DefaultValuedAttr<SortTypeEnumAttr, "static_cast<int64_t>(MLIRSortType::VALUES)"> :$sortType)>
+               DefaultValuedAttr<SortTypeEnumAttr, "MLIRSortType::VALUES"> :$sortType)>
 {  
     let summary = "Softmax operation.";
     let description = [{

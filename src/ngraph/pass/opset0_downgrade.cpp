@@ -593,6 +593,17 @@ namespace
         return true;
     }
 
+    bool op_cast(shared_ptr<op::v1::Split> node)
+    {
+        const auto num_splits = node->get_num_splits();
+
+        auto replacement_node =
+            make_shared<op::v0::Split>(node->input_value(0), node->input_value(1), num_splits);
+
+        replace_node(node, replacement_node);
+        return true;
+    }
+
     bool op_cast(shared_ptr<op::v1::Subtract> node)
     {
         op_cast_binary_elementwise_node<op::v0::Subtract, op::v1::Subtract>(node);
@@ -655,6 +666,25 @@ namespace
         // values output will be 0, indices 1
         vector<int64_t> output_order{1, 0};
         replace_node(node, replacement_node, output_order);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::VariadicSplit> node)
+    {
+        const auto split_lengths = node->input_value(2).get_node_shared_ptr();
+
+        NGRAPH_CHECK(split_lengths->is_constant(),
+                     "Unable to convert VariadicSplit:v1 to Split:v0 "
+                     "if 'split_lengths' input is not constant. Node: ",
+                     *node);
+
+        const auto splits = as_type_ptr<op::Constant>(split_lengths)->get_vector<int64_t>();
+        const std::vector<size_t> splits_unsigned{splits.begin(), splits.end()};
+
+        auto replacement_node =
+            make_shared<op::v0::Split>(node->input_value(0), node->input_value(1), splits_unsigned);
+
+        replace_node(node, replacement_node);
         return true;
     }
 
