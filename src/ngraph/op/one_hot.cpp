@@ -166,7 +166,7 @@ void op::v1::OneHot::validate_and_infer_types()
         auto depth_element_type = depth->get_output_element_type(0);
         NODE_VALIDATION_CHECK(this,
                               depth_element_type.is_integral(),
-                              "'depth' input element type must be i8, i32 or i64 (got ",
+                               "'depth' input element type must be an integer (got ",
                               depth_element_type,
                               ").");
 
