@@ -18,25 +18,30 @@
 
 #include "get_output_element_elimination.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/pad.hpp"
+#include "ngraph/op/product.hpp"
+#include "ngraph/op/sum.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-bool pass::GetOutputElementElimination::run_on_function(shared_ptr<Function> f)
+bool pass::GetOutputElementElimination::run_on_node(shared_ptr<Node> n)
 {
     bool optimized = false;
-    for (auto& n : f->get_ops())
+    for (auto& input : n->inputs())
     {
-        for (auto& input : n->inputs())
+        if (auto goe = dynamic_cast<op::GetOutputElement*>(input.get_source_output().get_node()))
         {
-            if (auto goe = as_type<op::GetOutputElement>(input.get_source_output().get_node()))
-            {
-                input.replace_source_output(goe->input(0).get_source_output());
-                // we don't need to fix anything w.r.t GetOutputElement as it will become
-                // unreachable
-                optimized = true;
-            }
+            input.replace_source_output(goe->input(0).get_source_output());
+            // we don't need to fix anything w.r.t GetOutputElement as it will become unreachable
+            optimized = true;
         }
     }
     return optimized;
