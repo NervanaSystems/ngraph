@@ -132,6 +132,7 @@ batch_norm_fprop_b1c2h2w2
 batch_norm_fprop_b2c2h2w1
 batch_norm_fprop_b2c2d2h1w1
 batch_norm_fprop_inference_b2c2h2w1
+dyn_batch_norm_fprop_b1c2h2w2
 pad_edge_1d
 pad_edge_1d_top_neg
 pad_edge_1d_top_neg_bigger_than_tensor
@@ -315,6 +316,11 @@ random_uniform_dynamic_shapes
 layer_norm_affine_stats
 layer_norm_bprop_affine_stats
 layer_norm_bprop_affine
+
+# Another fused op decomposition pass required after the downgrade pass
+model_split_equal_parts_default
+model_split_equal_parts_2d
+model_split_variable_parts_2d
 
 # shapes with zeros dimensions like (5, 0, 5) not supported in PlaidML backend
 dyn_replace_slice

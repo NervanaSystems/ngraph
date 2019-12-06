@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "op/conv_integer.hpp"
+#include "conv_integer.hpp"
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/frontend/onnx_import/exceptions.hpp"
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
