@@ -121,7 +121,7 @@ NodeVector op::DepthToSpace::decompose_op() const
     case DepthToSpaceMode::BLOCKS_FIRST:
     default:
     {
-        dispersed_shape.insert(dispersed_shape.begin() + spatial_dims, c_flat);
+        dispersed_shape.insert(dispersed_shape.begin() + spatial_dims + 1, c_flat);
         flat_node = builder::reshape(data, dispersed_shape);
 
         axes_order.push_back(spatial_dims + 1);
