@@ -21,6 +21,8 @@
 
 #include <mlir/Pass/Pass.h>
 #include <unordered_map>
+#include "ngraph/check.hpp"
+
 namespace mlir
 {
     // BufferInfo
@@ -36,6 +38,7 @@ namespace mlir
     struct MemoryAnalysis
     {
         using BufferInfoMap = std::unordered_map<Operation*, BufferInfo>;
+        using BufferSizeMap = std::unordered_map<unsigned, unsigned>;
         // Compute this analysis with the provided operation.
         MemoryAnalysis(Operation* op);
 
@@ -49,7 +52,28 @@ namespace mlir
             return it->second;
         }
         void setBufferInfo(Operation* op, BufferInfo bufferInfo) { m_bufferInfo[op] = bufferInfo; }
+        void setBufferSize(unsigned bufferId, unsigned size) 
+        {
+            auto it = m_bufferSize.find(bufferId);
+            if (it != m_bufferSize.end())
+            {
+                it->second = (size > it->second) ? size : it->second;
+            }
+            else
+            {
+                m_bufferSize[bufferId] = size;
+            }
+        }
+        unsigned getBufferSize(unsigned bufferId)
+        {
+            auto it = m_bufferSize.find(bufferId);
+            NGRAPH_CHECK(it != m_bufferSize.end(), "Buffer has no size!");
+            return it->second;
+        }
     private:
+        // Records assignment of BufferInfo to each inplace op
         BufferInfoMap m_bufferInfo;
+        // Records buffer size required for each buffer id in bytes
+        BufferSizeMap m_bufferSize;
     };
 }

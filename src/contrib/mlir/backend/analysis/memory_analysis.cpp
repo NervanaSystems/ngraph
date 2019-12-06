@@ -22,7 +22,7 @@
 #include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/ngraph_dialect/type.hpp"
 
-#include "ngraph/assertion.hpp"
+
 
 #include <llvm/ADT/BitVector.h>
 #include <llvm/ADT/DenseSet.h>
@@ -126,6 +126,11 @@ namespace
         int m_bufferId;
         MemoryAnalysis* m_memAnalysis;
     };
+
+    // helpers
+    // Determines the buffer size a value needs based on its type
+    // offset is where that value should start in the buffer
+    static unsigned getBufferSizeForOperand(mlir::Value* value, int offset);
 
     // Go backwards over instructions
     //
@@ -245,6 +250,7 @@ namespace
             std::vector<int> opndOffsets;
             BufferInfo bufferInfo;
             int bufferId = -1, baseOffset = 0;
+            unsigned bufferSize = 0; 
 
             if (isInputOrOutputValue(op->getResult(0)))
             {
@@ -372,16 +378,22 @@ namespace
                 bufferId = m_bufferId++;
                 baseOffset = 0;
             }
+
+            // adjust the buffer size based on this instruction
+            // max size is determined from dst offset and type
+            bufferSize = getBufferSizeForOperand(op->getResult(0), baseOffset);
+            m_memAnalysis->setBufferSize(bufferId, bufferSize);
+
             // Update analysis map. No need to check if we are over-writing previous entries
             // since they should all match.
             m_memAnalysis->setBufferInfo(op, {bufferId, baseOffset});
-
             for (auto i = 0; i < op->getNumOperands(); i++)
             {
                 auto opnd = op->getOperand(i);
                 auto defOp = opnd->getDefiningOp();
                 NGRAPH_CHECK(defOp != nullptr, "Defining operation expected");
-                m_memAnalysis->setBufferInfo(defOp, {bufferId, baseOffset + opndOffsets[i]});
+                auto opndOffset = baseOffset + opndOffsets[i];
+                m_memAnalysis->setBufferInfo(defOp, {bufferId, opndOffset});
             }
         }
     }
@@ -426,15 +438,18 @@ namespace
         if (!bufferInfo.isValid())
         {
             // attach a new buffer id, and 0 offset on obth src and result
-            m_memAnalysis->setBufferInfo(op, {m_bufferId, 0});
-            m_memAnalysis->setBufferInfo(use->getDefiningOp(), {m_bufferId, 0});
-            m_bufferId++;
+            bufferInfo = {m_bufferId++, 0};
+            m_memAnalysis->setBufferInfo(op, bufferInfo);
+            m_memAnalysis->setBufferInfo(use->getDefiningOp(), bufferInfo);
         }
         else
         {
             // copy result buffer id and offset to src
             m_memAnalysis->setBufferInfo(use->getDefiningOp(), bufferInfo);
         }
+        auto bufferSize = 0;
+        bufferSize = getBufferSizeForOperand(op->getResult(0), bufferInfo.m_offset);
+        m_memAnalysis->setBufferSize(bufferInfo.m_bufferId, bufferSize);
 
         // update aliasing info
         // use value cannot alias any live value
@@ -588,6 +603,18 @@ namespace
             return;
         }
         m_liveness[it->second] = false;
+    }
+
+    // helpers
+    unsigned getBufferSizeForOperand(mlir::Value* value, int offset)
+    {
+        auto tensorType = value->getType().dyn_cast<NGTensorType>();
+        NGRAPH_CHECK(tensorType, "Invalid type to find buffer size for");
+        
+        unsigned bufferSize = offset * std::ceil(tensorType.getElementBitWidth() / 8);
+        bufferSize += tensorType.getSizeInBytes();
+
+        return bufferSize;
     }
 }
 
