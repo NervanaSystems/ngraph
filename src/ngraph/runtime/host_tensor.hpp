@@ -30,7 +30,7 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::HostTensor : public ngraph::runtime::Tensor
+class NGRAPH_API ngraph::runtime::HostTensor : public ngraph::runtime::Tensor
 {
 public:
     HostTensor(const ngraph::element::Type& element_type,

@@ -19,7 +19,6 @@
 #include <memory>
 #include <string>
 
-#include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/partial_shape.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -36,7 +35,7 @@ namespace ngraph
         }
 
         /// \brief Compile-time descriptor of a first-class value that is a tensor.
-        class Tensor
+        class NGRAPH_API Tensor
         {
             Tensor(const Tensor&) = delete;
             Tensor& operator=(const Tensor&) = delete;

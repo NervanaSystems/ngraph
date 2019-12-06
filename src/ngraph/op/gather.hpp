@@ -25,10 +25,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Gather slices from axis of params according to indices
-            class Gather : public Op
+            class NGRAPH_API Gather : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Gather", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Gather() = default;
@@ -55,10 +54,9 @@ namespace ngraph
         namespace v1
         {
             /// \brief Gather slices from axis of params according to indices
-            class Gather : public Op
+            class NGRAPH_API Gather : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Gather", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Gather() = default;

@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/split.hpp"
 #include "op/split.hpp"
 #include "utils/common.hpp"
@@ -32,30 +33,25 @@ namespace ngraph
                 NodeVector split(const Node& node)
                 {
                     const auto input = node.get_ng_inputs().at(0);
-                    const auto outputs_number = node.get_output_names().size();
                     const auto axis = node.get_attribute_value<int64_t>("axis", 0);
-                    std::size_t valid_axis =
-                        common::validate_axis(node, axis, input->get_shape().size());
+                    const auto axis_node =
+                        ngraph::op::Constant::create(element::i64, Shape{}, {axis});
 
-                    try
+                    std::shared_ptr<ngraph::Node> fused_split;
+                    if (node.has_attribute("split"))
                     {
                         const auto length_parts =
                             node.get_attribute_value<std::vector<std::size_t>>("split");
-                        const auto fused_split =
-                            std::make_shared<ngraph::op::Split>(input, valid_axis, length_parts);
-
-                        return fused_split->decompose_op();
+                        fused_split =
+                            std::make_shared<ngraph::op::Split>(input, axis_node, length_parts);
                     }
-                    catch (const error::node::UnknownAttribute&)
+                    else
                     {
-                        // an exception will be caught if the input node does not contain
-                        // the 'split' attribute - this means we should split the input tensor
-                        // into same-length parts equal to the number of node outputs
-                        const auto fused_split =
-                            std::make_shared<ngraph::op::Split>(input, valid_axis, outputs_number);
-
-                        return fused_split->decompose_op();
+                        const auto outputs_number = node.get_output_names().size();
+                        fused_split =
+                            std::make_shared<ngraph::op::Split>(input, axis_node, outputs_number);
                     }
+                    return common::get_outputs(fused_split);
                 }
 
             } // namespace set_1

@@ -29,7 +29,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::CommonFunctionCollection : public ModulePass
+class NGRAPH_API ngraph::pass::CommonFunctionCollection : public ModulePass
 {
 public:
     /// \brief Create the CommonFunctionCollection pass
