@@ -24,7 +24,6 @@
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/select.hpp"
-
 #include "softplus.hpp"
 
 namespace ngraph

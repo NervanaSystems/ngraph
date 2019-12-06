@@ -18,11 +18,10 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
-#include "shape.hpp"
+#include "size.hpp"
 
 namespace ngraph
 {

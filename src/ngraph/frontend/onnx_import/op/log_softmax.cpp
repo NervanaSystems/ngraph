@@ -16,10 +16,8 @@
 
 #include <memory>
 
-#include "core/node.hpp"
-#include "ngraph/node.hpp"
+#include "log_softmax.hpp"
 #include "ngraph/op/fused/log_softmax.hpp"
-#include "utils/common.hpp"
 
 namespace ngraph
 {

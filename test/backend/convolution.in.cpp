@@ -175,7 +175,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_convolution_backprop_data)
     for (int i = 0; i < 2 * 3 * 5 * 5; i++)
         expected_result.emplace_back(i);
 
-    vector<int64_t> shapes = {2, 3, 5, 5};
+    vector<int64_t> shapes = {5, 5};
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_delta);
