@@ -21,8 +21,9 @@
 // NOTE: This file follows nGraph format style and MLIR naming convention since it does
 // not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
 
-include "mlir/IR/OpBase.td"
 include "core/ngraph_dialect/ops_interfaces.td"
+include "mlir/IR/OpBase.td"
+
 // nGraph Dialect operations definitions
 //
 // This files declares nGraph operations that table-gen uses to create C++ code
