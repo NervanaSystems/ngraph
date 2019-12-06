@@ -27,34 +27,39 @@
 #include "utils/common.hpp"
 #include "utils/reshape.hpp"
 
-/// \return Parse node attribute value for axis and adjust for negative value if needed.
-static std::int64_t get_axis(const ngraph::onnx_import::Node& node)
+namespace
 {
-    std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
+    /// \return Parse node attribute value for axis and adjust for negative value if needed.
+    std::int64_t get_axis(const ngraph::onnx_import::Node& node)
+    {
+        std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
 
-    auto data = node.get_ng_inputs().at(0);
-    auto data_rank = data->get_shape().size();
-    return ngraph::onnx_import::common::validate_axis(node, axis, data_rank);
-}
+        auto data = node.get_ng_inputs().at(0);
+        auto data_rank = data->get_shape().size();
+        return ngraph::onnx_import::common::validate_axis(node, axis, data_rank);
+    }
 
-/// \return Return the second input to the TopK node reshaped to a scalar.
-static std::shared_ptr<ngraph::Node> get_k(const ngraph::onnx_import::Node& node)
-{
-    auto k_node = node.get_ng_inputs().at(1);
-    NGRAPH_CHECK(shape_size(k_node->get_shape()) == 1,
-                 "ONNX TopK operator: 'K' parameter must contain a single positive value.",
-                 node);
+    /// \return Return the second input to the TopK node reshaped to a scalar.
+    std::shared_ptr<ngraph::Node> get_k(const ngraph::onnx_import::Node& node)
+    {
+        auto k_node = node.get_ng_inputs().at(1);
+        NGRAPH_CHECK(shape_size(k_node->get_shape()) == 1,
+                     "ONNX TopK operator: 'K' parameter must contain a single positive value.",
+                     node);
 
-    return ngraph::onnx_import::reshape::interpret_as_scalar(k_node);
-}
+        return ngraph::onnx_import::reshape::interpret_as_scalar(k_node);
+    }
 
-/// \return Return the outputs of the TopK node.
-static ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node)
-{
-    std::shared_ptr<ngraph::Node> values = std::make_shared<ngraph::op::GetOutputElement>(node, 0);
-    std::shared_ptr<ngraph::Node> indices = std::make_shared<ngraph::op::GetOutputElement>(node, 1);
+    /// \return Return the outputs of the TopK node.
+    ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node)
+    {
+        std::shared_ptr<ngraph::Node> values =
+            std::make_shared<ngraph::op::GetOutputElement>(node, 0);
+        std::shared_ptr<ngraph::Node> indices =
+            std::make_shared<ngraph::op::GetOutputElement>(node, 1);
 
-    return {values, indices};
+        return {values, indices};
+    }
 }
 
 namespace ngraph
