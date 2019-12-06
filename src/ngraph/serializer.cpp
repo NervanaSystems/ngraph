@@ -1404,17 +1404,33 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             const auto trans_std = node_js.at("trans_std").get<float>();
             const auto part_size = node_js.at("part_size").get<int64_t>();
 
-            node = make_shared<op::v1::DeformablePSROIPooling>(args[0],
-                                                               args[1],
-                                                               args[2],
-                                                               output_dim,
-                                                               spatial_scale,
-                                                               group_size,
-                                                               mode,
-                                                               spatial_bins_x,
-                                                               spatial_bins_y,
-                                                               trans_std,
-                                                               part_size);
+            if (args.size() == 2)
+            {
+                node = make_shared<op::v1::DeformablePSROIPooling>(args[0],
+                                                                   args[1],
+                                                                   output_dim,
+                                                                   spatial_scale,
+                                                                   group_size,
+                                                                   mode,
+                                                                   spatial_bins_x,
+                                                                   spatial_bins_y,
+                                                                   trans_std,
+                                                                   part_size);
+            }
+            else
+            {
+                node = make_shared<op::v1::DeformablePSROIPooling>(args[0],
+                                                                   args[1],
+                                                                   args[2],
+                                                                   output_dim,
+                                                                   spatial_scale,
+                                                                   group_size,
+                                                                   mode,
+                                                                   spatial_bins_x,
+                                                                   spatial_bins_y,
+                                                                   trans_std,
+                                                                   part_size);
+            }
             break;
         }
         case OP_TYPEID::DepthToSpace_v1:
@@ -2745,6 +2761,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             const auto splits = node_js.at("splits").get<vector<size_t>>();
             node = make_shared<op::Split>(args[0], args[1], splits);
+            break;
+        }
+        case OP_TYPEID::Split_v1:
+        {
+            const auto num_splits = node_js.at("num_splits").get<size_t>();
+            node = make_shared<op::Split>(args[0], args[1], num_splits);
             break;
         }
         case OP_TYPEID::Sqrt:
@@ -4415,8 +4437,14 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Split:
     {
-        auto tmp = static_cast<const op::Split*>(&n);
+        const auto tmp = static_cast<const op::Split*>(&n);
         node["splits"] = tmp->get_splits();
+        break;
+    }
+    case OP_TYPEID::Split_v1:
+    {
+        const auto tmp = static_cast<const op::v1::Split*>(&n);
+        node["num_splits"] = tmp->get_num_splits();
         break;
     }
     case OP_TYPEID::Sqrt: { break;
