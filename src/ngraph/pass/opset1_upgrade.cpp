@@ -179,7 +179,10 @@ namespace
         auto replacement_node = make_shared<op::v1::ConvolutionBackpropData>(
             node->input_value(1), // data
             node->input_value(0), // filters
-            op::Constant::create(element::i64, Shape{data_batch_shape.size()}, data_batch_shape),
+            op::Constant::create(
+                element::i64,
+                Shape{data_batch_shape.size() - 2},
+                vector<size_t>(data_batch_shape.begin() + 2, data_batch_shape.end())),
             strides,
             pads_begin,
             pads_end,
