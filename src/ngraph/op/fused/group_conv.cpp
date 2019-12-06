@@ -278,13 +278,10 @@ void op::v1::GroupConvolutionBackpropData::validate_and_infer_types()
         if (filters_pshape.is_static() && data_pshape.is_static())
         {
             auto filters_shape = filters_pshape.to_shape();
-            filters_shape.erase(filters_shape.begin(),
-                                filters_shape.begin() + 3); // remove {G, O, I}
             auto data_shape = data_pshape.to_shape();
-            data_shape.erase(data_shape.begin(), data_shape.begin() + 2); // remove {N, C}
 
             Shape output_shape;
-            auto data_spatial_rank = data_shape.size();
+            auto data_spatial_rank = data_shape.size() - 2;
             auto output_padding = get_output_padding();
             if (output_padding.size() == 0)
             {
@@ -292,12 +289,12 @@ void op::v1::GroupConvolutionBackpropData::validate_and_infer_types()
             }
             for (size_t i = 0; i < data_spatial_rank; ++i)
             {
-                size_t tmp = m_strides[i] * (data_shape[i] - 1) +
-                             ((filters_shape[i] - 1) * m_dilations[i] + 1) - m_pads_begin[i] -
+                size_t tmp = m_strides[i] * (data_shape[i + 2] - 1) +
+                             ((filters_shape[i + 3] - 1) * m_dilations[i] + 1) - m_pads_begin[i] -
                              m_pads_end[i] + output_padding[i];
                 output_shape.push_back(tmp);
             }
-            output_shape.insert(output_shape.begin(), filters_shape.at(1));
+            output_shape.insert(output_shape.begin(), filters_shape.at(0) * filters_shape.at(2)); // GROUP * C_OUTPUT
             output_shape.insert(output_shape.begin(), data_shape.at(0));
             output_pshape = output_shape;
         }
