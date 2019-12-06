@@ -18,7 +18,7 @@ include(ExternalProject)
 
 ExternalProject_Add(
     ext_mlir
-    PREFIX llvm
+    PREFIX mlir
     URL ${MLIR_LLVM_TARBALL_URL}
     URL_HASH SHA1=${MLIR_LLVM_SHA1_HASH}
     CONFIGURE_COMMAND ""
