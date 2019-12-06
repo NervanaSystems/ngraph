@@ -20,6 +20,7 @@
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -149,7 +150,7 @@ namespace ngraph
                 bool can_use_mkldnn_batchnorm_fprop(const ngraph::Node* node);
                 bool can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node);
 
-                bool is_bf16_supported();
+                bool CPU_BACKEND_API is_bf16_supported();
 
                 //
                 // Intel(R) MKL-DNN supports the Winograd algorithm for convolutions with the
