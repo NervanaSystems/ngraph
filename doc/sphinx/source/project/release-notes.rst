@@ -11,4 +11,4 @@ Developer documentation with Official Release Notes
 can be found here: 
 
 
-http://ngraph.nervanasys.com/docs/latest/project/release-notes.html
+https://ngraph.nervanasys.com/docs/latest/project/release-notes.html
