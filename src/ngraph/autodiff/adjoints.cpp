@@ -34,10 +34,10 @@
 
 using namespace ngraph;
 
-Output<Node> make_broadcast_zero(const Output<Node>& output)
+NodeOutput make_broadcast_zero(const NodeOutput& output)
 {
-    Output<Node> zero = std::make_shared<op::ScalarConstantLike>(output, 0.0);
-    Output<Node> bzero = std::make_shared<op::BroadcastLike>(zero, output, AxisSet{});
+    NodeOutput zero = std::make_shared<op::ScalarConstantLike>(output, 0.0);
+    NodeOutput bzero = std::make_shared<op::BroadcastLike>(zero, output, AxisSet{});
     return bzero;
 }
 
@@ -138,7 +138,7 @@ autodiff::Adjoints::Adjoints(const OutputVector& ys, const OutputVector& cs)
     }
 }
 
-const OutputVector& autodiff::Adjoints::get(const Output<Node>& x)
+const OutputVector& autodiff::Adjoints::get(const NodeOutput& x)
 {
     auto adjoint_it = m_adjoint_map.find(x.get_node());
     if (m_adjoint_map.end() == adjoint_it)
@@ -149,8 +149,8 @@ const OutputVector& autodiff::Adjoints::get(const Output<Node>& x)
     return adjoint_it->second;
 }
 
-void autodiff::Adjoints::add_delta(const Output<Node>& x,
-                                   const Output<Node>& delta,
+void autodiff::Adjoints::add_delta(const NodeOutput& x,
+                                   const NodeOutput& delta,
                                    size_t output_index)
 {
     auto adjoint_it = m_adjoint_map.find(x.get_node());
@@ -169,8 +169,8 @@ void autodiff::Adjoints::add_delta(const Output<Node>& x,
 }
 
 // This doesn't need an index since slice can only sit on top of GOE
-void autodiff::Adjoints::add_delta_to_slice(const Output<Node>& x,
-                                            const Output<Node>& delta,
+void autodiff::Adjoints::add_delta_to_slice(const NodeOutput& x,
+                                            const NodeOutput& delta,
                                             const Coordinate& lower_bounds,
                                             const Coordinate& upper_bounds,
                                             const Strides& strides)
@@ -204,12 +204,12 @@ void autodiff::Adjoints::add_delta_to_slice(const Output<Node>& x,
     }
 }
 
-std::shared_ptr<Node> autodiff::Adjoints::backprop_node(const Output<Node>& x)
+std::shared_ptr<Node> autodiff::Adjoints::backprop_node(const NodeOutput& x)
 {
     return get_output_element(backprop_output(x));
 }
 
-Output<Node> autodiff::Adjoints::backprop_output(const Output<Node>& x)
+NodeOutput autodiff::Adjoints::backprop_output(const NodeOutput& x)
 {
     return get(x).at(x.get_index());
 }

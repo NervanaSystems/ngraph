@@ -32,7 +32,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Atan::type_info;
 
-op::Atan::Atan(const Output<Node>& arg)
+op::Atan::Atan(const NodeOutput& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();

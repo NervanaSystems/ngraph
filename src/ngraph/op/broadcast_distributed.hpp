@@ -32,7 +32,7 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"BroadcastDistributed", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 BroadcastDistributed() = default;
-                BroadcastDistributed(const Output<Node>& arg, int64_t root_id = 0);
+                BroadcastDistributed(const NodeOutput& arg, int64_t root_id = 0);
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 

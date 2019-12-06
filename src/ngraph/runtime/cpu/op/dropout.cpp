@@ -25,11 +25,11 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Dropout::type_info;
 
-op::Dropout::Dropout(const Output<Node>& input,
-                     const Output<Node>& gm_const,
-                     const Output<Node>& use_seed,
-                     const Output<Node>& seed,
-                     const Output<Node>& keep_prob)
+op::Dropout::Dropout(const NodeOutput& input,
+                     const NodeOutput& gm_const,
+                     const NodeOutput& use_seed,
+                     const NodeOutput& seed,
+                     const NodeOutput& keep_prob)
     : Op({input, gm_const, use_seed, seed, keep_prob})
 {
     constructor_validate_and_infer_types();

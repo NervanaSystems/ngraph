@@ -42,9 +42,9 @@ namespace ngraph
                 /// \param[in]  alpha  A scalar value representing the alpha parameter.
                 /// \param[in]  beta   A scalar value representing the beta parameter.
                 ///
-                HardSigmoid(const Output<Node>& data,
-                            const Output<Node>& alpha,
-                            const Output<Node>& beta);
+                HardSigmoid(const NodeOutput& data,
+                            const NodeOutput& alpha,
+                            const NodeOutput& beta);
 
                 virtual void pre_validate_and_infer_types() override;
                 virtual NodeVector decompose_op() const override;

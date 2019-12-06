@@ -24,7 +24,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Tan::type_info;
 
-op::Tan::Tan(const Output<Node>& arg)
+op::Tan::Tan(const NodeOutput& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();

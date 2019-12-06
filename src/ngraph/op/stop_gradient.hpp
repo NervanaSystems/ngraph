@@ -33,7 +33,7 @@ namespace ngraph
                 /// \brief Constructs StopGradient
                 ///
                 /// \param arg Node that produces the input tensor.
-                StopGradient(const Output<Node>& arg);
+                StopGradient(const NodeOutput& arg);
                 StopGradient() = default;
 
                 virtual std::shared_ptr<Node>

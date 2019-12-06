@@ -98,7 +98,7 @@ Shape op::GroupConvolutionBias::get_weights_dimensions()
 constexpr NodeTypeInfo op::GroupConvolutionBias::type_info;
 
 op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolution>& conv,
-                                               const Output<Node>& bias,
+                                               const NodeOutput& bias,
                                                size_t groups,
                                                const Shape& output_shape,
                                                bool with_relu,
@@ -129,9 +129,9 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolu
     set_output_type(0, conv->get_element_type(), output_shape);
 }
 
-op::GroupConvolutionBias::GroupConvolutionBias(const Output<Node>& data_batch,
-                                               const Output<Node>& filters,
-                                               const Output<Node>& bias,
+op::GroupConvolutionBias::GroupConvolutionBias(const NodeOutput& data_batch,
+                                               const NodeOutput& filters,
+                                               const NodeOutput& bias,
                                                const Strides& window_movement_strides,
                                                const Strides& window_dilation_strides,
                                                const CoordinateDiff& padding_below,

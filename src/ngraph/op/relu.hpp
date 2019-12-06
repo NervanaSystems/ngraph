@@ -40,7 +40,7 @@ namespace ngraph
                 /// \brief Constructs a Relu operation.
                 ///
                 /// \param arg Node that produces the input tensor.
-                Relu(const Output<ngraph::Node>& arg);
+                Relu(const NodeOutput& arg);
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;

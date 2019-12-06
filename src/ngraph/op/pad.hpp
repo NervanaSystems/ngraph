@@ -42,8 +42,8 @@ namespace ngraph
                 /// \param padding_below The padding-below widths.
                 /// \param padding_above The padding-above widths.
                 /// \param pad_mode The padding mode: CONSTANT(default), EDGE, REFLECT or SYMMETRIC.
-                Pad(const Output<Node>& arg,
-                    const Output<Node>& arg_pad_value,
+                Pad(const NodeOutput& arg,
+                    const NodeOutput& arg_pad_value,
                     const CoordinateDiff& padding_below,
                     const CoordinateDiff& padding_above,
                     PadMode pad_mode = PadMode::CONSTANT);
@@ -103,10 +103,10 @@ namespace ngraph
                 /// \param arg_pad_value The node with value which set to extended elements
                 /// if pad_mode is CONSTANT
                 /// \param pad_mode The padding mode: CONSTANT, EDGE, REFLECT or SYMMETRIC.
-                Pad(const Output<Node>& arg,
-                    const Output<Node>& pads_begin,
-                    const Output<Node>& pads_end,
-                    const Output<Node>& arg_pad_value,
+                Pad(const NodeOutput& arg,
+                    const NodeOutput& pads_begin,
+                    const NodeOutput& pads_end,
+                    const NodeOutput& arg_pad_value,
                     PadMode pad_mode);
 
                 /// \brief Constructs a generic padding operation.
@@ -117,9 +117,9 @@ namespace ngraph
                 /// \param pads_end The node which specifies the number of padding elements
                 /// at the end of each axis
                 /// \param pad_mode The padding mode: CONSTANT, EDGE, REFLECT or SYMMETRIC.
-                Pad(const Output<Node>& arg,
-                    const Output<Node>& pads_begin,
-                    const Output<Node>& pads_end,
+                Pad(const NodeOutput& arg,
+                    const NodeOutput& pads_begin,
+                    const NodeOutput& pads_end,
                     PadMode pad_mode);
 
                 /// \brief Constructs a generic padding operation.

@@ -274,7 +274,7 @@ std::list<std::shared_ptr<ngraph::Node>>
             OutputVector cloned_args;
             for (auto input : node->inputs())
             {
-                Output<Node> output = input.get_source_output();
+                NodeOutput output = input.get_source_output();
                 cloned_args.push_back(output.for_node(node_map.at(output.get_node())));
             }
             std::vector<std::shared_ptr<Node>> cloned_dependencies;
@@ -347,7 +347,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function&
     return std::make_shared<ngraph::Function>(cloned_results, cloned_params);
 }
 
-bool ngraph::is_equal_to_const_value(std::string const_value, const Output<Node>& reduce_constant)
+bool ngraph::is_equal_to_const_value(std::string const_value, const NodeOutput& reduce_constant)
 {
     if (auto rc = as_type_ptr<ngraph::op::Constant>(reduce_constant.get_node_shared_ptr()))
     {
@@ -388,13 +388,13 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
     par_node->set_placement(dst_node->get_placement());
 
     // Fix input / output among src, dst and par
-    std::vector<Input<Node>> dst_inputs = get_inputs_from(*src_node, *dst_node);
+    std::vector<NodeInput> dst_inputs = get_inputs_from(*src_node, *dst_node);
     NGRAPH_CHECK(dst_inputs.size() == 1,
                  "insert_result_parameter_split encountered more than "
                  "one input between the source and destination nodes");
     auto& dst_input = dst_inputs[0];
 
-    std::vector<Output<Node>> src_outputs = get_outputs_to(*src_node, *dst_node);
+    std::vector<NodeOutput> src_outputs = get_outputs_to(*src_node, *dst_node);
     NGRAPH_CHECK(src_outputs.size() == 1,
                  "insert_result_parameter_split encountered more than "
                  "one output between the source and destination nodes");
@@ -459,13 +459,13 @@ void ngraph::insert_new_node_between(const shared_ptr<Node>& src_node,
                                      const shared_ptr<Node>& new_node)
 {
     // Fix input / output
-    std::vector<Input<Node>> dst_inputs = get_inputs_from(*src_node, *dst_node);
+    std::vector<NodeInput> dst_inputs = get_inputs_from(*src_node, *dst_node);
     NGRAPH_CHECK(dst_inputs.size() == 1,
                  "insert_new_node_between encountered more than one "
                  "input between the source and destination nodes");
     auto& dst_input = dst_inputs[0];
 
-    std::vector<Output<Node>> src_outputs = get_outputs_to(*src_node, *dst_node);
+    std::vector<NodeOutput> src_outputs = get_outputs_to(*src_node, *dst_node);
     NGRAPH_CHECK(src_outputs.size() == 1,
                  "insert_new_node_between encountered more than one "
                  "output between the source and destination nodes");
@@ -499,7 +499,7 @@ std::shared_ptr<Node> ngraph::make_constant_from_string(std::string val,
     return std::make_shared<op::Constant>(element_type, shape, cvals);
 }
 
-bool ngraph::is_zero(const Output<Node>& reduce_constant)
+bool ngraph::is_zero(const NodeOutput& reduce_constant)
 {
     auto result_bool = is_equal_to_const_value("0", reduce_constant);
     return result_bool;
@@ -658,9 +658,9 @@ void ngraph::plot_graph(
     pass_manager.run_passes(f);
 }
 
-std::vector<Input<Node>> ngraph::get_inputs_from(Node& src, Node& dst)
+std::vector<NodeInput> ngraph::get_inputs_from(Node& src, Node& dst)
 {
-    std::vector<Input<Node>> result;
+    std::vector<NodeInput> result;
 
     for (auto& input : dst.inputs())
     {
@@ -673,9 +673,9 @@ std::vector<Input<Node>> ngraph::get_inputs_from(Node& src, Node& dst)
     return result;
 }
 
-std::vector<Output<Node>> ngraph::get_outputs_to(Node& src, Node& dst)
+std::vector<NodeOutput> ngraph::get_outputs_to(Node& src, Node& dst)
 {
-    std::vector<Output<Node>> result;
+    std::vector<NodeOutput> result;
 
     for (auto& output : src.outputs())
     {

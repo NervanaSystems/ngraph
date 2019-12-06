@@ -30,7 +30,7 @@ namespace ngraph
 
 constexpr ngraph::NodeTypeInfo ngraph::runtime::plaidml::op::Replicate::type_info;
 
-ngraph::runtime::plaidml::op::Replicate::Replicate(const Output<Node>& arg,
+ngraph::runtime::plaidml::op::Replicate::Replicate(const NodeOutput& arg,
                                                    std::size_t replication_axis,
                                                    std::size_t replication_count)
     : Op{{arg}}
@@ -40,7 +40,7 @@ ngraph::runtime::plaidml::op::Replicate::Replicate(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-ngraph::runtime::plaidml::op::Replicate::Replicate(const Output<Node>& arg,
+ngraph::runtime::plaidml::op::Replicate::Replicate(const NodeOutput& arg,
                                                    std::vector<std::size_t> replication_axes)
     : Op{{arg}}
     , m_replication_axes(std::move(replication_axes))

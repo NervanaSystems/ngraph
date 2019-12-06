@@ -23,8 +23,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::NotEqual::type_info;
 
-op::v0::NotEqual::NotEqual(const Output<Node>& arg0,
-                           const Output<Node>& arg1,
+op::v0::NotEqual::NotEqual(const NodeOutput& arg0,
+                           const NodeOutput& arg1,
                            const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseComparison(arg0, arg1, auto_broadcast)
 {
@@ -41,8 +41,8 @@ shared_ptr<Node> op::v0::NotEqual::copy_with_new_args(const NodeVector& new_args
 
 constexpr NodeTypeInfo op::v1::NotEqual::type_info;
 
-op::v1::NotEqual::NotEqual(const Output<Node>& arg0,
-                           const Output<Node>& arg1,
+op::v1::NotEqual::NotEqual(const NodeOutput& arg0,
+                           const NodeOutput& arg1,
                            const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseComparison(arg0, arg1, auto_broadcast)
 {

@@ -22,13 +22,13 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::All::type_info;
 
-op::All::All(const Output<Node>& arg, const AxisSet& reduction_axes)
+op::All::All(const NodeOutput& arg, const AxisSet& reduction_axes)
     : LogicalReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
 }
 
-op::All::All(const Output<Node>& arg, const Output<Node>& reduction_axes)
+op::All::All(const NodeOutput& arg, const NodeOutput& reduction_axes)
     : LogicalReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();

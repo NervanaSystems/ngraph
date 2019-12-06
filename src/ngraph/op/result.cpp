@@ -26,7 +26,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Result::type_info;
 
-op::Result::Result(const Output<Node>& arg, bool needs_default_layout)
+op::Result::Result(const NodeOutput& arg, bool needs_default_layout)
     : Op({arg})
     , m_needs_default_layout(needs_default_layout)
 {

@@ -23,8 +23,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::Pad::type_info;
 
-op::v0::Pad::Pad(const Output<Node>& arg,
-                 const Output<Node>& arg_pad_value,
+op::v0::Pad::Pad(const NodeOutput& arg,
+                 const NodeOutput& arg_pad_value,
                  const CoordinateDiff& padding_below,
                  const CoordinateDiff& padding_above,
                  PadMode pad_mode)
@@ -179,10 +179,10 @@ std::shared_ptr<Node> op::Pad::get_default_value() const
 
 constexpr NodeTypeInfo op::v1::Pad::type_info;
 
-op::v1::Pad::Pad(const Output<Node>& arg,
-                 const Output<Node>& pads_begin,
-                 const Output<Node>& pads_end,
-                 const Output<Node>& arg_pad_value,
+op::v1::Pad::Pad(const NodeOutput& arg,
+                 const NodeOutput& pads_begin,
+                 const NodeOutput& pads_end,
+                 const NodeOutput& arg_pad_value,
                  PadMode pad_mode)
     : Op({arg, pads_begin, pads_end, arg_pad_value})
     , m_pad_mode{pad_mode}
@@ -190,9 +190,9 @@ op::v1::Pad::Pad(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::v1::Pad::Pad(const Output<Node>& arg,
-                 const Output<Node>& pads_begin,
-                 const Output<Node>& pads_end,
+op::v1::Pad::Pad(const NodeOutput& arg,
+                 const NodeOutput& pads_begin,
+                 const NodeOutput& pads_end,
                  PadMode pad_mode)
     : Op({arg, pads_begin, pads_end})
     , m_pad_mode{pad_mode}

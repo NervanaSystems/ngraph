@@ -23,11 +23,11 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::v1::NonMaxSuppression::type_info;
 
 op::v1::NonMaxSuppression::NonMaxSuppression(
-    const Output<Node>& boxes,
-    const Output<Node>& scores,
-    const Output<Node>& max_output_boxes_per_class,
-    const Output<Node>& iou_threshold,
-    const Output<Node>& score_threshold,
+    const NodeOutput& boxes,
+    const NodeOutput& scores,
+    const NodeOutput& max_output_boxes_per_class,
+    const NodeOutput& iou_threshold,
+    const NodeOutput& score_threshold,
     const op::v1::NonMaxSuppression::BoxEncodingType box_encoding,
     const bool sort_result_descending)
     : Op({boxes, scores, max_output_boxes_per_class, iou_threshold, score_threshold})
@@ -38,8 +38,8 @@ op::v1::NonMaxSuppression::NonMaxSuppression(
 }
 
 op::v1::NonMaxSuppression::NonMaxSuppression(
-    const Output<Node>& boxes,
-    const Output<Node>& scores,
+    const NodeOutput& boxes,
+    const NodeOutput& scores,
     const op::v1::NonMaxSuppression::BoxEncodingType box_encoding,
     const bool sort_result_descending)
     : Op({boxes,

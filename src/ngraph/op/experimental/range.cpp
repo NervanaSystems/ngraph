@@ -24,7 +24,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Range::type_info;
 
-op::Range::Range(const Output<Node>& start, const Output<Node>& stop, const Output<Node>& step)
+op::Range::Range(const NodeOutput& start, const NodeOutput& stop, const NodeOutput& step)
     : Op({start, stop, step})
 {
     constructor_validate_and_infer_types();

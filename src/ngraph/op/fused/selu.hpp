@@ -38,9 +38,7 @@ namespace ngraph
                 /// \param data - Node producing the input tensor
                 /// \param alpha - Alpha coefficient of SELU operation
                 /// \param lambda - Lambda coefficient of SELU operation
-                Selu(const Output<Node>& data,
-                     const Output<Node>& alpha,
-                     const Output<Node>& lambda);
+                Selu(const NodeOutput& data, const NodeOutput& alpha, const NodeOutput& lambda);
 
                 virtual NodeVector decompose_op() const override;
 

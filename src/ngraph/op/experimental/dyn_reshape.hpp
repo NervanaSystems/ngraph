@@ -49,8 +49,8 @@ namespace ngraph
                 /// \param zero_flag Treats zeros in `pattern` as wildcard flags indicating a copy
                 /// from
                 ///                  input shape at the same index.
-                DynReshape(const Output<Node>& arg,
-                           const Output<Node>& pattern,
+                DynReshape(const NodeOutput& arg,
+                           const NodeOutput& pattern,
                            bool zero_flag = false);
 
                 void validate_and_infer_types() override;

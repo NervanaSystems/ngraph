@@ -37,7 +37,7 @@ namespace ngraph
             /// \brief Constructs a Pool operation.
             ///
             /// \param x Input x
-            Pool(const Output<Node>& x,
+            Pool(const NodeOutput& x,
                  const Shape& window_shape,
                  const Strides& window_movement_strides,
                  const Shape& padding,
@@ -90,9 +90,9 @@ namespace ngraph
             /// \brief Constructs a PoolGrad operation.
             ///
             /// \param x Input tensor
-            PoolGrad(const Output<Node>& x,
-                     const Output<Node>& output,
-                     const Output<Node>& output_delta,
+            PoolGrad(const NodeOutput& x,
+                     const NodeOutput& output,
+                     const NodeOutput& output_delta,
                      const Shape& window_shape,
                      const Strides& window_movement_strides,
                      const Shape& padding,

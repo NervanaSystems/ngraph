@@ -22,9 +22,9 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Quantize::type_info;
 
-op::Quantize::Quantize(const Output<Node>& input,
-                       const Output<Node>& scale,
-                       const Output<Node>& zero_point,
+op::Quantize::Quantize(const NodeOutput& input,
+                       const NodeOutput& scale,
+                       const NodeOutput& zero_point,
                        const element::Type& type,
                        const AxisSet& axes,
                        RoundMode round_mode)

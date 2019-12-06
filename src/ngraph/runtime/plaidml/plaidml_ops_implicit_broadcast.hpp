@@ -43,7 +43,7 @@ class ngraph::runtime::plaidml::op::ImplicitBroadcast final : public ngraph::op:
 public:
     static constexpr NodeTypeInfo type_info{"plaidmlImplicitBroadcast", 0};
     const NodeTypeInfo& get_type_info() const override { return type_info; }
-    ImplicitBroadcast(const Output<Node>& input, const Shape& shape);
+    ImplicitBroadcast(const NodeOutput& input, const Shape& shape);
 
     void validate_and_infer_types() final;
 

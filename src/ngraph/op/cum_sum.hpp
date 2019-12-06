@@ -83,8 +83,8 @@ namespace ngraph
                 /// \param axis zero dimension tensor specifying axis position along which
                 /// cumulative
                 /// sum must be performed
-                CumSum(const Output<Node>& arg,
-                       const Output<Node>& axis,
+                CumSum(const NodeOutput& arg,
+                       const NodeOutput& axis,
                        const bool exclusive = false,
                        const bool reverse = false);
 

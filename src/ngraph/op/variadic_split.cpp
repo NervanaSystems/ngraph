@@ -25,9 +25,9 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v1::VariadicSplit::type_info;
 
-op::v1::VariadicSplit::VariadicSplit(const Output<Node>& data,
-                                     const Output<Node>& axis,
-                                     const Output<Node>& split_lengths)
+op::v1::VariadicSplit::VariadicSplit(const NodeOutput& data,
+                                     const NodeOutput& axis,
+                                     const NodeOutput& split_lengths)
     : Op({data, axis, split_lengths})
 {
     constructor_validate_and_infer_types();

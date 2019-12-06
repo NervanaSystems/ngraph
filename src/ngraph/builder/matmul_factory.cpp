@@ -38,7 +38,7 @@ using namespace std;
 ///
 /// \return     The node representing sub matrix.
 ///
-static Output<Node> get_sub_matrix(const Output<Node>& node, size_t idx)
+static NodeOutput get_sub_matrix(const NodeOutput& node, size_t idx)
 {
     const Shape& shape{node.get_shape()};
     if (shape.size() < 3)
@@ -53,17 +53,17 @@ static Output<Node> get_sub_matrix(const Output<Node>& node, size_t idx)
     lower_bounds.at(0) = idx;
     upper_bounds.at(0) = idx + 1;
 
-    auto sub_matrix = Output<Node>{make_shared<op::Slice>(node, lower_bounds, upper_bounds)};
+    auto sub_matrix = NodeOutput{make_shared<op::Slice>(node, lower_bounds, upper_bounds)};
     // Remove first single entry dim.
     return builder::squeeze(sub_matrix);
 }
 
-Output<Node> builder::MatmulFactory::get_left()
+NodeOutput builder::MatmulFactory::get_left()
 {
     return m_inputs.at(0);
 }
 
-Output<Node> builder::MatmulFactory::get_right()
+NodeOutput builder::MatmulFactory::get_right()
 {
     return m_inputs.at(1);
 }
@@ -151,18 +151,17 @@ NodeVector builder::MatmulFactory::make_matmul_op()
     }
 }
 
-Output<Node> builder::MatmulFactory::make_dot(const Output<Node>& left, const Output<Node>& right)
+NodeOutput builder::MatmulFactory::make_dot(const NodeOutput& left, const NodeOutput& right)
 {
     return make_shared<op::Dot>(left, right);
 }
 
-Output<Node> builder::QLinearMatmulFactory::get_right()
+NodeOutput builder::QLinearMatmulFactory::get_right()
 {
     return m_inputs.at(3);
 }
 
-Output<Node> builder::QLinearMatmulFactory::make_dot(const Output<Node>& left,
-                                                     const Output<Node>& right)
+NodeOutput builder::QLinearMatmulFactory::make_dot(const NodeOutput& left, const NodeOutput& right)
 {
     ngraph::element::Type output_type;
 
@@ -192,8 +191,7 @@ Output<Node> builder::QLinearMatmulFactory::make_dot(const Output<Node>& left,
                                                       ngraph::AxisSet{});
 }
 
-Output<Node> builder::MatmulIntegerFactory::make_dot(const Output<Node>& left,
-                                                     const Output<Node>& right)
+NodeOutput builder::MatmulIntegerFactory::make_dot(const NodeOutput& left, const NodeOutput& right)
 {
     auto num_inputs = m_inputs.size();
     auto scale_one = ngraph::builder::make_constant(ngraph::element::f32, Shape{}, 1);

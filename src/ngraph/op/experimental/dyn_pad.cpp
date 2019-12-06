@@ -21,10 +21,10 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::DynPad::type_info;
 
-op::DynPad::DynPad(const Output<Node>& arg,
-                   const Output<Node>& padding_below,
-                   const Output<Node>& padding_above,
-                   const Output<Node>& padding_value,
+op::DynPad::DynPad(const NodeOutput& arg,
+                   const NodeOutput& padding_below,
+                   const NodeOutput& padding_above,
+                   const NodeOutput& padding_value,
                    op::PadMode pad_mode)
     : Op({arg, padding_below, padding_above, padding_value})
     , m_pad_mode(pad_mode)

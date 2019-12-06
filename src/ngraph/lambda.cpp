@@ -46,7 +46,7 @@ int64_t Lambda::get_parameter_index(const std::shared_ptr<op::Parameter>& parame
     return -1;
 }
 
-int64_t Lambda::get_result_index(const Output<Node>& value) const
+int64_t Lambda::get_result_index(const NodeOutput& value) const
 {
     int64_t pos = 0;
     if (is_type<op::Result>(value.get_node_shared_ptr()))

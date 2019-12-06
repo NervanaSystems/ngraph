@@ -37,29 +37,29 @@ namespace ngraph
     {
         namespace quantization_utils
         {
-            std::shared_ptr<Node> max_abs(const Output<Node>& a, const Output<Node>& b);
+            std::shared_ptr<Node> max_abs(const NodeOutput& a, const NodeOutput& b);
 
-            std::shared_ptr<Node> get_scale(const Output<Node>& input_min_range,
-                                            const Output<Node>& input_max_range,
+            std::shared_ptr<Node> get_scale(const NodeOutput& input_min_range,
+                                            const NodeOutput& input_max_range,
                                             const ngraph::element::Type& quant_type,
                                             bool bump_by_eps = false);
 
-            std::shared_ptr<Node> get_bias_scale(Output<Node> min_input,
-                                                 Output<Node> max_input,
-                                                 Output<Node> min_filter,
-                                                 Output<Node> max_filter);
+            std::shared_ptr<Node> get_bias_scale(NodeOutput min_input,
+                                                 NodeOutput max_input,
+                                                 NodeOutput min_filter,
+                                                 NodeOutput max_filter);
 
-            std::shared_ptr<Node> get_sum_scale(Output<Node> min_freezed_output_conv_1,
-                                                Output<Node> max_freezed_output_conv_1,
-                                                Output<Node> min_freezed_output_conv_2,
-                                                Output<Node> max_freezed_output_conv_2);
+            std::shared_ptr<Node> get_sum_scale(NodeOutput min_freezed_output_conv_1,
+                                                NodeOutput max_freezed_output_conv_1,
+                                                NodeOutput min_freezed_output_conv_2,
+                                                NodeOutput max_freezed_output_conv_2);
 
-            std::shared_ptr<Node> get_dot_scale(Output<Node> min_input,
-                                                Output<Node> max_input,
-                                                Output<Node> min_filter,
-                                                Output<Node> max_filter,
-                                                Output<Node> min_freezed_output,
-                                                Output<Node> max_freezed_output,
+            std::shared_ptr<Node> get_dot_scale(NodeOutput min_input,
+                                                NodeOutput max_input,
+                                                NodeOutput min_filter,
+                                                NodeOutput max_filter,
+                                                NodeOutput min_freezed_output,
+                                                NodeOutput max_freezed_output,
                                                 const ngraph::element::Type& input_type,
                                                 const ngraph::element::Type& output_type,
                                                 const bool requantize = true);

@@ -53,9 +53,7 @@ namespace ngraph
                 /// \param arg0 Node that produces the first input tensor.
                 /// \param arg1 Node that produces the second input tensor.
                 /// \param arg2 Node that produces the third input tensor.
-                Select(const Output<Node>& arg0,
-                       const Output<Node>& arg1,
-                       const Output<Node>& arg2);
+                Select(const NodeOutput& arg0, const NodeOutput& arg1, const NodeOutput& arg2);
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
@@ -105,9 +103,9 @@ namespace ngraph
                 /// \param arg2 Node that produces the third input tensor.
                 /// \param auto_broadcast Auto broadcast specification. Default is Numpy-style
                 ///                       implicit broadcasting.
-                Select(const Output<Node>& arg0,
-                       const Output<Node>& arg1,
-                       const Output<Node>& arg2,
+                Select(const NodeOutput& arg0,
+                       const NodeOutput& arg1,
+                       const NodeOutput& arg2,
                        const AutoBroadcastSpec& auto_broadcast =
                            AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 

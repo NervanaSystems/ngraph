@@ -45,7 +45,7 @@ namespace ngraph
                 /// describes
                 ///                          prior box sizes.
                 ///
-                RegionYolo(const Output<Node>& input,
+                RegionYolo(const NodeOutput& input,
                            const size_t num_coords,
                            const size_t num_classes,
                            const size_t num_regions,

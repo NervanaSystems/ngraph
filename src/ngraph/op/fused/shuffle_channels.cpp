@@ -22,7 +22,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::ShuffleChannels::type_info;
 
-op::ShuffleChannels::ShuffleChannels(const Output<Node>& data, const int axis, const size_t groups)
+op::ShuffleChannels::ShuffleChannels(const NodeOutput& data, const int axis, const size_t groups)
     : FusedOp({data})
     , m_axis(axis)
     , m_groups{groups}

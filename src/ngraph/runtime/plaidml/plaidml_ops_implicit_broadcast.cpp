@@ -32,7 +32,7 @@ namespace ngraph
 
 constexpr ngraph::NodeTypeInfo ngraph::runtime::plaidml::op::ImplicitBroadcast::type_info;
 
-ngraph::runtime::plaidml::op::ImplicitBroadcast::ImplicitBroadcast(const Output<Node>& input,
+ngraph::runtime::plaidml::op::ImplicitBroadcast::ImplicitBroadcast(const NodeOutput& input,
                                                                    const Shape& shape)
     : Op{{input}}
     , m_shape{shape}

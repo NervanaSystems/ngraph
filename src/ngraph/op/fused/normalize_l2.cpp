@@ -29,8 +29,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::NormalizeL2::type_info;
 
-op::NormalizeL2::NormalizeL2(const Output<Node>& data,
-                             const Output<Node>& axes,
+op::NormalizeL2::NormalizeL2(const NodeOutput& data,
+                             const NodeOutput& axes,
                              float eps,
                              EpsMode eps_mode)
     : FusedOp({data, axes})
@@ -89,7 +89,7 @@ AxisSet op::NormalizeL2::get_reduction_axes() const
 
 NodeVector op::NormalizeL2::decompose_op() const
 {
-    Output<Node> data{input_value(0)};
+    NodeOutput data{input_value(0)};
     const Shape input_shape{data.get_shape()};
 
     AxisSet reduction_axes = get_reduction_axes();
@@ -97,7 +97,7 @@ NodeVector op::NormalizeL2::decompose_op() const
     // Calculate l2 norm across axes determined by axes input
     auto builder_bias_mode =
         (m_eps_mode == EpsMode::MAX) ? builder::BiasMode::MAX : builder::BiasMode::ADD;
-    Output<Node> norm = builder::l2_norm(data, reduction_axes, m_eps, builder_bias_mode, true);
+    NodeOutput norm = builder::l2_norm(data, reduction_axes, m_eps, builder_bias_mode, true);
 
     data = make_shared<op::Divide>(data, norm, AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 

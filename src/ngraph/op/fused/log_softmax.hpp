@@ -37,7 +37,7 @@ namespace ngraph
                 ///
                 /// \param data Node that produces the first input tensor
                 /// \param axis Describes the axis of the inputs when coerced to 2D
-                LogSoftmax(const Output<Node>& data, int64_t axis);
+                LogSoftmax(const NodeOutput& data, int64_t axis);
 
                 virtual NodeVector decompose_op() const override;
 

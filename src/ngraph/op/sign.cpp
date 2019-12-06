@@ -21,7 +21,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Sign::type_info;
 
-op::Sign::Sign(const Output<Node>& arg)
+op::Sign::Sign(const NodeOutput& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();

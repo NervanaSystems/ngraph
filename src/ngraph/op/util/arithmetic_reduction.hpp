@@ -37,12 +37,12 @@ namespace ngraph
                 ///
                 /// \param arg Output that produces the first input tensor.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
-                ArithmeticReduction(const Output<Node>& arg, const AxisSet& reduction_axes);
+                ArithmeticReduction(const NodeOutput& arg, const AxisSet& reduction_axes);
                 /// \brief Constructs an arithmetic reduction operation.
                 ///
                 /// \param arg Output that produces the first input tensor.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
-                ArithmeticReduction(const Output<Node>& arg, const Output<Node>& reduction_axes);
+                ArithmeticReduction(const NodeOutput& arg, const NodeOutput& reduction_axes);
 
             public:
                 void validate_and_infer_types() override;

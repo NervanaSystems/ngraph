@@ -24,7 +24,7 @@ using namespace ngraph;
 constexpr NodeTypeInfo runtime::cpu::op::ConvertLayout::type_info;
 
 runtime::cpu::op::ConvertLayout::ConvertLayout(
-    const Output<Node>& arg, const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)
+    const NodeOutput& arg, const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)
     : ConvertLayout(arg, 0, layout)
 {
     runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(this);
@@ -41,7 +41,7 @@ shared_ptr<Node>
 }
 
 runtime::cpu::op::ConvertLayout::ConvertLayout(
-    const Output<Node>& arg,
+    const NodeOutput& arg,
     size_t output_index,
     const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)
     : Op({arg})

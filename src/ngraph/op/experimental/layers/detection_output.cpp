@@ -21,11 +21,11 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::DetectionOutput::type_info;
 
-op::DetectionOutput::DetectionOutput(const Output<Node>& box_logits,
-                                     const Output<Node>& class_preds,
-                                     const Output<Node>& proposals,
-                                     const Output<Node>& aux_class_preds,
-                                     const Output<Node>& aux_box_preds,
+op::DetectionOutput::DetectionOutput(const NodeOutput& box_logits,
+                                     const NodeOutput& class_preds,
+                                     const NodeOutput& proposals,
+                                     const NodeOutput& aux_class_preds,
+                                     const NodeOutput& aux_box_preds,
                                      const DetectionOutputAttrs& attrs)
     : Op({box_logits, class_preds, proposals, aux_class_preds, aux_box_preds})
     , m_attrs(attrs)
@@ -33,9 +33,9 @@ op::DetectionOutput::DetectionOutput(const Output<Node>& box_logits,
     constructor_validate_and_infer_types();
 }
 
-op::DetectionOutput::DetectionOutput(const Output<Node>& box_logits,
-                                     const Output<Node>& class_preds,
-                                     const Output<Node>& proposals,
+op::DetectionOutput::DetectionOutput(const NodeOutput& box_logits,
+                                     const NodeOutput& class_preds,
+                                     const NodeOutput& proposals,
                                      const DetectionOutputAttrs& attrs)
     : Op({box_logits, class_preds, proposals})
     , m_attrs(attrs)

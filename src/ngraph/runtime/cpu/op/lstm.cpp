@@ -39,12 +39,12 @@ shared_ptr<Node> op::Lstm::copy_with_new_args(const NodeVector& new_args) const
                              m_rnntype);
 }
 
-op::Lstm::Lstm(const Output<Node>& src_layer,
-               const Output<Node>& src_iter,
-               const Output<Node>& src_iter_c,
-               const Output<Node>& weights_layer,
-               const Output<Node>& weights_iter,
-               const Output<Node>& bias,
+op::Lstm::Lstm(const NodeOutput& src_layer,
+               const NodeOutput& src_iter,
+               const NodeOutput& src_iter_c,
+               const NodeOutput& weights_layer,
+               const NodeOutput& weights_iter,
+               const NodeOutput& bias,
                ngraph::runtime::cpu::rnn_utils::rnntype rnn_type)
     : Op({src_layer, src_iter, src_iter_c, weights_layer, weights_iter, bias})
     , m_output_tensor_shape(src_layer.get_shape())
@@ -120,11 +120,11 @@ shared_ptr<Node> op::Lstm::copy_with_new_args(const NodeVector& new_args) const
         new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), new_args.at(4), m_rnntype);
 }
 
-op::Lstm::Lstm(const Output<Node>& src_layer,
-               const Output<Node>& src_iter,
-               const Output<Node>& weights_layer,
-               const Output<Node>& weights_iter,
-               const Output<Node>& bias,
+op::Lstm::Lstm(const NodeOutput& src_layer,
+               const NodeOutput& src_iter,
+               const NodeOutput& weights_layer,
+               const NodeOutput& weights_iter,
+               const NodeOutput& bias,
                ngraph::runtime::cpu::rnn_utils::rnntype rnn_type)
     : Op({src_layer, src_iter, weights_layer, weights_iter, bias})
     , m_output_tensor_shape(src_layer.get_shape())

@@ -23,7 +23,7 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::Relu::type_info;
 constexpr NodeTypeInfo op::ReluBackprop::type_info;
 
-op::Relu::Relu(const Output<Node>& arg)
+op::Relu::Relu(const NodeOutput& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();

@@ -37,7 +37,7 @@ namespace ngraph
                     static constexpr NodeTypeInfo type_info{"HalideOp", 0};
                     const NodeTypeInfo& get_type_info() const override { return type_info; }
                     HalideOp(const OutputVector& args,
-                             const std::list<Output<Node>>& ops,
+                             const std::list<NodeOutput>& ops,
                              const element::Type& out_type,
                              const Shape& out_shape);
 
@@ -46,9 +46,9 @@ namespace ngraph
                     virtual std::shared_ptr<Node>
                         copy_with_new_args(const NodeVector& new_args) const override;
 
-                    const std::list<Output<Node>>& get_ops() const { return m_ops; }
+                    const std::list<NodeOutput>& get_ops() const { return m_ops; }
                 private:
-                    std::list<Output<Node>> m_ops;
+                    std::list<NodeOutput> m_ops;
                     element::Type m_output_type;
                     Shape m_output_shape;
                 };

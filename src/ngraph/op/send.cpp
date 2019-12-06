@@ -21,7 +21,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Send::type_info;
 
-op::Send::Send(const Output<Node>& arg, int dest_id)
+op::Send::Send(const NodeOutput& arg, int dest_id)
     : Op({arg})
     , m_dest_id(dest_id)
 {

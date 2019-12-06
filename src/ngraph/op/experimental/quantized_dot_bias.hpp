@@ -30,10 +30,10 @@ namespace ngraph
             static constexpr NodeTypeInfo type_info{"QuantizedDotBias", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             QuantizedDotBias() = default;
-            QuantizedDotBias(const Output<Node>& data,
-                             const Output<Node>& weights,
-                             const Output<Node>& bias,
-                             const Output<Node>& scale,
+            QuantizedDotBias(const NodeOutput& data,
+                             const NodeOutput& weights,
+                             const NodeOutput& bias,
+                             const NodeOutput& scale,
                              bool requantize = true,
                              bool with_relu = false);
 

@@ -23,13 +23,13 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::Sum::type_info;
 
-op::v0::Sum::Sum(const Output<Node>& arg, const AxisSet& reduction_axes)
+op::v0::Sum::Sum(const NodeOutput& arg, const AxisSet& reduction_axes)
     : ArithmeticReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
 }
 
-op::v0::Sum::Sum(const Output<Node>& arg, const Output<Node>& reduction_axes)
+op::v0::Sum::Sum(const NodeOutput& arg, const NodeOutput& reduction_axes)
     : ArithmeticReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();

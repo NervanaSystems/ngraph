@@ -44,7 +44,7 @@ namespace ngraph
                 /// \param eps the number to be added to the variance to avoid division by zero when
                 ///            normalizing the value
                 ///
-                MVN(const Output<Node>& data,
+                MVN(const NodeOutput& data,
                     bool across_channels = true,
                     bool normalize_variance = true,
                     double eps = 1e-9);
@@ -58,7 +58,7 @@ namespace ngraph
                 /// \param eps the number to be added to the variance to avoid division by zero when
                 ///            normalizing the value
                 ///
-                MVN(const Output<Node>& data,
+                MVN(const NodeOutput& data,
                     AxisSet reduction_axes,
                     bool normalize_variance = true,
                     double eps = 1e-9);

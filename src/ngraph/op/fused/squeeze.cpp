@@ -26,7 +26,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Squeeze::type_info;
 
-op::Squeeze::Squeeze(const Output<Node>& data, const Output<Node>& axes)
+op::Squeeze::Squeeze(const NodeOutput& data, const NodeOutput& axes)
     : FusedOp({data, axes})
 {
     constructor_validate_and_infer_types();

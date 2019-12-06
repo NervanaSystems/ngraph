@@ -23,7 +23,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Cosh::type_info;
 
-op::Cosh::Cosh(const Output<Node>& arg)
+op::Cosh::Cosh(const NodeOutput& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();

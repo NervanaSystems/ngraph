@@ -23,9 +23,9 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Proposal::type_info;
 
-op::Proposal::Proposal(const Output<Node>& class_probs,
-                       const Output<Node>& class_logits,
-                       const Output<Node>& image_shape,
+op::Proposal::Proposal(const NodeOutput& class_probs,
+                       const NodeOutput& class_logits,
+                       const NodeOutput& image_shape,
                        const ProposalAttrs& attrs)
     : Op({class_probs, class_logits, image_shape})
     , m_attrs(attrs)

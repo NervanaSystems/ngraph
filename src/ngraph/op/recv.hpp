@@ -37,7 +37,7 @@ namespace ngraph
                 ///
                 /// \param arg The node for tensor to receive data
                 /// \param src_id the source id which could be rank or node id.
-                Recv(const Output<Node>& arg, int src_id);
+                Recv(const NodeOutput& arg, int src_id);
 
                 void validate_and_infer_types() override;
 

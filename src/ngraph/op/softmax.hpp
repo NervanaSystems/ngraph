@@ -40,7 +40,7 @@ namespace ngraph
                 ///
                 /// Output `[d0, ...]`
                 ///
-                Softmax(const Output<Node>& arg, const AxisSet& axes);
+                Softmax(const NodeOutput& arg, const AxisSet& axes);
                 /// \brief Constructs a softmax operation.
                 ///
                 /// \param arg Node that produces the first input tensor.<br>
@@ -50,7 +50,7 @@ namespace ngraph
                 ///
                 /// Output `[d0, ...]`
                 ///
-                Softmax(const Output<Node>& arg, const Output<Node>& axes);
+                Softmax(const NodeOutput& arg, const NodeOutput& axes);
 
                 void validate_and_infer_types() override;
 
@@ -86,7 +86,7 @@ namespace ngraph
                 ///
                 /// Output `[d0, ...]`
                 ///
-                Softmax(const Output<Node>& arg, const size_t axis);
+                Softmax(const NodeOutput& arg, const size_t axis);
 
                 void validate_and_infer_types() override;
 

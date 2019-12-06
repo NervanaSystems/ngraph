@@ -31,7 +31,7 @@ namespace ngraph
         ///
         /// \return     The vector containing multiple nodes we split input node into.
         ///
-        NodeVector split(const Output<Node>& value,
+        NodeVector split(const NodeOutput& value,
                          const std::vector<size_t>& length_parts,
                          size_t axis = 0);
 
@@ -49,6 +49,6 @@ namespace ngraph
         ///
         /// \return     The vector containing multiple nodes we split input node into.
         ///
-        NodeVector split(const Output<Node>& value, size_t split_parts, int axis = 0);
+        NodeVector split(const NodeOutput& value, size_t split_parts, int axis = 0);
     } // namespace builder
 } // namespace ngraph

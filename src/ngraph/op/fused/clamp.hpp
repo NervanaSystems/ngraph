@@ -42,7 +42,7 @@ namespace ngraph
                 /// \param data - Node producing the input tensor
                 /// \param min - the lower bound of the <min;max> range
                 /// \param max - the upper bound of the <min;max> range
-                Clamp(const Output<Node>& data, const double min, const double max);
+                Clamp(const NodeOutput& data, const double min, const double max);
 
                 void pre_validate_and_infer_types() override;
 

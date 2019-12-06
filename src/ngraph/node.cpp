@@ -114,7 +114,7 @@ std::shared_ptr<Node>
     else
     {
         NodeVector args;
-        for (const Output<Node>& input : inputs)
+        for (const NodeOutput& input : inputs)
         {
             args.push_back(get_output_element(input, false));
         }
@@ -225,7 +225,7 @@ descriptor::Output& Node::get_output_descriptor(size_t position)
     return m_outputs.at(position);
 }
 
-void Node::set_argument(size_t position, const Output<Node>& argument)
+void Node::set_argument(size_t position, const NodeOutput& argument)
 {
     auto output_node = argument.get_node();
     auto& output_descriptor = output_node->get_output_descriptor(argument.get_index());

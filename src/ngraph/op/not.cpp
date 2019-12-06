@@ -22,7 +22,7 @@ using namespace std;
 
 constexpr NodeTypeInfo op::v1::LogicalNot::type_info;
 
-op::v1::LogicalNot::LogicalNot(const Output<Node>& arg)
+op::v1::LogicalNot::LogicalNot(const NodeOutput& arg)
     : Op({arg})
 {
     constructor_validate_and_infer_types();
@@ -46,7 +46,7 @@ shared_ptr<Node> op::v1::LogicalNot::copy_with_new_args(const NodeVector& new_ar
 
 constexpr NodeTypeInfo op::v0::Not::type_info;
 
-op::v0::Not::Not(const Output<Node>& arg)
+op::v0::Not::Not(const NodeOutput& arg)
     : Op({arg})
 {
     constructor_validate_and_infer_types();

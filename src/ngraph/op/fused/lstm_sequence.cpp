@@ -235,7 +235,7 @@ NodeVector op::LSTMSequence::lstm_pass(bool is_reverse) const
     return {Y, Y_h, Y_c};
 }
 
-shared_ptr<Node> op::LSTMSequence::prepare_input(Output<Node> node, bool is_reverse) const
+shared_ptr<Node> op::LSTMSequence::prepare_input(NodeOutput node, bool is_reverse) const
 {
     // In bidirectional mode inputs are stacked together, so we must split them.
     shared_ptr<Node> tmp = node.get_node_shared_ptr();

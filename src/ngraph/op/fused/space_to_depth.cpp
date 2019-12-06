@@ -25,7 +25,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::SpaceToDepth::type_info;
 
-op::SpaceToDepth::SpaceToDepth(const Output<Node>& data,
+op::SpaceToDepth::SpaceToDepth(const NodeOutput& data,
                                const SpaceToDepthMode& mode,
                                size_t block_size)
     : FusedOp({data})
@@ -35,7 +35,7 @@ op::SpaceToDepth::SpaceToDepth(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-op::SpaceToDepth::SpaceToDepth(const Output<Node>& data, const std::string& mode, size_t block_size)
+op::SpaceToDepth::SpaceToDepth(const NodeOutput& data, const std::string& mode, size_t block_size)
     : SpaceToDepth(data, mode_from_string(mode), block_size)
 {
 }
@@ -81,7 +81,7 @@ NodeVector op::SpaceToDepth::decompose_op() const
     // First we have to disperse the data from height and width channels, then
     // rearrange them so as appropriate chunks of data where close to their
     // destination place. Finally squeeze data from respective dimensions.
-    Output<Node> flat_node = builder::reshape(data, Shape{n, c, h_flat, bs, w_flat, bs});
+    NodeOutput flat_node = builder::reshape(data, Shape{n, c, h_flat, bs, w_flat, bs});
     switch (m_mode)
     {
     case SpaceToDepthMode::DEPTH_FIRST:

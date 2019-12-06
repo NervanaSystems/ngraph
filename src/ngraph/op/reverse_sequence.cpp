@@ -26,8 +26,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::ReverseSequence::type_info;
 
-op::ReverseSequence::ReverseSequence(const Output<Node>& arg,
-                                     const Output<Node>& seq_indices,
+op::ReverseSequence::ReverseSequence(const NodeOutput& arg,
+                                     const NodeOutput& seq_indices,
                                      int64_t batch_axis,
                                      int64_t seq_axis)
     : Op({arg, seq_indices})

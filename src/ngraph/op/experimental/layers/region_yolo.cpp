@@ -21,7 +21,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::RegionYolo::type_info;
 
-op::RegionYolo::RegionYolo(const Output<Node>& input,
+op::RegionYolo::RegionYolo(const NodeOutput& input,
                            const size_t num_coords,
                            const size_t num_classes,
                            const size_t num_regions,

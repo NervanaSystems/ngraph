@@ -28,8 +28,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::GroupConvolutionTranspose::type_info;
 
-op::GroupConvolutionTranspose::GroupConvolutionTranspose(const Output<Node>& data,
-                                                         const Output<Node>& filters,
+op::GroupConvolutionTranspose::GroupConvolutionTranspose(const NodeOutput& data,
+                                                         const NodeOutput& filters,
                                                          const Strides& strides,
                                                          const Strides& dilations,
                                                          const CoordinateDiff& padding_begin,
@@ -51,8 +51,8 @@ op::GroupConvolutionTranspose::GroupConvolutionTranspose(const Output<Node>& dat
     constructor_validate_and_infer_types();
 }
 
-op::GroupConvolutionTranspose::GroupConvolutionTranspose(const Output<Node>& data,
-                                                         const Output<Node>& filters,
+op::GroupConvolutionTranspose::GroupConvolutionTranspose(const NodeOutput& data,
+                                                         const NodeOutput& filters,
                                                          const std::size_t groups)
     : GroupConvolutionTranspose(data,
                                 filters,
@@ -67,8 +67,8 @@ op::GroupConvolutionTranspose::GroupConvolutionTranspose(const Output<Node>& dat
 {
 }
 
-op::GroupConvolutionTranspose::GroupConvolutionTranspose(const Output<Node>& data,
-                                                         const Output<Node>& filters,
+op::GroupConvolutionTranspose::GroupConvolutionTranspose(const NodeOutput& data,
+                                                         const NodeOutput& filters,
                                                          const Strides& strides,
                                                          const Strides& dilations,
                                                          const CoordinateDiff& output_padding,
@@ -87,8 +87,8 @@ op::GroupConvolutionTranspose::GroupConvolutionTranspose(const Output<Node>& dat
 {
 }
 
-op::GroupConvolutionTranspose::GroupConvolutionTranspose(const Output<Node>& data,
-                                                         const Output<Node>& filters,
+op::GroupConvolutionTranspose::GroupConvolutionTranspose(const NodeOutput& data,
+                                                         const NodeOutput& filters,
                                                          const Shape& output_shape,
                                                          const std::size_t groups)
     : GroupConvolutionTranspose(data,

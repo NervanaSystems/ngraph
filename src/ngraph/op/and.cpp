@@ -21,8 +21,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v1::LogicalAnd::type_info;
 
-op::v1::LogicalAnd::LogicalAnd(const Output<Node>& arg0,
-                               const Output<Node>& arg1,
+op::v1::LogicalAnd::LogicalAnd(const NodeOutput& arg0,
+                               const NodeOutput& arg1,
                                const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseLogical(arg0, arg1, auto_broadcast)
 {
@@ -43,8 +43,8 @@ shared_ptr<Node> op::v1::LogicalAnd::copy_with_new_args(const NodeVector& new_ar
 
 constexpr NodeTypeInfo op::v0::And::type_info;
 
-op::v0::And::And(const Output<Node>& arg0,
-                 const Output<Node>& arg1,
+op::v0::And::And(const NodeOutput& arg0,
+                 const NodeOutput& arg1,
                  const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseLogical(arg0, arg1, auto_broadcast)
 {

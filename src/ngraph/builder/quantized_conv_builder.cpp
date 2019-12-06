@@ -25,19 +25,19 @@ namespace ngraph
 {
     namespace builder
     {
-        shared_ptr<Node> QuantizedConvolutionBuilder(const Output<Node>& input,
-                                                     const Output<Node>& filters,
+        shared_ptr<Node> QuantizedConvolutionBuilder(const NodeOutput& input,
+                                                     const NodeOutput& filters,
                                                      const Strides& window_movement_strides,
                                                      const Strides& window_dilation_strides,
                                                      const CoordinateDiff& padding_below,
                                                      const CoordinateDiff& padding_above,
                                                      const Strides& data_dilation_strides,
-                                                     const Output<Node>& min_input,
-                                                     const Output<Node>& max_input,
-                                                     const Output<Node>& min_filter,
-                                                     const Output<Node>& max_filter,
-                                                     const Output<Node>& min_output,
-                                                     const Output<Node>& max_output,
+                                                     const NodeOutput& min_input,
+                                                     const NodeOutput& max_input,
+                                                     const NodeOutput& min_filter,
+                                                     const NodeOutput& max_filter,
+                                                     const NodeOutput& min_output,
+                                                     const NodeOutput& max_output,
                                                      const ngraph::element::Type& output_type,
                                                      const ngraph::AxisSet& input_axes,
                                                      const ngraph::AxisSet& filter_axes,
@@ -82,20 +82,20 @@ namespace ngraph
                                                       max_output});
         }
 
-        shared_ptr<Node> QuantizedConvolutionBiasBuilder(const Output<Node>& input,
-                                                         const Output<Node>& filters,
-                                                         const Output<Node>& bias,
+        shared_ptr<Node> QuantizedConvolutionBiasBuilder(const NodeOutput& input,
+                                                         const NodeOutput& filters,
+                                                         const NodeOutput& bias,
                                                          const Strides& window_movement_strides,
                                                          const Strides& window_dilation_strides,
                                                          const CoordinateDiff& padding_below,
                                                          const CoordinateDiff& padding_above,
                                                          const Strides& data_dilation_strides,
-                                                         const Output<Node>& min_input,
-                                                         const Output<Node>& max_input,
-                                                         const Output<Node>& min_filter,
-                                                         const Output<Node>& max_filter,
-                                                         const Output<Node>& min_output,
-                                                         const Output<Node>& max_output,
+                                                         const NodeOutput& min_input,
+                                                         const NodeOutput& max_input,
+                                                         const NodeOutput& min_filter,
+                                                         const NodeOutput& max_filter,
+                                                         const NodeOutput& min_output,
+                                                         const NodeOutput& max_output,
                                                          const bool with_relu)
         {
             auto output_et = with_relu ? element::u8 : element::i8;
@@ -141,19 +141,19 @@ namespace ngraph
                                                       max_output});
         }
 
-        shared_ptr<Node> QuantizedConvolutionReluBuilder(const Output<Node>& input,
-                                                         const Output<Node>& filters,
+        shared_ptr<Node> QuantizedConvolutionReluBuilder(const NodeOutput& input,
+                                                         const NodeOutput& filters,
                                                          const Strides& window_movement_strides,
                                                          const Strides& window_dilation_strides,
                                                          const CoordinateDiff& padding_below,
                                                          const CoordinateDiff& padding_above,
                                                          const Strides& data_dilation_strides,
-                                                         const Output<Node>& min_input,
-                                                         const Output<Node>& max_input,
-                                                         const Output<Node>& min_filter,
-                                                         const Output<Node>& max_filter,
-                                                         const Output<Node>& min_output,
-                                                         const Output<Node>& max_output)
+                                                         const NodeOutput& min_input,
+                                                         const NodeOutput& max_input,
+                                                         const NodeOutput& min_filter,
+                                                         const NodeOutput& max_filter,
+                                                         const NodeOutput& min_output,
+                                                         const NodeOutput& max_output)
         {
             auto input_scale =
                 quantization_utils::get_scale(min_input, max_input, input.get_element_type());
@@ -180,23 +180,23 @@ namespace ngraph
                                                       max_output});
         }
 
-        shared_ptr<Node> QuantizedConvolutionBiasAddBuilder(const Output<Node>& input,
-                                                            const Output<Node>& filters,
-                                                            const Output<Node>& bias,
-                                                            const Output<Node>& sum_input,
+        shared_ptr<Node> QuantizedConvolutionBiasAddBuilder(const NodeOutput& input,
+                                                            const NodeOutput& filters,
+                                                            const NodeOutput& bias,
+                                                            const NodeOutput& sum_input,
                                                             const Strides& window_movement_strides,
                                                             const Strides& window_dilation_strides,
                                                             const CoordinateDiff& padding_below,
                                                             const CoordinateDiff& padding_above,
                                                             const Strides& data_dilation_strides,
-                                                            const Output<Node>& min_input,
-                                                            const Output<Node>& max_input,
-                                                            const Output<Node>& min_filter,
-                                                            const Output<Node>& max_filter,
-                                                            const Output<Node>& min_output,
-                                                            const Output<Node>& max_output,
-                                                            const Output<Node>& min_sum_input,
-                                                            const Output<Node>& max_sum_input,
+                                                            const NodeOutput& min_input,
+                                                            const NodeOutput& max_input,
+                                                            const NodeOutput& min_filter,
+                                                            const NodeOutput& max_filter,
+                                                            const NodeOutput& min_output,
+                                                            const NodeOutput& max_output,
+                                                            const NodeOutput& min_sum_input,
+                                                            const NodeOutput& max_sum_input,
                                                             const bool with_relu)
         {
             auto output_et = with_relu ? element::u8 : element::i8;
@@ -251,23 +251,23 @@ namespace ngraph
         }
 
         shared_ptr<Node>
-            QuantizedConvolutionBiasSignedAddBuilder(const Output<Node>& input,
-                                                     const Output<Node>& filters,
-                                                     const Output<Node>& bias,
-                                                     const Output<Node>& sum_input,
+            QuantizedConvolutionBiasSignedAddBuilder(const NodeOutput& input,
+                                                     const NodeOutput& filters,
+                                                     const NodeOutput& bias,
+                                                     const NodeOutput& sum_input,
                                                      const Strides& window_movement_strides,
                                                      const Strides& window_dilation_strides,
                                                      const CoordinateDiff& padding_below,
                                                      const CoordinateDiff& padding_above,
                                                      const Strides& data_dilation_strides,
-                                                     const Output<Node>& min_input,
-                                                     const Output<Node>& max_input,
-                                                     const Output<Node>& min_filter,
-                                                     const Output<Node>& max_filter,
-                                                     const Output<Node>& min_output,
-                                                     const Output<Node>& max_output,
-                                                     const Output<Node>& min_sum_input,
-                                                     const Output<Node>& max_sum_input,
+                                                     const NodeOutput& min_input,
+                                                     const NodeOutput& max_input,
+                                                     const NodeOutput& min_filter,
+                                                     const NodeOutput& max_filter,
+                                                     const NodeOutput& min_output,
+                                                     const NodeOutput& max_output,
+                                                     const NodeOutput& min_sum_input,
+                                                     const NodeOutput& max_sum_input,
                                                      const bool with_relu)
         {
             auto output_et = with_relu ? element::u8 : element::i8;

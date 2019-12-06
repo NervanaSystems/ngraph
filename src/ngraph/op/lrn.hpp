@@ -49,10 +49,10 @@ namespace ngraph
                 /// \brief Constructs a LRN operation.
                 ///
                 /// \param arg Node that produces the input tensor.
-                LRN(const Output<Node>& arg, double alpha, double beta, double bias, size_t size);
+                LRN(const NodeOutput& arg, double alpha, double beta, double bias, size_t size);
 
-                LRN(const Output<Node>& arg,
-                    const Output<Node>& axes,
+                LRN(const NodeOutput& arg,
+                    const NodeOutput& axes,
                     double alpha,
                     double beta,
                     double bias,

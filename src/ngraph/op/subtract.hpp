@@ -40,8 +40,8 @@ namespace ngraph
                 /// \param arg0 Node that produces the first input tensor.
                 /// \param arg1 Node that produces the second input tensor.
                 /// \param auto_broadcast Auto broadcast specification
-                Subtract(const Output<Node>& arg0,
-                         const Output<Node>& arg1,
+                Subtract(const NodeOutput& arg0,
+                         const NodeOutput& arg1,
                          const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
                 virtual std::shared_ptr<Node>
@@ -70,8 +70,8 @@ namespace ngraph
                 /// \param arg0 Node that produces the first input tensor.
                 /// \param arg1 Node that produces the second input tensor.
                 /// \param auto_broadcast Auto broadcast specification
-                Subtract(const Output<Node>& arg0,
-                         const Output<Node>& arg1,
+                Subtract(const NodeOutput& arg0,
+                         const NodeOutput& arg1,
                          const AutoBroadcastSpec& auto_broadcast =
                              AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 
@@ -85,6 +85,5 @@ namespace ngraph
 
         using v0::Subtract;
     } // namespace op
-    std::shared_ptr<ngraph::Node> operator-(const Output<ngraph::Node> arg0,
-                                            const Output<ngraph::Node> arg1);
+    std::shared_ptr<ngraph::Node> operator-(const NodeOutput arg0, const NodeOutput arg1);
 } // namespace ngraph

@@ -46,9 +46,9 @@ namespace ngraph
             /// \param data_dilation_strides_forward The data dilation strides from forward-prop.
             /// \param with_relu Flag indicating to add relu or not
             DeconvolutionBias(const Shape& data_batch_shape,
-                              const Output<Node>& filters,
-                              const Output<Node>& output_delta,
-                              const Output<Node>& bias,
+                              const NodeOutput& filters,
+                              const NodeOutput& output_delta,
+                              const NodeOutput& bias,
                               const Strides& window_movement_strides_forward,
                               const Strides& window_dilation_strides_forward,
                               const CoordinateDiff& padding_below_forward,

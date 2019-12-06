@@ -35,7 +35,7 @@ namespace ngraph
                 /// \brief Constructs a logical negation operation.
                 ///
                 /// \param arg Node that produces the input tensor.
-                LogicalNot(const Output<Node>& arg);
+                LogicalNot(const NodeOutput& arg);
 
                 void validate_and_infer_types() override;
 
@@ -56,7 +56,7 @@ namespace ngraph
                 /// \brief Constructs a logical negation operation.
                 ///
                 /// \param arg Node that produces the input tensor.
-                Not(const Output<Node>& arg);
+                Not(const NodeOutput& arg);
 
                 void validate_and_infer_types() override;
 

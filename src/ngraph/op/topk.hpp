@@ -47,7 +47,7 @@ namespace ngraph
                 /// \param k Number of top indices to compute. Compute all indices if k = 0
                 /// \param compute_max Compute top k max or top k min?
                 /// \param sort SortType for sorting results, default - SORT_VALUES
-                TopK(const Output<Node>& arg,
+                TopK(const NodeOutput& arg,
                      size_t top_k_axis,
                      const element::Type& index_element_type,
                      size_t k = 0,
@@ -62,8 +62,8 @@ namespace ngraph
                 ///                           supported
                 /// \param compute_max Compute top k max or top k min?
                 /// \param sort SortType for sorting results, default - SORT_VALUES
-                TopK(const Output<Node>& arg,
-                     const Output<Node>& k,
+                TopK(const NodeOutput& arg,
+                     const NodeOutput& k,
                      size_t top_k_axis,
                      const element::Type& index_element_type,
                      bool compute_max = true,
@@ -78,9 +78,9 @@ namespace ngraph
                 /// supported
                 /// \param compute_max Compute top k max or top k min?
                 /// \param sort SortType for sorting results, default - NONE
-                TopK(const Output<Node>& arg,
-                     const Output<Node>& k,
-                     const Output<Node>& top_k_axis,
+                TopK(const NodeOutput& arg,
+                     const NodeOutput& k,
+                     const NodeOutput& top_k_axis,
                      const element::Type& index_element_type,
                      bool compute_max = true,
                      SortType sort = SortType::NONE);
@@ -140,15 +140,15 @@ namespace ngraph
                 /// \param sort Specifies order of output elements and/or indices
                 ///             Accepted values: none, index, value
                 /// \param index_element_type Specyfies type of produced indices
-                TopK(const Output<Node>& data,
-                     const Output<Node>& k,
+                TopK(const NodeOutput& data,
+                     const NodeOutput& k,
                      const int64_t axis,
                      const std::string& mode,
                      const std::string& sort,
                      const element::Type& index_element_type = element::i32);
 
-                TopK(const Output<Node>& data,
-                     const Output<Node>& k,
+                TopK(const NodeOutput& data,
+                     const NodeOutput& k,
                      const int64_t axis,
                      const Mode mode,
                      const SortType sort,

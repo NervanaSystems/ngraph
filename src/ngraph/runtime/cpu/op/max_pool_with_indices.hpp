@@ -35,7 +35,7 @@ namespace ngraph
             CPU_BACKEND_API
             static constexpr NodeTypeInfo type_info{"MaxPoolWithIndices", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
-            CPU_BACKEND_API MaxPoolWithIndices(const Output<Node>& arg,
+            CPU_BACKEND_API MaxPoolWithIndices(const NodeOutput& arg,
                                                const Shape& window_shape,
                                                const Strides& window_movement_strides,
                                                const Shape& padding_below,
@@ -70,9 +70,9 @@ namespace ngraph
         public:
             static constexpr NodeTypeInfo type_info{"MaxPoolWithIndicesBackprop", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
-            CPU_BACKEND_API MaxPoolWithIndicesBackprop(const Output<Node>& arg_forward,
-                                                       const Output<Node>& delta,
-                                                       const Output<Node>& indices,
+            CPU_BACKEND_API MaxPoolWithIndicesBackprop(const NodeOutput& arg_forward,
+                                                       const NodeOutput& delta,
+                                                       const NodeOutput& indices,
                                                        const Shape& window_shape,
                                                        const Strides& window_movement_strides,
                                                        const Shape& padding_below,

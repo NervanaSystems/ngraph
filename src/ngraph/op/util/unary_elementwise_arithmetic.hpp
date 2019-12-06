@@ -57,7 +57,7 @@ namespace ngraph
                 /// \brief Constructs a unary elementwise arithmetic operation.
                 ///
                 /// \param arg Output that produces the input tensor.
-                UnaryElementwiseArithmetic(const Output<Node>& arg);
+                UnaryElementwiseArithmetic(const NodeOutput& arg);
 
                 /// \brief Constructs a unary elementwise arithmetic operation.
                 ///

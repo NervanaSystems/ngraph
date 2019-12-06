@@ -37,8 +37,8 @@ namespace ngraph
                 /// \param arg0 Node that produces the first input tensor.
                 /// \param arg1 Node that produces the second input tensor.
                 /// \param auto_broadcast Auto broadcast specification
-                NotEqual(const Output<Node>& arg0,
-                         const Output<Node>& arg1,
+                NotEqual(const NodeOutput& arg0,
+                         const NodeOutput& arg1,
                          const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
                 virtual std::shared_ptr<Node>
@@ -63,8 +63,8 @@ namespace ngraph
                 /// \param arg0 Node that produces the first input tensor.
                 /// \param arg1 Node that produces the second input tensor.
                 /// \param auto_broadcast Auto broadcast specification
-                NotEqual(const Output<Node>& arg0,
-                         const Output<Node>& arg1,
+                NotEqual(const NodeOutput& arg0,
+                         const NodeOutput& arg1,
                          const AutoBroadcastSpec& auto_broadcast =
                              AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 

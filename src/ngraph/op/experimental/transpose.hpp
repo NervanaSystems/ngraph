@@ -40,7 +40,7 @@ namespace ngraph
                 ///                    input shape. Must be a vector of element type element::i64,
                 ///                    with shape [n], where n is the rank of arg. The tensor's
                 ///                    value must contain every integer in the range [0,n-1].
-                Transpose(const Output<Node>& arg, const Output<Node>& input_order);
+                Transpose(const NodeOutput& arg, const NodeOutput& input_order);
 
                 void validate_and_infer_types() override;
 

@@ -41,10 +41,10 @@ namespace ngraph
             /// \param boxes [NUM_BOXES, 4] where boxes[box] is [y1, x1, y2, x2] each in [0, 1]
             /// \param box_indices [NUM_BOXES] in [0, N)
             /// \param crop_size [crop_height, crop_width]
-            CropAndResize(const Output<Node>& image,
-                          const Output<Node>& boxes,
-                          const Output<Node>& box_indices,
-                          const Output<Node>& crop_size,
+            CropAndResize(const NodeOutput& image,
+                          const NodeOutput& boxes,
+                          const NodeOutput& box_indices,
+                          const NodeOutput& crop_size,
                           ResizeMethod resize_method,
                           float extrapolation_value);
 

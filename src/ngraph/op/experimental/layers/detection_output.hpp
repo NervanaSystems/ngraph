@@ -60,11 +60,11 @@ namespace ngraph
                 /// \param aux_class_preds		Auxilary class predictions
                 /// \param aux_box_preds		Auxilary box predictions
                 /// \param attrs				Detection Output attributes
-                DetectionOutput(const Output<Node>& box_logits,
-                                const Output<Node>& class_preds,
-                                const Output<Node>& proposals,
-                                const Output<Node>& aux_class_preds,
-                                const Output<Node>& aux_box_preds,
+                DetectionOutput(const NodeOutput& box_logits,
+                                const NodeOutput& class_preds,
+                                const NodeOutput& proposals,
+                                const NodeOutput& aux_class_preds,
+                                const NodeOutput& aux_box_preds,
                                 const DetectionOutputAttrs& attrs);
 
                 /// \brief Constructs a DetectionOutput operation
@@ -73,9 +73,9 @@ namespace ngraph
                 /// \param class_preds			Class predictions
                 /// \param proposals			Proposals
                 /// \param attrs				Detection Output attributes
-                DetectionOutput(const Output<Node>& box_logits,
-                                const Output<Node>& class_preds,
-                                const Output<Node>& proposals,
+                DetectionOutput(const NodeOutput& box_logits,
+                                const NodeOutput& class_preds,
+                                const NodeOutput& proposals,
                                 const DetectionOutputAttrs& attrs);
 
                 void validate_and_infer_types() override;

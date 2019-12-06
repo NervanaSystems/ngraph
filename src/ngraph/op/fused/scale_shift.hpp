@@ -41,9 +41,9 @@ namespace ngraph
                 /// \param data Input tensor
                 /// \param scale Input tensor that scale input data
                 /// \param shift Input tensor that shift input data
-                ScaleShift(const Output<Node>& data,
-                           const Output<Node>& scale,
-                           const Output<Node>& shift);
+                ScaleShift(const NodeOutput& data,
+                           const NodeOutput& scale,
+                           const NodeOutput& shift);
 
                 virtual NodeVector decompose_op() const override;
 

@@ -21,9 +21,7 @@ using namespace std;
 using namespace ngraph;
 
 op::util::ArithmeticReductionKeepDims::ArithmeticReductionKeepDims(
-    const ngraph::Output<ngraph::Node>& arg,
-    const ngraph::Output<ngraph::Node>& reduction_axes,
-    bool keep_dims)
+    const ngraph::NodeOutput& arg, const ngraph::NodeOutput& reduction_axes, bool keep_dims)
     : ArithmeticReduction(arg, reduction_axes)
     , m_keep_dims{keep_dims}
 {

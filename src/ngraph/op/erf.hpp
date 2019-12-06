@@ -30,7 +30,7 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"Erf", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Erf() = default;
-                Erf(const Output<Node>& arg);
+                Erf(const NodeOutput& arg);
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;

@@ -29,7 +29,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::MVN::type_info;
 
-op::MVN::MVN(const Output<Node>& data, bool across_channels, bool normalize_variance, double eps)
+op::MVN::MVN(const NodeOutput& data, bool across_channels, bool normalize_variance, double eps)
     : FusedOp({data})
     , m_eps{eps}
     , m_across_channels{across_channels}
@@ -38,7 +38,7 @@ op::MVN::MVN(const Output<Node>& data, bool across_channels, bool normalize_vari
     constructor_validate_and_infer_types();
 }
 
-op::MVN::MVN(const Output<Node>& data, AxisSet reduction_axes, bool normalize_variance, double eps)
+op::MVN::MVN(const NodeOutput& data, AxisSet reduction_axes, bool normalize_variance, double eps)
     : FusedOp({data})
     , m_eps{eps}
     , m_across_channels{false}
@@ -87,7 +87,7 @@ NodeVector op::MVN::decompose_op() const
         variance = make_shared<op::Sqrt>(variance);
         // add epsilon
         auto eps_node = op::Constant::create(
-            data.get_element_type(), Output<Node>(variance).get_shape(), vector<double>{m_eps});
+            data.get_element_type(), NodeOutput(variance).get_shape(), vector<double>{m_eps});
         variance = variance + eps_node;
         variance = std::make_shared<op::Broadcast>(variance, data_shape, m_reduction_axes);
 

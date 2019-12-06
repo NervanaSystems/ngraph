@@ -42,7 +42,7 @@ void op::util::validate_conv_shapes(const Node* node,
 constexpr NodeTypeInfo op::ConvolutionAdd::type_info;
 
 op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
-                                   const Output<Node>& sum_input,
+                                   const NodeOutput& sum_input,
                                    bool with_relu)
     : Op({conv->input(0).get_source_output(), conv->input(1).get_source_output(), sum_input})
     , m_window_movement_strides(conv->get_window_movement_strides())
@@ -57,9 +57,9 @@ op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
     set_output_type(0, conv->get_element_type(), conv->get_shape());
 }
 
-op::ConvolutionAdd::ConvolutionAdd(const Output<Node>& data_batch,
-                                   const Output<Node>& filters,
-                                   const Output<Node>& sum_input,
+op::ConvolutionAdd::ConvolutionAdd(const NodeOutput& data_batch,
+                                   const NodeOutput& filters,
+                                   const NodeOutput& sum_input,
                                    const Strides& window_movement_strides,
                                    const Strides& window_dilation_strides,
                                    const CoordinateDiff& padding_below,

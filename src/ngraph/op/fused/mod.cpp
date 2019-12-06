@@ -27,9 +27,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v1::Mod::type_info;
 
-op::v1::Mod::Mod(const Output<Node>& A,
-                 const Output<Node>& B,
-                 const AutoBroadcastSpec& auto_broadcast)
+op::v1::Mod::Mod(const NodeOutput& A, const NodeOutput& B, const AutoBroadcastSpec& auto_broadcast)
     : FusedOp({A, B})
     , m_auto_broadcast(auto_broadcast)
 {

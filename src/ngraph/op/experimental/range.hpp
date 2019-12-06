@@ -42,9 +42,7 @@ namespace ngraph
                 ///             element type, and same element type as `start` and `step`.
                 /// \param step The tensor producing the step value. Must be a scalar of integer
                 ///             element type, and same element type as `start` and `stop`.
-                Range(const Output<Node>& start,
-                      const Output<Node>& stop,
-                      const Output<Node>& step);
+                Range(const NodeOutput& start, const NodeOutput& stop, const NodeOutput& step);
 
                 void validate_and_infer_types() override;
 

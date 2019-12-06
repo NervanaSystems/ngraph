@@ -24,10 +24,10 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::CropAndResize::type_info;
 
-op::CropAndResize::CropAndResize(const Output<Node>& image,
-                                 const Output<Node>& boxes,
-                                 const Output<Node>& box_indices,
-                                 const Output<Node>& crop_size,
+op::CropAndResize::CropAndResize(const NodeOutput& image,
+                                 const NodeOutput& boxes,
+                                 const NodeOutput& box_indices,
+                                 const NodeOutput& crop_size,
                                  ResizeMethod resize_method,
                                  float extrapolation_value)
     : Op({image, boxes, box_indices, crop_size})

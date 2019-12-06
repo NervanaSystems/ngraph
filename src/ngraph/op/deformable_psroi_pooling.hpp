@@ -53,9 +53,9 @@ namespace ngraph
                 /// \param part_size       The number of parts the output tensor spatial dimensions
                 ///                        are divided into. Basically it is the height
                 ///                        and width of the third input
-                DeformablePSROIPooling(const Output<Node>& input,
-                                       const Output<Node>& coords,
-                                       const Output<Node>& offsets,
+                DeformablePSROIPooling(const NodeOutput& input,
+                                       const NodeOutput& coords,
+                                       const NodeOutput& offsets,
                                        const int64_t output_dim,
                                        const float spatial_scale,
                                        const int64_t group_size = 1,
@@ -65,8 +65,8 @@ namespace ngraph
                                        float trans_std = 1,
                                        int64_t part_size = 1);
 
-                DeformablePSROIPooling(const Output<Node>& input,
-                                       const Output<Node>& coords,
+                DeformablePSROIPooling(const NodeOutput& input,
+                                       const NodeOutput& coords,
                                        const int64_t output_dim,
                                        const float spatial_scale,
                                        const int64_t group_size = 1,

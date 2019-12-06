@@ -45,12 +45,12 @@ shared_ptr<Node> op::Rnn::copy_with_new_args(const NodeVector& new_args) const
                             m_rnntype);
 }
 
-op::Rnn::Rnn(const Output<Node>& src_layer,
-             const Output<Node>& src_iter,
-             const Output<Node>& src_iter_c,
-             const Output<Node>& weights_layer,
-             const Output<Node>& weights_iter,
-             const Output<Node>& bias,
+op::Rnn::Rnn(const NodeOutput& src_layer,
+             const NodeOutput& src_iter,
+             const NodeOutput& src_iter_c,
+             const NodeOutput& weights_layer,
+             const NodeOutput& weights_iter,
+             const NodeOutput& bias,
              size_t num_timesteps,
              size_t num_gates_per_cell,
              size_t src_sequence_length,
@@ -148,11 +148,11 @@ shared_ptr<Node> op::Rnn::copy_with_new_args(const NodeVector& new_args) const
                             m_rnntype);
 }
 
-op::Rnn::Rnn(const Output<Node>& src_layer,
-             const Output<Node>& src_iter,
-             const Output<Node>& weights_layer,
-             const Output<Node>& weights_iter,
-             const Output<Node>& bias,
+op::Rnn::Rnn(const NodeOutput& src_layer,
+             const NodeOutput& src_iter,
+             const NodeOutput& weights_layer,
+             const NodeOutput& weights_iter,
+             const NodeOutput& bias,
              size_t num_timesteps,
              size_t num_gates_per_cell,
              size_t src_sequence_length,

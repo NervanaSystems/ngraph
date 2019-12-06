@@ -25,7 +25,7 @@ op::util::IndexReduction::IndexReduction()
 {
 }
 
-op::util::IndexReduction::IndexReduction(const Output<Node>& arg,
+op::util::IndexReduction::IndexReduction(const NodeOutput& arg,
                                          uint64_t axis,
                                          const element::Type& index_element_type)
     : Op({arg})

@@ -37,8 +37,8 @@ namespace ngraph
             /// labels
             /// \param ignore_index Specifies a target value that is ignored and does not contribute
             /// to the input gradient Only valid if soft_label is set to False
-            CrossEntropy(const Output<Node>& arg1,
-                         const Output<Node>& arg2,
+            CrossEntropy(const NodeOutput& arg1,
+                         const NodeOutput& arg2,
                          bool soft_label = false,
                          int64_t ignore_index = -100);
 
@@ -71,9 +71,9 @@ namespace ngraph
             /// labels
             /// \param ignore_index Specifies a target value that is ignored and does not contribute
             /// to the input gradient Only valid if soft_label is set to False
-            CrossEntropyBackprop(const Output<Node>& input,
-                                 const Output<Node>& labels,
-                                 const Output<Node>& delta,
+            CrossEntropyBackprop(const NodeOutput& input,
+                                 const NodeOutput& labels,
+                                 const NodeOutput& delta,
                                  bool soft_label = false,
                                  int64_t ignore_index = -100);
 

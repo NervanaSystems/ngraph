@@ -28,8 +28,8 @@ using namespace ngraph;
 // *** Convolution OP SET 1 ***
 constexpr NodeTypeInfo op::v1::Convolution::type_info;
 
-op::v1::Convolution::Convolution(const Output<Node>& data_batch,
-                                 const Output<Node>& filters,
+op::v1::Convolution::Convolution(const NodeOutput& data_batch,
+                                 const NodeOutput& filters,
                                  const Strides& strides,
                                  const CoordinateDiff& pads_begin,
                                  const CoordinateDiff& pads_end,
@@ -164,9 +164,9 @@ shared_ptr<Node> op::v1::Convolution::get_default_value() const
     return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
 }
 
-op::v1::ConvolutionBackpropData::ConvolutionBackpropData(const Output<Node>& data,
-                                                         const Output<Node>& filters,
-                                                         const Output<Node>& output_shape,
+op::v1::ConvolutionBackpropData::ConvolutionBackpropData(const NodeOutput& data,
+                                                         const NodeOutput& filters,
+                                                         const NodeOutput& output_shape,
                                                          const Strides& strides,
                                                          const CoordinateDiff& pads_begin,
                                                          const CoordinateDiff& pads_end,
@@ -184,8 +184,8 @@ op::v1::ConvolutionBackpropData::ConvolutionBackpropData(const Output<Node>& dat
     constructor_validate_and_infer_types();
 }
 
-op::v1::ConvolutionBackpropData::ConvolutionBackpropData(const Output<Node>& data,
-                                                         const Output<Node>& filters,
+op::v1::ConvolutionBackpropData::ConvolutionBackpropData(const NodeOutput& data,
+                                                         const NodeOutput& filters,
                                                          const Strides& strides,
                                                          const CoordinateDiff& pads_begin,
                                                          const CoordinateDiff& pads_end,
@@ -358,7 +358,7 @@ void op::v1::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjo
                                m_strides[i]);
     }
 
-    auto swap_NC = [](const Output<Node>& n) {
+    auto swap_NC = [](const NodeOutput& n) {
         AxisVector ax_order = ngraph::get_default_order(n.get_shape());
         ax_order[0] = 1;
         ax_order[1] = 0;
@@ -415,9 +415,9 @@ shared_ptr<Node>
 
 constexpr NodeTypeInfo op::v1::ConvolutionBackpropFilters::type_info;
 
-op::v1::ConvolutionBackpropFilters::ConvolutionBackpropFilters(const Output<Node>& data_batch,
-                                                               const Output<Node>& output_delta,
-                                                               const Output<Node>& filters_shape,
+op::v1::ConvolutionBackpropFilters::ConvolutionBackpropFilters(const NodeOutput& data_batch,
+                                                               const NodeOutput& output_delta,
+                                                               const NodeOutput& filters_shape,
                                                                const Strides& strides,
                                                                const Strides& dilations,
                                                                const CoordinateDiff& pads_begin,
@@ -563,8 +563,8 @@ CoordinateDiff op::v1::ConvolutionBackpropFilters::compute_backward_in_pad_above
 // *** Convolution OP SET 0 ***
 constexpr NodeTypeInfo op::v0::Convolution::type_info;
 
-op::v0::Convolution::Convolution(const Output<Node>& data_batch,
-                                 const Output<Node>& filters,
+op::v0::Convolution::Convolution(const NodeOutput& data_batch,
+                                 const NodeOutput& filters,
                                  const Strides& window_movement_strides,
                                  const Strides& window_dilation_strides,
                                  const CoordinateDiff& padding_below,
@@ -657,8 +657,8 @@ void op::v0::Convolution::validate_and_infer_types()
     set_output_type(0, result_et, result_shape);
 }
 
-op::v0::Convolution::Convolution(const Output<Node>& data_batch,
-                                 const Output<Node>& filters,
+op::v0::Convolution::Convolution(const NodeOutput& data_batch,
+                                 const NodeOutput& filters,
                                  const Strides& window_movement_strides,
                                  const Strides& window_dilation_strides,
                                  const CoordinateDiff& padding_below,
@@ -673,8 +673,8 @@ op::v0::Convolution::Convolution(const Output<Node>& data_batch,
 {
 }
 
-op::v0::Convolution::Convolution(const Output<Node>& data_batch,
-                                 const Output<Node>& filters,
+op::v0::Convolution::Convolution(const NodeOutput& data_batch,
+                                 const NodeOutput& filters,
                                  const Strides& window_movement_strides,
                                  const Strides& window_dilation_strides)
     : Convolution(data_batch,
@@ -686,8 +686,8 @@ op::v0::Convolution::Convolution(const Output<Node>& data_batch,
 {
 }
 
-op::v0::Convolution::Convolution(const Output<Node>& data_batch,
-                                 const Output<Node>& filters,
+op::v0::Convolution::Convolution(const NodeOutput& data_batch,
+                                 const NodeOutput& filters,
                                  const Strides& window_movement_strides)
     : Convolution(data_batch,
                   filters,
@@ -698,7 +698,7 @@ op::v0::Convolution::Convolution(const Output<Node>& data_batch,
 {
 }
 
-op::v0::Convolution::Convolution(const Output<Node>& data_batch, const Output<Node>& filters)
+op::v0::Convolution::Convolution(const NodeOutput& data_batch, const NodeOutput& filters)
     : Convolution(data_batch, filters, Strides(), Strides(), CoordinateDiff(), CoordinateDiff())
 {
 }
@@ -755,8 +755,8 @@ shared_ptr<Node> op::v0::Convolution::get_default_value() const
 
 op::v0::ConvolutionBackpropData::ConvolutionBackpropData(
     const Shape& data_batch_shape,
-    const Output<Node>& filters,
-    const Output<Node>& output_delta,
+    const NodeOutput& filters,
+    const NodeOutput& output_delta,
     const Strides& window_movement_strides_forward,
     const Strides& window_dilation_strides_forward,
     const CoordinateDiff& padding_below_forward,
@@ -891,7 +891,7 @@ void op::v0::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjo
                 m_data_dilation_strides_forward[i]);
     }
 
-    auto swap_NC = [](const Output<Node>& n) {
+    auto swap_NC = [](const NodeOutput& n) {
         AxisVector ax_order = ngraph::get_default_order(n.get_shape());
         ax_order[0] = 1;
         ax_order[1] = 0;
@@ -985,9 +985,9 @@ CoordinateDiff op::v0::ConvolutionBackpropData::compute_backward_delta_out_pad_a
 constexpr NodeTypeInfo op::v0::ConvolutionBackpropFilters::type_info;
 
 op::v0::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
-    const Output<Node>& data_batch,
+    const NodeOutput& data_batch,
     const Shape& filters_shape,
-    const Output<Node>& output_delta,
+    const NodeOutput& output_delta,
     const Strides& window_movement_strides_forward,
     const Strides& window_dilation_strides_forward,
     const CoordinateDiff& padding_below_forward,

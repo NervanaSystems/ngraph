@@ -29,7 +29,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::PRelu::type_info;
 
-op::PRelu::PRelu(const Output<Node>& data, const Output<Node>& slope)
+op::PRelu::PRelu(const NodeOutput& data, const NodeOutput& slope)
     : FusedOp({data, slope})
 {
     constructor_validate_and_infer_types();

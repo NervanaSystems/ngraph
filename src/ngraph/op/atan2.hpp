@@ -40,8 +40,8 @@ namespace ngraph
             ///
             /// \param y
             /// \param x
-            Atan2(const Output<Node>& y,
-                  const Output<Node>& x,
+            Atan2(const NodeOutput& y,
+                  const NodeOutput& x,
                   const AutoBroadcastSpec& autob = AutoBroadcastSpec());
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 

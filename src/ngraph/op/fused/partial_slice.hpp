@@ -41,7 +41,7 @@ namespace ngraph
                 /// \param lower_bounds Starting indices of corresponding axis in `axes`
                 /// \param upper_bounds Ending indices of corresponding axis in `axes`
                 /// \param decrease_axis Axes to be dropped (dimension will be one)
-                PartialSlice(const Output<Node>& data,
+                PartialSlice(const NodeOutput& data,
                              const AxisVector& axes,
                              const std::vector<int64_t>& lower_bounds,
                              const std::vector<int64_t>& upper_bounds,
@@ -84,8 +84,8 @@ namespace ngraph
                 /// \param axes Axes that lower and upper bounds apply to
                 /// \param lower_bounds Starting indices of corresponding axis in `axes`
                 /// \param upper_bounds Ending indices of corresponding axis in `axes`
-                PartialSliceBackprop(const Output<Node>& data,
-                                     const Output<Node>& dout,
+                PartialSliceBackprop(const NodeOutput& data,
+                                     const NodeOutput& dout,
                                      const AxisVector& axes,
                                      const std::vector<int64_t>& lower_bounds,
                                      const std::vector<int64_t>& upper_bounds);

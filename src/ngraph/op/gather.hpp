@@ -34,7 +34,7 @@ namespace ngraph
                 /// \param params The tensor from which slices are gathered
                 /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
                 /// \param axis Axis in params to gather
-                Gather(const Output<Node>& params, const Output<Node>& indices, size_t axis = 0);
+                Gather(const NodeOutput& params, const NodeOutput& indices, size_t axis = 0);
 
                 void validate_and_infer_types() override;
 
@@ -63,9 +63,7 @@ namespace ngraph
                 /// \param params The tensor from which slices are gathered
                 /// \param indices Tensor with indexes to gather
                 /// \param axis The tensor is a dimension index to gather data from
-                Gather(const Output<Node>& params,
-                       const Output<Node>& indices,
-                       const Output<Node>& axis);
+                Gather(const NodeOutput& params, const NodeOutput& indices, const NodeOutput& axis);
 
                 size_t get_version() const override { return 1; }
                 size_t get_axis() const;

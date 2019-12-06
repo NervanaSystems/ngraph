@@ -22,10 +22,10 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v1::GatherTree::type_info;
 
-op::v1::GatherTree::GatherTree(const Output<Node>& step_ids,
-                               const Output<Node>& parent_idx,
-                               const Output<Node>& max_seq_len,
-                               const Output<Node>& end_token)
+op::v1::GatherTree::GatherTree(const NodeOutput& step_ids,
+                               const NodeOutput& parent_idx,
+                               const NodeOutput& max_seq_len,
+                               const NodeOutput& end_token)
     : Op({step_ids, parent_idx, max_seq_len, end_token})
 {
     constructor_validate_and_infer_types();

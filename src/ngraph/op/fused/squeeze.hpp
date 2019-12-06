@@ -35,7 +35,7 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"Squeeze", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Squeeze() = default;
-                Squeeze(const Output<Node>& data, const Output<Node>& axes);
+                Squeeze(const NodeOutput& data, const NodeOutput& axes);
 
                 virtual NodeVector decompose_op() const override;
 

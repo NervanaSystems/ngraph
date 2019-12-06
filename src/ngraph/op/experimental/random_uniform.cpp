@@ -23,10 +23,10 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::RandomUniform::type_info;
 
-op::RandomUniform::RandomUniform(const Output<Node>& min_value,
-                                 const Output<Node>& max_value,
-                                 const Output<Node>& result_shape,
-                                 const Output<Node>& use_fixed_seed,
+op::RandomUniform::RandomUniform(const NodeOutput& min_value,
+                                 const NodeOutput& max_value,
+                                 const NodeOutput& result_shape,
+                                 const NodeOutput& use_fixed_seed,
                                  uint64_t fixed_seed)
     : Op({min_value, max_value, result_shape, use_fixed_seed})
     , m_fixed_seed(fixed_seed)

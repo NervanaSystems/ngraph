@@ -23,7 +23,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Tile::type_info;
 
-op::Tile::Tile(const Output<Node>& data, const Output<Node>& repeats)
+op::Tile::Tile(const NodeOutput& data, const NodeOutput& repeats)
     : Op({data, repeats})
 {
     constructor_validate_and_infer_types();

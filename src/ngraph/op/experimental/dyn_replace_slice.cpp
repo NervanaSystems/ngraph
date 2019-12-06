@@ -26,11 +26,11 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::DynReplaceSlice::type_info;
 
-op::DynReplaceSlice::DynReplaceSlice(const Output<Node>& arg,
-                                     const Output<Node>& replacement,
-                                     const Output<Node>& lower_bounds,
-                                     const Output<Node>& upper_bounds,
-                                     const Output<Node>& strides,
+op::DynReplaceSlice::DynReplaceSlice(const NodeOutput& arg,
+                                     const NodeOutput& replacement,
+                                     const NodeOutput& lower_bounds,
+                                     const NodeOutput& upper_bounds,
+                                     const NodeOutput& strides,
                                      const AxisSet& lower_bounds_mask,
                                      const AxisSet& upper_bounds_mask,
                                      const AxisSet& new_axis,

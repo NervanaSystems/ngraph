@@ -25,7 +25,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::LogSoftmax::type_info;
 
-op::LogSoftmax::LogSoftmax(const Output<Node>& data, int64_t axis)
+op::LogSoftmax::LogSoftmax(const NodeOutput& data, int64_t axis)
     : FusedOp({data})
     , m_axis(axis)
 {

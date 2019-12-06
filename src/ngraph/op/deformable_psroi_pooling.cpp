@@ -21,9 +21,9 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v1::DeformablePSROIPooling::type_info;
 
-op::v1::DeformablePSROIPooling::DeformablePSROIPooling(const Output<Node>& input,
-                                                       const Output<Node>& coords,
-                                                       const Output<Node>& offsets,
+op::v1::DeformablePSROIPooling::DeformablePSROIPooling(const NodeOutput& input,
+                                                       const NodeOutput& coords,
+                                                       const NodeOutput& offsets,
                                                        const int64_t output_dim,
                                                        const float spatial_scale,
                                                        const int64_t group_size,
@@ -45,8 +45,8 @@ op::v1::DeformablePSROIPooling::DeformablePSROIPooling(const Output<Node>& input
     constructor_validate_and_infer_types();
 }
 
-op::v1::DeformablePSROIPooling::DeformablePSROIPooling(const Output<Node>& input,
-                                                       const Output<Node>& coords,
+op::v1::DeformablePSROIPooling::DeformablePSROIPooling(const NodeOutput& input,
+                                                       const NodeOutput& coords,
                                                        const int64_t output_dim,
                                                        const float spatial_scale,
                                                        const int64_t group_size,

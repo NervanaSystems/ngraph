@@ -46,8 +46,8 @@ namespace ngraph
                 ///
                 /// Output `[d0, ...]`
                 ///
-                LogicalAnd(const Output<Node>& arg0,
-                           const Output<Node>& arg1,
+                LogicalAnd(const NodeOutput& arg0,
+                           const NodeOutput& arg1,
                            const AutoBroadcastSpec& auto_broadcast =
                                AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 
@@ -78,8 +78,8 @@ namespace ngraph
                 ///
                 /// Output `[d0, ...]`
                 ///
-                And(const Output<Node>& arg0,
-                    const Output<Node>& arg1,
+                And(const NodeOutput& arg0,
+                    const NodeOutput& arg1,
                     const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
                 std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;

@@ -43,7 +43,7 @@ namespace ngraph
                 ///
                 /// Output `[d1, ...]`
                 ///
-                Abs(const Output<Node>& arg);
+                Abs(const NodeOutput& arg);
 
                 std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 

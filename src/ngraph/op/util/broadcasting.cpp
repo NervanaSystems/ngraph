@@ -131,10 +131,9 @@ static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
 ///
 /// \return     The broadcasted Node.
 ///
-static std::shared_ptr<ngraph::Node>
-    broadcast_node_numpy_style(const ngraph::Output<ngraph::Node>& value,
-                               const ngraph::Shape& output_shape,
-                               const ngraph::Shape& source_shape)
+static std::shared_ptr<ngraph::Node> broadcast_node_numpy_style(const ngraph::NodeOutput& value,
+                                                                const ngraph::Shape& output_shape,
+                                                                const ngraph::Shape& source_shape)
 {
     // If node already has the required shape, return original node
     if (output_shape == value.get_shape())
@@ -166,7 +165,7 @@ static std::shared_ptr<ngraph::Node>
     }
 
     // Remove axes which have length of 1 from source shape
-    ngraph::Output<ngraph::Node> broadcasted_value = std::make_shared<ngraph::op::Reshape>(
+    ngraph::NodeOutput broadcasted_value = std::make_shared<ngraph::op::Reshape>(
         value, ngraph::get_default_order(value.get_shape()), squeezed_shape);
 
     return std::make_shared<ngraph::op::Broadcast>(broadcasted_value, output_shape, broadcast_axes);
@@ -180,8 +179,9 @@ static std::shared_ptr<ngraph::Node>
 ///
 /// \return     The broadcasted Node.
 ///
-static std::shared_ptr<ngraph::Node> broadcast_value_pdpd_style(
-    const ngraph::Output<ngraph::Node>& value, const ngraph::Shape& output_shape, int64_t axis)
+static std::shared_ptr<ngraph::Node> broadcast_value_pdpd_style(const ngraph::NodeOutput& value,
+                                                                const ngraph::Shape& output_shape,
+                                                                int64_t axis)
 {
     auto value_shape = value.get_shape();
 
@@ -267,7 +267,7 @@ namespace ngraph
             return broadcasted_inputs;
         }
 
-        std::shared_ptr<ngraph::Node> numpy_style_broadcast(const Output<ngraph::Node>& value,
+        std::shared_ptr<ngraph::Node> numpy_style_broadcast(const NodeOutput& value,
                                                             const Shape& shape)
         {
             auto bcast_shape = get_numpy_broadcast_shapes({value.get_shape(), shape});
@@ -310,9 +310,8 @@ namespace ngraph
                     broadcast_node_numpy_style(right, right_output_shape, right_full_shape)};
         }
 
-        OutputVector
-            numpy_style_broadcast_values_for_matmul_operation(const Output<ngraph::Node>& left,
-                                                              const Output<ngraph::Node>& right)
+        OutputVector numpy_style_broadcast_values_for_matmul_operation(const NodeOutput& left,
+                                                                       const NodeOutput& right)
         {
             const auto& left_shape = left.get_shape();
             const auto& right_shape = right.get_shape();
@@ -407,10 +406,9 @@ namespace ngraph
             return {left, broadcast_right};
         }
 
-        OutputVector
-            legacy_style_broadcast_values_for_binary_operation(const Output<ngraph::Node>& left,
-                                                               const Output<ngraph::Node>& right,
-                                                               size_t start_match_axis)
+        OutputVector legacy_style_broadcast_values_for_binary_operation(const NodeOutput& left,
+                                                                        const NodeOutput& right,
+                                                                        size_t start_match_axis)
         {
             const auto& left_shape = left.get_shape();
             const auto& right_shape = right.get_shape();

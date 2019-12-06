@@ -39,8 +39,8 @@ namespace ngraph
                 /// \param A - Dividend tensor
                 /// \param B - Divisor tensor
                 /// \param auto_broadcast Auto broadcast specification
-                Mod(const Output<Node>& A,
-                    const Output<Node>& B,
+                Mod(const NodeOutput& A,
+                    const NodeOutput& B,
                     const AutoBroadcastSpec& auto_broadcast = AutoBroadcastType::NUMPY);
 
                 virtual NodeVector decompose_op() const override;

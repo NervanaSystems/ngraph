@@ -30,7 +30,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Elu::type_info;
 
-op::Elu::Elu(const Output<Node>& data, const double alpha)
+op::Elu::Elu(const NodeOutput& data, const double alpha)
     : FusedOp({data})
     , m_alpha{alpha}
 {

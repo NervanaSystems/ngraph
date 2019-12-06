@@ -24,7 +24,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Clamp::type_info;
 
-op::Clamp::Clamp(const Output<Node>& data, const double min, const double max)
+op::Clamp::Clamp(const NodeOutput& data, const double min, const double max)
     : FusedOp({data})
     , m_min{min}
     , m_max{max}

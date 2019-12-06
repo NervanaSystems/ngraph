@@ -47,7 +47,7 @@ namespace ngraph
                 /// \brief Constructs a square operation.
                 ///
                 /// \param arg Node that produces the input tensor.
-                Sqrt(const Output<Node>& arg);
+                Sqrt(const NodeOutput& arg);
                 Sqrt() = default;
 
                 virtual std::shared_ptr<Node>

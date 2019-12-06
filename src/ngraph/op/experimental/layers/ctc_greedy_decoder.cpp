@@ -21,8 +21,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::CTCGreedyDecoder::type_info;
 
-op::CTCGreedyDecoder::CTCGreedyDecoder(const Output<Node>& input,
-                                       const Output<Node>& seq_len,
+op::CTCGreedyDecoder::CTCGreedyDecoder(const NodeOutput& input,
+                                       const NodeOutput& seq_len,
                                        const bool ctc_merge_repeated)
     : Op({input, seq_len})
     , m_ctc_merge_repeated(ctc_merge_repeated)

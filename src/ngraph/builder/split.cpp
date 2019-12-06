@@ -26,7 +26,7 @@ namespace
         return std::min(idx, axis_size);
     }
 
-    std::shared_ptr<op::Slice> make_ng_slice(const Output<Node>& output,
+    std::shared_ptr<op::Slice> make_ng_slice(const NodeOutput& output,
                                              const std::vector<size_t>& axes,
                                              const std::vector<size_t>& starts,
                                              const std::vector<size_t>& ends)
@@ -47,9 +47,8 @@ namespace
     }
 }
 
-NodeVector builder::split(const Output<ngraph::Node>& value,
-                          const std::vector<size_t>& length_parts,
-                          size_t axis)
+NodeVector
+    builder::split(const NodeOutput& value, const std::vector<size_t>& length_parts, size_t axis)
 {
     size_t start_index{0};
     NodeVector outputs;
@@ -62,7 +61,7 @@ NodeVector builder::split(const Output<ngraph::Node>& value,
     return outputs;
 }
 
-NodeVector builder::split(const Output<Node>& value, size_t split_parts, int axis)
+NodeVector builder::split(const NodeOutput& value, size_t split_parts, int axis)
 {
     size_t axis_to_split{static_cast<size_t>(axis)};
     if (axis < 0)
