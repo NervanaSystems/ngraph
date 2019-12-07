@@ -1428,6 +1428,13 @@ namespace
         auto shape = (result->getType().cast<NGTensorType>()).getShape();
         auto memAnalysis = pass.getMemAnalysis();
         BufferInfo bufferInfo = memAnalysis->getBufferInfo(op);
+
+        if (!bufferInfo.isValid())
+        {
+            // no buffer assignment to dst, nothing to do
+            return false;
+        }
+
         auto dstBufferId = bufferInfo.m_bufferId;
         auto dstOffset = bufferInfo.m_offset;
 
@@ -1441,6 +1448,7 @@ namespace
             }
             if (shape[i] != 1)
             {
+                LLVM_DEBUG(llvm::dbgs() << "Axis FAIL. Skipping instruction\n");
                 return false;
             }
         }
@@ -1448,7 +1456,6 @@ namespace
 
         // Check if the buffer id and offsets are consistent with what's exepcted
         LLVM_DEBUG(llvm::dbgs() << "Dst (id, offset) = (" << dstBufferId << ", " << dstOffset << ")\n");
-
         // relative offset in the buffer
         int opndOffset = 0;
         for (auto opnd : op->getOperands())
