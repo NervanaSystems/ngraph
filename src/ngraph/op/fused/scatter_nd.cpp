@@ -79,7 +79,7 @@ void op::ScatterND::validate_and_infer_types()
     NODE_VALIDATION_CHECK(
         this,
         data_shape.rank().is_dynamic() || updates_rank == expected_updates_rank,
-        "update rank is expected to be equal data_rank + indices_rank - indices_shape[-1] - 1");
+        "Updates rank is expected to be equal data_rank + indices_rank - indices_shape[-1] - 1.");
 
     set_output_type(0, data_et, data_shape);
 }
@@ -95,8 +95,9 @@ NodeVector op::ScatterND::decompose_op() const
 
     element::Type data_et = get_input_element_type(DATA);
 
-    const auto false_values = op::Constant::create(element::Type_t::boolean, data_shape, {false});
-    const auto true_values = op::Constant::create(element::Type_t::boolean, updates_shape, {true});
+    const auto true_values = op::Constant::create(element::Type_t::boolean, data_shape, {true});
+    const auto false_values =
+        op::Constant::create(element::Type_t::boolean, updates_shape, {false});
 
     const auto mask = std::make_shared<op::v0::ScatterNDAdd>(true_values, indices, false_values);
 
