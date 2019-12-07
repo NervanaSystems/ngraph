@@ -462,7 +462,7 @@ namespace ngraph
         void merge_provenance_tags_from(const std::shared_ptr<const Node>& source);
 
         /// Get all the nodes that uses the current node
-        NodeVector get_users(bool check_is_used = false) const;
+        virtual NodeVector get_users(bool check_is_used = false) const;
 
         /// \return Version of this node
         virtual size_t get_version() const { return get_type_info().version; }

@@ -137,6 +137,7 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
                           std::shared_ptr<Node> replacement,
                           const std::vector<int64_t>& output_order)
 {
+    Node* target_goe = nullptr;
     if (target->is_output())
     {
         throw ngraph_error("Result nodes cannot be replaced.");
@@ -147,12 +148,15 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
                  target->get_output_size(),
                  " must be equal output_order size: ",
                  output_order.size());
+    cerr << "*** Target: " << *target << endl;
+    cerr << "*** Replac: " << *replacement << endl;
     OutputVector target_values;
     OutputVector replacement_values;
 
     if (is_type<op::GetOutputElement>(target))
     {
         // We are replacing a particular output
+        target_goe = target.get();
         Output<Node> target_value(target);
         NGRAPH_CHECK(!target_value.get_target_inputs().empty(),
                      "Attempted to replace unreachable node '",
@@ -168,12 +172,15 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
     }
     else
     {
-        NGRAPH_CHECK(!target->get_users().empty(),
-                     "Attempted to replace unreachable node '",
-                     *target,
-                     "'. Replacement: '",
-                     *replacement,
-                     "'");
+        if (!is_type<op::GetOutputElement>(target))
+        {
+            NGRAPH_CHECK(!target->get_users().empty(),
+                         "Attempted to replace unreachable node '",
+                         *target,
+                         "'. Replacement: '",
+                         *replacement,
+                         "'");
+        }
         NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
         target_values = target->outputs();
         replacement_values = replacement->outputs();
@@ -211,9 +218,9 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
     {
         for (auto& input : target_values.at(i).get_target_inputs())
         {
-            if (!is_type<op::GetOutputElement>(input.get_node()))
+            if (input.get_node() != target_goe)
             {
-                input.replace_source_output(replacement_values.at(i));
+                input.replace_source_output(replacement_values.at(output_order[i]));
             }
         }
     }

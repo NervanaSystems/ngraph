@@ -62,6 +62,9 @@ namespace ngraph
                         i);
                 };
 
+                /// Get all the nodes that uses the current node
+                NodeVector get_users(bool check_is_used = false) const override;
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const NodeVector& deltas) override;
