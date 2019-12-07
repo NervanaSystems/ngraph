@@ -16,6 +16,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 
 #include "expand.hpp"
 #include "ngraph/descriptor/output.hpp"

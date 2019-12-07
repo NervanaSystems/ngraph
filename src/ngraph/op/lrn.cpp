@@ -64,13 +64,6 @@ void op::LRN::validate_and_infer_types()
     const PartialShape& input_shape = get_input_partial_shape(0);
     const auto input_shape_rank = input_shape.rank();
 
-    NODE_VALIDATION_CHECK(this,
-                          input_shape_rank.is_dynamic() ||
-                              static_cast<size_t>(input_shape.rank()) >= 3,
-                          "Argument must have rank >= 3 (argument shape: ",
-                          input_shape,
-                          ").");
-
     PartialShape axes_shape{PartialShape::dynamic()};
     if (get_input_partial_shape(1).is_static())
     {

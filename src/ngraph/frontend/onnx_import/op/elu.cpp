@@ -17,10 +17,9 @@
 #include <memory>
 #include <vector>
 
+#include "elu.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/elu.hpp"
-
-#include "elu.hpp"
 
 namespace ngraph
 {

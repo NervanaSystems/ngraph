@@ -96,6 +96,8 @@ add_library(onnx_import STATIC
         op/flatten.hpp
         op/floor.hpp
         op/gather.hpp
+        op/gather_nd.hpp
+        op/gather_nd.cpp
         op/gemm.cpp
         op/gemm.hpp
         op/global_average_pool.cpp
@@ -140,6 +142,8 @@ add_library(onnx_import STATIC
         op/mul.hpp
         op/neg.hpp
         op/not.hpp
+        op/non_max_suppression.cpp
+        op/non_max_suppression.hpp
         op/onehot.cpp
         op/onehot.hpp
         op/or.hpp
@@ -162,7 +166,7 @@ add_library(onnx_import STATIC
         op/reshape.cpp
         op/reshape.hpp
         op/reverse_sequence.cpp
-        op/reverse_sequence.h
+        op/reverse_sequence.hpp
         op/selu.cpp
         op/selu.hpp
         op/shape.hpp
