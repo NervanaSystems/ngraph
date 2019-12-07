@@ -3055,7 +3055,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         node["friendly_name"] = n.get_friendly_name();
     }
-    node["op"] = n.type_info.name;
+    node["op"] = type_info.name;
     // TODO Multiple outputs
     json inputs = json::array();
     json control_deps = json::array();

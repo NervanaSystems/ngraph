@@ -156,8 +156,6 @@ namespace ngraph
         void safe_delete(NodeVector& nodes, bool recurse);
 
     public:
-        static constexpr NodeTypeInfo type_info{"Node", 0};
-
         virtual ~Node();
 
         virtual bool visit_attributes(AttributeVisitor& visitor) { return false; }
@@ -183,11 +181,6 @@ namespace ngraph
         virtual const char* get_type_name() const
         {
             auto& info = get_type_info();
-            if (is_type<Node>(this))
-            {
-                // Transitional definition
-                return description().c_str();
-            }
             return info.name;
         }
         /// Sets/replaces the arguments with new arguments.

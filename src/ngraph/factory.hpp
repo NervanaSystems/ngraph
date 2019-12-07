@@ -21,6 +21,7 @@
 #include <mutex>
 
 #include "ngraph/ngraph_visibility.hpp"
+#include "ngraph/type.hpp"
 
 namespace ngraph
 {
@@ -32,7 +33,7 @@ namespace ngraph
     {
     public:
         using Factory = std::function<BASE_TYPE*()>;
-        using FactoryMap = std::map<decltype(BASE_TYPE::type_info), Factory>;
+        using FactoryMap = std::map<DiscreteTypeInfo, Factory>;
 
         // \brief Get the default factory for DERIVED_TYPE. Specialize as needed.
         template <typename DERIVED_TYPE>
@@ -42,7 +43,7 @@ namespace ngraph
         }
 
         /// \brief Register a custom factory for type_info
-        void register_factory(const decltype(BASE_TYPE::type_info) & type_info, Factory factory)
+        void register_factory(const DiscreteTypeInfo & type_info, Factory factory)
         {
             std::lock_guard<std::mutex> guard(get_registry_mutex());
             m_factory_map[type_info] = factory;
@@ -63,7 +64,7 @@ namespace ngraph
         }
 
         /// \brief Check to see if a factory is registered
-        bool has_factory(const decltype(BASE_TYPE::type_info) & info)
+        bool has_factory(const DiscreteTypeInfo & info)
         {
             std::lock_guard<std::mutex> guard(get_registry_mutex());
             return m_factory_map.find(info) != m_factory_map.end();
@@ -77,7 +78,7 @@ namespace ngraph
         }
 
         /// \brief Create an instance for type_info
-        BASE_TYPE* create(const decltype(BASE_TYPE::type_info) & type_info)
+        BASE_TYPE* create(const DiscreteTypeInfo & type_info)
         {
             std::lock_guard<std::mutex> guard(get_registry_mutex());
             auto it = m_factory_map.find(type_info);
