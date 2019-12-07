@@ -100,7 +100,6 @@
 #include "op/reduce.hpp"
 #include "op/relu.hpp"
 #include "op/reshape.hpp"
-#include "op/reverse_sequence.h"
 #include "op/reverse_sequence.hpp"
 #include "op/scatter_nd.hpp"
 #include "op/selu.hpp"
