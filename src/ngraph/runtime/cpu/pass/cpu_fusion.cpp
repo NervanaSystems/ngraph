@@ -183,7 +183,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
     this->add_matcher(m, callback);
 }
 
-void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul_f32()
+void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul()
 {
     Shape shape_w{2, 4};
     Shape shape_x{4, 1};
@@ -207,83 +207,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul_f32()
 
         auto mpattern = m.get_match_root();
         auto dot = m.get_match_root();
+        auto element_type = mpattern->get_element_type();
 
-        if (mpattern->get_element_type() != element::f32)
+        if (element_type != element::f32 && element_type != element::f64)
         {
-            NGRAPH_DEBUG << "mpattern = " << mpattern->get_name() << " type is not float!";
-            return false;
-        }
-
-        if (dot->get_shape().size() != 2)
-        {
-            NGRAPH_DEBUG << "dot = " << dot->get_name() << " shape is not equal to 2!";
-            return false;
-        }
-
-        if (shape_size(dot->get_shape()) == 0)
-        {
-            NGRAPH_DEBUG << "dot has a zero dimension";
-            return false;
-        }
-
-        bool transpose_w = false;
-        Shape shape_arg0{pattern_map[W]->get_shape()};
-        if (!init_cblas_arg(dot->get_argument(0), pattern_map[W], transpose_w, shape_arg0))
-        {
-            return false;
-        }
-
-        bool transpose_x = false;
-        Shape shape_arg1{pattern_map[x]->get_shape()};
-        if (!init_cblas_arg(dot->get_argument(1), pattern_map[x], transpose_x, shape_arg1))
-        {
-            return false;
-        }
-
-        auto cg = std::shared_ptr<Node>(new ngraph::op::MatmulBias(pattern_map[W],
-                                                                   pattern_map[x],
-                                                                   Output<Node>(),
-                                                                   shape_arg0,
-                                                                   shape_arg1,
-                                                                   transpose_w,
-                                                                   transpose_x));
-
-        ngraph::replace_node(mpattern, cg);
-        return true;
-    };
-
-    auto m = std::make_shared<ngraph::pattern::Matcher>(pdot, "CPUFusion.MatMul");
-    this->add_matcher(m, callback);
-}
-
-void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul_f64()
-{
-    Shape shape_w{2, 4};
-    Shape shape_x{4, 1};
-    Shape shape_b{1};
-    Shape shape_dot{2, 1};
-
-    auto W = std::make_shared<pattern::op::Label>(element::f64, shape_w);
-    auto x = std::make_shared<pattern::op::Label>(element::f64, shape_x);
-
-    auto reshape_pred = pattern::has_class<ngraph::op::Reshape>();
-
-    auto skip_w = std::make_shared<pattern::op::Skip>(W, reshape_pred);
-    auto skip_x = std::make_shared<pattern::op::Skip>(x, reshape_pred);
-
-    auto pdot = std::make_shared<ngraph::op::Dot>(skip_w, skip_x);
-
-    auto callback = [W, x](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In callback for construct_matmul_pattern against node = "
-                     << m.get_match_root()->get_name();
-        auto pattern_map = m.get_pattern_map();
-
-        auto mpattern = m.get_match_root();
-        auto dot = m.get_match_root();
-
-        if (mpattern->get_element_type() != element::f64)
-        {
-            NGRAPH_DEBUG << "mpattern = " << mpattern->get_name() << " type is not double!";
+            NGRAPH_DEBUG << "mpattern = " << mpattern->get_name()
+                         << " type is not float or double!";
             return false;
         }
 

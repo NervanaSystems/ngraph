@@ -65,8 +65,7 @@ public:
 
         if (fusions.is_set(FusionType::REGULAR_FUSIONS))
         {
-            construct_matmul_f32();
-            construct_matmul_f64();
+            construct_matmul();
             construct_matmulbias();
             construct_fprop_bn();
             construct_conv_bias_bprop();
@@ -104,8 +103,7 @@ public:
     }
 
 private:
-    void construct_matmul_f32();
-    void construct_matmul_f64();
+    void construct_matmul();
     void construct_matmulbias();
     void construct_conv_bias();
     void construct_conv_bias_bprop();
