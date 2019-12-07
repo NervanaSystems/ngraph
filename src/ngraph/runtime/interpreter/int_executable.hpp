@@ -1879,6 +1879,7 @@ private:
         case OP_TYPEID::PartialSlice:
         case OP_TYPEID::PartialSliceBackprop:
         case OP_TYPEID::RNNCell:
+        case OP_TYPEID::ScatterND:
         case OP_TYPEID::ScaleShift:
         case OP_TYPEID::Selu:
         case OP_TYPEID::ShuffleChannels:
