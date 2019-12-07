@@ -39,17 +39,17 @@
 
 static llvm::cl::opt<bool> clEnableNgInPlaceMemory(
     "ngraph-memory-opt",
-    llvm::cl::init(false),
+    llvm::cl::init(true),
     llvm::cl::desc("Enable ngraph dialect in-place memory optimization pass"));
 
 static llvm::cl::opt<bool>
     clEnableNgInPlaceConcat("ngraph-memory-opt-concat",
-                            llvm::cl::init(false),
+                            llvm::cl::init(true),
                             llvm::cl::desc("Enable inplace concat optimization"));
 
 static llvm::cl::opt<bool>
     clEnableNgInPlaceEltWise("ngraph-memory-opt-eltwise",
-                             llvm::cl::init(false),
+                             llvm::cl::init(true),
                              llvm::cl::desc("Enable inplace element wise optimization"));
 
 // anonymous namespace
