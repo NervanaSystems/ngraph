@@ -1768,6 +1768,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
             return false;
         }
 
+        if (conv_m->has_groups_in_filters())
+        {
+            return false;
+        }
+
         // new weights = old weights * gamma / sqrt(variance + epsilon)
         // new biases = (-mean) * gamma / sqrt(variance + epsilon) + beta
 

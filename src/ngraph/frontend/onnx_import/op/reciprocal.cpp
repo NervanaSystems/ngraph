@@ -20,7 +20,6 @@
 #include "ngraph/op/fused/reciprocal.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
-
 #include "reciprocal.hpp"
 
 namespace ngraph

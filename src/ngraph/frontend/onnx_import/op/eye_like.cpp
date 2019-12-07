@@ -13,9 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "eye_like.hpp"
+
+#include <memory>
+
 #include "exceptions.hpp"
-#include "ngraph/frontend/onnx_import/utils/common.hpp"
+#include "eye_like.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {

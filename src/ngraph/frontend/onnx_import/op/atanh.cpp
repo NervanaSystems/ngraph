@@ -14,6 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <memory>
+
 #include "atanh.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
