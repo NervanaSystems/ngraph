@@ -211,7 +211,10 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
     {
         for (auto& input : target_values.at(i).get_target_inputs())
         {
-            input.replace_source_output(replacement_values.at(i));
+            if (!is_type<op::GetOutputElement>(input.get_node()))
+            {
+                input.replace_source_output(replacement_values.at(i));
+            }
         }
     }
 

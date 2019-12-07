@@ -538,7 +538,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                                                    lstm_weights_iter_label,
                                                    lstm_bias_label,
                                                    ref_rnn_type);
-    auto lstm_goe = Output<Node>(lstm, 1);
+    auto lstm_goe = Output<Node>(lstm, 1).as_single_output_node();
     // We cannot attach labels to multi-output nodes, so we attach a label to the goe instead
     auto lstm_goe_label =
         std::make_shared<pattern::op::Label>(lstm_goe, nullptr, NodeVector{lstm_goe});
@@ -715,7 +715,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         auto rnn_ct_goe = ngraph::op::get_output_elements(lstm_nodes[sequence_len - 1])[1];
         if (rnn_ct_goe)
         {
-            replace_collapse_node_user(rnn_ct_goe, rnn_ht_ct_goe->output(0));
+            replace_collapse_node_user(rnn_ct_goe, rnn_ht_ct_goe);
         }
 
         // now go through the lstm goe_0 consumers and replace them with the slice
