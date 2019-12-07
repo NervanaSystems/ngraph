@@ -228,7 +228,7 @@ namespace ngraph
         /// graph against the graph.
         bool is_same_op_type(const std::shared_ptr<Node>& node) const
         {
-            return description() == node->description();
+            return get_type_info() == node->get_type_info();
         }
 
         /// \brief Marks an input as being relevant or irrelevant to the output shapes of this
@@ -332,8 +332,14 @@ namespace ngraph
         /// Returns the partial shape for output i
         const PartialShape& get_output_partial_shape(size_t i) const;
 
-        std::shared_ptr<Node> get_output_as_single_output_node(size_t i,
-                                                               bool for_get_output_element = true);
+        /// Second argument is ignored
+        /// Returns the node if i=1 and the node has 1 output, otherwise a GetOutputElement
+        /// If the node is a GetOutputElement, applies to the underlying node
+        virtual std::shared_ptr<Node>
+            get_output_as_single_output_node(size_t i, bool for_get_output_element = true);
+
+        virtual Output<Node> get_as_output();
+        virtual Output<const Node> get_as_output() const;
 
         /// Checks that there is exactly one output and returns its shape
         // TODO: deprecate in favor of node->output(0).get_shape() with a suitable check in the
@@ -695,6 +701,9 @@ namespace ngraph
     template <>
     class NGRAPH_API Output<Node>
     {
+        void eliminate_goe();
+        void eliminate_goe(size_t index);
+
     public:
         /// \brief Constructs a Output.
         /// \param node A pointer to the node for the output handle.
@@ -703,6 +712,7 @@ namespace ngraph
             : m_node(node->shared_from_this())
             , m_index(index)
         {
+            eliminate_goe(index);
         }
 
         /// \brief Constructs a Output.
@@ -714,14 +724,17 @@ namespace ngraph
             : m_node(node)
             , m_index(index)
         {
+            eliminate_goe(index);
         }
 
         /// \brief Constructs a Output, referencing the zeroth output of the node.
         /// \param node A `shared_ptr` to the node for the output handle.
         template <typename T>
         Output(const std::shared_ptr<T>& node)
-            : Output(node, 0)
+            : m_node(node)
+            , m_index(0)
         {
+            eliminate_goe();
         }
 
         /// A null output
@@ -801,6 +814,9 @@ namespace ngraph
     template <>
     class NGRAPH_API Output<const Node>
     {
+        void eliminate_goe();
+        void eliminate_goe(size_t index);
+
     public:
         /// \brief Constructs a Output.
         /// \param node A pointer to the node for the output handle.
@@ -809,6 +825,7 @@ namespace ngraph
             : m_node(node->shared_from_this())
             , m_index(index)
         {
+            eliminate_goe(index);
         }
 
         /// \brief Constructs a Output.
@@ -820,6 +837,7 @@ namespace ngraph
             : m_node(node)
             , m_index(index)
         {
+            eliminate_goe(index);
         }
 
         /// \brief Constructs a Output, referencing the zeroth output of the node.
@@ -828,6 +846,7 @@ namespace ngraph
         Output(const std::shared_ptr<T>& node)
             : Output(node, 0)
         {
+            eliminate_goe();
         }
 
         /// A null output

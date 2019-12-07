@@ -46,10 +46,16 @@ void op::GetOutputElement::validate_and_infer_types()
 shared_ptr<Node> op::GetOutputElement::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<GetOutputElement>(new_args.at(0), m_n);
+    return shared_ptr<GetOutputElement>(new GetOutputElement(new_args.at(0), m_n));
 }
 
-Output<Node> op::GetOutputElement::get_as_output() const
+Output<const Node> op::GetOutputElement::get_as_output() const
+{
+    auto inval = input_value(0);
+    return Output<const Node>(inval.get_node_shared_ptr(), inval.get_index());
+}
+
+Output<Node> op::GetOutputElement::get_as_output()
 {
     return input_value(0);
 }

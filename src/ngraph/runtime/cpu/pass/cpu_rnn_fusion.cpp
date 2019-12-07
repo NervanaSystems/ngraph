@@ -152,11 +152,11 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
 #endif
 
 #if MKLDNN_VERSION_MAJOR < 1
-        auto lstm_ht_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 0);
-        auto lstm_ht_ct_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 1);
+        auto lstm_ht_output = Output<Node>(lstm_node, 0).as_single_output_node();
+        auto lstm_ht_ct_output = Output<Node>(lstm_node, 1).as_single_output_node();
 #else
-        auto lstm_ht_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 1);
-        auto ct_slice = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 2);
+        auto lstm_ht_output = Output<Node>(lstm_node, 1).as_single_output_node();
+        auto ct_slice = Output<Node>(lstm_node, 2).as_single_output_node();
 #endif
 
         auto goe_nodes = ngraph::op::get_output_elements(m.get_match_root());
@@ -445,8 +445,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         auto lstm_node = std::make_shared<ngraph::op::Lstm>(
             src_layer, src_iter, weights_layer, weights_iter, bias, rnn_type);
 
-        auto lstm_ht_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 0);
-        auto lstm_ht_ct_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 1);
+        auto lstm_ht_output = Output<Node>(lstm_node, 0);
+        auto lstm_ht_ct_output = Output<Node>(lstm_node, 1);
 
         // dst_iter of lstm mkldnn output holds the results of both recurrent state
         // tensor outputs. we need to slice the ct.
@@ -474,8 +474,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         auto lstm_node = std::make_shared<ngraph::op::Lstm>(
             src_layer, hidden_state, cell_state, weights_layer, weights_iter, bias, rnn_type);
 
-        auto lstm_ht_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 1);
-        auto lstm_ct_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 2);
+        auto lstm_ht_output = Output<Node>(lstm_node, 1).as_single_output_node();
+        auto lstm_ct_output = Output<Node>(lstm_node, 2).as_single_output_node();
 
         // Now identify the nodes which consumes the output of LSTM nodes
         // and replace them accordingly
@@ -538,7 +538,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                                                    lstm_weights_iter_label,
                                                    lstm_bias_label,
                                                    ref_rnn_type);
-    auto lstm_goe = std::make_shared<ngraph::op::GetOutputElement>(lstm, 1);
+    auto lstm_goe = Output<Node>(lstm, 1);
     // We cannot attach labels to multi-output nodes, so we attach a label to the goe instead
     auto lstm_goe_label =
         std::make_shared<pattern::op::Label>(lstm_goe, nullptr, NodeVector{lstm_goe});
@@ -650,8 +650,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         std::vector<std::shared_ptr<ngraph::op::Slice>> ht_slice_per_timestep(sequence_len,
                                                                               nullptr);
-        auto rnn_ht_goe = std::make_shared<ngraph::op::GetOutputElement>(rnn, 0);
-        auto rnn_ht_ct_goe = std::make_shared<ngraph::op::GetOutputElement>(rnn, 1);
+        auto rnn_ht_goe = Output<Node>(rnn, 0);
+        auto rnn_ht_ct_goe = Output<Node>(rnn, 1);
 
         for (size_t i = 0, start_index = 0; i < sequence_len; i++, start_index += batch_size)
         {
@@ -743,7 +743,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                                                    lstm_weights_iter_label,
                                                    lstm_bias_label,
                                                    ref_rnn_type);
-    auto lstm_goe = std::make_shared<ngraph::op::GetOutputElement>(lstm, 2);
+    auto lstm_goe = Output<Node>(lstm, 2).as_single_output_node();
     // We cannot attach labels to multi-output nodes, so we attach a label to the goe instead
     auto lstm_goe_label =
         std::make_shared<pattern::op::Label>(lstm_goe, nullptr, NodeVector{lstm_goe});
@@ -853,8 +853,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         std::vector<std::shared_ptr<ngraph::op::Slice>> ht_slice_per_timestep(sequence_len,
                                                                               nullptr);
-        auto rnn_hts_goe = std::make_shared<ngraph::op::GetOutputElement>(rnn, 0);
-        auto rnn_ct_goe = std::make_shared<ngraph::op::GetOutputElement>(rnn, 2);
+        auto rnn_hts_goe = Output<Node>(rnn, 0).as_single_output_node();
+        auto rnn_ct_goe = Output<Node>(rnn, 2).as_single_output_node();
 
         for (size_t i = 0, start_index = 0; i < sequence_len; i++, start_index += batch_size)
         {
@@ -988,7 +988,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                                                           ref_num_of_rnn_fused_layer,
                                                           ref_rnn_type);
 
-    auto rnn_goe0 = std::make_shared<ngraph::op::GetOutputElement>(ref_rnn_node, 0);
+    auto rnn_goe0 = Output<Node>(ref_rnn_node, 0).as_single_output_node();
 
     auto rnn_goe0_label =
         std::make_shared<pattern::op::Label>(rnn_goe0, nullptr, NodeVector{rnn_goe0});
@@ -1109,9 +1109,9 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                                                      num_fused_rnn_layers,
                                                      rnn_type);
 
-        auto mrnn_ht = std::make_shared<ngraph::op::GetOutputElement>(rnn, 0);
+        auto mrnn_ht = Output<Node>(rnn, 0).as_single_output_node();
 #if MKLDNN_VERSION_MAJOR < 1
-        auto mrnn_ht_ct = std::make_shared<ngraph::op::GetOutputElement>(rnn, 1);
+        auto mrnn_ht_ct = Output<Node>(rnn, 1).as_single_output_node();
 
         // Replace all the users of RNN cell state {ct} across different user.
         auto replace_rnn_output_cellstate = [&](std::shared_ptr<Node> rnn_ct_goe1, size_t layer) {
@@ -1160,7 +1160,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             }
         }
 #else
-        auto mrnn_ct = std::make_shared<ngraph::op::GetOutputElement>(rnn, 2);
+        auto mrnn_ct = Output<Node>(rnn, 2).as_single_output_node();
 
         // Replace all the users of RNN cell state {ct} across different user.
         auto replace_rnn_output_cellstate = [&](std::shared_ptr<Node> rnn_ct_goe2, size_t layer) {
@@ -1229,10 +1229,8 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
         element::f32, Shape{1, 256}, pattern::has_class<ngraph::op::Rnn>());
 
     auto reshape_pred = [](std::shared_ptr<Node> n) { return (is_type<ngraph::op::Reshape>(n)); };
-    auto rnn_left_to_right_goe0 =
-        std::make_shared<ngraph::op::GetOutputElement>(rnn_left_to_right, 0);
-    auto rnn_right_to_left_goe0 =
-        std::make_shared<ngraph::op::GetOutputElement>(rnn_right_to_left, 0);
+    auto rnn_left_to_right_goe0 = Output<Node>(rnn_left_to_right, 0).as_single_output_node();
+    auto rnn_right_to_left_goe0 = Output<Node>(rnn_right_to_left, 0).as_single_output_node();
 
     auto rnn_rtol_goe0_reshape_ntc =
         std::make_shared<pattern::op::Skip>(rnn_right_to_left_goe0, reshape_pred);
@@ -1347,7 +1345,7 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
                                                      rnn_type);
 #endif
 
-        auto layer_rnn_ht = std::make_shared<ngraph::op::GetOutputElement>(rnn, 0);
+        auto layer_rnn_ht = Output<Node>(rnn, 0).as_single_output_node();
         size_t batch_size = layer_rnn_ht->get_shape()[0] / num_time_steps;
         size_t feature_size = layer_rnn_ht->get_shape()[1];
 

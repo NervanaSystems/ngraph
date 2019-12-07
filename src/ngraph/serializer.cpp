@@ -1660,8 +1660,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::GetOutputElement:
         {
-            node = make_shared<op::GetOutputElement>(
-                static_cast<Output<Node>>(args[0]).get_node_shared_ptr(),
+            Output<Node> arg = args[0];
+            node = arg.get_node_shared_ptr()->get_output_as_single_output_node(
                 node_js.at("n").get<size_t>());
             break;
         }

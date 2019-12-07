@@ -89,6 +89,16 @@ std::shared_ptr<Node> Node::copy_with_new_inputs(const OutputVector& inputs) con
     return copy_with_new_inputs(inputs, get_control_dependencies());
 }
 
+Output<Node> Node::get_as_output()
+{
+    return Output<Node>(shared_from_this());
+}
+
+Output<const Node> Node::get_as_output() const
+{
+    return Output<const Node>(shared_from_this());
+}
+
 std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i, bool for_get_output_element)
 {
     for (auto in : output(i).get_target_inputs())
@@ -98,52 +108,22 @@ std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i, bool for_
             return in.get_node()->shared_from_this();
         }
     }
-    return get_output_element(output(i), for_get_output_element);
+    if (i == 0 && get_output_size() == 1)
+    {
+        return shared_from_this();
+    }
+    else
+    {
+        return shared_ptr<Node>(new op::GetOutputElement(shared_from_this(), i));
+    }
 }
 
 std::shared_ptr<Node>
     Node::copy_with_new_inputs(const OutputVector& inputs,
                                const std::vector<std::shared_ptr<Node>>& control_dependencies) const
 {
-    shared_ptr<Node> clone;
-    if (is_type<op::GetOutputElement>(this))
-    {
-        auto& value = inputs.at(0);
-        clone = make_shared<op::GetOutputElement>(value.get_node_shared_ptr(), value.get_index());
-    }
-    else
-    {
-        NodeVector args;
-        for (const Output<Node>& input : inputs)
-        {
-            args.push_back(get_output_element(input, false));
-        }
-        for (int i = 0; i < inputs.size(); ++i)
-        {
-            auto in_val = inputs.at(i);
-            if (is_type<op::GetOutputElement>(in_val.get_node()))
-            {
-                in_val = as_type_ptr<op::GetOutputElement>(in_val.get_node_shared_ptr())
-                             ->get_as_output();
-            }
-            auto in_index = in_val.get_index();
-            auto arg = args.at(i);
-            size_t out_index = 0;
-            if (is_type<op::GetOutputElement>(arg))
-            {
-                out_index = as_type_ptr<op::GetOutputElement>(arg)->get_n();
-            }
-            if (in_index != out_index)
-            {
-                cerr << "Mismatch in: " << in_index << " arg: " << out_index << endl;
-                cerr << "ARG: " << *arg << endl;
-                cerr << "IN: " << *inputs.at(i).get_node() << endl;
-                cerr << "INV: " << *in_val.get_node() << endl;
-                cerr << "In node " << *this << endl;
-            }
-        }
-        clone = copy_with_new_args(args);
-    }
+    shared_ptr<Node> clone = copy_with_new_args(as_node_vector(inputs));
+    ;
     for (auto& cdep : control_dependencies)
     {
         clone->add_control_dependency(cdep);
@@ -489,16 +469,16 @@ std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
     NGRAPH_CHECK(
         index < m_inputs.size(), "index '", index, "' out of range in get_argument(size_t index)");
-    return m_inputs[index].get_output().get_node();
+    return input_value(index).as_single_output_node();
 }
 
 NodeVector Node::get_arguments() const
 {
     NodeVector result;
-    for (auto& i : m_inputs)
+    for (size_t i = 0; i < get_input_size(); ++i)
     {
         {
-            result.push_back(i.get_output().get_node());
+            result.push_back(get_argument(i));
         }
     }
     return result;
@@ -618,11 +598,11 @@ std::ostream& Node::write_long_description(std::ostream& out) const
 {
     out << description() << '[' << get_name() << "](";
     string sep = "";
-    for (auto arg : get_arguments())
+    for (auto arg : input_values())
     {
-        out << sep << NodeDescription(*arg, true) << ": "
-            << pretty_element_type(arg->get_output_element_type(0))
-            << arg->get_output_partial_shape(0);
+        out << sep << NodeDescription(*arg.get_node_shared_ptr(), true) << "[" << arg.get_index()
+            << "]"
+            << ": " << pretty_element_type(arg.get_element_type()) << arg.get_partial_shape();
         sep = ", ";
     }
     out << ") -> (";
@@ -833,9 +813,16 @@ const NodeVector& ngraph::check_single_output_args(const NodeVector& args)
 OutputVector ngraph::as_output_vector(const NodeVector& args)
 {
     OutputVector output_vector;
-    for (auto& arg : check_single_output_args(args))
+    for (auto arg : args)
     {
-        output_vector.push_back(arg);
+        if (auto goe = as_type_ptr<op::GetOutputElement>(arg))
+        {
+            output_vector.push_back(goe->get_as_output());
+        }
+        else
+        {
+            output_vector.push_back(arg);
+        }
     }
     return output_vector;
 }
@@ -945,4 +932,38 @@ bool Node::is_dynamic() const
         }
     }
     return false;
+}
+
+void Output<Node>::eliminate_goe()
+{
+    if (auto goe = as_type_ptr<op::GetOutputElement>(m_node))
+    {
+        *this = m_node->input_value(0);
+    }
+}
+
+void Output<Node>::eliminate_goe(size_t index)
+{
+    if (auto goe = as_type_ptr<op::GetOutputElement>(m_node))
+    {
+        m_node = goe->input_value(0).get_node_shared_ptr();
+    }
+}
+
+void Output<const Node>::eliminate_goe()
+{
+    if (auto goe = as_type_ptr<const op::GetOutputElement>(m_node))
+    {
+        auto value = m_node->input_value(0);
+        m_node = value.get_node_shared_ptr();
+        m_index = value.get_index();
+    }
+}
+
+void Output<const Node>::eliminate_goe(size_t index)
+{
+    if (auto goe = as_type_ptr<const op::GetOutputElement>(m_node))
+    {
+        m_node = goe->input_value(0).get_node_shared_ptr();
+    }
 }

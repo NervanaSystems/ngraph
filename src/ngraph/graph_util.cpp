@@ -27,6 +27,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -146,16 +147,39 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
                  target->get_output_size(),
                  " must be equal output_order size: ",
                  output_order.size());
+    OutputVector target_values;
+    OutputVector replacement_values;
 
-    NGRAPH_CHECK(!target->get_users().empty(),
-                 "Attempted to replace unreachable node '",
-                 *target,
-                 "'. Replacement: '",
-                 *replacement,
-                 "'");
+    if (is_type<op::GetOutputElement>(target))
+    {
+        // We are replacing a particular output
+        Output<Node> target_value(target);
+        NGRAPH_CHECK(!target_value.get_target_inputs().empty(),
+                     "Attempted to replace unreachable node '",
+                     *target,
+                     "'. Replacement: '",
+                     *replacement,
+                     "'");
+        target_values.push_back(target_value);
+        target = target_value.get_node_shared_ptr();
+        Output<Node> replacement_value(replacement);
+        replacement_values.push_back(replacement_value);
+        replacement = replacement_value.get_node_shared_ptr();
+    }
+    else
+    {
+        NGRAPH_CHECK(!target->get_users().empty(),
+                     "Attempted to replace unreachable node '",
+                     *target,
+                     "'. Replacement: '",
+                     *replacement,
+                     "'");
+        NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
+        target_values = target->outputs();
+        replacement_values = replacement->outputs();
+    }
 
     // Fix input/output descriptors
-    NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
 
     if (ngraph::get_provenance_enabled())
     {
@@ -183,11 +207,11 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
     // For each of target's output O with replacement output O_rep:
     //     For each O's connected downstream input I:
     //         Change I's connected upstream output to O_rep
-    for (size_t i = 0; i < target->get_output_size(); i++)
+    for (size_t i = 0; i < target_values.size(); i++)
     {
-        for (auto& input : target->output(i).get_target_inputs())
+        for (auto& input : target_values.at(i).get_target_inputs())
         {
-            input.replace_source_output(replacement->output(output_order[i]));
+            input.replace_source_output(replacement_values.at(i));
         }
     }
 

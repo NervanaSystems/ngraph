@@ -124,9 +124,9 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
                                                  m_max_pool->get_padding_above());
 
     auto max_pool_with_indices_output =
-        std::make_shared<op::GetOutputElement>(max_pool_with_indices, 0);
+        Output<Node>(max_pool_with_indices, 0).as_single_output_node();
     auto max_pool_with_indices_indices =
-        std::make_shared<op::GetOutputElement>(max_pool_with_indices, 1);
+        Output<Node>(max_pool_with_indices, 1).as_single_output_node();
 
     // rewire users to use a new MaxPoolWithIndices (maxpool's output)
     for (auto& o : m_max_pool->get_outputs())
