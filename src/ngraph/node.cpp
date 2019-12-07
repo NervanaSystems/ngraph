@@ -317,6 +317,7 @@ const std::string& Node::description() const
         // type_name to const_char and virtual description() to virtual get_type_name()
         const_cast<Node*>(this)->m_node_type = get_type_name();
     }
+
     return m_node_type;
 }
 

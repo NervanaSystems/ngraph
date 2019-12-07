@@ -17,10 +17,9 @@
 #include <cstdint>
 #include <memory>
 
-#include "ngraph/frontend/onnx_import/core/null_node.hpp"
-#include "ngraph/frontend/onnx_import/exceptions.hpp"
-#include "ngraph/frontend/onnx_import/op/batch_norm.hpp"
-#include "ngraph/node.hpp"
+#include "batch_norm.hpp"
+#include "core/null_node.hpp"
+#include "exceptions.hpp"
 #include "ngraph/op/batch_norm.hpp"
 
 namespace ngraph
