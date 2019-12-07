@@ -76,7 +76,6 @@ namespace ngraph
                                     const Coordinate& upper_bounds,
                                     const Strides& strides);
 
-            std::shared_ptr<Node> backprop_node(const Output<Node>& x);
             Output<Node> backprop_output(const Output<Node>& x);
 
         protected:

@@ -39,7 +39,7 @@ namespace ngraph
                 void validate_and_infer_types() override;
 
                 void generate_adjoints(autodiff::Adjoints& adjoints,
-                                       const NodeVector& deltas) override;
+                                       const OutputVector& deltas) override;
 
                 size_t get_axis() const { return m_axis; }
                 void set_axis(size_t axis) { m_axis = axis; }
@@ -73,7 +73,7 @@ namespace ngraph
                 void validate_and_infer_types() override;
 
                 void generate_adjoints(autodiff::Adjoints& adjoints,
-                                       const NodeVector& deltas) override;
+                                       const OutputVector& deltas) override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;

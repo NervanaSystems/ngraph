@@ -102,9 +102,6 @@ autodiff::Adjoints::Adjoints(const OutputVector& ys, const OutputVector& cs)
     // before a node is visited.
     for (size_t i = 0; i < ys.size(); i++)
     {
-        Node* n = ys.at(i).get_node();
-        OutputVector t{cs.at(i)};
-        std::pair<Node*, OutputVector> pair = std::make_pair(n, t);
         m_adjoint_map.insert(std::make_pair(ys.at(i).get_node(), OutputVector{cs.at(i)}));
     }
 
@@ -129,12 +126,7 @@ autodiff::Adjoints::Adjoints(const OutputVector& ys, const OutputVector& cs)
             }
         }
         OutputVector deltas = get(node);
-        NodeVector delta_nodes;
-        for (auto delta : deltas)
-        {
-            delta_nodes.push_back(get_output_element(delta));
-        }
-        node->generate_adjoints(*this, delta_nodes);
+        node->generate_adjoints(*this, deltas);
     }
 }
 
@@ -202,11 +194,6 @@ void autodiff::Adjoints::add_delta_to_slice(const Output<Node>& x,
             upper_bounds,
             strides);
     }
-}
-
-std::shared_ptr<Node> autodiff::Adjoints::backprop_node(const Output<Node>& x)
-{
-    return get_output_element(backprop_output(x));
 }
 
 Output<Node> autodiff::Adjoints::backprop_output(const Output<Node>& x)

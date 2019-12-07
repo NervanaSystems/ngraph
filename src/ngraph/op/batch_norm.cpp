@@ -81,7 +81,7 @@ std::shared_ptr<Node> op::BatchNormTraining::copy_with_new_args(const NodeVector
 }
 
 void op::BatchNormTraining::generate_adjoints(autodiff::Adjoints& adjoints,
-                                              const NodeVector& deltas)
+                                              const OutputVector& deltas)
 {
     auto gamma = input_value(0);
     auto beta = input_value(1);
