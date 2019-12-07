@@ -52,7 +52,7 @@ namespace mlir
             return it->second;
         }
         void setBufferInfo(Operation* op, BufferInfo bufferInfo) { m_bufferInfo[op] = bufferInfo; }
-        void setBufferSize(unsigned bufferId, unsigned size) 
+        void setBufferSize(unsigned bufferId, unsigned size)
         {
             auto it = m_bufferSize.find(bufferId);
             if (it != m_bufferSize.end())
@@ -70,6 +70,7 @@ namespace mlir
             NGRAPH_CHECK(it != m_bufferSize.end(), "Buffer has no size!");
             return it->second;
         }
+
     private:
         // Records assignment of BufferInfo to each inplace op
         BufferInfoMap m_bufferInfo;

@@ -22,8 +22,6 @@
 #include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/ngraph_dialect/type.hpp"
 
-
-
 #include <llvm/ADT/BitVector.h>
 #include <llvm/ADT/DenseSet.h>
 #include <map>
@@ -250,7 +248,7 @@ namespace
             std::vector<int> opndOffsets;
             BufferInfo bufferInfo;
             int bufferId = -1, baseOffset = 0;
-            unsigned bufferSize = 0; 
+            unsigned bufferSize = 0;
 
             if (isInputOrOutputValue(op->getResult(0)))
             {
@@ -610,7 +608,7 @@ namespace
     {
         auto tensorType = value->getType().dyn_cast<NGTensorType>();
         NGRAPH_CHECK(tensorType, "Invalid type to find buffer size for");
-        
+
         unsigned bufferSize = offset * std::ceil(tensorType.getElementBitWidth() / 8);
         bufferSize += tensorType.getSizeInBytes();
 

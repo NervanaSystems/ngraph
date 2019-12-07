@@ -186,7 +186,7 @@ namespace
     public:
         void runOnModule() override;
         SmallVector<Value*, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
-        /// Allocates a linear buffer for a temporary memref that shares its 
+        /// Allocates a linear buffer for a temporary memref that shares its
         /// underlying memory. Used in conjunction with createTempMemref
         Value* createTempBuffer(int bufferId, PatternRewriter& rewriter);
         /// Creates an allocation or view of a memref.
@@ -194,8 +194,8 @@ namespace
         /// buffer   Optional buffer value to create view over
         /// offset   Optional offset into the buffer this view starts at
         ///
-        /// If buffer is null it allocates a Memref directly and Offset is ignored. 
-        /// If not, it creates a view over the pre-allocated buffer at the given offset. 
+        /// If buffer is null it allocates a Memref directly and Offset is ignored.
+        /// If not, it creates a view over the pre-allocated buffer at the given offset.
         Value*
             createTempMemref(Type type, Value* buffer, unsigned offset, PatternRewriter& rewriter);
         /// Inserts dealloc Ops for each temporary allocated by AllocOp
@@ -207,6 +207,7 @@ namespace
         void populateNGraphToAffineConversionPatterns(OwningRewritePatternList& patterns);
         void findOutputValues();
         void insertNoAliasArgAttrs();
+
     private:
         NGraphTypeConverter typeConverter;
         // List of temporary memrefs to deallocate at end of function
@@ -1455,7 +1456,8 @@ namespace
         LLVM_DEBUG(llvm::dbgs() << "Axis OK\n");
 
         // Check if the buffer id and offsets are consistent with what's exepcted
-        LLVM_DEBUG(llvm::dbgs() << "Dst (id, offset) = (" << dstBufferId << ", " << dstOffset << ")\n");
+        LLVM_DEBUG(llvm::dbgs() << "Dst (id, offset) = (" << dstBufferId << ", " << dstOffset
+                                << ")\n");
         // relative offset in the buffer
         int opndOffset = 0;
         for (auto opnd : op->getOperands())
@@ -1463,7 +1465,8 @@ namespace
             bufferInfo = memAnalysis->getBufferInfo(opnd->getDefiningOp());
             auto srcBufferId = bufferInfo.m_bufferId;
             auto srcOffset = bufferInfo.m_offset;
-            LLVM_DEBUG(llvm::dbgs() << "Src (id, offset) = (" << srcBufferId << ", " << srcOffset << ")\n");
+            LLVM_DEBUG(llvm::dbgs() << "Src (id, offset) = (" << srcBufferId << ", " << srcOffset
+                                    << ")\n");
             if (!bufferInfo.isValid() || srcBufferId != dstBufferId ||
                 srcOffset != (opndOffset + dstOffset))
             {
@@ -1475,7 +1478,7 @@ namespace
             opndOffset += tensorType.getNumElements();
         }
         LLVM_DEBUG(llvm::dbgs() << "Buffer ID and Offsets OK\n");
-        
+
         return true;
     }
 }
