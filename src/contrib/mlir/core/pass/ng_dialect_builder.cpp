@@ -41,6 +41,7 @@
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/less.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -475,6 +476,76 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::AvgPool)
 
     attr = NgDialectObj.getShapeAsAttr(avgPoolNode->get_padding_above());
     avgPoolOp.setPadAbove(attr);
+    return op;
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::AvgPoolBackprop)
+{
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGAvgPoolBackpropOp>(ngNode);
+    auto avgPoolBackpropNode = static_cast<const ngraph::op::AvgPoolBackprop*>(ngNode);
+    auto avgPoolBackpropOp = llvm::cast<mlir::NGAvgPoolBackpropOp>(op);
+
+    mlir::BoolAttr boolAttr = NgDialectObj.m_builder.getBoolAttr(
+        avgPoolBackpropNode->get_include_padding_in_avg_computation());
+    avgPoolBackpropOp.setIncludePadding(boolAttr);
+
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(avgPoolBackpropNode->get_window_shape());
+    avgPoolBackpropOp.setWindowShape(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolBackpropNode->get_window_movement_strides());
+    avgPoolBackpropOp.setWindowMovementStrides(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolBackpropNode->get_padding_below());
+    avgPoolBackpropOp.setPadBelow(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolBackpropNode->get_padding_above());
+    avgPoolBackpropOp.setPadAbove(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolBackpropNode->get_forward_arg_shape());
+    avgPoolBackpropOp.setForwardArgShape(attr);
+    return op;
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::MaxPool)
+{
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGMaxPoolOp>(ngNode);
+    auto maxPoolNode = static_cast<const ngraph::op::MaxPool*>(ngNode);
+    auto maxPoolOp = llvm::cast<mlir::NGMaxPoolOp>(op);
+
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(maxPoolNode->get_window_shape());
+    maxPoolOp.setWindowShape(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(maxPoolNode->get_window_movement_strides());
+    maxPoolOp.setWindowMovementStrides(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(maxPoolNode->get_padding_below());
+    maxPoolOp.setPadBelow(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(maxPoolNode->get_padding_above());
+    maxPoolOp.setPadAbove(attr);
+    return op;
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::MaxPoolBackprop)
+{
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGMaxPoolBackpropOp>(ngNode);
+    auto maxPoolBackpropNode = static_cast<const ngraph::op::MaxPool*>(ngNode);
+    auto maxPoolBackpropOp = llvm::cast<mlir::NGMaxPoolBackpropOp>(op);
+
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(maxPoolBackpropNode->get_window_shape());
+    maxPoolBackpropOp.setWindowShape(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(maxPoolBackpropNode->get_window_movement_strides());
+    maxPoolBackpropOp.setWindowMovementStrides(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(maxPoolBackpropNode->get_padding_below());
+    maxPoolBackpropOp.setPadBelow(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(maxPoolBackpropNode->get_padding_above());
+    maxPoolBackpropOp.setPadAbove(attr);
     return op;
 }
 

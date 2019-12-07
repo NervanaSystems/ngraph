@@ -36,6 +36,7 @@
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/less.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -573,6 +574,57 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
 
         return ((arg0_rank == 4 && avg_pool->get_window_shape().size() == 2) ||
                 (arg0_rank == 5 && avg_pool->get_window_shape().size() == 3)) &&
+               node->get_input_element_type(0) == element::f32;
+    }
+
+    if (TI(ngraph::op::AvgPoolBackprop) == TI(*node))
+    {
+        // AvgPoolBackprop is only supported through callback
+        if (std::getenv("NGRAPH_MLIR_CALLBACK") == nullptr)
+        {
+            return false;
+        }
+        auto avg_pool_backprop = static_cast<ngraph::op::AvgPoolBackprop*>(node.get());
+
+        auto arg0_shape = node->get_input_shape(0);
+        auto arg0_rank = arg0_shape.size();
+
+        return ((arg0_rank == 4 && avg_pool_backprop->get_window_shape().size() == 2) ||
+                (arg0_rank == 5 && avg_pool_backprop->get_window_shape().size() == 3)) &&
+               node->get_input_element_type(0) == element::f32;
+    }
+
+    if (TI(ngraph::op::MaxPoolBackprop) == TI(*node))
+    {
+        // MaxPoolBackprop is only supported through callback
+        if (std::getenv("NGRAPH_MLIR_CALLBACK") == nullptr)
+        {
+            return false;
+        }
+        auto max_pool_backprop = static_cast<ngraph::op::MaxPoolBackprop*>(node.get());
+
+        auto arg0_shape = node->get_input_shape(0);
+        auto arg0_rank = arg0_shape.size();
+
+        return ((arg0_rank == 4 && max_pool_backprop->get_window_shape().size() == 2) ||
+                (arg0_rank == 5 && max_pool_backprop->get_window_shape().size() == 3)) &&
+               node->get_input_element_type(0) == element::f32;
+    }
+
+    if (TI(ngraph::op::MaxPool) == TI(*node))
+    {
+        // MaxPool is only supported through callback
+        if (std::getenv("NGRAPH_MLIR_CALLBACK") == nullptr)
+        {
+            return false;
+        }
+        auto max_pool = static_cast<ngraph::op::MaxPool*>(node.get());
+
+        auto arg0_shape = node->get_input_shape(0);
+        auto arg0_rank = arg0_shape.size();
+
+        return ((arg0_rank == 4 && max_pool->get_window_shape().size() == 2) ||
+                (arg0_rank == 5 && max_pool->get_window_shape().size() == 3)) &&
                node->get_input_element_type(0) == element::f32;
     }
 

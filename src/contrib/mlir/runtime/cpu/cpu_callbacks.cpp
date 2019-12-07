@@ -28,74 +28,225 @@
 using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
 
-/// Callback for AvgPool
-static void __mlir_mkldnn_avgpool(size_t rank, void* input, void* output, void* attrs)
+/// Callback for MaxPoolBackprop
+static void
+    __mlir_mkldnn_maxpoolbackprop(size_t rank, void* src, void* delta, void* output, void* attrs)
 {
-    auto memRefInput = reinterpret_cast<StaticMemRef*>(input);
+    auto memRefSrc = reinterpret_cast<StaticMemRef*>(src);
+    auto memRefDelta = reinterpret_cast<StaticMemRef*>(delta);
     auto memRefOutput = reinterpret_cast<StaticMemRef*>(output);
-    mkldnn::memory::dims dims(rank);
-    mkldnn::memory::dims strides(rank);
+    mkldnn::memory::dims srcDims(rank);
+    mkldnn::memory::dims srcStrides(rank);
+    mkldnn::memory::dims deltaDims(rank);
+    mkldnn::memory::dims deltaStrides(rank);
     for (auto i = 0; i < rank; i++)
     {
-        dims[i] = memRefInput->shapeAndStrides[i];
-        strides[i] = memRefInput->shapeAndStrides[rank + i];
-    }
-    mkldnn::memory::dims outDims(rank);
-    for (auto i = 0; i < rank; i++)
-    {
-        outDims[i] = memRefOutput->shapeAndStrides[i];
+        srcDims[i] = memRefSrc->shapeAndStrides[i];
+        srcStrides[i] = memRefSrc->shapeAndStrides[rank + i];
+        deltaDims[i] = memRefDelta->shapeAndStrides[i];
+        deltaStrides[i] = memRefDelta->shapeAndStrides[rank + i];
     }
 
     // build mkldnn primitive and execute
     mkldnn::memory::data_type dtype = mkldnn::memory::data_type::f32;
-    auto input_desc = mkldnn::memory::desc(dims, dtype, strides);
-    auto result_desc = mkldnn::memory::desc(outDims, dtype, mkldnn::memory::format_tag::any);
+    auto diff_dst_desc = mkldnn::memory::desc(deltaDims, dtype, deltaStrides);
+    auto diff_src_desc = mkldnn::memory::desc(srcDims, dtype, srcStrides);
     mkldnn::primitive_attr attr;
     mkldnn::engine cpu_engine(mkldnn::engine::kind::cpu, 0);
-    mkldnn::pooling_forward::primitive_desc avgpool_pd;
+    mkldnn::pooling_forward::primitive_desc maxpool_pd_f;
+    mkldnn::pooling_backward::primitive_desc maxpool_pd_b;
     if (rank == 4)
     {
         auto pAttrs = reinterpret_cast<poolAttrs<2>*>(attrs);
-        auto avgpool_desc = mkldnn::pooling_forward::desc(
-            mkldnn::prop_kind::forward_inference,
-            (pAttrs->includePaddingInAvgComputation
-                 ? mkldnn::algorithm::pooling_avg_include_padding
-                 : mkldnn::algorithm::pooling_avg_exclude_padding),
-            input_desc,
-            result_desc,
+        auto maxpool_desc_f = mkldnn::pooling_forward::desc(
+            mkldnn::prop_kind::forward_training,
+            mkldnn::algorithm::pooling_max,
+            diff_src_desc,
+            diff_dst_desc,
             mkldnn::memory::dims{pAttrs->windowStrides[0], pAttrs->windowStrides[1]},
             mkldnn::memory::dims{pAttrs->windowShape[0], pAttrs->windowShape[1]},
             mkldnn::memory::dims{pAttrs->padBelow[0], pAttrs->padBelow[1]},
             mkldnn::memory::dims{pAttrs->padAbove[0], pAttrs->padAbove[1]});
-        avgpool_pd = mkldnn::pooling_forward::primitive_desc(avgpool_desc, attr, cpu_engine);
+        auto maxpool_desc_b = mkldnn::pooling_backward::desc(
+            mkldnn::algorithm::pooling_max,
+            diff_src_desc,
+            diff_dst_desc,
+            mkldnn::memory::dims{pAttrs->windowStrides[0], pAttrs->windowStrides[1]},
+            mkldnn::memory::dims{pAttrs->windowShape[0], pAttrs->windowShape[1]},
+            mkldnn::memory::dims{pAttrs->padBelow[0], pAttrs->padBelow[1]},
+            mkldnn::memory::dims{pAttrs->padAbove[0], pAttrs->padAbove[1]});
+        maxpool_pd_f = mkldnn::pooling_forward::primitive_desc(maxpool_desc_f, attr, cpu_engine);
+        maxpool_pd_b = mkldnn::pooling_backward::primitive_desc(
+            maxpool_desc_b, attr, cpu_engine, maxpool_pd_f);
     }
     else if (rank == 5)
     {
         auto pAttrs = reinterpret_cast<poolAttrs<3>*>(attrs);
-        auto avgpool_desc = mkldnn::pooling_forward::desc(
-            mkldnn::prop_kind::forward_inference,
-            (pAttrs->includePaddingInAvgComputation
-                 ? mkldnn::algorithm::pooling_avg_include_padding
-                 : mkldnn::algorithm::pooling_avg_exclude_padding),
-            input_desc,
-            result_desc,
+        auto maxpool_desc_f = mkldnn::pooling_forward::desc(
+            mkldnn::prop_kind::forward_training,
+            mkldnn::algorithm::pooling_max,
+            diff_src_desc,
+            diff_dst_desc,
             mkldnn::memory::dims{
                 pAttrs->windowStrides[0], pAttrs->windowStrides[1], pAttrs->windowStrides[2]},
             mkldnn::memory::dims{
                 pAttrs->windowShape[0], pAttrs->windowShape[1], pAttrs->windowShape[2]},
             mkldnn::memory::dims{pAttrs->padBelow[0], pAttrs->padBelow[1], pAttrs->padBelow[2]},
             mkldnn::memory::dims{pAttrs->padAbove[0], pAttrs->padAbove[1], pAttrs->padAbove[2]});
-        avgpool_pd = mkldnn::pooling_forward::primitive_desc(avgpool_desc, attr, cpu_engine);
+        auto maxpool_desc_b = mkldnn::pooling_backward::desc(
+            mkldnn::algorithm::pooling_max,
+            diff_src_desc,
+            diff_dst_desc,
+            mkldnn::memory::dims{
+                pAttrs->windowStrides[0], pAttrs->windowStrides[1], pAttrs->windowStrides[2]},
+            mkldnn::memory::dims{
+                pAttrs->windowShape[0], pAttrs->windowShape[1], pAttrs->windowShape[2]},
+            mkldnn::memory::dims{pAttrs->padBelow[0], pAttrs->padBelow[1], pAttrs->padBelow[2]},
+            mkldnn::memory::dims{pAttrs->padAbove[0], pAttrs->padAbove[1], pAttrs->padAbove[2]});
+        auto maxpool_pd_f =
+            mkldnn::pooling_forward::primitive_desc(maxpool_desc_f, attr, cpu_engine);
+        maxpool_pd_f = mkldnn::pooling_forward::primitive_desc(maxpool_desc_f, attr, cpu_engine);
+        maxpool_pd_b = mkldnn::pooling_backward::primitive_desc(
+            maxpool_desc_b, attr, cpu_engine, maxpool_pd_f);
     }
 
-    mkldnn::pooling_forward avgpool(avgpool_pd);
-    mkldnn::memory in{
-        avgpool_pd.src_desc(), cpu_engine, memRefInput->basePtr + memRefInput->offset};
-    mkldnn::memory out{
-        avgpool_pd.dst_desc(), cpu_engine, memRefOutput->basePtr + memRefOutput->offset};
+    mkldnn::pooling_forward maxpool_f(maxpool_pd_f);
+    mkldnn::memory src_mem{
+        maxpool_pd_b.diff_src_desc(), cpu_engine, memRefSrc->basePtr + memRefSrc->offset};
+    mkldnn::memory dst_mem{maxpool_pd_b.diff_dst_desc(), cpu_engine};
+    mkldnn::memory workspace{maxpool_pd_f.workspace_desc(), cpu_engine};
 
-    std::unordered_map<int, mkldnn::memory> exec_args = {{MKLDNN_ARG_SRC, in},
-                                                         {MKLDNN_ARG_DST, out}};
+    mkldnn::pooling_backward maxpool_b(maxpool_pd_b);
+    mkldnn::memory diff_dst{
+        maxpool_pd_b.diff_dst_desc(), cpu_engine, memRefDelta->basePtr + memRefDelta->offset};
+    mkldnn::memory diff_src{
+        maxpool_pd_b.diff_src_desc(), cpu_engine, memRefOutput->basePtr + memRefOutput->offset};
+
+    std::unordered_map<int, mkldnn::memory> exec_args_f = {
+        {MKLDNN_ARG_SRC, src_mem}, {MKLDNN_ARG_WORKSPACE, workspace}, {MKLDNN_ARG_DST, dst_mem}};
+    std::unordered_map<int, mkldnn::memory> exec_args_b = {{MKLDNN_ARG_DIFF_DST, diff_dst},
+                                                           {MKLDNN_ARG_WORKSPACE, workspace},
+                                                           {MKLDNN_ARG_DIFF_SRC, diff_src}};
+
+    mkldnn::stream s(cpu_engine);
+    try
+    {
+        maxpool_f.execute(s, exec_args_f);
+        s.wait();
+        maxpool_b.execute(s, exec_args_b);
+        s.wait();
+    }
+    catch (const mkldnn::error& e)
+    {
+        free(attrs);
+        throw ngraph_error("Could not run mkdnn primitive " + std::string(e.message));
+    }
+    free(attrs);
+}
+
+extern "C" void __mlir_mkldnn_maxpoolbackprop_4d(void* src, void* delta, void* output, void* attrs)
+{
+    __mlir_mkldnn_maxpoolbackprop(4, src, delta, output, attrs);
+}
+
+extern "C" void __mlir_mkldnn_maxpoolbackprop_5d(void* src, void* delta, void* output, void* attrs)
+{
+    __mlir_mkldnn_maxpoolbackprop(5, src, delta, output, attrs);
+}
+
+/// Callback for AvgPoolBackprop
+static void __mlir_mkldnn_avgpoolbackprop(size_t rank, void* input, void* output, void* attrs)
+{
+    auto memRefInput = reinterpret_cast<StaticMemRef*>(input);
+    auto memRefOutput = reinterpret_cast<StaticMemRef*>(output);
+    mkldnn::memory::dims dims(rank);
+    mkldnn::memory::dims strides(rank);
+    mkldnn::memory::dims outDims(rank);
+    for (auto i = 0; i < rank; i++)
+    {
+        dims[i] = memRefInput->shapeAndStrides[i];
+        strides[i] = memRefInput->shapeAndStrides[rank + i];
+        outDims[i] = memRefOutput->shapeAndStrides[i];
+    }
+
+    // build mkldnn primitive and execute
+    mkldnn::memory::data_type dtype = mkldnn::memory::data_type::f32;
+    auto diff_dst_desc = mkldnn::memory::desc(dims, dtype, strides);
+    auto diff_src_desc = mkldnn::memory::desc(outDims, dtype, mkldnn::memory::format_tag::any);
+    mkldnn::primitive_attr attr;
+    mkldnn::engine cpu_engine(mkldnn::engine::kind::cpu, 0);
+    mkldnn::pooling_backward::primitive_desc avgpool_pd_b;
+    if (rank == 4)
+    {
+        auto pAttrs = reinterpret_cast<poolAttrs<2>*>(attrs);
+        auto avgpool_desc_f = mkldnn::pooling_forward::desc(
+            mkldnn::prop_kind::forward_training,
+            (pAttrs->includePaddingInAvgComputation
+                 ? mkldnn::algorithm::pooling_avg_include_padding
+                 : mkldnn::algorithm::pooling_avg_exclude_padding),
+            diff_src_desc,
+            diff_dst_desc,
+            mkldnn::memory::dims{pAttrs->windowStrides[0], pAttrs->windowStrides[1]},
+            mkldnn::memory::dims{pAttrs->windowShape[0], pAttrs->windowShape[1]},
+            mkldnn::memory::dims{pAttrs->padBelow[0], pAttrs->padBelow[1]},
+            mkldnn::memory::dims{pAttrs->padAbove[0], pAttrs->padAbove[1]});
+        auto avgpool_desc_b = mkldnn::pooling_backward::desc(
+            (pAttrs->includePaddingInAvgComputation
+                 ? mkldnn::algorithm::pooling_avg_include_padding
+                 : mkldnn::algorithm::pooling_avg_exclude_padding),
+            diff_src_desc,
+            diff_dst_desc,
+            mkldnn::memory::dims{pAttrs->windowStrides[0], pAttrs->windowStrides[1]},
+            mkldnn::memory::dims{pAttrs->windowShape[0], pAttrs->windowShape[1]},
+            mkldnn::memory::dims{pAttrs->padBelow[0], pAttrs->padBelow[1]},
+            mkldnn::memory::dims{pAttrs->padAbove[0], pAttrs->padAbove[1]});
+        auto avgpool_pd_f =
+            mkldnn::pooling_forward::primitive_desc(avgpool_desc_f, attr, cpu_engine);
+        avgpool_pd_b = mkldnn::pooling_backward::primitive_desc(
+            avgpool_desc_b, attr, cpu_engine, avgpool_pd_f);
+    }
+    else if (rank == 5)
+    {
+        auto pAttrs = reinterpret_cast<poolAttrs<3>*>(attrs);
+        auto avgpool_desc_f = mkldnn::pooling_forward::desc(
+            mkldnn::prop_kind::forward_training,
+            (pAttrs->includePaddingInAvgComputation
+                 ? mkldnn::algorithm::pooling_avg_include_padding
+                 : mkldnn::algorithm::pooling_avg_exclude_padding),
+            diff_src_desc,
+            diff_dst_desc,
+            mkldnn::memory::dims{
+                pAttrs->windowStrides[0], pAttrs->windowStrides[1], pAttrs->windowStrides[2]},
+            mkldnn::memory::dims{
+                pAttrs->windowShape[0], pAttrs->windowShape[1], pAttrs->windowShape[2]},
+            mkldnn::memory::dims{pAttrs->padBelow[0], pAttrs->padBelow[1], pAttrs->padBelow[2]},
+            mkldnn::memory::dims{pAttrs->padAbove[0], pAttrs->padAbove[1], pAttrs->padAbove[2]});
+        auto avgpool_desc_b = mkldnn::pooling_backward::desc(
+            (pAttrs->includePaddingInAvgComputation
+                 ? mkldnn::algorithm::pooling_avg_include_padding
+                 : mkldnn::algorithm::pooling_avg_exclude_padding),
+            diff_src_desc,
+            diff_dst_desc,
+            mkldnn::memory::dims{
+                pAttrs->windowStrides[0], pAttrs->windowStrides[1], pAttrs->windowStrides[2]},
+            mkldnn::memory::dims{
+                pAttrs->windowShape[0], pAttrs->windowShape[1], pAttrs->windowShape[2]},
+            mkldnn::memory::dims{pAttrs->padBelow[0], pAttrs->padBelow[1], pAttrs->padBelow[2]},
+            mkldnn::memory::dims{pAttrs->padAbove[0], pAttrs->padAbove[1], pAttrs->padAbove[2]});
+        auto avgpool_pd_f =
+            mkldnn::pooling_forward::primitive_desc(avgpool_desc_f, attr, cpu_engine);
+        avgpool_pd_b = mkldnn::pooling_backward::primitive_desc(
+            avgpool_desc_b, attr, cpu_engine, avgpool_pd_f);
+    }
+
+    mkldnn::pooling_backward avgpool(avgpool_pd_b);
+    mkldnn::memory in{
+        avgpool_pd_b.diff_dst_desc(), cpu_engine, memRefInput->basePtr + memRefInput->offset};
+    mkldnn::memory out{
+        avgpool_pd_b.diff_src_desc(), cpu_engine, memRefOutput->basePtr + memRefOutput->offset};
+
+    std::unordered_map<int, mkldnn::memory> exec_args = {{MKLDNN_ARG_DIFF_DST, in},
+                                                         {MKLDNN_ARG_DIFF_SRC, out}};
 
     mkldnn::stream s(cpu_engine);
     try
@@ -105,18 +256,119 @@ static void __mlir_mkldnn_avgpool(size_t rank, void* input, void* output, void* 
     }
     catch (const mkldnn::error& e)
     {
+        free(attrs);
         throw ngraph_error("Could not run mkdnn primitive " + std::string(e.message));
+    }
+    free(attrs);
+}
+
+/// Callback for AvgPool and MaxPool
+static void __mlir_mkldnn_pooling(size_t rank, void* input, void* output, void* attrs, OpType type)
+{
+    auto memRefInput = reinterpret_cast<StaticMemRef*>(input);
+    auto memRefOutput = reinterpret_cast<StaticMemRef*>(output);
+    mkldnn::memory::dims dims(rank);
+    mkldnn::memory::dims strides(rank);
+    mkldnn::memory::dims outDims(rank);
+    for (auto i = 0; i < rank; i++)
+    {
+        dims[i] = memRefInput->shapeAndStrides[i];
+        strides[i] = memRefInput->shapeAndStrides[rank + i];
+        outDims[i] = memRefOutput->shapeAndStrides[i];
+    }
+
+    // build mkldnn primitive and execute
+    mkldnn::memory::data_type dtype = mkldnn::memory::data_type::f32;
+    auto input_desc = mkldnn::memory::desc(dims, dtype, strides);
+    auto result_desc = mkldnn::memory::desc(outDims, dtype, mkldnn::memory::format_tag::any);
+    mkldnn::primitive_attr attr;
+    mkldnn::engine cpu_engine(mkldnn::engine::kind::cpu, 0);
+    mkldnn::pooling_forward::primitive_desc pool_pd;
+    if (rank == 4)
+    {
+        auto pAttrs = reinterpret_cast<poolAttrs<2>*>(attrs);
+        mkldnn::algorithm alg = type == OpType::MAXPOOL
+                                    ? mkldnn::algorithm::pooling_max
+                                    : (pAttrs->includePaddingInAvgComputation
+                                           ? mkldnn::algorithm::pooling_avg_include_padding
+                                           : mkldnn::algorithm::pooling_avg_exclude_padding);
+        auto pool_desc = mkldnn::pooling_forward::desc(
+            mkldnn::prop_kind::forward_inference,
+            alg,
+            input_desc,
+            result_desc,
+            mkldnn::memory::dims{pAttrs->windowStrides[0], pAttrs->windowStrides[1]},
+            mkldnn::memory::dims{pAttrs->windowShape[0], pAttrs->windowShape[1]},
+            mkldnn::memory::dims{pAttrs->padBelow[0], pAttrs->padBelow[1]},
+            mkldnn::memory::dims{pAttrs->padAbove[0], pAttrs->padAbove[1]});
+        pool_pd = mkldnn::pooling_forward::primitive_desc(pool_desc, attr, cpu_engine);
+    }
+    else if (rank == 5)
+    {
+        auto pAttrs = reinterpret_cast<poolAttrs<3>*>(attrs);
+        mkldnn::algorithm alg = type == OpType::MAXPOOL
+                                    ? mkldnn::algorithm::pooling_max
+                                    : (pAttrs->includePaddingInAvgComputation
+                                           ? mkldnn::algorithm::pooling_avg_include_padding
+                                           : mkldnn::algorithm::pooling_avg_exclude_padding);
+        auto pool_desc = mkldnn::pooling_forward::desc(
+            mkldnn::prop_kind::forward_inference,
+            alg,
+            input_desc,
+            result_desc,
+            mkldnn::memory::dims{
+                pAttrs->windowStrides[0], pAttrs->windowStrides[1], pAttrs->windowStrides[2]},
+            mkldnn::memory::dims{
+                pAttrs->windowShape[0], pAttrs->windowShape[1], pAttrs->windowShape[2]},
+            mkldnn::memory::dims{pAttrs->padBelow[0], pAttrs->padBelow[1], pAttrs->padBelow[2]},
+            mkldnn::memory::dims{pAttrs->padAbove[0], pAttrs->padAbove[1], pAttrs->padAbove[2]});
+        pool_pd = mkldnn::pooling_forward::primitive_desc(pool_desc, attr, cpu_engine);
+    }
+
+    mkldnn::pooling_forward pool(pool_pd);
+    mkldnn::memory in{pool_pd.src_desc(), cpu_engine, memRefInput->basePtr + memRefInput->offset};
+    mkldnn::memory out{
+        pool_pd.dst_desc(), cpu_engine, memRefOutput->basePtr + memRefOutput->offset};
+
+    std::unordered_map<int, mkldnn::memory> exec_args = {{MKLDNN_ARG_SRC, in},
+                                                         {MKLDNN_ARG_DST, out}};
+
+    mkldnn::stream s(cpu_engine);
+    try
+    {
+        pool.execute(s, exec_args);
+        s.wait();
+    }
+    catch (const mkldnn::error& e)
+    {
+        free(attrs);
+        throw ngraph_error("Could not run mkdnn primitive " + std::string(e.message));
+    }
+    free(attrs);
+}
+
+extern "C" void __mlir_mkldnn_pooling_4d(void* input, void* output, void* attrs, OpType type)
+{
+    if (type == OpType::AVGPOOL || type == OpType::MAXPOOL)
+    {
+        __mlir_mkldnn_pooling(4, input, output, attrs, type);
+    }
+    else if (type == OpType::AVGPOOLBACKPROP)
+    {
+        __mlir_mkldnn_avgpoolbackprop(4, input, output, attrs);
     }
 }
 
-extern "C" void __mlir_mkldnn_avgpool_4d(void* input, void* output, void* attrs)
+extern "C" void __mlir_mkldnn_pooling_5d(void* input, void* output, void* attrs, OpType type)
 {
-    __mlir_mkldnn_avgpool(4, input, output, attrs);
-}
-
-extern "C" void __mlir_mkldnn_avgpool_5d(void* input, void* output, void* attrs)
-{
-    __mlir_mkldnn_avgpool(5, input, output, attrs);
+    if (type == OpType::AVGPOOL || type == OpType::MAXPOOL)
+    {
+        __mlir_mkldnn_pooling(5, input, output, attrs, type);
+    }
+    else if (type == OpType::AVGPOOLBACKPROP)
+    {
+        __mlir_mkldnn_avgpoolbackprop(5, input, output, attrs);
+    }
 }
 
 /// Callback for Softmax

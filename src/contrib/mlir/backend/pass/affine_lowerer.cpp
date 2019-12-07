@@ -166,6 +166,12 @@ namespace
                                PatternRewriter& rewriter,
                                DialectLoweringPass& pass);
 
+    template <typename OP>
+    void lowerPooling(Operation* op,
+                      ArrayRef<Value*> operands,
+                      PatternRewriter& rewriter,
+                      DialectLoweringPass& pass);
+
     ValueHandle createZeroConstant(mlir::Type type);
 
     /// Conversion from types in the nGraph dialect to the Standard dialect.
@@ -1522,54 +1528,81 @@ namespace
 
     REWRITER(NGAvgPoolOp)
     {
-        auto avgPool = cast<NGAvgPoolOp>(op);
-        auto loc = avgPool.getLoc();
+        lowerPooling<mlir::NGAvgPoolOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGAvgPoolBackpropOp)
+    {
+        lowerPooling<mlir::NGAvgPoolBackpropOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGMaxPoolOp)
+    {
+        lowerPooling<mlir::NGMaxPoolOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGMaxPoolBackpropOp)
+    {
+        auto pooling = cast<NGMaxPoolBackpropOp>(op);
+        auto loc = pooling.getLoc();
 
         // Retrieve/generate Values for operands and result.
         ScopedContext scope(rewriter, loc);
-        Value* lhs = operands[0];
-        auto windowShape = avgPool.windowShape().getValue();
-        auto windowStrides = avgPool.windowMovementStrides().getValue();
-        auto padBelow = avgPool.padBelow().getValue();
-        auto padAbove = avgPool.padAbove().getValue();
+        Value* src = operands[0];
+        Value* delta = operands[1];
+        ArrayRef<Attribute> windowShape = pooling.windowShape().getValue();
+        ArrayRef<Attribute> windowStrides = pooling.windowMovementStrides().getValue();
+        ArrayRef<Attribute> padBelow = pooling.padBelow().getValue();
+        ArrayRef<Attribute> padAbove = pooling.padAbove().getValue();
 
         Value* result = pass.buildOutputDefs(op, rewriter)[0];
-        NGRAPH_CHECK(lhs && result, "Unexpected null values in AvgPoolOp");
+        NGRAPH_CHECK(src && delta && result, "Unexpected null values in MaxPoolBackprop Op");
 
         auto resultTy = result->getType().dyn_cast<MemRefType>();
         auto resultShape = resultTy.getShape();
-        auto lhsTy = lhs->getType().dyn_cast<MemRefType>();
-        auto lhsShape = lhsTy.getShape();
+        auto srcTy = src->getType().dyn_cast<MemRefType>();
+        auto srcShape = srcTy.getShape();
+        auto deltaTy = delta->getType().dyn_cast<MemRefType>();
+        auto deltaShape = deltaTy.getShape();
         NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
-        NGRAPH_CHECK(lhsTy, "Unexpected non-memref LHS type");
+        NGRAPH_CHECK(srcTy, "Unexpected non-memref src type");
+        NGRAPH_CHECK(deltaTy, "Unexpected non-memref delta type");
 
         Type elemTy = resultTy.getElementType();
-        NGRAPH_CHECK(elemTy == lhsTy.getElementType(), "Types mismatch in SoftmaxOp");
+        NGRAPH_CHECK(elemTy == srcTy.getElementType() && elemTy == deltaTy.getElementType(),
+                     "Types mismatch in MaxPoolBackprop");
 
-        NGRAPH_CHECK((lhsShape.size() == 4 && resultShape.size() == 4) ||
-                         (lhsShape.size() == 5 && resultShape.size() == 5),
-                     "MKLDNN AvgPool operation is only supported for 3D and 5D tensors");
+        NGRAPH_CHECK((srcShape.size() == 4 && resultShape.size() == 4) ||
+                         (srcShape.size() == 5 && resultShape.size() == 5),
+                     "MKLDNN pooling operation is only supported for 3D and 5D tensors");
 
         auto floatTy = rewriter.getF32Type();
         auto int64Ty = rewriter.getIntegerType(64);
 
         SmallVector<mlir::Value*, 4> args;
         FuncOp callBackFunc;
-        if (lhsShape.size() == 4)
+        if (srcShape.size() == 4)
         {
             auto memref4dTy = MemRefType::get({-1, -1, -1, -1}, floatTy, {}, 0);
-            auto lhsCast =
-                rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), lhs, memref4dTy);
+            auto srcCast =
+                rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), src, memref4dTy);
+            auto deltaCast =
+                rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), delta, memref4dTy);
             auto resultCast =
                 rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), result, memref4dTy);
 
-            callBackFunc = pass.getCallDecl(
-                "__mlir_mkldnn_avgpool_4d", {memref4dTy, memref4dTy, int64Ty}, {}, rewriter);
+            callBackFunc = pass.getCallDecl("__mlir_mkldnn_maxpoolbackprop_4d",
+                                            {memref4dTy, memref4dTy, memref4dTy, int64Ty},
+                                            {},
+                                            rewriter);
 
             auto attrPtr = static_cast<poolAttrs<2>*>(malloc(sizeof(poolAttrs<2>)));
             auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
                 rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
-            attrPtr->includePaddingInAvgComputation = avgPool.includePadding();
+            attrPtr->includePaddingInAvgComputation = false;
             for (auto i = 0; i < 2; i++)
             {
                 attrPtr->windowShape[i] = windowShape[i].cast<IntegerAttr>().getInt();
@@ -1577,23 +1610,27 @@ namespace
                 attrPtr->padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
                 attrPtr->padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
             }
-            args = {lhsCast, resultCast, attrPtrArg};
+            args = {srcCast, deltaCast, resultCast, attrPtrArg};
         }
-        else if (lhsShape.size() == 5)
+        else if (srcShape.size() == 5)
         {
             auto memref5dTy = MemRefType::get({-1, -1, -1, -1, -1}, floatTy, {}, 0);
-            auto lhsCast =
-                rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), lhs, memref5dTy);
+            auto srcCast =
+                rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), src, memref5dTy);
+            auto deltaCast =
+                rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), delta, memref5dTy);
             auto resultCast =
                 rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), result, memref5dTy);
 
-            callBackFunc = pass.getCallDecl(
-                "__mlir_mkldnn_avgpool_5d", {memref5dTy, memref5dTy, int64Ty}, {}, rewriter);
+            callBackFunc = pass.getCallDecl("__mlir_mkldnn_maxpoolbackprop_5d",
+                                            {memref5dTy, memref5dTy, memref5dTy, int64Ty},
+                                            {},
+                                            rewriter);
 
             auto attrPtr = static_cast<poolAttrs<3>*>(malloc(sizeof(poolAttrs<3>)));
             auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
                 rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
-            attrPtr->includePaddingInAvgComputation = avgPool.includePadding();
+            attrPtr->includePaddingInAvgComputation = false;
             for (auto i = 0; i < 3; i++)
             {
                 attrPtr->windowShape[i] = windowShape[i].cast<IntegerAttr>().getInt();
@@ -1601,12 +1638,11 @@ namespace
                 attrPtr->padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
                 attrPtr->padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
             }
-            args = {lhsCast, resultCast, attrPtrArg};
+            args = {srcCast, deltaCast, resultCast, attrPtrArg};
         }
 
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
-
         return matchSuccess();
     }
 
@@ -1833,6 +1869,122 @@ namespace
             });
         }
 
+        rewriter.replaceOp(op, result);
+    }
+
+    template <typename OP>
+    void lowerPooling(Operation* op,
+                      ArrayRef<Value*> operands,
+                      PatternRewriter& rewriter,
+                      DialectLoweringPass& pass)
+    {
+        auto pooling = cast<OP>(op);
+        auto loc = pooling.getLoc();
+
+        // Retrieve/generate Values for operands and result.
+        ScopedContext scope(rewriter, loc);
+        Value* lhs = operands[0];
+        ArrayRef<Attribute> windowShape = pooling.windowShape().getValue();
+        ArrayRef<Attribute> windowStrides = pooling.windowMovementStrides().getValue();
+        ArrayRef<Attribute> padBelow = pooling.padBelow().getValue();
+        ArrayRef<Attribute> padAbove = pooling.padAbove().getValue();
+
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(lhs && result, "Unexpected null values in Pooling Op");
+
+        auto resultTy = result->getType().dyn_cast<MemRefType>();
+        auto resultShape = resultTy.getShape();
+        auto lhsTy = lhs->getType().dyn_cast<MemRefType>();
+        auto lhsShape = lhsTy.getShape();
+        NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
+        NGRAPH_CHECK(lhsTy, "Unexpected non-memref LHS type");
+
+        Type elemTy = resultTy.getElementType();
+        NGRAPH_CHECK(elemTy == lhsTy.getElementType(), "Types mismatch in Pooling");
+
+        NGRAPH_CHECK((lhsShape.size() == 4 && resultShape.size() == 4) ||
+                         (lhsShape.size() == 5 && resultShape.size() == 5),
+                     "MKLDNN pooling operation is only supported for 3D and 5D tensors");
+
+        auto floatTy = rewriter.getF32Type();
+        auto int64Ty = rewriter.getIntegerType(64);
+
+        SmallVector<mlir::Value*, 4> args;
+        FuncOp callBackFunc;
+        OpType ty;
+        bool includePadding = false;
+        if (isa<NGAvgPoolOp>(op))
+        {
+            ty = OpType::AVGPOOL;
+            includePadding = cast<NGAvgPoolOp>(op).includePadding();
+        }
+        else if (isa<NGAvgPoolBackpropOp>(op))
+        {
+            ty = OpType::AVGPOOLBACKPROP;
+            includePadding = cast<NGAvgPoolBackpropOp>(op).includePadding();
+        }
+        else if (isa<NGMaxPoolOp>(op))
+        {
+            ty = OpType::MAXPOOL;
+        }
+        if (lhsShape.size() == 4)
+        {
+            auto memref4dTy = MemRefType::get({-1, -1, -1, -1}, floatTy, {}, 0);
+            auto lhsCast =
+                rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), lhs, memref4dTy);
+            auto resultCast =
+                rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), result, memref4dTy);
+
+            callBackFunc = pass.getCallDecl("__mlir_mkldnn_pooling_4d",
+                                            {memref4dTy, memref4dTy, int64Ty, int64Ty},
+                                            {},
+                                            rewriter);
+
+            auto attrPtr = static_cast<poolAttrs<2>*>(malloc(sizeof(poolAttrs<2>)));
+            auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
+                rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
+            attrPtr->includePaddingInAvgComputation = includePadding;
+            for (auto i = 0; i < 2; i++)
+            {
+                attrPtr->windowShape[i] = windowShape[i].cast<IntegerAttr>().getInt();
+                attrPtr->windowStrides[i] = windowStrides[i].cast<IntegerAttr>().getInt();
+                attrPtr->padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
+                attrPtr->padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
+            }
+            auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
+                rewriter.getUnknownLoc(), static_cast<int64_t>(ty), 64);
+            args = {lhsCast, resultCast, attrPtrArg, opTypeArg};
+        }
+        else if (lhsShape.size() == 5)
+        {
+            auto memref5dTy = MemRefType::get({-1, -1, -1, -1, -1}, floatTy, {}, 0);
+            auto lhsCast =
+                rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), lhs, memref5dTy);
+            auto resultCast =
+                rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), result, memref5dTy);
+
+            callBackFunc = pass.getCallDecl("__mlir_mkldnn_pooling_5d",
+                                            {memref5dTy, memref5dTy, int64Ty, int64Ty},
+                                            {},
+                                            rewriter);
+
+            auto attrPtr = static_cast<poolAttrs<3>*>(malloc(sizeof(poolAttrs<3>)));
+            auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
+                rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
+            attrPtr->includePaddingInAvgComputation = includePadding;
+            for (auto i = 0; i < 3; i++)
+            {
+                attrPtr->windowShape[i] = windowShape[i].cast<IntegerAttr>().getInt();
+                attrPtr->windowStrides[i] = windowStrides[i].cast<IntegerAttr>().getInt();
+                attrPtr->padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
+                attrPtr->padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
+            }
+            auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
+                rewriter.getUnknownLoc(), static_cast<int64_t>(ty), 64);
+            args = {lhsCast, resultCast, attrPtrArg, opTypeArg};
+        }
+
+        rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
     }
 

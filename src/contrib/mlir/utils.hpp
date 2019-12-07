@@ -26,6 +26,60 @@ namespace ngraph
     {
         namespace ngmlir
         {
+            enum class OpType
+            {
+                ADD = 0,
+                AVGPOOL,
+                AVGPOOLBACKPROP,
+                BATCHNORM3ARGS,
+                BATCHNORM5ARGS,
+                BATCHNORMBACKPROP,
+                BOUNDEDRELU,
+                CONCAT,
+                CONVERTLAYOUT,
+                CONVOLUTION,
+                CONVOLUTIONRELU,
+                CONVOLUTIONADD,
+                CONVOLUTIONBIAS,
+                CONVOLUTIONBIASADD,
+                CONVOLUTIONBACKPROPDATA,
+                CONVOLUTIONBACKPROPWEIGHTS,
+                CONVOLUTIONBACKPROPWEIGHTSBIAS,
+                GELU,
+                GELUBACKPROP,
+                GROUPCONVOLUTION,
+                GROUPCONVOLUTIONBIAS,
+                DECONVOLUTIONBIAS,
+                LEAKYRELU,
+                LRN,
+                LSTM,
+                MAXPOOL,
+                MAXPOOLBACKPROP,
+                MAXPOOLBACKPROPFORWARD,
+                MAXPOOLBACKPROPBACKWARD,
+                MAXPOOLWITHINDICES,
+                MAXPOOLWITHINDICESBACKPROP,
+                QUANTIZE,
+                DEQUANTIZE,
+                QUANTIZEDAVGPOOL,
+                QUANTIZEDMAXPOOL,
+                QUANTIZEDCONCAT,
+                QUANTIZEDDOTBIAS,
+                QUANTIZEDMATMUL,
+                QUANTIZEDCONVOLUTION,
+                QUANTIZEDCONVOLUTIONBIAS,
+                QUANTIZEDCONVOLUTIONBIASADD,
+                QUANTIZEDCONVOLUTIONBIASSIGNEDADD,
+                QUANTIZEDCONVOLUTIONRELU,
+                RELU,
+                RELUBACKPROP,
+                RNN,
+                SIGMOID,
+                SIGMOIDBACKPROP,
+                SLICE,
+                SOFTMAX
+            };
+
             template <int N>
             struct poolAttrs
             {
