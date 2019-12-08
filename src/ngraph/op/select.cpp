@@ -94,7 +94,7 @@ bool op::v1::Select::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-void op::v1::Select::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v1::Select::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     if (get_auto_broadcast().m_type != op::AutoBroadcastType::NONE)
     {

@@ -142,7 +142,7 @@ shared_ptr<Node> op::v1::GroupConvolution::copy_with_new_args(const NodeVector& 
 }
 
 void op::v1::GroupConvolution::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                 const NodeVector& deltas)
+                                                 const OutputVector& deltas)
 {
     ngraph_error("Not Yet Implemented");
 }
@@ -307,7 +307,7 @@ void op::v1::GroupConvolutionBackpropData::validate_and_infer_types()
 }
 
 void op::v1::GroupConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                             const NodeVector& deltas)
+                                                             const OutputVector& deltas)
 {
     ngraph_error("Not Yet Implemented");
 }
