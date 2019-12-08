@@ -13,10 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+
 #include <memory>
 
+#include "exceptions.hpp"
 #include "mod.hpp"
-#include "ngraph/frontend/onnx_import/exceptions.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/fused/mod.hpp"
 #include "ngraph/op/util/attr_types.hpp"

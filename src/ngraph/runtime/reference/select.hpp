@@ -19,6 +19,8 @@
 #include <cstddef>
 #include <iostream>
 
+#include "ngraph/runtime/reference/autobroadcast_binop.hpp"
+
 namespace ngraph
 {
     namespace runtime
@@ -36,6 +38,28 @@ namespace ngraph
                 {
                     out[i] = arg0[i] ? arg1[i] : arg2[i];
                 }
+            }
+
+            template <typename T>
+            void select(const char* arg0,
+                        const T* arg1,
+                        const T* arg2,
+                        T* out,
+                        const Shape& arg0_shape,
+                        const Shape& arg1_shape,
+                        const Shape& arg2_shape,
+                        const op::AutoBroadcastSpec& broadcast_spec)
+            {
+                autobroadcast_select(
+                    arg0,
+                    arg1,
+                    arg2,
+                    out,
+                    arg0_shape,
+                    arg1_shape,
+                    arg2_shape,
+                    broadcast_spec,
+                    [](char s, T x, T y) -> T { return static_cast<T>(s ? x : y); });
             }
         }
     }

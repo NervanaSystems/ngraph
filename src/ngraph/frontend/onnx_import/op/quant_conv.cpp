@@ -18,10 +18,9 @@
 #include <memory>
 #include <vector>
 
+#include "exceptions.hpp"
 #include "ngraph/builder/quantization/quantized_linear_convolution.hpp"
 #include "ngraph/coordinate_diff.hpp"
-#include "ngraph/frontend/onnx_import/exceptions.hpp"
-#include "ngraph/frontend/onnx_import/op/conv.hpp"
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/quantized_convolution.hpp"
