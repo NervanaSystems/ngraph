@@ -591,7 +591,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
     auto beta = std::make_shared<pattern::op::Label>(element::f32, beta_shape);
     double eps = 0.001;
     auto bn = std::make_shared<ngraph::op::BatchNormTraining>(eps, gamma, beta, input);
-    auto goe = Output<Node>(bn, 0);
+    auto goe = Output<Node>(bn, 0).as_single_output_node();
     auto prelu = std::make_shared<ngraph::op::Relu>(goe);
 
     auto callback = [input, gamma, beta](pattern::Matcher& m) {

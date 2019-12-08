@@ -1198,7 +1198,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
             // TODO (pthoreho) : For MKLDNN > V1.0, change mkldnn kernel integration to compute for
             // LSTMCell
             // with peephole as well.
-            if (is_type<ngraph::op::Constant>(node.get_argument(6)))
+            if (is_type<ngraph::op::Constant>(node.input_value(6).get_node_shared_ptr()))
             {
                 return true;
             }
@@ -1871,8 +1871,9 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
                         if (!n->is_parameter() && !n->is_constant())
                         {
                             bool is_head = true;
-                            for (auto arg : n->get_arguments())
+                            for (auto input_value : n->input_values())
                             {
+                                auto arg = input_value.get_node_shared_ptr();
                                 if (!arg->is_parameter() && !arg->is_constant())
                                 {
                                     is_head = false;

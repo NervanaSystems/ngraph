@@ -44,7 +44,7 @@ static bool cse_convertlayout(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 
     auto a_layout_desc = get_tensor_layout(a);
     auto b_layout_desc = get_tensor_layout(b);
-    bool is_args_same = (ar_a->get_argument(0) == ar_b->get_argument(0));
+    bool is_args_same = (ar_a->input_value(0) == ar_b->input_value(0));
     bool is_output_mem_desc_same = runtime::cpu::mkldnn_utils::compare_mkldnn_mds(
         a_layout_desc->get_mkldnn_md(), b_layout_desc->get_mkldnn_md());
 

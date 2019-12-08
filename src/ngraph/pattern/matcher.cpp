@@ -17,8 +17,6 @@
 #include "matcher.hpp"
 #include <algorithm>
 #include <regex>
-#include <typeindex>
-#include <typeinfo>
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
@@ -266,7 +264,7 @@ namespace ngraph
             auto p_pattern_node = pattern_node.get();
             auto p_graph_node = graph_node.get();
 
-            if (std::type_index(typeid(*p_pattern_node)) == std::type_index(typeid(*p_graph_node)))
+            if (p_pattern_node->get_type_info() == p_graph_node->get_type_info())
             {
                 return abort_match(watermark,
                                    match_arguments(pattern_node, graph_node, pattern_map));

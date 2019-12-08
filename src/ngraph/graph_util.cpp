@@ -148,8 +148,15 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
                  target->get_output_size(),
                  " must be equal output_order size: ",
                  output_order.size());
-    cerr << "*** Target: " << *target << endl;
-    cerr << "*** Replac: " << *replacement << endl;
+
+    NGRAPH_CHECK(!target->get_users().empty(),
+                 "Attempted to replace unreachable node '",
+                 *target,
+                 "'. Replacement: '",
+                 *replacement,
+                 "'");
+    NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
+
     OutputVector target_values;
     OutputVector replacement_values;
 
@@ -158,31 +165,22 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
         // We are replacing a particular output
         target_goe = target.get();
         Output<Node> target_value(target);
-        NGRAPH_CHECK(!target_value.get_target_inputs().empty(),
-                     "Attempted to replace unreachable node '",
-                     *target,
-                     "'. Replacement: '",
-                     *replacement,
-                     "'");
         target_values.push_back(target_value);
         target = target_value.get_node_shared_ptr();
+    }
+    else
+    {
+        target_values = target->outputs();
+    }
+
+    if (is_type<op::GetOutputElement>(replacement))
+    {
         Output<Node> replacement_value(replacement);
         replacement_values.push_back(replacement_value);
         replacement = replacement_value.get_node_shared_ptr();
     }
     else
     {
-        if (!is_type<op::GetOutputElement>(target))
-        {
-            NGRAPH_CHECK(!target->get_users().empty(),
-                         "Attempted to replace unreachable node '",
-                         *target,
-                         "'. Replacement: '",
-                         *replacement,
-                         "'");
-        }
-        NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
-        target_values = target->outputs();
         replacement_values = replacement->outputs();
     }
 
@@ -306,10 +304,9 @@ std::list<std::shared_ptr<ngraph::Node>>
         {
             // get (already) cloned arguments and clone the node
             OutputVector cloned_args;
-            for (auto input : node->inputs())
+            for (auto value : node->input_values())
             {
-                Output<Node> output = input.get_source_output();
-                cloned_args.push_back(output.for_node(node_map.at(output.get_node())));
+                cloned_args.push_back(value.for_node(node_map.at(value.get_node())));
             }
             std::vector<std::shared_ptr<Node>> cloned_dependencies;
             for (auto& dependency : node->get_control_dependencies())
@@ -344,6 +341,70 @@ std::list<std::shared_ptr<ngraph::Node>>
     for (auto node : nodes)
     {
         cloned_nodes.push_back(node_map.at(node.get()));
+    }
+    return cloned_nodes;
+}
+
+std::list<std::shared_ptr<ngraph::Node>>
+    ngraph::clone_nodes(const std::list<std::shared_ptr<ngraph::Node>>& nodes,
+                        WeakNodeOutputMap& output_map)
+{
+    // for each node in topological order
+    auto sorted_nodes = topological_sort(nodes, true);
+    std::list<shared_ptr<Node>> cloned_nodes;
+    for (auto node : sorted_nodes)
+    {
+        auto node_outputs = node->outputs();
+        for (auto value : node_outputs)
+        {
+            if (output_map.count(value) == 0)
+            {
+                // We need this node cloned
+                // get (already) cloned arguments and clone the node
+                OutputVector cloned_args;
+                for (auto value : node->input_values())
+                {
+                    cloned_args.push_back(output_map.at(value));
+                }
+                NodeVector cloned_dependencies;
+                for (auto& dependency : node->get_control_dependencies())
+                {
+                    for (auto dependency_value : dependency->outputs())
+                    {
+                        shared_ptr<Node> dependent =
+                            output_map.at(dependency_value).get_node_shared_ptr();
+                        if (find(cloned_dependencies.begin(),
+                                 cloned_dependencies.end(),
+                                 dependent) == cloned_dependencies.end())
+                        {
+                            cloned_dependencies.push_back(dependent);
+                        }
+                    }
+                }
+                auto cloned_node = node->copy_with_new_inputs(cloned_args, cloned_dependencies);
+                cloned_nodes.push_back(cloned_node);
+                if (node->get_friendly_name() != node->get_name())
+                {
+                    // There is a friendly name for this node so copy it
+                    cloned_node->set_friendly_name(node->get_friendly_name());
+                }
+
+                for (auto tag : node->get_provenance_tags())
+                {
+                    cloned_node->add_provenance_tag(tag);
+                }
+                cloned_node->set_op_annotations(node->get_op_annotations());
+                for (auto cloned_value : cloned_node->outputs())
+                {
+                    auto original_value = node_outputs.at(cloned_value.get_index());
+                    if (output_map.count(original_value) == 0)
+                    {
+                        output_map[original_value] = cloned_value;
+                    }
+                }
+                break;
+            }
+        }
     }
     return cloned_nodes;
 }
@@ -397,16 +458,17 @@ bool ngraph::is_equal_to_const_value(std::string const_value, const Output<Node>
 // Insert result and parameter node between src_node and dst_node by splitting the graph
 //
 // Before:                        |  After:
-// (Device:0)         (Device:1)  |  (Device:0)         (Device:0)  (Device:1)         (Device:1)
-// +-----+---+       +---+-----+  |  +-----+---+       +---+-----+  +-----+---+       +---+-----+
-// |     |   |       |   |     |  |  |     |   |       |   |     |  |     |   |       |   |     |
-// |     | o +--[0]--> i |     |  |  |     | o +--[4]--> i |     |  |     | o +--[8]--> i |     |
-// |     |   <--[1]--+   |     |  |  |     |   <--[5]--+   |     |  |     |   <--[9]--+   |     |
-// | src +---+       +---+ dst |  |  | src +---+       +---+ res |  | par +---+       +---+ dst |
-// |     |               |     |  |  |     |               |     |  |     |               |     |
-// |     +------[2]------>     |  |  |     +------[6]------>     |  |     +------[10]----->     |
-// |     <------[3]------+     |  |  |     <------[7]------+     |  |     <------[11]-----+     |
-// +-----+               +-----+  |  +-----+               +-----+  +-----+               +-----+
+// (Device:0)         (Device:1)  |  (Device:0)         (Device:0)  (Device:1) (Device:1)
+// +-----+---+       +---+-----+  |  +-----+---+       +---+-----+  +-----+---+ +---+-----+
+// |     |   |       |   |     |  |  |     |   |       |   |     |  |     |   |       |   | |
+// |     | o +--[0]--> i |     |  |  |     | o +--[4]--> i |     |  |     | o +--[8]--> i | |
+// |     |   <--[1]--+   |     |  |  |     |   <--[5]--+   |     |  |     |   <--[9]--+   | |
+// | src +---+       +---+ dst |  |  | src +---+       +---+ res |  | par +---+       +---+ dst
+// |
+// |     |               |     |  |  |     |               |     |  |     |               | |
+// |     +------[2]------>     |  |  |     +------[6]------>     |  |     +------[10]-----> |
+// |     <------[3]------+     |  |  |     <------[7]------+     |  |     <------[11]-----+ |
+// +-----+               +-----+  |  +-----+               +-----+  +-----+ +-----+
 pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
     ngraph::insert_result_parameter_split(const shared_ptr<Node>& src_node,
                                           const shared_ptr<Node>& dst_node)
@@ -586,6 +648,10 @@ NodeVector ngraph::extract_subgraph(const NodeVector& results, const NodeVector&
 
 bool ngraph::is_used(Node* node)
 {
+    if (is_type<op::GetOutputElement>(node))
+    {
+        node = node->input_value(0).get_node();
+    }
     std::unordered_set<Node*> instances_seen;
     std::stack<Node*, std::vector<Node*>> stack;
     stack.push(node);

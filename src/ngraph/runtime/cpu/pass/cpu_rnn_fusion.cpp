@@ -445,8 +445,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         auto lstm_node = std::make_shared<ngraph::op::Lstm>(
             src_layer, src_iter, weights_layer, weights_iter, bias, rnn_type);
 
-        auto lstm_ht_output = Output<Node>(lstm_node, 0);
-        auto lstm_ht_ct_output = Output<Node>(lstm_node, 1);
+        auto lstm_ht_output = Output<Node>(lstm_node, 0).as_single_output_node();
+        auto lstm_ht_ct_output = Output<Node>(lstm_node, 1).as_single_output_node();
 
         // dst_iter of lstm mkldnn output holds the results of both recurrent state
         // tensor outputs. we need to slice the ct.
@@ -650,8 +650,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         std::vector<std::shared_ptr<ngraph::op::Slice>> ht_slice_per_timestep(sequence_len,
                                                                               nullptr);
-        auto rnn_ht_goe = Output<Node>(rnn, 0);
-        auto rnn_ht_ct_goe = Output<Node>(rnn, 1);
+        auto rnn_ht_goe = Output<Node>(rnn, 0).as_single_output_node();
+        auto rnn_ht_ct_goe = Output<Node>(rnn, 1).as_single_output_node();
 
         for (size_t i = 0, start_index = 0; i < sequence_len; i++, start_index += batch_size)
         {
@@ -679,35 +679,32 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         for (size_t index = 0; index < sequence_len; index++)
         {
-            auto goe_nodes = ngraph::op::get_output_elements(lstm_nodes[index]);
+            auto lstm_outputs = lstm_nodes[index]->outputs();
 
-            // if there is no GOE followed by the Lstm, their might be pattern match error
+            // if there are not two outpus for the Lstm, there might be pattern match error
             // we will return safely
-            if (goe_nodes.size() != 2)
+            if (lstm_outputs.size() != 2)
             {
                 return false;
             }
 
             // dst_layer of the lstm cell
-            auto goe_0 = goe_nodes[0];
+            auto goe_0 = lstm_outputs[0];
 
-            if (goe_0)
+            for (auto goe0_input : goe_0.get_target_inputs())
             {
-                for (auto goe0_user : goe_0->get_users())
+                auto goe0_user = goe0_input.get_node()->shared_from_this();
+                if (ngraph::is_used(goe0_user.get()))
                 {
-                    if (ngraph::is_used(goe0_user.get()))
+                    if (!is_type<ngraph::op::Slice>(goe0_user.get()))
                     {
-                        if (!is_type<ngraph::op::Slice>(goe0_user))
-                        {
-                            NGRAPH_DEBUG << "Did not find LSTM slice to replace with RNN slice";
-                            return false;
-                        }
-                        map_to_rnn_slices.insert(
-                            make_pair(goe0_user, ht_slice_per_timestep[index]));
-
-                        NGRAPH_DEBUG << "ht_slice: " << ht_slice_per_timestep[index]->get_name()
-                                     << " goe0_user " << goe0_user->get_name() << " ";
+                        NGRAPH_DEBUG << "Did not find LSTM slice to replace with RNN slice";
+                        return false;
                     }
+                    map_to_rnn_slices.insert(make_pair(goe0_user, ht_slice_per_timestep[index]));
+
+                    NGRAPH_DEBUG << "ht_slice: " << ht_slice_per_timestep[index]->get_name()
+                                 << " goe0_user " << goe0_user->get_name() << " ";
                 }
             }
         }
@@ -715,7 +712,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         auto rnn_ct_goe = ngraph::op::get_output_elements(lstm_nodes[sequence_len - 1])[1];
         if (rnn_ct_goe)
         {
-            replace_collapse_node_user(rnn_ct_goe, rnn_ht_ct_goe);
+            replace_collapse_node_user(rnn_ct_goe, rnn_ht_ct_goe->output(0));
         }
 
         // now go through the lstm goe_0 consumers and replace them with the slice

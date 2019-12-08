@@ -1751,9 +1751,9 @@ namespace ngraph
                 writer.block_begin();
                 const ngraph::op::EmbeddingLookup* embed =
                     static_cast<const ngraph::op::EmbeddingLookup*>(node);
-                auto index_type_name = embed->get_argument(0)->get_element_type().c_type_string();
+                auto index_type_name = embed->input_value(0).get_element_type().c_type_string();
                 auto type_name = embed->get_element_type().c_type_string();
-                auto element_count = shape_size(embed->get_argument(0)->get_shape());
+                auto element_count = shape_size(embed->input_value(0).get_shape());
 
                 writer << "reference::embedding<" << type_name << "," << index_type_name << ">(";
                 writer << "            " << args[0].get_name() << ",\n";

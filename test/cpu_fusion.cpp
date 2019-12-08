@@ -1178,7 +1178,7 @@ shared_ptr<Function> gen_deconv(const bool add_goe)
     auto beta = std::make_shared<op::Parameter>(element::f32, bias_shape);
     double eps = 0.001;
 
-    auto goe_bn = std::make_shared<op::GetOutputElement>(conv, 0);
+    auto goe_bn = - (- conv);
 
     // Adding a goe will stop fusion since the patterns wont expect to see this op
     auto bn = add_goe
@@ -1265,7 +1265,7 @@ shared_ptr<Function> gen_groupconv_batchnorm(const bool add_goe,
     auto mean = std::make_shared<op::Parameter>(element::f32, shape_bn);
     auto var = std::make_shared<op::Parameter>(element::f32, shape_bn);
 
-    auto goe_bn = std::make_shared<op::GetOutputElement>(group_conv, 0);
+    auto goe_bn = - (- group_conv);
 
     // Adding a goe will stop fusion since the patterns wont expect to see this op
     auto bn =
@@ -1703,7 +1703,9 @@ TEST(cpu_fusion, maxpool_with_indices_in_mxnet)
     auto fprop_cache = ngraph::cache_fprop(f, maybe_bf);
 
     auto mpwi_bprop = fprop_cache.bprop->get_results().at(0)->get_argument(0);
+    cerr << "****:" << *mpwi_bprop << endl;
     ASSERT_TRUE(as_type_ptr<op::Parameter>(mpwi_bprop->get_argument(0)));
+    cerr << "****:" << *mpwi_bprop->get_argument(2) << endl;
     ASSERT_TRUE(as_type_ptr<op::Parameter>(mpwi_bprop->get_argument(2)));
 }
 
@@ -2655,7 +2657,7 @@ TEST(cpu_fusion, MLIR_DISABLE_TEST(fuse_dropout))
 
         auto mult = std::make_shared<op::Multiply>(gen_mask, input);
 
-        auto goe = std::make_shared<op::GetOutputElement>(mult, 0);
+        auto goe = - (- mult);
 
         auto pdivide = fuse ? std::make_shared<op::Divide>(mult, value)
                             : std::make_shared<op::Divide>(goe, value);

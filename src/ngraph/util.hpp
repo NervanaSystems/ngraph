@@ -204,18 +204,12 @@ namespace ngraph
 
     AxisVector get_permutation_to_default_order(const AxisVector& axis_order);
 
-    //
-    // Return type struct for cache_fprop, with the modified fprop and bprop
-    // functions
-    // and a list of the nodes that have been appended to fprop output/bprop
-    // input
-    //
     struct FpropCache
     {
         std::shared_ptr<Function> fprop;
         std::shared_ptr<Function> bprop;
-        std::vector<Node*> fprop_output_nodes;
-        NodeMap node_param_map;
+        std::vector<WeakNodeOutput> fprop_output_nodes;
+        WeakNodeOutputMap node_param_map;
     };
 
     //
