@@ -43,7 +43,7 @@ namespace ngraph
         }
 
         /// \brief Register a custom factory for type_info
-        void register_factory(const DiscreteTypeInfo & type_info, Factory factory)
+        void register_factory(const DiscreteTypeInfo& type_info, Factory factory)
         {
             std::lock_guard<std::mutex> guard(get_registry_mutex());
             m_factory_map[type_info] = factory;
@@ -64,7 +64,7 @@ namespace ngraph
         }
 
         /// \brief Check to see if a factory is registered
-        bool has_factory(const DiscreteTypeInfo & info)
+        bool has_factory(const DiscreteTypeInfo& info)
         {
             std::lock_guard<std::mutex> guard(get_registry_mutex());
             return m_factory_map.find(info) != m_factory_map.end();
@@ -78,7 +78,7 @@ namespace ngraph
         }
 
         /// \brief Create an instance for type_info
-        BASE_TYPE* create(const DiscreteTypeInfo & type_info)
+        BASE_TYPE* create(const DiscreteTypeInfo& type_info)
         {
             std::lock_guard<std::mutex> guard(get_registry_mutex());
             auto it = m_factory_map.find(type_info);
