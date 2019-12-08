@@ -154,7 +154,8 @@ namespace ngraph
 
         virtual void generate_adjoints(autodiff::Adjoints& /* adjoints */,
                                        const NodeVector& /* deltas */)
-            NGRAPH_DEPRECATED("use generate_adjoints(autodiff::Adjoints&, const OutputVector&) instead")
+            NGRAPH_DEPRECATED(
+                "use generate_adjoints(autodiff::Adjoints&, const OutputVector&) instead")
         {
         }
         /// \brief Moves nodes that would be deleted from inputs to nodes to avoid stack overflows
