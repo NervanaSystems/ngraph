@@ -123,26 +123,15 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
                                                  m_max_pool->get_padding_below(),
                                                  m_max_pool->get_padding_above());
 
-    auto max_pool_with_indices_output =
-        Output<Node>(max_pool_with_indices, 0).as_single_output_node();
-    auto max_pool_with_indices_indices =
-        Output<Node>(max_pool_with_indices, 1).as_single_output_node();
-
     // rewire users to use a new MaxPoolWithIndices (maxpool's output)
-    for (auto& o : m_max_pool->get_outputs())
-    {
-        std::set<ngraph::descriptor::Input*> copy{begin(o.get_inputs()), end(o.get_inputs())};
-        for (auto i : copy)
-        {
-            i->replace_output(max_pool_with_indices_output->get_outputs().at(0));
-        }
-    }
+    replace_node(m_max_pool->output(0).as_single_output_node(),
+                 max_pool_with_indices->output(0).as_single_output_node());
 
     // create a new max_pool_with_indices_bprop
     auto max_pool_with_indices_bprop =
         std::make_shared<op::MaxPoolWithIndicesBackprop>(pattern_map[data],
                                                          pattern_map[delta],
-                                                         max_pool_with_indices_indices,
+                                                         max_pool_with_indices->output(1),
                                                          m_max_pool->get_window_shape(),
                                                          m_max_pool->get_window_movement_strides(),
                                                          m_max_pool->get_padding_below(),
@@ -151,7 +140,7 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
     ngraph::replace_node(m_max_pool_bprop, max_pool_with_indices_bprop);
     if (m_return_indices)
     {
-        m_indices_list.push_back(max_pool_with_indices_indices);
+        m_indices_list.push_back(max_pool_with_indices->output(1).as_single_output_node());
     }
     return true;
 }
