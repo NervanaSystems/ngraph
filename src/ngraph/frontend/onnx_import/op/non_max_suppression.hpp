@@ -18,7 +18,6 @@
 
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/and.hpp"
 
 namespace ngraph
 {
