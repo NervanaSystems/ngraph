@@ -16,13 +16,7 @@ graph {
         elem_type: 1
         shape {
           dim {
-            dim_value: 4
-          }
-          dim {
-            dim_value: 4
-          }
-          dim {
-            dim_value: 4
+            dim_value: 8
           }
         }
       }
@@ -35,7 +29,7 @@ graph {
         elem_type: 7
         shape {
           dim {
-            dim_value: 2
+            dim_value: 4
           }
           dim {
             dim_value: 1
@@ -51,12 +45,6 @@ graph {
         elem_type: 1
         shape {
           dim {
-            dim_value: 2
-          }
-          dim {
-            dim_value: 4
-          }
-          dim {
             dim_value: 4
           }
         }
@@ -70,13 +58,7 @@ graph {
         elem_type: 1
         shape {
           dim {
-            dim_value: 4
-          }
-          dim {
-            dim_value: 4
-          }
-          dim {
-            dim_value: 4
+            dim_value: 8
           }
         }
       }

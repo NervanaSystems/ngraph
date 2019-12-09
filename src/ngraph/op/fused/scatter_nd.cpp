@@ -118,16 +118,16 @@ NodeVector op::ScatterND::decompose_op() const
 
     element::Type data_et = get_input_element_type(DATA);
 
-    const auto true_values = op::Constant::create(element::i64, data_shape, {1});
-    const auto false_values = op::Constant::create(element::i64, updates_shape, {0});
+    const auto true_values = op::Constant::create(element::i64, updates_shape, {1});
+    const auto false_values = op::Constant::create(element::i64, data_shape, {0});
 
-    const auto mask = std::make_shared<op::v0::ScatterNDAdd>(true_values, indices, false_values);
+    const auto mask = std::make_shared<op::v0::ScatterNDAdd>(false_values, indices, true_values);
 
     const auto mask_bool = std::make_shared<op::v0::Convert>(mask, element::boolean);
 
     const auto zeros = op::Constant::create(data_et, data_shape, {0});
 
-    const auto intermediate = std::make_shared<op::v0::Select>(mask_bool, data, zeros);
+    const auto intermediate = std::make_shared<op::v0::Select>(mask_bool, zeros, data);
 
     return {std::make_shared<op::v0::ScatterNDAdd>(intermediate, indices, updates)};
 }
