@@ -17,6 +17,7 @@
 #include "ngraph/op/fused/scatter_nd.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/convert.hpp"
 #include "ngraph/op/scatter_nd_add.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/shape.hpp"
@@ -117,15 +118,16 @@ NodeVector op::ScatterND::decompose_op() const
 
     element::Type data_et = get_input_element_type(DATA);
 
-    const auto true_values = op::Constant::create(element::Type_t::boolean, data_shape, {true});
-    const auto false_values =
-        op::Constant::create(element::Type_t::boolean, updates_shape, {false});
+    const auto true_values = op::Constant::create(element::i64, data_shape, {1});
+    const auto false_values = op::Constant::create(element::i64, updates_shape, {0});
 
     const auto mask = std::make_shared<op::v0::ScatterNDAdd>(true_values, indices, false_values);
 
+    const auto mask_bool = std::make_shared<op::v0::Convert>(mask, element::boolean);
+
     const auto zeros = op::Constant::create(data_et, data_shape, {0});
 
-    const auto intermediate = std::make_shared<op::v0::Select>(mask, data, zeros);
+    const auto intermediate = std::make_shared<op::v0::Select>(mask_bool, data, zeros);
 
     return {std::make_shared<op::v0::ScatterNDAdd>(intermediate, indices, updates)};
 }
