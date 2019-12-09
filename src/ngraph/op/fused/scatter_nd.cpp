@@ -28,30 +28,27 @@ static int DATA = 0;
 static int INDICES = 1;
 static int UPDATES = 2;
 
-constexpr NodeTypeInfo op::ScatterND::type_info;
+constexpr NodeTypeInfo op::v0::ScatterND::type_info;
 
-shared_ptr<Node> op::ScatterND::copy_with_new_args(const NodeVector& new_args) const
+op::v0::ScatterND::ScatterND(const Output<Node>& data,
+                             const Output<Node>& indices,
+                             const Output<Node>& updates)
+    : op::util::FusedOp({data, indices, updates})
+{
+    constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::v0::ScatterND::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<ScatterND>(new_args.at(DATA), new_args.at(INDICES), new_args.at(UPDATES));
 }
 
-void op::ScatterND::validate_and_infer_types()
+void op::v0::ScatterND::pre_validate_and_infer_types()
 {
     element::Type data_et = get_input_element_type(DATA);
     element::Type indices_et = get_input_element_type(INDICES);
     element::Type updates_et = get_input_element_type(UPDATES);
-
-    const PartialShape& data_shape = get_input_shape(DATA);
-    const PartialShape& indices_shape = get_input_shape(INDICES);
-    const PartialShape& updates_shape = get_input_shape(UPDATES);
-
-    const size_t data_rank = static_cast<size_t>(data_shape.rank());
-    const size_t indices_rank = static_cast<size_t>(indices_shape.rank());
-    const size_t updates_rank = static_cast<size_t>(updates_shape.rank());
-
-    const size_t indices_last_dim =
-        static_cast<size_t>(indices_shape[static_cast<size_t>(indices_shape.rank()) - 1]);
 
     NODE_VALIDATION_CHECK(this,
                           indices_et == element::i32 || indices_et == element::i64,
@@ -59,29 +56,54 @@ void op::ScatterND::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(this,
                           data_et == updates_et,
-                          "Updates element type must be the same as element type of data. ");
+                          "Updates element type must be the same as element type of data.");
 
-    NODE_VALIDATION_CHECK(this,
-                          indices_shape.rank().is_dynamic() || indices_rank >= 1,
-                          "Indices rank is expected to be at least 1.");
+    const PartialShape& data_ps = get_input_partial_shape(DATA);
+    const PartialShape& indices_ps = get_input_partial_shape(INDICES);
+    const PartialShape& updates_ps = get_input_partial_shape(UPDATES);
 
-    NODE_VALIDATION_CHECK(this,
-                          data_shape.rank().is_dynamic() || data_rank >= 1,
-                          "Data rank is expected to be at least 1.");
+    if (data_ps.rank().is_static())
+    {
+        const size_t data_rank = static_cast<size_t>(data_ps.rank());
+        NODE_VALIDATION_CHECK(this, data_rank >= 1, "Data rank is expected to be at least 1.");
+    }
 
-    NODE_VALIDATION_CHECK(this,
-                          data_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
-                              indices_last_dim <= data_rank,
-                          "Last dimension of indices can be at most the rank of data.");
+    if (indices_ps.rank().is_static())
+    {
+        const size_t indices_rank = static_cast<size_t>(indices_ps.rank());
 
-    const size_t expected_updates_rank = data_rank + indices_rank - indices_last_dim - 1;
+        NODE_VALIDATION_CHECK(
+            this, indices_rank >= 1, "Indices rank is expected to be at least 1.");
+    }
 
-    NODE_VALIDATION_CHECK(
-        this,
-        data_shape.rank().is_dynamic() || updates_rank == expected_updates_rank,
-        "Updates rank is expected to be equal data_rank + indices_rank - indices_shape[-1] - 1.");
+    if (indices_ps.rank().is_static() && data_ps.rank().is_static())
+    {
+        const size_t indices_rank = static_cast<size_t>(indices_ps.rank());
+        const size_t last_dim_pos = indices_rank - 1;
+        const Dimension indices_last_dim = indices_ps[last_dim_pos];
+        if (indices_last_dim.is_static())
+        {
+            const size_t indices_last_dim_value = static_cast<size_t>(indices_last_dim);
+            const size_t data_rank = static_cast<size_t>(data_ps.rank());
+            NODE_VALIDATION_CHECK(this,
+                                  indices_last_dim_value <= data_rank,
+                                  "Last dimension of indices can be at most the rank of data.");
 
-    set_output_type(0, data_et, data_shape);
+            if (updates_ps.rank().is_static())
+            {
+                const size_t expected_updates_rank =
+                    data_rank + indices_rank - indices_last_dim_value - 1;
+
+                NODE_VALIDATION_CHECK(
+                    this,
+                    static_cast<size_t>(updates_ps.rank()) == expected_updates_rank,
+                    "Updates rank is expected to be equal data_rank + indices_rank - "
+                    "indices_shape[-1] - 1.");
+            }
+        }
+    }
+
+    set_output_type(0, data_et, data_ps);
 }
 
 NodeVector op::ScatterND::decompose_op() const

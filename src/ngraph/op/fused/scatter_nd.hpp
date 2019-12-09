@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/op/op.hpp"
+#include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
@@ -25,10 +25,10 @@ namespace ngraph
         namespace v0
         {
             /// \brief  Replace values within provided tensor by `updates` according to `indices`.
-            class NGRAPH_API ScatterND : public Op
+            class NGRAPH_API ScatterND : public op::util::FusedOp
             {
             public:
-                static constexpr NodeTypeInfo type_info{"ScatterND", 1};
+                static constexpr NodeTypeInfo type_info{"ScatterND", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ScatterND() = default;
                 /// \param data The tensor whithn slice-values will be updated
@@ -36,19 +36,9 @@ namespace ngraph
                 /// \param updates The tensor of replacement-slice-values
                 ScatterND(const Output<Node>& data,
                           const Output<Node>& indices,
-                          const Output<Node>& updates)
-                    : Op({data, indices, updates})
-                {
-                    constructor_validate_and_infer_types();
-                }
+                          const Output<Node>& updates);
 
-                void validate_and_infer_types() override;
-
-                void generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                       const NodeVector& /* deltas */) override
-                {
-                    throw ngraph_error("Not yet implemented");
-                }
+                void pre_validate_and_infer_types() override;
 
                 virtual NodeVector decompose_op() const override;
 
