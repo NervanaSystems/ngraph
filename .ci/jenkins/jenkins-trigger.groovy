@@ -22,7 +22,7 @@
 // original script -- we only need to provide this new trigger hook.
 //
 
-String JENKINS_BRANCH = "a2f84baf6fd5e25b0c4c2d47e2af5fd582efa0af"
+String JENKINS_BRANCH = "aslepko/r0.26"
 String TIMEOUTTIME = "3600"
 
 // Constants
