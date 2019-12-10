@@ -45,6 +45,6 @@ Mathematical Definition
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Sign
+.. doxygenclass:: ngraph::op::v0::Sign
    :project: ngraph
    :members:

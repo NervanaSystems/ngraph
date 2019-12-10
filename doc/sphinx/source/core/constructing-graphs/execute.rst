@@ -270,16 +270,15 @@ programmatically or manually) in order to successfully retreive shape data.
 
 * :ref:`create_dyn_tensor`
 * :ref:`call_graph_vw_`
-* :ref:`call_graph_vwnew`
+* :ref:`dyn_ten_result`
 * :ref:`kpsh`
 
 
-Create and compile a graph for ``f(x) = x + x`` where the provided info 
-of shape ``x`` is ``(2,?)``:
+Create and compile a graph where the provided info of shape ``x`` is ``(2,?)``:
 
 .. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
    :language: cpp
-   :lines: 27-32
+   :lines: 35-40
 
 
 .. _create_dyn_tensor:
@@ -291,7 +290,7 @@ Create a dynamic tensor of shape ``(2,?)``
 
 .. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
    :language: cpp
-   :lines: 35
+   :lines: 43-46
 
 At this point, ``t_out->get_shape()`` would throw an exception, while 
 ``t_out->get_partial_shape()`` would return ``"(2,?)"``.
@@ -299,29 +298,25 @@ At this point, ``t_out->get_shape()`` would throw an exception, while
 
 .. _call_graph_vw_:
 
-Write shape
------------
-
-Call the graph to write a value with shape (2,3) to t_out
+Initialize input of shape
+-------------------------
 
 .. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
    :language: cpp
-   :lines: 38-40
+   :lines: 57-62
 
 At this point, ``t_out->get_shape()`` would return ``Shape{2,3}``,
 while ``t_out->get_partial_shape()`` would return ``"(2,?)"``.
 
 
-.. _call_graph_vwnew:
+.. _dyn_ten_result:
 
-Write new shape
----------------
-
-Call the graph again, to write a value with a different shape to ``t_out``.
+Get the result
+--------------
 
 .. literalinclude:: ../../../../examples/dynamic_tensor/partial_shape.cpp
    :language: cpp
-   :lines: 44-45
+   :lines: 64-80
 
 At this point, ``t_out->get_shape()`` would return ``Shape{2,20}``,
 while ``t_out->get_partial_shape()`` would return ``"(2,?)"``.

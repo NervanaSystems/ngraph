@@ -41,7 +41,7 @@ the new code is highlighted below:
 
 .. literalinclude:: ../../../../examples/mnist_mlp/dist_mnist_mlp.cpp
    :language: cpp
-   :lines: 178-194
+   :lines: 174-189
    :emphasize-lines: 8-11
 
 See the `full code`_ in the ``examples`` folder ``/doc/examples/mnist_mlp/dist_mnist_mlp.cpp``. 
