@@ -70,7 +70,7 @@ void op::GetOutputElement::generate_adjoints(autodiff::Adjoints& adjoints,
 {
     auto delta = deltas.at(0);
 
-    adjoints.add_delta(input_value(0).get_node_shared_ptr(), delta);
+    adjoints.add_delta(input_value(0), delta);
 }
 
 /// Get all the nodes that uses the current node
