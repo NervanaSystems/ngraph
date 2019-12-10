@@ -359,7 +359,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_tree_1)
     auto add2 = make_shared<op::Add>(A, B);
     auto concat = make_shared<op::Concat>(NodeVector{add1, add2}, 1);
     auto f = make_shared<Function>(make_shared<op::Add>(concat, concat), ParameterVector{A, B});
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 1, 1, 1});
@@ -387,7 +387,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_tree_2)
     auto concat2 = make_shared<op::Concat>(NodeVector{add1, add2}, 1);
     auto concat12 = make_shared<op::Concat>(NodeVector{concat1, concat2}, 1);
     auto f = make_shared<Function>(make_shared<op::Add>(concat12, concat12), ParameterVector{A, B});
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
@@ -417,7 +417,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_tree_3)
     auto concat34 = make_shared<op::Concat>(NodeVector{concat3, concat4}, 1);
     auto concat14 = make_shared<op::Concat>(NodeVector{concat12, concat34}, 1);
     auto f = make_shared<Function>(make_shared<op::Add>(concat14, concat14), ParameterVector{A, B});
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 1, 1, 1});
@@ -443,7 +443,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_add_concat)
     auto concat = make_shared<op::Concat>(NodeVector{add1, add2}, 0);
     auto add3 = make_shared<op::Add>(concat, concat);
     auto f = make_shared<Function>(add3, ParameterVector{A, B});
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 1, 1, 1});
@@ -474,7 +474,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_add_concat_2)
 
     auto add6 = make_shared<op::Add>(concat1, concat2);
     auto f = make_shared<Function>(add6, ParameterVector{A, B});
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 1, 1, 1});
