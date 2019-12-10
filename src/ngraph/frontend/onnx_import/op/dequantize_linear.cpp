@@ -18,6 +18,7 @@
 #include <memory>
 
 #include "dequantize_linear.hpp"
+#include "default_opset.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/convert.hpp"
@@ -73,7 +74,7 @@ namespace ngraph
 
                     if (x->get_element_type() != zero_point->get_element_type())
                     {
-                        zero_point = std::make_shared<ngraph::op::Convert>(zero_point,
+                        zero_point = std::make_shared<ngraph::default_opset::Convert>(zero_point,
                                                                            x->get_element_type());
                     }
 
