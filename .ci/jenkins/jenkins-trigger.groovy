@@ -22,7 +22,7 @@
 // original script -- we only need to provide this new trigger hook.
 //
 
-String JENKINS_BRANCH = "master"
+String JENKINS_BRANCH = "aslepko/r0.26"
 String TIMEOUTTIME = "3600"
 
 // Constants
@@ -38,7 +38,7 @@ timestamps {
         def sleeptime=0
         retry(count: 3) {
             sleep sleeptime; sleeptime = 10
-            sh "git clone -b $JENKINS_BRANCH https://github.intel.com/AIPG/cje-algo ."
+            sh "git clone -b $JENKINS_BRANCH https://gitlab.devtools.intel.com/AIPG/AlgoVal/cje-algo.git ."
         }
 
         // Call the main job script.
