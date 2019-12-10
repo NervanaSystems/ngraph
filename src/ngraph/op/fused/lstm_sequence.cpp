@@ -197,8 +197,8 @@ NodeVector op::LSTMSequence::lstm_pass(bool is_reverse) const
                                                                m_clip_threshold,
                                                                m_input_forget);
 
-        shared_ptr<Node> H = Output<Node>(lstm_cell, 0).as_single_output_node();
-        shared_ptr<Node> C = Output<Node>(lstm_cell, 1).as_single_output_node();
+        Output<Node> H = lstm_cell->output(0);
+        Output<Node> C = lstm_cell->output(1);
 
         // Expand tensors with empty outermost dim, so we can later concatenate
         // them.
