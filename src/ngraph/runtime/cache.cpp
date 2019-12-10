@@ -25,7 +25,7 @@ runtime::LRUCache::LRUCache()
     char* cache_size = getenv("NGRAPH_CACHE_SIZE");
     if (cache_size == nullptr)
     {
-        m_size = 1024; // TODO(nbpatel): Figure out a default size for the cache
+        m_size = 5; // TODO(nbpatel): Figure out a default size for the cache
         NGRAPH_INFO << "Cache size is " << m_size;
     }
     else
