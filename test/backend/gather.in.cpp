@@ -625,8 +625,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis_int8)
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
     EXPECT_TRUE(test::all_close((vector<int8_t>{10, 11, 20, 21, 20, 21, 30, 31}),
-                                read_vector<int8_t>(result),
-                                static_cast<int8_t> MIN_FLOAT_TOLERANCE_BITS));
+                                read_vector<int8_t>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis_int16)
@@ -651,8 +650,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis_int16)
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
     EXPECT_TRUE(test::all_close((vector<int16_t>{10, 11, 20, 21, 20, 21, 30, 31}),
-                                read_vector<int16_t>(result),
-                                static_cast<int16_t> MIN_FLOAT_TOLERANCE_BITS));
+                                read_vector<int16_t>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis_int32)
@@ -677,8 +675,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis_int32)
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
     EXPECT_TRUE(test::all_close((vector<int32_t>{10, 11, 20, 21, 20, 21, 30, 31}),
-                                read_vector<int32_t>(result),
-                                MIN_FLOAT_TOLERANCE_BITS));
+                                read_vector<int32_t>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis_int64)
@@ -703,8 +700,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis_int64)
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
     EXPECT_TRUE(test::all_close((vector<int64_t>{10, 11, 20, 21, 20, 21, 30, 31}),
-                                read_vector<int64_t>(result),
-                                static_cast<int64_t> MIN_FLOAT_TOLERANCE_BITS));
+                                read_vector<int64_t>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis_uint8)
@@ -729,8 +725,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis_uint8)
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
     EXPECT_TRUE(test::all_close((vector<uint8_t>{10, 11, 20, 21, 20, 21, 30, 31}),
-                                read_vector<uint8_t>(result),
-                                static_cast<uint8_t> MIN_FLOAT_TOLERANCE_BITS));
+                                read_vector<uint8_t>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis_uint16)
@@ -755,8 +750,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis_uint16)
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
     EXPECT_TRUE(test::all_close((vector<uint16_t>{10, 11, 20, 21, 20, 21, 30, 31}),
-                                read_vector<uint16_t>(result),
-                                static_cast<uint16_t> MIN_FLOAT_TOLERANCE_BITS));
+                                read_vector<uint16_t>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis_uint32)
@@ -781,8 +775,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis_uint32)
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
     EXPECT_TRUE(test::all_close((vector<uint32_t>{10, 11, 20, 21, 20, 21, 30, 31}),
-                                read_vector<uint32_t>(result),
-                                static_cast<uint32_t> MIN_FLOAT_TOLERANCE_BITS));
+                                read_vector<uint32_t>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis_uint64)
@@ -807,8 +800,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis_uint64)
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
     EXPECT_TRUE(test::all_close((vector<uint64_t>{10, 11, 20, 21, 20, 21, 30, 31}),
-                                read_vector<uint64_t>(result),
-                                static_cast<uint64_t> MIN_FLOAT_TOLERANCE_BITS));
+                                read_vector<uint64_t>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis_bool)
@@ -832,7 +824,5 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis_bool)
 
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
-    EXPECT_TRUE(test::all_close((vector<char>{1, 1, 1, 0, 1, 0, 0, 1}),
-                                read_vector<char>(result),
-                                static_cast<char> MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close((vector<char>{1, 1, 1, 0, 1, 0, 0, 1}), read_vector<char>(result)));
 }

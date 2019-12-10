@@ -33,7 +33,7 @@ namespace ngraph
     /// Attributes are the values set when building a graph which are not
     /// computed as the graph executes. Values computed from the graph topology and attributes
     /// during compilation are not attributes.
-    class AttributeVisitor
+    class NGRAPH_API AttributeVisitor
     {
     public:
         virtual ~AttributeVisitor() {}

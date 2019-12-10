@@ -50,7 +50,8 @@ void pass::ConstantFolding::construct_constant_dyn_reshape()
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
     auto constant_shape_label =
         make_shared<pattern::op::Label>(element::i64, Shape{1}, pattern::has_class<op::Constant>());
-    auto dyn_reshape = make_shared<op::v1::Reshape>(constant_data_label, constant_shape_label);
+    auto dyn_reshape =
+        make_shared<op::v1::Reshape>(constant_data_label, constant_shape_label, false);
 
     // Note: No need to capture or consider constant_shape_label, because
     // shape propagation will have transferred the info to dyn_reshape's
