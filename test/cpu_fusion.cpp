@@ -1178,7 +1178,7 @@ shared_ptr<Function> gen_deconv(const bool add_goe)
     auto beta = std::make_shared<op::Parameter>(element::f32, bias_shape);
     double eps = 0.001;
 
-    auto goe_bn = - (- conv);
+    auto goe_bn = -(-conv);
 
     // Adding a goe will stop fusion since the patterns wont expect to see this op
     auto bn = add_goe
@@ -1265,7 +1265,7 @@ shared_ptr<Function> gen_groupconv_batchnorm(const bool add_goe,
     auto mean = std::make_shared<op::Parameter>(element::f32, shape_bn);
     auto var = std::make_shared<op::Parameter>(element::f32, shape_bn);
 
-    auto goe_bn = - (- group_conv);
+    auto goe_bn = -(-group_conv);
 
     // Adding a goe will stop fusion since the patterns wont expect to see this op
     auto bn =
@@ -2657,7 +2657,7 @@ TEST(cpu_fusion, MLIR_DISABLE_TEST(fuse_dropout))
 
         auto mult = std::make_shared<op::Multiply>(gen_mask, input);
 
-        auto goe = - (- mult);
+        auto goe = -(-mult);
 
         auto pdivide = fuse ? std::make_shared<op::Divide>(mult, value)
                             : std::make_shared<op::Divide>(goe, value);

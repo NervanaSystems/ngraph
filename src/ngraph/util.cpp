@@ -256,7 +256,8 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     NodeVector result_nodes;
     for (auto node : bprop->get_results())
     {
-        auto result = as_type_ptr<op::Result>(fprop_cache.node_param_map.at(Output<Node>(node)).get_node_shared_ptr());
+        auto result = as_type_ptr<op::Result>(
+            fprop_cache.node_param_map.at(Output<Node>(node)).get_node_shared_ptr());
         if (!result)
         {
             throw ngraph_error("Expected op::Result values for op::Result keys in node_param_map");
@@ -271,8 +272,8 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
         ParameterVector bprop_input_params;
         for (auto param : bprop_inputs)
         {
-            bprop_input_params.push_back(
-                as_type_ptr<op::Parameter>(fprop_cache.node_param_map.at(Output<Node>(param)).get_node_shared_ptr()));
+            bprop_input_params.push_back(as_type_ptr<op::Parameter>(
+                fprop_cache.node_param_map.at(Output<Node>(param)).get_node_shared_ptr()));
         }
 
         // add the cached fprop nodes as inputs to bprop
