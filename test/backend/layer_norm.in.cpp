@@ -204,16 +204,16 @@ NGRAPH_TEST(${BACKEND_NAME}, layer_norm_bprop_4d_input)
     auto p_scale = make_shared<op::Parameter>(element::f32, Shape{60});
     auto lnb = make_shared<op::LayerNormBackprop>(p_data, p_delta, p_mean, p_variance, p_scale);
 
-    auto output_data = lnb->outputs()[0].as_single_output_node(false);
-    auto output_scale = lnb->outputs()[1].as_single_output_node(false);
-    auto output_bias = lnb->outputs()[2].as_single_output_node(false);
+    auto output_data = lnb->output(0);
+    auto output_scale = lnb->output(1);
+    auto output_bias = lnb->output(2);
 
     // flatten output_scale
-    auto output_scale_shape = output_scale->get_shape();
+    auto output_scale_shape = output_scale.get_shape();
     auto flattened_output_scale = make_shared<op::Reshape>(
         output_scale, get_default_order(output_scale_shape), Shape{shape_size(output_scale_shape)});
 
-    auto f = make_shared<Function>(NodeVector{output_data, flattened_output_scale, output_bias},
+    auto f = make_shared<Function>(OutputVector{output_data, flattened_output_scale, output_bias},
                                    ParameterVector{p_data, p_delta, p_mean, p_variance, p_scale});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -225,15 +225,15 @@ NGRAPH_TEST(${BACKEND_NAME}, layer_norm_bprop_4d_input)
     auto variance = backend->create_tensor(element::f32, Shape{2});
     auto scale = backend->create_tensor(element::f32, Shape{60});
     // Fill in input tensors
-    vector<float> d_input(1, 2 * 3 * 4 * 5);
+    vector<float> d_input(2 * 3 * 4 * 5, 1);
     copy_data(data, d_input);
-    vector<float> dt_input(1, 2 * 3 * 4 * 5);
+    vector<float> dt_input(2 * 3 * 4 * 5, 1);
     copy_data(delta, dt_input);
-    vector<float> m_input(1, 2);
+    vector<float> m_input(2, 1);
     copy_data(mean, m_input);
-    vector<float> v_input(1, 2);
+    vector<float> v_input(2, 1);
     copy_data(variance, v_input);
-    vector<float> s_input(1, 60);
+    vector<float> s_input(60, 1);
     copy_data(scale, s_input);
     // Create tensors for output
     auto d_data = backend->create_tensor(element::f32, Shape{2, 3, 4, 5});
@@ -242,4 +242,7 @@ NGRAPH_TEST(${BACKEND_NAME}, layer_norm_bprop_4d_input)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({d_data, d_scale, d_bias}, {data, delta, mean, variance, scale});
+    EXPECT_EQ(120, read_vector<float>(d_data).size());
+    EXPECT_EQ(60, read_vector<float>(d_scale).size());
+    EXPECT_EQ(60, read_vector<float>(d_bias).size());
 }
