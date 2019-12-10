@@ -1,2 +1,5 @@
 #include "ngraph/opsets/opset1.hpp"
-namespace ngraph::default_opset = ngraph::opset1;
+
+namespace ngraph {
+    namespace default_opset = ngraph::opset1;
+}
