@@ -242,7 +242,7 @@ NGRAPH_TEST(${BACKEND_NAME}, layer_norm_bprop_4d_input)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({d_data, d_scale, d_bias}, {data, delta, mean, variance, scale});
-    
+
     vector<float> expected_data(120, 0);
     vector<float> expected_scale(60, 0);
     vector<float> expected_bias(60, 2);
