@@ -179,7 +179,10 @@ namespace
         auto replacement_node = make_shared<op::v1::ConvolutionBackpropData>(
             node->input_value(1), // data
             node->input_value(0), // filters
-            op::Constant::create(element::i64, Shape{data_batch_shape.size()}, data_batch_shape),
+            op::Constant::create(
+                element::i64,
+                Shape{data_batch_shape.size() - 2},
+                vector<size_t>(data_batch_shape.begin() + 2, data_batch_shape.end())),
             strides,
             pads_begin,
             pads_end,
@@ -497,6 +500,16 @@ namespace
         return true;
     }
 
+    bool op_cast(shared_ptr<op::Select> node)
+    {
+        auto replacement_node = make_shared<op::v1::Select>(node->input_value(0),
+                                                            node->input_value(1),
+                                                            node->input_value(2),
+                                                            op::AutoBroadcastSpec());
+        replace_node(node, replacement_node);
+        return true;
+    }
+
     bool op_cast(shared_ptr<op::Softmax> node)
     {
         NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant(),
@@ -532,6 +545,35 @@ namespace
                                                                   strides,
                                                                   vector<int64_t>(input_size, 0),
                                                                   vector<int64_t>(input_size, 0));
+
+        replace_node(node, replacement_node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::Split> node)
+    {
+        const auto& splits_vec = node->get_splits();
+        const auto first_elem = splits_vec.front();
+
+        const bool split_evenly =
+            std::all_of(splits_vec.begin(), splits_vec.end(), [first_elem](const size_t split) {
+                return split == first_elem;
+            });
+
+        std::shared_ptr<Node> replacement_node;
+        if (split_evenly)
+        {
+            replacement_node = make_shared<op::v1::Split>(
+                node->input_value(0), node->input_value(1), splits_vec.front());
+        }
+        else
+        {
+            const auto split_lengths =
+                ngraph::op::Constant::create(element::u64, Shape{splits_vec.size()}, splits_vec);
+
+            replacement_node = make_shared<op::v1::VariadicSplit>(
+                node->input_value(0), node->input_value(1), split_lengths);
+        }
 
         replace_node(node, replacement_node);
         return true;

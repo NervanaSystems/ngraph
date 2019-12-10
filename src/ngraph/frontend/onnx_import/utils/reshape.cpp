@@ -22,6 +22,7 @@
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/shape.hpp"
+#include "reshape.hpp"
 
 namespace ngraph
 {
