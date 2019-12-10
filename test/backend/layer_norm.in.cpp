@@ -242,7 +242,12 @@ NGRAPH_TEST(${BACKEND_NAME}, layer_norm_bprop_4d_input)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({d_data, d_scale, d_bias}, {data, delta, mean, variance, scale});
-    EXPECT_EQ(120, read_vector<float>(d_data).size());
-    EXPECT_EQ(60, read_vector<float>(d_scale).size());
-    EXPECT_EQ(60, read_vector<float>(d_bias).size());
+    
+    vector<float> expected_data(120, 0);
+    vector<float> expected_scale(60, 0);
+    vector<float> expected_bias(60, 2);
+
+    EXPECT_TRUE(test::all_close_f(expected_data, read_vector<float>(d_data), 1e-7f, 1e-7f));
+    EXPECT_TRUE(test::all_close_f(expected_scale, read_vector<float>(d_scale)));
+    EXPECT_TRUE(test::all_close_f(expected_bias, read_vector<float>(d_bias)));
 }
