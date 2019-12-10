@@ -60,6 +60,7 @@ std::shared_ptr<Function>
             m[f->get_parameters()[i].get()] =
                 std::make_shared<op::Parameter>(parameter_element_types[i], parameter_shapes[i]);
         }
+        m[f->get_parameters()[i].get()]->get_rt_info() = f->get_parameters()[i]->get_rt_info();
     }
 
     for (auto old_node : f->get_ordered_ops())

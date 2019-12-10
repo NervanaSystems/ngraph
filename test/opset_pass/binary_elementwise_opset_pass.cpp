@@ -262,3 +262,13 @@ TEST(opset_transform, opset1_power_upgrade_pass)
 {
     test_opset1_arithmetic_upgrade_pass<op::v0::Power, op::v1::Power>();
 }
+
+TEST(opset_transform, opset0_subtract_downgrade_pass)
+{
+    test_opset0_arithmetic_downgrade_pass<op::v0::Subtract, op::v1::Subtract>();
+}
+
+TEST(opset_transform, opset1_subtract_upgrade_pass)
+{
+    test_opset1_arithmetic_upgrade_pass<op::v0::Subtract, op::v1::Subtract>();
+}

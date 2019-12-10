@@ -53,6 +53,6 @@ Backprop
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Tanh
+.. doxygenclass:: ngraph::op::v0::Tanh
    :project: ngraph
    :members:

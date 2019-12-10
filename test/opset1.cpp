@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/opsets/opset.hpp"
 #include "ngraph/opsets/opset1.hpp"
 
 #include <memory>
@@ -27,7 +28,13 @@ using namespace ngraph;
 
 #define CHECK_OPSET(op1, op2)                                                                      \
     EXPECT_TRUE(is_type<op1>(make_shared<op2>()));                                                 \
-    EXPECT_TRUE((std::is_same<op1, op2>::value));
+    EXPECT_TRUE((std::is_same<op1, op2>::value));                                                  \
+    EXPECT_TRUE((get_opset1().contains_type<op2>()));                                              \
+    {                                                                                              \
+        shared_ptr<Node> op(get_opset1().create(op2::type_info.name));                             \
+        ASSERT_TRUE(op);                                                                           \
+        EXPECT_TRUE(is_type<op2>(op));                                                             \
+    }
 
 TEST(opset, check_opset1)
 {
@@ -54,7 +61,7 @@ TEST(opset, check_opset1)
     CHECK_OPSET(op::v0::Cosh, opset1::Cosh)
     CHECK_OPSET(op::v0::CTCGreedyDecoder, opset1::CTCGreedyDecoder)
     // TODO: using op::v0::DeformableConvolution
-    // TODO: using op::v0::DeformablePSROIPooling
+    CHECK_OPSET(op::v1::DeformablePSROIPooling, opset1::DeformablePSROIPooling)
     CHECK_OPSET(op::v0::DepthToSpace, opset1::DepthToSpace)
     CHECK_OPSET(op::v0::DetectionOutput, opset1::DetectionOutput)
     CHECK_OPSET(op::v1::Divide, opset1::Divide)
@@ -70,7 +77,8 @@ TEST(opset, check_opset1)
     CHECK_OPSET(op::v1::Greater, opset1::Greater)
     CHECK_OPSET(op::v1::GreaterEqual, opset1::GreaterEqual)
     CHECK_OPSET(op::v0::GRN, opset1::GRN)
-    CHECK_OPSET(op::v0::GroupConvolution, opset1::GroupConvolution)
+    CHECK_OPSET(op::v1::GroupConvolution, opset1::GroupConvolution)
+    CHECK_OPSET(op::v1::GroupConvolutionBackpropData, opset1::GroupConvolutionBackpropData)
     // CHECK_OPSET(op::v0::GRUCell, opset1::GRUCell)
     // TODO CHECK_OPSET(op::v0::GRUSequence, opset1::GRUSequence)
     CHECK_OPSET(op::v0::HardSigmoid, opset1::HardSigmoid)
@@ -102,8 +110,8 @@ TEST(opset, check_opset1)
     CHECK_OPSET(op::v0::PriorBoxClustered, opset1::PriorBoxClustered)
     CHECK_OPSET(op::v0::Proposal, opset1::Proposal)
     CHECK_OPSET(op::v0::PSROIPooling, opset1::PSROIPooling)
-    // TODO CHECK_OPSET(op::v0::ReduceLogicalAnd, opset1::ReduceLogicalAnd)
-    // TODO CHECK_OPSET(op::v0::ReduceLogicalOr, opset1::ReduceLogicalOr)
+    CHECK_OPSET(op::v1::ReduceLogicalAnd, opset1::ReduceLogicalAnd)
+    CHECK_OPSET(op::v1::ReduceLogicalOr, opset1::ReduceLogicalOr)
     CHECK_OPSET(op::v1::ReduceMax, opset1::ReduceMax)
     CHECK_OPSET(op::v1::ReduceMean, opset1::ReduceMean)
     CHECK_OPSET(op::v1::ReduceMin, opset1::ReduceMin)
@@ -116,7 +124,7 @@ TEST(opset, check_opset1)
     CHECK_OPSET(op::v1::Reverse, opset1::Reverse)
     CHECK_OPSET(op::v0::ReverseSequence, opset1::ReverseSequence)
     // CHECK_OPSET(op::v0::RNNCell, opset1::RNNCell)
-    CHECK_OPSET(op::v0::Select, opset1::Select)
+    CHECK_OPSET(op::v1::Select, opset1::Select)
     CHECK_OPSET(op::v0::Selu, opset1::Selu)
     CHECK_OPSET(op::v0::ShapeOf, opset1::ShapeOf)
     CHECK_OPSET(op::v0::ShuffleChannels, opset1::ShuffleChannels)
@@ -126,12 +134,12 @@ TEST(opset, check_opset1)
     CHECK_OPSET(op::v0::Sinh, opset1::Sinh)
     CHECK_OPSET(op::v1::Softmax, opset1::Softmax)
     CHECK_OPSET(op::v0::SpaceToDepth, opset1::SpaceToDepth)
-    CHECK_OPSET(op::v0::Split, opset1::Split)
+    CHECK_OPSET(op::v1::Split, opset1::Split)
     CHECK_OPSET(op::v0::Sqrt, opset1::Sqrt)
     CHECK_OPSET(op::v0::SquaredDifference, opset1::SquaredDifference)
     CHECK_OPSET(op::v0::Squeeze, opset1::Squeeze)
     CHECK_OPSET(op::v1::StridedSlice, opset1::StridedSlice)
-    CHECK_OPSET(op::v0::Subtract, opset1::Subtract)
+    CHECK_OPSET(op::v1::Subtract, opset1::Subtract)
     CHECK_OPSET(op::v0::Tan, opset1::Tan)
     CHECK_OPSET(op::v0::Tanh, opset1::Tanh)
     CHECK_OPSET(op::v0::TensorIterator, opset1::TensorIterator)
@@ -139,6 +147,45 @@ TEST(opset, check_opset1)
     CHECK_OPSET(op::v1::TopK, opset1::TopK)
     CHECK_OPSET(op::v0::Transpose, opset1::Transpose)
     CHECK_OPSET(op::v0::Unsqueeze, opset1::Unsqueeze)
-    // TODO using op::v0::VariadicSplit
+    CHECK_OPSET(op::v1::VariadicSplit, opset1::VariadicSplit)
     CHECK_OPSET(op::v0::Xor, opset1::Xor)
+}
+
+class NewOp : public op::Op
+{
+public:
+    NewOp() = default;
+    static constexpr NodeTypeInfo type_info{"NewOp", 0};
+    const NodeTypeInfo& get_type_info() const override { return type_info; }
+    void validate_and_infer_types() override{};
+
+    virtual std::shared_ptr<Node>
+        copy_with_new_args(const NodeVector& /* new_args */) const override
+    {
+        return make_shared<NewOp>();
+    };
+};
+
+constexpr NodeTypeInfo NewOp::type_info;
+
+TEST(opset, new_op)
+{
+    // Copy opset1; don't bash the real thing in a test
+    OpSet opset1_copy(get_opset1());
+    opset1_copy.insert<NewOp>();
+    {
+        shared_ptr<Node> op(opset1_copy.create(NewOp::type_info.name));
+        ASSERT_TRUE(op);
+        EXPECT_TRUE(is_type<NewOp>(op));
+    }
+    shared_ptr<Node> fred;
+    fred = shared_ptr<Node>(opset1_copy.create("Fred"));
+    EXPECT_FALSE(fred);
+    opset1_copy.insert<NewOp>("Fred");
+    // Make sure we copied
+    fred = shared_ptr<Node>(get_opset1().create("Fred"));
+    ASSERT_FALSE(fred);
+    // Fred should be in the copy
+    fred = shared_ptr<Node>(opset1_copy.create("Fred"));
+    EXPECT_TRUE(fred);
 }

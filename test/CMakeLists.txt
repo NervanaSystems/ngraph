@@ -87,6 +87,7 @@ set(SRC
     opset_pass/poolings_opset_pass.cpp
     opset_pass/product_opset_pass.cpp
     opset_pass/reverse_opset_pass.cpp
+    opset_pass/select_opset_pass.cpp
     opset_pass/slice_opset_pass.cpp
     opset_pass/softmax_opset_pass.cpp
     opset_pass/sum_opset_pass.cpp
@@ -120,6 +121,7 @@ set(SRC
     type_prop/convolution.cpp
     type_prop/convolution_bias.cpp
     type_prop/crop_and_resize.cpp
+    type_prop/deformable_psroi_pooling.cpp
     type_prop/depth_to_space.cpp
     type_prop/dequantize.cpp
     type_prop/dot.cpp
@@ -134,6 +136,7 @@ set(SRC
     type_prop/fake_quantize.cpp
     type_prop/gather.cpp
     type_prop/gather_nd.cpp
+    type_prop/gather_tree.cpp
     type_prop/gemm.cpp
     type_prop/get_output_element.cpp
     type_prop/grn.cpp
@@ -150,6 +153,7 @@ set(SRC
     type_prop/matmul.cpp
     type_prop/max_pool.cpp
     type_prop/mvn.cpp
+    type_prop/non_max_suppression.cpp
     type_prop/normalize.cpp
     type_prop/one_hot.cpp
     type_prop/pad.cpp
@@ -185,6 +189,7 @@ set(SRC
     type_prop/transpose.cpp
     type_prop/unary_elementwise.cpp
     type_prop/unsqueeze.cpp
+    type_prop/variadic_split.cpp
     type_prop_benchmark.cpp
     type_prop_layers.cpp
     util.cpp
@@ -308,6 +313,7 @@ set(MULTI_TEST_SRC
     backend/gather.in.cpp
     backend/gelu.in.cpp
     backend/generate_mask.in.cpp
+    backend/group_convolution.in.cpp
     backend/layer_norm.in.cpp
     backend/log.in.cpp
     backend/logical_and.in.cpp

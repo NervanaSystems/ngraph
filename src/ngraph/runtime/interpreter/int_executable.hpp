@@ -549,7 +549,6 @@ private:
             reference::constant<T>(c->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::ScalarConstantLike: break;
         case OP_TYPEID::Convert:
         {
             // const op::Convert* c = static_cast<const op::Convert*>(&node);
@@ -1858,6 +1857,8 @@ private:
         case OP_TYPEID::Elu:
         case OP_TYPEID::FakeQuantize:
         case OP_TYPEID::GroupConvolution:
+        case OP_TYPEID::GroupConvolutionBackpropData:
+        case OP_TYPEID::GroupConvolutionBackpropFilters:
         case OP_TYPEID::GRN:
         case OP_TYPEID::GRUCell:
         case OP_TYPEID::Gelu:
@@ -1877,6 +1878,7 @@ private:
         case OP_TYPEID::PartialSlice:
         case OP_TYPEID::PartialSliceBackprop:
         case OP_TYPEID::RNNCell:
+        case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::ScaleShift:
         case OP_TYPEID::Selu:
         case OP_TYPEID::ShuffleChannels:
