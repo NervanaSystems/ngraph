@@ -20,7 +20,7 @@
 
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/ceiling.hpp"
+#include "default_opset.hpp"
 
 namespace ngraph
 {
@@ -32,7 +32,7 @@ namespace ngraph
             {
                 inline NodeVector ceil(const Node& node)
                 {
-                    return {std::make_shared<ngraph::op::Ceiling>(node.get_ng_inputs().at(0))};
+                    return {std::make_shared<ngraph::default_opset::Ceiling>(node.get_ng_inputs().at(0))};
                 }
 
             } // namespace set_1

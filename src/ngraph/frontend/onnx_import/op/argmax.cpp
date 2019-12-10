@@ -17,7 +17,7 @@
 #include "argmax.hpp"
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/argmax.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "utils/reduction.hpp"
 
 namespace ngraph
