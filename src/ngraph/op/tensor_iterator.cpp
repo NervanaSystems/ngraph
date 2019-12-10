@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <pass/get_output_element_elimination.hpp>
 #include "ngraph/op/tensor_iterator.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/specialize_function.hpp"
@@ -440,43 +441,42 @@ std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& n
     auto op = make_shared<op::TensorIterator>(as_output_vector(new_args));
     op->set_output_size(m_output_descriptions.size());
 
-//    std::vector<::ngraph::element::Type> types;
-//    std::vector<::ngraph::PartialShape> new_shapes(m_body->get_parameters().size());
-//    for (const auto& parameter : m_body->get_parameters())
-//    {
-//        types.emplace_back(parameter->get_element_type());
-//    }
-//
-//    for (size_t input_index = 0; input_index < new_args.size(); ++input_index)
-//    {
-//        for (auto& input_description : m_input_descriptions)
-//        {
-//            if (input_description->m_input_index == input_index)
-//            {
-//                new_shapes[input_description->m_body_parameter_index] =
-//                        new_args[input_index]->get_output_partial_shape(0);
-//
-//                if (auto slice_in =
-//                        ::ngraph::as_type_ptr<ngraph::op::TensorIterator::SliceInputDescription>(
-//                                input_description)) {
-//                    new_shapes[slice_in->m_body_parameter_index][slice_in->m_axis] =
-//                            slice_in->m_part_size;
-//                }
-//            }
-//        }
-//    }
-//
-//    auto func = std::make_shared<Function>(m_body->get_results(), m_body->get_parameters());
-//    auto spec_func = specialize_function(
-//            func, types, new_shapes, std::vector<void *>(new_args.size(), nullptr), false, true);
-//    op->m_body =
-//            std::make_shared<BodyLambda>(spec_func->get_results(), spec_func->get_parameters());
+    std::vector<::ngraph::element::Type> types(m_body->get_parameters().size());;
+    std::vector<::ngraph::PartialShape> new_shapes(m_body->get_parameters().size());
 
-    Function func(m_body->get_results(), m_body->get_parameters());
-    auto deep_cp_func = clone_function(func);
-    op->m_body = make_shared<BodyLambda>(deep_cp_func->get_results(), deep_cp_func->get_parameters());
+    for (size_t input_index = 0; input_index < new_args.size(); ++input_index)
+    {
+        for (auto& input_description : m_input_descriptions)
+        {
+            if (input_description->m_input_index == input_index)
+            {
+                types[input_description->m_body_parameter_index] = new_args[input_index]->get_element_type();
+                new_shapes[input_description->m_body_parameter_index] =
+                        new_args[input_index]->get_output_partial_shape(0);
 
-//    op->m_body = std::make_shared<BodyLambda>(m_body->get_results(), m_body->get_parameters());
+                if (new_shapes[input_description->m_body_parameter_index].is_static()) {
+                    if (auto slice_in =
+                            ::ngraph::as_type_ptr<ngraph::op::TensorIterator::SliceInputDescription>(
+                                    input_description)) {
+                        new_shapes[slice_in->m_body_parameter_index][slice_in->m_axis] = slice_in->m_part_size;
+                    }
+                }
+            }
+        }
+    }
+
+    auto func = std::make_shared<Function>(m_body->get_results(), m_body->get_parameters());
+    auto spec_func = specialize_function(
+            func, types, new_shapes, std::vector<void *>(new_args.size(), nullptr), false, true);
+    op->m_body =
+            std::make_shared<BodyLambda>(spec_func->get_results(), spec_func->get_parameters());
+
+    // TODO: remove this code after the fix on the nGraph side (GetOutputElements)
+//    ::ngraph::pass::GetOutputElementElimination goe_elimination;
+//    for (auto n : spec_func->get_ops()) {
+//        goe_elimination.run_on_node(n);
+//    }
+
     for (auto& input_description : m_input_descriptions)
     {
         op->m_input_descriptions.push_back(input_description->copy());
@@ -485,5 +485,6 @@ std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& n
     {
         op->m_output_descriptions.push_back(output_description->copy());
     }
+
     return move(op);
 }
