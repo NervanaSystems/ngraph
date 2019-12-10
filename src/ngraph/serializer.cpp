@@ -1404,17 +1404,33 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             const auto trans_std = node_js.at("trans_std").get<float>();
             const auto part_size = node_js.at("part_size").get<int64_t>();
 
-            node = make_shared<op::v1::DeformablePSROIPooling>(args[0],
-                                                               args[1],
-                                                               args[2],
-                                                               output_dim,
-                                                               spatial_scale,
-                                                               group_size,
-                                                               mode,
-                                                               spatial_bins_x,
-                                                               spatial_bins_y,
-                                                               trans_std,
-                                                               part_size);
+            if (args.size() == 2)
+            {
+                node = make_shared<op::v1::DeformablePSROIPooling>(args[0],
+                                                                   args[1],
+                                                                   output_dim,
+                                                                   spatial_scale,
+                                                                   group_size,
+                                                                   mode,
+                                                                   spatial_bins_x,
+                                                                   spatial_bins_y,
+                                                                   trans_std,
+                                                                   part_size);
+            }
+            else
+            {
+                node = make_shared<op::v1::DeformablePSROIPooling>(args[0],
+                                                                   args[1],
+                                                                   args[2],
+                                                                   output_dim,
+                                                                   spatial_scale,
+                                                                   group_size,
+                                                                   mode,
+                                                                   spatial_bins_x,
+                                                                   spatial_bins_y,
+                                                                   trans_std,
+                                                                   part_size);
+            }
             break;
         }
         case OP_TYPEID::DepthToSpace_v1:
@@ -3039,7 +3055,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         node["friendly_name"] = n.get_friendly_name();
     }
-    node["op"] = n.type_info.name;
+    node["op"] = type_info.name;
     // TODO Multiple outputs
     json inputs = json::array();
     json control_deps = json::array();

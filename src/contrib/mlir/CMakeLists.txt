@@ -46,6 +46,7 @@ llvm_map_components_to_libnames(llvm_libs support core irreader)
 # Link MLIR libs
 target_link_libraries(
     mlir_backend PRIVATE 
+    MLIRAffineToStandard
     MLIRAnalysis
     MLIREDSC
     MLIRExecutionEngine

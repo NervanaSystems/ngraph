@@ -14,9 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/argmin.hpp"
+#include "argmin.hpp"
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "utils/reduction.hpp"
 
 namespace ngraph

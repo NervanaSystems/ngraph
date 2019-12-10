@@ -14,10 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "global_average_pool.hpp"
+#pragma once
+
+#include "core/node.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/avg_pool.hpp"
-#include "utils/pooling_factory.hpp"
 
 namespace ngraph
 {
@@ -27,10 +27,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector global_average_pool(const Node& node)
-                {
-                    return pooling::GlobalPoolingFactory(node).make_avg_pool();
-                }
+                NodeVector gather_nd(const Node& node);
 
             } // namespace set_1
 

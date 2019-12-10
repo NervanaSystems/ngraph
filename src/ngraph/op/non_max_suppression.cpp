@@ -126,9 +126,60 @@ void op::v1::NonMaxSuppression::validate_and_infer_types()
 
     // NonMaxSuppression produces triplets
     // that have the following format: [batch_index, class_index, box_index]
-    // The number of returned triplets depends entirely on the computation, thus one dynamic dim
-    const PartialShape out_shape = {Dimension::dynamic(), 3};
+    PartialShape out_shape = {Dimension::dynamic(), 3};
 
+    const auto max_output_boxes_per_class = input_value(2).get_node_shared_ptr();
+    if (num_boxes_boxes.is_static() && scores_ps[1].is_static() &&
+        max_output_boxes_per_class->is_constant())
+    {
+        const auto num_boxes = static_cast<int64_t>(num_boxes_boxes);
+        const auto max_output_boxes_per_class = max_boxes_output_from_input();
+        const auto num_classes = static_cast<int64_t>(scores_ps[1]);
+
+        out_shape[0] = std::min(num_boxes, max_output_boxes_per_class * num_classes);
+    }
     set_output_size(1);
     set_output_type(0, element::i64, out_shape);
+}
+
+int64_t op::v1::NonMaxSuppression::max_boxes_output_from_input() const
+{
+    int64_t max_output_boxes{0};
+
+    const auto max_output_boxes_input =
+        as_type_ptr<op::Constant>(input_value(2).get_node_shared_ptr());
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+#endif
+    switch (static_cast<element::Type_t>(max_output_boxes_input->get_element_type()))
+    {
+    case element::Type_t::i8:
+    {
+        max_output_boxes = max_output_boxes_input->get_vector<int8_t>().at(0);
+        break;
+    }
+    case element::Type_t::i16:
+    {
+        max_output_boxes = max_output_boxes_input->get_vector<int16_t>().at(0);
+        break;
+    }
+    case element::Type_t::i32:
+    {
+        max_output_boxes = max_output_boxes_input->get_vector<int32_t>().at(0);
+        break;
+    }
+    case element::Type_t::i64:
+    {
+        max_output_boxes = max_output_boxes_input->get_vector<int64_t>().at(0);
+        break;
+    }
+    default: break;
+    }
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+
+    return max_output_boxes;
 }

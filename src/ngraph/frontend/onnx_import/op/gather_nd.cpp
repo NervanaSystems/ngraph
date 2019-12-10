@@ -14,10 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "global_average_pool.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/op/avg_pool.hpp"
-#include "utils/pooling_factory.hpp"
+#include "ngraph/op/gather_nd.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -27,9 +25,13 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector global_average_pool(const Node& node)
+                NodeVector gather_nd(const Node& node)
                 {
-                    return pooling::GlobalPoolingFactory(node).make_avg_pool();
+                    NodeVector ng_inputs{node.get_ng_inputs()};
+                    auto data = ng_inputs.at(0);
+                    auto indices = ng_inputs.at(1);
+
+                    return {std::make_shared<ngraph::op::GatherND>(data, indices)};
                 }
 
             } // namespace set_1
