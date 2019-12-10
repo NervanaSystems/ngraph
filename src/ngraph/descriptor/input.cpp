@@ -17,6 +17,7 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/type/element_type.hpp"
 
 using namespace ngraph;
@@ -53,6 +54,10 @@ void descriptor::Input::replace_output(Output& new_output)
     {
         m_output->remove_input(this);
     }
+    if (is_type<op::GetOutputElement>(new_output.get_node()))
+    {
+        std::cerr << "Setting GOE: " << new_output.get_node() << std::endl;
+    }
     new_output.add_input(this);
     m_output = &new_output;
     m_src_node = std::shared_ptr<Node>(new_output.get_node());
@@ -64,7 +69,7 @@ void descriptor::Input::replace_output(Output& new_output)
         // the result of copy_with_new_args will be thrown away or
         // an exception will be thrown by `m_node`'s class c-tor
         // if a new input violates one of the type checks in the c-tor.
-        (this->m_node->copy_with_new_args(this->m_node->get_arguments()));
+        (this->m_node->copy_with_new_args(as_node_vector(this->m_node->input_values())));
     }
 }
 

@@ -20,6 +20,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 
 namespace ngraph
@@ -51,9 +52,8 @@ namespace ngraph
             {
                 if (pattern_map[label] != graph_node)
                 {
-                    NGRAPH_DEBUG << "[MATCHER] get_bound_node " << pattern_map[label]->get_name()
-                                 << " , " << pattern_map[label] << " does NOT match "
-                                 << graph_node->get_name();
+                    NGRAPH_DEBUG << "[MATCHER] get_bound_node " << *pattern_map[label] << " , "
+                                 << pattern_map[label] << " does NOT match " << *graph_node;
                     is_match = false;
                 }
             }
@@ -79,16 +79,16 @@ namespace ngraph
 
                 if (is_match)
                 {
-                    NGRAPH_DEBUG << "[MATCHER] (Re)binding get_bound_node " << label->get_name()
-                                 << " , " << graph_node << " , " << graph_node->get_name();
+                    NGRAPH_DEBUG << "[MATCHER] (Re)binding get_bound_node " << *label << " , "
+                                 << graph_node << " , " << *graph_node;
                     pattern_map[label] = graph_node;
                 }
             }
 
             if (!is_match)
             {
-                NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name()
-                             << " for pattern " << label->get_name();
+                NGRAPH_DEBUG << "[MATCHER] Aborting at " << *graph_node << " for pattern "
+                             << *label;
             }
             return is_match;
         }
@@ -152,8 +152,7 @@ namespace ngraph
             }
             else
             {
-                NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name()
-                             << " for pattern " << any->get_name();
+                NGRAPH_DEBUG << "[MATCHER] Aborting at " << *graph_node << " for pattern " << *any;
                 return false;
             }
         }
@@ -180,14 +179,12 @@ namespace ngraph
                     }
                 }
 
-                NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name()
-                             << " for pattern " << any->get_name();
+                NGRAPH_DEBUG << "[MATCHER] Aborting at " << *graph_node << " for pattern " << *any;
                 return false;
             }
             else
             {
-                NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name()
-                             << " for pattern " << any->get_name();
+                NGRAPH_DEBUG << "[MATCHER] Aborting at " << *graph_node << " for pattern " << *any;
                 return false;
             }
         }
@@ -199,6 +196,23 @@ namespace ngraph
             if (!pattern_node || !graph_node)
             {
                 throw ngraph_error("pattern_node or graph_node shouldn't be nullptrs!");
+            }
+
+            if (auto goe = as_type_ptr<ngraph::op::GetOutputElement>(pattern_node))
+            {
+                if (!is_type<ngraph::op::GetOutputElement>(graph_node))
+                {
+                    auto goe_value = goe->input_value(0);
+                    if (goe_value.get_index() < graph_node->get_output_size())
+                    {
+                        auto graph_goe =
+                            graph_node->output(goe_value.get_index()).as_single_output_node();
+                        if (graph_goe != graph_node)
+                        {
+                            return match_node(pattern_node, graph_goe, pattern_map);
+                        }
+                    }
+                }
             }
 
             add_node(graph_node);
@@ -230,15 +244,14 @@ namespace ngraph
                 static const std::regex node_skip_regex(node_skip_cregex);
                 if (std::regex_match(graph_node->get_name(), node_skip_regex))
                 {
-                    NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name()
+                    NGRAPH_DEBUG << "[MATCHER] Aborting at " << *graph_node
                                  << " due to NGRAPH_MATCHER_SKIP set to " << node_skip_cregex;
                     return abort_match(watermark, false);
                 }
             }
 
             NGRAPH_DEBUG << pad(2 * m_depth) << "[MATCHER] in match_node : "
-                         << "pattern = " << pattern_node->get_name() << " matched "
-                         << graph_node->get_name();
+                         << "pattern = " << *pattern_node << " matched " << *graph_node;
 
             if (auto label_node = as_type_ptr<op::Label>(pattern_node))
             {
@@ -270,8 +283,8 @@ namespace ngraph
                                    match_arguments(pattern_node, graph_node, pattern_map));
             }
 
-            NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name() << " for pattern "
-                         << pattern_node->get_name();
+            NGRAPH_DEBUG << "[MATCHER] Aborting at " << *graph_node << " for pattern "
+                         << *pattern_node;
             return abort_match(watermark, false);
         }
 
@@ -297,16 +310,16 @@ namespace ngraph
                                       PatternMap& pattern_map)
         {
             NGRAPH_DEBUG << pad(2 * m_depth) << "[MATCHER] in match_arguments : "
-                         << "pattern = " << pattern_node->get_name() << " "
-                         << "matched " << graph_node->get_name();
+                         << "pattern = " << *pattern_node << " "
+                         << "matched " << *graph_node;
 
             auto args = graph_node->get_arguments();
             auto pattern_args = pattern_node->get_arguments();
 
             if (args.size() != pattern_args.size())
             {
-                NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name()
-                             << " for pattern " << pattern_node->get_name();
+                NGRAPH_DEBUG << "[MATCHER] Aborting at " << *graph_node << " for pattern "
+                             << *pattern_node;
                 return false;
             }
 
@@ -349,8 +362,8 @@ namespace ngraph
                 }
             }
 
-            NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name() << " for pattern "
-                         << pattern_node->get_name();
+            NGRAPH_DEBUG << "[MATCHER] Aborting at " << *graph_node << " for pattern "
+                         << *pattern_node;
             return false;
         }
 
@@ -366,8 +379,8 @@ namespace ngraph
                 throw ngraph_error("m_pattern_node or graph_node are not set");
             }
 
-            NGRAPH_DEBUG << "[MATCHER] Starting match pattern = " << m_pattern_node->get_name()
-                         << " , graph_node = " << graph_node->get_name();
+            NGRAPH_DEBUG << "[MATCHER] Starting match pattern = " << *m_pattern_node
+                         << " , graph_node = " << *graph_node;
 
             bool is_match = match_node(m_pattern_node, graph_node, m_pattern_map);
             if (is_match)
@@ -392,8 +405,8 @@ namespace ngraph
                 throw ngraph_error("m_pattern_node or graph_node are not set");
             }
 
-            NGRAPH_DEBUG << "[MATCHER] Starting match pattern = " << m_pattern_node->get_name()
-                         << " , graph_node = " << graph_node->get_name();
+            NGRAPH_DEBUG << "[MATCHER] Starting match pattern = " << *m_pattern_node
+                         << " , graph_node = " << *graph_node;
 
             bool is_match = match_node(m_pattern_node, graph_node, m_pattern_map);
             if (is_match)
@@ -411,14 +424,14 @@ namespace ngraph
             m_matches.clear();
             m_match_root = graph;
 
-            NGRAPH_DEBUG << "matching graph to " << graph->get_name() << std::endl;
+            NGRAPH_DEBUG << "matching graph to " << *graph << std::endl;
             // try to match one cell (i.e. pattern)
             while (m.match(graph, previous_matches))
             {
                 matched = true;
                 // move to the next cell
                 graph = m.get_pattern_map()[m_recurrent_pattern];
-                NGRAPH_DEBUG << "setting graph to " << graph->get_name() << std::endl;
+                NGRAPH_DEBUG << "setting graph to " << *graph << std::endl;
 
                 // copy bound nodes for the current pattern graph into a global matches map
                 for (auto cur_match : m.get_pattern_map())
@@ -452,8 +465,8 @@ namespace ngraph
 
             if (!matched)
             {
-                NGRAPH_DEBUG << "[RecurrentMatcher] Aborting at " << graph->get_name()
-                             << " for pattern " << m_pattern->get_name();
+                NGRAPH_DEBUG << "[RecurrentMatcher] Aborting at " << *graph << " for pattern "
+                             << *m_pattern;
                 m_match_root.reset();
             }
 

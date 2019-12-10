@@ -152,11 +152,11 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
 #endif
 
 #if MKLDNN_VERSION_MAJOR < 1
-        auto lstm_ht_output = Output<Node>(lstm_node, 0).as_single_output_node();
-        auto lstm_ht_ct_output = Output<Node>(lstm_node, 1).as_single_output_node();
+        auto lstm_ht_output = lstm_node->output(0).as_single_output_node();
+        auto lstm_ht_ct_output = lstm_node->output(1).as_single_output_node();
 #else
-        auto lstm_ht_output = Output<Node>(lstm_node, 1).as_single_output_node();
-        auto ct_slice = Output<Node>(lstm_node, 2).as_single_output_node();
+        auto lstm_ht_output = lstm_node->output(1).as_single_output_node();
+        auto ct_slice = lstm_node->output(2).as_single_output_node();
 #endif
 
         auto goe_nodes = ngraph::op::get_output_elements(m.get_match_root());
@@ -445,8 +445,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         auto lstm_node = std::make_shared<ngraph::op::Lstm>(
             src_layer, src_iter, weights_layer, weights_iter, bias, rnn_type);
 
-        auto lstm_ht_output = Output<Node>(lstm_node, 0).as_single_output_node();
-        auto lstm_ht_ct_output = Output<Node>(lstm_node, 1).as_single_output_node();
+        auto lstm_ht_output = lstm_node->output(0).as_single_output_node();
+        auto lstm_ht_ct_output = lstm_node->output(1).as_single_output_node();
 
         // dst_iter of lstm mkldnn output holds the results of both recurrent state
         // tensor outputs. we need to slice the ct.
@@ -474,8 +474,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         auto lstm_node = std::make_shared<ngraph::op::Lstm>(
             src_layer, hidden_state, cell_state, weights_layer, weights_iter, bias, rnn_type);
 
-        auto lstm_ht_output = Output<Node>(lstm_node, 1).as_single_output_node();
-        auto lstm_ct_output = Output<Node>(lstm_node, 2).as_single_output_node();
+        auto lstm_ht_output = lstm_node->output(1).as_single_output_node();
+        auto lstm_ct_output = lstm_node->output(2).as_single_output_node();
 
         // Now identify the nodes which consumes the output of LSTM nodes
         // and replace them accordingly
@@ -538,7 +538,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                                                    lstm_weights_iter_label,
                                                    lstm_bias_label,
                                                    ref_rnn_type);
-    auto lstm_goe = Output<Node>(lstm, 1).as_single_output_node();
+    auto lstm_goe = lstm->output(1).as_single_output_node();
     // We cannot attach labels to multi-output nodes, so we attach a label to the goe instead
     auto lstm_goe_label =
         std::make_shared<pattern::op::Label>(lstm_goe, nullptr, NodeVector{lstm_goe});
@@ -650,8 +650,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         std::vector<std::shared_ptr<ngraph::op::Slice>> ht_slice_per_timestep(sequence_len,
                                                                               nullptr);
-        auto rnn_ht_goe = Output<Node>(rnn, 0).as_single_output_node();
-        auto rnn_ht_ct_goe = Output<Node>(rnn, 1).as_single_output_node();
+        auto rnn_ht_goe = rnn->output(0).as_single_output_node();
+        auto rnn_ht_ct_goe = rnn->output(1).as_single_output_node();
 
         for (size_t i = 0, start_index = 0; i < sequence_len; i++, start_index += batch_size)
         {
@@ -740,7 +740,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                                                    lstm_weights_iter_label,
                                                    lstm_bias_label,
                                                    ref_rnn_type);
-    auto lstm_goe = Output<Node>(lstm, 2).as_single_output_node();
+    auto lstm_goe = lstm->output(2).as_single_output_node();
     // We cannot attach labels to multi-output nodes, so we attach a label to the goe instead
     auto lstm_goe_label =
         std::make_shared<pattern::op::Label>(lstm_goe, nullptr, NodeVector{lstm_goe});
@@ -850,8 +850,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         std::vector<std::shared_ptr<ngraph::op::Slice>> ht_slice_per_timestep(sequence_len,
                                                                               nullptr);
-        auto rnn_hts_goe = Output<Node>(rnn, 0).as_single_output_node();
-        auto rnn_ct_goe = Output<Node>(rnn, 2).as_single_output_node();
+        auto rnn_hts_goe = rnn->output(0).as_single_output_node();
+        auto rnn_ct_goe = rnn->output(2).as_single_output_node();
 
         for (size_t i = 0, start_index = 0; i < sequence_len; i++, start_index += batch_size)
         {
@@ -885,36 +885,33 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         // LSTM in the same layer)
         for (size_t index = 0; index < sequence_len; index++)
         {
+            auto lstm_outputs = lstm_nodes[index]->outputs();
             auto goe_nodes = ngraph::op::get_output_elements(lstm_nodes[index]);
 
             // if there is no GOE followed by the Lstm, their might be pattern match error
             // we will return safely
-            if (goe_nodes.size() != 3)
+            if (lstm_outputs.size() != 3)
             {
                 return false;
             }
 
             // dst_iter of the lstm cell
-            auto goe_1 = goe_nodes[1];
-            if (goe_1)
+            for (auto goe1_input : lstm_outputs[1].get_target_inputs())
             {
-                for (auto goe1_user : goe_1->get_users())
+                auto goe1_user = goe1_input.get_node()->shared_from_this();
+                // do not include LSTM in the same layer
+                if (std::find(lstm_nodes.begin(), lstm_nodes.end(), goe1_user) == lstm_nodes.end())
                 {
-                    // do not include LSTM in the same layer
-                    if (std::find(lstm_nodes.begin(), lstm_nodes.end(), goe1_user) ==
-                        lstm_nodes.end())
+                    for (size_t i = 0; i < goe1_user->get_input_size(); i++)
                     {
-                        for (size_t i = 0; i < goe1_user->get_input_size(); i++)
+                        if (goe1_user->input_value(i) == lstm_outputs[1])
                         {
-                            if (goe1_user->get_argument(i) == goe_1)
-                            {
-                                goe1_user->get_inputs().at(i).replace_output(
-                                    ht_slice_per_timestep[index]->get_outputs().at(0));
-                            }
+                            goe1_user->input(i).replace_source_output(
+                                ht_slice_per_timestep[index]->output(0));
                         }
-                        NGRAPH_DEBUG << "ht_slice: " << ht_slice_per_timestep[index]->get_name()
-                                     << " goe1_user " << goe1_user->get_name() << " ";
                     }
+                    NGRAPH_DEBUG << "ht_slice: " << *ht_slice_per_timestep[index] << " goe1_user "
+                                 << *goe1_user << " ";
                 }
             }
         }
@@ -985,7 +982,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                                                           ref_num_of_rnn_fused_layer,
                                                           ref_rnn_type);
 
-    auto rnn_goe0 = Output<Node>(ref_rnn_node, 0).as_single_output_node();
+    auto rnn_goe0 = ref_rnn_node->output(0).as_single_output_node();
 
     auto rnn_goe0_label =
         std::make_shared<pattern::op::Label>(rnn_goe0, nullptr, NodeVector{rnn_goe0});
@@ -1106,9 +1103,9 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                                                      num_fused_rnn_layers,
                                                      rnn_type);
 
-        auto mrnn_ht = Output<Node>(rnn, 0).as_single_output_node();
+        auto mrnn_ht = rnn->output(0).as_single_output_node();
 #if MKLDNN_VERSION_MAJOR < 1
-        auto mrnn_ht_ct = Output<Node>(rnn, 1).as_single_output_node();
+        auto mrnn_ht_ct = rnn->output(1).as_single_output_node();
 
         // Replace all the users of RNN cell state {ct} across different user.
         auto replace_rnn_output_cellstate = [&](std::shared_ptr<Node> rnn_ct_goe1, size_t layer) {
@@ -1157,7 +1154,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             }
         }
 #else
-        auto mrnn_ct = Output<Node>(rnn, 2).as_single_output_node();
+        auto mrnn_ct = rnn->output(2).as_single_output_node();
 
         // Replace all the users of RNN cell state {ct} across different user.
         auto replace_rnn_output_cellstate = [&](std::shared_ptr<Node> rnn_ct_goe2, size_t layer) {
@@ -1226,8 +1223,8 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
         element::f32, Shape{1, 256}, pattern::has_class<ngraph::op::Rnn>());
 
     auto reshape_pred = [](std::shared_ptr<Node> n) { return (is_type<ngraph::op::Reshape>(n)); };
-    auto rnn_left_to_right_goe0 = Output<Node>(rnn_left_to_right, 0).as_single_output_node();
-    auto rnn_right_to_left_goe0 = Output<Node>(rnn_right_to_left, 0).as_single_output_node();
+    auto rnn_left_to_right_goe0 = rnn_left_to_right->output(0).as_single_output_node();
+    auto rnn_right_to_left_goe0 = rnn_right_to_left->output(0).as_single_output_node();
 
     auto rnn_rtol_goe0_reshape_ntc =
         std::make_shared<pattern::op::Skip>(rnn_right_to_left_goe0, reshape_pred);
@@ -1342,7 +1339,7 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
                                                      rnn_type);
 #endif
 
-        auto layer_rnn_ht = Output<Node>(rnn, 0).as_single_output_node();
+        auto layer_rnn_ht = rnn->output(0).as_single_output_node();
         size_t batch_size = layer_rnn_ht->get_shape()[0] / num_time_steps;
         size_t feature_size = layer_rnn_ht->get_shape()[1];
 

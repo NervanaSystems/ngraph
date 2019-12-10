@@ -54,10 +54,7 @@ runtime::cpu::op::ConvertLayout::ConvertLayout(
 
 void runtime::cpu::op::ConvertLayout::validate_and_infer_types()
 {
-    auto value = input_value(0);
-    Node* arg = value.get_node();
-
-    const auto& arg_tensor = arg->get_output_tensor_ptr(arg_output_index);
+    const auto& arg_tensor = input_value(0).get_tensor_ptr();
     const auto& arg_layout = arg_tensor->get_tensor_layout();
 
     if (!arg_layout)

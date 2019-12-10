@@ -791,6 +791,9 @@ namespace ngraph
         // TODO(amprocte): Investigate whether this really ought to be public.
         void remove_target_input(const Input<Node>& target_input) const;
 
+        /// \brief Replace all users of this value with replacement
+        void replace(const Output<Node>& replacement);
+
         bool operator==(const Output& other) const
         {
             return m_node == other.m_node && m_index == other.m_index;

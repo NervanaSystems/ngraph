@@ -137,7 +137,8 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
                           std::shared_ptr<Node> replacement,
                           const std::vector<int64_t>& output_order)
 {
-    Node* target_goe = nullptr;
+    NGRAPH_DEBUG << "replace_node target: " << *target << ", replacement: " << *replacement;
+
     if (target->is_output())
     {
         throw ngraph_error("Result nodes cannot be replaced.");
@@ -163,7 +164,6 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
     if (is_type<op::GetOutputElement>(target))
     {
         // We are replacing a particular output
-        target_goe = target.get();
         Output<Node> target_value(target);
         target_values.push_back(target_value);
         target = target_value.get_node_shared_ptr();
@@ -214,13 +214,7 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
     //         Change I's connected upstream output to O_rep
     for (size_t i = 0; i < target_values.size(); i++)
     {
-        for (auto& input : target_values.at(i).get_target_inputs())
-        {
-            if (input.get_node() != target_goe)
-            {
-                input.replace_source_output(replacement_values.at(output_order[i]));
-            }
-        }
+        target_values.at(i).replace(replacement_values.at(output_order[i]));
     }
 
     replacement->add_node_control_dependents(target);

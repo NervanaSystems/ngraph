@@ -346,7 +346,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
         {
             return false;
         }
-        auto normalized_output = Output<Node>(bn_node, 0).as_single_output_node();
+        auto normalized_output = bn_node->output(0).as_single_output_node();
 
         ngraph::replace_node(m.get_match_root(), normalized_output);
         return true;
@@ -486,8 +486,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
                             conv_bprop->get_padding_below_forward(),
                             conv_bprop->get_padding_above_forward(),
                             conv_bprop->get_data_dilation_strides_forward());
-                    auto goe1 = Output<Node>(conv_bias_bprop, 0).as_single_output_node();
-                    auto goe2 = Output<Node>(conv_bias_bprop, 1).as_single_output_node();
+                    auto goe1 = conv_bias_bprop->output(0).as_single_output_node();
+                    auto goe2 = conv_bias_bprop->output(1).as_single_output_node();
                     NGRAPH_DEBUG << "Replacing " << m.get_match_root()->get_name()
                                  << "with ConvolutionBiasBackpropFiltersBias";
                     ngraph::replace_node(m.get_match_root(), goe1);
@@ -591,7 +591,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
     auto beta = std::make_shared<pattern::op::Label>(element::f32, beta_shape);
     double eps = 0.001;
     auto bn = std::make_shared<ngraph::op::BatchNormTraining>(eps, gamma, beta, input);
-    auto goe = Output<Node>(bn, 0).as_single_output_node();
+    auto goe = bn->output(0).as_single_output_node();
     auto prelu = std::make_shared<ngraph::op::Relu>(goe);
 
     auto callback = [input, gamma, beta](pattern::Matcher& m) {
@@ -622,9 +622,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         auto bn_relu = std::make_shared<ngraph::op::BatchNormTrainingRelu>(
             m_bn->get_eps_value(), pattern_map[gamma], pattern_map[beta], pattern_map[input]);
 
-        auto bn_relu_output = Output<Node>(bn_relu, 0).as_single_output_node();
-        auto bn_relu_mean = Output<Node>(bn_relu, 1).as_single_output_node();
-        auto bn_relu_var = Output<Node>(bn_relu, 2).as_single_output_node();
+        auto bn_relu_output = bn_relu->output(0).as_single_output_node();
+        auto bn_relu_mean = bn_relu->output(1).as_single_output_node();
+        auto bn_relu_var = bn_relu->output(2).as_single_output_node();
 
         std::shared_ptr<Node> new_nodes[] = {bn_relu_output, bn_relu_mean, bn_relu_var};
 
@@ -1171,10 +1171,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
                                                                gm->get_argument(3),
                                                                gm->get_argument(4));
 
-        auto goe1 = Output<Node>(dropout_n, 0).as_single_output_node();
+        auto goe1 = dropout_n->output(0).as_single_output_node();
         ngraph::replace_node(m.get_match_root(), goe1);
 
-        auto goe2 = Output<Node>(dropout_n, 1).as_single_output_node();
+        auto goe2 = dropout_n->output(1).as_single_output_node();
         ngraph::replace_node(pattern_map[genmask_label], goe2);
 
         return true;
@@ -2048,8 +2048,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fuse_lstm_recurrent_state(
                                                     bias_label,
                                                     rnn_type);
 
-    auto lstm1_goe0 = std::make_shared<ngraph::op::GetOutputElement>(lstm1, 0);
-    auto lstm1_goe1 = std::make_shared<ngraph::op::GetOutputElement>(lstm1, 1);
+    auto lstm1_goe0 = lstm1->output(0).as_single_output_node();
+    auto lstm1_goe1 = lstm1->output(1).as_single_output_node();
     auto lstm1_goe0_label =
         std::make_shared<pattern::op::Label>(lstm1_goe0, nullptr, NodeVector{lstm1_goe0});
     auto lstm1_goe1_label =

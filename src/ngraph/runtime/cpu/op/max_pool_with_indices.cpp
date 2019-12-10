@@ -197,6 +197,7 @@ op::MaxPoolWithIndicesBackprop::MaxPoolWithIndicesBackprop(const Output<Node>& a
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
 {
+    cerr << *delta.get_node() << endl;
     constructor_validate_and_infer_types();
 
     if (delta.get_shape() != indices.get_shape())

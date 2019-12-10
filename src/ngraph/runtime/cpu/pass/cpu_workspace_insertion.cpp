@@ -136,7 +136,6 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
                                                          m_max_pool->get_window_movement_strides(),
                                                          m_max_pool->get_padding_below(),
                                                          m_max_pool->get_padding_above());
-
     ngraph::replace_node(m_max_pool_bprop, max_pool_with_indices_bprop);
     if (m_return_indices)
     {

@@ -92,7 +92,7 @@ NodeVector op::get_output_elements(const shared_ptr<Node>& mon)
     NodeVector goes(mon->get_output_size());
     for (auto o : mon->outputs())
     {
-        goes.at(o.get_index()) = o.as_single_output_node();
+        goes[o.get_index()] = o.as_single_output_node();
     }
     return goes;
 }
