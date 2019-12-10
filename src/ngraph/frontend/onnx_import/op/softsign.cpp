@@ -23,7 +23,6 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
-
 #include "softsign.hpp"
 
 namespace ngraph

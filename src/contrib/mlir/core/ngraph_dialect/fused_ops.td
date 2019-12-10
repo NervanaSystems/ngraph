@@ -33,7 +33,7 @@ def NGSqueezeOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return mlir::success(); /* TBD */ }];
+  // TODO: verifier
 }
 
 // Unsqueeze Op
@@ -47,7 +47,7 @@ def NGUnSqueezeOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return mlir::success(); /* TBD */ }];
+  // TODO: verifier
 }
 
 // Squared Difference Op
@@ -60,7 +60,7 @@ def NGSquaredDiffOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return mlir::success(); /* TBD */ }];
+  // TODO: verifier
 }
 
 // Split Op
@@ -74,7 +74,7 @@ def NGSplitOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return mlir::success(); /* TBD */ }];
+  // TODO: verifier
 
   let extraClassDeclaration = [{
     void setAxis(const Attribute& attr)            { this->setAttr("axis", attr);            }
@@ -102,7 +102,7 @@ def NGSpaceToDepthOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return mlir::success(); /* TBD */ }];
+  // TODO: verifier
 
   let extraClassDeclaration = [{
     void setBlockSize(const Attribute& attr) { this->setAttr("blockSize", attr); }
@@ -127,7 +127,7 @@ def NGShuffleChannelsOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return mlir::success(); /* TBD */ }];
+  // TODO: verifier
 
   let extraClassDeclaration = [{
     void setAxis(const Attribute& axis)     { this->setAttr("axis", axis); }
@@ -146,7 +146,7 @@ def NGScaleShiftOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return mlir::success(); /* TBD */ }];
+  // TODO: verifier
 }
 
 // RNN Cell Op
@@ -166,7 +166,7 @@ def NGRNNCellOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return mlir::success(); /* TBD */ }];  
+  // TODO: verifier
 
   let builders = [
     OpBuilder<
@@ -213,7 +213,7 @@ def NGPrelu :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return mlir::success(); /* TBD */ }];  
+  // TODO: verifier
 }
 
 // Normalize L2 Op
@@ -233,7 +233,7 @@ def NGNormalizeL2Op :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return mlir::success(); /* TBD */ }];  
+  // TODO: verifier
 
   let extraClassDeclaration = [{
     void setEpsMode(const Attribute& epsMode) { this->setAttr("epsMOde", epsMode); }
@@ -358,9 +358,7 @@ def NGLSTMCellOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ 
-    return mlir::success(); /* TBD */ 
-  }];  
+  // TODO: verifier
 
   let builders = [
     OpBuilder<
@@ -445,9 +443,7 @@ def NGLSTMSequenceOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ 
-    return mlir::success(); /* TBD */ 
-  }];  
+  // TODO: verifier
 
   let extraClassDeclaration = [{
     void setHiddenSize  (const Attribute& attr)       { this->setAttr("hiddenSize", attr); }
@@ -499,7 +495,7 @@ def NGGRUCellOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return mlir::success(); /* TBD */ }];  
+  // TODO: verifier
 
   let builders = [
     OpBuilder<
@@ -716,8 +712,7 @@ def NGGroupConvOp :
                I64ArrayAttr:$padBelow,
                I64ArrayAttr:$padAbove,
                I64Attr:$groups,
-               DefaultValuedAttr<PadTypeEnumAttr, 
-                                "static_cast<int64_t>(MLIRPadType::EXPLICIT)">:$padType)>
+               DefaultValuedAttr<PadTypeEnumAttr, "MLIRPadType::EXPLICIT">:$padType)>
 {
   let summary = "Group Convolution Op";
   let description = [{
@@ -755,8 +750,7 @@ def NGGroupConvTransposeOp :
              I64ArrayAttr:$strides, I64ArrayAttr:$padBelow, I64ArrayAttr:$padAbove, 
              I64ArrayAttr:$outputPad, 
              DefaultValuedAttr<I64Attr, "1UL">:$groups, 
-             DefaultValuedAttr<PadTypeEnumAttr, 
-                               "static_cast<int64_t>(MLIRPadType::EXPLICIT)">:$padType,
+             DefaultValuedAttr<PadTypeEnumAttr, "MLIRPadType::EXPLICIT">:$padType,
              I64ArrayAttr:$outputShape)>
 {
   let summary = "Group Transpose Convolution (Deconvolution)";
@@ -898,11 +892,10 @@ def NGEluOp :
 // FakeQuant Op
 def NGFakeQuantOp :
     NG_OneResult_Op<"fakeQuant", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
-    Arguments<(ins NG_TensorType:$data, NG_TensorType:$inputLow, NG_TensorType:$inputHigh, 
-               NG_TensorType:$outputLow, NG_TensorType:$outputHigh, 
+    Arguments<(ins NG_TensorType:$data, NG_TensorType:$inputLow, NG_TensorType:$inputHigh,
+               NG_TensorType:$outputLow, NG_TensorType:$outputHigh,
                I64Attr:$levels,
-               DefaultValuedAttr<AutoBroadcastEnumAttr,
-                                "static_cast<int64_t>(MLIRPadType::EXPLICIT)">:$autoBroadcast)>
+               DefaultValuedAttr<AutoBroadcastEnumAttr, "MLIRAutoBroadcastMode::NONE">:$autoBroadcast)>
 {
   let summary = "Op performing element-wise linear quantization.";
   let description = [{
