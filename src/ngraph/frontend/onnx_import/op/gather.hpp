@@ -20,7 +20,7 @@
 
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/gather.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "utils/common.hpp"
 
 namespace ngraph
@@ -39,7 +39,7 @@ namespace ngraph
                     auto axis = node.get_attribute_value<int64_t>("axis", 0);
                     auto valid_axis = common::validate_axis(node, axis, data->get_shape().size());
 
-                    return {std::make_shared<ngraph::op::Gather>(data, indices, valid_axis)};
+                    return {std::make_shared<ngraph::opset0::Gather>(data, indices, valid_axis)};
                 }
 
             } // namespace set_1

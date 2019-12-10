@@ -18,8 +18,7 @@
 #include <vector>
 
 #include "elu.hpp"
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/elu.hpp"
+#include "default_opset.hpp"
 
 namespace ngraph
 {
@@ -34,7 +33,7 @@ namespace ngraph
                     auto data = node.get_ng_inputs().at(0);
                     double alpha = node.get_attribute_value<double>("alpha", 1);
 
-                    return NodeVector{std::make_shared<ngraph::op::Elu>(data, alpha)};
+                    return NodeVector{std::make_shared<ngraph::default_opset::Elu>(data, alpha)};
                 }
 
             } // namespace set_1

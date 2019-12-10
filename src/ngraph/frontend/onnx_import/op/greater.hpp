@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "core/node.hpp"
+#include "default_opset.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
@@ -33,7 +34,7 @@ namespace ngraph
             {
                 inline NodeVector greater(const Node& node)
                 {
-                    return {std::make_shared<ngraph::op::v1::Greater>(node.get_ng_inputs().at(0),
+                    return {std::make_shared<ngraph::default_opset::Greater>(node.get_ng_inputs().at(0),
                                                                       node.get_ng_inputs().at(1))};
                 }
 

@@ -17,10 +17,7 @@
 #include <memory>
 
 #include "hard_sigmoid.hpp"
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/hard_sigmoid.hpp"
-
-using namespace ngraph::op;
+#include "default_opset.hpp"
 
 namespace ngraph
 {
@@ -34,17 +31,17 @@ namespace ngraph
                 {
                     const auto data = node.get_ng_inputs().at(0);
 
-                    const auto alpha = Constant::create<double>(
+                    const auto alpha = ngraph::default_opset::Constant::create<double>(
                         data->get_element_type(),
                         Shape{},
                         std::vector<double>{node.get_attribute_value<double>("alpha", 0.2)});
 
-                    const auto beta = Constant::create<double>(
+                    const auto beta = ngraph::default_opset::Constant::create<double>(
                         data->get_element_type(),
                         Shape{},
                         std::vector<double>{node.get_attribute_value<double>("beta", 0.5)});
 
-                    return {std::make_shared<ngraph::op::HardSigmoid>(data, alpha, beta)};
+                    return {std::make_shared<ngraph::default_opset::HardSigmoid>(data, alpha, beta)};
                 }
 
             } // namespace set_1

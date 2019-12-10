@@ -23,6 +23,7 @@
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/dequantize.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -78,7 +79,7 @@ namespace ngraph
                                                                            x->get_element_type());
                     }
 
-                    return {std::make_shared<ngraph::op::Dequantize>(
+                    return {std::make_shared<ngraph::opset0::Dequantize>(
                         x, x_scale, zero_point, x_scale->get_element_type(), axes)};
                 }
 

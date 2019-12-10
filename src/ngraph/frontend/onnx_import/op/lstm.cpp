@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "exceptions.hpp"
+#include "default_opset.hpp"
 #include "lstm.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/frontend/onnx_import/op/lstm.hpp"
@@ -29,6 +30,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/lstm_sequence.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -94,7 +96,7 @@ namespace ngraph
                         }
                         else
                         {
-                            m_map[LSTMInput::LSTM_INPUT_B] = ngraph::op::Constant::create(
+                            m_map[LSTMInput::LSTM_INPUT_B] = ngraph::default_opset::Constant::create(
                                 element::f32,
                                 Shape{num_directions, gates_count * hidden_size},
                                 std::vector<float>(num_directions * gates_count * hidden_size,
@@ -107,7 +109,7 @@ namespace ngraph
                         }
                         else
                         {
-                            m_map[LSTMInput::LSTM_INPUT_SEQ_LENGTHS] = ngraph::op::Constant::create(
+                            m_map[LSTMInput::LSTM_INPUT_SEQ_LENGTHS] = ngraph::default_opset::Constant::create(
                                 element::i32,
                                 Shape{batch_size},
                                 std::vector<std::int32_t>(
@@ -121,7 +123,7 @@ namespace ngraph
                         }
                         else
                         {
-                            m_map[LSTMInput::LSTM_INPUT_INIT_H] = ngraph::op::Constant::create(
+                            m_map[LSTMInput::LSTM_INPUT_INIT_H] = ngraph::default_opset::Constant::create(
                                 element::f32,
                                 Shape{num_directions, batch_size, hidden_size},
                                 std::vector<float>(num_directions * batch_size * hidden_size, 0.f));
@@ -134,7 +136,7 @@ namespace ngraph
                         }
                         else
                         {
-                            m_map[LSTMInput::LSTM_INPUT_INIT_C] = ngraph::op::Constant::create(
+                            m_map[LSTMInput::LSTM_INPUT_INIT_C] = ngraph::default_opset::Constant::create(
                                 element::f32,
                                 Shape{num_directions, batch_size, hidden_size},
                                 std::vector<float>(num_directions * batch_size * hidden_size, 0.f));
@@ -146,7 +148,7 @@ namespace ngraph
                         }
                         else
                         {
-                            m_map[LSTMInput::LSTM_INPUT_P] = ngraph::op::Constant::create(
+                            m_map[LSTMInput::LSTM_INPUT_P] = ngraph::default_opset::Constant::create(
                                 element::f32,
                                 Shape{num_directions, peepholes_count * hidden_size},
                                 std::vector<float>(num_directions * peepholes_count * hidden_size,
@@ -188,15 +190,15 @@ namespace ngraph
                                      " is invalid");
                         if (direction == "forward")
                         {
-                            m_direction = ngraph::op::LSTMSequence::direction::FORWARD;
+                            m_direction = ngraph::default_opset::LSTMSequence::direction::FORWARD;
                         }
                         else if (direction == "reverse")
                         {
-                            m_direction = ngraph::op::LSTMSequence::direction::REVERSE;
+                            m_direction = ngraph::default_opset::LSTMSequence::direction::REVERSE;
                         }
                         else // (direction == "bidirectional")
                         {
-                            m_direction = ngraph::op::LSTMSequence::direction::BIDIRECTIONAL;
+                            m_direction = ngraph::default_opset::LSTMSequence::direction::BIDIRECTIONAL;
                         }
                     }
 
@@ -218,7 +220,7 @@ namespace ngraph
                     LSTMNgInputMap input_map{node};
                     LSTMAttributes attributes{node};
 
-                    auto lstmSequence = std::make_shared<ngraph::op::LSTMSequence>(
+                    auto lstmSequence = std::make_shared<ngraph::default_opset::LSTMSequence>(
                         input_map.at(LSTMInput::LSTM_INPUT_X),
                         input_map.at(LSTMInput::LSTM_INPUT_INIT_H),
                         input_map.at(LSTMInput::LSTM_INPUT_INIT_C),
@@ -235,9 +237,9 @@ namespace ngraph
                         attributes.m_activations,
                         attributes.m_clip_threshold,
                         attributes.m_input_forget);
-                    return {std::make_shared<ngraph::op::GetOutputElement>(lstmSequence, 0),
-                            std::make_shared<ngraph::op::GetOutputElement>(lstmSequence, 1),
-                            std::make_shared<ngraph::op::GetOutputElement>(lstmSequence, 2)};
+                    return {std::make_shared<ngraph::opset0::GetOutputElement>(lstmSequence, 0),
+                            std::make_shared<ngraph::opset0::GetOutputElement>(lstmSequence, 1),
+                            std::make_shared<ngraph::opset0::GetOutputElement>(lstmSequence, 2)};
                 }
             } // namespace set_1
 

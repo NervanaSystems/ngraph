@@ -19,8 +19,8 @@
 #include <memory>
 
 #include "core/node.hpp"
+#include "default_opset.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/fused/matmul.hpp"
 
 namespace ngraph
 {
@@ -32,7 +32,7 @@ namespace ngraph
             {
                 NodeVector matmul(const Node& node)
                 {
-                    return {std::make_shared<ngraph::op::MatMul>(node.get_ng_inputs().at(0),
+                    return {std::make_shared<ngraph::default_opset::MatMul>(node.get_ng_inputs().at(0),
                                                                  node.get_ng_inputs().at(1))};
                 }
             } // namespace set_1
