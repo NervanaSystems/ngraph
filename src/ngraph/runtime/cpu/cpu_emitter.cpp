@@ -45,6 +45,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
+#include "ngraph/op/cum_sum.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
@@ -4602,6 +4603,22 @@ namespace ngraph
 
                     writer.block_end();
                 }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::CumSum)
+            {
+                const ngraph::op::CumSum* cumsum = static_cast<const ngraph::op::CumSum*>(node);
+                writer.block_begin();
+                writer << "reference::cumsum<" << args[0].get_element_type().c_type_string();
+                writer << ",           " << args[1].get_element_type().c_type_string() << ">(";
+                writer << "            " << args[0].get_name() << ",\n";
+                writer << "            " << args[1].get_name() << ",\n";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            {" << join(args[0].get_shape()) << "},\n";
+                writer << "            " << cumsum->is_exclusive() << ",\n";
+                writer << "            " << cumsum->is_reverse() << ");\n";
+                writer.block_end();
             }
 
 #undef TI

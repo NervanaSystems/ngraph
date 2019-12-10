@@ -26,7 +26,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::ZeroDimTensorElimination : public FunctionPass
+class NGRAPH_API ngraph::pass::ZeroDimTensorElimination : public FunctionPass
 {
 public:
     ZeroDimTensorElimination()

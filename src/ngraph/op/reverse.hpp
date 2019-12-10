@@ -48,10 +48,9 @@ namespace ngraph
             /// | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
             /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \texttt{arg}[j_1,\dots,j_n]\f$ and \f$j_k = d_k - i_k - 1\f$ if axis \f$k\f$ is in the reverse set; else \f$j_k = i_k\f$. |
             // clang-format on
-            class Reverse : public Op
+            class NGRAPH_API Reverse : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Reverse", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Reverse() = default;
@@ -83,7 +82,7 @@ namespace ngraph
 
         namespace v1
         {
-            class Reverse : public Op
+            class NGRAPH_API Reverse : public Op
             {
             public:
                 enum class Mode
@@ -92,7 +91,6 @@ namespace ngraph
                     MASK
                 };
 
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Reverse", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Reverse() = default;

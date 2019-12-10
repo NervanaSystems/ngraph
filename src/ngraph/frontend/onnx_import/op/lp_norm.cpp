@@ -16,6 +16,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 
 #include "exceptions.hpp"
 #include "lp_norm.hpp"

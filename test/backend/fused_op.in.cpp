@@ -111,11 +111,15 @@ NGRAPH_TEST(${BACKEND_NAME}, reciprocal)
 
 NGRAPH_TEST(${BACKEND_NAME}, hardsigmoid)
 {
-    Shape shape{2, 7};
-    float alpha = 0.125f;
-    float beta = 0.642f;
+    const Shape shape{2, 7};
+    const float alpha_f = 0.125f;
+    const float beta_f = 0.642f;
 
-    auto A = make_shared<op::Parameter>(element::f32, shape);
+    const auto A = make_shared<op::Parameter>(element::f32, shape);
+
+    const auto alpha = op::Constant::create<float>(A->get_element_type(), Shape{}, {alpha_f});
+    const auto beta = op::Constant::create<float>(A->get_element_type(), Shape{}, {beta_f});
+
     auto hardsigmoid = make_shared<op::HardSigmoid>(A, alpha, beta);
     auto f0 = make_shared<Function>(NodeVector{hardsigmoid}, ParameterVector{A});
 
@@ -137,7 +141,7 @@ NGRAPH_TEST(${BACKEND_NAME}, hardsigmoid)
                              numeric_limits<float>::min() / 16.f,
                              -numeric_limits<float>::min() / 16.f};
 
-    auto impl = [alpha, beta](float val) { return min(max(alpha * val + beta, 0.f), 1.f); };
+    auto impl = [alpha_f, beta_f](float val) { return min(max(alpha_f * val + beta_f, 0.f), 1.f); };
     vector<float> expected_output;
     transform(begin(input_data), end(input_data), back_inserter(expected_output), impl);
 
@@ -1355,8 +1359,9 @@ NGRAPH_TEST(${BACKEND_NAME}, squared_difference_broadcast)
 NGRAPH_TEST(${BACKEND_NAME}, split_3_equal_parts)
 {
     const auto data = make_shared<op::Parameter>(element::i32, Shape{6});
+    const auto axis = op::Constant::create(element::i64, Shape{}, {0});
 
-    const auto tested_op = make_shared<op::Split>(data, 0, 3);
+    const auto tested_op = make_shared<op::Split>(data, axis, 3);
     const auto function = make_shared<Function>(tested_op->decompose_op(), ParameterVector{data});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -1374,7 +1379,8 @@ NGRAPH_TEST(${BACKEND_NAME}, split_var_len_parts)
     const auto data = make_shared<op::Parameter>(element::i32, Shape{2, 6});
 
     const std::vector<size_t> splits = {2, 4};
-    const auto tested_op = make_shared<op::Split>(data, 1, splits);
+    const auto axis = op::Constant::create(element::i64, Shape{}, {1});
+    const auto tested_op = make_shared<op::Split>(data, axis, splits);
     const auto function = make_shared<Function>(tested_op->decompose_op(), ParameterVector{data});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");

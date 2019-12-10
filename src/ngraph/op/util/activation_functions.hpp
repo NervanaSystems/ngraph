@@ -78,12 +78,13 @@ namespace ngraph
             ///
             /// \brief      Class representing activation function used in RNN cells.
             ///
-            class ActivationFunction
+            class NGRAPH_API ActivationFunction
             {
             public:
                 ActivationFunction(ActivationFunctionType f, float alpha, float beta);
                 ActivationFunction(ActivationFunctionType f, float alpha);
                 ActivationFunction(ActivationFunctionType f);
+                ActivationFunction() = default;
 
                 ///
                 /// \brief  Calls stored activation function with provided node argument.

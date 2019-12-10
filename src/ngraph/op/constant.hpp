@@ -30,12 +30,12 @@ namespace ngraph
     namespace op
     {
         /// \brief Class for constants.
-        class Constant : public Op
+        class NGRAPH_API Constant : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Constant", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            Constant() = default;
             /// \brief Constructs a tensor constant.
             ///
             /// \param type The element type of the tensor constant.
@@ -356,13 +356,11 @@ namespace ngraph
             Constant operator=(const Constant&) = delete;
         };
 
-        class ScalarConstantLikeBase : public Constant
+        class NGRAPH_API ScalarConstantLikeBase : public Constant
         {
         public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"ScalarConstantLikeBase", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
             std::shared_ptr<op::Constant> as_constant() const;
+            ScalarConstantLikeBase() = default;
 
         protected:
             ScalarConstantLikeBase(const OutputVector& args)
@@ -372,9 +370,11 @@ namespace ngraph
         };
 
         /// \brief A scalar constant whose element type is the same as like.
-        class ScalarConstantLike : public ScalarConstantLikeBase
+        class NGRAPH_API ScalarConstantLike : public ScalarConstantLikeBase
         {
         public:
+            static constexpr NodeTypeInfo type_info{"ScalarConstantLike", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief A scalar constant whose element type is the same as like.
             ///
             /// Once the element type is known, the dependency on like will be removed and
@@ -389,6 +389,8 @@ namespace ngraph
             {
                 constructor_validate_and_infer_types();
             }
+
+            ScalarConstantLike() = default;
 
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
