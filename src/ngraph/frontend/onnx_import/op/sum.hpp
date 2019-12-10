@@ -17,9 +17,9 @@
 #pragma once
 
 #include "core/node.hpp"
+#include "default_opset.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/opsets/opset0.hpp"
-#include "ngraph/opsets/opset1.hpp"
 #include "utils/variadic.hpp"
 
 namespace ngraph
@@ -41,7 +41,7 @@ namespace ngraph
             {
                 inline NodeVector sum(const Node& node)
                 {
-                    return variadic::make_ng_variadic_op<ngraph::opset1::Add>(node);
+                    return variadic::make_ng_variadic_op<ngraph::default_opset::Add>(node);
                 }
 
             } // namespace set_8

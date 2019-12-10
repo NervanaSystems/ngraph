@@ -16,6 +16,7 @@
 
 #include <memory>
 
+#include "default_opset.hpp"
 #include "exceptions.hpp"
 #include "leaky_relu.hpp"
 #include "ngraph/op/constant.hpp"

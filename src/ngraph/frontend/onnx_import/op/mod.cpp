@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "exceptions.hpp"
+#include "default_opset.hpp"
 #include "mod.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/fused/mod.hpp"
@@ -39,7 +40,7 @@ namespace ngraph
                     ASSERT_IS_SUPPORTED(node, fmod == 1)
                         << "Only 'fmod=1' mode is supported for mod operator.";
 
-                    return {std::make_shared<ngraph::op::v1::Mod>(dividend, divisor)};
+                    return {std::make_shared<ngraph::default_opset::Mod>(dividend, divisor)};
                 }
 
             } // namespace set_1
