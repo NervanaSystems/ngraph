@@ -222,7 +222,7 @@ void op::TensorIterator::revalidate_and_infer_types_for_body_ops()
     std::stack<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>> nodes_to_do;
     std::unordered_set<std::shared_ptr<Node>> nodes_done;
 
-    for (auto r : m_body->get_results())
+    for (const auto& r : m_body->get_results())
     {
         nodes_to_do.push(r);
     }
@@ -283,7 +283,7 @@ void op::TensorIterator::validate_and_infer_types()
 
     // Input
     uint64_t index_it = 0;
-    for (auto input_description : m_input_descriptions)
+    for (const auto& input_description : m_input_descriptions)
     {
         auto index = input_description->m_input_index;
         NODE_VALIDATION_CHECK(this, index == index_it, "Input_index not in order");
@@ -400,7 +400,7 @@ void op::TensorIterator::validate_and_infer_types()
 
     // Output
     index_it = 0;
-    for (auto output_description : m_output_descriptions)
+    for (const auto& output_description : m_output_descriptions)
     {
         auto index = output_description->m_output_index;
         NODE_VALIDATION_CHECK(this, index == index_it, "Output_index not in order");
@@ -472,10 +472,10 @@ std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& n
             std::make_shared<BodyLambda>(spec_func->get_results(), spec_func->get_parameters());
 
     // TODO: remove this code after the fix on the nGraph side (GetOutputElements)
-//    ::ngraph::pass::GetOutputElementElimination goe_elimination;
-//    for (auto n : spec_func->get_ops()) {
-//        goe_elimination.run_on_node(n);
-//    }
+    ::ngraph::pass::GetOutputElementElimination goe_elimination;
+    for (const auto& n : spec_func->get_ops()) {
+        goe_elimination.run_on_node(n);
+    }
 
     for (auto& input_description : m_input_descriptions)
     {
