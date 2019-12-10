@@ -99,9 +99,9 @@ void op::BatchNormTraining::generate_adjoints(autodiff::Adjoints& adjoints,
 
     auto bbn = std::make_shared<op::BatchNormTrainingBackprop>(
         data, gamma, beta, mean, var, deltas.at(0), get_eps_value());
-    auto dinput = std::make_shared<op::GetOutputElement>(bbn, 0);
-    auto dgamma = std::make_shared<op::GetOutputElement>(bbn, 1);
-    auto dbeta = std::make_shared<op::GetOutputElement>(bbn, 2);
+    auto dinput = Output<Node>(bbn, 0);
+    auto dgamma = Output<Node>(bbn, 1);
+    auto dbeta = Output<Node>(bbn, 2);
 
     adjoints.add_delta(data, dinput);
     adjoints.add_delta(gamma, dgamma);
