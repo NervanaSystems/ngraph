@@ -65,7 +65,6 @@ void pass::ConstantFolding::construct_constant_split_v1()
 
         const auto axis_val = axis_value(axis_node);
         const auto slices = builder::split(data_node, split->get_num_splits(), axis_val);
-        const auto split_input = m.get_match_root()->input(0);
 
         for (size_t i = 0; i < split->get_output_size(); i++)
         {
