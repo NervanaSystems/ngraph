@@ -58,7 +58,7 @@ namespace ngraph
             void set_type(const element::Type& type) { m_type = type; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+                                           const OutputVector& deltas) override;
 
         private:
             element::Type m_type;

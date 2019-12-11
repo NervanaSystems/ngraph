@@ -46,6 +46,6 @@ Mathematical Definition
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::ShapeOf
+.. doxygenclass:: ngraph::op::v0::ShapeOf
    :project: ngraph
    :members:

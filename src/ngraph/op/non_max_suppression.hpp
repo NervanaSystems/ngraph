@@ -87,6 +87,9 @@ namespace ngraph
             protected:
                 BoxEncodingType m_box_encoding = BoxEncodingType::CORNER;
                 bool m_sort_result_descending = true;
+
+            private:
+                int64_t max_boxes_output_from_input() const;
             };
         }
     }

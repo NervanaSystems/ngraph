@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <cstddef>
+#include <memory>
 
 #include "exceptions.hpp"
 #include "instance_norm.hpp"

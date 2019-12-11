@@ -14,9 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/fused/unsqueeze.hpp"
+#include <memory>
+
 #include "ngraph/op/constant.hpp"
-#include "squeeze.hpp"
+#include "ngraph/op/fused/unsqueeze.hpp"
+#include "ngraph/shape.hpp"
+#include "unsqueeze.hpp"
 #include "utils/common.hpp"
 
 namespace ngraph
