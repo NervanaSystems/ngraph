@@ -295,6 +295,25 @@ TEST(cpu_fusion, cpu_fusion_pass_basic)
     ASSERT_NE(as_type_ptr<op::MatmulBias>(graph->get_argument(0)), nullptr);
 }
 
+TEST(cpu_fusion, matmul_f64)
+{
+    Shape shape{};
+    Shape shape_w{2, 4};
+    Shape shape_x{4, 1};
+    Shape shape_b{1};
+    auto A = make_shared<op::Parameter>(element::f64, shape_w);
+    auto B = make_shared<op::Parameter>(element::f64, shape_x);
+    auto C = make_shared<op::Parameter>(element::f64, shape_b);
+
+    auto dot = make_shared<op::Dot>(A, B);
+    auto graph = make_shared<op::Abs>(dot);
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::FusionType::REGULAR_FUSIONS);
+    auto func = make_shared<Function>(graph, ParameterVector{A, B, C});
+    pass_manager.run_passes(func);
+    ASSERT_NE(as_type_ptr<op::MatmulBias>(graph->get_argument(0)), nullptr);
+}
+
 TEST(cpu_fusion, commutative_matmul_bias)
 {
     Shape shape{};

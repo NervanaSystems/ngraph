@@ -945,10 +945,26 @@ namespace ngraph
                          dot->get_reduction_axes_count() == 1)
                 {
                     // Emit an MKL SGEMM call if possible
-                    if (args[0].get_element_type() == element::f32)
+                    auto element_type = args[0].get_element_type();
+                    if (element_type == element::f32)
                     {
                         writer.block_begin();
                         writer << "cblas::cblas_sgemm("
+                               << "cblas::Layout::RowMajor, "
+                               << "cblas::Transpose::None, "
+                               << "cblas::Transpose::None, " << arg0_shape[0] << ", "
+                               << arg1_shape[1] << ", " << arg0_shape[1] << ",\n"
+                               << "        1.0f, " << args[0].get_name() << ", "
+                               << max(1UL, arg0_shape[1]) << ", " << args[1].get_name() << ", "
+                               << max(1UL, arg1_shape[1]) << ", 0.0f,\n"
+                               << "        " << out[0].get_name() << ", " << max(1UL, arg1_shape[1])
+                               << ");\n";
+                        writer.block_end();
+                    }
+                    else if (element_type == element::f64)
+                    {
+                        writer.block_begin();
+                        writer << "cblas::cblas_dgemm("
                                << "cblas::Layout::RowMajor, "
                                << "cblas::Transpose::None, "
                                << "cblas::Transpose::None, " << arg0_shape[0] << ", "
