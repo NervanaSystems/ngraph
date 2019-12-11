@@ -42,20 +42,12 @@ void op::v0::CumSum::validate_and_infer_types()
     set_output_type(0, arg_type, arg_shape);
 
     const PartialShape& input_shape = get_input_partial_shape(0);
-    const auto input_shape_rank = input_shape.rank();
 
     PartialShape axes_shape{PartialShape::dynamic()};
     if (get_input_partial_shape(1).is_static())
     {
         axes_shape = get_input_partial_shape(1);
     }
-
-    auto axes_rank = axes_shape.rank();
-    NODE_VALIDATION_CHECK(this,
-                          axes_rank.compatible(1),
-                          "Input axes must have rank equals 1 (axes_rank: ",
-                          axes_rank,
-                          ").");
 
     const auto& axis_type = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
