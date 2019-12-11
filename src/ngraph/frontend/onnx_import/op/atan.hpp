@@ -32,8 +32,7 @@ namespace ngraph
             {
                 inline NodeVector atan(const Node& node)
                 {
-                    return {
-                        std::make_shared<default_opset::Atan>(node.get_ng_inputs().at(0))};
+                    return {std::make_shared<default_opset::Atan>(node.get_ng_inputs().at(0))};
                 }
             } // namespace set_1
 

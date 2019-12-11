@@ -41,8 +41,7 @@ namespace ngraph
                         Shape{},
                         std::vector<double>{node.get_attribute_value<double>("beta", 0.5)});
 
-                    return {
-                        std::make_shared<default_opset::HardSigmoid>(data, alpha, beta)};
+                    return {std::make_shared<default_opset::HardSigmoid>(data, alpha, beta)};
                 }
 
             } // namespace set_1

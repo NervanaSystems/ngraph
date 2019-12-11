@@ -63,10 +63,9 @@ namespace ngraph
                         common::get_monotonic_range<std::size_t>(data->get_shape().size(), 2)};
 
                     const std::shared_ptr<ngraph::Node> eps_node =
-                        std::make_shared<default_opset::Constant>(
-                            data->get_element_type(),
-                            data->get_shape(),
-                            std::vector<float>{epsilon});
+                        std::make_shared<default_opset::Constant>(data->get_element_type(),
+                                                                  data->get_shape(),
+                                                                  std::vector<float>{epsilon});
 
                     scale = ngraph::op::legacy_style_broadcast_for_binary_operation(data, scale, 1)
                                 .at(1);
@@ -81,8 +80,7 @@ namespace ngraph
                     variance = std::make_shared<ngraph::opset0::Broadcast>(
                         variance, data->get_shape(), reduction_axes);
 
-                    const auto sqrt =
-                        std::make_shared<default_opset::Sqrt>(variance + eps_node);
+                    const auto sqrt = std::make_shared<default_opset::Sqrt>(variance + eps_node);
 
                     return {scale * (data - mean) / sqrt + bias};
                 }

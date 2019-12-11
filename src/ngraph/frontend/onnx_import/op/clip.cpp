@@ -40,8 +40,7 @@ namespace ngraph
                     const double min_value = node.get_attribute_value<double>(
                         "min", std::numeric_limits<double>::lowest());
 
-                    return {
-                        std::make_shared<default_opset::Clamp>(data, min_value, max_value)};
+                    return {std::make_shared<default_opset::Clamp>(data, min_value, max_value)};
                 }
 
             } // namespace set_1

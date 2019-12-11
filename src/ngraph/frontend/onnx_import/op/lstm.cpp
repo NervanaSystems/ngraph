@@ -96,12 +96,11 @@ namespace ngraph
                         }
                         else
                         {
-                            m_map[LSTMInput::LSTM_INPUT_B] =
-                                default_opset::Constant::create(
-                                    element::f32,
-                                    Shape{num_directions, gates_count * hidden_size},
-                                    std::vector<float>(num_directions * gates_count * hidden_size,
-                                                       0.f));
+                            m_map[LSTMInput::LSTM_INPUT_B] = default_opset::Constant::create(
+                                element::f32,
+                                Shape{num_directions, gates_count * hidden_size},
+                                std::vector<float>(num_directions * gates_count * hidden_size,
+                                                   0.f));
                         }
                         // The lengths of the sequences in a batch. Shape [batch_size]
                         if (ng_inputs.size() > 4 && !ng_inputs.at(4)->is_null())
@@ -126,12 +125,10 @@ namespace ngraph
                         }
                         else
                         {
-                            m_map[LSTMInput::LSTM_INPUT_INIT_H] =
-                                default_opset::Constant::create(
-                                    element::f32,
-                                    Shape{num_directions, batch_size, hidden_size},
-                                    std::vector<float>(num_directions * batch_size * hidden_size,
-                                                       0.f));
+                            m_map[LSTMInput::LSTM_INPUT_INIT_H] = default_opset::Constant::create(
+                                element::f32,
+                                Shape{num_directions, batch_size, hidden_size},
+                                std::vector<float>(num_directions * batch_size * hidden_size, 0.f));
                         }
                         // The initial value of the cell.
                         // Shape [num_directions, batch_size, hidden_size]
@@ -141,12 +138,10 @@ namespace ngraph
                         }
                         else
                         {
-                            m_map[LSTMInput::LSTM_INPUT_INIT_C] =
-                                default_opset::Constant::create(
-                                    element::f32,
-                                    Shape{num_directions, batch_size, hidden_size},
-                                    std::vector<float>(num_directions * batch_size * hidden_size,
-                                                       0.f));
+                            m_map[LSTMInput::LSTM_INPUT_INIT_C] = default_opset::Constant::create(
+                                element::f32,
+                                Shape{num_directions, batch_size, hidden_size},
+                                std::vector<float>(num_directions * batch_size * hidden_size, 0.f));
                         }
                         // The weight tensor for peepholes. Shape [num_directions, 3*hidde_size]
                         if (ng_inputs.size() > 7 && !ng_inputs.at(7)->is_null())
@@ -155,12 +150,11 @@ namespace ngraph
                         }
                         else
                         {
-                            m_map[LSTMInput::LSTM_INPUT_P] =
-                                default_opset::Constant::create(
-                                    element::f32,
-                                    Shape{num_directions, peepholes_count * hidden_size},
-                                    std::vector<float>(
-                                        num_directions * peepholes_count * hidden_size, 0.f));
+                            m_map[LSTMInput::LSTM_INPUT_P] = default_opset::Constant::create(
+                                element::f32,
+                                Shape{num_directions, peepholes_count * hidden_size},
+                                std::vector<float>(num_directions * peepholes_count * hidden_size,
+                                                   0.f));
                         }
                     }
 
@@ -206,8 +200,7 @@ namespace ngraph
                         }
                         else // (direction == "bidirectional")
                         {
-                            m_direction =
-                                default_opset::LSTMSequence::direction::BIDIRECTIONAL;
+                            m_direction = default_opset::LSTMSequence::direction::BIDIRECTIONAL;
                         }
                     }
 

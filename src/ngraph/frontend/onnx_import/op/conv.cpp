@@ -69,14 +69,13 @@ namespace ngraph
                         }
                         else
                         {
-                            return std::make_shared<default_opset::Convolution>(
-                                data,
-                                filters,
-                                strides,
-                                padding_below,
-                                padding_above,
-                                dilations,
-                                auto_pad);
+                            return std::make_shared<default_opset::Convolution>(data,
+                                                                                filters,
+                                                                                strides,
+                                                                                padding_below,
+                                                                                padding_above,
+                                                                                dilations,
+                                                                                auto_pad);
                         }
                     }
 
