@@ -17,7 +17,7 @@
 #include <memory>
 
 #include "ngraph/op/fused/scatter_nd.hpp"
-#include "utils/common.hpp"
+#include "scatter_nd.hpp"
 
 namespace ngraph
 {

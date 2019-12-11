@@ -269,6 +269,7 @@ model_global_lp_pool_p3
 model_argmin_no_keepdims
 model_reduce_log_sum_exp
 model_elu
+model_scatterND
 model_selu
 model_sigmoid
 model_softplus

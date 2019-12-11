@@ -25,9 +25,9 @@
 using namespace std;
 using namespace ngraph;
 
-static int DATA = 0;
-static int INDICES = 1;
-static int UPDATES = 2;
+const static int DATA = 0;
+const static int INDICES = 1;
+const static int UPDATES = 2;
 
 constexpr NodeTypeInfo op::v0::ScatterND::type_info;
 
