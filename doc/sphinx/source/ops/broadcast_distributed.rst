@@ -41,6 +41,6 @@ Outputs (in place)
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::BroadcastDistributed
+.. doxygenclass:: ngraph::op::v0::BroadcastDistributed
    :project: ngraph
    :members:

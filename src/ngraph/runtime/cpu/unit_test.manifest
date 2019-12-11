@@ -23,3 +23,6 @@ lrn_2d_across_outermost_axis
 
 # ONNX TopK with dynamic K
 top_k_opset_10
+
+# ONNX GatherND with int32
+model_gatherND_int32

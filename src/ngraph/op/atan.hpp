@@ -50,7 +50,7 @@ namespace ngraph
                 bool visit_attributes(AttributeVisitor& visitor) override { return true; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
             };
         }
         using v0::Atan;
