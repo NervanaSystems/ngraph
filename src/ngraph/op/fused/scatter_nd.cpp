@@ -25,10 +25,6 @@
 using namespace std;
 using namespace ngraph;
 
-const static int DATA = 0;
-const static int INDICES = 1;
-const static int UPDATES = 2;
-
 constexpr NodeTypeInfo op::v0::ScatterND::type_info;
 
 op::v0::ScatterND::ScatterND(const Output<Node>& data,
@@ -42,14 +38,18 @@ op::v0::ScatterND::ScatterND(const Output<Node>& data,
 shared_ptr<Node> op::v0::ScatterND::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<ScatterND>(new_args.at(DATA), new_args.at(INDICES), new_args.at(UPDATES));
+    return make_shared<ScatterND>(new_args.at(0), new_args.at(1), new_args.at(2));
 }
 
 void op::v0::ScatterND::pre_validate_and_infer_types()
 {
-    element::Type data_et = get_input_element_type(DATA);
-    element::Type indices_et = get_input_element_type(INDICES);
-    element::Type updates_et = get_input_element_type(UPDATES);
+    const static int DATA = 0;
+    const static int INDICES = 1;
+    const static int UPDATES = 2;
+
+    element::Type data_et = input_value(DATA).get_element_type();
+    element::Type indices_et = input_value(INDICES).get_element_type();
+    element::Type updates_et = input_value(UPDATES).get_element_type();
 
     NODE_VALIDATION_CHECK(this,
                           indices_et == element::i32 || indices_et == element::i64,
@@ -109,14 +109,18 @@ void op::v0::ScatterND::pre_validate_and_infer_types()
 
 NodeVector op::ScatterND::decompose_op() const
 {
-    const auto data = input_value(DATA);
-    const auto indices = input_value(INDICES);
-    const auto updates = input_value(UPDATES);
+    const auto data = input_value(0);
+    const auto indices = input_value(1);
+    const auto updates = input_value(2);
 
-    const Shape& data_shape = get_input_shape(DATA);
-    const Shape& updates_shape = get_input_shape(UPDATES);
+    const Shape& data_shape = data.get_shape();
+    const Shape& updates_shape = updates.get_shape();
 
-    element::Type data_et = get_input_element_type(DATA);
+    element::Type data_et = data.get_element_type();
+
+    // Create a boolean mask that matches the data tensor shape and
+    // contains 'true' values in the positions indicated by 'indices'
+    // and 'false' values everywhere else.
 
     const auto true_values = op::Constant::create(element::i64, updates_shape, {1});
     const auto false_values = op::Constant::create(element::i64, data_shape, {0});
@@ -126,6 +130,9 @@ NodeVector op::ScatterND::decompose_op() const
     const auto mask_bool = std::make_shared<op::v0::Convert>(mask, element::boolean);
 
     const auto zeros = op::Constant::create(data_et, data_shape, {0});
+
+    // Create an intermediate node that will contain the original data and
+    // zeros in the positions indicated by indices.
 
     const auto intermediate = std::make_shared<op::v0::Select>(mask_bool, zeros, data);
 
