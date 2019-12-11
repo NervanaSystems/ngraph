@@ -35,7 +35,7 @@ shared_ptr<Node> op::Relu::copy_with_new_args(const NodeVector& new_args) const
     return make_shared<Relu>(new_args.at(0));
 }
 
-op::ReluBackprop::ReluBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
+op::ReluBackprop::ReluBackprop(const Output<Node>& arg, const Output<Node>& delta)
     : BinaryElementwiseArithmetic(arg, delta, AutoBroadcastSpec::NONE)
 {
     constructor_validate_and_infer_types();
@@ -47,10 +47,10 @@ shared_ptr<Node> op::ReluBackprop::copy_with_new_args(const NodeVector& new_args
     return make_shared<ReluBackprop>(new_args.at(0), new_args.at(1));
 }
 
-void op::Relu::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Relu::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    auto backprop = make_shared<op::ReluBackprop>(shared_from_this(), delta);
+    auto backprop = make_shared<op::ReluBackprop>(output(0), delta);
     adjoints.add_delta(input_value(0), backprop);
 }
