@@ -64,7 +64,7 @@ namespace ngraph
                         std::make_shared<ngraph::opset0::Sum,
                                          const std::shared_ptr<ngraph::Node>&,
                                          const ngraph::AxisSet&>)};
-                    return {std::make_shared<ngraph::default_opset::Log>(sum_node)};
+                    return {std::make_shared<default_opset::Log>(sum_node)};
                 }
 
                 /// \brief      Compute the log sum exponent of the input tensor's elements along
@@ -82,14 +82,14 @@ namespace ngraph
                 inline NodeVector reduce_log_sum_exp(const Node& node)
                 {
                     auto exp_node =
-                        std::make_shared<ngraph::default_opset::Exp>(node.get_ng_inputs().at(0));
+                        std::make_shared<default_opset::Exp>(node.get_ng_inputs().at(0));
                     std::shared_ptr<ngraph::Node> sum_node{reduction::make_ng_reduction_op(
                         node,
                         exp_node,
                         std::make_shared<ngraph::opset0::Sum,
                                          const std::shared_ptr<ngraph::Node>&,
                                          const ngraph::AxisSet&>)};
-                    return {std::make_shared<ngraph::default_opset::Log>(sum_node)};
+                    return {std::make_shared<default_opset::Log>(sum_node)};
                 }
 
                 /// \brief      Compute the L1 norm of the input tensor's element along the provided
@@ -213,7 +213,7 @@ namespace ngraph
                     return {reduction::make_ng_reduction_op(
                         node,
                         node.get_ng_inputs().at(0),
-                        std::make_shared<ngraph::default_opset::ReduceProd,
+                        std::make_shared<default_opset::ReduceProd,
                                          const std::shared_ptr<ngraph::Node>&,
                                          const std::shared_ptr<ngraph::Node>&,
                                          bool>)};
@@ -236,7 +236,7 @@ namespace ngraph
                     return {reduction::make_ng_reduction_op(
                         node,
                         node.get_ng_inputs().at(0),
-                        std::make_shared<ngraph::default_opset::ReduceSum,
+                        std::make_shared<default_opset::ReduceSum,
                                          const std::shared_ptr<ngraph::Node>&,
                                          const std::shared_ptr<ngraph::Node>&,
                                          bool>)};

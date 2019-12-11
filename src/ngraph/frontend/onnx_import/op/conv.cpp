@@ -58,7 +58,7 @@ namespace ngraph
                             auto reshaped_filters =
                                 ngraph::builder::reshape(filters, filters_shape);
 
-                            return std::make_shared<ngraph::default_opset::GroupConvolution>(
+                            return std::make_shared<default_opset::GroupConvolution>(
                                 data,
                                 reshaped_filters,
                                 strides,
@@ -69,7 +69,7 @@ namespace ngraph
                         }
                         else
                         {
-                            return std::make_shared<ngraph::default_opset::Convolution>(
+                            return std::make_shared<default_opset::Convolution>(
                                 data,
                                 filters,
                                 strides,

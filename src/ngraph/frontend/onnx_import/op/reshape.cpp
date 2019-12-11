@@ -51,7 +51,7 @@ namespace ngraph
                             << "doesn't support shape input of other type than Constant.";
 
                         output_shape =
-                            ngraph::as_type_ptr<ngraph::default_opset::Constant>(ng_inputs.at(1))
+                            ngraph::as_type_ptr<default_opset::Constant>(ng_inputs.at(1))
                                 ->get_vector<std::size_t>();
                     }
                     // Do nothing if there is no shape argument nor second node input.

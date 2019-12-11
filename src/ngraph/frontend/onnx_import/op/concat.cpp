@@ -37,7 +37,7 @@ namespace ngraph
                     size_t valid_axis =
                         common::validate_axis(node, axis, inputs.at(0)->get_shape().size());
 
-                    return {std::make_shared<ngraph::default_opset::Concat>(inputs, valid_axis)};
+                    return {std::make_shared<default_opset::Concat>(inputs, valid_axis)};
                 }
 
             } // namespace set_1

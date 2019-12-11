@@ -32,7 +32,7 @@ namespace ngraph
             {
                 inline NodeVector equal(const Node& node)
                 {
-                    return {std::make_shared<ngraph::default_opset::Equal>(
+                    return {std::make_shared<default_opset::Equal>(
                         node.get_ng_inputs().at(0), node.get_ng_inputs().at(1))};
                 }
 

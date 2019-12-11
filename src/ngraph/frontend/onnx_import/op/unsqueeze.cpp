@@ -36,9 +36,9 @@ namespace ngraph
                     const auto expanded_rank = data->get_shape().size() + axes.size();
                     std::vector<std::size_t> valid_axes =
                         common::validate_axes(node, axes, expanded_rank);
-                    auto axes_node = std::make_shared<ngraph::default_opset::Constant>(
+                    auto axes_node = std::make_shared<default_opset::Constant>(
                         element::i64, Shape{valid_axes.size()}, valid_axes);
-                    return {std::make_shared<ngraph::default_opset::Unsqueeze>(data, axes_node)};
+                    return {std::make_shared<default_opset::Unsqueeze>(data, axes_node)};
                 }
 
             } // namespace set_1

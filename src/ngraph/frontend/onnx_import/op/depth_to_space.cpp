@@ -31,10 +31,10 @@ namespace ngraph
                     const auto mode = node.get_attribute_value<std::string>("mode", "DCR");
                     const auto ngraph_mode =
                         (mode == "DCR")
-                            ? ngraph::default_opset::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST
-                            : ngraph::default_opset::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST;
+                            ? default_opset::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST
+                            : default_opset::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST;
                     const auto block_size = node.get_attribute_value<std::int64_t>("blocksize");
-                    return NodeVector{std::make_shared<ngraph::default_opset::DepthToSpace>(
+                    return NodeVector{std::make_shared<default_opset::DepthToSpace>(
                         data, ngraph_mode, block_size)};
                 }
             } // namespace set_1

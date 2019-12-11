@@ -35,7 +35,7 @@ namespace ngraph
                     auto data = node.get_ng_inputs().at(0);
                     auto data_shape = data->get_shape();
 
-                    return {std::make_shared<ngraph::default_opset::Constant>(
+                    return {std::make_shared<default_opset::Constant>(
                         ngraph::element::i64, Shape{data_shape.size()}, data_shape)};
                 }
 

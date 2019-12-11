@@ -47,7 +47,7 @@ namespace ngraph
                     else
                     {
                         max_output_boxes_per_class =
-                            ngraph::default_opset::Constant::create(element::i64, Shape{}, {0});
+                            default_opset::Constant::create(element::i64, Shape{}, {0});
                     }
 
                     std::shared_ptr<ngraph::Node> iou_threshold;
@@ -58,7 +58,7 @@ namespace ngraph
                     else
                     {
                         iou_threshold =
-                            ngraph::default_opset::Constant::create(element::f32, Shape{}, {.0f});
+                            default_opset::Constant::create(element::f32, Shape{}, {.0f});
                     }
 
                     std::shared_ptr<ngraph::Node> score_threshold;
@@ -69,7 +69,7 @@ namespace ngraph
                     else
                     {
                         score_threshold =
-                            ngraph::default_opset::Constant::create(element::f32, Shape{}, {.0f});
+                            default_opset::Constant::create(element::f32, Shape{}, {.0f});
                     }
 
                     const auto center_point_box =
@@ -80,10 +80,10 @@ namespace ngraph
 
                     const auto box_encoding =
                         center_point_box == 0
-                            ? ngraph::default_opset::NonMaxSuppression::BoxEncodingType::CORNER
-                            : ngraph::default_opset::NonMaxSuppression::BoxEncodingType::CENTER;
+                            ? default_opset::NonMaxSuppression::BoxEncodingType::CORNER
+                            : default_opset::NonMaxSuppression::BoxEncodingType::CENTER;
 
-                    return {std::make_shared<ngraph::default_opset::NonMaxSuppression>(
+                    return {std::make_shared<default_opset::NonMaxSuppression>(
                         boxes,
                         scores,
                         max_output_boxes_per_class,

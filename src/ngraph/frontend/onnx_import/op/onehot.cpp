@@ -34,7 +34,7 @@ namespace ngraph
                 NodeVector onehot(const Node& node)
                 {
                     NodeVector inputs{node.get_ng_inputs()};
-                    auto indices = std::make_shared<ngraph::default_opset::Convert>(inputs.at(0),
+                    auto indices = std::make_shared<default_opset::Convert>(inputs.at(0),
                                                                                     element::i64);
                     auto depth = reshape::interpret_as_scalar(inputs.at(1));
 
@@ -48,7 +48,7 @@ namespace ngraph
 
                     auto axis = node.get_attribute_value<std::int64_t>("axis", -1);
 
-                    return {std::make_shared<ngraph::default_opset::OneHot>(
+                    return {std::make_shared<default_opset::OneHot>(
                         indices, depth, on_value, off_value, axis)};
                 }
 

@@ -46,7 +46,7 @@ namespace ngraph
                                  "Ngraph does not support dynamic braodcasting for Expand op.");
 
                     std::vector<std::size_t> shape_vector =
-                        ngraph::as_type_ptr<ngraph::default_opset::Constant>(shape)
+                        ngraph::as_type_ptr<default_opset::Constant>(shape)
                             ->get_vector<std::size_t>();
 
                     const ngraph::Shape shape_shape{shape_vector};

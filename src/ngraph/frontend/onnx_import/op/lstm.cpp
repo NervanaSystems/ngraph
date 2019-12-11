@@ -97,7 +97,7 @@ namespace ngraph
                         else
                         {
                             m_map[LSTMInput::LSTM_INPUT_B] =
-                                ngraph::default_opset::Constant::create(
+                                default_opset::Constant::create(
                                     element::f32,
                                     Shape{num_directions, gates_count * hidden_size},
                                     std::vector<float>(num_directions * gates_count * hidden_size,
@@ -111,7 +111,7 @@ namespace ngraph
                         else
                         {
                             m_map[LSTMInput::LSTM_INPUT_SEQ_LENGTHS] =
-                                ngraph::default_opset::Constant::create(
+                                default_opset::Constant::create(
                                     element::i32,
                                     Shape{batch_size},
                                     std::vector<std::int32_t>(
@@ -127,7 +127,7 @@ namespace ngraph
                         else
                         {
                             m_map[LSTMInput::LSTM_INPUT_INIT_H] =
-                                ngraph::default_opset::Constant::create(
+                                default_opset::Constant::create(
                                     element::f32,
                                     Shape{num_directions, batch_size, hidden_size},
                                     std::vector<float>(num_directions * batch_size * hidden_size,
@@ -142,7 +142,7 @@ namespace ngraph
                         else
                         {
                             m_map[LSTMInput::LSTM_INPUT_INIT_C] =
-                                ngraph::default_opset::Constant::create(
+                                default_opset::Constant::create(
                                     element::f32,
                                     Shape{num_directions, batch_size, hidden_size},
                                     std::vector<float>(num_directions * batch_size * hidden_size,
@@ -156,7 +156,7 @@ namespace ngraph
                         else
                         {
                             m_map[LSTMInput::LSTM_INPUT_P] =
-                                ngraph::default_opset::Constant::create(
+                                default_opset::Constant::create(
                                     element::f32,
                                     Shape{num_directions, peepholes_count * hidden_size},
                                     std::vector<float>(
@@ -198,16 +198,16 @@ namespace ngraph
                                      " is invalid");
                         if (direction == "forward")
                         {
-                            m_direction = ngraph::default_opset::LSTMSequence::direction::FORWARD;
+                            m_direction = default_opset::LSTMSequence::direction::FORWARD;
                         }
                         else if (direction == "reverse")
                         {
-                            m_direction = ngraph::default_opset::LSTMSequence::direction::REVERSE;
+                            m_direction = default_opset::LSTMSequence::direction::REVERSE;
                         }
                         else // (direction == "bidirectional")
                         {
                             m_direction =
-                                ngraph::default_opset::LSTMSequence::direction::BIDIRECTIONAL;
+                                default_opset::LSTMSequence::direction::BIDIRECTIONAL;
                         }
                     }
 
@@ -229,7 +229,7 @@ namespace ngraph
                     LSTMNgInputMap input_map{node};
                     LSTMAttributes attributes{node};
 
-                    auto lstmSequence = std::make_shared<ngraph::default_opset::LSTMSequence>(
+                    auto lstmSequence = std::make_shared<default_opset::LSTMSequence>(
                         input_map.at(LSTMInput::LSTM_INPUT_X),
                         input_map.at(LSTMInput::LSTM_INPUT_INIT_H),
                         input_map.at(LSTMInput::LSTM_INPUT_INIT_C),

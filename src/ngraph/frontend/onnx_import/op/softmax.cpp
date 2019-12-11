@@ -37,7 +37,7 @@ namespace ngraph
                     int axis = node.get_attribute_value<int64_t>("axis", 1);
                     std::size_t valid_axis = common::validate_axis(node, axis, data_shape.size());
 
-                    return {std::make_shared<ngraph::default_opset::Softmax>(data, valid_axis)};
+                    return {std::make_shared<default_opset::Softmax>(data, valid_axis)};
                 }
             } // namespace set_1
 

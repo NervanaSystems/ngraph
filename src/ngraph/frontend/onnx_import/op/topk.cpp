@@ -76,16 +76,16 @@ namespace ngraph
                     auto data = node.get_ng_inputs().at(0);
                     std::int64_t k{node.get_attribute_value<std::int64_t>("k")};
                     auto k_node =
-                        ngraph::default_opset::Constant::create(element::i64, Shape{}, {k});
+                        default_opset::Constant::create(element::i64, Shape{}, {k});
                     auto axis = get_axis(node);
 
                     std::shared_ptr<ngraph::Node> top_k =
-                        std::make_shared<ngraph::default_opset::TopK>(
+                        std::make_shared<default_opset::TopK>(
                             data,
                             k_node,
                             axis,
-                            ngraph::default_opset::TopK::Mode::MAX,
-                            ngraph::default_opset::TopK::SortType::SORT_VALUES,
+                            default_opset::TopK::Mode::MAX,
+                            default_opset::TopK::SortType::SORT_VALUES,
                             element::i64);
 
                     return get_outputs(top_k);
@@ -101,12 +101,12 @@ namespace ngraph
                     auto axis = get_axis(node);
 
                     std::shared_ptr<ngraph::Node> top_k =
-                        std::make_shared<ngraph::default_opset::TopK>(
+                        std::make_shared<default_opset::TopK>(
                             data,
                             k,
                             axis,
-                            ngraph::default_opset::TopK::Mode::MAX,
-                            ngraph::default_opset::TopK::SortType::SORT_VALUES,
+                            default_opset::TopK::Mode::MAX,
+                            default_opset::TopK::SortType::SORT_VALUES,
                             element::i64);
 
                     return get_outputs(top_k);
@@ -128,15 +128,15 @@ namespace ngraph
 
                     // Map attribute values to nGraph enums
                     const auto sort_type = sorted
-                                               ? ngraph::default_opset::TopK::SortType::SORT_VALUES
-                                               : ngraph::default_opset::TopK::SortType::NONE;
+                                               ? default_opset::TopK::SortType::SORT_VALUES
+                                               : default_opset::TopK::SortType::NONE;
 
                     const auto compute_max = static_cast<bool>(largest);
-                    const auto mode = compute_max ? ngraph::default_opset::TopK::Mode::MAX
-                                                  : ngraph::default_opset::TopK::Mode::MIN;
+                    const auto mode = compute_max ? default_opset::TopK::Mode::MAX
+                                                  : default_opset::TopK::Mode::MIN;
 
                     std::shared_ptr<ngraph::Node> top_k =
-                        std::make_shared<ngraph::default_opset::TopK>(
+                        std::make_shared<default_opset::TopK>(
                             data, k, axis, mode, sort_type, element::i64);
 
                     return get_outputs(top_k);

@@ -34,7 +34,7 @@ namespace ngraph
             {
                 inline NodeVector less(const Node& node)
                 {
-                    return {std::make_shared<ngraph::default_opset::Less>(
+                    return {std::make_shared<default_opset::Less>(
                         node.get_ng_inputs().at(0), node.get_ng_inputs().at(1))};
                 }
 

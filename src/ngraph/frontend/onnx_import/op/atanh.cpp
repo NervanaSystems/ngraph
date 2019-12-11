@@ -41,19 +41,19 @@ namespace ngraph
                     //          = 0.5 * (ln(1 + x) - ln(1 - x))
                     //
 
-                    std::shared_ptr<ngraph::Node> one_node{ngraph::default_opset::Constant::create(
+                    std::shared_ptr<ngraph::Node> one_node{default_opset::Constant::create(
                         data->get_element_type(),
                         data->get_shape(),
                         std::vector<float>(ngraph::shape_size(data->get_shape()), 1.f))};
 
-                    std::shared_ptr<ngraph::Node> half_node{ngraph::default_opset::Constant::create(
+                    std::shared_ptr<ngraph::Node> half_node{default_opset::Constant::create(
                         data->get_element_type(),
                         data->get_shape(),
                         std::vector<float>(ngraph::shape_size(data->get_shape()), 0.5f))};
 
                     return {half_node *
-                            (std::make_shared<ngraph::default_opset::Log>(one_node + data) -
-                             std::make_shared<ngraph::default_opset::Log>(one_node - data))};
+                            (std::make_shared<default_opset::Log>(one_node + data) -
+                             std::make_shared<default_opset::Log>(one_node - data))};
                 }
 
             } // namespace set_1

@@ -2,5 +2,8 @@
 
 namespace ngraph
 {
-    namespace default_opset = ngraph::opset1;
+    namespace onnx_import
+    {
+        namespace default_opset = ngraph::opset1;
+    }
 }

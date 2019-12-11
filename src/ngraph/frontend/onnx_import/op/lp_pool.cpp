@@ -69,7 +69,7 @@ namespace ngraph
                             output_shape);
                     }
 
-                    return {std::make_shared<ngraph::default_opset::Concat>(slices, channel_axis)};
+                    return {std::make_shared<default_opset::Concat>(slices, channel_axis)};
                 }
 
             } // namespace set_1

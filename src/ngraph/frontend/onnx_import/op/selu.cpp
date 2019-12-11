@@ -38,13 +38,13 @@ namespace ngraph
                     auto gamma =
                         node.get_attribute_value<double>("gamma", 1.05070102214813232421875);
 
-                    auto alpha_node = std::make_shared<ngraph::default_opset::Constant>(
+                    auto alpha_node = std::make_shared<default_opset::Constant>(
                         data->get_element_type(), data->get_shape(), std::vector<double>{alpha});
 
-                    auto gamma_node = std::make_shared<ngraph::default_opset::Constant>(
+                    auto gamma_node = std::make_shared<default_opset::Constant>(
                         data->get_element_type(), data->get_shape(), std::vector<double>{gamma});
 
-                    return {std::make_shared<ngraph::default_opset::Selu>(
+                    return {std::make_shared<default_opset::Selu>(
                         data, alpha_node, gamma_node)};
                 }
 

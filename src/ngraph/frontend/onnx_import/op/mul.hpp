@@ -53,7 +53,7 @@ namespace ngraph
             {
                 inline NodeVector mul(const Node& node)
                 {
-                    return {std::make_shared<ngraph::default_opset::Multiply>(
+                    return {std::make_shared<default_opset::Multiply>(
                         node.get_ng_inputs().at(0), node.get_ng_inputs().at(1))};
                 }
 

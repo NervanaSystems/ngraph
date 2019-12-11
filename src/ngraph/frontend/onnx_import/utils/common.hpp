@@ -155,7 +155,7 @@ namespace ngraph
                     identity_matrix.at(diagonal_element_idx) = T{1};
                 }
 
-                return std::make_shared<ngraph::default_opset::Constant>(
+                return std::make_shared<default_opset::Constant>(
                     output_type, output_shape, identity_matrix);
             }
 
@@ -165,7 +165,7 @@ namespace ngraph
             ///
             /// \return A Constant node representing identity matrix with shape (n, n).
             template <typename T = double>
-            std::shared_ptr<ngraph::default_opset::Constant>
+            std::shared_ptr<default_opset::Constant>
                 square_identity(const size_t n, const element::Type& type)
             {
                 return shifted_square_identity(Shape{n, n}, type, 0);

@@ -42,7 +42,7 @@ namespace ngraph
                     }
                     else
                     {
-                        axis = ngraph::default_opset::Constant::create(
+                        axis = default_opset::Constant::create(
                             element::i64, Shape{}, {0}); // default
                     }
                     return NodeVector{

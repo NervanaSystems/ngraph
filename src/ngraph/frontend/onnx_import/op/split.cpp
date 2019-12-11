@@ -34,7 +34,7 @@ namespace ngraph
                     const auto input = node.get_ng_inputs().at(0);
                     const auto axis = node.get_attribute_value<int64_t>("axis", 0);
                     const auto axis_node =
-                        ngraph::default_opset::Constant::create(element::i64, Shape{}, {axis});
+                        default_opset::Constant::create(element::i64, Shape{}, {axis});
 
                     std::shared_ptr<ngraph::Node> split;
                     if (node.has_attribute("split"))
@@ -42,16 +42,16 @@ namespace ngraph
                         const auto splits =
                             node.get_attribute_value<std::vector<std::size_t>>("split");
 
-                        const auto split_lengths = ngraph::default_opset::Constant::create(
+                        const auto split_lengths = default_opset::Constant::create(
                             element::u64, Shape{splits.size()}, splits);
 
-                        split = std::make_shared<ngraph::default_opset::VariadicSplit>(
+                        split = std::make_shared<default_opset::VariadicSplit>(
                             input, axis_node, split_lengths);
                     }
                     else
                     {
                         const auto outputs_number = node.get_output_names().size();
-                        split = std::make_shared<ngraph::default_opset::Split>(
+                        split = std::make_shared<default_opset::Split>(
                             input, axis_node, outputs_number);
                     }
                     return common::get_outputs(split);

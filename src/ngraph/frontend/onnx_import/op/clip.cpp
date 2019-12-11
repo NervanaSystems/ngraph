@@ -41,7 +41,7 @@ namespace ngraph
                         "min", std::numeric_limits<double>::lowest());
 
                     return {
-                        std::make_shared<ngraph::default_opset::Clamp>(data, min_value, max_value)};
+                        std::make_shared<default_opset::Clamp>(data, min_value, max_value)};
                 }
 
             } // namespace set_1

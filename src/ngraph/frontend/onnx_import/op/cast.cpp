@@ -34,7 +34,7 @@ namespace ngraph
                     int64_t target_type = node.get_attribute_value<int64_t>("to");
                     element::Type elem_type = common::get_ngraph_element_type(target_type);
 
-                    return {std::make_shared<ngraph::default_opset::Convert>(data, elem_type)};
+                    return {std::make_shared<default_opset::Convert>(data, elem_type)};
                 }
 
             } // namespace set_1

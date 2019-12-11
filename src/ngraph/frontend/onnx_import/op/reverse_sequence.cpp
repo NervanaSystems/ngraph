@@ -38,7 +38,7 @@ namespace ngraph
                     const auto sequence_lengths = node.get_ng_inputs().at(1);
                     // nGraph supports only int32 type of sequence_lengths
                     const auto sequence_lengths_i32 =
-                        std::make_shared<ngraph::default_opset::Convert>(node.get_ng_inputs().at(1),
+                        std::make_shared<default_opset::Convert>(node.get_ng_inputs().at(1),
                                                                          element::i32);
 
                     const auto batch_axis = node.get_attribute_value<int64_t>("batch_axis", 1);
@@ -60,7 +60,7 @@ namespace ngraph
                                  "'batch_axis' and 'time_axis' attributes of the ReverseSequence "
                                  "operator can't point to the same dimension");
 
-                    return {std::make_shared<ngraph::default_opset::ReverseSequence>(
+                    return {std::make_shared<default_opset::ReverseSequence>(
                         data, sequence_lengths_i32, valid_batch_axis, valid_time_axis)};
                 }
 

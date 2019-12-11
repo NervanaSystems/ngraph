@@ -31,18 +31,18 @@ namespace ngraph
                 {
                     const auto data = node.get_ng_inputs().at(0);
 
-                    const auto alpha = ngraph::default_opset::Constant::create<double>(
+                    const auto alpha = default_opset::Constant::create<double>(
                         data->get_element_type(),
                         Shape{},
                         std::vector<double>{node.get_attribute_value<double>("alpha", 0.2)});
 
-                    const auto beta = ngraph::default_opset::Constant::create<double>(
+                    const auto beta = default_opset::Constant::create<double>(
                         data->get_element_type(),
                         Shape{},
                         std::vector<double>{node.get_attribute_value<double>("beta", 0.5)});
 
                     return {
-                        std::make_shared<ngraph::default_opset::HardSigmoid>(data, alpha, beta)};
+                        std::make_shared<default_opset::HardSigmoid>(data, alpha, beta)};
                 }
 
             } // namespace set_1

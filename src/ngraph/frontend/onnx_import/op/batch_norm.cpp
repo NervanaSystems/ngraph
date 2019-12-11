@@ -57,7 +57,7 @@ namespace ngraph
                     {
                         mean = inputs.at(3);
                         var = inputs.at(4);
-                        return {std::make_shared<ngraph::default_opset::BatchNormInference>(
+                        return {std::make_shared<default_opset::BatchNormInference>(
                                     x, scale, bias, mean, var, epsilon),
                                 after_bn_mean,
                                 after_bn_var,

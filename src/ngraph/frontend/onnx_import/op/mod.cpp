@@ -40,7 +40,7 @@ namespace ngraph
                     ASSERT_IS_SUPPORTED(node, fmod == 1)
                         << "Only 'fmod=1' mode is supported for mod operator.";
 
-                    return {std::make_shared<ngraph::default_opset::Mod>(dividend, divisor)};
+                    return {std::make_shared<default_opset::Mod>(dividend, divisor)};
                 }
 
             } // namespace set_1

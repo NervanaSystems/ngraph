@@ -37,7 +37,7 @@ namespace ngraph
 
                     // Create a Constant representing the number of inputs with the same shape as
                     // sum
-                    auto count = ngraph::default_opset::Constant::create(
+                    auto count = default_opset::Constant::create(
                         sum->get_element_type(),
                         shape,
                         std::vector<int>(shape_size(shape), node.get_ng_inputs().size()));
@@ -52,12 +52,12 @@ namespace ngraph
                 NodeVector mean(const Node& node)
                 {
                     auto sum =
-                        variadic::make_ng_variadic_op<ngraph::default_opset::Add>(node).front();
+                        variadic::make_ng_variadic_op<default_opset::Add>(node).front();
                     auto shape = sum->get_shape();
 
                     // Create a Constant representing the number of inputs with the same shape as
                     // sum
-                    auto count = ngraph::default_opset::Constant::create(
+                    auto count = default_opset::Constant::create(
                         sum->get_element_type(),
                         shape,
                         std::vector<int>(shape_size(shape), node.get_ng_inputs().size()));

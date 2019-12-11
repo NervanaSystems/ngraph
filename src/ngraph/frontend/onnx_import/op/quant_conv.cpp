@@ -139,7 +139,7 @@ namespace ngraph
                                 }
                             }
                             std::size_t concatenation_axis = 1;
-                            return std::make_shared<ngraph::default_opset::Concat>(
+                            return std::make_shared<default_opset::Concat>(
                                 convolution_nodes, concatenation_axis);
                         }
                         else

@@ -41,7 +41,7 @@ namespace ngraph
             {
                 inline NodeVector sum(const Node& node)
                 {
-                    return variadic::make_ng_variadic_op<ngraph::default_opset::Add>(node);
+                    return variadic::make_ng_variadic_op<default_opset::Add>(node);
                 }
 
             } // namespace set_8

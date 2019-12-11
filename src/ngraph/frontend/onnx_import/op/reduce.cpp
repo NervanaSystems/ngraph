@@ -49,7 +49,7 @@ namespace ngraph
                                          const std::shared_ptr<ngraph::Node>&,
                                          const ngraph::AxisSet&>)};
 
-                    auto const_node = ngraph::default_opset::Constant::create(
+                    auto const_node = default_opset::Constant::create(
                         sum_node->get_element_type(),
                         sum_node->get_shape(),
                         std::vector<std::size_t>(shape_size(sum_node->get_shape()),

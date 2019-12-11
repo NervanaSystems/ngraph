@@ -49,7 +49,7 @@ namespace ngraph
             {
                 inline NodeVector sub(const Node& node)
                 {
-                    return {std::make_shared<ngraph::default_opset::Subtract>(
+                    return {std::make_shared<default_opset::Subtract>(
                         node.get_ng_inputs().at(0), node.get_ng_inputs().at(1))};
                 }
 

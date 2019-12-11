@@ -41,7 +41,7 @@ namespace ngraph
             {
                 inline NodeVector min(const Node& node)
                 {
-                    return variadic::make_ng_variadic_op<ngraph::default_opset::Minimum>(node);
+                    return variadic::make_ng_variadic_op<default_opset::Minimum>(node);
                 }
 
             } // namespace set_8
