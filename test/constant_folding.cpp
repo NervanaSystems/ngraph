@@ -1866,6 +1866,163 @@ TEST(constant_folding, constant_v1_select)
     ASSERT_EQ(values_expected, values_out);
 }
 
+TEST(constant_folding, constant_split_axis_1_4_splits)
+{
+    Shape shape_in{4, 4, 4};
+    Shape axes_shape{};
+    auto num_splits = 4;
+
+    vector<int> values_in{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+
+                          16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+
+                          32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+                          48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63};
+    auto constant = make_shared<op::Constant>(element::i32, shape_in, values_in);
+    vector<int64_t> values_axes{1};
+    auto constant_axes = make_shared<op::Constant>(element::i64, axes_shape, values_axes);
+    auto split = make_shared<op::v1::Split>(constant, constant_axes, num_splits);
+    auto goe0 = make_shared<op::GetOutputElement>(split, 0);
+    auto goe1 = make_shared<op::GetOutputElement>(split, 1);
+    auto goe2 = make_shared<op::GetOutputElement>(split, 2);
+    auto goe3 = make_shared<op::GetOutputElement>(split, 3);
+    auto f = make_shared<Function>(NodeVector{goe0, goe1, goe2, goe3}, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Split>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), num_splits);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int>();
+
+    vector<int> sliced_values{0, 1, 2, 3, 16, 17, 18, 19, 32, 33, 34, 35, 48, 49, 50, 51};
+    ASSERT_EQ(sliced_values, values_out);
+}
+
+TEST(constant_folding, constant_split_axis_1_2_splits)
+{
+    Shape shape_in{4, 4, 4};
+    Shape axes_shape{};
+    auto num_splits = 2;
+
+    vector<int> values_in{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+
+                          16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+
+                          32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+                          48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63};
+    auto constant = make_shared<op::Constant>(element::i32, shape_in, values_in);
+    vector<int64_t> values_axes{1};
+    auto constant_axes = make_shared<op::Constant>(element::i64, axes_shape, values_axes);
+    auto split = make_shared<op::v1::Split>(constant, constant_axes, num_splits);
+    auto goe0 = make_shared<op::GetOutputElement>(split, 0);
+    auto goe1 = make_shared<op::GetOutputElement>(split, 1);
+    auto f = make_shared<Function>(NodeVector{goe0, goe1}, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Split>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), num_splits);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(1)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int>();
+
+    vector<int> sliced_values{8,  9,  10, 11, 12, 13, 14, 15, 24, 25, 26, 27, 28, 29, 30, 31,
+                              40, 41, 42, 43, 44, 45, 46, 47, 56, 57, 58, 59, 60, 61, 62, 63};
+    ASSERT_EQ(sliced_values, values_out);
+}
+
+TEST(constant_folding, constant_variadic_split_axis_1_2_splits)
+{
+    Shape shape_in{4, 4, 4};
+    Shape axes_shape{};
+    Shape lengths_shape{2};
+    auto num_splits = 2;
+
+    vector<int> values_in{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+
+                          16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+
+                          32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+                          48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63};
+    auto constant = make_shared<op::Constant>(element::i32, shape_in, values_in);
+    vector<int64_t> values_axes{1};
+    auto constant_axes = make_shared<op::Constant>(element::i64, axes_shape, values_axes);
+    vector<int64_t> values_lengths{3, 1};
+    auto constant_lengths = make_shared<op::Constant>(element::i64, lengths_shape, values_lengths);
+    auto variadic_split =
+        make_shared<op::v1::VariadicSplit>(constant, constant_axes, constant_lengths);
+    auto goe0 = make_shared<op::GetOutputElement>(variadic_split, 0);
+    auto goe1 = make_shared<op::GetOutputElement>(variadic_split, 1);
+    auto f = make_shared<Function>(NodeVector{goe0, goe1}, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::VariadicSplit>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), num_splits);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(1)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int>();
+
+    vector<int> sliced_values{12, 13, 14, 15, 28, 29, 30, 31, 44, 45, 46, 47, 60, 61, 62, 63};
+    ASSERT_EQ(sliced_values, values_out);
+}
+
+TEST(constant_folding, constant_variadic_split_axis_1_3_splits_neg_length)
+{
+    Shape shape_in{4, 4, 4};
+    Shape axes_shape{};
+    Shape lengths_shape{3};
+    auto num_splits = 3;
+
+    vector<int> values_in{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+
+                          16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+
+                          32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+                          48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63};
+    auto constant = make_shared<op::Constant>(element::i32, shape_in, values_in);
+    vector<int64_t> values_axes{1};
+    auto constant_axes = make_shared<op::Constant>(element::i64, axes_shape, values_axes);
+    vector<int64_t> values_lengths{1, 1, -1};
+    auto constant_lengths = make_shared<op::Constant>(element::i64, lengths_shape, values_lengths);
+    auto variadic_split =
+        make_shared<op::v1::VariadicSplit>(constant, constant_axes, constant_lengths);
+    auto goe0 = make_shared<op::GetOutputElement>(variadic_split, 0);
+    auto goe1 = make_shared<op::GetOutputElement>(variadic_split, 1);
+    auto goe2 = make_shared<op::GetOutputElement>(variadic_split, 2);
+    auto f = make_shared<Function>(NodeVector{goe0, goe1, goe2}, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::VariadicSplit>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), num_splits);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(2)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int>();
+
+    vector<int> sliced_values{8,  9,  10, 11, 12, 13, 14, 15, 24, 25, 26, 27, 28, 29, 30, 31,
+                              40, 41, 42, 43, 44, 45, 46, 47, 56, 57, 58, 59, 60, 61, 62, 63};
+    ASSERT_EQ(sliced_values, values_out);
+}
+
 TEST(constant_folding, pass_property)
 {
     auto pass = std::make_shared<ngraph::pass::ConstantFolding>();
