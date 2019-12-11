@@ -41,8 +41,6 @@ void op::v0::CumSum::validate_and_infer_types()
     PartialShape arg_shape = get_input_partial_shape(0);
     set_output_type(0, arg_type, arg_shape);
 
-    const PartialShape& input_shape = get_input_partial_shape(0);
-
     PartialShape axes_shape{PartialShape::dynamic()};
     if (get_input_partial_shape(1).is_static())
     {
