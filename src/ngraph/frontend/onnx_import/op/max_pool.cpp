@@ -14,9 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/max_pool.hpp"
+#include <memory>
+
 #include "core/null_node.hpp"
-#include "ngraph/node.hpp"
+#include "max_pool.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "utils/pooling_factory.hpp"
 
 namespace ngraph

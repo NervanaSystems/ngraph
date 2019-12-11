@@ -97,7 +97,7 @@ void op::v0::Gather::validate_and_infer_types()
 }
 
 void op::v0::Gather::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                       const NodeVector& /* deltas */)
+                                       const OutputVector& /* deltas */)
 {
     throw ngraph_error("Not yet implemented");
 }
@@ -197,7 +197,7 @@ size_t op::v1::Gather::get_axis() const
 }
 
 void op::v1::Gather::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                       const NodeVector& /* deltas */)
+                                       const OutputVector& /* deltas */)
 {
     throw ngraph_error("Not yet implemented");
 }

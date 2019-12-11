@@ -97,7 +97,7 @@ namespace ngraph
                 bool is_reverse() const { return m_reverse; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
             private:
                 bool m_exclusive;

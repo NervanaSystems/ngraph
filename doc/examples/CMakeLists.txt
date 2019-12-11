@@ -17,6 +17,7 @@
 if (NGRAPH_CPU_ENABLE)
     add_subdirectory(abc)
     add_subdirectory(abc_operator)
+    add_subdirectory(dynamic_tensor)
     add_subdirectory(mnist_mlp)
     add_subdirectory(update)
 endif()
