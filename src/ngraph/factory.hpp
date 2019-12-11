@@ -32,11 +32,7 @@ namespace ngraph
     {
     public:
         using Factory = std::function<BASE_TYPE*()>;
-<<<<<<< HEAD
-        using FactoryMap = std::map<typename BASE_TYPE::type_info_t, Factory>;
-=======
         using FactoryMap = std::unordered_map<typename BASE_TYPE::type_info_t, Factory>;
->>>>>>> cyphers/nti
 
         // \brief Get the default factory for DERIVED_TYPE. Specialize as needed.
         template <typename DERIVED_TYPE>
