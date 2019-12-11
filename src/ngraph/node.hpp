@@ -1069,44 +1069,39 @@ namespace ngraph
         return result;
     }
 
-    //
-    // Return type struct for cache_fprop, with the modified fprop and bprop
-    // functions
-    // and a list of the nodes that have been appended to fprop output/bprop
-    // input
-    //
-    struct WeakNodeOutput
+    // Like an Output but with a Node* instead of a shared_ptr<Node>
+    struct RawNodeOutput
     {
-        WeakNodeOutput(const Output<Node>& value)
+        RawNodeOutput(const Output<Node>& value)
             : node(value.get_node())
             , index(value.get_index())
         {
         }
-        WeakNodeOutput(const WeakNodeOutput&) = default;
-        WeakNodeOutput() = default;
+        RawNodeOutput(const RawNodeOutput&) = default;
+        RawNodeOutput() = default;
 
         Node* node;
         size_t index{0};
 
         operator Output<Node>() { return Output<Node>(node->shared_from_this(), index); }
-        bool operator==(const WeakNodeOutput& other) const
+        bool operator==(const RawNodeOutput& other) const
         {
             return node == other.node && index == other.index;
         }
-        bool operator!=(const WeakNodeOutput& other) const { return !(*this == other); }
-        bool operator<(const WeakNodeOutput& other) const
+        bool operator!=(const RawNodeOutput& other) const { return !(*this == other); }
+        bool operator<(const RawNodeOutput& other) const
         {
             return node < other.node || (node == other.node && index < other.index);
         }
-        bool operator>(const WeakNodeOutput& other) const
+        bool operator>(const RawNodeOutput& other) const
         {
             return node > other.node || (node == other.node && index > other.index);
         }
-        bool operator<=(const WeakNodeOutput& other) const { return !(*this > other); }
-        bool operator>=(const WeakNodeOutput& other) const { return !(*this < other); }
+        bool operator<=(const RawNodeOutput& other) const { return !(*this > other); }
+        bool operator>=(const RawNodeOutput& other) const { return !(*this < other); }
     };
 
-    using WeakNodeOutputMap = std::map<WeakNodeOutput, Output<Node>>;
+    using RawNodeOutputMap = std::map<RawNodeOutput, Output<Node>>;
 
     class NodeValidationFailure : public CheckFailure
     {

@@ -245,7 +245,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     ngraph::clone_nodes(bprop->get_ops(), fprop_cache.node_param_map);
 
     // invert the fprop_cache cloned node map for easy back and for acces.
-    std::map<Output<Node>, WeakNodeOutput> inverted_node_map;
+    std::map<Output<Node>, RawNodeOutput> inverted_node_map;
     for (auto kv : fprop_cache.node_param_map)
     {
         inverted_node_map[kv.second] = kv.first;

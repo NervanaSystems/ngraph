@@ -341,7 +341,7 @@ std::list<std::shared_ptr<ngraph::Node>>
 
 std::list<std::shared_ptr<ngraph::Node>>
     ngraph::clone_nodes(const std::list<std::shared_ptr<ngraph::Node>>& nodes,
-                        WeakNodeOutputMap& output_map)
+                        RawNodeOutputMap& output_map)
 {
     // for each node in topological order
     auto sorted_nodes = topological_sort(nodes, true);
