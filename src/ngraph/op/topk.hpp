@@ -105,7 +105,7 @@ namespace ngraph
                 bool m_compute_max{false};
                 SortType m_sort{SortType::NONE};
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
             };
         } // namespace v0
 
@@ -186,7 +186,7 @@ namespace ngraph
                 element::Type m_index_element_type;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 size_t read_k_from_constant_node(const std::shared_ptr<Node>& node,
                                                  const element::Type& k_element_type) const;
