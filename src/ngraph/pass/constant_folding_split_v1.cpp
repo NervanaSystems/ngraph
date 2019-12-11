@@ -18,10 +18,6 @@
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/split.hpp"
-// TODO
-#include "ngraph/pass/fused_op_decomposition.hpp"
-#include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/opset0_downgrade.hpp"
 
 using namespace std;
 using namespace ngraph;

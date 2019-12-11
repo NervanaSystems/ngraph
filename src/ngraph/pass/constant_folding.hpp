@@ -68,7 +68,6 @@ public:
         m_enable_shape_inference = true;
 
         construct_constant_split_v1();
-        construct_constant_variadic_split_v1();
         construct_constant_reshape();
         construct_constant_broadcast();
         construct_constant_dyn_broadcast();
@@ -141,7 +140,6 @@ public:
 
 private:
     void construct_constant_split_v1();
-    void construct_constant_variadic_split_v1(){};
     void construct_constant_reshape();
     void construct_constant_broadcast();
     void construct_constant_dyn_broadcast();
