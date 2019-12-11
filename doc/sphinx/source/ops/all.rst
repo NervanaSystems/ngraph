@@ -42,6 +42,6 @@ Outputs
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::All
+.. doxygenclass:: ngraph::op::v0::All
    :project: ngraph
    :members:

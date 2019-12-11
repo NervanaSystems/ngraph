@@ -19,7 +19,8 @@
 
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/split.hpp"
-#include "op/split.hpp"
+#include "ngraph/op/variadic_split.hpp"
+#include "split.hpp"
 #include "utils/common.hpp"
 
 namespace ngraph
@@ -37,21 +38,25 @@ namespace ngraph
                     const auto axis_node =
                         ngraph::op::Constant::create(element::i64, Shape{}, {axis});
 
-                    std::shared_ptr<ngraph::Node> fused_split;
+                    std::shared_ptr<ngraph::Node> split;
                     if (node.has_attribute("split"))
                     {
-                        const auto length_parts =
+                        const auto splits =
                             node.get_attribute_value<std::vector<std::size_t>>("split");
-                        fused_split =
-                            std::make_shared<ngraph::op::Split>(input, axis_node, length_parts);
+
+                        const auto split_lengths = ngraph::op::Constant::create(
+                            element::u64, Shape{splits.size()}, splits);
+
+                        split = std::make_shared<ngraph::op::v1::VariadicSplit>(
+                            input, axis_node, split_lengths);
                     }
                     else
                     {
                         const auto outputs_number = node.get_output_names().size();
-                        fused_split =
-                            std::make_shared<ngraph::op::Split>(input, axis_node, outputs_number);
+                        split = std::make_shared<ngraph::op::v1::Split>(
+                            input, axis_node, outputs_number);
                     }
-                    return common::get_outputs(fused_split);
+                    return common::get_outputs(split);
                 }
 
             } // namespace set_1
