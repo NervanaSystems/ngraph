@@ -25,7 +25,6 @@
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/chrome_trace.hpp"
@@ -69,6 +68,8 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     pass_manager.register_pass<pass::LikeReplacement>();
     pass_manager.register_pass<pass::FusedOpDecomposition>();
     pass_manager.register_pass<pass::Opset0Downgrade>();
+    // Need to decompose any v0 fused ops, which were produced by the downgrade pass
+    pass_manager.register_pass<pass::FusedOpDecomposition>();
     pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.run_passes(m_function);
