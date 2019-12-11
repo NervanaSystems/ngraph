@@ -14,19 +14,18 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "cpu_visualize_tree.hpp"
 #include <string>
+
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
+#include "ngraph/runtime/cpu/cpu_visualize_tree.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 
 using namespace mkldnn;
 using namespace ngraph;
 using namespace std;
-
-#define TI(x) std::type_index(typeid(x))
 
 static void visualize_layout_format(const Node& node, ostream& ss)
 {
@@ -90,8 +89,8 @@ namespace ngraph
             const visualize_tree_ops_map_t& get_visualize_tree_ops_map()
             {
                 const static visualize_tree_ops_map_t vtom{
-                    {TI(runtime::cpu::op::ConvertLayout), visualize_layout_format},
-                    {TI(ngraph::op::Reshape), visualize_layout_format}};
+                    {runtime::cpu::op::ConvertLayout::type_info, visualize_layout_format},
+                    {ngraph::op::Reshape::type_info, visualize_layout_format}};
                 return vtom;
             }
         }

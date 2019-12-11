@@ -31,8 +31,6 @@
 using namespace ngraph;
 using namespace std;
 
-#define TI(x) type_index(typeid(x))
-
 //
 // As we are visualizing the graph, we will make some tweaks to the generated dot file to make
 // routing more tractable for Graphviz as well as (hopefully) more legible for the user.
@@ -260,8 +258,9 @@ void pass::VisualizeTree::add_node_arguments(shared_ptr<Node> node,
                                              size_t& fake_node_ctr)
 {
     size_t arg_index = 0;
-    for (auto arg : node->get_arguments())
+    for (auto input_value : node->input_values())
     {
+        auto arg = input_value.get_node_shared_ptr();
         size_t jump_distance = height_maps[arg.get()].max_jump_to(height_maps[node.get()]);
         if (is_type<ngraph::op::Constant>(arg) || is_type<ngraph::op::Parameter>(arg))
         {
@@ -388,11 +387,10 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
                                                      : node->get_element_type().c_type_string());
         }
 
-        const Node& n = *node;
-        auto eh = m_ops_to_details.find(TI(n));
+        auto eh = m_ops_to_details.find(node->get_type_info());
         if (eh != m_ops_to_details.end())
         {
-            eh->second(n, label);
+            eh->second(*node, label);
         }
         label << "\"";
         attributes.push_back(label.str());
