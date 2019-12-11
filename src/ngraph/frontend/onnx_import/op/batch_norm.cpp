@@ -65,12 +65,12 @@ namespace ngraph
                                 saved_var};
                     }
 
-                    return {
-                        std::make_shared<ngraph::opset0::BatchNormTraining>(x, scale, bias, epsilon),
-                        after_bn_mean,
-                        after_bn_var,
-                        saved_mean,
-                        saved_var};
+                    return {std::make_shared<ngraph::opset0::BatchNormTraining>(
+                                x, scale, bias, epsilon),
+                            after_bn_mean,
+                            after_bn_var,
+                            saved_mean,
+                            saved_var};
                 }
 
             } // namespace set_1

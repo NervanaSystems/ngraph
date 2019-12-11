@@ -51,8 +51,9 @@ namespace ngraph
                         data->get_shape(),
                         std::vector<float>(ngraph::shape_size(data->get_shape()), 0.5f))};
 
-                    return {half_node * (std::make_shared<ngraph::default_opset::Log>(one_node + data) -
-                                         std::make_shared<ngraph::default_opset::Log>(one_node - data))};
+                    return {half_node *
+                            (std::make_shared<ngraph::default_opset::Log>(one_node + data) -
+                             std::make_shared<ngraph::default_opset::Log>(one_node - data))};
                 }
 
             } // namespace set_1

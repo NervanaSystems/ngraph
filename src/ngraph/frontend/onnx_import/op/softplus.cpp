@@ -39,8 +39,9 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> zero_node =
                         std::make_shared<ngraph::default_opset::Constant>(
                             data->get_element_type(), data->get_shape(), std::vector<float>{0.f});
-                    std::shared_ptr<ngraph::Node> one_node = std::make_shared<ngraph::default_opset::Constant>(
-                        data->get_element_type(), data->get_shape(), std::vector<float>{1.f});
+                    std::shared_ptr<ngraph::Node> one_node =
+                        std::make_shared<ngraph::default_opset::Constant>(
+                            data->get_element_type(), data->get_shape(), std::vector<float>{1.f});
 
                     std::shared_ptr<ngraph::Node> positive_val_node =
                         data + std::make_shared<ngraph::default_opset::Log>(
@@ -49,8 +50,8 @@ namespace ngraph
                                    one_node);
 
                     std::shared_ptr<ngraph::Node> negative_val_node =
-                        std::make_shared<ngraph::default_opset::Log>(std::make_shared<ngraph::default_opset::Exp>(data) +
-                                                          one_node);
+                        std::make_shared<ngraph::default_opset::Log>(
+                            std::make_shared<ngraph::default_opset::Exp>(data) + one_node);
 
                     std::shared_ptr<ngraph::Node> condition_node =
                         std::make_shared<ngraph::opset0::Greater>(data, zero_node);

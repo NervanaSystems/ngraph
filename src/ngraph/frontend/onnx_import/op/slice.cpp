@@ -72,7 +72,8 @@ namespace ngraph
                         }
                     }
 
-                    return {std::make_shared<ngraph::opset0::Slice>(data, lower_bounds, upper_bounds)};
+                    return {
+                        std::make_shared<ngraph::opset0::Slice>(data, lower_bounds, upper_bounds)};
                 }
 
             } // namespace set_1

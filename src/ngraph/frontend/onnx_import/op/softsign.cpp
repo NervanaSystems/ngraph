@@ -37,8 +37,9 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
 
-                    std::shared_ptr<ngraph::Node> one_node = std::make_shared<ngraph::default_opset::Constant>(
-                        data->get_element_type(), Shape{}, std::vector<double>{1});
+                    std::shared_ptr<ngraph::Node> one_node =
+                        std::make_shared<ngraph::default_opset::Constant>(
+                            data->get_element_type(), Shape{}, std::vector<double>{1});
                     one_node = ngraph::op::make_broadcast_node(one_node, data->get_shape());
 
                     return {data / (std::make_shared<ngraph::default_opset::Abs>(data) + one_node)};

@@ -17,8 +17,8 @@
 #include <memory>
 #include <vector>
 
-#include "elu.hpp"
 #include "default_opset.hpp"
+#include "elu.hpp"
 
 namespace ngraph
 {

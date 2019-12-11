@@ -16,8 +16,8 @@
 
 #include <memory>
 
-#include "exceptions.hpp"
 #include "default_opset.hpp"
+#include "exceptions.hpp"
 #include "ngraph/op/non_max_suppression.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "non_max_suppression.hpp"
@@ -57,7 +57,8 @@ namespace ngraph
                     }
                     else
                     {
-                        iou_threshold = ngraph::default_opset::Constant::create(element::f32, Shape{}, {.0f});
+                        iou_threshold =
+                            ngraph::default_opset::Constant::create(element::f32, Shape{}, {.0f});
                     }
 
                     std::shared_ptr<ngraph::Node> score_threshold;

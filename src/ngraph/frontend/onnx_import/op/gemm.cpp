@@ -16,8 +16,8 @@
 
 #include <memory>
 
-#include "gemm.hpp"
 #include "default_opset.hpp"
+#include "gemm.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
@@ -80,8 +80,8 @@ namespace ngraph
                     auto beta_times_input_c =
                         std::make_shared<ngraph::default_opset::Multiply>(beta_node, input_c);
 
-                    return NodeVector{std::make_shared<ngraph::default_opset::Add>(alpha_times_product,
-                                                                            beta_times_input_c)};
+                    return NodeVector{std::make_shared<ngraph::default_opset::Add>(
+                        alpha_times_product, beta_times_input_c)};
                 }
 
             } // namespace set_1
@@ -116,16 +116,16 @@ namespace ngraph
                     const bool trans_a = node.get_attribute_value<int64_t>("transA", 0);
                     const bool trans_b = node.get_attribute_value<int64_t>("transB", 0);
 
-                    auto matmul_node =
-                        std::make_shared<ngraph::default_opset::MatMul>(input_a, input_b, trans_a, trans_b);
+                    auto matmul_node = std::make_shared<ngraph::default_opset::MatMul>(
+                        input_a, input_b, trans_a, trans_b);
 
                     auto alpha_times_product =
                         std::make_shared<ngraph::default_opset::Multiply>(alpha_node, matmul_node);
                     auto beta_times_input_c =
                         std::make_shared<ngraph::default_opset::Multiply>(beta_node, input_c);
 
-                    return NodeVector{std::make_shared<ngraph::default_opset::Add>(alpha_times_product,
-                                                                            beta_times_input_c)};
+                    return NodeVector{std::make_shared<ngraph::default_opset::Add>(
+                        alpha_times_product, beta_times_input_c)};
                 }
 
             } // namespace set_6

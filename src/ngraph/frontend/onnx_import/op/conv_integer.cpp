@@ -16,10 +16,10 @@
 
 #include "conv_integer.hpp"
 #include "exceptions.hpp"
-#include "utils/convpool.hpp"
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/opsets/opset0.hpp"
+#include "utils/convpool.hpp"
 
 using namespace ngraph::builder;
 

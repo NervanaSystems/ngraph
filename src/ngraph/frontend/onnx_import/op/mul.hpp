@@ -43,8 +43,8 @@ namespace ngraph
                     NodeVector ng_inputs{ngraph::op::legacy_style_broadcast_for_binary_operation(
                         node.get_ng_inputs().at(0), node.get_ng_inputs().at(1), axis)};
 
-                    return {
-                        std::make_shared<ngraph::opset0::Multiply>(ng_inputs.at(0), ng_inputs.at(1))};
+                    return {std::make_shared<ngraph::opset0::Multiply>(ng_inputs.at(0),
+                                                                       ng_inputs.at(1))};
                 }
 
             } // namespace set_1
@@ -53,8 +53,8 @@ namespace ngraph
             {
                 inline NodeVector mul(const Node& node)
                 {
-                    return {std::make_shared<ngraph::default_opset::Multiply>(node.get_ng_inputs().at(0),
-                                                                       node.get_ng_inputs().at(1))};
+                    return {std::make_shared<ngraph::default_opset::Multiply>(
+                        node.get_ng_inputs().at(0), node.get_ng_inputs().at(1))};
                 }
 
             } // namespace set_7

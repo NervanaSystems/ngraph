@@ -25,8 +25,8 @@
 #include <type_traits> // std::enable_if
 #include <vector>
 
-#include "default_opset.hpp"
 #include "core/node.hpp"
+#include "default_opset.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -165,8 +165,8 @@ namespace ngraph
             ///
             /// \return A Constant node representing identity matrix with shape (n, n).
             template <typename T = double>
-            std::shared_ptr<ngraph::default_opset::Constant> square_identity(const size_t n,
-                                                                  const element::Type& type)
+            std::shared_ptr<ngraph::default_opset::Constant>
+                square_identity(const size_t n, const element::Type& type)
             {
                 return shifted_square_identity(Shape{n, n}, type, 0);
             }

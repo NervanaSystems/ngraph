@@ -42,7 +42,8 @@ namespace ngraph
                     }
                     else
                     {
-                        axis = ngraph::default_opset::Constant::create(element::i64, Shape{}, {0}); // default
+                        axis = ngraph::default_opset::Constant::create(
+                            element::i64, Shape{}, {0}); // default
                     }
                     return NodeVector{
                         std::make_shared<ngraph::opset0::CumSum>(data, axis, exclusive, reverse)};

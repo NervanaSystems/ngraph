@@ -18,8 +18,8 @@
 #include <cstdint>
 #include <memory>
 
-#include "exceptions.hpp"
 #include "default_opset.hpp"
+#include "exceptions.hpp"
 #include "lp_pool.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/norm.hpp"

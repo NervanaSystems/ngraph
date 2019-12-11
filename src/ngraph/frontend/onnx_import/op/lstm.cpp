@@ -21,8 +21,8 @@
 #include <string>
 #include <vector>
 
-#include "exceptions.hpp"
 #include "default_opset.hpp"
+#include "exceptions.hpp"
 #include "lstm.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/frontend/onnx_import/op/lstm.hpp"
@@ -96,11 +96,12 @@ namespace ngraph
                         }
                         else
                         {
-                            m_map[LSTMInput::LSTM_INPUT_B] = ngraph::default_opset::Constant::create(
-                                element::f32,
-                                Shape{num_directions, gates_count * hidden_size},
-                                std::vector<float>(num_directions * gates_count * hidden_size,
-                                                   0.f));
+                            m_map[LSTMInput::LSTM_INPUT_B] =
+                                ngraph::default_opset::Constant::create(
+                                    element::f32,
+                                    Shape{num_directions, gates_count * hidden_size},
+                                    std::vector<float>(num_directions * gates_count * hidden_size,
+                                                       0.f));
                         }
                         // The lengths of the sequences in a batch. Shape [batch_size]
                         if (ng_inputs.size() > 4 && !ng_inputs.at(4)->is_null())
@@ -109,11 +110,13 @@ namespace ngraph
                         }
                         else
                         {
-                            m_map[LSTMInput::LSTM_INPUT_SEQ_LENGTHS] = ngraph::default_opset::Constant::create(
-                                element::i32,
-                                Shape{batch_size},
-                                std::vector<std::int32_t>(
-                                    batch_size, m_map[LSTMInput::LSTM_INPUT_X]->get_shape().at(0)));
+                            m_map[LSTMInput::LSTM_INPUT_SEQ_LENGTHS] =
+                                ngraph::default_opset::Constant::create(
+                                    element::i32,
+                                    Shape{batch_size},
+                                    std::vector<std::int32_t>(
+                                        batch_size,
+                                        m_map[LSTMInput::LSTM_INPUT_X]->get_shape().at(0)));
                         }
                         // The initial value of the hidden.
                         // Shape [num_directions, batch_size, hidden_size]
@@ -123,10 +126,12 @@ namespace ngraph
                         }
                         else
                         {
-                            m_map[LSTMInput::LSTM_INPUT_INIT_H] = ngraph::default_opset::Constant::create(
-                                element::f32,
-                                Shape{num_directions, batch_size, hidden_size},
-                                std::vector<float>(num_directions * batch_size * hidden_size, 0.f));
+                            m_map[LSTMInput::LSTM_INPUT_INIT_H] =
+                                ngraph::default_opset::Constant::create(
+                                    element::f32,
+                                    Shape{num_directions, batch_size, hidden_size},
+                                    std::vector<float>(num_directions * batch_size * hidden_size,
+                                                       0.f));
                         }
                         // The initial value of the cell.
                         // Shape [num_directions, batch_size, hidden_size]
@@ -136,10 +141,12 @@ namespace ngraph
                         }
                         else
                         {
-                            m_map[LSTMInput::LSTM_INPUT_INIT_C] = ngraph::default_opset::Constant::create(
-                                element::f32,
-                                Shape{num_directions, batch_size, hidden_size},
-                                std::vector<float>(num_directions * batch_size * hidden_size, 0.f));
+                            m_map[LSTMInput::LSTM_INPUT_INIT_C] =
+                                ngraph::default_opset::Constant::create(
+                                    element::f32,
+                                    Shape{num_directions, batch_size, hidden_size},
+                                    std::vector<float>(num_directions * batch_size * hidden_size,
+                                                       0.f));
                         }
                         // The weight tensor for peepholes. Shape [num_directions, 3*hidde_size]
                         if (ng_inputs.size() > 7 && !ng_inputs.at(7)->is_null())
@@ -148,11 +155,12 @@ namespace ngraph
                         }
                         else
                         {
-                            m_map[LSTMInput::LSTM_INPUT_P] = ngraph::default_opset::Constant::create(
-                                element::f32,
-                                Shape{num_directions, peepholes_count * hidden_size},
-                                std::vector<float>(num_directions * peepholes_count * hidden_size,
-                                                   0.f));
+                            m_map[LSTMInput::LSTM_INPUT_P] =
+                                ngraph::default_opset::Constant::create(
+                                    element::f32,
+                                    Shape{num_directions, peepholes_count * hidden_size},
+                                    std::vector<float>(
+                                        num_directions * peepholes_count * hidden_size, 0.f));
                         }
                     }
 
@@ -198,7 +206,8 @@ namespace ngraph
                         }
                         else // (direction == "bidirectional")
                         {
-                            m_direction = ngraph::default_opset::LSTMSequence::direction::BIDIRECTIONAL;
+                            m_direction =
+                                ngraph::default_opset::LSTMSequence::direction::BIDIRECTIONAL;
                         }
                     }
 

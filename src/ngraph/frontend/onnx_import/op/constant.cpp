@@ -15,8 +15,8 @@
 //*****************************************************************************
 
 #include "constant.hpp"
-#include "default_opset.hpp"
 #include "core/tensor.hpp"
+#include "default_opset.hpp"
 #include "ngraph/op/constant.hpp"
 
 namespace ngraph
@@ -121,7 +121,8 @@ namespace ngraph
                         return __make_ng_constant<uint64_t>(element::u64, tensor);
                     }
 
-                    inline std::shared_ptr<ngraph::default_opset::Constant> make_constant(const Tensor& tensor)
+                    inline std::shared_ptr<ngraph::default_opset::Constant>
+                        make_constant(const Tensor& tensor)
                     {
 #define MAKE_NG_CONSTANT(data_type_)                                                               \
     case data_type_: return make_ng_constant<data_type_>(tensor)

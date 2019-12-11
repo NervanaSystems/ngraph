@@ -18,11 +18,11 @@
 #include <memory>
 #include <vector>
 
-#include "exceptions.hpp"
 #include "default_opset.hpp"
+#include "exceptions.hpp"
 #include "ngraph/axis_vector.hpp"
-#include "ngraph/shape.hpp"
 #include "ngraph/opsets/opset0.hpp"
+#include "ngraph/shape.hpp"
 #include "reshape.hpp"
 #include "utils/reshape.hpp"
 
@@ -50,8 +50,9 @@ namespace ngraph
                         ASSERT_IS_SUPPORTED(node, ng_inputs.at(1)->description() == "Constant")
                             << "doesn't support shape input of other type than Constant.";
 
-                        output_shape = ngraph::as_type_ptr<ngraph::default_opset::Constant>(ng_inputs.at(1))
-                                           ->get_vector<std::size_t>();
+                        output_shape =
+                            ngraph::as_type_ptr<ngraph::default_opset::Constant>(ng_inputs.at(1))
+                                ->get_vector<std::size_t>();
                     }
                     // Do nothing if there is no shape argument nor second node input.
                     else if (output_shape.empty())

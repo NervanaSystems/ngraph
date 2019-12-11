@@ -16,8 +16,8 @@
 
 #include <memory>
 
-#include "hard_sigmoid.hpp"
 #include "default_opset.hpp"
+#include "hard_sigmoid.hpp"
 
 namespace ngraph
 {
@@ -41,7 +41,8 @@ namespace ngraph
                         Shape{},
                         std::vector<double>{node.get_attribute_value<double>("beta", 0.5)});
 
-                    return {std::make_shared<ngraph::default_opset::HardSigmoid>(data, alpha, beta)};
+                    return {
+                        std::make_shared<ngraph::default_opset::HardSigmoid>(data, alpha, beta)};
                 }
 
             } // namespace set_1

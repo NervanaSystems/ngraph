@@ -35,7 +35,8 @@ namespace ngraph
                     double bias = node.get_attribute_value<double>("bias", 1);
                     size_t size = node.get_attribute_value<size_t>("size");
 
-                    return {std::make_shared<ngraph::default_opset::LRN>(data, alpha, beta, bias, size)};
+                    return {std::make_shared<ngraph::default_opset::LRN>(
+                        data, alpha, beta, bias, size)};
                 }
 
             } // namespace set_1

@@ -16,8 +16,8 @@
 
 #include <memory>
 
-#include "exceptions.hpp"
 #include "default_opset.hpp"
+#include "exceptions.hpp"
 #include "mod.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/fused/mod.hpp"

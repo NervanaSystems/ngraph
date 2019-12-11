@@ -32,7 +32,8 @@ namespace ngraph
             {
                 inline NodeVector tanh(const Node& node)
                 {
-                    return {std::make_shared<ngraph::default_opset::Tanh>(node.get_ng_inputs().at(0))};
+                    return {
+                        std::make_shared<ngraph::default_opset::Tanh>(node.get_ng_inputs().at(0))};
                 }
 
             } // namespace set_1

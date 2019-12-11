@@ -18,8 +18,8 @@
 #include <memory>
 #include <vector>
 
-#include "exceptions.hpp"
 #include "default_opset.hpp"
+#include "exceptions.hpp"
 #include "ngraph/builder/quantization/quantized_linear_convolution.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
@@ -139,8 +139,8 @@ namespace ngraph
                                 }
                             }
                             std::size_t concatenation_axis = 1;
-                            return std::make_shared<ngraph::default_opset::Concat>(convolution_nodes,
-                                                                        concatenation_axis);
+                            return std::make_shared<ngraph::default_opset::Concat>(
+                                convolution_nodes, concatenation_axis);
                         }
                         else
                         {
