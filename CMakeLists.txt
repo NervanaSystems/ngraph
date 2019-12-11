@@ -432,7 +432,6 @@ endif()
 
 if (NGRAPH_MLIR_ENABLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_MLIR_ENABLE")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_USE_PREBUILT_MLIR")
     set(NGRAPH_MLIR_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/contrib/mlir)
 endif()
 
@@ -498,6 +497,11 @@ add_custom_target(fix-mode
     -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/fix_mode.cmake
 )
 
+if (NGRAPH_USE_PREBUILT_MLIR)
+	if (NOT DEFINED MLIR_LLVM_PREBUILT_PATH)
+	    message(FATAL_ERROR "MLIR_LLVM_PREBUILT_PATH not specified")
+    endif()
+endif()
 #-----------------------------------------------------------------------------------------------
 # enable or disable output from NGRAPH_DEBUG statements
 #-----------------------------------------------------------------------------------------------
@@ -583,10 +587,8 @@ if(NGRAPH_CPU_ENABLE)
         include(cmake/external_mkldnn_v1.cmake)
     endif()
 endif()
-if (NGRAPH_MLIR_ENABLE AND NOT NGRAPH_USE_PREBUILT_MLIR)
+if (NGRAPH_MLIR_ENABLE)
     include(cmake/external_mlir.cmake)
-elseif (NGRAPH_MLIR_ENABLE AND NGRAPH_USE_PREBUILT_MLIR)
-    include(cmake/external_mlir_prebuilt.cmake)
 endif()
 
 if (NGRAPH_CPU_ENABLE AND NOT NGRAPH_DEX_ONLY)
