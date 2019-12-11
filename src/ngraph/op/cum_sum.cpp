@@ -47,7 +47,7 @@ shared_ptr<Node> op::CumSum::copy_with_new_args(const NodeVector& new_args) cons
     return make_shared<op::CumSum>(new_args.at(0), new_args.at(1), m_exclusive, m_reverse);
 }
 
-void op::CumSum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::CumSum::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
     auto input_tensor = input_value(0);
