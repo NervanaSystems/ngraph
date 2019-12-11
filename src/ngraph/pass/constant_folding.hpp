@@ -50,13 +50,15 @@ public:
         GATHER,
         SLICE,
         DYN_SLICE,
+        SPLIT_V1,
         STRIDED_SLICE,
         DYN_RESHAPE,
         TRANSPOSE,
         RANGE,
         SELECT,
         SQUEEZE,
-        UNSQUEEZE
+        UNSQUEEZE /*,
+         VARIADIC_SPLIT_V1*/
     };
 
     ConstantFolding(const ngraph::BuildNodeExecutorMap& cfmap = ngraph::BuildNodeExecutorMap())
@@ -65,6 +67,8 @@ public:
         m_cfmap = cfmap;
         m_enable_shape_inference = true;
 
+        construct_constant_split_v1();
+        construct_constant_variadic_split_v1();
         construct_constant_reshape();
         construct_constant_broadcast();
         construct_constant_dyn_broadcast();
@@ -130,11 +134,14 @@ public:
             case CFTransformations::SELECT: construct_constant_select(); break;
             case CFTransformations::SQUEEZE: construct_constant_squeeze(); break;
             case CFTransformations::UNSQUEEZE: construct_constant_unsqueeze(); break;
+            case CFTransformations::SPLIT_V1: construct_constant_split_v1(); break;
             }
         }
     }
 
 private:
+    void construct_constant_split_v1();
+    void construct_constant_variadic_split_v1(){};
     void construct_constant_reshape();
     void construct_constant_broadcast();
     void construct_constant_dyn_broadcast();

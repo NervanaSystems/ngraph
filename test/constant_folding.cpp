@@ -1872,3 +1872,33 @@ TEST(constant_folding, pass_property)
     ASSERT_FALSE(pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
     ASSERT_TRUE(pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
 }
+
+TEST(constant_folding, constant_v1_split)
+{
+    vector<float> data{.1f, .2f, .3f, .4f, .5f, .6f};
+    auto const_data = op::Constant::create(element::f32, Shape{data.size()}, data);
+    auto const_axis = op::Constant::create(element::i64, Shape{}, {0});
+
+    auto split_v1 = make_shared<op::v1::Split>(const_data, const_axis, 3);
+    auto f = make_shared<Function>(split_v1->outputs(), ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    auto res1 = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto res2 = as_type_ptr<op::Constant>(f->get_results().at(1)->get_argument(0));
+    auto res3 = as_type_ptr<op::Constant>(f->get_results().at(2)->get_argument(0));
+    ASSERT_TRUE(res1);
+    ASSERT_TRUE(res2);
+    ASSERT_TRUE(res3);
+
+    auto res1_values = res1->get_vector<float>();
+    auto dd = std::vector<float>(data.begin(), data.begin() + 1);
+    std::cout << dd.size() << "\n";
+    ASSERT_TRUE(test::all_close_f(vector<float>{.1f, .2f}, res1_values));
+    auto res2_values = res2->get_vector<float>();
+    ASSERT_TRUE(test::all_close_f(vector<float>{.3f, .4f}, res2_values));
+    auto res3_values = res3->get_vector<float>();
+    ASSERT_TRUE(test::all_close_f(vector<float>{.5f, .6f}, res3_values));
+}
