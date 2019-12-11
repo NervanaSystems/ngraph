@@ -41,7 +41,7 @@ shared_ptr<Node> op::Convert::copy_with_new_args(const NodeVector& new_args) con
     return make_shared<Convert>(new_args.at(0), m_destination_type);
 }
 
-void op::Convert::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Convert::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
