@@ -217,50 +217,18 @@ namespace
         return true;
     }
 
-    shared_ptr<Node> downgrade_to_reshape_v0(shared_ptr<op::v1::Reshape> node)
-    {
-        const auto target_shape_input = node->input_value(1).get_node_shared_ptr();
-        Shape target_shape = as_type_ptr<op::Constant>(target_shape_input)->get_shape_val();
-
-        if (node->get_special_zero())
-        {
-            NGRAPH_CHECK(node->get_input_partial_shape(0).is_static(),
-                         "Can't convert v1::Reshape with special_zero on to v0::Reshape. Dynamic "
-                         "shape of the data input disallows the target shape calculation.");
-
-            const auto data_shape = node->get_input_shape(0);
-
-            NGRAPH_CHECK(target_shape.size() <= data_shape.size());
-
-            for (size_t dim = 0; dim < target_shape.size(); ++dim) {
-                if (target_shape.at(dim) == 0)
-                {
-                    target_shape.at(dim) = data_shape.at(dim);
-                }
-            }
-        }
-
-        if (count(target_shape.begin(), target_shape.end(), -1))
-        {
-            // TODO Shape nie może zawierać liczb ujemnych, bo jest oparty o size_t
-            // odczytać wartość constant za pomocą get_vector
-        }
-
-        return builder::reshape(node->input_value(0), target_shape);
-    }
-
     bool op_cast(shared_ptr<op::v1::Reshape> node)
     {
         shared_ptr<Node> replacement_node;
 
         const auto target_shape_input = node->input_value(1).get_node_shared_ptr();
-        if (target_shape_input->is_constant())
+        if (target_shape_input->is_constant() && node->get_output_partial_shape(0).is_static())
         {
-            replacement_node = downgrade_to_reshape_v0(node);
+            replacement_node = builder::reshape(node->input_value(0), node->get_output_shape(0));
         }
         else
         {
-            auto replacement_node = make_shared<op::v0::DynReshape>(
+            replacement_node = make_shared<op::v0::DynReshape>(
                 node->input_value(0), node->input_value(1), node->get_special_zero());
         }
 
