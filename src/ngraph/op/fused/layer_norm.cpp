@@ -234,7 +234,7 @@ void op::LayerNorm::pre_validate_and_infer_types()
     set_output_type(0, input_element_type, norm_shape);
 }
 
-void op::LayerNorm::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::LayerNorm::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
     auto data = input_value(0);

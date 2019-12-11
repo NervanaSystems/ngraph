@@ -142,7 +142,7 @@ shared_ptr<Node> op::v1::GroupConvolution::copy_with_new_args(const NodeVector& 
 }
 
 void op::v1::GroupConvolution::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                 const NodeVector& deltas)
+                                                 const OutputVector& deltas)
 {
     ngraph_error("Not Yet Implemented");
 }
@@ -307,7 +307,7 @@ void op::v1::GroupConvolutionBackpropData::validate_and_infer_types()
 }
 
 void op::v1::GroupConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                             const NodeVector& deltas)
+                                                             const OutputVector& deltas)
 {
     ngraph_error("Not Yet Implemented");
 }
@@ -534,8 +534,8 @@ NodeVector op::v0::GroupConvolution::decompose_op() const
     return {std::make_shared<ngraph::op::Concat>(convolution_nodes, concatenation_axis)};
 }
 
-void op::v0::GroupConvolution::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                                 const NodeVector& /* deltas */)
+void op::GroupConvolution::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                             const OutputVector& /* deltas */)
 {
     throw ngraph_error("NYI");
 }
