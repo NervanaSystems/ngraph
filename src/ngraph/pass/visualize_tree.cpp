@@ -260,8 +260,9 @@ void pass::VisualizeTree::add_node_arguments(shared_ptr<Node> node,
                                              size_t& fake_node_ctr)
 {
     size_t arg_index = 0;
-    for (auto arg : node->get_arguments())
+    for (auto input_value : node->input_values())
     {
+        auto arg = input_value.get_node_shared_ptr();
         size_t jump_distance = height_maps[arg.get()].max_jump_to(height_maps[node.get()]);
         if (is_type<ngraph::op::Constant>(arg) || is_type<ngraph::op::Parameter>(arg))
         {
