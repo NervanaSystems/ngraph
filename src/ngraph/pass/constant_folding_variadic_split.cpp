@@ -22,40 +22,17 @@
 using namespace std;
 using namespace ngraph;
 
-static int64_t axis_value(std::shared_ptr<op::Constant> axis_const)
-{
-    int64_t axis_value{0};
-
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wswitch-enum"
-#endif
-    switch (static_cast<element::Type_t>(axis_const->get_element_type()))
-    {
-    case element::Type_t::i8: axis_value = axis_const->get_vector<int8_t>().at(0); break;
-    case element::Type_t::i16: axis_value = axis_const->get_vector<int16_t>().at(0); break;
-    case element::Type_t::i32: axis_value = axis_const->get_vector<int32_t>().at(0); break;
-    case element::Type_t::i64: axis_value = axis_const->get_vector<int64_t>().at(0); break;
-    default: break;
-    }
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
-
-    return axis_value;
-}
-
-void pass::ConstantFolding::construct_constant_split_v1()
+void pass::ConstantFolding::construct_constant_variadic_split()
 {
     auto data_label = make_shared<pattern::op::Label>(
-        element::f32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
+        element::f32, Shape{ 2, 3, 4 }, pattern::has_class<op::Constant>());
     auto axis_label =
         make_shared<pattern::op::Label>(element::i64, Shape{}, pattern::has_class<op::Constant>());
     auto split_v1 = make_shared<op::v1::Split>(data_label, axis_label, 0);
 
     auto constant_split_v1_callback = [this, data_label, axis_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_split_v1_callback against node = "
-                     << m.get_match_root()->get_name();
+            << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
         const auto data_node = static_pointer_cast<op::Constant>(pattern_map[data_label]);
@@ -63,8 +40,9 @@ void pass::ConstantFolding::construct_constant_split_v1()
 
         const auto split = static_pointer_cast<op::v1::Split>(m.get_match_root());
 
-        const auto axis_val = axis_value(axis_node);
-        const auto slices = builder::split(data_node, split->get_num_splits(), axis_val);
+        const auto axis_val = axis_node->cast_vector<int64_t>()[0];
+        const auto norm_axis_val = ngraph::normalize_axis(split_v1, axis_val, data_node->get_shape().size());
+        const auto slices = builder::split(data_node, split->get_num_splits(), norm_axis_val);
 
         for (size_t i = 0; i < split->get_output_size(); i++)
         {
