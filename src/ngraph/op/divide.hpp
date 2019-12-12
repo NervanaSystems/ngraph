@@ -61,7 +61,7 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
             protected:
                 bool m_pythondiv{true};
@@ -110,7 +110,7 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
                 size_t get_version() const override { return 1; }
             protected:
                 bool m_pythondiv{true};
