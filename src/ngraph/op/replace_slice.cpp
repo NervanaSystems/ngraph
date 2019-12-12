@@ -174,7 +174,7 @@ shared_ptr<Node> op::ReplaceSlice::copy_with_new_args(const NodeVector& new_args
         new_args.at(0), new_args.at(1), m_lower_bounds, m_upper_bounds, m_strides);
 }
 
-void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

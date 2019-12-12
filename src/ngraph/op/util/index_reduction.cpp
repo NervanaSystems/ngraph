@@ -121,7 +121,7 @@ void op::util::IndexReduction::validate_and_infer_types()
 }
 
 void op::util::IndexReduction::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                                 const NodeVector& /* deltas */)
+                                                 const OutputVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }
