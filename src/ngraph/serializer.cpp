@@ -2807,11 +2807,15 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Sum:
         {
-            auto reduction_axes = deserialize_axis_set(node_js.at("reduction_axes"));
+            set<size_t> reduction_axes = get_or_default<set<size_t>>(node_js, "reduction_axes", set<size_t>());
             if (reduction_axes.empty())
+            {
                 node = make_shared<op::v0::Sum>(args[0], args[1]);
+            }
             else
+            {
                 node = make_shared<op::v0::Sum>(args[0], reduction_axes);
+            }
             break;
         }
         case OP_TYPEID::Tan:

@@ -61,14 +61,14 @@ namespace
     {
         if (!check_self_concat_op(Op))
         {
-            NGRAPH_DEBUG << "self_concat_fusion: Matcher matched " << Op->get_name()
+            NGRAPH_INFO << "self_concat_fusion: Matcher matched " << Op->get_name()
                          << " but it is not a self concat\n";
             return false;
         }
 
         if (!check_concat_axis_dim_value(Op))
         {
-            NGRAPH_DEBUG << "self_concat_fusion: Input shape value along concat axis of "
+            NGRAPH_INFO << "self_concat_fusion: Input shape value along concat axis of "
                          << Op->get_name() << " is not equal to 1\n";
             return false;
         }
@@ -95,7 +95,7 @@ void pass::ConcatElimination::construct_concat_elimination()
     auto concat_label = std::make_shared<pattern::op::Label>(concat, nullptr, NodeVector{concat});
 
     auto callback = [op_label](pattern::Matcher& m) {
-        NGRAPH_DEBUG
+        NGRAPH_INFO
             << "concat_elimination: In callback for construct_concat_elimination against node = "
             << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -104,12 +104,12 @@ void pass::ConcatElimination::construct_concat_elimination()
         auto root = as_type_ptr<op::Concat>(m.get_match_root());
         if (root && (root->get_input_shape(0) == root->get_output_shape(0)))
         {
-            NGRAPH_DEBUG << " eliminated " << m.get_match_root() << "\n";
+            NGRAPH_INFO << " eliminated " << m.get_match_root() << "\n";
             replace_node(m.get_match_root(), op);
 
             return true;
         }
-        NGRAPH_DEBUG << " Incorrect match in callback\n";
+        NGRAPH_INFO << " Incorrect match in callback\n";
         return false;
     };
 
@@ -158,7 +158,7 @@ bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> f
         construct_concat_patterns(matcher, concat_op_label, n);
     }
 
-    NGRAPH_DEBUG << print_state_of_bounded_vectors();
+    NGRAPH_INFO << print_state_of_bounded_vectors();
 
     remove_single_concat_op_pattern();
 
@@ -180,19 +180,19 @@ void ngraph::pass::SelfConcatFusion::construct_concat_patterns(
         auto concat_op = matcher->get_pattern_map()[concat_op_label];
         if (!is_type<op::Concat>(concat_op))
         {
-            NGRAPH_DEBUG << "self_concat_fusion: Pattern matcher matched incorrect op. Matched "
+            NGRAPH_INFO << "self_concat_fusion: Pattern matcher matched incorrect op. Matched "
                          << concat_op->get_name() << " instead of a self concat";
             return;
         }
         if (!valid_self_concat(concat_op))
         {
-            NGRAPH_DEBUG << "self_concat_fusion: " << concat_op->get_name()
+            NGRAPH_INFO << "self_concat_fusion: " << concat_op->get_name()
                          << " is not a valid self concat\n";
             return;
         }
         else
         {
-            NGRAPH_DEBUG << "self_concat_fusion: " << concat_op->get_name()
+            NGRAPH_INFO << "self_concat_fusion: " << concat_op->get_name()
                          << " is a VALID self concat\n";
         }
 
