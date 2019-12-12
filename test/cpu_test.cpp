@@ -2157,10 +2157,10 @@ TEST(cpu_test, tensor_copy_from_different_layout)
 
 TEST(cpu_test, max_pool_bf16)
 {
-    if (!runtime::cpu::mkldnn_utils::is_bf16_supported())
+    if (!runtime::cpu::mkldnn_utils::is_bf16_supported() || std::getenv("NGRAPH_MLIR") != nullptr)
     {
         // TODO change to skip when there is a new release of gtest
-        NGRAPH_WARN << "This test is skipped for platform without bf16 support.";
+        NGRAPH_WARN << "This test is skipped for platform without bf16 support and for mlir.";
         return;
     }
 
@@ -2192,10 +2192,10 @@ TEST(cpu_test, max_pool_bf16)
 
 TEST(cpu_test, convolution_simple_bf16)
 {
-    if (!runtime::cpu::mkldnn_utils::is_bf16_supported())
+    if (!runtime::cpu::mkldnn_utils::is_bf16_supported() || std::getenv("NGRAPH_MLIR") != nullptr)
     {
         // TODO change to skip when there is a new release of gtest
-        NGRAPH_WARN << "This test is skipped for platform without bf16 support.";
+        NGRAPH_WARN << "This test is skipped for platform without bf16 support and for mlir.";
         return;
     }
 
