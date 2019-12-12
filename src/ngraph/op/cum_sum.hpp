@@ -91,6 +91,8 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
+                void validate_and_infer_types() override;
+
                 /// \return The default value for CumSum.
                 virtual std::shared_ptr<Node> get_default_value() const override;
                 bool is_exclusive() const { return m_exclusive; }
