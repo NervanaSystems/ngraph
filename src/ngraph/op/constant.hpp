@@ -18,6 +18,7 @@
 
 #include <cstring>
 #include <sstream>
+#include <cmath>
 
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
@@ -46,7 +47,7 @@ namespace ngraph
             Constant(const element::Type& type, Shape shape, const std::vector<T>& values)
                 : m_element_type(type)
                 , m_shape(shape)
-                , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.bitwidth() / 8,
+                , m_data(new runtime::AlignedBuffer(std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f),
                                                     host_alignment()))
             {
                 NODE_VALIDATION_CHECK(
@@ -82,7 +83,7 @@ namespace ngraph
             Constant(const element::Type& type, Shape shape, const std::vector<std::string>& values)
                 : m_element_type(type)
                 , m_shape(shape)
-                , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.bitwidth() / 8,
+                , m_data(new runtime::AlignedBuffer(std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f),
                                                     host_alignment()))
             {
                 NODE_VALIDATION_CHECK(
@@ -143,9 +144,8 @@ namespace ngraph
                 , m_shape(shape)
                 , m_data(nullptr)
             {
-                size_t size = shape_size(m_shape) * m_element_type.bitwidth() / 8;
-                m_data.reset(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.bitwidth() / 8,
-                                                        host_alignment()));
+                size_t size = std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f);
+                m_data.reset(new runtime::AlignedBuffer(size, host_alignment()));
                 std::memcpy(m_data->get_ptr(), data, size);
                 constructor_validate_and_infer_types();
                 m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
