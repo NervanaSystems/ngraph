@@ -91,6 +91,8 @@ ExternalProject_Add(
                 -DLIBOMP_OMPT_SUPPORT=OFF
                 -DCLANG_BUILD_TOOLS=OFF
                 -DCLANG_ENABLE_ARCMT=OFF
+                -DCLANG_ANALYZER_ENABLE_Z3_SOLVER=OFF
+                -DCLANG_ANALYZER_BUILD_Z3=OFF
                 -DCLANG_ENABLE_STATIC_ANALYZER=OFF
                 -DLLVM_EXTERNAL_CLANG_SOURCE_DIR=${CLANG_SOURCE_DIR}
                 ${PASS_LLVM_OPENMP_DIR}
