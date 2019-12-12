@@ -251,7 +251,7 @@ shared_ptr<Node> op::v0::MaxPoolBackprop::copy_with_new_args(const NodeVector& n
                                                 m_padding_above);
 }
 
-void op::v0::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     if (m_ceil_mode)
     {
@@ -459,7 +459,7 @@ shared_ptr<Node> op::v1::MaxPoolBackprop::copy_with_new_args(const NodeVector& n
         new_args.at(0), new_args.at(1), m_strides, m_pads_begin, m_pads_end, m_kernel);
 }
 
-void op::v1::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v1::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     if (m_rounding_type == op::RoundingType::CEIL)
     {

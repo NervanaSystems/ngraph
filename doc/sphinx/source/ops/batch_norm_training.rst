@@ -91,7 +91,7 @@ Backprop
 C++ Interface
 ==============
 
-.. doxygenclass:: ngraph::op::BatchNormTraining
+.. doxygenclass:: ngraph::op::v0::BatchNormTraining
    :project: ngraph
    :members:
 
