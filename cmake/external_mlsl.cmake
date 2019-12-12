@@ -41,6 +41,8 @@ ExternalProject_Add(
     SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/MLSL/src"
     INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/MLSL/install"
     EXCLUDE_FROM_ALL TRUE
+    CMAKE_ARGS
+      -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
     )
 
 add_library(libmlsl INTERFACE)

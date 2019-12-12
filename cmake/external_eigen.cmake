@@ -39,6 +39,8 @@ ExternalProject_Add(
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
     EXCLUDE_FROM_ALL TRUE
+    CMAKE_ARGS
+        -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
     )
 
 #------------------------------------------------------------------------------
