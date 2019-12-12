@@ -17,7 +17,8 @@
 #include "constant_folding.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/split.hpp"
+#include "ngraph/op/variadic_split.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -25,38 +26,69 @@ using namespace ngraph;
 void pass::ConstantFolding::construct_constant_variadic_split()
 {
     auto data_label = make_shared<pattern::op::Label>(
-        element::f32, Shape{ 2, 3, 4 }, pattern::has_class<op::Constant>());
+        element::f32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
     auto axis_label =
         make_shared<pattern::op::Label>(element::i64, Shape{}, pattern::has_class<op::Constant>());
-    auto split_v1 = make_shared<op::v1::Split>(data_label, axis_label, 0);
+    auto lengths_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
+    auto variadic_split_pattern =
+        make_shared<op::v1::VariadicSplit>(data_label, axis_label, lengths_label);
 
-    auto constant_split_v1_callback = [this, data_label, axis_label](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In callback for constant_split_v1_callback against node = "
-            << m.get_match_root()->get_name();
+    auto constant_variadic_split_callback = [this, data_label, axis_label, lengths_label](
+        pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_variadic_split_callback against node = "
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
         const auto data_node = static_pointer_cast<op::Constant>(pattern_map[data_label]);
         const auto axis_node = static_pointer_cast<op::Constant>(pattern_map[axis_label]);
-
-        const auto split = static_pointer_cast<op::v1::Split>(m.get_match_root());
+        const auto lengths_node = static_pointer_cast<op::Constant>(pattern_map[lengths_label]);
+        const auto variadic_split = static_pointer_cast<op::v1::VariadicSplit>(m.get_match_root());
 
         const auto axis_val = axis_node->cast_vector<int64_t>()[0];
-        const auto norm_axis_val = ngraph::normalize_axis(split_v1, axis_val, data_node->get_shape().size());
-        const auto slices = builder::split(data_node, split->get_num_splits(), norm_axis_val);
+        const auto norm_axis_val =
+            ngraph::normalize_axis(variadic_split.get(), axis_val, data_node->get_shape().size());
+        auto split_lengths = lengths_node->cast_vector<int64_t>();
 
-        for (size_t i = 0; i < split->get_output_size(); i++)
+        // Adjust split lengths in case of negatives
+        size_t sum_of_splits = 0;
+        int64_t negative_one = -1;
+        for (size_t i = 0; i < split_lengths.size(); i++)
         {
-            for (auto& input : split->output(i).get_target_inputs())
+            if (split_lengths[i] == -1)
+            {
+                negative_one = i;
+            }
+            else
+            {
+                sum_of_splits += split_lengths[i];
+            }
+        }
+
+        if (negative_one > 0)
+        {
+            split_lengths[negative_one] =
+                static_cast<size_t>(data_node->get_shape()[norm_axis_val]) - sum_of_splits;
+        }
+
+        const auto slices = builder::split(
+            data_node, vector<size_t>(split_lengths.begin(), split_lengths.end()), norm_axis_val);
+
+        for (size_t i = 0; i < variadic_split->get_output_size(); i++)
+        {
+            for (auto& input : variadic_split->output(i).get_target_inputs())
             {
                 input.replace_source_output((slices[i]->output(0)));
             }
         }
-        split->outputs().clear();
+        variadic_split->outputs().clear();
         construct_constant_slice();
+
         return true;
     };
-    auto split_v1_matcher =
-        make_shared<pattern::Matcher>(split_v1, "ConstantFolding.ConstantSplit_v1");
-    this->add_matcher(
-        split_v1_matcher, constant_split_v1_callback, PassProperty::CHANGE_DYNAMIC_STATE);
+    auto variadic_split_matcher = make_shared<pattern::Matcher>(
+        variadic_split_pattern, "ConstantFolding.ConstantVariadicSplit");
+    this->add_matcher(variadic_split_matcher,
+                      constant_variadic_split_callback,
+                      PassProperty::CHANGE_DYNAMIC_STATE);
 }

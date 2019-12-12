@@ -18,6 +18,7 @@
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/split.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -28,20 +29,20 @@ void pass::ConstantFolding::construct_constant_split()
         element::f32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
     auto axis_label =
         make_shared<pattern::op::Label>(element::i64, Shape{}, pattern::has_class<op::Constant>());
-    auto split_v1 = make_shared<op::v1::Split>(data_label, axis_label, 0);
+    auto split_pattern = make_shared<op::v1::Split>(data_label, axis_label, 0);
 
-    auto constant_split_v1_callback = [this, data_label, axis_label](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In callback for constant_split_v1_callback against node = "
+    auto constant_split_callback = [this, data_label, axis_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_split_callback against node = "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
         const auto data_node = static_pointer_cast<op::Constant>(pattern_map[data_label]);
         const auto axis_node = static_pointer_cast<op::Constant>(pattern_map[axis_label]);
-
         const auto split = static_pointer_cast<op::v1::Split>(m.get_match_root());
 
         const auto axis_val = axis_node->cast_vector<int64_t>()[0];
-        const auto norm_axis_val = ngraph::normalize_axis(split_v1, axis_val, data_node->get_shape().size());
+        const auto norm_axis_val =
+            ngraph::normalize_axis(split.get(), axis_val, data_node->get_shape().size());
         const auto slices = builder::split(data_node, split->get_num_splits(), norm_axis_val);
 
         for (size_t i = 0; i < split->get_output_size(); i++)
@@ -53,10 +54,10 @@ void pass::ConstantFolding::construct_constant_split()
         }
         split->outputs().clear();
         construct_constant_slice();
+
         return true;
     };
-    auto split_v1_matcher =
-        make_shared<pattern::Matcher>(split_v1, "ConstantFolding.ConstantSplit_v1");
-    this->add_matcher(
-        split_v1_matcher, constant_split_v1_callback, PassProperty::CHANGE_DYNAMIC_STATE);
+    auto split_matcher =
+        make_shared<pattern::Matcher>(split_pattern, "ConstantFolding.ConstantSplit");
+    this->add_matcher(split_matcher, constant_split_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
