@@ -49,14 +49,7 @@ void ngraph::Event::write_trace(const ngraph::Event& event)
         if (!so_initialized)
         {
             // Open the file
-            std::string file_name = "ngraph_event_trace.json";
-            if (get_distributed_interface()->get_size() > 1)
-            {
-                auto rank = std::to_string(get_distributed_interface()->get_rank());
-                int num_zero = 3;
-                std::string prefix = std::string(num_zero - rank.length(), '0') + rank + "_";
-                file_name.insert(0, prefix);
-            }
+            std::string file_name = "ngraph_event_trace-" + std::to_string(getpid()) + ".json";
             s_event_log.open(file_name, ios_base::trunc);
             s_event_log << "[\n";
             so_initialized = true;
