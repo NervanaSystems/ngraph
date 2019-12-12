@@ -295,7 +295,6 @@ namespace
             "Unable to convert GroupConvolutionBackpropData:v1 to GroupConvolutionBackpropData:v0 "
             "if output_shape is not constant. Node: ",
             *node);
-        const size_t num_spatial_dims = strides.size();
 
         auto output_padding = node->get_output_padding();
 
