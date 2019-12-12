@@ -221,3 +221,23 @@ TEST(build_graph, validate_function_for_dynamic_shape)
     EXPECT_TRUE(make_function(true)->is_dynamic());
     EXPECT_FALSE(make_function(false)->is_dynamic());
 }
+
+TEST(build_graph, goe_elimination)
+{
+    auto etype = element::f32;
+    auto input_shape = Shape{10, 20, 30};
+    Shape channel_shape{input_shape.at(1)};
+    double epsilon = .01;
+    auto Input = std::make_shared<op::Parameter>(etype, input_shape);
+    auto Gamma = std::make_shared<op::Parameter>(etype, channel_shape);
+    auto Beta = std::make_shared<op::Parameter>(etype, channel_shape);
+    auto BN = std::make_shared<op::BatchNormTraining>(Input, Gamma, Beta, epsilon);
+    auto NormedInput = std::make_shared<op::Result>(std::make_shared<op::GetOutputElement>(BN, 0));
+    auto Mean = std::make_shared<op::Result>(std::make_shared<op::GetOutputElement>(BN, 1));
+    auto Variance = std::make_shared<op::Result>(std::make_shared<op::GetOutputElement>(BN, 2));
+    auto f = std::make_shared<Function>(ResultVector{NormedInput, Mean, Variance},
+                                        ParameterVector{Input, Gamma, Beta});
+    EXPECT_TRUE(NormedInput->input_value(0) == BN->output(0));
+    EXPECT_TRUE(Mean->input_value(0) == BN->output(1));
+    EXPECT_TRUE(Variance->input_value(0) == BN->output(2));
+}
