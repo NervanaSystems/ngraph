@@ -61,7 +61,6 @@ void runtime::cpu::op::ConvertLayout::validate_and_infer_types()
     {
         // throw ngraph_error("Layout conversion input tensor is missing layout information");
     }
-
     set_output_type(0, output_layout->get_element_type(), output_layout->get_shape());
     get_output_tensor_ptr()->set_tensor_layout(output_layout);
 }

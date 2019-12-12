@@ -98,9 +98,8 @@ static shared_ptr<Node>
                            to_string(node->get_input_size()) + ")");
     }
 
-    for (const descriptor::Input& input : node->get_inputs())
+    for (auto& output : node->input_values())
     {
-        const auto& output = input.get_output();
         auto tv = output.get_tensor_ptr();
         auto tvl =
             std::dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_layout());
@@ -111,7 +110,7 @@ static shared_ptr<Node>
                 output.get_node()->get_name());
         }
 
-        if (input.get_shape() == Shape{})
+        if (output.get_shape() == Shape{})
         {
             tvl->set_mkldnn_md(required_mds[index]);
         }
@@ -128,23 +127,22 @@ static shared_ptr<Node>
             auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
             layout->set_mkldnn_md(required_mds[index]);
             auto new_node = std::shared_ptr<Node>(
-                new runtime::cpu::op::ConvertLayout(output.get_node(), output.get_index(), layout));
+                new runtime::cpu::op::ConvertLayout(output, output.get_index(), layout));
             new_args.push_back(new_node);
             replace_node = true;
 #if MKLDNN_VERSION_MAJOR < 1
             NGRAPH_DEBUG << "Inserted conversion node " << new_node->get_name() << " between "
-                         << output.get_node()->get_name()
-                         << "(layout: " << tvl->get_mkldnn_md().data.format << ") and "
-                         << node->get_name() << "(layout: " << required_mds[index].data.format
+                         << *output.get_node() << "(layout: " << tvl->get_mkldnn_md().data.format
+                         << ") and " << *node << "(layout: " << required_mds[index].data.format
                          << ")";
 #else
-            NGRAPH_DEBUG << "Inserted conversion node " << new_node->get_name() << " between "
-                         << output.get_node()->get_name() << " and " << node->get_name();
+            NGRAPH_DEBUG << "Inserted conversion node " << *new_node << " between "
+                         << *output.get_node() << " and " << *node;
 #endif
         }
         else
         {
-            new_args.push_back(output.get_node());
+            new_args.push_back(output);
         }
         index++;
     }
