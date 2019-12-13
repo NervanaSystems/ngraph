@@ -26,6 +26,7 @@ __version__ = os.environ.get('NGRAPH_VERSION', '0.0.0-dev')
 PYNGRAPH_ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 NGRAPH_DEFAULT_INSTALL_DIR = os.environ.get('HOME')
 NGRAPH_ONNX_IMPORT_ENABLE = os.environ.get('NGRAPH_ONNX_IMPORT_ENABLE')
+NGRAPH_PYTHON_DEBUG = os.environ.get('NGRAPH_PYTHON_DEBUG')
 
 
 def find_ngraph_dist_dir():
@@ -388,7 +389,10 @@ class BuildExt(build_ext):
             add_platform_specific_link_args(ext.extra_link_args)
 
             ext.extra_compile_args += ['-Wformat', '-Wformat-security']
-            ext.extra_compile_args += ['-O2', '-D_FORTIFY_SOURCE=2']
+            if NGRAPH_PYTHON_DEBUG in ['TRUE', 'ON', True]:
+                ext.extra_compile_args += ['-O0', '-g']
+            else:
+                ext.extra_compile_args += ['-O2', '-D_FORTIFY_SOURCE=2']
             if sys.platform == 'darwin':
                 ext.extra_compile_args += ['-stdlib=libc++']
         build_ext.build_extensions(self)
