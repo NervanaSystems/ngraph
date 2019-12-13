@@ -61,8 +61,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
         NGRAPH_DEBUG << "In a callback for construct_weight against "
                      << m.get_match_root()->get_name();
 
-        auto m_cvt_lt = m.get_match_root()->get_argument(1);
-        auto m_reshape_conv = m_cvt_lt->get_argument(0);
+        auto m_cvt_lt = m.get_match_root()->input_value(1).get_node_shared_ptr();
+        auto m_reshape_conv = m_cvt_lt->input_value(0).get_node_shared_ptr();
 
         std::shared_ptr<Node> m_conv_bprop;
 
@@ -108,14 +108,10 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
             return false;
         }
 
-        auto m_cvt_lt_bprop = m_conv_bprop->get_argument(0);
-        auto m_reshape_bprop = m_cvt_lt_bprop->get_argument(0);
-
-        NGRAPH_DEBUG << "Replacing input "
-                     << m_cvt_lt_bprop->get_inputs().at(0).get_output().get_node()->get_name()
-                     << " to " << m_cvt_lt_bprop->get_name() << " with "
-                     << m_cvt_lt->get_outputs().at(0).get_node()->get_name();
-        m_cvt_lt_bprop->get_inputs().at(0).replace_output(m_cvt_lt->get_outputs().at(0));
+        auto m_cvt_lt_bprop = m_conv_bprop->input_value(0).get_node_shared_ptr();
+        NGRAPH_DEBUG << "Replacing input " << *m_cvt_lt_bprop->input_value(0).get_node() << " to "
+                     << *m_cvt_lt_bprop << " with " << *m_cvt_lt->output(0).get_node();
+        m_cvt_lt_bprop->input(0).replace_source_output(m_cvt_lt->output(0));
 
         return true;
     };
@@ -139,23 +135,23 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
                      << m.get_match_root()->get_name();
 
         auto m_cvt_lt = m.get_match_root();
-        auto m_slice = m_cvt_lt->get_argument(0);
-        auto slice_ptr = static_cast<const ngraph::op::Slice*>(m_slice.get());
+        auto m_slice = m_cvt_lt->input(0);
+        auto slice_ptr = as_type<ngraph::op::Slice>(m_slice.get_source_output().get_node());
         // do the fusion if slice has 1 user and uses mkldnn kernel.
         if (!runtime::cpu::mkldnn_utils::use_mkldnn_kernel(slice_ptr) ||
-            m_slice->get_users().size() != 1)
+            slice_ptr->output(0).get_target_inputs().size() != 1)
         {
             return false;
         }
 
-        for (auto u : m.get_pattern_map()[param]->get_users())
+        for (auto u : m.get_pattern_map()[param]->output(0).get_target_inputs())
         {
             if (u != m_slice)
             {
                 continue;
             }
 
-            auto new_slice = std::make_shared<ngraph::op::Slice>(m_slice->get_argument(0),
+            auto new_slice = std::make_shared<ngraph::op::Slice>(slice_ptr->input_value(0),
                                                                  slice_ptr->get_lower_bounds(),
                                                                  slice_ptr->get_upper_bounds(),
                                                                  slice_ptr->get_strides());
