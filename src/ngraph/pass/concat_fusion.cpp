@@ -160,8 +160,6 @@ bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> f
 
     NGRAPH_DEBUG << print_state_of_bounded_vectors();
 
-    remove_single_concat_op_pattern();
-
     for (auto concat_op_pattern_node_vector : this->m_concat_pattern_vectors)
     {
         modify_graph = replace_patterns(concat_op_pattern_node_vector);
