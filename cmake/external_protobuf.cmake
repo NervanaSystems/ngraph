@@ -43,6 +43,7 @@ if (WIN32)
         CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
         CMAKE_ARGS
             ${NGRAPH_FORWARD_CMAKE_ARGS}
+            -DCMAKE_CXX_FLAGS=${CMAKE_ORIGINAL_CXX_FLAGS}
             -Dprotobuf_MSVC_STATIC_RUNTIME=OFF
             -Dprotobuf_WITH_ZLIB=OFF
             -Dprotobuf_BUILD_TESTS=OFF
@@ -84,7 +85,7 @@ else()
         UPDATE_COMMAND ""
         PATCH_COMMAND ""
         CONFIGURE_COMMAND ./autogen.sh COMMAND ./configure --prefix=${EXTERNAL_PROJECTS_ROOT}/protobuf --disable-shared CXX=${CMAKE_CXX_COMPILER}
-        BUILD_COMMAND $(MAKE) "CXXFLAGS=-std=c++${NGRAPH_CXX_STANDARD} -fPIC -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI}"
+        BUILD_COMMAND $(MAKE) "CXXFLAGS=-std=c++${NGRAPH_CXX_STANDARD} -fPIC"
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/download"
