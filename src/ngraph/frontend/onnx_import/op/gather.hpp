@@ -19,8 +19,8 @@
 #include <memory>
 
 #include "core/node.hpp"
+#include "default_opset.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/opsets/opset1.hpp"
 #include "utils/common.hpp"
 
 namespace ngraph
@@ -39,10 +39,10 @@ namespace ngraph
                     auto axis = node.get_attribute_value<int64_t>("axis", 0);
                     auto valid_axis = common::validate_axis(node, axis, data->get_shape().size());
 
-                    return {std::make_shared<opset1::Gather>(
+                    return {std::make_shared<default_opset::Gather>(
                         data,
                         indices,
-                        opset1::Constant::create(element::i64, Shape{}, {valid_axis}))};
+                        default_opset::Constant::create(element::i64, Shape{}, {valid_axis}))};
                 }
 
             } // namespace set_1
