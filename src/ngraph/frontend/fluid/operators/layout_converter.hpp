@@ -47,7 +47,7 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            const int get_mode() const { return m_mode; }
+            int get_mode() const { return m_mode; }
         protected:
             int m_mode;
         };
