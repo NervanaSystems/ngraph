@@ -2060,6 +2060,12 @@ TEST(constant_folding, constant_v1_variadic_split_axis_1_3_splits_neg_length)
     ASSERT_TRUE(res2);
     ASSERT_TRUE(res3);
 
+    auto res1_values = res1->get_vector<int64_t>();
+    ASSERT_EQ(vector<int64_t>({0, 1, 2, 3, 16, 17, 18, 19, 32, 33, 34, 35, 48, 49, 50, 51}),
+              res1_values);
+    auto res2_values = res2->get_vector<int64_t>();
+    ASSERT_EQ(vector<int64_t>({4, 5, 6, 7, 20, 21, 22, 23, 36, 37, 38, 39, 52, 53, 54, 55}),
+              res2_values);
     auto res3_values = res3->get_vector<int64_t>();
     ASSERT_EQ(vector<int64_t>({8,  9,  10, 11, 12, 13, 14, 15, 24, 25, 26, 27, 28, 29, 30, 31,
                                40, 41, 42, 43, 44, 45, 46, 47, 56, 57, 58, 59, 60, 61, 62, 63}),
