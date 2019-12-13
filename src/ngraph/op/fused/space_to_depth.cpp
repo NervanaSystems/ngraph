@@ -46,12 +46,13 @@ NodeVector op::SpaceToDepth::decompose_op() const
     auto data = input_value(0);
     auto data_shape = data.get_shape();
 
-    NGRAPH_CHECK((data_shape.size() >= 3),
-                 "The input tensor with rank lower than 3 is not supported (input rank: ",
-                 data_shape.size(),
-                 ")");
+    NODE_VALIDATION_CHECK(this,
+                          (data_shape.size() >= 3),
+                          "The input tensor with rank lower than 3 is not supported (input rank: ",
+                          data_shape.size(),
+                          ")");
 
-    NGRAPH_CHECK(m_blocksize > 0, "m_blocksize must be greater than 0");
+    NODE_VALIDATION_CHECK(this, m_blocksize > 0, "m_blocksize must be greater than 0");
 
     if (data_shape.size() == 3)
     {
@@ -67,13 +68,14 @@ NodeVector op::SpaceToDepth::decompose_op() const
 
     for (int i = spatial_dim_index; i < data_shape.size(); ++i)
     {
-        NGRAPH_CHECK(m_blocksize > 0 && data_shape.at(i) % m_blocksize == 0,
-                     "The dimension on position: ",
-                     i,
-                     " equal to: ",
-                     data_shape.at(i),
-                     " must be a multiple of m_blocksize: ",
-                     m_blocksize);
+        NODE_VALIDATION_CHECK(this,
+                              m_blocksize > 0 && data_shape.at(i) % m_blocksize == 0,
+                              "The dimension on position: ",
+                              i,
+                              " equal to: ",
+                              data_shape.at(i),
+                              " must be a multiple of m_blocksize: ",
+                              m_blocksize);
     }
 
     // First we have to disperse the data from spatial dimensions, then

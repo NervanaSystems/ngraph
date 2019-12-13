@@ -49,10 +49,11 @@ NodeVector op::DepthToSpace::decompose_op() const
     auto data = input_value(0);
     auto data_shape = data.get_shape();
 
-    NGRAPH_CHECK((data_shape.size() >= 3),
-                 "The input tensor with rank lower than 3 is not supported (input rank: ",
-                 data_shape.size(),
-                 ")");
+    NODE_VALIDATION_CHECK(this,
+                          (data_shape.size() >= 3),
+                          "The input tensor with rank lower than 3 is not supported (input rank: ",
+                          data_shape.size(),
+                          ")");
 
     if (data_shape.size() == 3)
     {
@@ -66,12 +67,13 @@ NodeVector op::DepthToSpace::decompose_op() const
     const size_t spatial_dims = data_shape.size() - spatial_dim_index;
     const auto c_dim_divider = static_cast<int>(std::pow(m_blocksize, spatial_dims));
 
-    NGRAPH_CHECK(m_blocksize > 0 && c_dim % c_dim_divider == 0,
-                 "DepthToSpace: The input data's 'channels' axis size: ",
-                 c_dim,
-                 " must be a equivalent to ",
-                 "'block_size'^'spatial_dims': ",
-                 c_dim_divider);
+    NODE_VALIDATION_CHECK(this,
+                          m_blocksize > 0 && c_dim % c_dim_divider == 0,
+                          "DepthToSpace: The input data's 'channels' axis size: ",
+                          c_dim,
+                          " must be a equivalent to ",
+                          "'block_size'^'spatial_dims': ",
+                          c_dim_divider);
 
     auto bs = static_cast<size_t>(m_blocksize);
     size_t c_flat = c_dim / c_dim_divider;
