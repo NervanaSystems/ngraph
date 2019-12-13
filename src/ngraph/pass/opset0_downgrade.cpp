@@ -221,8 +221,19 @@ namespace
 
     bool op_cast(shared_ptr<op::v1::Reshape> node)
     {
-        auto replacement_node = make_shared<op::v0::DynReshape>(
-            node->input_value(0), node->input_value(1), node->get_special_zero());
+        shared_ptr<Node> replacement_node;
+
+        const auto target_shape_input = node->input_value(1).get_node_shared_ptr();
+        if (target_shape_input->is_constant() && node->get_output_partial_shape(0).is_static())
+        {
+            replacement_node = builder::reshape(node->input_value(0), node->get_output_shape(0));
+        }
+        else
+        {
+            replacement_node = make_shared<op::v0::DynReshape>(
+                node->input_value(0), node->input_value(1), node->get_special_zero());
+        }
+
         replace_node(node, replacement_node);
         return true;
     }
