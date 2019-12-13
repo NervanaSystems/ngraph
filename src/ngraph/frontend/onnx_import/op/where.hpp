@@ -20,8 +20,8 @@
 
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/select.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/opsets/opset0.hpp"
 
 namespace ngraph
 {
@@ -35,7 +35,7 @@ namespace ngraph
                 {
                     NodeVector ng_inputs{ngraph::op::numpy_style_broadcast(node.get_ng_inputs())};
 
-                    return {std::make_shared<ngraph::op::Select>(
+                    return {std::make_shared<ngraph::opset0::Select>(
                         ng_inputs.at(0), ng_inputs.at(1), ng_inputs.at(2))};
                 }
             } // namespace set_1
