@@ -31,7 +31,7 @@ std::function<bool(std::shared_ptr<Node>)> ngraph::pass::get_no_fan_out_function
         }
         else
         {
-            NGRAPH_DEBUG << n->get_name() << " has fan out\n";
+            NGRAPH_INFO << n->get_name() << " has fan out\n";
             return false;
         }
     };

@@ -160,10 +160,11 @@ bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> f
 
     NGRAPH_INFO << print_state_of_bounded_vectors();
 
-    remove_single_concat_op_pattern();
+    // remove_single_concat_op_pattern();
 
     for (auto concat_op_pattern_node_vector : this->m_concat_pattern_vectors)
     {
+        NGRAPH_INFO << "concat_op_pattern_node_vector.size() = " << concat_op_pattern_node_vector.size();
         modify_graph = replace_patterns(concat_op_pattern_node_vector);
     }
 
@@ -237,6 +238,7 @@ void ngraph::pass::SelfConcatFusion::remove_single_concat_op_pattern()
     {
         if (iter->size() == 1)
         {
+            NGRAPH_INFO << "Erasing " << iter->at(0)->get_name() << "from patterns";
             iter = m_concat_pattern_vectors.erase(iter);
         }
         else
@@ -248,6 +250,11 @@ void ngraph::pass::SelfConcatFusion::remove_single_concat_op_pattern()
 
 bool ngraph::pass::SelfConcatFusion::replace_patterns(const NodeVector& bounded_concat_ops)
 {
+    NGRAPH_INFO << "replacing concat ops: ";
+    for (auto& op : bounded_concat_ops)
+    {
+        NGRAPH_INFO << *op;
+    }
     auto scalarize_dim = [](std::vector<size_t> concat_axis_vector,
                             const Shape& input_shape) -> Shape {
 
