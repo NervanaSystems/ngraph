@@ -44,6 +44,6 @@ Outputs
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::GetOutputElement
+.. doxygenclass:: ngraph::op::v0::GetOutputElement
    :project: ngraph
    :members:

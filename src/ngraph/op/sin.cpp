@@ -35,7 +35,7 @@ shared_ptr<Node> op::Sin::copy_with_new_args(const NodeVector& new_args) const
     return make_shared<Sin>(new_args.at(0));
 }
 
-void op::Sin::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Sin::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

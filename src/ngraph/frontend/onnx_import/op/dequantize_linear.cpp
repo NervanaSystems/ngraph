@@ -17,12 +17,12 @@
 #include <cstdint>
 #include <memory>
 
+#include "dequantize_linear.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/shape.hpp"
-#include "quantize_linear.hpp"
 
 namespace ngraph
 {

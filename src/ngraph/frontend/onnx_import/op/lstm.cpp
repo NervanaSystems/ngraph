@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "exceptions.hpp"
+#include "lstm.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/frontend/onnx_import/op/lstm.hpp"
 #include "ngraph/op/add.hpp"
