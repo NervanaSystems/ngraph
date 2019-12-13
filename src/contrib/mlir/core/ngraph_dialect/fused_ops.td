@@ -740,6 +740,7 @@ def NGGroupConvOp :
     void setPadAbove(const ArrayAttr& attr) { this->setAttr("padAbove", attr); }
     void setPadBelow(const ArrayAttr& attr) { this->setAttr("padBelow", attr); }
     void setPadType(const Attribute& attr)  { this->setAttr("padType", attr);  }
+    void setGroups(const Attribute& attr)   { this->setAttr("groups", attr);   }
   }];
 }
 

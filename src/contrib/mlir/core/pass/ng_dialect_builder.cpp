@@ -36,6 +36,7 @@
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/greater.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
@@ -215,6 +216,12 @@ mlir::ArrayAttr NgDialectConversionPass::getShapeAsAttr(T ngShape)
     getMlirShape(ngShape, mlirShape);
     return m_builder.getI64ArrayAttr(mlirShape);
 }
+
+mlir::Attribute NgDialectConversionPass::getIntAsAttr(int64_t value)
+{
+    return m_builder.getI64IntegerAttr(value);
+}
+
 
 // Converts an nGraph Tensor into an MLIR tensor type, including the conversion of the Tensor's
 // element type.
@@ -434,6 +441,26 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Convolutio
 
     attr = NgDialectObj.getShapeAsAttr(convNode->get_padding_above());
     convOp.setPadAbove(attr);
+    return op;
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::GroupConvolution)
+{
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGGroupConvolutionOp>(ngNode);
+    auto gConvNode = static_cast<const ngraph::op::GroupConvolution*>(ngNode);
+    auto gConvOp = llvm::cast<mlir::NGGroupConvolutionOp>(op);
+
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(gConvNode->get_window_movement_strides());
+    gConvOp.setStrides(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(gConvNode->get_padding_below());
+    gConvOp.setPadBelow(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(gConvNode->get_padding_above());
+    gConvOp.setPadAbove(attr);
+
+    attr = NgDialectObj.getIntAsAttr(gConvnode->get_groups());
     return op;
 }
 
