@@ -18,10 +18,9 @@
 #include <memory>
 #include <vector>
 
+#include "default_opset.hpp"
 #include "exceptions.hpp"
 #include "ngraph/axis_vector.hpp"
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/reshape.hpp"
 #include "ngraph/shape.hpp"
 #include "reshape.hpp"
 #include "utils/reshape.hpp"
@@ -54,11 +53,11 @@ namespace ngraph
                         const auto output_shape =
                             node.get_attribute_value<std::vector<int64_t>>("shape", {});
 
-                        pattern = ngraph::op::Constant::create(
+                        pattern = default_opset::Constant::create(
                             element::i64, Shape{output_shape.size()}, output_shape);
                     }
 
-                    return {std::make_shared<ngraph::op::v1::Reshape>(data, pattern, true)};
+                    return {std::make_shared<default_opset::Reshape>(data, pattern, true)};
                 }
 
             } // namespace set_1
