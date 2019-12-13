@@ -1,5 +1,5 @@
 diff --git a/cmake/OpenMP.cmake b/cmake/OpenMP.cmake
-index 0bc6ea57a..1cfeee757 100644
+index 0bc6ea57a..4fa0a22d1 100644
 --- a/cmake/OpenMP.cmake
 +++ b/cmake/OpenMP.cmake
 @@ -28,7 +28,7 @@ if (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -54,12 +54,9 @@ index 0bc6ea57a..1cfeee757 100644
  if(WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
      add_definitions(/Qpar)
      add_definitions(/openmp)
-@@ -76,9 +112,8 @@ if (DNNL_CPU_THREADING_RUNTIME MATCHES "OMP")
-     else()
-         message(${_omp_severity} "OpenMP library could not be found. "
-             "Proceeding might lead to highly sub-optimal performance.")
--        # Override CPU threading to sequential if allowed to proceed
--        set(DNNL_CPU_THREADING_RUNTIME "SEQ")
+@@ -79,6 +115,7 @@ if (DNNL_CPU_THREADING_RUNTIME MATCHES "OMP")
+         # Override CPU threading to sequential if allowed to proceed
+         set(DNNL_CPU_THREADING_RUNTIME "SEQ")
      endif()
 +    use_intel_omp_rt()
  else()
