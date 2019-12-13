@@ -15,9 +15,8 @@
 //*****************************************************************************
 
 #include "mean.hpp"
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
+#include "ngraph/opsets/opset1.hpp"
 #include "utils/variadic.hpp"
 
 namespace ngraph
@@ -30,12 +29,12 @@ namespace ngraph
             {
                 NodeVector mean(const Node& node)
                 {
-                    auto sum = variadic::make_ng_variadic_op<ngraph::op::v1::Add>(node).front();
+                    auto sum = variadic::make_ng_variadic_op<ngraph::opset1::Add>(node).front();
                     auto shape = sum->get_shape();
 
                     // Create a Constant representing the number of inputs with the same shape as
                     // sum
-                    auto count = ngraph::op::Constant::create(
+                    auto count = ngraph::opset1::Constant::create(
                         sum->get_element_type(),
                         shape,
                         std::vector<int>(shape_size(shape), node.get_ng_inputs().size()));
