@@ -196,9 +196,9 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
     OutputVector new_args;
     bool replace_node = false;
     uint32_t index = 0;
-    for (descriptor::Input& input : node->get_inputs())
+    for (auto input : node->inputs())
     {
-        const auto& output = input.get_output();
+        auto output = input.get_source_output();
         auto tv = output.get_tensor_ptr();
         auto et = tv->get_element_type();
         auto shape = tv->get_shape();
@@ -213,8 +213,8 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
             {
                 auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
                 layout->set_mkldnn_md(native_md);
-                auto new_node = std::shared_ptr<Node>(new runtime::cpu::op::ConvertLayout(
-                    output.get_node(), output.get_index(), layout));
+                auto new_node = std::shared_ptr<Node>(
+                    new runtime::cpu::op::ConvertLayout(output, output.get_index(), layout));
                 new_args.push_back(new_node);
                 if (use_replace)
                 {
@@ -222,7 +222,7 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
                 }
                 else
                 {
-                    input.replace_output(new_node->get_outputs().at(0));
+                    input.replace_source_output(new_node->output(0));
                 }
 
 #if MKLDNN_VERSION_MAJOR < 1
@@ -234,12 +234,12 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
             }
             else
             {
-                new_args.push_back(output.get_node());
+                new_args.push_back(output);
             }
         }
         else
         {
-            new_args.push_back(output.get_node());
+            new_args.push_back(output);
         }
         index++;
     }
@@ -387,7 +387,7 @@ namespace ngraph
                     {
                         arg1_shape = gconv->get_weights_dimensions();
                     }
-                    auto result_shape = node->get_output_shape(0);
+                    auto result_shape = node->output(0).get_shape();
                     auto filter_strides = convolution->get_window_movement_strides();
                     auto padding_below = convolution->get_padding_below();
                     auto padding_above = convolution->get_padding_above();
@@ -518,7 +518,7 @@ namespace ngraph
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg1_shape = node->get_input_shape(1);
 
-                    auto result_shape = node->get_output_shape(0);
+                    auto result_shape = node->output(0).get_shape();
 
                     memory::data_type et =
                         mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0));
@@ -925,7 +925,7 @@ namespace ngraph
                         auto weights_shape = node->get_input_shape(0);
                         auto delta_shape = node->get_input_shape(1);
                         auto bias_shape = node->get_input_shape(2);
-                        auto result_shape = node->get_output_shape(0);
+                        auto result_shape = node->output(0).get_shape();
                         auto filter_strides = convolution->get_window_movement_strides_forward();
                         auto padding_below = convolution->get_padding_below_forward();
                         auto padding_above = convolution->get_padding_above_forward();
@@ -1009,7 +1009,7 @@ namespace ngraph
 
                         auto arg0_shape = node->get_input_shape(0);
                         auto arg1_shape = node->get_input_shape(1);
-                        auto result_shape = node->get_output_shape(0);
+                        auto result_shape = node->output(0).get_shape();
                         auto filter_strides = convolution->get_window_movement_strides_forward();
                         auto padding_below = convolution->get_padding_below_forward();
                         auto padding_above = convolution->get_padding_above_forward();
@@ -1095,7 +1095,7 @@ namespace ngraph
 
                     auto data_shape = node->get_input_shape(0);
                     auto delta_shape = node->get_input_shape(1);
-                    auto filters_shape = node->get_output_shape(0);
+                    auto filters_shape = node->output(0).get_shape();
                     auto filter_strides = convolution->get_window_movement_strides_forward();
                     auto padding_below = convolution->get_padding_below_forward();
                     auto padding_above = convolution->get_padding_above_forward();
@@ -1128,7 +1128,7 @@ namespace ngraph
                     std::unique_ptr<convolution_forward::desc> fwd_desc{nullptr};
                     if (use_bias)
                     {
-                        auto bias_shape = node->get_output_shape(1);
+                        auto bias_shape = node->output(1).get_shape();
                         memory::dims mkldnn_bias_shape(bias_shape.begin(), bias_shape.end());
                         const memory::desc bias_desc(mkldnn_bias_shape, et, memory::FORMAT::any);
                         bwd_desc.reset(
@@ -1245,7 +1245,7 @@ namespace ngraph
                     auto avg_pool = static_cast<const ngraph::op::AvgPool*>(node.get());
 
                     auto arg0_shape = node->get_input_shape(0);
-                    auto result_shape = node->get_output_shape(0);
+                    auto result_shape = node->output(0).get_shape();
                     auto filter_shape = avg_pool->get_window_shape();
                     auto filter_strides = avg_pool->get_window_movement_strides();
                     auto padding_below = avg_pool->get_padding_below();
@@ -1344,7 +1344,7 @@ namespace ngraph
                         auto avg_pool = static_cast<const ngraph::op::AvgPoolBackprop*>(node.get());
 
                         auto arg0_shape = node->get_input_shape(0);
-                        auto result_shape = node->get_output_shape(0);
+                        auto result_shape = node->output(0).get_shape();
                         auto filter_shape = avg_pool->get_window_shape();
                         auto filter_strides = avg_pool->get_window_movement_strides();
                         auto padding_below = avg_pool->get_padding_below();
@@ -1431,7 +1431,7 @@ namespace ngraph
                     auto max_pool = static_cast<const T*>(node.get());
 
                     auto arg0_shape = node->get_input_shape(0);
-                    auto result_shape = node->get_output_shape(0);
+                    auto result_shape = node->output(0).get_shape();
                     auto filter_shape = max_pool->get_window_shape();
                     auto filter_strides = max_pool->get_window_movement_strides();
                     auto padding_below = max_pool->get_padding_below();
@@ -1721,7 +1721,7 @@ namespace ngraph
                     // Propagate fprop's input layout
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg1_shape = node->get_input_shape(1);
-                    auto result_shape = node->get_output_shape(0);
+                    auto result_shape = node->output(0).get_shape();
                     auto filter_shape = max_pool->get_window_shape();
                     auto filter_strides = max_pool->get_window_movement_strides();
                     auto padding_below = max_pool->get_padding_below();
@@ -1857,9 +1857,9 @@ namespace ngraph
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Result)
                 {
-                    auto result = static_cast<const ngraph::op::Result*>(node.get());
+                    auto result = as_type_ptr<ngraph::op::Result>(node);
                     auto cpu_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
-                        node->get_inputs()[0].get_output().get_tensor_ptr()->get_tensor_layout());
+                        node->input_value(0).get_tensor_ptr()->get_tensor_layout());
 
                     if (result->needs_default_layout() || !cpu_tvl->is_mkldnn_layout() ||
                         cpu_tvl->get_size() * cpu_tvl->get_element_type().size() !=
@@ -1881,8 +1881,8 @@ namespace ngraph
                 {
                     (void)md;
                     auto axis_order = reshape->get_input_order();
-                    auto input_shape = reshape->get_input_shape(0);
-                    auto output_shape = reshape->get_output_shape();
+                    auto input_shape = reshape->input_value(0).get_shape();
+                    auto output_shape = reshape->output(0).get_shape();
                     if (input_shape.size() != output_shape.size())
                         return false;
 
@@ -1903,7 +1903,7 @@ namespace ngraph
                                             AxisVector& squeezed_axis)
                 {
                     auto input_shape = reshape->get_input_shape(0);
-                    auto output_shape = reshape->get_output_shape();
+                    auto output_shape = reshape->output(0).get_shape();
 
                     if (input_shape.size() <= output_shape.size())
                         return false;
@@ -1939,7 +1939,7 @@ namespace ngraph
                                             AxisVector& expanded_axis)
                 {
                     auto input_shape = reshape->get_input_shape(0);
-                    auto output_shape = reshape->get_output_shape();
+                    auto output_shape = reshape->output(0).get_shape();
 
                     if (input_shape.size() >= output_shape.size())
                         return false;
@@ -1971,14 +1971,13 @@ namespace ngraph
                     bool skip_reshape = false;
                     bool skip_input_reorder = false;
 
-                    auto tvl =
-                        node->get_inputs()[0].get_output().get_tensor_ptr()->get_tensor_layout();
+                    auto tvl = node->input_value(0).get_tensor_ptr()->get_tensor_layout();
                     auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
                     if (cpu_tvl && cpu_tvl->is_mkldnn_layout())
                     {
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                        auto input_shape = reshape->get_input_shape(0);
-                        auto output_shape = reshape->get_output_shape();
+                        auto input_shape = reshape->input_value(0).get_shape();
+                        auto output_shape = reshape->output(0).get_shape();
                         AxisVector squeezed_axis;
                         AxisVector expanded_axis;
 
@@ -2030,7 +2029,7 @@ namespace ngraph
                             }
 
                             auto output_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
-                                node->get_output_tensor_ptr()->get_tensor_layout());
+                                node->output(0).get_tensor_ptr()->get_tensor_layout());
                             // TODO (jbobba): For now non-MKLDNN layouts are always in row-major
                             // format. Enable this once we support non row-major strided formats
                             // output_tvl->set_strides(output_strides);
@@ -2331,7 +2330,7 @@ namespace ngraph
                         const ngraph::op::Slice* slice =
                             static_cast<const ngraph::op::Slice*>(node.get());
                         auto lower_bounds = slice->get_lower_bounds();
-                        auto result_shape = slice->get_output_shape(0);
+                        auto result_shape = slice->output(0).get_shape();
 
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
 #if MKLDNN_VERSION_MAJOR < 1
