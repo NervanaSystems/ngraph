@@ -19,7 +19,7 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
-#include "ngraph/op/slice.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "slice.hpp"
 #include "utils/common.hpp"
 
@@ -72,7 +72,8 @@ namespace ngraph
                         }
                     }
 
-                    return {std::make_shared<ngraph::op::Slice>(data, lower_bounds, upper_bounds)};
+                    return {
+                        std::make_shared<ngraph::opset0::Slice>(data, lower_bounds, upper_bounds)};
                 }
 
             } // namespace set_1
