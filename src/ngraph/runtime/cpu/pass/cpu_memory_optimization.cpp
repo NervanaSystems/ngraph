@@ -65,10 +65,9 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 {
     for (auto n : function->get_ordered_ops())
     {
-        if (n->description() == "Concat")
+        if (auto concat = as_type_ptr<op::Concat>(n))
         {
-            auto concat = std::static_pointer_cast<ngraph::op::Concat>(n);
-            auto shape = concat->get_input_shape(0);
+            auto shape = concat->input_value(0).get_shape();
             auto axis = concat->get_concatenation_axis();
             auto product = 1;
             for (size_t i = 0; i < axis; i++)
@@ -119,10 +118,10 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             AxisVector axis_list = ngraph::get_default_order(shape);
 
             auto index = 0;
-            for (descriptor::Input& input : concat->get_inputs())
+            for (auto output : concat->input_values())
             {
                 // no tensors with zero-sized dimensions after zero_dim_tensor_elimination
-                NGRAPH_CHECK(shape_size(input.get_shape()) != 0);
+                NGRAPH_CHECK(shape_size(output.get_shape()) != 0);
 
                 // check if input layout is padded
                 auto input_md = mkldnn_utils::get_input_mkldnn_md(n.get(), index);
@@ -135,8 +134,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     break;
                 }
 
-                const auto& output = input.get_output();
-                auto arg = output.get_node();
+                auto arg = output.get_node_shared_ptr();
                 if (arg->is_constant() || arg->is_parameter())
                 {
                     NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
@@ -147,31 +145,27 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
                 NGRAPH_CHECK(arg->get_output_size() == 1);
 
-                if (arg->description() != "Concat")
+                if (!is_type<op::Concat>(arg))
                 {
-                    if (arg->is_op())
-                    {
-                        auto op = std::static_pointer_cast<ngraph::op::Op>(arg);
-                        auto annotation = op->get_op_annotations();
-                        if (annotation && annotation->get_in_place_oi_pairs().size() > 0)
+                    auto annotation = arg->get_op_annotations();
+                    if (annotation && annotation->get_in_place_oi_pairs().size() > 0)
 
-                        {
-                            NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
-                                         << ": in place non-concat op, no in place concat";
-                            in_place_concat = false;
-                            break;
-                        }
+                    {
+                        NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
+                                     << ": in place non-concat op, no in place concat";
+                        in_place_concat = false;
+                        break;
                     }
                 }
 
-                if (output.get_inputs().size() != 1)
+                if (output.get_target_inputs().size() != 1)
                 {
                     // check if we can do in place concat
                     auto concat_count = 0;
-                    for (auto output_input : output.get_inputs())
+                    for (auto output_input : output.get_target_inputs())
                     {
-                        auto user = output_input->get_node();
-                        if (user->description() == "Concat")
+                        auto user = output_input.get_node();
+                        if (is_type<op::Concat>(user))
                         {
                             concat_count++;
                             if (concat_count == 2)
@@ -242,11 +236,10 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
     for (auto n : function->get_ordered_ops())
     {
-        if (n->description() == "Slice")
+        if (auto slice = as_type_ptr<op::Slice>(n))
         {
-            auto slice = std::static_pointer_cast<ngraph::op::Slice>(n);
-            auto in_shape = slice->get_input_shape(0);
-            auto out_shape = slice->get_output_shape(0);
+            auto in_shape = slice->input_value(0).get_shape();
+            auto out_shape = slice->output(0).get_shape();
             auto strides = slice->get_strides();
 
             auto lower_bounds = slice->get_lower_bounds();
@@ -308,23 +301,23 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             }
 #endif
 
-            const auto& dtype = slice->get_input_element_type(0);
+            const auto& dtype = slice->input_value(0).get_element_type();
             if (runtime::cpu::mkldnn_utils::get_mkldnn_data_type(dtype) ==
                 mkldnn::memory::data_type::DATA_UNDEF)
             {
                 NGRAPH_DEBUG << "cpu_memory_optimization: "
-                             << slice->get_input_element_type(0).c_type_string()
+                             << slice->input_value(0).get_element_type().c_type_string()
                              << " isn't supported, no in place slice";
                 continue;
             }
 
             // If input layout is in non-native layout, we need more complicated checks for
             // slice contiguity. Bail out for now.
-            auto input_tensor = slice->get_inputs().at(0).get_output().get_tensor_ptr();
+            auto input_tensor = slice->input_value(0).get_tensor_ptr();
             auto native_md = mkldnn_utils::create_blocked_mkldnn_md(
                 in_shape,
                 input_tensor->get_tensor_layout()->get_strides(),
-                slice->get_input_element_type(0));
+                slice->input_value(0).get_element_type());
             if (!mkldnn_utils::compare_mkldnn_mds(input_md, native_md))
             {
                 NGRAPH_DEBUG << "cpu_memory_optimization: Non-native layout for MKLDNN slice input";

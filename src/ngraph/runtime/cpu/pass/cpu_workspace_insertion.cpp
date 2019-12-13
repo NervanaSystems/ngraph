@@ -98,19 +98,22 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::run_on_function(std::shared_ptr<
 
 bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
 {
-    auto data = std::static_pointer_cast<pattern::op::Label>(m.get_pattern()->get_argument(0));
-    auto delta = std::static_pointer_cast<pattern::op::Label>(m.get_pattern()->get_argument(1));
-    auto max_pool = std::static_pointer_cast<pattern::op::Label>(m.get_pattern()->get_argument(2));
+    auto data =
+        as_type_ptr<pattern::op::Label>(m.get_pattern()->input_value(0).get_node_shared_ptr());
+    auto delta =
+        as_type_ptr<pattern::op::Label>(m.get_pattern()->input_value(1).get_node_shared_ptr());
+    auto max_pool =
+        as_type_ptr<pattern::op::Label>(m.get_pattern()->input_value(2).get_node_shared_ptr());
     NGRAPH_DEBUG << "In a callback for construct_max_pool_with_indices against "
                  << *m.get_match_root();
 
     auto pattern_map = m.get_pattern_map();
-    auto m_max_pool = std::static_pointer_cast<op::MaxPool>(pattern_map[max_pool]);
-    auto m_max_pool_bprop = std::static_pointer_cast<op::MaxPoolBackprop>(m.get_match_root());
+    auto m_max_pool = as_type_ptr<op::MaxPool>(pattern_map[max_pool]);
+    auto m_max_pool_bprop = as_type_ptr<op::MaxPoolBackprop>(m.get_match_root());
 
-    if (m_max_pool_bprop->get_shape().size() != 4 ||
+    if (m_max_pool_bprop->output(0).get_shape().size() != 4 ||
         m_max_pool_bprop->get_window_shape().size() != 2 ||
-        m_max_pool_bprop->get_input_element_type(0) != element::f32)
+        m_max_pool_bprop->input_value(0).get_element_type() != element::f32)
     {
         NGRAPH_DEBUG << "MKLDNN doesn't support inputs of given shape type";
         return false;

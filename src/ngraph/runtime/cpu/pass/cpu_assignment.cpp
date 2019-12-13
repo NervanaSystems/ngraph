@@ -80,8 +80,8 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Add)
                 {
                     (void)external_function;
-                    auto arg0_shape = node->get_input_shape(0);
-                    auto arg1_shape = node->get_input_shape(1);
+                    auto arg0_shape = node->input_value(0).get_shape();
+                    auto arg1_shape = node->input_value(1).get_shape();
                     auto arg0_rank = arg0_shape.size();
                     auto arg1_rank = arg1_shape.size();
 
@@ -90,8 +90,8 @@ namespace ngraph
                     // insert Add as MKLDNN op, only if the src_size is big. this is to avoid MKLDNN
                     // overhead
                     // for smaller tensor sizes
-                    if (node->get_input_element_type(0) == element::f32 &&
-                        node->get_input_element_type(1) == element::f32 && arg0_rank == 4 &&
+                    if (node->input_value(0).get_element_type() == element::f32 &&
+                        node->input_value(1).get_element_type() == element::f32 && arg0_rank == 4 &&
                         arg1_rank == 4 && src_size > 64000)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -102,11 +102,11 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Concat)
                 {
                     (void)external_function;
-                    if ((node->get_input_element_type(0) == element::f32 ||
-                         node->get_input_element_type(0) == element::i8 ||
-                         node->get_input_element_type(0) == element::u8) &&
-                        ((node->get_input_shape(0)).size() == 4 ||
-                         (node->get_input_shape(0)).size() == 2))
+                    auto element_type = node->input_value(0).get_element_type();
+                    auto rank = node->input_value(0).get_shape().size();
+                    if ((element_type == element::f32 || element_type == element::i8 ||
+                         element_type == element::u8) &&
+                        (rank == 4 || rank == 2))
                     {
                         // MKLDNN seems to throw an exception when given tensors with 0-length
                         // dimensions, so don't assign it in such cases.
@@ -114,7 +114,7 @@ namespace ngraph
 
                         for (size_t i = 0; i < node->get_input_size(); i++)
                         {
-                            if (shape_size(node->get_input_shape(i)) == 0)
+                            if (shape_size(node->input_value(i).get_shape()) == 0)
                             {
                                 any_zero = true;
                                 break;
@@ -241,10 +241,10 @@ namespace ngraph
                     (void)external_function;
                     auto convolution = static_cast<ngraph::op::DeconvolutionBias*>(node);
 
-                    auto arg0_shape = node->get_input_shape(0);
-                    auto arg1_shape = node->get_input_shape(1);
-                    auto arg2_shape = node->get_input_shape(2);
-                    auto result_shape = node->get_output_shape(0);
+                    auto arg0_shape = node->input_value(0).get_shape();
+                    auto arg1_shape = node->input_value(1).get_shape();
+                    auto arg2_shape = node->input_value(2).get_shape();
+                    auto result_shape = node->output(0).get_shape();
                     auto arg0_rank = arg0_shape.size();
                     auto arg1_rank = arg1_shape.size();
                     auto arg2_rank = arg2_shape.size();
@@ -257,7 +257,7 @@ namespace ngraph
 
                     if (!data_dilated && ((arg0_rank == 4 && arg1_rank == 4) ||
                                           (arg0_rank == 5 && arg1_rank == 5)) &&
-                        (arg2_rank == 1) && node->get_input_element_type(0) == element::f32)
+                        (arg2_rank == 1) && node->input_value(0).get_element_type() == element::f32)
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -276,9 +276,9 @@ namespace ngraph
                     (void)external_function;
                     auto convolution = static_cast<ngraph::op::ConvolutionBackpropData*>(node);
 
-                    auto arg0_shape = node->get_input_shape(0);
-                    auto arg1_shape = node->get_input_shape(1);
-                    auto result_shape = node->get_output_shape(0);
+                    auto arg0_shape = node->input_value(0).get_shape();
+                    auto arg1_shape = node->input_value(1).get_shape();
+                    auto result_shape = node->output(0).get_shape();
                     auto arg0_rank = arg0_shape.size();
                     auto arg1_rank = arg1_shape.size();
 
@@ -290,7 +290,7 @@ namespace ngraph
 
                     if (!data_dilated && ((arg0_rank == 4 && arg1_rank == 4) ||
                                           (arg0_rank == 5 && arg1_rank == 5)) &&
-                        node->get_input_element_type(0) == element::f32)
+                        node->input_value(0).get_element_type() == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -302,9 +302,9 @@ namespace ngraph
                     (void)external_function;
                     auto convolution = static_cast<ngraph::op::ConvolutionBackpropFilters*>(node);
 
-                    auto arg0_shape = node->get_input_shape(0);
-                    auto arg1_shape = node->get_input_shape(1);
-                    auto result_shape = node->get_output_shape(0);
+                    auto arg0_shape = node->input_value(0).get_shape();
+                    auto arg1_shape = node->input_value(1).get_shape();
+                    auto result_shape = node->output(0).get_shape();
                     auto arg0_rank = arg0_shape.size();
                     auto arg1_rank = arg1_shape.size();
 
@@ -316,7 +316,7 @@ namespace ngraph
 
                     if (!data_dilated && ((arg0_rank == 4 && arg1_rank == 4) ||
                                           (arg0_rank == 5 && arg1_rank == 5)) &&
-                        node->get_input_element_type(0) == element::f32)
+                        node->input_value(0).get_element_type() == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -339,8 +339,8 @@ namespace ngraph
                     auto convolution =
                         static_cast<ngraph::op::ConvolutionBiasBackpropFiltersBias*>(node);
 
-                    auto data_shape = node->get_input_shape(0);
-                    auto delta_shape = node->get_input_shape(1);
+                    auto data_shape = node->input_value(0).get_shape();
+                    auto delta_shape = node->input_value(1).get_shape();
                     auto data_rank = data_shape.size();
                     auto delta_rank = delta_shape.size();
 
@@ -352,7 +352,7 @@ namespace ngraph
 
                     if (!data_dilated && data_rank == delta_rank &&
                         (data_rank == 4 || data_rank == 5) &&
-                        node->get_input_element_type(0) == element::f32)
+                        node->input_value(0).get_element_type() == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -364,15 +364,15 @@ namespace ngraph
                     (void)external_function;
                     auto avg_pool = static_cast<ngraph::op::AvgPool*>(node);
 
-                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg0_shape = node->input_value(0).get_shape();
                     auto arg0_rank = arg0_shape.size();
-                    auto result_shape = node->get_output_shape(0);
+                    auto result_shape = node->output(0).get_shape();
 
                     if (((arg0_rank == 4 && avg_pool->get_window_shape().size() == 2) ||
                          (arg0_rank == 5 && avg_pool->get_window_shape().size() == 3)) &&
-                        (node->get_input_element_type(0) == element::f32 ||
-                         node->get_input_element_type(0) == element::u8 ||
-                         node->get_input_element_type(0) == element::i8))
+                        (node->input_value(0).get_element_type() == element::f32 ||
+                         node->input_value(0).get_element_type() == element::u8 ||
+                         node->input_value(0).get_element_type() == element::i8))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -384,13 +384,13 @@ namespace ngraph
                     (void)external_function;
                     auto avg_pool = static_cast<ngraph::op::AvgPoolBackprop*>(node);
 
-                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg0_shape = node->input_value(0).get_shape();
                     auto arg0_rank = arg0_shape.size();
-                    auto result_shape = node->get_output_shape(0);
+                    auto result_shape = node->output(0).get_shape();
 
                     if (((arg0_rank == 4 && avg_pool->get_window_shape().size() == 2) ||
                          (arg0_rank == 5 && avg_pool->get_window_shape().size() == 3)) &&
-                        node->get_input_element_type(0) == element::f32)
+                        node->input_value(0).get_element_type() == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -402,16 +402,16 @@ namespace ngraph
                     (void)external_function;
                     auto max_pool = static_cast<ngraph::op::MaxPool*>(node);
 
-                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg0_shape = node->input_value(0).get_shape();
                     auto arg0_rank = arg0_shape.size();
-                    auto result_shape = node->get_output_shape(0);
+                    auto result_shape = node->output(0).get_shape();
 
                     if (((arg0_rank == 4 && max_pool->get_window_shape().size() == 2) ||
                          (arg0_rank == 5 && max_pool->get_window_shape().size() == 3)) &&
-                        (node->get_input_element_type(0) == element::f32 ||
-                         node->get_input_element_type(0) == element::u8 ||
-                         node->get_input_element_type(0) == element::i8 ||
-                         (node->get_input_element_type(0) == element::bf16 &&
+                        (node->input_value(0).get_element_type() == element::f32 ||
+                         node->input_value(0).get_element_type() == element::u8 ||
+                         node->input_value(0).get_element_type() == element::i8 ||
+                         (node->input_value(0).get_element_type() == element::bf16 &&
                           runtime::cpu::mkldnn_utils::is_bf16_supported())))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -424,12 +424,12 @@ namespace ngraph
                     (void)external_function;
                     auto max_pool = static_cast<ngraph::op::MaxPoolWithIndices*>(node);
 
-                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg0_shape = node->input_value(0).get_shape();
                     auto arg0_rank = arg0_shape.size();
-                    auto result_shape = node->get_output_shape(0);
+                    auto result_shape = node->output(0).get_shape();
 
                     if (arg0_rank == 4 && max_pool->get_window_shape().size() == 2 &&
-                        node->get_input_element_type(0) == element::f32)
+                        node->input_value(0).get_element_type() == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -441,13 +441,13 @@ namespace ngraph
                     (void)external_function;
                     auto max_pool = static_cast<ngraph::op::MaxPoolBackprop*>(node);
 
-                    auto arg1_shape = node->get_input_shape(1);
+                    auto arg1_shape = node->input_value(1).get_shape();
                     auto arg1_rank = arg1_shape.size();
-                    auto result_shape = node->get_output_shape(0);
+                    auto result_shape = node->output(0).get_shape();
 
                     if (((arg1_rank == 4 && max_pool->get_window_shape().size() == 2) ||
                          (arg1_rank == 5 && max_pool->get_window_shape().size() == 3)) &&
-                        node->get_input_element_type(1) == element::f32)
+                        node->input_value(1).get_element_type() == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -459,12 +459,12 @@ namespace ngraph
                     (void)external_function;
                     auto max_pool = static_cast<ngraph::op::MaxPoolWithIndicesBackprop*>(node);
 
-                    auto arg1_shape = node->get_input_shape(1);
+                    auto arg1_shape = node->input_value(1).get_shape();
                     auto arg1_rank = arg1_shape.size();
-                    auto result_shape = node->get_output_shape(0);
+                    auto result_shape = node->output(0).get_shape();
 
                     if (arg1_rank == 4 && max_pool->get_window_shape().size() == 2 &&
-                        node->get_input_element_type(1) == element::f32)
+                        node->input_value(1).get_element_type() == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -476,12 +476,12 @@ namespace ngraph
                     (void)external_function;
                     auto relu = static_cast<ngraph::op::Relu*>(node);
 
-                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg0_shape = node->input_value(0).get_shape();
                     auto arg0_rank = arg0_shape.size();
-                    auto result_shape = node->get_output_shape(0);
+                    auto result_shape = node->output(0).get_shape();
 
                     if ((arg0_rank == 4 || arg0_rank == 3 || arg0_rank == 2) &&
-                        node->get_input_element_type(0) == element::f32)
+                        node->input_value(0).get_element_type() == element::f32)
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -548,11 +548,11 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::LRN)
                 {
                     (void)external_function;
-                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg0_shape = node->input_value(0).get_shape();
                     auto arg0_rank = arg0_shape.size();
-                    auto result_shape = node->get_output_shape(0);
+                    auto result_shape = node->output(0).get_shape();
 
-                    if ((arg0_rank == 4) && node->get_input_element_type(0) == element::f32)
+                    if ((arg0_rank == 4) && node->input_value(0).get_element_type() == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -562,7 +562,7 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Sigmoid)
                 {
                     (void)external_function;
-                    if (node->get_input_element_type(0) == element::f32)
+                    if (node->input_value(0).get_element_type() == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -572,7 +572,7 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::SigmoidBackprop)
                 {
                     (void)external_function;
-                    if (node->get_input_element_type(0) == element::f32)
+                    if (node->input_value(0).get_element_type() == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -582,12 +582,12 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ReluBackprop)
                 {
                     (void)external_function;
-                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg0_shape = node->input_value(0).get_shape();
                     auto arg0_rank = arg0_shape.size();
-                    auto result_shape = node->get_output_shape(0);
+                    auto result_shape = node->output(0).get_shape();
 
                     if ((arg0_rank == 4 || arg0_rank == 2) &&
-                        node->get_input_element_type(0) == element::f32)
+                        node->input_value(0).get_element_type() == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -627,28 +627,28 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Lstm)
                 {
                     (void)external_function;
-                    auto src_layer_rank = node->get_input_shape(0).size();
-                    auto src_iter_rank = node->get_input_shape(1).size();
+                    auto src_layer_rank = node->input_value(0).get_shape().size();
+                    auto src_iter_rank = node->input_value(1).get_shape().size();
 #if MKLDNN_VERSION_MAJOR < 1
-                    auto weights_layer_rank = node->get_input_shape(2).size();
-                    auto weights_iter_rank = node->get_input_shape(3).size();
-                    auto bias_rank = node->get_input_shape(4).size();
+                    auto weights_layer_rank = node->input_value(2).get_shape().size();
+                    auto weights_iter_rank = node->input_value(3).get_shape().size();
+                    auto bias_rank = node->input_value(4).get_shape().size();
                     if ((src_layer_rank == 2 && src_iter_rank == 2 && weights_layer_rank == 2 &&
                          weights_iter_rank == 2 && bias_rank == 1 &&
-                         node->get_input_element_type(0) == element::f32 &&
-                         node->get_input_element_type(1) == element::f32))
+                         node->input_value(0).get_element_type() == element::f32 &&
+                         node->input_value(1).get_element_type() == element::f32))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
 #else
-                    auto src_iter_c_rank = node->get_input_shape(2).size();
-                    auto weights_layer_rank = node->get_input_shape(3).size();
-                    auto weights_iter_rank = node->get_input_shape(4).size();
-                    auto bias_rank = node->get_input_shape(5).size();
+                    auto src_iter_c_rank = node->input_value(2).get_shape().size();
+                    auto weights_layer_rank = node->input_value(3).get_shape().size();
+                    auto weights_iter_rank = node->input_value(4).get_shape().size();
+                    auto bias_rank = node->input_value(5).get_shape().size();
                     if ((src_layer_rank == 2 && src_iter_rank == 2 && src_iter_c_rank == 2 &&
                          weights_layer_rank == 2 && weights_iter_rank == 2 && bias_rank == 1 &&
-                         node->get_input_element_type(0) == element::f32 &&
-                         node->get_input_element_type(1) == element::f32))
+                         node->input_value(0).get_element_type() == element::f32 &&
+                         node->input_value(1).get_element_type() == element::f32))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -659,28 +659,28 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Rnn)
                 {
                     (void)external_function;
-                    auto src_layer_rank = node->get_input_shape(0).size();
-                    auto src_iter_rank = node->get_input_shape(1).size();
+                    auto src_layer_rank = node->input_value(0).get_shape().size();
+                    auto src_iter_rank = node->input_value(1).get_shape().size();
 #if MKLDNN_VERSION_MAJOR < 1
-                    auto weights_layer_rank = node->get_input_shape(2).size();
-                    auto weights_iter_rank = node->get_input_shape(3).size();
-                    auto bias_rank = node->get_input_shape(4).size();
+                    auto weights_layer_rank = node->input_value(2).get_shape().size();
+                    auto weights_iter_rank = node->input_value(3).get_shape().size();
+                    auto bias_rank = node->input_value(4).get_shape().size();
                     if ((src_layer_rank == 2 && src_iter_rank == 2 && weights_layer_rank == 2 &&
                          weights_iter_rank == 2 && bias_rank == 1 &&
-                         node->get_input_element_type(0) == element::f32 &&
-                         node->get_input_element_type(1) == element::f32))
+                         node->input_value(0).get_element_type() == element::f32 &&
+                         node->input_value(1).get_element_type() == element::f32))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
 #else
-                    auto src_iter_c_rank = node->get_input_shape(2).size();
-                    auto weights_layer_rank = node->get_input_shape(3).size();
-                    auto weights_iter_rank = node->get_input_shape(4).size();
-                    auto bias_rank = node->get_input_shape(5).size();
+                    auto src_iter_c_rank = node->input_value(2).get_shape().size();
+                    auto weights_layer_rank = node->input_value(3).get_shape().size();
+                    auto weights_iter_rank = node->input_value(4).get_shape().size();
+                    auto bias_rank = node->input_value(5).get_shape().size();
                     if ((src_layer_rank == 2 && src_iter_rank == 2 && src_iter_c_rank == 2 &&
                          weights_layer_rank == 2 && weights_iter_rank == 2 && bias_rank == 1 &&
-                         node->get_input_element_type(0) == element::f32 &&
-                         node->get_input_element_type(1) == element::f32))
+                         node->input_value(0).get_element_type() == element::f32 &&
+                         node->input_value(1).get_element_type() == element::f32))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -693,12 +693,12 @@ namespace ngraph
                     (void)external_function;
                     auto softmax = static_cast<ngraph::op::Softmax*>(node);
 
-                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg0_shape = node->input_value(0).get_shape();
                     auto arg0_rank = arg0_shape.size();
-                    auto result_shape = node->get_output_shape(0);
+                    auto result_shape = node->output(0).get_shape();
 
                     if ((arg0_rank == 4 || arg0_rank == 2) &&
-                        node->get_input_element_type(0) == element::f32 &&
+                        node->input_value(0).get_element_type() == element::f32 &&
                         softmax->get_axes().size() == 1)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -711,7 +711,8 @@ namespace ngraph
                     (void)external_function;
                     auto slice = static_cast<ngraph::op::Slice*>(node);
                     auto strides = slice->get_strides();
-                    if (!is_strided(strides) && node->get_input_element_type(0) == element::f32)
+                    if (!is_strided(strides) &&
+                        node->input_value(0).get_element_type() == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -723,12 +724,12 @@ namespace ngraph
                     (void)external_function;
                     auto bounded_relu = static_cast<ngraph::op::BoundedRelu*>(node);
 
-                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg0_shape = node->input_value(0).get_shape();
                     auto arg0_rank = arg0_shape.size();
-                    auto result_shape = node->get_output_shape(0);
+                    auto result_shape = node->output(0).get_shape();
 
                     if ((arg0_rank == 4 || arg0_rank == 2) &&
-                        node->get_input_element_type(0) == element::f32)
+                        node->input_value(0).get_element_type() == element::f32)
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -748,7 +749,7 @@ namespace ngraph
                     (void)external_function;
                     auto gelu = static_cast<ngraph::op::Gelu*>(node);
 
-                    if (node->get_input_element_type(0) == element::f32)
+                    if (node->input_value(0).get_element_type() == element::f32)
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -769,7 +770,7 @@ namespace ngraph
                     (void)external_function;
                     auto gelu = static_cast<ngraph::op::GeluBackprop*>(node);
 
-                    if (node->get_input_element_type(0) == element::f32)
+                    if (node->input_value(0).get_element_type() == element::f32)
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -790,12 +791,12 @@ namespace ngraph
                     (void)external_function;
                     auto leaky_relu = static_cast<ngraph::op::CPULeakyRelu*>(node);
 
-                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg0_shape = node->input_value(0).get_shape();
                     auto arg0_rank = arg0_shape.size();
-                    auto result_shape = node->get_output_shape(0);
+                    auto result_shape = node->output(0).get_shape();
 
                     if ((arg0_rank == 4 || arg0_rank == 2) &&
-                        node->get_input_element_type(0) == element::f32)
+                        node->input_value(0).get_element_type() == element::f32)
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -820,8 +821,8 @@ namespace ngraph
                         as_type_ptr<ngraph::op::Constant>(qconv->get_argument(5));
                     auto output_zero_point =
                         as_type_ptr<ngraph::op::Constant>(qconv->get_argument(7));
-                    if (node->get_input_element_type(0) == element::u8 &&
-                        node->get_input_element_type(1) == element::i8)
+                    if (node->input_value(0).get_element_type() == element::u8 &&
+                        node->input_value(1).get_element_type() == element::i8)
                     {
                         // Mkldnn assumes zero point to be zero
                         if (input_zero_point == nullptr || filter_zero_point == nullptr ||
@@ -884,8 +885,8 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedDotBias)
                 {
                     (void)external_function;
-                    if (node->get_input_element_type(0) == element::u8 &&
-                        node->get_input_element_type(1) == element::i8)
+                    if (node->input_value(0).get_element_type() == element::u8 &&
+                        node->input_value(1).get_element_type() == element::i8)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -895,8 +896,8 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedMatmul)
                 {
                     (void)external_function;
-                    if (node->get_input_element_type(0) == element::u8 &&
-                        node->get_input_element_type(1) == element::i8)
+                    if (node->input_value(0).get_element_type() == element::u8 &&
+                        node->input_value(1).get_element_type() == element::i8)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -916,23 +917,23 @@ namespace ngraph
                     auto offset_const_op =
                         std::static_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(2));
                     // TODO: MKLDNN only handles float / not double
-                    if (node->get_output_element_type(0) != element::f32)
+                    if (node->output(0).get_element_type() != element::f32)
                     {
                         return;
                     }
-                    if (node->get_input_element_type(0) == element::u8)
+                    if (node->input_value(0).get_element_type() == element::u8)
                     {
                         auto offset = offset_const_op->get_vector<uint8_t>();
                         if (offset[0] != 0)
                             return;
                     }
-                    if (node->get_input_element_type(0) == element::i8)
+                    if (node->input_value(0).get_element_type() == element::i8)
                     {
                         auto offset = offset_const_op->get_vector<int8_t>();
                         if (offset[0] != 0)
                             return;
                     }
-                    if (node->get_input_element_type(0) == element::i32)
+                    if (node->input_value(0).get_element_type() == element::i32)
                     {
                         auto offset = offset_const_op->get_vector<int32_t>();
                         if (offset[0] != 0)
@@ -960,11 +961,11 @@ namespace ngraph
                         return;
                     }
                     // TODO: MKLDNN only handles float / not double
-                    if (node->get_input_element_type(0) != element::f32)
+                    if (node->input_value(0).get_element_type() != element::f32)
                     {
                         return;
                     }
-                    if (node->get_output_element_type(0) == element::u8)
+                    if (node->output(0).get_element_type() == element::u8)
                     {
                         auto offset = offset_const_op->get_vector<uint8_t>();
                         if (offset[0] != 0)
@@ -972,7 +973,7 @@ namespace ngraph
                             return;
                         }
                     }
-                    if (node->get_output_element_type(0) == element::i8)
+                    if (node->output(0).get_element_type() == element::i8)
                     {
                         auto offset = offset_const_op->get_vector<int8_t>();
                         if (offset[0] != 0)
@@ -980,7 +981,7 @@ namespace ngraph
                             return;
                         }
                     }
-                    if (node->get_output_element_type(0) == element::i32)
+                    if (node->output(0).get_element_type() == element::i32)
                     {
                         auto offset = offset_const_op->get_vector<int32_t>();
                         if (offset[0] != 0)
@@ -996,10 +997,10 @@ namespace ngraph
                 {
                     (void)external_function;
                     auto convert = static_cast<ngraph::op::Convert*>(node);
-                    if ((node->get_input_element_type(0) == element::i8 &&
-                         node->get_output_element_type(0) == element::u8) ||
-                        (node->get_input_element_type(0) == element::u8 &&
-                         node->get_output_element_type(0) == element::i8))
+                    if ((node->input_value(0).get_element_type() == element::i8 &&
+                         node->output(0).get_element_type() == element::u8) ||
+                        (node->input_value(0).get_element_type() == element::u8 &&
+                         node->output(0).get_element_type() == element::i8))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
