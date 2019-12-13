@@ -14,14 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <memory>
-#include <vector>
-
+#include "add.hpp"
 #include "default_opset.hpp"
-#include "ngraph/op/multiply.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/opsets/opset0.hpp"
-#include "thresholded_relu.hpp"
 
 namespace ngraph
 {
@@ -31,23 +27,30 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector thresholded_relu(const Node& node)
+                NodeVector add(const Node& node)
                 {
-                    auto data = node.get_ng_inputs().at(0);
-                    double alpha = node.get_attribute_value<double>("alpha", 1.0);
+                    auto left_rank = node.get_ng_inputs().at(0)->get_shape().size();
+                    auto right_rank = node.get_ng_inputs().at(1)->get_shape().size();
+                    auto axis =
+                        node.get_attribute_value<std::int64_t>("axis", left_rank - right_rank);
+                    NodeVector ng_inputs{ngraph::op::legacy_style_broadcast_for_binary_operation(
+                        node.get_ng_inputs().at(0), node.get_ng_inputs().at(1), axis)};
 
-                    std::shared_ptr<ngraph::Node> alpha_node =
-                        std::make_shared<default_opset::Constant>(data->get_element_type(),
-                                                                  data->get_shape(),
-                                                                  std::vector<double>{alpha});
-
-                    auto data_map = std::make_shared<default_opset::Convert>(
-                        std::make_shared<ngraph::opset0::Greater>(data, alpha_node),
-                        data->get_element_type());
-                    return {data * data_map};
+                    return {
+                        std::make_shared<ngraph::opset0::Add>(ng_inputs.at(0), ng_inputs.at(1))};
                 }
 
-            } // namespace set_1default_opset
+            } // namespace set_1
+
+            namespace set_7
+            {
+                NodeVector add(const Node& node)
+                {
+                    return {std::make_shared<default_opset::Add>(node.get_ng_inputs().at(0),
+                                                                 node.get_ng_inputs().at(1))};
+                }
+
+            } // namespace set_7
 
         } // namespace op
 
