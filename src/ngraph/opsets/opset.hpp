@@ -98,6 +98,6 @@ namespace ngraph
         std::map<std::string, NodeTypeInfo> m_name_type_info_map;
     };
 
-    const OpSet& get_opset0();
-    const OpSet& get_opset1();
+    const NGRAPH_API OpSet& get_opset0();
+    const NGRAPH_API OpSet& get_opset1();
 }

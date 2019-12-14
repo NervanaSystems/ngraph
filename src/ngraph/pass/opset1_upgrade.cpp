@@ -327,6 +327,46 @@ namespace
         return true;
     }
 
+    bool op_cast(shared_ptr<op::v0::GroupConvolutionBackpropData> node)
+    {
+        auto strides = node->get_window_movement_strides();
+        auto dilations = node->get_window_dilation_strides();
+        auto pads_begin = node->get_padding_below();
+        auto pads_end = node->get_padding_above();
+        auto data_batch_pshape = node->get_input_partial_shape(0);
+
+        NGRAPH_CHECK(data_batch_pshape.is_static(),
+                     "Unable to convert GroupConvolution:0 to GroupConvolution:1"
+                     "with dynamic data_batch shape. Node: ",
+                     *node);
+
+        auto data_batch_shape = data_batch_pshape.to_shape();
+        data_batch_shape.erase(data_batch_shape.begin(), data_batch_shape.end());
+
+        NGRAPH_CHECK(node->get_input_partial_shape(1).is_static(),
+                     "Unable to convert GroupConvolution:0 to GroupConvolution:1"
+                     "with dynamic filters shape. Node: ",
+                     *node);
+
+        auto filters_shape = node->get_input_shape(1);
+        auto groups = node->get_groups();
+        filters_shape[0] /= groups;
+        filters_shape.insert(filters_shape.begin(), groups);
+
+        auto reshaped_filters = builder::reshape(node->input_value(1), filters_shape);
+
+        auto replacement_node = make_shared<op::v1::GroupConvolutionBackpropData>(
+            node->input_value(2),
+            reshaped_filters,
+            op::Constant::create(element::i64, Shape{data_batch_shape.size()}, data_batch_shape),
+            strides,
+            pads_begin,
+            pads_end,
+            dilations);
+        replace_node(node, replacement_node);
+        return true;
+    }
+
     bool op_cast(shared_ptr<op::Less> node)
     {
         op_cast_binary_elementwise_node<op::v0::Less, op::v1::Less>(node);
@@ -657,7 +697,7 @@ namespace
         };
         return dispatch_map;
     }
-}
+} // namespace
 
 bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 {

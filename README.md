@@ -45,8 +45,8 @@ framework and deploying to a variety of hardware targets. We strongly believe in
 providing freedom, performance, and ease-of-use to AI developers. 
 
 The diagram below shows deep learning frameworks and hardware targets
-supported by nGraph. NNP-L and NNP-I in the diagram refer to Intel's next generation 
-deep learning accelerators: Intel® Nervana™ Neural Network Processor for Learning and 
+supported by nGraph. NNP-T and NNP-I in the diagram refer to Intel's next generation 
+deep learning accelerators: Intel® Nervana™ Neural Network Processor for Training and 
 Inference respectively.  Future plans for supporting addtional deep learning frameworks 
 and backends are outlined in the [ecosystem] section. 
 

@@ -48,7 +48,7 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
             };
         } // namespace v0
 
@@ -79,7 +79,7 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
             };
         } // namespace v1
 
