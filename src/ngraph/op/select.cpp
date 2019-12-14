@@ -94,7 +94,7 @@ bool op::v1::Select::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-void op::v1::Select::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v1::Select::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     if (get_auto_broadcast().m_type != op::AutoBroadcastType::NONE)
     {
@@ -156,7 +156,7 @@ shared_ptr<Node> op::v0::Select::copy_with_new_args(const NodeVector& new_args) 
     return make_shared<v0::Select>(new_args.at(0), new_args.at(1), new_args.at(2));
 }
 
-void op::v0::Select::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Select::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

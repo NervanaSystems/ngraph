@@ -155,7 +155,7 @@ shared_ptr<Node> op::DynReplaceSlice::copy_with_new_args(const NodeVector& new_a
 }
 
 void op::DynReplaceSlice::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                            const NodeVector& /* deltas */)
+                                            const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for DynReplaceSlice");
 }
