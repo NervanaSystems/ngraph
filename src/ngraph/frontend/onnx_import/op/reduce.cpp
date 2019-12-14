@@ -18,7 +18,8 @@
 #include <iterator> // std::begin, std::end
 #include <numeric>  // std::accumulate
 
-#include "default_opset.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/divide.hpp"
 #include "ngraph/shape.hpp"
 #include "reduce.hpp"
 
@@ -45,17 +46,17 @@ namespace ngraph
                     auto sum_node = std::shared_ptr<ngraph::Node>{reduction::make_ng_reduction_op(
                         node,
                         node.get_ng_inputs().at(0),
-                        std::make_shared<ngraph::opset0::Sum,
+                        std::make_shared<ngraph::op::Sum,
                                          const std::shared_ptr<ngraph::Node>&,
                                          const ngraph::AxisSet&>)};
 
-                    auto const_node = default_opset::Constant::create(
+                    auto const_node = ngraph::op::Constant::create(
                         sum_node->get_element_type(),
                         sum_node->get_shape(),
                         std::vector<std::size_t>(shape_size(sum_node->get_shape()),
                                                  elem_count_product));
 
-                    return {std::make_shared<ngraph::opset0::Divide>(sum_node, const_node)};
+                    return {std::make_shared<ngraph::op::Divide>(sum_node, const_node)};
                 }
 
             } // namespace set_1

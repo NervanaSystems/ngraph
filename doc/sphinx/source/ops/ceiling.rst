@@ -56,6 +56,6 @@ to define a backprop.
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::v0::Ceiling
+.. doxygenclass:: ngraph::op::Ceiling
    :project: ngraph
    :members:

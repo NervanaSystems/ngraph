@@ -60,7 +60,7 @@ namespace ngraph
                 element::Type m_index_element_type;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const OutputVector& deltas) override;
+                                               const NodeVector& deltas) override;
             };
         }
     }

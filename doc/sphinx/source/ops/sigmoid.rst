@@ -47,6 +47,6 @@ Mathematical Definition
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::v0::Sigmoid
+.. doxygenclass:: ngraph::op::Sigmoid
    :project: ngraph
    :members:

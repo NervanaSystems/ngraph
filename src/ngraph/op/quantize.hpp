@@ -105,7 +105,7 @@ namespace ngraph
                 RoundMode get_round_mode() const { return m_round_mode; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const OutputVector& deltas) override;
+                                               const NodeVector& deltas) override;
 
             private:
                 ngraph::element::Type m_type;

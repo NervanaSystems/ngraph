@@ -66,7 +66,7 @@ namespace ngraph
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const OutputVector& deltas) override;
+                                           const NodeVector& deltas) override;
 
         private:
             /// Helper method to compute output shape

@@ -74,7 +74,7 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const OutputVector& deltas) override;
+                                               const NodeVector& deltas) override;
 
                 double m_alpha;
                 double m_beta;

@@ -46,7 +46,7 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const OutputVector& deltas) override;
+                                               const NodeVector& deltas) override;
             };
 
             /// \brief Elementwise ReluBackprop operation.
@@ -63,7 +63,8 @@ namespace ngraph
                 /// \brief Constructs a ReluBackprop operation.
                 ///
                 /// \param arg Node that produces the relu forward input tensor.
-                ReluBackprop(const Output<ngraph::Node>& arg, const Output<ngraph::Node>& delta);
+                ReluBackprop(std::shared_ptr<ngraph::Node> arg,
+                             std::shared_ptr<ngraph::Node> delta);
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;

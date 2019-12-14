@@ -82,6 +82,6 @@ To be documented.
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::v0::Dot
+.. doxygenclass:: ngraph::op::Dot
    :project: ngraph
    :members:

@@ -27,7 +27,6 @@
 #include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/opsets/opset0.hpp"
 #include "ngraph/shape.hpp"
 #include "utils/convpool.hpp"
 
@@ -85,7 +84,7 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> conv_node;
                     if (!output_shape.empty())
                     {
-                        conv_node = std::make_shared<ngraph::opset0::GroupConvolutionTranspose>(
+                        conv_node = std::make_shared<ngraph::op::GroupConvolutionTranspose>(
                             data,
                             filters,
                             strides,
@@ -96,7 +95,7 @@ namespace ngraph
                     }
                     else
                     {
-                        conv_node = std::make_shared<ngraph::opset0::GroupConvolutionTranspose>(
+                        conv_node = std::make_shared<ngraph::op::GroupConvolutionTranspose>(
                             data,
                             filters,
                             strides,
@@ -116,7 +115,7 @@ namespace ngraph
 
                     auto bias = inputs.at(2);
 
-                    return {std::make_shared<ngraph::opset0::Add>(
+                    return {std::make_shared<ngraph::op::Add>(
                         conv_node,
                         ngraph::op::make_broadcast_node(bias, conv_node->get_shape(), 1))};
                 }

@@ -51,7 +51,7 @@ namespace ngraph
                 void set_sequence_axis(int64_t sequence_axis) { m_seq_axis = sequence_axis; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const OutputVector& deltas) override;
+                                               const NodeVector& deltas) override;
 
             private:
                 int64_t m_batch_axis;

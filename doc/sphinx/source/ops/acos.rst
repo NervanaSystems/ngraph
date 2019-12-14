@@ -53,6 +53,6 @@ Backprop
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::v0::Acos
+.. doxygenclass:: ngraph::op::Acos
    :project: ngraph
    :members:

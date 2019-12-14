@@ -19,7 +19,6 @@
 #include "mean_variance_normalization.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/fused/mvn.hpp"
-#include "ngraph/opsets/opset0.hpp"
 #include "utils/common.hpp"
 
 namespace ngraph
@@ -38,7 +37,7 @@ namespace ngraph
                     bool normalize_variance =
                         node.get_attribute_value<std::int64_t>("normalize_variance", 1);
 
-                    return {std::make_shared<ngraph::opset0::MVN>(
+                    return {std::make_shared<ngraph::op::MVN>(
                         data, across_channels, normalize_variance)};
                 }
 
@@ -53,7 +52,7 @@ namespace ngraph
                     std::vector<std::size_t> valid_axes =
                         common::validate_axes(node, axes, data->get_shape().size());
 
-                    return {std::make_shared<ngraph::opset0::MVN>(data, AxisSet(valid_axes))};
+                    return {std::make_shared<ngraph::op::MVN>(data, AxisSet(valid_axes))};
                 }
 
             } // namespace set_9

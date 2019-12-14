@@ -60,7 +60,7 @@ namespace ngraph
                 const AxisVector& get_decrease_axes() const { return m_decrease_axes; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const OutputVector& deltas) override;
+                                               const NodeVector& deltas) override;
 
             private:
                 AxisVector m_axes;

@@ -64,6 +64,9 @@ autodiff::Adjoints::Adjoints(const OutputVector& ys, const OutputVector& cs)
     // Number of nodes that use the node's value
     std::unordered_map<std::shared_ptr<Node>, size_t> parent_counts;
 
+    // Nodes that have been processed
+    std::unordered_set<std::shared_ptr<Node>> visited_nodes;
+
     // Nodes we should check
     std::list<std::shared_ptr<Node>> nodes_to_check;
     for (auto& y : ys)
@@ -74,40 +77,40 @@ autodiff::Adjoints::Adjoints(const OutputVector& ys, const OutputVector& cs)
     {
         auto node = nodes_to_check.front();
         nodes_to_check.pop_front();
-        if (m_adjoint_map.find(node.get()) == m_adjoint_map.end())
+        if (visited_nodes.count(node) != 0)
         {
-            m_adjoint_map[node.get()] = OutputVector(node->get_output_size());
-            for (auto value : node->input_values())
+            continue;
+        }
+        for (auto input : node->inputs())
+        {
+            auto arg = input.get_source_output().get_node_shared_ptr();
+            auto count_it = parent_counts.find(arg);
+            if (count_it == parent_counts.end())
             {
-                auto arg = value.get_node_shared_ptr();
-                auto count_it = parent_counts.find(arg);
-                if (count_it == parent_counts.end())
-                {
-                    parent_counts[arg] = 1;
-                    nodes_to_check.push_front(arg);
-                }
-                else
-                {
-                    parent_counts[arg]++;
-                }
+                parent_counts[arg] = 1;
+                nodes_to_check.push_front(arg);
+            }
+            else
+            {
+                parent_counts[arg]++;
             }
         }
+        visited_nodes.insert(node);
     }
 
     // Second pass visits the nodes so that all users of a node's value are visited
     // before a node is visited.
     for (size_t i = 0; i < ys.size(); i++)
     {
-        add_delta(ys.at(i), cs.at(i));
+        Node* n = ys.at(i).get_node();
+        OutputVector t{cs.at(i)};
+        std::pair<Node*, OutputVector> pair = std::make_pair(n, t);
+        m_adjoint_map.insert(std::make_pair(ys.at(i).get_node(), OutputVector{cs.at(i)}));
     }
 
     for (auto& y : ys)
     {
-        auto node = y.get_node_shared_ptr();
-        if (find(nodes_to_check.begin(), nodes_to_check.end(), node) == nodes_to_check.end())
-        {
-            nodes_to_check.push_back(y.get_node_shared_ptr());
-        }
+        nodes_to_check.push_back(y.get_node_shared_ptr());
     }
 
     while (nodes_to_check.size() > 0)
@@ -115,9 +118,9 @@ autodiff::Adjoints::Adjoints(const OutputVector& ys, const OutputVector& cs)
         auto node = nodes_to_check.front();
         nodes_to_check.pop_front();
         // Look for nodes that will be available when this node is done
-        for (auto value : node->input_values())
+        for (auto input : node->inputs())
         {
-            auto input_source_node = value.get_node_shared_ptr();
+            auto input_source_node = input.get_source_output().get_node_shared_ptr();
             auto count_it = parent_counts.find(input_source_node);
             count_it->second--;
             if (0 == count_it->second)
@@ -125,57 +128,43 @@ autodiff::Adjoints::Adjoints(const OutputVector& ys, const OutputVector& cs)
                 nodes_to_check.push_front(input_source_node);
             }
         }
-        OutputVector deltas = m_adjoint_map[node.get()];
-        for (size_t i = 0; i < node->get_output_size(); ++i)
+        OutputVector deltas = get(node);
+        NodeVector delta_nodes;
+        for (auto delta : deltas)
         {
-            auto& delta = deltas[i];
-            if (delta == Output<Node>())
-            {
-                delta = make_broadcast_zero(node->output(i));
-            }
+            delta_nodes.push_back(get_output_element(delta));
         }
-        node->generate_adjoints(*this, deltas);
+        node->generate_adjoints(*this, delta_nodes);
     }
 }
 
-Output<Node> autodiff::Adjoints::backprop_output(const Output<Node>& x)
-{
-    auto node = x.get_node();
-    auto adjoint_it = m_adjoint_map.find(node);
-    Output<Node> result;
-    OutputVector deltas;
-    if (m_adjoint_map.end() == adjoint_it)
-    {
-        deltas = OutputVector(node->get_output_size());
-        m_adjoint_map[node] = deltas;
-    }
-    else
-    {
-        deltas = adjoint_it->second;
-    }
-    if (deltas.at(x.get_index()) == Output<Node>())
-    {
-        deltas.at(x.get_index()) = make_broadcast_zero(x);
-    }
-    return deltas.at(x.get_index());
-}
-
-void autodiff::Adjoints::add_delta(const Output<Node>& x, const Output<Node>& delta)
+const OutputVector& autodiff::Adjoints::get(const Output<Node>& x)
 {
     auto adjoint_it = m_adjoint_map.find(x.get_node());
-    if (adjoint_it == m_adjoint_map.end())
+    if (m_adjoint_map.end() == adjoint_it)
     {
-        m_adjoint_map[x.get_node()] = OutputVector(x.get_node()->get_output_size());
-        adjoint_it = m_adjoint_map.find(x.get_node());
+        adjoint_it =
+            m_adjoint_map.insert({x.get_node(), make_zeros(x.get_node_shared_ptr())}).first;
     }
-    auto& deltas = adjoint_it->second[x.get_index()];
-    if (deltas == Output<Node>())
+    return adjoint_it->second;
+}
+
+void autodiff::Adjoints::add_delta(const Output<Node>& x,
+                                   const Output<Node>& delta,
+                                   size_t output_index)
+{
+    auto adjoint_it = m_adjoint_map.find(x.get_node());
+    if (m_adjoint_map.end() == adjoint_it)
     {
-        deltas = delta;
+        auto zeros = make_zeros(x.get_node_shared_ptr());
+        zeros.at(output_index) = delta;
+        m_adjoint_map.insert({x.get_node(), zeros});
     }
     else
     {
-        deltas = std::make_shared<op::Add>(deltas, delta);
+        auto& deltas = adjoint_it->second;
+        deltas.at(output_index) = std::make_shared<op::Add>(deltas.at(output_index), delta);
+        adjoint_it->second = deltas;
     }
 }
 
@@ -194,21 +183,33 @@ void autodiff::Adjoints::add_delta_to_slice(const Output<Node>& x,
     }
 
     auto adjoint_it = m_adjoint_map.find(x.get_node());
-    auto& deltas = adjoint_it->second[x.get_index()];
-    if (deltas == Output<Node>())
+    if (m_adjoint_map.end() == adjoint_it)
     {
         auto zero = make_broadcast_zero(x);
-        deltas =
-            std::make_shared<op::ReplaceSlice>(zero, delta, lower_bounds, upper_bounds, strides);
+        OutputVector zeros{
+            std::make_shared<op::ReplaceSlice>(zero, delta, lower_bounds, upper_bounds, strides)};
+        m_adjoint_map.insert({x.get_node(), zeros});
     }
     else
     {
-        deltas = std::make_shared<op::ReplaceSlice>(
-            deltas,
+        auto& deltas = adjoint_it->second;
+        deltas.at(0) = std::make_shared<op::ReplaceSlice>(
+            deltas.at(0),
             std::make_shared<op::Add>(
-                std::make_shared<op::Slice>(deltas, lower_bounds, upper_bounds, strides), delta),
+                std::make_shared<op::Slice>(deltas.at(0), lower_bounds, upper_bounds, strides),
+                delta),
             lower_bounds,
             upper_bounds,
             strides);
     }
+}
+
+std::shared_ptr<Node> autodiff::Adjoints::backprop_node(const Output<Node>& x)
+{
+    return get_output_element(backprop_output(x));
+}
+
+Output<Node> autodiff::Adjoints::backprop_output(const Output<Node>& x)
+{
+    return get(x).at(x.get_index());
 }

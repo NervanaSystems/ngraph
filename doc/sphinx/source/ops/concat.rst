@@ -74,6 +74,6 @@ We slice the backprop value into the backprops associated with the inputs.
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::v0::Concat
+.. doxygenclass:: ngraph::op::Concat
    :project: ngraph
    :members:

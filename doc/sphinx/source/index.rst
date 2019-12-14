@@ -59,6 +59,7 @@ nGraph Compiler Stack Documentation
    core/fusion/index.rst
    nGraph Core Ops <ops/index.rst>
    provenance/index.rst
+   Graph Execution API <backends/executable-api/index.rst>
    core/quantization.rst
    dynamic/index.rst
 

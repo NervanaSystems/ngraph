@@ -82,20 +82,20 @@ weights and bias:
 
 .. literalinclude:: ../../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
-   :lines: 123-134
+   :lines: 127-135
 
 
 Repeat the process for the next layer,
 
 .. literalinclude:: ../../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
-   :lines: 137-144
+   :lines: 138-146
 
 and normalize everything with a ``softmax``.
 
 .. literalinclude:: ../../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
-   :lines: 146-147
+   :lines: 148-150
 
 
 .. _loss:
@@ -109,7 +109,7 @@ underflow.
 
 .. literalinclude:: ../../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
-   :lines: 150-164
+   :lines: 154-166
 
 
 .. _backprop:
@@ -125,7 +125,7 @@ allows the calculations for the adjustments to be further optimized.
 
 .. literalinclude:: ../../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
-   :lines: 167-170
+   :lines: 169-172
 
 
 For any node ``N``, if the update for ``loss`` is ``delta``, the
@@ -138,7 +138,7 @@ update computation for ``N`` will be given by the node
 
 .. literalinclude:: ../../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
-   :lines: 177-179
+   :lines: 177-181
 
 
 The different update nodes will share intermediate computations. So to
@@ -147,7 +147,7 @@ get the updated values for the weights as computed with the specified
 
 .. literalinclude:: ../../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
-   :lines: 184-212
+   :lines: 182-215
 
 
 .. _update:
@@ -167,5 +167,5 @@ compile clones of the nodes.
 
 .. literalinclude:: ../../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
-   :lines: 217-224
+   :lines: 216-226
 

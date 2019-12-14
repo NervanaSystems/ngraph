@@ -54,6 +54,6 @@ Backprop
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::v0::Negative
+.. doxygenclass:: ngraph::op::Negative
    :project: ngraph
    :members:

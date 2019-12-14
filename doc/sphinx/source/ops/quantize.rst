@@ -102,6 +102,6 @@ Mathematical Definition
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::v0::Quantize
+.. doxygenclass:: ngraph::op::Quantize
    :project: ngraph
    :members: 

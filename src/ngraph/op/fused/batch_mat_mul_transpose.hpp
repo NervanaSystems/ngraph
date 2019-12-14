@@ -61,7 +61,7 @@ namespace ngraph
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const OutputVector& deltas) override;
+                                           const NodeVector& deltas) override;
 
         private:
             bool m_transpose_arg0;

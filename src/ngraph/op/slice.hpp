@@ -70,7 +70,7 @@ namespace ngraph
                 const Strides& get_strides() const { return m_strides; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const OutputVector& deltas) override;
+                                               const NodeVector& deltas) override;
 
                 Coordinate m_lower_bounds;
                 Coordinate m_upper_bounds;

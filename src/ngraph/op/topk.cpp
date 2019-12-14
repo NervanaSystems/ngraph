@@ -219,7 +219,7 @@ shared_ptr<Node> op::v0::TopK::copy_with_new_args(const NodeVector& new_args) co
 }
 
 void op::v0::TopK::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                     const OutputVector& /* deltas */)
+                                     const NodeVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }
@@ -353,8 +353,7 @@ size_t op::v1::TopK::validate_and_get_k(const shared_ptr<op::Constant>& k_consta
     return static_cast<size_t>(k_const_contents[0]);
 }
 
-void op::v1::TopK::generate_adjoints(autodiff::Adjoints& /*adjoints*/,
-                                     const OutputVector& /* deltas */)
+void op::v1::TopK::generate_adjoints(autodiff::Adjoints& /*adjoints*/, const NodeVector& /*deltas*/)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }

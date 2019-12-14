@@ -1,7 +1,5 @@
 .. inspection/index: 
 
-.. _inspection: 
-
 Visualization Tools
 ###################
 

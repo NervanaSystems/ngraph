@@ -19,7 +19,6 @@
 #include <memory>
 
 #include "core/node.hpp"
-#include "default_opset.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/asin.hpp"
 
@@ -33,7 +32,7 @@ namespace ngraph
             {
                 inline NodeVector asin(const Node& node)
                 {
-                    return {std::make_shared<default_opset::Asin>(node.get_ng_inputs().at(0))};
+                    return {std::make_shared<ngraph::op::Asin>(node.get_ng_inputs().at(0))};
                 }
             } // namespace set_1
 

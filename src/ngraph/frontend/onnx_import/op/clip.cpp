@@ -18,9 +18,12 @@
 #include <memory>
 
 #include "clip.hpp"
-#include "default_opset.hpp"
 #include "ngraph/builder/make_constant.hpp"
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/fused/clamp.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/minimum.hpp"
+#include "ngraph/op/reshape.hpp"
 
 namespace ngraph
 {
@@ -40,7 +43,7 @@ namespace ngraph
                     const double min_value = node.get_attribute_value<double>(
                         "min", std::numeric_limits<double>::lowest());
 
-                    return {std::make_shared<default_opset::Clamp>(data, min_value, max_value)};
+                    return {std::make_shared<ngraph::op::Clamp>(data, min_value, max_value)};
                 }
 
             } // namespace set_1
@@ -80,12 +83,12 @@ namespace ngraph
                             data_type, data_shape, std::numeric_limits<double>::max());
                     }
 
-                    auto max_of_min_and_data = std::make_shared<ngraph::opset0::Maximum>(
+                    auto max_of_min_and_data = std::make_shared<ngraph::op::Maximum>(
                         min,
                         data,
                         ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY));
 
-                    return {std::make_shared<ngraph::opset0::Minimum>(
+                    return {std::make_shared<ngraph::op::Minimum>(
                         max,
                         max_of_min_and_data,
                         ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY))};

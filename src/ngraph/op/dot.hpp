@@ -91,7 +91,7 @@ namespace ngraph
                 bool m_has_reduction_axes_count;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const OutputVector& deltas) override;
+                                               const NodeVector& deltas) override;
             };
         }
         using v0::Dot;
