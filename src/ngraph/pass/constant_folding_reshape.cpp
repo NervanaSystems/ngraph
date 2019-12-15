@@ -16,7 +16,6 @@
 
 #include "constant_folding.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
 
 using namespace std;
@@ -27,7 +26,7 @@ shared_ptr<op::Constant> fold_constant_reshape(shared_ptr<op::Constant> constant
                                                shared_ptr<op::Reshape> reshape,
                                                NodeExecutorTy func)
 {
-    auto out_shape = reshape->get_shape();
+    const Shape& out_shape = reshape->get_shape();
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
     T* data_ptr = buffer.get_ptr<T>();
 

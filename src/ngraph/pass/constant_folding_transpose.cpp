@@ -26,7 +26,7 @@ shared_ptr<op::Constant> fold_constant_transpose(shared_ptr<op::Constant> consta
                                                  shared_ptr<op::Constant> constant_perm,
                                                  shared_ptr<op::Transpose> transpose)
 {
-    auto out_shape = transpose->get_shape();
+    const Shape& out_shape = transpose->get_shape();
     auto input_order = constant_perm->get_axis_vector_val();
 
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));

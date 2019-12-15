@@ -36,8 +36,7 @@ static shared_ptr<op::Constant> fold_constant_concat_helper(const shared_ptr<op:
         arg_shapes.push_back(input.get_shape());
     }
 
-    const Shape& out_shape = concat->get_shape();
-    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
+    runtime::AlignedBuffer buffer(shape_size(concat->get_shape()) * sizeof(T));
     T* data_ptr = buffer.get_ptr<T>();
 
     runtime::reference::concat<T>(

@@ -27,7 +27,7 @@ shared_ptr<op::Constant> fold_constant_select(const shared_ptr<op::Constant>& se
                                               const shared_ptr<op::Constant>& f,
                                               const shared_ptr<Node>& select)
 {
-    auto out_shape = select->get_shape();
+    const Shape& out_shape = select->get_shape();
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
     T* data_ptr = buffer.get_ptr<T>();
 

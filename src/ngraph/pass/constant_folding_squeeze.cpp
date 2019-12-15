@@ -24,7 +24,7 @@ template <class T>
 shared_ptr<op::Constant> fold_constant_squeeze(shared_ptr<op::Constant> constant,
                                                shared_ptr<op::Squeeze> squeeze)
 {
-    auto out_shape = squeeze->get_shape();
+    const Shape& out_shape = squeeze->get_shape();
     return make_shared<op::Constant>(
         constant->get_element_type(), out_shape, constant->get_data_ptr());
 }

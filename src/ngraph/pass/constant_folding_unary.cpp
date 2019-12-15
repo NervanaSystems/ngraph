@@ -60,7 +60,7 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
         }
     }
 
-    auto out_shape = unary->get_shape();
+    const Shape& out_shape = unary->get_shape();
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
 
     if (func != nullptr)
