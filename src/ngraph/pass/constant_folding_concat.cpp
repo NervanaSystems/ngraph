@@ -25,7 +25,6 @@ using namespace ngraph;
 template <typename T>
 static shared_ptr<op::Constant> fold_constant_concat_helper(const shared_ptr<op::Concat>& concat)
 {
-    NGRAPH_INFO;
     auto concat_inputs = concat->inputs();
     std::vector<const T*> arg_bufs;
     std::vector<Shape> arg_shapes;
@@ -37,16 +36,15 @@ static shared_ptr<op::Constant> fold_constant_concat_helper(const shared_ptr<op:
         arg_shapes.push_back(input.get_shape());
     }
 
-    std::vector<T> result_vec(shape_size(concat->get_shape()));
+    const Shape& out_shape = concat->get_shape();
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
+    T* data_ptr = reinterpret_cast<T*>(buffer.get_ptr());
 
-    runtime::reference::concat<T>(arg_bufs,
-                                  result_vec.data(),
-                                  arg_shapes,
-                                  concat->get_shape(),
-                                  concat->get_concatenation_axis());
+    runtime::reference::concat<T>(
+        arg_bufs, data_ptr, arg_shapes, concat->get_shape(), concat->get_concatenation_axis());
 
     return make_shared<op::Constant>(
-        concat->get_output_element_type(0), concat->get_output_shape(0), result_vec);
+        concat->get_output_element_type(0), concat->get_output_shape(0), data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_concat()

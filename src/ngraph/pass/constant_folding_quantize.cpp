@@ -27,20 +27,20 @@ shared_ptr<op::Constant> fold_constant_quantize(shared_ptr<op::Constant> constan
                                                 shared_ptr<op::Constant> scale,
                                                 shared_ptr<op::Constant> offset)
 {
-    NGRAPH_INFO;
     auto out_shape = constant->get_shape();
-    vector<QUANT> out_vec(shape_size(out_shape));
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(QUANT));
+    QUANT* data_ptr = reinterpret_cast<QUANT*>(buffer.get_ptr());
 
     runtime::reference::quantize<REAL, QUANT>(constant->get_vector<REAL>().data(),
                                               scale->get_vector<REAL>().data(),
                                               offset->get_vector<QUANT>().data(),
-                                              out_vec.data(),
+                                              data_ptr,
                                               constant->get_shape(),
                                               scale->get_shape(),
                                               quant->get_axes(),
                                               quant->get_round_mode());
 
-    return make_shared<op::Constant>(quant->get_element_type(), out_shape, out_vec);
+    return make_shared<op::Constant>(quant->get_element_type(), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_quantize()
