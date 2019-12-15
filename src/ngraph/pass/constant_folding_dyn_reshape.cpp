@@ -30,7 +30,7 @@ shared_ptr<op::Constant> fold_constant_dyn_reshape(shared_ptr<op::Constant> cons
 {
     const Shape& out_shape = dyn_reshape->get_shape();
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
-    T* data_ptr = reinterpret_cast<T*>(buffer.get_ptr());
+    T* data_ptr = buffer.get_ptr<T>();
 
     AxisVector input_order(constant_data->get_shape().size());
     std::iota(input_order.begin(), input_order.end(), 0);

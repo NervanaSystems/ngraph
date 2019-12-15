@@ -29,7 +29,7 @@ shared_ptr<op::Constant> fold_constant_quantize(shared_ptr<op::Constant> constan
 {
     auto out_shape = constant->get_shape();
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(QUANT));
-    QUANT* data_ptr = reinterpret_cast<QUANT*>(buffer.get_ptr());
+    QUANT* data_ptr = buffer.get_ptr<QUANT>();
 
     runtime::reference::quantize<REAL, QUANT>(constant->get_vector<REAL>().data(),
                                               scale->get_vector<REAL>().data(),

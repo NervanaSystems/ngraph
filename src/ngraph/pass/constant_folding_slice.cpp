@@ -27,7 +27,7 @@ shared_ptr<op::Constant> fold_constant_slice(shared_ptr<op::Constant> constant,
 {
     auto out_shape = slice->get_shape();
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
-    T* data_ptr = reinterpret_cast<T*>(buffer.get_ptr());
+    T* data_ptr = buffer.get_ptr<T>();
 
     runtime::reference::slice<T>(constant->get_data_ptr<T>(),
                                  data_ptr,

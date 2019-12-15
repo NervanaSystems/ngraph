@@ -29,7 +29,7 @@ static shared_ptr<op::Constant> fold_constant_gather_helper(const shared_ptr<op:
                                                             const shared_ptr<Node>& gather)
 {
     runtime::AlignedBuffer buffer(shape_size(gather->get_shape()) * sizeof(T));
-    T* data_ptr = reinterpret_cast<T*>(buffer.get_ptr());
+    T* data_ptr = buffer.get_ptr<T>();
 
     if (auto gather_v1 = as_type_ptr<op::v1::Gather>(gather))
     {

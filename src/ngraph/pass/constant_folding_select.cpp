@@ -29,7 +29,7 @@ shared_ptr<op::Constant> fold_constant_select(const shared_ptr<op::Constant>& se
 {
     auto out_shape = select->get_shape();
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
-    T* data_ptr = reinterpret_cast<T*>(buffer.get_ptr());
+    T* data_ptr = buffer.get_ptr<T>();
 
     if (auto select_v0 = as_type_ptr<op::v0::Select>(select))
     {

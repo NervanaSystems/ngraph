@@ -44,7 +44,7 @@ static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::C
                                                                 shared_ptr<Node> reduction_node)
 {
     runtime::AlignedBuffer buffer(shape_size(reduction_node->get_shape()) * sizeof(char));
-    char* data_ptr = reinterpret_cast<char*>(buffer.get_ptr());
+    char* data_ptr = buffer.get_ptr<char>();
 
     if (auto all = as_type_ptr<::ngraph::op::All>(reduction_node))
     {

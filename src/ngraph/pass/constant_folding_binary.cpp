@@ -58,7 +58,7 @@ static shared_ptr<op::Constant> fold_constant_binary_logical(shared_ptr<op::Cons
 {
     const Shape& out_shape = binary->get_shape();
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(char));
-    char* data_ptr = reinterpret_cast<char*>(buffer.get_ptr());
+    char* data_ptr = buffer.get_ptr<char>();
 
     // NOTE: We will skip the executor if the shapes do not match, because that means
     // auto-broadcast is in use, and the CPU functors don't yet support that.
@@ -158,7 +158,7 @@ shared_ptr<op::Constant> fold_constant_binary_comparison(shared_ptr<op::Constant
 {
     const Shape& out_shape = binary->get_shape();
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(char));
-    char* data_ptr = reinterpret_cast<char*>(buffer.get_ptr());
+    char* data_ptr = buffer.get_ptr<char>();
 
     // NOTE: We will skip the executor if the shapes do not match, because that means
     // auto-broadcast is in use, and the CPU functors don't yet support that.
@@ -323,7 +323,7 @@ shared_ptr<op::Constant> fold_constant_binary_arithmetic(shared_ptr<op::Constant
 {
     const Shape& out_shape = binary->get_shape();
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(Tout));
-    Tout* data_ptr = reinterpret_cast<Tout*>(buffer.get_ptr());
+    Tout* data_ptr = buffer.get_ptr<Tout>();
 
     // NOTE: We will skip the executor if the shapes do not match, because that means
     // auto-broadcast is in use, and the CPU functors don't yet support that.

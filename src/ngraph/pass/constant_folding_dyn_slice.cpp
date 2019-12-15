@@ -43,7 +43,7 @@ shared_ptr<op::Constant> fold_constant_dyn_slice(shared_ptr<op::Constant> data,
                                      slice->get_ellipsis_mask());
 
     runtime::AlignedBuffer slice_out_buffer(shape_size(plan.reshape_in_shape) * sizeof(T));
-    T* slice_out_data = reinterpret_cast<T*>(slice_out_buffer.get_ptr());
+    T* slice_out_data = slice_out_buffer.get_ptr<T>();
     runtime::reference::slice<T>(data->get_data_ptr<T>(),
                                  slice_out_data,
                                  data->get_shape(),
@@ -53,7 +53,7 @@ shared_ptr<op::Constant> fold_constant_dyn_slice(shared_ptr<op::Constant> data,
                                  plan.reshape_in_shape);
 
     runtime::AlignedBuffer reshape_out_buffer(shape_size(plan.reshape_out_shape) * sizeof(T));
-    T* reshape_out_data = reinterpret_cast<T*>(reshape_out_buffer.get_ptr());
+    T* reshape_out_data = reshape_out_buffer.get_ptr<T>();
     runtime::reference::reshape<T>(slice_out_data,
                                    reshape_out_data,
                                    plan.reshape_in_shape,
@@ -61,7 +61,7 @@ shared_ptr<op::Constant> fold_constant_dyn_slice(shared_ptr<op::Constant> data,
                                    plan.reshape_out_shape);
 
     runtime::AlignedBuffer reverse_out_buffer(shape_size(plan.reshape_out_shape) * sizeof(T));
-    T* reverse_out_data = reinterpret_cast<T*>(reverse_out_buffer.get_ptr());
+    T* reverse_out_data = reverse_out_buffer.get_ptr<T>();
     runtime::reference::reverse<T>(reshape_out_data,
                                    reverse_out_data,
                                    plan.reshape_out_shape,

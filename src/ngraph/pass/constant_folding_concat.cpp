@@ -38,7 +38,7 @@ static shared_ptr<op::Constant> fold_constant_concat_helper(const shared_ptr<op:
 
     const Shape& out_shape = concat->get_shape();
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
-    T* data_ptr = reinterpret_cast<T*>(buffer.get_ptr());
+    T* data_ptr = buffer.get_ptr<T>();
 
     runtime::reference::concat<T>(
         arg_bufs, data_ptr, arg_shapes, concat->get_shape(), concat->get_concatenation_axis());

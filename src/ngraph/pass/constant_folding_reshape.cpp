@@ -29,7 +29,7 @@ shared_ptr<op::Constant> fold_constant_reshape(shared_ptr<op::Constant> constant
 {
     auto out_shape = reshape->get_shape();
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
-    T* data_ptr = reinterpret_cast<T*>(buffer.get_ptr());
+    T* data_ptr = buffer.get_ptr<T>();
 
     if (func != nullptr)
     {

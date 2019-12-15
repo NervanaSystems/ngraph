@@ -30,7 +30,7 @@ shared_ptr<op::Constant> fold_constant_convert_helper1(shared_ptr<op::Constant> 
 {
     auto out_shape = constant->get_shape();
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(TO));
-    TO* data_ptr = reinterpret_cast<TO*>(buffer.get_ptr());
+    TO* data_ptr = buffer.get_ptr<TO>();
 
     runtime::reference::convert<TI, TO>(
         constant->get_vector<TI>().data(), data_ptr, shape_size(out_shape));

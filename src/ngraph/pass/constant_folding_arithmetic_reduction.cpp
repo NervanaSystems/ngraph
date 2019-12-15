@@ -39,7 +39,7 @@ static shared_ptr<op::Constant>
 {
     const Shape& out_shape = reduction_node->get_shape();
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
-    T* data_ptr = reinterpret_cast<T*>(buffer.get_ptr());
+    T* data_ptr = buffer.get_ptr<T>();
 
     if (auto max = as_type_ptr<op::Max>(reduction_node))
     {
