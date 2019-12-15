@@ -27,6 +27,7 @@ shared_ptr<op::Constant> fold_constant_quantize(shared_ptr<op::Constant> constan
                                                 shared_ptr<op::Constant> scale,
                                                 shared_ptr<op::Constant> offset)
 {
+    NGRAPH_INFO;
     auto out_shape = constant->get_shape();
     vector<QUANT> out_vec(shape_size(out_shape));
 

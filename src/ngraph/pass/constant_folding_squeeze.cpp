@@ -24,6 +24,7 @@ template <class T>
 shared_ptr<op::Constant> fold_constant_squeeze(shared_ptr<op::Constant> constant,
                                                shared_ptr<op::Squeeze> squeeze)
 {
+    NGRAPH_INFO;
     auto out_shape = squeeze->get_shape();
     vector<T> out_vec(shape_size(out_shape));
     out_vec = constant->get_vector<T>();

@@ -37,6 +37,7 @@ static shared_ptr<op::Constant>
     fold_constant_arithmetic_reduction_helper(shared_ptr<op::Constant> constant,
                                               shared_ptr<Node> reduction_node)
 {
+    NGRAPH_INFO;
     vector<T> out_vec(shape_size(reduction_node->get_shape()));
 
     if (auto max = as_type_ptr<op::Max>(reduction_node))

@@ -28,6 +28,7 @@ template <class T>
 shared_ptr<op::Constant> fold_constant_dyn_reshape(shared_ptr<op::Constant> constant_data,
                                                    shared_ptr<op::v1::Reshape> dyn_reshape)
 {
+    NGRAPH_INFO;
     auto out_shape = dyn_reshape->get_shape();
 
     AxisVector input_order(constant_data->get_shape().size());

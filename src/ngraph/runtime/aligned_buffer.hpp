@@ -37,7 +37,7 @@ public:
     // Allocator objects and the allocation interfaces are owned by the
     // creators of AlignedBuffers. They need to ensure that the lifetime of
     // allocator exceeds the lifetime of this AlignedBuffer.
-    AlignedBuffer(size_t byte_size, size_t alignment, Allocator* allocator = nullptr);
+    AlignedBuffer(size_t byte_size, size_t alignment = 64, Allocator* allocator = nullptr);
 
     AlignedBuffer();
     ~AlignedBuffer();

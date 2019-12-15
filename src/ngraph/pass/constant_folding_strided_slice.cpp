@@ -32,6 +32,7 @@ shared_ptr<op::Constant> fold_constant_strided_slice(shared_ptr<op::Constant> da
                                                      shared_ptr<op::Constant> strides,
                                                      shared_ptr<op::v1::StridedSlice> slice)
 {
+    NGRAPH_INFO;
     auto convert_mask_to_axis_set = [](const std::vector<int64_t>& mask) {
         AxisSet axis_set{};
         for (size_t i = 0; i < static_cast<size_t>(mask.size()); ++i)

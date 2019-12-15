@@ -28,6 +28,7 @@ template <typename TI, typename TO>
 shared_ptr<op::Constant> fold_constant_convert_helper1(shared_ptr<op::Constant> constant,
                                                        const element::Type& output_element_type)
 {
+    NGRAPH_INFO;
     auto out_shape = constant->get_shape();
     vector<TO> out_vec(shape_size(out_shape));
 

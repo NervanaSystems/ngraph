@@ -56,6 +56,7 @@ static shared_ptr<op::Constant> fold_constant_binary_logical(shared_ptr<op::Cons
                                                              shared_ptr<Node> binary,
                                                              NodeExecutorTy func)
 {
+    NGRAPH_INFO;
     auto out_shape = binary->get_shape();
 
     // NOTE: We will skip the executor if the shapes do not match, because that means
@@ -155,6 +156,7 @@ shared_ptr<op::Constant> fold_constant_binary_comparison(shared_ptr<op::Constant
                                                          shared_ptr<Node> binary,
                                                          NodeExecutorTy func)
 {
+    NGRAPH_INFO;
     auto out_shape = binary->get_shape();
 
     // NOTE: We will skip the executor if the shapes do not match, because that means
@@ -319,6 +321,7 @@ shared_ptr<op::Constant> fold_constant_binary_arithmetic(shared_ptr<op::Constant
                                                          shared_ptr<Node> binary,
                                                          NodeExecutorTy func)
 {
+    NGRAPH_INFO;
     auto out_shape = binary->get_shape();
 
     // NOTE: We will skip the executor if the shapes do not match, because that means
@@ -528,6 +531,7 @@ shared_ptr<op::Constant> fold_constant_binary_helper(shared_ptr<op::Constant> a,
                                                      shared_ptr<Node> binary,
                                                      NodeExecutorTy func)
 {
+    NGRAPH_INFO;
     if (binary->is_binary_elementwise_comparison())
     {
         return fold_constant_binary_comparison<Tin>(a, b, binary, func);

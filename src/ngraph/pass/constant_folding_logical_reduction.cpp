@@ -43,6 +43,7 @@ static Shape get_shape_no_keep_dims(const AxisSet& reduction_axes, const Shape& 
 static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::Constant> constant,
                                                                 shared_ptr<Node> reduction_node)
 {
+    NGRAPH_INFO;
     vector<char> out_vec(shape_size(reduction_node->get_shape()));
 
     if (auto all = as_type_ptr<::ngraph::op::All>(reduction_node))

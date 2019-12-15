@@ -25,6 +25,7 @@ using namespace ngraph;
 template <typename T>
 static shared_ptr<op::Constant> fold_constant_concat_helper(const shared_ptr<op::Concat>& concat)
 {
+    NGRAPH_INFO;
     auto concat_inputs = concat->inputs();
     std::vector<const T*> arg_bufs;
     std::vector<Shape> arg_shapes;

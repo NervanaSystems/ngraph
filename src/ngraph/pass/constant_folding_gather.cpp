@@ -28,6 +28,7 @@ static shared_ptr<op::Constant> fold_constant_gather_helper(const shared_ptr<op:
                                                             const shared_ptr<op::Constant>& indices,
                                                             const shared_ptr<Node>& gather)
 {
+    NGRAPH_INFO;
     std::vector<T> result_vec(shape_size(gather->get_shape()));
 
     if (auto gather_v1 = as_type_ptr<op::v1::Gather>(gather))

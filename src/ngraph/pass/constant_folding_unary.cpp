@@ -50,6 +50,7 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
                                              shared_ptr<Node> unary,
                                              NodeExecutorTy func)
 {
+    NGRAPH_INFO;
     // check sqrt arg
     if (is_type<op::Sqrt>(unary))
     {

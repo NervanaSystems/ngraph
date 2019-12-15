@@ -26,6 +26,7 @@ shared_ptr<op::Constant> fold_constant_range(shared_ptr<op::Constant> start,
                                              shared_ptr<op::Constant> step,
                                              shared_ptr<op::Range> range)
 {
+    NGRAPH_INFO;
     vector<T> out_vec(shape_size(range->get_shape()));
     runtime::reference::range<T>(start->get_vector<T>().data(),
                                  step->get_vector<T>().data(),

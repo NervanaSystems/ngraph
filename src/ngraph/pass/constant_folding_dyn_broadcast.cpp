@@ -27,6 +27,7 @@ shared_ptr<op::Constant> fold_constant_dyn_broadcast(shared_ptr<op::Constant> ar
                                                      shared_ptr<op::Constant> shape,
                                                      shared_ptr<op::Constant> axes)
 {
+    NGRAPH_INFO;
     auto out_shape = shape->get_shape_val();
     vector<T> out_vec(shape_size(out_shape));
 

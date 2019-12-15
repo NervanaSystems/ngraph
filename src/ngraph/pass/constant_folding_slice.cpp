@@ -25,6 +25,7 @@ template <class T>
 shared_ptr<op::Constant> fold_constant_slice(shared_ptr<op::Constant> constant,
                                              shared_ptr<op::Slice> slice)
 {
+    NGRAPH_INFO;
     auto out_shape = slice->get_shape();
     vector<T> out_vec(shape_size(out_shape));
 

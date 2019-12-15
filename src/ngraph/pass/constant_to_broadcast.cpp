@@ -32,7 +32,7 @@ bool pass::ConstantToBroadcast::run_on_node(shared_ptr<Node> node)
         size_t size = shape_size(constant->get_shape());
         if (size > minimum_size_of_interest)
         {
-            if (constant->are_all_data_elements_bitwise_identical())
+            if (constant->get_all_data_elements_bitwise_identical())
             {
                 auto scalar_constant = make_shared<op::Constant>(
                     constant->get_element_type(), Shape{}, constant->get_data_ptr());

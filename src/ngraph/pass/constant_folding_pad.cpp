@@ -26,6 +26,7 @@ shared_ptr<op::Constant> fold_constant_pad(shared_ptr<op::Constant> constant,
                                            shared_ptr<op::Pad> pad,
                                            NodeExecutorTy func)
 {
+    NGRAPH_INFO;
     auto out_shape = pad->get_shape();
     vector<T> out_vec(shape_size(out_shape));
     auto pad_value = std::static_pointer_cast<op::Constant>(

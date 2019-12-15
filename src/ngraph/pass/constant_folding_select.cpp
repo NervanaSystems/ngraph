@@ -27,6 +27,7 @@ shared_ptr<op::Constant> fold_constant_select(const shared_ptr<op::Constant>& se
                                               const shared_ptr<op::Constant>& f,
                                               const shared_ptr<Node>& select)
 {
+    NGRAPH_INFO;
     auto out_shape = select->get_shape();
     vector<T> out_vec(shape_size(out_shape));
 

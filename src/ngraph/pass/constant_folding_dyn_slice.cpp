@@ -32,6 +32,7 @@ shared_ptr<op::Constant> fold_constant_dyn_slice(shared_ptr<op::Constant> data,
                                                  shared_ptr<op::Constant> strides,
                                                  shared_ptr<op::DynSlice> slice)
 {
+    NGRAPH_INFO;
     SlicePlan plan = make_slice_plan(data->get_shape(),
                                      lb->get_vector<int64_t>(),
                                      ub->get_vector<int64_t>(),

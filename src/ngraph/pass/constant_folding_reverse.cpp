@@ -37,6 +37,7 @@ static shared_ptr<op::Constant> fold_constant_reverse_helper(shared_ptr<op::Cons
 static shared_ptr<op::Constant> fold_constant_reverse(shared_ptr<op::Constant> constant,
                                                       const AxisSet& reversed_axes)
 {
+    NGRAPH_INFO;
     auto& input_element_type = constant->get_output_element_type(0);
 
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
