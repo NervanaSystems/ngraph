@@ -8,9 +8,15 @@ General Visualization Tools
 nGraph provides serialization and deserialization facilities, along with the 
 ability to create image formats or a PDF. 
 
+
+``NGRAPH_ENABLE_VISUALIZE_TRACING=1`` enables visualization and generates graph 
+visualization files.  
+
+.. note:: Using ``NGRAPH_ENABLE_VISUALIZE_TRACING=1`` will affect performance.
+
 When visualization is enabled, ``svg`` files for your graph get generated. The 
 default format can be adjusted by setting the ``NGRAPH_VISUALIZE_TRACING_FORMAT`` 
-flag to another format, like PNG or PDF. 
+flag to another format, like PNG or PDF.
 
 .. note:: Large graphs are usually not legible with formats like PDF.
 

@@ -1414,15 +1414,16 @@ input[type="radio"][disabled], input[type="checkbox"][disabled] {
   border-left-width: 0;
 }
 .wy-table thead, .rst-content table.docutils thead, .rst-content table.field-list thead {
-  color: #000;
-  text-align: left;
+  color: #1b1b1e;
+  text-align: center;
   vertical-align: bottom;
   white-space: nowrap;
 }
 .wy-table thead th, .rst-content table.docutils thead th, .rst-content table.field-list thead th {
-  font-family: Nunito, 'Nunito Sans', sans;
-  font-variant: small-caps;
-  border-bottom: solid 1px #c1c7d7;
+  font-family: monospace;
+  font-size: 1.33em;
+  background-color: #3e4451;
+  color: #e0e0e0;
 }
 .wy-table td, .rst-content table.docutils td, .rst-content table.field-list td {
   background-color: transparent;
@@ -1491,7 +1492,6 @@ input[type="radio"][disabled], input[type="checkbox"][disabled] {
 .wy-table-horizontal td, .wy-table-horizontal th {
   border-width: 0 0 1px 0;
   border-bottom: 1px solid #e1e4e5;
-  font-variant: small-caps;
 }
 .wy-table-horizontal tbody > tr:last-child td {
   border-bottom-width: 0;
@@ -1512,8 +1512,8 @@ input[type="radio"][disabled], input[type="checkbox"][disabled] {
 
 .wy-table-responsive table th {
   white-space: pre-wrap;
-  font-family: Nunito, 'Nunito Sans', sans;
-  font-variant: small-caps;
+  font-family: monospace;
+
 }
 
 
@@ -2310,7 +2310,7 @@ div[class^='highlight'] pre {
   margin-bottom: 12px;
 }
 .rst-content .toc-backref {
-  color: #7b7064;
+  color: #1b1b1e;
 }
 .rst-content .align-right {
   float: right;
@@ -3000,7 +3000,7 @@ footer span.commit code, footer span.commit .rst-content tt, .rst-content footer
 }
 
 .rst-footer-buttons {
-  *zoom: 1;
+  zoom: 1;
 }
 .rst-footer-buttons:before, .rst-footer-buttons:after {
   display: table;

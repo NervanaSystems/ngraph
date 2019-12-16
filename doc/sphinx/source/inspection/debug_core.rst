@@ -69,7 +69,7 @@ Environment Variables
    ``NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE``, Calculated in code; helps prevent *long* edges between two nodes very far apart
    ``NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES``, Set it to 1 in ~/.bashrc
    ``NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES``, Set it to 1 in ~/.bashrc
-   ``NGRAPH_ENABLE`SERIALIZE_TRACING``, Creates serialized files to be run with ``nbench`` for localized execution rather than whole stack execution
+   ``NGRAPH_ENABLE_SERIALIZE_TRACING``, Creates serialized files to be run with ``nbench`` for localized execution rather than whole stack execution
    ``NGRAPH_PROFILE_PASS_ENABLE``, Per-pass time taken to compile
    ``NGRAPH_PASS_ENABLES``, Enable or disable a pass: either core or backend
    ``NGRAPH_PASS_ATTRIBUTES``, Enable or disable attributes related to a pass; see also `pass config`_
@@ -96,7 +96,7 @@ Environment Variables
    ``NGRAPH_CPU_CHECK_PARMS_AND_CONSTS``,
    ``NGRAPH_CPU_NAN_CHECK``,
    ``NGRAPH_CPU_INF_CHECK``,
-   ``NGRAPH_DECONV_FUSE``, "Default ``FALSE``; when ``TRUE`` it enables fusion for deconvolution"
+   ``NGRAPH_DECONV_FUSE``, "Default ``FALSE``; when ``TRUE`` it enables fusion for deconvolution.  Only available with CPU."
    ``NGRAPH_PASS_CPU_LAYOUT_ELTWISE``,
 
 
