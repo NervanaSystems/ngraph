@@ -185,29 +185,7 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
     }
 
     // Fix input/output descriptors
-
-    if (ngraph::get_provenance_enabled())
-    {
-        auto common_args = ngraph::find_common_args(target, replacement);
-
-        std::set<string> removed_subgraph_tags;
-
-        auto set_replacement_prov = [&removed_subgraph_tags](std::shared_ptr<Node> node) {
-            for (auto tag : node->get_provenance_tags())
-            {
-                removed_subgraph_tags.insert(tag);
-            }
-        };
-
-        traverse_nodes({target}, set_replacement_prov, false, common_args);
-        replacement->add_provenance_tags(removed_subgraph_tags);
-
-        auto set_prov_new_nodes = [&removed_subgraph_tags](std::shared_ptr<Node> node) {
-            node->add_provenance_tags(removed_subgraph_tags);
-        };
-
-        traverse_nodes({replacement}, set_prov_new_nodes, false, common_args);
-    }
+    target->transfer_provenance_tags(replacement);
 
     // For each of target's output O with replacement output O_rep:
     //     For each O's connected downstream input I:
@@ -216,9 +194,7 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
     {
         target_values.at(i).replace(replacement_values.at(output_order[i]));
     }
-
-    replacement->add_node_control_dependents(target);
-    target->clear_control_dependents();
+    target->transfer_control_dependents(replacement);
 }
 
 void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)

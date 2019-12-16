@@ -303,6 +303,9 @@ namespace ngraph
         /// This node becomes a dependent of every node dependent on source_node
         void add_node_control_dependents(std::shared_ptr<Node> source_node);
 
+        /// This node's control dependencies are replaced by replacement
+        void transfer_control_dependents(std::shared_ptr<Node> replacement);
+
         /// Returns the number of outputs from the node.
         size_t get_output_size() const;
 
@@ -451,6 +454,9 @@ namespace ngraph
 
         // to be used when nodes are replaced
         void merge_provenance_tags_from(const std::shared_ptr<const Node>& source);
+
+        /// Transfer provenance tags to replacement
+        void transfer_provenance_tags(const std::shared_ptr<Node>& replacement);
 
         /// Get all the nodes that uses the current node
         virtual NodeVector get_users(bool check_is_used = false) const;
