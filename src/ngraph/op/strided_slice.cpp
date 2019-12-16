@@ -179,7 +179,7 @@ shared_ptr<Node> op::v1::StridedSlice::copy_with_new_args(const NodeVector& new_
 }
 
 void op::v1::StridedSlice::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                             const NodeVector& /* deltas */)
+                                             const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for StridedSlice");
 }

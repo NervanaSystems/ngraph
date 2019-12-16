@@ -17,11 +17,10 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/convert.hpp"
-#include "ngraph/op/greater.hpp"
+#include "default_opset.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "thresholded_relu.hpp"
 
 namespace ngraph
@@ -38,17 +37,17 @@ namespace ngraph
                     double alpha = node.get_attribute_value<double>("alpha", 1.0);
 
                     std::shared_ptr<ngraph::Node> alpha_node =
-                        std::make_shared<ngraph::op::Constant>(data->get_element_type(),
-                                                               data->get_shape(),
-                                                               std::vector<double>{alpha});
+                        std::make_shared<default_opset::Constant>(data->get_element_type(),
+                                                                  data->get_shape(),
+                                                                  std::vector<double>{alpha});
 
-                    auto data_map = std::make_shared<ngraph::op::Convert>(
-                        std::make_shared<ngraph::op::Greater>(data, alpha_node),
+                    auto data_map = std::make_shared<default_opset::Convert>(
+                        std::make_shared<ngraph::opset0::Greater>(data, alpha_node),
                         data->get_element_type());
                     return {data * data_map};
                 }
 
-            } // namespace set_1
+            } // namespace set_1default_opset
 
         } // namespace op
 
