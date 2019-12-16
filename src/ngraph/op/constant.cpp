@@ -337,21 +337,6 @@ bool op::Constant::are_all_data_elements_bitwise_identical() const
     return rc;
 }
 
-bool op::Constant::get_all_data_elements_bitwise_identical() const
-{
-    return are_all_data_elements_bitwise_identical();
-}
-
-bool op::Constant::get_all_data_elements_bitwise_identical()
-{
-    if (!m_all_elements_bitwise_identical_valid)
-    {
-        m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
-        m_all_elements_bitwise_identical_valid = true;
-    }
-    return m_all_elements_bitwise_identical;
-}
-
 constexpr NodeTypeInfo op::ScalarConstantLike::type_info;
 
 shared_ptr<op::Constant> op::ScalarConstantLikeBase::as_constant() const
