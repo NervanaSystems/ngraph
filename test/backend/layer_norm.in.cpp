@@ -247,7 +247,7 @@ NGRAPH_TEST(${BACKEND_NAME}, layer_norm_bprop_4d_input)
     vector<float> expected_scale(60, 0);
     vector<float> expected_bias(60, 2);
 
-    EXPECT_TRUE(test::all_close_f(expected_data, read_vector<float>(d_data), 1e-6f, 1e-6f));
-    EXPECT_TRUE(test::all_close_f(expected_scale, read_vector<float>(d_scale), 1e-6f, 1e-6f));
-    EXPECT_TRUE(test::all_close_f(expected_bias, read_vector<float>(d_bias), 1e-6f, 1e-6f));
+    EXPECT_TRUE(test::all_close(expected_data, read_vector<float>(d_data), 1e-5f, 1e-6f));
+    EXPECT_TRUE(test::all_close(expected_scale, read_vector<float>(d_scale), 1e-5f, 1e-6f));
+    EXPECT_TRUE(test::all_close(expected_bias, read_vector<float>(d_bias), 1e-5f, 1e-6f));
 }
