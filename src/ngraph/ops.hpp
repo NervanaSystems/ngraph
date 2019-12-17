@@ -110,6 +110,7 @@
 #include "ngraph/op/fused/reciprocal.hpp"
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
+#include "ngraph/op/fused/scatter_nd.hpp"
 #include "ngraph/op/fused/selu.hpp"
 #include "ngraph/op/fused/shuffle_channels.hpp"
 #include "ngraph/op/fused/softmax_crossentropy.hpp"

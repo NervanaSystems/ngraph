@@ -407,6 +407,8 @@ set (SRC
     op/fused/rnn_cell.hpp
     op/fused/scale_shift.cpp
     op/fused/scale_shift.hpp
+    op/fused/scatter_nd.cpp
+    op/fused/scatter_nd.hpp
     op/fused/stack.cpp
     op/fused/stack.hpp
     op/fused/selu.cpp
