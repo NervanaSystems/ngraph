@@ -137,64 +137,67 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
                           std::shared_ptr<Node> replacement,
                           const std::vector<int64_t>& output_order)
 {
-    NGRAPH_DEBUG << "replace_node target: " << *target << ", replacement: " << *replacement;
+    if (is_type<op::GetOutputElement>(target))
+    {
+        // We are replacing a particular output
+        target->input_value(0).replace(replacement);
+    }
+    else
+    {
+        NGRAPH_CHECK(target->get_output_size() == output_order.size(),
+                     "Target output size: ",
+                     target->get_output_size(),
+                     " must be equal output_order size: ",
+                     output_order.size());
 
+        OutputVector pre_replacement_values;
+        if (is_type<op::GetOutputElement>(replacement))
+        {
+            Output<Node> replacement_value(replacement);
+            pre_replacement_values.push_back(replacement_value);
+            replacement = replacement_value.get_node_shared_ptr();
+        }
+        else
+        {
+            pre_replacement_values = replacement->outputs();
+        }
+        OutputVector replacement_values(output_order.size());
+        for (size_t i = 0; i < output_order.size(); i++)
+        {
+            replacement_values[i] = pre_replacement_values.at(output_order.at(i));
+        }
+        replace_node(target, replacement_values);
+    }
+}
+
+void ngraph::replace_node(const std::shared_ptr<Node>& target,
+                          const OutputVector& replacement_values)
+{
     if (target->is_output())
     {
         throw ngraph_error("Result nodes cannot be replaced.");
     }
 
-    NGRAPH_CHECK(target->get_output_size() == output_order.size(),
-                 "Target output size: ",
-                 target->get_output_size(),
-                 " must be equal output_order size: ",
-                 output_order.size());
+    NGRAPH_CHECK(!target->get_users().empty(), "Attempted to replace unreachable node '", *target);
+    NGRAPH_CHECK(target->get_output_size() == replacement_values.size());
 
-    NGRAPH_CHECK(!target->get_users().empty(),
-                 "Attempted to replace unreachable node '",
-                 *target,
-                 "'. Replacement: '",
-                 *replacement,
-                 "'");
-    NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
-
-    OutputVector target_values;
-    OutputVector replacement_values;
-
-    if (is_type<op::GetOutputElement>(target))
-    {
-        // We are replacing a particular output
-        Output<Node> target_value(target);
-        target_values.push_back(target_value);
-        target = target_value.get_node_shared_ptr();
-    }
-    else
-    {
-        target_values = target->outputs();
-    }
-
-    if (is_type<op::GetOutputElement>(replacement))
-    {
-        Output<Node> replacement_value(replacement);
-        replacement_values.push_back(replacement_value);
-        replacement = replacement_value.get_node_shared_ptr();
-    }
-    else
-    {
-        replacement_values = replacement->outputs();
-    }
-
-    // Fix input/output descriptors
-    target->transfer_provenance_tags(replacement);
-
+    unordered_set<shared_ptr<Node>> replacement_nodes;
     // For each of target's output O with replacement output O_rep:
     //     For each O's connected downstream input I:
     //         Change I's connected upstream output to O_rep
-    for (size_t i = 0; i < target_values.size(); i++)
+    for (size_t i = 0; i < target->get_output_size(); i++)
     {
-        target_values.at(i).replace(replacement_values.at(output_order[i]));
+        auto& replacement_value = replacement_values.at(i);
+        auto replacement_node = replacement_value.get_node_shared_ptr();
+        if (replacement_nodes.find(replacement_node) == replacement_nodes.end())
+        {
+            replacement_node->add_node_control_dependents(target);
+            target->transfer_provenance_tags(replacement_node);
+            replacement_nodes.insert(replacement_node);
+        }
+        target->output(i).replace(replacement_values.at(i));
     }
-    target->transfer_control_dependents(replacement);
+    target->clear_control_dependents();
 }
 
 void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)

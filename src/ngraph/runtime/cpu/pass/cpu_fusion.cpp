@@ -349,9 +349,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
         {
             return false;
         }
-        auto normalized_output = bn_node->output(0).as_single_output_node();
+        auto normalized_output = bn_node->output(0);
 
-        ngraph::replace_node(m.get_match_root(), normalized_output);
+        ngraph::replace_node(m.get_match_root(), {normalized_output});
         return true;
     };
 
@@ -494,8 +494,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
                             conv_bprop->get_data_dilation_strides_forward());
                     NGRAPH_DEBUG << "Replacing " << *m.get_match_root()
                                  << "with ConvolutionBiasBackpropFiltersBias";
-                    ngraph::replace_node(m.get_match_root(),
-                                         conv_bias_bprop->output(0).as_single_output_node());
+                    ngraph::replace_node(m.get_match_root(), {conv_bias_bprop->output(0)});
                     NGRAPH_DEBUG << "Replacing bias and adding it as a second o/p of "
                                     "ConvolutionBiasBackpropFiltersBias";
                     if (flag)
@@ -506,8 +505,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
                     }
                     else
                     {
-                        ngraph::replace_node(delta_user,
-                                             conv_bias_bprop->output(1).as_single_output_node());
+                        ngraph::replace_node(delta_user, {conv_bias_bprop->output(1)});
                     }
                     return true;
                 }
@@ -1174,9 +1172,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
                                                                gm->input_value(3),
                                                                gm->input_value(4));
 
-        ngraph::replace_node(m.get_match_root(), dropout_n->output(0).as_single_output_node());
-        ngraph::replace_node(pattern_map[genmask_label],
-                             dropout_n->output(1).as_single_output_node());
+        ngraph::replace_node(m.get_match_root(), {dropout_n->output(0)});
+        ngraph::replace_node(pattern_map[genmask_label], {dropout_n->output(1)});
 
         return true;
     };

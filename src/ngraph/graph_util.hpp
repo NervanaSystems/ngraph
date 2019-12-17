@@ -215,6 +215,11 @@ namespace ngraph
                       std::shared_ptr<Node> replacement,
                       const std::vector<int64_t>& output_order);
 
+    /// Replace target.outputs[i] with replacement_values[i] and transfer control dependents and
+    /// provenance from target to the node(s) in replacement_values.
+    NGRAPH_API
+    void replace_node(const std::shared_ptr<Node>& target, const OutputVector& replacement_values);
+
     NGRAPH_API
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 

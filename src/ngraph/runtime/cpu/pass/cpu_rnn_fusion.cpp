@@ -476,7 +476,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             replace_collapse_node_user(pattern_map[ct_label], lstm_ct_output);
         }
         // find the user's for {ht} and replace them with lstm_goe_1
-        ngraph::replace_node(m.get_match_root(), lstm_ht_output.as_single_output_node());
+        ngraph::replace_node(m.get_match_root(), {lstm_ht_output});
 #endif
         return true;
     };
@@ -1344,7 +1344,7 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
                 Shape{batch_size, num_time_steps, feature_size});
         }
 
-        ngraph::replace_node(m.get_match_root(), layer_rnn_ht_reshape.as_single_output_node());
+        ngraph::replace_node(m.get_match_root(), {layer_rnn_ht_reshape});
         return true;
     };
 

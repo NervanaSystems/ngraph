@@ -127,8 +127,7 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
                                                  m_max_pool->get_padding_above());
 
     // rewire users to use a new MaxPoolWithIndices (maxpool's output)
-    replace_node(m_max_pool->output(0).as_single_output_node(),
-                 max_pool_with_indices->output(0).as_single_output_node());
+    m_max_pool->output(0).replace(max_pool_with_indices->output(0));
 
     // create a new max_pool_with_indices_bprop
     auto max_pool_with_indices_bprop =
