@@ -58,9 +58,6 @@ namespace ngraph
                       const Output<Node>& axis,
                       const std::vector<size_t>& splits);
 
-                // TODO REMOVE THIS CONSTRUCTOR. INTRODUCED TO PROVIDE CI COMPATIBILITY
-                Split(const Output<Node>& data, int axis, const std::vector<size_t>& splits);
-
                 void pre_validate_and_infer_types() override;
 
                 virtual NodeVector decompose_op() const override;
