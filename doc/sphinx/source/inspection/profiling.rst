@@ -2,8 +2,8 @@
 
 .. _profiling: 
 
-Profiling Performance
-#####################
+Profile Performance with ``nbench``
+###################################
 
 The nGraph Compiler stack includes the ``nbench`` tool which 
 provides additional methods of assessing or debugging performance 
@@ -29,12 +29,9 @@ Samples for testing can be found under  ``ngraph/test/models``.
 ``nbench``
 ==========
 
-Options 
--------
+.. code-block:: none
 
-::
-
-    Benchmark nGraph JSON model with a given backend.
+    Benchmark and nGraph JSON model with a given backend.
     
     SYNOPSIS
         nbench [-f <filename>] [-b <backend>] [-i <iterations>]
@@ -60,6 +57,7 @@ Rather than run a TensorFlow\* model "end-to-end" all the time,
 developers who notice a problem with performance or memory usage 
 can generate a unique serialized model for debugging by using 
 ``NGRAPH_ENABLE_SERIALIZE=1``. This serialized model can then be 
-re-run with ``nbench`` to experiment with any changes in ngraph 
-space. This makes it faster for developers to change and test 
-changes without the overhead of a complete end-to-end compilation.
+run and re-run with ``nbench`` to efficiently experiment with any 
+changes in ``ngraph`` space; developers can make changes and test 
+changes without the overhead of a complete end-to-end compilation 
+for each change.
