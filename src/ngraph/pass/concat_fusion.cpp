@@ -91,8 +91,8 @@ namespace
 void pass::ConcatElimination::construct_concat_elimination()
 {
     auto op_label = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 3});
-    auto concat = std::make_shared<op::Concat>(NodeVector{op_label}, 0);
-    auto concat_label = std::make_shared<pattern::op::Label>(concat, nullptr, NodeVector{concat});
+    auto concat = std::make_shared<op::Concat>(OutputVector{op_label}, 0);
+    auto concat_label = std::make_shared<pattern::op::Label>(concat, nullptr, OutputVector{concat});
 
     auto callback = [op_label](pattern::Matcher& m) {
         NGRAPH_DEBUG

@@ -36,8 +36,8 @@ namespace ngraph
                 Any(const element::Type& type,
                     const PartialShape& s,
                     Predicate pred,
-                    const NodeVector& wrapped_nodes)
-                    : Pattern(wrapped_nodes, pred)
+                    const OutputVector& wriapped_values)
+                    : Pattern(wriapped_values, pred)
                 {
                     if (!pred)
                     {
@@ -45,14 +45,27 @@ namespace ngraph
                     }
                     set_output_type(0, type, s);
                 }
-
+                Any(const element::Type& type,
+                    const PartialShape& s,
+                    Predicate pred,
+                    const NodeVector& wrapped_values)
+                    : Any(type, s, pred, as_output_vector(wrapped_values))
+                {
+                }
                 /// \brief creates a Any node containing a sub-pattern described by the type and
                 ///        shape of \sa node.
-                Any(std::shared_ptr<Node> node, Predicate pred, const NodeVector& wrapped_nodes)
+                Any(std::shared_ptr<Node> node, Predicate pred, const OutputVector& wrapped_values)
                     : Any(node->get_element_type(),
                           node->get_output_partial_shape(0),
                           pred,
-                          wrapped_nodes)
+                          wrapped_values)
+                {
+                }
+                Any(std::shared_ptr<Node> node, Predicate pred, const NodeVector& wrapped_values)
+                    : Any(node->get_element_type(),
+                          node->get_output_partial_shape(0),
+                          pred,
+                          as_output_vector(wrapped_values))
                 {
                 }
             };

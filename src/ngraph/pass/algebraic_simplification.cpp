@@ -49,7 +49,7 @@ static shared_ptr<pattern::Matcher>
                           shared_ptr<pattern::op::Label> const_label)
 {
     auto bcst = make_shared<pattern::op::Skip>(const_label, pattern::has_class<op::Broadcast>());
-    auto bcst_label = make_shared<pattern::op::Label>(bcst, nullptr, NodeVector{bcst});
+    auto bcst_label = make_shared<pattern::op::Label>(bcst, nullptr, OutputVector{bcst});
     auto matcher = make_shared<pattern::Matcher>(make_shared<T>(label, bcst_label));
     return matcher;
 }
@@ -80,7 +80,7 @@ static bool simplify_concat(shared_ptr<Node> n)
 
     auto pslice = make_shared<op::Slice>(ltip, Coordinate{0, 0}, Coordinate{2, 1}, Strides{1, 1});
 
-    auto lslice = make_shared<pattern::op::Label>(pslice, nullptr, NodeVector{pslice});
+    auto lslice = make_shared<pattern::op::Label>(pslice, nullptr, OutputVector{pslice});
 
     auto skip_reshape = make_shared<pattern::op::Skip>(lslice, pattern::has_class<op::Reshape>());
 
@@ -252,8 +252,8 @@ static bool simplify_multiply(shared_ptr<Node> n)
     NGRAPH_DEBUG << "In simplify_multiply for " << n->get_name();
     auto iconst = make_zero(element::i32, Shape{});
     auto label = make_shared<pattern::op::Label>(iconst);
-    auto const_label_zero = make_shared<pattern::op::Label>(iconst, is_zero, NodeVector{iconst});
-    auto const_label_one = make_shared<pattern::op::Label>(iconst, is_one, NodeVector{iconst});
+    auto const_label_zero = make_shared<pattern::op::Label>(iconst, is_zero, OutputVector{iconst});
+    auto const_label_one = make_shared<pattern::op::Label>(iconst, is_one, OutputVector{iconst});
 
     auto matcher_const_zero = create_binary_matcher<op::Multiply>(label, const_label_zero);
     auto matcher_const_one = create_binary_matcher<op::Multiply>(label, const_label_one);
@@ -288,7 +288,7 @@ static bool simplify_add(shared_ptr<Node> n)
     NGRAPH_DEBUG << "In simplify_add for " << n->get_name();
     auto iconst = make_zero(element::i32, Shape{});
     auto label = make_shared<pattern::op::Label>(iconst);
-    auto const_label = make_shared<pattern::op::Label>(iconst, nullptr, NodeVector{iconst});
+    auto const_label = make_shared<pattern::op::Label>(iconst, nullptr, OutputVector{iconst});
     auto matcher = create_binary_matcher<op::Add>(label, const_label);
 
     if (matcher->match(n))

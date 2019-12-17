@@ -42,28 +42,41 @@ namespace ngraph
                 AnyOf(const element::Type& type,
                       const PartialShape& s,
                       Predicate pred,
-                      const NodeVector& wrapped_nodes)
-                    : Pattern(wrapped_nodes, pred)
+                      const OutputVector& wrapped_values)
+                    : Pattern(wrapped_values, pred)
                 {
                     if (!pred)
                     {
                         throw ngraph_error("predicate is required");
                     }
 
-                    if (wrapped_nodes.size() != 1)
+                    if (wrapped_values.size() != 1)
                     {
                         throw ngraph_error("AnyOf expects exactly one argument");
                     }
                     set_output_type(0, type, s);
                 }
+                AnyOf(const element::Type& type,
+                      const PartialShape& s,
+                      Predicate pred,
+                      const NodeVector& wrapped_values)
+                    : AnyOf(type, s, pred, as_output_vector(wrapped_values))
+                {
+                }
 
                 /// \brief creates a AnyOf node containing a sub-pattern described by the type and
                 ///        shape of \sa node.
-                AnyOf(std::shared_ptr<Node> node, Predicate pred, const NodeVector& wrapped_nodes)
+                AnyOf(std::shared_ptr<Node> node,
+                      Predicate pred,
+                      const OutputVector& wrapped_values)
                     : AnyOf(node->get_element_type(),
                             node->get_output_partial_shape(0),
                             pred,
-                            wrapped_nodes)
+                            wrapped_values)
+                {
+                }
+                AnyOf(std::shared_ptr<Node> node, Predicate pred, const NodeVector& wrapped_values)
+                    : AnyOf(node, pred, as_output_vector(wrapped_values))
                 {
                 }
             };

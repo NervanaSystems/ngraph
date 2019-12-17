@@ -111,7 +111,7 @@ void pass::ConstantFolding::construct_constant_logical_reduction()
         std::make_shared<pattern::op::Any>(element::i32,
                                            Shape{2},
                                            is_supported_reduction,
-                                           NodeVector{constant_data_label, constant_axes_label});
+                                           OutputVector{constant_data_label, constant_axes_label});
 
     auto constant_logical_reduction_callback = [constant_data_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_logical_reduction_callback against node = "

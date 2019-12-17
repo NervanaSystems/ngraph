@@ -135,7 +135,8 @@ void pass::ConstantFolding::construct_constant_unary()
     auto is_ue = [](std::shared_ptr<Node> n) {
         return n->is_unary_elementwise_arithmetic() || pattern::has_class<op::Not>()(n);
     };
-    auto ue = std::make_shared<pattern::op::Any>(constant_label, is_ue, NodeVector{constant_label});
+    auto ue =
+        std::make_shared<pattern::op::Any>(constant_label, is_ue, OutputVector{constant_label});
 
     auto constant_unary_callback = [&, constant_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_unary_callback against node = "

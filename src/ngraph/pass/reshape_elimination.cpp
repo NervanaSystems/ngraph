@@ -212,7 +212,7 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
     auto op = make_shared<pattern::op::Label>(element::f32, shape_op);
     auto reshape = make_shared<op::Reshape>(op, AxisVector{0}, shape_r);
     auto reshape_label =
-        make_shared<pattern::op::Label>(reshape, get_no_fan_out_function(), NodeVector{reshape});
+        make_shared<pattern::op::Label>(reshape, get_no_fan_out_function(), OutputVector{reshape});
 
     auto callback = [op, reshape_label](pattern::RecurrentMatcher& m) {
         NGRAPH_DEBUG << "In callback for construct_recurrent_reshape against node = "
@@ -245,7 +245,7 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
         // The complete reshape node vector may not contain contiguous reshapes that can be
         // fused. Only the subset of reshapes with a reshape(any axis order) followed by reshapes
         // with default axis order can be fused. Creating such subpatterns here:
-        std::vector<NodeVector> sub_patterns{NodeVector{first_bound_reshape_op}};
+        std::vector<OutputVector> sub_patterns{OutputVector{first_bound_reshape_op}};
         for (auto it = std::next(reshape_node_vector.begin()); it != reshape_node_vector.end();
              it++)
         {
@@ -269,7 +269,7 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
             {
                 NGRAPH_DEBUG << r->get_name() << "does not have default axis order. "
                              << "It might be part of a different subpattern";
-                sub_patterns.push_back(NodeVector{r});
+                sub_patterns.push_back(OutputVector{r});
             }
         }
 
@@ -284,9 +284,10 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
                 continue;
             }
 
-            auto first_reshape = as_type_ptr<op::Reshape>(sub_pattern.front());
-            auto input_to_first_reshape = first_reshape->get_argument(0);
-            auto last_reshape = as_type_ptr<op::Reshape>(sub_pattern.back());
+            auto first_reshape =
+                as_type_ptr<op::Reshape>(sub_pattern.front().get_node_shared_ptr());
+            auto input_to_first_reshape = first_reshape->input_value(0);
+            auto last_reshape = as_type_ptr<op::Reshape>(sub_pattern.back().get_node_shared_ptr());
 
             auto new_input_order = first_reshape->get_input_order();
             auto new_out_shape = last_reshape->get_shape();

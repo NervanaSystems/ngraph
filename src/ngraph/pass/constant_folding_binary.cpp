@@ -570,7 +570,7 @@ void pass::ConstantFolding::construct_constant_binary()
         return (n->is_binary_elementwise_arithmetic() || n->is_binary_elementwise_comparison() ||
                 n->is_binary_elementwise_logical());
     };
-    auto be = std::make_shared<pattern::op::Any>(a, is_be, NodeVector{a, b});
+    auto be = std::make_shared<pattern::op::Any>(a, is_be, OutputVector{a, b});
 
     auto constant_binary_callback = [&, a, b](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_binary_callback against node = "

@@ -51,7 +51,7 @@ void pass::ConstantFolding::construct_constant_quantize()
     auto mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
     auto quant_op =
         make_shared<op::Quantize>(constant_label, q_scale, q_offset, element::i8, AxisSet{}, mode);
-    auto quant = make_shared<pattern::op::Label>(quant_op, nullptr, NodeVector{quant_op});
+    auto quant = make_shared<pattern::op::Label>(quant_op, nullptr, OutputVector{quant_op});
 
     auto constant_quantize_callback = [constant_label, quant](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_quantize_callback against node = "
