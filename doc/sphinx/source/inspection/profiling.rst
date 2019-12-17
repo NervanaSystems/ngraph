@@ -30,10 +30,10 @@ Use ``nbench`` to ease end-to-end debugging for TensorFlow\*
 Rather than run a TensorFlow\* model "end-to-end" all the time, 
 developers who notice a problem with performance or memory usage 
 can generate a unique serialized model for debugging by using 
-``NGRAPH_ENABLE_SERIALIZE=1``. This serialized model can be 
-then be re-run with ``nbench`` to experiment with any changes in 
-ngraph space. This makes it faster for developers to change and 
-test changes without the overhead of an end-to-end compilation. 
+``NGRAPH_ENABLE_SERIALIZE=1``. This serialized model can then be 
+re-run with ``nbench`` to experiment with any changes in ngraph 
+space. This makes it faster for developers to change and test 
+changes without the overhead of a complete end-to-end compilation.
 
 .. _nbench:
 
@@ -44,6 +44,7 @@ Options
 -------
 
 ::
+
     SYNOPSIS
         nbench [-f <filename>] [-b <backend>] [-i <iterations>]
     OPTIONS
