@@ -104,9 +104,6 @@ namespace ngraph
                 bool supports_decompose() const override { return false; }
             protected:
                 size_t m_num_splits;
-
-            private:
-                int64_t axis_value_from_input() const;
             };
         }
 
