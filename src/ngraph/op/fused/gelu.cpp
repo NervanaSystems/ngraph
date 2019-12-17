@@ -80,7 +80,7 @@ void op::Gelu::pre_validate_and_infer_types()
     }
 }
 
-void op::Gelu::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Gelu::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

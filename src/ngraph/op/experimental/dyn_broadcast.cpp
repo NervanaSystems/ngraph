@@ -131,7 +131,7 @@ shared_ptr<Node> op::DynBroadcast::copy_with_new_args(const NodeVector& new_args
 
 // TODO: This function is not implemented!
 void op::DynBroadcast::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                         const NodeVector& /* deltas */)
+                                         const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for DynBroadcast");
 }

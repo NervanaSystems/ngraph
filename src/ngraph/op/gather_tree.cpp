@@ -78,7 +78,7 @@ void op::v1::GatherTree::validate_and_infer_types()
 }
 
 void op::v1::GatherTree::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                           const NodeVector& /* deltas */)
+                                           const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints is not implemented for GatherTree");
 }

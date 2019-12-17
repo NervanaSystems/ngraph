@@ -359,7 +359,7 @@ shared_ptr<Node>
 }
 
 void op::MaxPoolWithIndices::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                               const NodeVector& /* deltas */)
+                                               const OutputVector& /* deltas */)
 {
     throw ngraph_error("Differentation of MaxPoolWithIndices isn't supported");
 }

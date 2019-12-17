@@ -154,7 +154,7 @@ shared_ptr<Node> op::v0::DynReshape::copy_with_new_args(const NodeVector& new_ar
 }
 
 void op::v0::DynReshape::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                           const NodeVector& /* deltas */)
+                                           const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for DynReshape");
 }

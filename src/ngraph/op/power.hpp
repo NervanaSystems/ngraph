@@ -63,7 +63,7 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
             };
         } // namespace v0
 
@@ -110,7 +110,7 @@ namespace ngraph
                 size_t get_version() const override { return 1; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
             };
         } // namespace v1
 

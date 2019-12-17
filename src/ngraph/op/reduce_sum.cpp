@@ -42,7 +42,7 @@ shared_ptr<Node> op::v1::ReduceSum::copy_with_new_args(const NodeVector& new_arg
     return make_shared<ReduceSum>(new_args.at(0), new_args.at(1), get_keep_dims());
 }
 
-void op::v1::ReduceSum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v1::ReduceSum::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

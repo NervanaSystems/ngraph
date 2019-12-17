@@ -90,10 +90,8 @@ float test_accuracy(MNistDataLoader& loader,
     {
         loader.load();
         t_X->write(loader.get_image_floats(),
-                   0,
                    loader.get_image_batch_size() * sizeof(float));
         t_Y->write(loader.get_label_floats(),
-                   0,
                    loader.get_label_batch_size() * sizeof(float));
         exec->call({t_softmax}, {t_X, t_W0, t_b0, t_W1, t_b1});
         size_t acc = accuracy_count(t_softmax, t_Y);
@@ -106,8 +104,6 @@ float test_accuracy(MNistDataLoader& loader,
 
 int main(int argc, char* argv[])
 {
-    ngraph::Distributed dist;
-
     size_t epochs = 5;
     size_t batch_size = 128;
     size_t output_size = 10;
@@ -177,10 +173,10 @@ int main(int argc, char* argv[])
     // Updates
     ngraph::autodiff::Adjoints adjoints(OutputVector{loss},
                                         OutputVector{delta});
-    auto grad_W0 = adjoints.backprop_node(W0);
-    auto grad_b0 = adjoints.backprop_node(b0);
-    auto grad_W1 = adjoints.backprop_node(W1);
-    auto grad_b1 = adjoints.backprop_node(b1);
+    auto grad_W0 = adjoints.backprop_output(W0);
+    auto grad_b0 = adjoints.backprop_output(b0);
+    auto grad_W1 = adjoints.backprop_output(W1);
+    auto grad_b1 = adjoints.backprop_output(b1);
 
     auto avg_grad_W0 = std::make_shared<op::AllReduce>(grad_W0);
     auto avg_grad_b0 = std::make_shared<op::AllReduce>(grad_b0);
@@ -254,10 +250,8 @@ int main(int argc, char* argv[])
     {
         train_loader.load();
         t_X->write(train_loader.get_image_floats(),
-                   0,
                    train_loader.get_image_batch_size() * sizeof(float));
         t_Y->write(train_loader.get_label_floats(),
-                   0,
                    train_loader.get_label_batch_size() * sizeof(float));
         train_exec->call(
             {t_loss,

@@ -17,8 +17,9 @@
 #pragma once
 
 #include "core/node.hpp"
+#include "default_opset.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/maximum.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "utils/variadic.hpp"
 
 namespace ngraph
@@ -31,7 +32,7 @@ namespace ngraph
             {
                 inline NodeVector max(const Node& node)
                 {
-                    return variadic::make_ng_variadic_op<ngraph::op::Maximum>(node);
+                    return variadic::make_ng_variadic_op<ngraph::opset0::Maximum>(node);
                 }
 
             } // namespace set_1
@@ -40,7 +41,7 @@ namespace ngraph
             {
                 inline NodeVector max(const Node& node)
                 {
-                    return variadic::make_ng_variadic_op<ngraph::op::v1::Maximum>(node);
+                    return variadic::make_ng_variadic_op<default_opset::Maximum>(node);
                 }
 
             } // namespace set_8

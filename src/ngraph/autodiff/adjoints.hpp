@@ -49,16 +49,11 @@ namespace ngraph
             Adjoints& operator=(const Adjoints& adjoints) = default;
             Adjoints() = default;
 
-            /// \brief (dy/dx)(c)
-            ///
-            /// \param x The node whose adjoint is desired.
-            const OutputVector& get(const NodeOutput& x);
-
             /// \brief Add a backprop contribution to x's adjoint
             ///
             /// \param x The adjoint node
             /// \param delta A backprop contribution
-            void add_delta(const NodeOutput& x, const NodeOutput& delta, size_t output_index = 0);
+            void add_delta(const NodeOutput& x, const NodeOutput& delta);
 
             /// \brief Add a backprop contribution to a slice of x's adjoint
             ///
@@ -73,7 +68,9 @@ namespace ngraph
                                     const Coordinate& upper_bounds,
                                     const Strides& strides);
 
-            std::shared_ptr<Node> backprop_node(const NodeOutput& x);
+            /// \brief (dy/dx)(c)
+            ///
+            /// \param x The output whose adjoint is desired.
             NodeOutput backprop_output(const NodeOutput& x);
 
         protected:

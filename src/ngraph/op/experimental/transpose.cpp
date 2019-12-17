@@ -74,7 +74,7 @@ shared_ptr<Node> op::Transpose::copy_with_new_args(const NodeVector& new_args) c
 // TODO(amprocte): This will require some way of inverting the permutation in-graph. (TensorFlow,
 // for example, has an InvertPermutation op, but that doesn't feel very nGraph-y somehow.)
 void op::Transpose::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                      const NodeVector& /* deltas */)
+                                      const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for Transpose");
 }

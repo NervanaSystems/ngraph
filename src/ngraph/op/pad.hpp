@@ -77,7 +77,7 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
                 CoordinateDiff m_padding_below;
                 CoordinateDiff m_padding_above;
                 Shape m_padding_interior_fake; // LEGACY: This is all zeros.
@@ -142,7 +142,7 @@ namespace ngraph
                 void set_pad_mode(PadMode pad_mode) { m_pad_mode = pad_mode; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
             private:
                 PadMode m_pad_mode;

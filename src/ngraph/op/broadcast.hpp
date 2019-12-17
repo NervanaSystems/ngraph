@@ -63,7 +63,7 @@ namespace ngraph
                           const AxisSet& broadcast_axes);
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 virtual void infer_shape() {}
                 Shape m_shape;
@@ -168,7 +168,7 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
             private:
                 AutoBroadcastSpec m_broadcast_spec;

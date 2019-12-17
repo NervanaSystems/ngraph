@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include "depth_to_space.hpp"
-#include "ngraph/op/fused/depth_to_space.hpp"
+#include "default_opset.hpp"
 
 namespace ngraph
 {
@@ -30,11 +30,12 @@ namespace ngraph
                     auto data = node.get_ng_inputs().at(0);
                     const auto mode = node.get_attribute_value<std::string>("mode", "DCR");
                     const auto ngraph_mode =
-                        (mode == "DCR") ? ngraph::op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST
-                                        : ngraph::op::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST;
+                        (mode == "DCR")
+                            ? default_opset::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST
+                            : default_opset::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST;
                     const auto block_size = node.get_attribute_value<std::int64_t>("blocksize");
-                    return NodeVector{
-                        std::make_shared<ngraph::op::DepthToSpace>(data, ngraph_mode, block_size)};
+                    return NodeVector{std::make_shared<default_opset::DepthToSpace>(
+                        data, ngraph_mode, block_size)};
                 }
             } // namespace set_1
 

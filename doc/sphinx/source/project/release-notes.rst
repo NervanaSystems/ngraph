@@ -42,7 +42,7 @@ Latest documentation updates
 Changelog on Previous Releases
 ==============================
 
-+ All ops support ``Output<Node>`` arguments
++ All ops support ``NodeOutput`` arguments
 + Additional ops
 + ONNX handling unknown domains
 + Provenance works with builders and fused ops

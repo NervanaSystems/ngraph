@@ -1,5 +1,7 @@
 .. backends/index.rst
 
+.. _backend_support:
+
 #####################
 Working with Backends
 #####################

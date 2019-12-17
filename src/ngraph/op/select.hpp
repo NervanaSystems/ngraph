@@ -61,7 +61,7 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
             };
         }
 
@@ -124,7 +124,7 @@ namespace ngraph
                 const AutoBroadcastSpec& get_autob() const override { return m_auto_broadcast; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
             private:
                 AutoBroadcastSpec m_auto_broadcast;

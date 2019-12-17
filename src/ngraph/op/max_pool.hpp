@@ -136,7 +136,7 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 Shape m_window_shape;
                 Strides m_window_movement_strides;
@@ -279,7 +279,7 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 Shape m_kernel;
                 Strides m_strides;

@@ -112,7 +112,7 @@ shared_ptr<Node> op::Concat::copy_with_new_args(const NodeVector& new_args) cons
     return make_shared<Concat>(new_args, m_axis);
 }
 
-void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

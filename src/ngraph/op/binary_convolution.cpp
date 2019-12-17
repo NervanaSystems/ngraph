@@ -143,7 +143,7 @@ shared_ptr<Node> op::v1::BinaryConvolution::copy_with_new_args(const NodeVector&
 }
 
 void op::v1::BinaryConvolution::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                  const NodeVector& deltas)
+                                                  const OutputVector& deltas)
 {
     throw ngraph_error("BinaryConvolution generate_adjoints not implemented");
 }
