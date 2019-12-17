@@ -214,6 +214,7 @@ namespace ngraph
     void replace_node(std::shared_ptr<Node> target,
                       std::shared_ptr<Node> replacement,
                       const std::vector<int64_t>& output_order);
+
     NGRAPH_API
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
