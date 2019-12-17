@@ -35,6 +35,7 @@ namespace ngraph
             void register_builders_convert_cpp();
             void register_builders_convert_layout_cpp();
             void register_builders_convolution_cpp();
+            void register_builders_cumsum_cpp();
             void register_builders_dot_cpp();
             void register_builders_dropout_cpp();
             void register_builders_embedding_lookup_cpp();

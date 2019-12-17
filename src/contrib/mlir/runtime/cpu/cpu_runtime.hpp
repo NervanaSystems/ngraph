@@ -35,7 +35,8 @@ namespace ngraph
         {
             struct StaticMemRef
             {
-                float* basePtr;
+                void* allocatedPtr;
+                void* alignedPtr;
                 int64_t offset;
                 int64_t shapeAndStrides[];
             };

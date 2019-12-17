@@ -31,7 +31,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::ConcatElimination : public ngraph::pass::GraphRewrite
+class NGRAPH_API ngraph::pass::ConcatElimination : public ngraph::pass::GraphRewrite
 {
 public:
     ConcatElimination()
@@ -44,7 +44,7 @@ private:
     void construct_concat_elimination();
 };
 
-class ngraph::pass::SelfConcatFusion : public ngraph::pass::FunctionPass
+class NGRAPH_API ngraph::pass::SelfConcatFusion : public ngraph::pass::FunctionPass
 {
 public:
     SelfConcatFusion() { set_property(PassProperty::REQUIRE_STATIC_SHAPE, true); }

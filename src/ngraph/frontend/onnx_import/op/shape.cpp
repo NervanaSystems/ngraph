@@ -16,11 +16,10 @@
 
 #include <memory>
 
+#include "default_opset.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
-
 #include "shape.hpp"
 
 namespace ngraph
@@ -36,7 +35,7 @@ namespace ngraph
                     auto data = node.get_ng_inputs().at(0);
                     auto data_shape = data->get_shape();
 
-                    return {std::make_shared<ngraph::op::Constant>(
+                    return {std::make_shared<default_opset::Constant>(
                         ngraph::element::i64, Shape{data_shape.size()}, data_shape)};
                 }
 

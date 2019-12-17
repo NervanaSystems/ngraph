@@ -25,10 +25,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Elementwise maximum operation.
-            class Maximum : public util::BinaryElementwiseArithmetic
+            class NGRAPH_API Maximum : public util::BinaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Maximum", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a maximum operation.
@@ -51,17 +50,16 @@ namespace ngraph
                 virtual bool is_commutative() const override { return true; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
             };
         } // namespace v0
 
         namespace v1
         {
             /// \brief Elementwise maximum operation.
-            class Maximum : public util::BinaryElementwiseArithmetic
+            class NGRAPH_API Maximum : public util::BinaryElementwiseArithmetic
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Maximum", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a maximum operation.
@@ -87,7 +85,7 @@ namespace ngraph
                 size_t get_version() const override { return 1; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
             };
         } // namespace v1
 

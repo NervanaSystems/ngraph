@@ -210,6 +210,76 @@ vector<runtime::PerformanceCounter> runtime::cpu::CPU_Executable::get_performanc
     return rc;
 }
 
+shared_ptr<ngraph::op::Parameter> runtime::cpu::CPU_Executable::get_parameter(size_t index) const
+{
+    const ParameterVector& parameters = get_parameters();
+    NGRAPH_CHECK(index < parameters.size(), "create_tensor for input out of bounds");
+    return parameters[index];
+}
+
+shared_ptr<ngraph::op::Result> runtime::cpu::CPU_Executable::get_result(size_t index) const
+{
+    const ResultVector& results = get_results();
+    NGRAPH_CHECK(index < results.size(), "create_tensor for input out of bounds");
+    return results[index];
+}
+
+shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_input_tensor(size_t input_index)
+{
+    shared_ptr<op::Parameter> parameter = get_parameter(input_index);
+    return make_shared<runtime::cpu::CPUTensorView>(parameter->get_element_type(),
+                                                    parameter->get_shape());
+}
+
+shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_output_tensor(size_t output_index)
+{
+    shared_ptr<op::Result> result = get_result(output_index);
+    return make_shared<runtime::cpu::CPUTensorView>(result->get_element_type(),
+                                                    result->get_shape());
+}
+
+vector<shared_ptr<runtime::Tensor>>
+    runtime::cpu::CPU_Executable::create_input_tensor(size_t input_index, size_t pipeline_depth)
+{
+    vector<shared_ptr<runtime::cpu::CPUTensorView>> tensors;
+    shared_ptr<op::Parameter> parameter = get_parameter(input_index);
+    for (size_t i = 0; i < pipeline_depth; i++)
+    {
+        shared_ptr<runtime::cpu::CPUTensorView> tensor;
+        auto t = make_shared<runtime::cpu::CPUTensorView>(parameter->get_element_type(),
+                                                          parameter->get_shape());
+        tensor = static_pointer_cast<runtime::cpu::CPUTensorView>(t);
+        tensors.push_back(tensor);
+    }
+    vector<shared_ptr<runtime::Tensor>> result_tensors;
+    for (const shared_ptr<runtime::cpu::CPUTensorView>& tensor : tensors)
+    {
+        result_tensors.push_back(tensor);
+    }
+    return result_tensors;
+}
+
+vector<shared_ptr<runtime::Tensor>>
+    runtime::cpu::CPU_Executable::create_output_tensor(size_t output_index, size_t pipeline_depth)
+{
+    vector<shared_ptr<runtime::cpu::CPUTensorView>> tensors;
+    shared_ptr<op::Result> result = get_result(output_index);
+    for (size_t i = 0; i < pipeline_depth; i++)
+    {
+        shared_ptr<runtime::cpu::CPUTensorView> tensor;
+        auto t = make_shared<runtime::cpu::CPUTensorView>(result->get_element_type(),
+                                                          result->get_shape());
+        tensor = static_pointer_cast<runtime::cpu::CPUTensorView>(t);
+        tensors.push_back(tensor);
+    }
+    vector<shared_ptr<runtime::Tensor>> result_tensors;
+    for (const shared_ptr<runtime::cpu::CPUTensorView>& tensor : tensors)
+    {
+        result_tensors.push_back(tensor);
+    }
+    return result_tensors;
+}
+
 bool runtime::cpu::CPU_Backend::is_supported(const Node& /* op */) const
 {
     return true;

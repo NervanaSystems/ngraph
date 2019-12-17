@@ -31,10 +31,9 @@ namespace ngraph
         {
             /// \brief Takes a slice of an input tensor, i.e., the sub-tensor that resides within a
             ///        bounding box, optionally with stride.
-            class StridedSlice : public Op
+            class NGRAPH_API StridedSlice : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Slice", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 StridedSlice() = default;
@@ -104,7 +103,7 @@ namespace ngraph
                 size_t get_version() const override { return 1; }
             protected:
                 void generate_adjoints(autodiff::Adjoints& adjoints,
-                                       const NodeVector& deltas) override;
+                                       const OutputVector& deltas) override;
 
             private:
                 AxisSet convert_mask_to_axis_set(const std::vector<int64_t>& mask) const;

@@ -16,13 +16,14 @@
 
 #pragma once
 
+#include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 
 namespace ngraph
 {
-    class Lambda
+    class NGRAPH_API Lambda
     {
     public:
         static constexpr DiscreteTypeInfo type_info{"Lamdba", 0};

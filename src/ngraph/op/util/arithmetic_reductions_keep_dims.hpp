@@ -25,7 +25,7 @@ namespace ngraph
     {
         namespace util
         {
-            class ArithmeticReductionKeepDims : public util::ArithmeticReduction
+            class NGRAPH_API ArithmeticReductionKeepDims : public util::ArithmeticReduction
             {
             protected:
                 ArithmeticReductionKeepDims() = default;

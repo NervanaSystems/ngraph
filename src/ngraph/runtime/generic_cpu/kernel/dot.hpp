@@ -18,8 +18,11 @@
 
 #include <Eigen/Dense>
 #include <cmath>
-#include <omp.h>
 #include <utility>
+
+#ifdef PARALLEL
+#include <omp.h>
+#endif
 
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/shape_util.hpp"

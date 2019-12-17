@@ -24,10 +24,9 @@ namespace ngraph
     {
         /// \brief Generic padding operation which takes padding below and above as dynamic shapes.
         /// This is similar to existing Pad operation except padding values are dynamic.
-        class DynPad : public Op
+        class NGRAPH_API DynPad : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"DynPad", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             DynPad() = default;
@@ -52,7 +51,7 @@ namespace ngraph
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+                                           const OutputVector& deltas) override;
 
         private:
             PadMode m_pad_mode;

@@ -155,7 +155,8 @@ TEST(build_graph, multi_output_split)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{64, 8, 100, 150});
     auto filters = make_shared<op::Parameter>(element::f32, Shape{128, 2, 10, 20});
-    const auto split = make_shared<op::Split>(data, 1, 2);
+    const auto axis = op::Constant::create(element::i64, Shape{}, {1});
+    const auto split = make_shared<op::Split>(data, axis, 2);
     auto conv = make_shared<op::GroupConvolution>(split->output(1),
                                                   filters,
                                                   Strides{1, 1},
@@ -170,7 +171,8 @@ TEST(build_graph, multi_output_split)
 TEST(build_graph, multi_output_split_dynamic)
 {
     const auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    const auto split = make_shared<op::Split>(data, 1, 2);
+    const auto axis = op::Constant::create(element::i64, Shape{}, {1});
+    const auto split = make_shared<op::Split>(data, axis, 2);
     auto abs = make_shared<op::Abs>(split->output(1));
     EXPECT_TRUE(abs->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
 

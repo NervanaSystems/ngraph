@@ -33,13 +33,11 @@
 using namespace std;
 using namespace ngraph;
 
-#define TI(x) type_index(typeid(x))
-
 static bool replace_broadcast_like(const std::shared_ptr<ngraph::Node>& node)
 {
     // Replace a broadcast like with the broadcast to eliminate the pseudo-dependency on the "like"
     // argument
-    auto broadcast_like = static_pointer_cast<op::BroadcastLike>(node);
+    auto broadcast_like = as_type_ptr<op::BroadcastLike>(node);
     replace_node(node,
                  make_shared<op::Broadcast>(broadcast_like->get_argument(0),
                                             broadcast_like->get_broadcast_shape(),
@@ -47,18 +45,28 @@ static bool replace_broadcast_like(const std::shared_ptr<ngraph::Node>& node)
     return true;
 }
 
-static const unordered_map<type_index, function<bool(const shared_ptr<Node>&)>> dispatcher{
-    {TI(op::BroadcastLike), &replace_broadcast_like}};
-
-bool pass::LikeReplacement::run_on_function(shared_ptr<Function> function)
+static bool replace_scalar_constant_like(const std::shared_ptr<Node>& node)
 {
-    bool clobbered = false;
+    auto scalar_constant_like = as_type_ptr<op::ScalarConstantLike>(node);
+    replace_node(node, scalar_constant_like->as_constant());
+    return true;
+}
 
-    for (const auto& n : function->get_ops())
+static const map<NodeTypeInfo, function<bool(const shared_ptr<Node>&)>> dispatcher{
+    {op::BroadcastLike::type_info, replace_broadcast_like},
+    {op::ScalarConstantLike::type_info, replace_scalar_constant_like}};
+
+bool pass::LikeReplacement::run_on_function(shared_ptr<Function> function_ptr)
+{
+    static const map<NodeTypeInfo, function<bool(const shared_ptr<Node>&)>> dispatcher{
+        {op::BroadcastLike::type_info, replace_broadcast_like},
+        {op::ScalarConstantLike::type_info, replace_scalar_constant_like}};
+
+    bool clobbered = false;
+    for (const auto& n : function_ptr->get_ops())
     {
         // Work around a warning [-Wpotentially-evaluated-expression]
-        const Node& node = *n;
-        auto handler = dispatcher.find(TI(node));
+        auto handler = dispatcher.find(n->get_type_info());
         if (handler != dispatcher.end())
         {
             clobbered = handler->second(n) || clobbered;

@@ -33,7 +33,7 @@ namespace ngraph
             ///        permutations and slices.
             ///
             /// The linearized offset of an index I is dot(I, strides) + offset.
-            class DenseTensorLayout : public TensorLayout
+            class NGRAPH_API DenseTensorLayout : public TensorLayout
             {
             public:
                 ~DenseTensorLayout() override {}

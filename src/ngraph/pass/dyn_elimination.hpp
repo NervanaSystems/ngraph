@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace pass
     {
-        class DynElimination : public GraphRewrite
+        class NGRAPH_API DynElimination : public GraphRewrite
         {
         public:
             DynElimination();

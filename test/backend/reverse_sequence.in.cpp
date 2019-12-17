@@ -154,3 +154,44 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_sequence_n4d2c3h2w2)
     handle->call_with_validate({result}, {a, b});
     EXPECT_EQ(read_vector<int>(result), expected);
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, reverse_sequence_negative_axes)
+{
+    Shape shape{2, 3, 4, 2};
+    Shape seq_len_shape{4};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto B = make_shared<op::Parameter>(element::i32, seq_len_shape);
+
+    int64_t batch_axis = -2;
+    int64_t sequence_axis = -3;
+    auto rs = std::make_shared<op::ReverseSequence>(A, B, batch_axis, sequence_axis);
+
+    auto f = make_shared<Function>(rs, ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, seq_len_shape);
+
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shape);
+
+    std::vector<int> input{
+        0,  0, 3,  0, 6,  0, 9,  0, 1,  0, 4,  0, 7,  0, 10, 0, 2,  0, 5,  0, 8,  0, 11, 0,
+        12, 0, 15, 0, 18, 0, 21, 0, 13, 0, 16, 0, 19, 0, 22, 0, 14, 0, 17, 0, 20, 0, 23, 0,
+    };
+
+    std::vector<int> seq_lenghts{1, 2, 1, 2};
+    copy_data(b, seq_lenghts);
+
+    std::vector<int> expected{
+        0,  0, 4,  0, 6,  0, 10, 0, 1,  0, 3,  0, 7,  0, 9,  0, 2,  0, 5,  0, 8,  0, 11, 0,
+
+        12, 0, 16, 0, 18, 0, 22, 0, 13, 0, 15, 0, 19, 0, 21, 0, 14, 0, 17, 0, 20, 0, 23, 0};
+
+    copy_data(a, input);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    EXPECT_EQ(read_vector<int>(result), expected);
+}

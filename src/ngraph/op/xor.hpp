@@ -28,10 +28,9 @@ namespace ngraph
         {
             /// \brief Elementwise logical-xor operation.
             ///
-            class LogicalXor : public util::BinaryElementwiseLogical
+            class NGRAPH_API LogicalXor : public util::BinaryElementwiseLogical
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"LogicalXor", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 LogicalXor() = default;
@@ -60,10 +59,9 @@ namespace ngraph
         {
             /// \brief Elementwise logical-xor operation.
             ///
-            class Xor : public util::BinaryElementwiseLogical
+            class NGRAPH_API Xor : public util::BinaryElementwiseLogical
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Xor", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Xor() = default;

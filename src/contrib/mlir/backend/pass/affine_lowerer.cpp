@@ -193,7 +193,20 @@ namespace
         void runOnModule() override;
 
         SmallVector<Value*, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
-        Value* createTempTensor(Type type, PatternRewriter& rewriter);
+        /// Allocates a linear buffer for a temporary tensor
+        Value* createTempBuffer(Type type, PatternRewriter& rewriter);
+
+        /// Creates an allocation or view of a memref.
+        /// type     MemRef Type
+        /// buffer   Optional buffer value to create view over
+        /// offset   Optional offset into the buffer this view starts at
+        ///
+        /// If buffer is null, a new allocation of a memref is created.
+        /// Offset is ignored.  If buffer is non-null, then we create a temp
+        /// view over a pre-allocated buffer (see createTempBuffer)
+
+        Value*
+            createTempMemref(Type type, Value* buffer, unsigned offset, PatternRewriter& rewriter);
 
         /// Inserts dealloc Ops for each temporary allocated by AllocOp
         void insertDeallocs(PatternRewriter& rewriter);
@@ -333,44 +346,63 @@ namespace
             }
             else
             {
+                // For temporaries, we create two instructions:
+                // 1. Linear buffer allocation: If the ng value already has a buffer ID assigned,
+                //    we re-use that linear buffer SSA value, else generate an AllocOp.
+                // 2. View creation: Create a view with the tensor shape and an N-D to 1 map over
+                //    the linear buffer.
+                // If two memrefs are defined via 2 Views over the same buffer, then they share and
+                // will re-use the same buffer.
                 auto tensorType = origResult->getType().cast<NGTensorType>();
-                Value* newResult;
+                Value* newResult = nullptr;
                 Attribute bufferIdAttr = getBufferId(op);
+                Type memRefType = typeConverter.convertType(tensorType);
+
+                Value* bufferValue = nullptr;
                 if (!bufferIdAttr)
                 {
                     // Allocate new memref
-                    newResult = createTempTensor(typeConverter.convertType(tensorType), rewriter);
+                    newResult = createTempMemref(memRefType, nullptr, 0, rewriter);
                 }
                 else
                 {
                     unsigned bufferId = bufferIdAttr.cast<IntegerAttr>().getInt();
-                    // Re-use a memref if it exist, else create a new one and update map
+                    // Re-use a buffer if it exist, else create a new one and update map
                     IdToMemRefMap::iterator it = m_id_to_memref.find(bufferId);
                     if (it == m_id_to_memref.end())
                     {
-                        // create a new memref
-                        newResult =
-                            createTempTensor(typeConverter.convertType(tensorType), rewriter);
-                        m_id_to_memref[bufferId] = newResult;
+                        // create a new buffer
+                        bufferValue = createTempBuffer(memRefType, rewriter);
+                        m_id_to_memref[bufferId] = bufferValue;
                     }
                     else
                     {
-                        newResult = it->second;
+                        bufferValue = it->second;
                     }
+                    // Create a temp view over the linear buffer
+                    newResult = createTempMemref(memRefType, bufferValue, 0, rewriter);
                 }
+                NGRAPH_CHECK(newResult != nullptr, "Temp memref value is not set");
                 newResults.push_back(newResult);
             }
         }
         return newResults;
     }
 
-    Value* DialectLoweringPass::createTempTensor(Type type, PatternRewriter& rewriter)
+    Value* DialectLoweringPass::createTempBuffer(Type type, PatternRewriter& rewriter)
     {
         MemRefType memRefType = type.cast<MemRefType>();
 
         NGRAPH_CHECK(memRefType.hasStaticShape(), "Dynamic shapes are not supported");
 
-        Value* alloc = rewriter.create<mlir::AllocOp>(rewriter.getUnknownLoc(), memRefType);
+        // deduce linear buffer shape
+        unsigned sizeInBytes = memRefType.getSizeInBits() / 8;
+
+        MemRefType bufferType =
+            MemRefType::get({sizeInBytes}, IntegerType::get(8, type.getContext()), {});
+
+        Value* alloc = rewriter.create<mlir::AllocOp>(rewriter.getUnknownLoc(), bufferType);
+
         memRefsToDealloc.push_back(alloc);
 
         // TODO:
@@ -383,6 +415,45 @@ namespace
         // This is better be done via std.AllocOp but we need to make it hookable to nGraph
         // allocator call-back.
 
+        return alloc;
+    }
+
+    Value* DialectLoweringPass::createTempMemref(Type type,
+                                                 Value* buffer,
+                                                 unsigned offset,
+                                                 PatternRewriter& rewriter)
+    {
+        NGRAPH_CHECK(offset == 0, "Only zero offset is supported");
+        MemRefType memRefType = type.cast<MemRefType>();
+        if (buffer)
+        {
+            // We have a buffer to map to. Create a view over it.
+
+            // Create the N-D to 1D affine expression mapping the memref shape to the underlying
+            // linear
+            // buffer
+            // This is simply (d0, d1, d2, .. dN-1) --> d0 * S0 + d1 * S1 ... + dN-1 * SN-1
+            // Where Si is the stride along the i_th dimension
+            auto shape = memRefType.getShape();
+            SmallVector<int64_t, 4> strides(shape.size(), 0);
+            strides[shape.size() - 1] = 1;
+            for (int64_t i = shape.size() - 2; i >= 0; i--)
+            {
+                strides[i] = strides[i + 1] * shape[i + 1];
+            }
+
+            auto map = makeStridedLinearLayoutMap(strides, offset, rewriter.getContext());
+            MemRefType newMemRefType = MemRefType::get(shape, memRefType.getElementType(), map);
+            auto viewOp = rewriter.create<mlir::ViewOp>(
+                buffer->getDefiningOp()->getLoc(), newMemRefType, buffer, llvm::None);
+            return viewOp.getResult();
+        }
+
+        // No buffer, create an atomic memref without underlying buffer
+        NGRAPH_CHECK(memRefType.hasStaticShape(), "Dynamic shapes are not supported");
+
+        Value* alloc = rewriter.create<mlir::AllocOp>(rewriter.getUnknownLoc(), memRefType);
+        memRefsToDealloc.push_back(alloc);
         return alloc;
     }
 

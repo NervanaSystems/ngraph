@@ -33,10 +33,9 @@ namespace ngraph
         /// For example, for `a` with shape `(batch_size, n, k)`, and `b` with
         /// shape `(batch_size, k, m)`, the result of BatchMatMul will have shape
         /// `(batch_size, n, m)`, and `BatchMatMulTranspose(a, b)[i] = Dot(a[i], b[i])`.
-        class BatchMatMulTranspose : public ngraph::op::util::FusedOp
+        class NGRAPH_API BatchMatMulTranspose : public ngraph::op::util::FusedOp
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"BatchMatMulTranspose", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             BatchMatMulTranspose() = default;
@@ -62,7 +61,7 @@ namespace ngraph
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+                                           const OutputVector& deltas) override;
 
         private:
             bool m_transpose_arg0;

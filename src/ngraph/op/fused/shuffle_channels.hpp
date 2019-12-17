@@ -25,46 +25,51 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Permutes data in the channel dimension of the input
-        class ShuffleChannels : public ngraph::op::util::FusedOp
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"ShuffleChannels", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            ShuffleChannels() = default;
-            /// \brief Constructs a ShuffleChannels node.
-            ///
-            /// \param data - Node producing the input tensor
-            /// \param axis - channel dimension index in the data tensor. A negative value means
-            ///               that the index should be calculated from the back of the input data
-            ///               shape.
-            /// \param groups - number of groups the channel dimension specified by axis should be
-            ///                 split into
-            ShuffleChannels(const Output<Node>& data,
-                            const int axis = 1,
-                            const size_t groups = 1UL);
+            /// \brief Permutes data in the channel dimension of the input
+            class NGRAPH_API ShuffleChannels : public ngraph::op::util::FusedOp
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"ShuffleChannels", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                ShuffleChannels() = default;
+                /// \brief Constructs a ShuffleChannels node.
+                ///
+                /// \param data - Node producing the input tensor
+                /// \param axis - channel dimension index in the data tensor. A negative value means
+                ///               that the index should be calculated from the back of the input
+                ///               data
+                ///               shape.
+                /// \param groups - number of groups the channel dimension specified by axis should
+                /// be
+                ///                 split into
+                ShuffleChannels(const Output<Node>& data,
+                                const int axis = 1,
+                                const size_t groups = 1UL);
 
-            size_t get_zero_based_axis() const;
+                size_t get_zero_based_axis() const;
 
-            virtual void pre_validate_and_infer_types() override;
+                virtual void pre_validate_and_infer_types() override;
 
-            virtual NodeVector decompose_op() const override;
+                virtual NodeVector decompose_op() const override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            int get_axis() const { return m_axis; }
-            size_t get_groups() const { return m_groups; }
-        private:
-            /// \brief Generates a shape required to permute the data
-            ///
-            /// \param data_shape - Shape of the original input data tensor
-            /// \return A 4D tensor to be used to reshape the input data before shuffling it
-            Shape get_pre_shuffle_shape(const Shape& data_shape) const;
+                int get_axis() const { return m_axis; }
+                size_t get_groups() const { return m_groups; }
+            private:
+                /// \brief Generates a shape required to permute the data
+                ///
+                /// \param data_shape - Shape of the original input data tensor
+                /// \return A 4D tensor to be used to reshape the input data before shuffling it
+                Shape get_pre_shuffle_shape(const Shape& data_shape) const;
 
-            int m_axis;
-            size_t m_groups;
-        };
+                int m_axis;
+                size_t m_groups;
+            };
+        }
+        using v0::ShuffleChannels;
     }
 }

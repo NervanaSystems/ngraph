@@ -27,10 +27,9 @@ namespace ngraph
         /// \brief Dequantize operation
         ///        Maps quantized input (q) to real output (r) using scale (s) and zero point (z):
         ///        r = (q - o) * s
-        class Dequantize : public ngraph::op::Op
+        class NGRAPH_API Dequantize : public ngraph::op::Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Dequantize", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a Dequantize operation
@@ -59,7 +58,7 @@ namespace ngraph
             void set_type(const element::Type& type) { m_type = type; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+                                           const OutputVector& deltas) override;
 
         private:
             element::Type m_type;

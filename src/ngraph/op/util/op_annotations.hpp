@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "ngraph/except.hpp"
+#include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
 {
@@ -34,7 +35,7 @@ namespace ngraph
             };
 
             /// \brief Base class for annotations added to graph ops
-            class OpAnnotations
+            class NGRAPH_API OpAnnotations
             {
             public:
                 virtual ~OpAnnotations() = default;

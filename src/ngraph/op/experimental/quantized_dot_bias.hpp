@@ -24,10 +24,9 @@ namespace ngraph
 {
     namespace op
     {
-        class QuantizedDotBias : public Op
+        class NGRAPH_API QuantizedDotBias : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"QuantizedDotBias", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             QuantizedDotBias() = default;

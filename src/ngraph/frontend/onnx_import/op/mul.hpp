@@ -16,11 +16,15 @@
 
 #pragma once
 
+#include <memory>
+
 #include "core/node.hpp"
+#include "default_opset.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/opsets/opset0.hpp"
 
 namespace ngraph
 {
@@ -39,8 +43,8 @@ namespace ngraph
                     NodeVector ng_inputs{ngraph::op::legacy_style_broadcast_for_binary_operation(
                         node.get_ng_inputs().at(0), node.get_ng_inputs().at(1), axis)};
 
-                    return {
-                        std::make_shared<ngraph::op::Multiply>(ng_inputs.at(0), ng_inputs.at(1))};
+                    return {std::make_shared<ngraph::opset0::Multiply>(ng_inputs.at(0),
+                                                                       ng_inputs.at(1))};
                 }
 
             } // namespace set_1
@@ -49,8 +53,8 @@ namespace ngraph
             {
                 inline NodeVector mul(const Node& node)
                 {
-                    return {std::make_shared<ngraph::op::v1::Multiply>(node.get_ng_inputs().at(0),
-                                                                       node.get_ng_inputs().at(1))};
+                    return {std::make_shared<default_opset::Multiply>(node.get_ng_inputs().at(0),
+                                                                      node.get_ng_inputs().at(1))};
                 }
 
             } // namespace set_7

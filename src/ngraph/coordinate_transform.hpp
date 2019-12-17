@@ -24,7 +24,7 @@
 
 namespace ngraph
 {
-    class CoordinateTransform
+    class NGRAPH_API CoordinateTransform
     {
     public:
         CoordinateTransform(const Shape& source_shape,
@@ -72,7 +72,7 @@ namespace ngraph
         const Strides& get_source_strides() const { return m_source_strides; }
         const AxisVector& get_source_axis_order() const { return m_source_axis_order; }
         const Strides& get_target_dilation_strides() const { return m_target_dilation_strides; }
-        class Iterator
+        class NGRAPH_API Iterator
         {
         public:
             Iterator(const Shape& target_shape, bool is_end = false);

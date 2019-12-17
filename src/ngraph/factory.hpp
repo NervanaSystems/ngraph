@@ -17,43 +17,84 @@
 #pragma once
 
 #include <functional>
-#include <map>
 #include <mutex>
+#include <unordered_map>
+
+#include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
 {
-    std::mutex& get_registry_mutex();
+    NGRAPH_API std::mutex& get_registry_mutex();
 
-    template <typename T>
+    /// \brief Registry of factories that can construct objects derived from BASE_TYPE
+    template <typename BASE_TYPE>
     class FactoryRegistry
     {
     public:
-        using Factory = std::function<T*()>;
-        using FactoryMap = std::map<decltype(T::type_info), Factory>;
+        using Factory = std::function<BASE_TYPE*()>;
+        using FactoryMap = std::unordered_map<typename BASE_TYPE::type_info_t, Factory>;
 
-        template <typename U>
-        void register_factory()
+        // \brief Get the default factory for DERIVED_TYPE. Specialize as needed.
+        template <typename DERIVED_TYPE>
+        static Factory get_default_factory()
         {
-            std::lock_guard<std::mutex> guard(get_registry_mutex());
-            m_factory_map[U::type_info] = []() { return new U(); };
+            return []() { return new DERIVED_TYPE(); };
         }
 
-        bool has_factory(const decltype(T::type_info) & info)
+        /// \brief Register a custom factory for type_info
+        void register_factory(const typename BASE_TYPE::type_info_t& type_info, Factory factory)
+        {
+            std::lock_guard<std::mutex> guard(get_registry_mutex());
+            m_factory_map[type_info] = factory;
+        }
+
+        /// \brief Register a custom factory for DERIVED_TYPE
+        template <typename DERIVED_TYPE>
+        void register_factory(Factory factory)
+        {
+            register_factory(DERIVED_TYPE::type_info, factory);
+        }
+
+        /// \brief Register the defualt constructor factory for DERIVED_TYPE
+        template <typename DERIVED_TYPE>
+        void register_factory()
+        {
+            register_factory<DERIVED_TYPE>(get_default_factory<DERIVED_TYPE>());
+        }
+
+        /// \brief Check to see if a factory is registered
+        bool has_factory(const typename BASE_TYPE::type_info_t& info)
         {
             std::lock_guard<std::mutex> guard(get_registry_mutex());
             return m_factory_map.find(info) != m_factory_map.end();
         }
 
-        T* create(const decltype(T::type_info) & info)
+        /// \brief Check to see if DERIVED_TYPE has a registered factory
+        template <typename DERIVED_TYPE>
+        bool has_factory()
+        {
+            return has_factory(DERIVED_TYPE::type_info);
+        }
+
+        /// \brief Create an instance for type_info
+        BASE_TYPE* create(const typename BASE_TYPE::type_info_t& type_info)
         {
             std::lock_guard<std::mutex> guard(get_registry_mutex());
-            auto it = m_factory_map.find(info);
+            auto it = m_factory_map.find(type_info);
             return it == m_factory_map.end() ? nullptr : it->second();
         }
-        static FactoryRegistry<T>& get();
+
+        /// \brief Create an instance using factory for DERIVED_TYPE
+        template <typename DERIVED_TYPE>
+        BASE_TYPE* create()
+        {
+            return create(DERIVED_TYPE::type_info);
+        }
+
+        /// \brief Get the factory for BASE_TYPE
+        static FactoryRegistry<BASE_TYPE>& get();
 
     protected:
-        // Need a Compare on type_info
         FactoryMap m_factory_map;
     };
 }

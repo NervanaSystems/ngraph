@@ -30,7 +30,7 @@ TEST(opset_transform, opset1_pad_upgrade_pass)
     auto pad_s1_result = f->get_results().at(0);
     auto node = pad_s1_result->input(0).get_source_output().get_node_shared_ptr();
     auto pad_v1_node = as_type_ptr<op::v1::Pad>(node);
-    EXPECT_TRUE(pad_v1_node);
+    ASSERT_TRUE(pad_v1_node);
     EXPECT_EQ(pad_v1_node->get_pad_mode(), pad_mode);
 
     EXPECT_EQ(pad_v1_node->get_pads_begin(), padding_below);
@@ -57,7 +57,7 @@ TEST(opset_transform, opset1_pad_downgrade_pass)
     auto pad_s0_result = f->get_results().at(0);
     auto node = pad_s0_result->input(0).get_source_output().get_node_shared_ptr();
     auto pad_v0_node = as_type_ptr<op::v0::Pad>(node);
-    EXPECT_TRUE(pad_v0_node);
+    ASSERT_TRUE(pad_v0_node);
     EXPECT_EQ(pad_v0_node->get_pad_mode(), pad_mode);
 
     EXPECT_EQ(pad_v0_node->get_padding_below(), CoordinateDiff({1, 2}));

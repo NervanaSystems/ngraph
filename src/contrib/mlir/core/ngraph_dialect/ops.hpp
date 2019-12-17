@@ -22,6 +22,7 @@
 #include <cstdarg>
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/OpDefinition.h"
+#include "mlir/IR/OpImplementation.h"
 #include "mlir/IR/OperationSupport.h"
 #include "mlir/IR/StandardTypes.h"
 #include "mlir/Support/STLExtras.h"

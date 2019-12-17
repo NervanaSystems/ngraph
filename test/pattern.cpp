@@ -144,8 +144,8 @@ public:
 
             size_t const_node_index =
                 m.get_match_root()->get_arguments().at(0) == pattern_map[pattern];
-            auto const_node = static_pointer_cast<op::Constant>(
-                m.get_match_root()->get_arguments().at(const_node_index));
+            auto const_node =
+                as_type_ptr<op::Constant>(m.get_match_root()->get_arguments().at(const_node_index));
             auto second_node = m.get_match_root()->get_arguments().at(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();

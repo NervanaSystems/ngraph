@@ -62,7 +62,7 @@ hardware-specific primitives; here they get matched via Intel® MKL-DNN.
 
 .. _figure-simple-compiler:
 
-.. figure:: ../../graphics/simple-compiler-passes.png
+.. figure:: ../../graphics/simple-compiler-passes.svg
    :width: 750px
    :alt: Simple kernel fusion
 
@@ -95,7 +95,7 @@ group before finally concatenating the result back together.
 
 .. _figure-mobilenet-gc:
 
-.. figure:: ../../graphics/mobilenet-group-conv.png
+.. figure:: ../../graphics/mobilenet-group-conv.svg
    :width: 700px
    :alt: MobileNet example
 

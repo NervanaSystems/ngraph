@@ -28,12 +28,11 @@ namespace ngraph
             /// \brief \p Skip allows users to specify unexpected nodes in a pattern
             /// and skip them if a predicate condition is satisfied.
             ///
-            class Skip : public Pattern
+            class NGRAPH_API Skip : public Pattern
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"patternSkip", 0};
-                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                const NodeTypeInfo& get_type_info() const override;
                 Skip(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)
                     : Pattern(NodeVector{arg}, predicate)
                 {

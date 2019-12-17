@@ -17,9 +17,10 @@
 #pragma once
 
 #include "core/node.hpp"
+#include "default_opset.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/opsets/opset0.hpp"
 
 namespace ngraph
 {
@@ -38,8 +39,8 @@ namespace ngraph
                     NodeVector ng_inputs{ngraph::op::legacy_style_broadcast_for_binary_operation(
                         node.get_ng_inputs().at(0), node.get_ng_inputs().at(1), axis)};
 
-                    return {
-                        std::make_shared<ngraph::op::Subtract>(ng_inputs.at(0), ng_inputs.at(1))};
+                    return {std::make_shared<ngraph::opset0::Subtract>(ng_inputs.at(0),
+                                                                       ng_inputs.at(1))};
                 }
 
             } // namespace set_1
@@ -48,10 +49,8 @@ namespace ngraph
             {
                 inline NodeVector sub(const Node& node)
                 {
-                    return {std::make_shared<ngraph::op::Subtract>(
-                        node.get_ng_inputs().at(0),
-                        node.get_ng_inputs().at(1),
-                        ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY))};
+                    return {std::make_shared<default_opset::Subtract>(node.get_ng_inputs().at(0),
+                                                                      node.get_ng_inputs().at(1))};
                 }
 
             } // namespace set_1

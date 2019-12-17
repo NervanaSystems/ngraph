@@ -339,3 +339,5 @@ bool PartialShape::all_non_negative() const
 
     return true;
 }
+
+NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<PartialShape>::type_info;

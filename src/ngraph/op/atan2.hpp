@@ -25,10 +25,9 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise full arctan operation
-        class Atan2 : public util::BinaryElementwiseArithmetic
+        class NGRAPH_API Atan2 : public util::BinaryElementwiseArithmetic
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Atan2", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             Atan2()
@@ -48,7 +47,7 @@ namespace ngraph
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+                                           const OutputVector& deltas) override;
         };
     }
 }

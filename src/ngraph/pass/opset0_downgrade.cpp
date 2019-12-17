@@ -16,91 +16,54 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <functional>
 #include <numeric>
 
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/ops.hpp"
+#include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/slice_plan.hpp"
 #include "ngraph/type.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 namespace
 {
-    enum class OP_TYPEID
+    template <typename OpV0, typename OpV1>
+    void op_cast_binary_elementwise_node(const shared_ptr<OpV1>& node)
     {
-#define NGRAPH_OP(a, b) a,
-//#include "ngraph/op/fused_op_tbl.hpp"
-//#include "ngraph/op/op_v0_tbl.hpp"
-#undef NGRAPH_OP
-#define NGRAPH_OP(a, b) a##_v1,
-#include "ngraph/op/op_v1_tbl.hpp"
-        OTHER
-    };
-#undef NGRAPH_OP
-}
-
-static OP_TYPEID get_typeid(shared_ptr<Node> node)
-{
-    static map<NodeTypeInfo, OP_TYPEID> typeid_map{
-#define NGRAPH_OP(a, b) {b::a::type_info, OP_TYPEID::a##_v1},
-#include "ngraph/op/op_v1_tbl.hpp"
-#undef NGRAPH_OP
-    };
-    OP_TYPEID type_id = OP_TYPEID::OTHER;
-    auto it = typeid_map.find(node->get_type_info());
-    if (it != typeid_map.end())
-    {
-        type_id = it->second;
+        const auto input_arg0 = node->input_value(0);
+        const auto input_arg1 = node->input_value(1);
+        const auto autob = node->get_autob();
+        auto replacement_node = make_shared<OpV0>(input_arg0, input_arg1, autob);
+        replace_node(node, replacement_node);
     }
-    return type_id;
-}
-// END mapping to OP_TYPEID
 
-template <typename OpV0, typename OpV1>
-void downgrade_binary_elementwise_node(const shared_ptr<Node>& node)
-{
-    const auto tmp = as_type_ptr<OpV1>(node);
-    const auto input_arg0 = node->input(0).get_source_output();
-    const auto input_arg1 = node->input(1).get_source_output();
-    const auto autob = tmp->get_autob();
-    auto replacement_node = make_shared<OpV0>(input_arg0, input_arg1, autob);
-    replace_node(node, replacement_node);
-}
-
-bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
-{
-    bool modified = false;
-
-// Not all enumeration values explicitly handled in switch
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wswitch-enum"
-#endif
-    switch (get_typeid(node))
+    // Default is that we didn nothing
+    bool op_cast(shared_ptr<Node> node) { return false; }
+    bool op_cast(shared_ptr<op::v1::Add> node)
     {
-    case OP_TYPEID::Add_v1:
-    {
-        downgrade_binary_elementwise_node<op::v0::Add, op::v1::Add>(node);
-        modified = true;
-        break;
+        op_cast_binary_elementwise_node<op::v0::Add, op::v1::Add>(node);
+        return true;
     }
-    case OP_TYPEID::AvgPool_v1:
-    {
-        const auto tmp = as_type_ptr<op::v1::AvgPool>(node);
 
-        auto const input_arg = node->input(0).get_source_output();
-        const auto ceil_mode = static_cast<bool>(tmp->get_rounding_type());
-        const auto include_padding_in_avg_computation = !tmp->get_exclude_pad();
-        const auto pad_type = tmp->get_auto_pad();
-        const auto padding_below = tmp->get_pads_begin();
-        const auto padding_above = tmp->get_pads_end();
-        const auto window_movement_strides = tmp->get_strides();
-        const auto window_shape = tmp->get_kernel();
+    bool op_cast(shared_ptr<op::v1::AvgPool> node)
+    {
+        auto const input_arg = node->input_value(0);
+        const auto ceil_mode = static_cast<bool>(node->get_rounding_type());
+        const auto include_padding_in_avg_computation = !node->get_exclude_pad();
+        const auto pad_type = node->get_auto_pad();
+        const auto padding_below = node->get_pads_begin();
+        const auto padding_above = node->get_pads_end();
+        const auto window_movement_strides = node->get_strides();
+        const auto window_shape = node->get_kernel();
 
         auto replacement_node = make_shared<op::v0::AvgPool>(input_arg,
                                                              window_shape,
@@ -111,22 +74,21 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
                                                              pad_type,
                                                              ceil_mode);
         replace_node(node, replacement_node);
-        modified = true;
-        break;
+        return true;
     }
-    case OP_TYPEID::AvgPoolBackprop_v1:
+
+    bool op_cast(shared_ptr<op::v1::AvgPoolBackprop> node)
     {
-        const auto tmp = as_type_ptr<op::v1::AvgPoolBackprop>(node);
         NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
         const auto forward_arg_shape =
             static_pointer_cast<op::Constant>(node->input_value(1).get_node_shared_ptr())
                 ->get_shape_val();
-        const auto delta = node->input(0).get_source_output();
-        const auto include_padding_in_avg_computation = !tmp->get_exclude_pad();
-        const auto padding_below = tmp->get_pads_begin();
-        const auto padding_above = tmp->get_pads_end();
-        const auto window_movement_strides = tmp->get_strides();
-        const auto window_shape = tmp->get_kernel();
+        const auto delta = node->input_value(0);
+        const auto include_padding_in_avg_computation = !node->get_exclude_pad();
+        const auto padding_below = node->get_pads_begin();
+        const auto padding_above = node->get_pads_end();
+        const auto window_movement_strides = node->get_strides();
+        const auto window_shape = node->get_kernel();
 
         auto replacement_node =
             make_shared<op::v0::AvgPoolBackprop>(forward_arg_shape,
@@ -137,216 +99,347 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
                                                  padding_above,
                                                  include_padding_in_avg_computation);
         replace_node(node, replacement_node);
-        modified = true;
-        break;
+        return true;
     }
-    case OP_TYPEID::Broadcast_v1:
+
+    bool op_cast(shared_ptr<op::v1::Broadcast> node)
     {
-        auto tmp = dynamic_cast<const op::v1::Broadcast*>(node.get());
-        const auto arg = node->input(0).get_source_output();
+        auto arg = node->input_value(0);
         NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
         auto target_shape =
             static_pointer_cast<op::Constant>(node->input_value(1).get_node_shared_ptr())
                 ->get_shape_val();
-        NGRAPH_CHECK(tmp->get_broadcast_axes().first);
+        NGRAPH_CHECK(node->get_broadcast_axes().first);
         auto replacement_node =
-            make_shared<op::v0::Broadcast>(arg, target_shape, tmp->get_broadcast_axes().second);
+            make_shared<op::v0::Broadcast>(arg, target_shape, node->get_broadcast_axes().second);
 
         replace_node(node, replacement_node);
-        modified = true;
-        break;
+        return true;
     }
-    case OP_TYPEID::Convolution_v1:
+
+    bool op_cast(shared_ptr<op::v1::Convolution> node)
     {
-        auto tmp = as_type_ptr<op::v1::Convolution>(node);
-        const auto data_arg = node->input(0).get_source_output();
-        const auto filters_arg = node->input(1).get_source_output();
-        const PartialShape& data_arg_pshape = node->get_input_partial_shape(0);
-        NGRAPH_CHECK(data_arg_pshape.rank().is_static(),
-                     "Unable to convert Convolution:v1 to Convolution:v0 if data argument "
-                     "rank is dynamic. Node: ",
-                     *node);
-        const size_t num_spatial_dims = static_cast<size_t>(data_arg_pshape.rank()) - 2;
+        const auto data_arg = node->input_value(0);
+        const auto filters_arg = node->input_value(1);
+        const auto strides = node->get_strides();
+        const size_t num_spatial_dims = strides.size();
         auto replacement_node = make_shared<op::v0::Convolution>(data_arg,
                                                                  filters_arg,
-                                                                 tmp->get_strides(),
-                                                                 tmp->get_dilations(),
-                                                                 tmp->get_pads_begin(),
-                                                                 tmp->get_pads_end(),
+                                                                 node->get_strides(),
+                                                                 node->get_dilations(),
+                                                                 node->get_pads_begin(),
+                                                                 node->get_pads_end(),
                                                                  Strides(num_spatial_dims, 1),
-                                                                 tmp->get_auto_pad());
+                                                                 node->get_auto_pad());
         replace_node(node, replacement_node);
-        modified = true;
-        break;
+        return true;
     }
-    case OP_TYPEID::ConvolutionBackpropData_v1:
+
+    bool op_cast(shared_ptr<op::v1::ConvolutionBackpropData> node)
     {
-        auto tmp = as_type_ptr<op::v1::ConvolutionBackpropData>(node);
-        NGRAPH_CHECK(node->input_value(2).get_node_shared_ptr()->is_constant());
-        auto data_batch_shape =
-            static_pointer_cast<op::Constant>(node->input_value(2).get_node_shared_ptr())
-                ->get_shape_val();
-        const auto filters_arg = node->input(0).get_source_output();
-        const auto delta_arg = node->input(1).get_source_output();
-        const PartialShape& delta_arg_pshape = node->get_input_partial_shape(1);
-        NGRAPH_CHECK(delta_arg_pshape.rank().is_static(),
+        auto output_shape_node =
+            as_type_ptr<op::Constant>(node->input_value(2).get_node_shared_ptr());
+        const auto data_arg = node->input(0).get_source_output();
+        const auto filters_arg = node->input(1).get_source_output();
+        const auto strides = node->get_strides();
+        NGRAPH_CHECK(output_shape_node,
                      "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
-                     "if delta argument rank is dynamic. Node: ",
+                     "if output_shape is not constant. Node: ",
                      *node);
-        const size_t num_spatial_dims = static_cast<size_t>(delta_arg_pshape.rank()) - 2;
+        const size_t num_spatial_dims = strides.size();
+
+        auto output_padding = node->get_output_padding();
+
+        bool is_op_valid = all_of(
+            output_padding.begin(), output_padding.end(), [](size_t value) { return value == 0; });
+
+        NGRAPH_CHECK(is_op_valid,
+                     "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
+                     "with output padding other than `0`. Node: ",
+                     *node);
+
+        auto data_pshape = data_arg.get_partial_shape();
+        auto filters_pshape = filters_arg.get_partial_shape();
+
+        NGRAPH_CHECK(data_pshape.rank().is_static() && data_pshape[0].is_static() &&
+                         filters_pshape.rank().is_static() && filters_pshape[1].is_static(),
+                     "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
+                     "if data shape N and filters shape C dimensions are not static. Node: ",
+                     *node);
+
+        // Add N and C dimenstions to output_shape
+        auto output_shape = output_shape_node->get_shape_val();
+        output_shape.insert(output_shape.begin(), static_cast<size_t>(filters_pshape[1]));
+        output_shape.insert(output_shape.begin(), static_cast<size_t>(data_pshape[0]));
+
         auto replacement_node =
-            make_shared<op::v0::ConvolutionBackpropData>(data_batch_shape,
+            make_shared<op::v0::ConvolutionBackpropData>(output_shape,
                                                          filters_arg,
-                                                         delta_arg,
-                                                         tmp->get_strides(),
-                                                         tmp->get_dilations(),
-                                                         tmp->get_pads_begin(),
-                                                         tmp->get_pads_end(),
+                                                         data_arg,
+                                                         node->get_strides(),
+                                                         node->get_dilations(),
+                                                         node->get_pads_begin(),
+                                                         node->get_pads_end(),
                                                          Strides(num_spatial_dims, 1));
         replace_node(node, replacement_node);
-        modified = true;
-        break;
+        return true;
     }
-    case OP_TYPEID::ConvolutionBackpropFilters_v1:
+
+    bool op_cast(shared_ptr<op::v1::ConvolutionBackpropFilters> node)
     {
-        auto tmp = as_type_ptr<op::v1::ConvolutionBackpropFilters>(node);
         NGRAPH_CHECK(node->input_value(2).get_node_shared_ptr()->is_constant());
         auto filters_shape =
             static_pointer_cast<op::Constant>(node->input_value(2).get_node_shared_ptr())
                 ->get_shape_val();
-        const auto data_arg = node->input(0).get_source_output();
-        const auto delta_arg = node->input(1).get_source_output();
-        const PartialShape& data_arg_pshape = node->get_input_partial_shape(0);
-        NGRAPH_CHECK(data_arg_pshape.rank().is_static(),
-                     "Unable to convert ConvolutionBackpropFilters:v1 to "
-                     "ConvolutionBackpropFilters:v0 if data argument rank is dynamic. Node: ",
-                     *node);
-        const size_t num_spatial_dims = static_cast<size_t>(data_arg_pshape.rank()) - 2;
+        const auto data_arg = node->input_value(0);
+        const auto delta_arg = node->input_value(1);
+        const auto strides = node->get_strides();
+        const size_t num_spatial_dims = strides.size();
         auto replacement_node =
             make_shared<op::v0::ConvolutionBackpropFilters>(data_arg,
                                                             filters_shape,
                                                             delta_arg,
-                                                            tmp->get_strides(),
-                                                            tmp->get_dilations(),
-                                                            tmp->get_pads_begin(),
-                                                            tmp->get_pads_end(),
+                                                            node->get_strides(),
+                                                            node->get_dilations(),
+                                                            node->get_pads_begin(),
+                                                            node->get_pads_end(),
                                                             Strides(num_spatial_dims, 1));
         replace_node(node, replacement_node);
-        modified = true;
-        break;
+        return true;
     }
-    case OP_TYPEID::Divide_v1:
+
+    bool op_cast(shared_ptr<op::v1::Divide> node)
     {
-        const auto tmp = as_type_ptr<op::v1::Divide>(node);
-        const auto input_arg0 = node->input(0).get_source_output();
-        const auto input_arg1 = node->input(1).get_source_output();
-        const auto autob = tmp->get_autob();
-        const bool pydiv = tmp->is_pythondiv();
+        const auto input_arg0 = node->input_value(0);
+        const auto input_arg1 = node->input_value(1);
+        const auto autob = node->get_autob();
+        const bool pydiv = node->is_pythondiv();
         auto replacement_node = make_shared<op::v0::Divide>(input_arg0, input_arg1, pydiv, autob);
         replace_node(node, replacement_node);
-        modified = true;
-        break;
+        return true;
     }
-    case OP_TYPEID::Reshape_v1:
+
+    bool op_cast(shared_ptr<op::v1::Reshape> node)
     {
-        auto tmp = as_type_ptr<op::v1::Reshape>(node);
-        auto replacement_node = make_shared<op::v0::DynReshape>(node->input(0).get_source_output(),
-                                                                node->input(1).get_source_output(),
-                                                                tmp->get_zero_flag());
+        shared_ptr<Node> replacement_node;
+
+        const auto target_shape_input = node->input_value(1).get_node_shared_ptr();
+        if (target_shape_input->is_constant() && node->get_output_partial_shape(0).is_static())
+        {
+            replacement_node = builder::reshape(node->input_value(0), node->get_output_shape(0));
+        }
+        else
+        {
+            replacement_node = make_shared<op::v0::DynReshape>(
+                node->input_value(0), node->input_value(1), node->get_special_zero());
+        }
+
         replace_node(node, replacement_node);
-        modified = true;
-        break;
+        return true;
     }
-    case OP_TYPEID::Equal_v1:
+
+    bool op_cast(shared_ptr<op::v1::Equal> node)
     {
-        downgrade_binary_elementwise_node<op::v0::Equal, op::v1::Equal>(node);
-        modified = true;
-        break;
+        op_cast_binary_elementwise_node<op::v0::Equal, op::v1::Equal>(node);
+        return true;
     }
-    case OP_TYPEID::GenerateMask_v1:
+
+    bool op_cast(shared_ptr<op::v1::Gather> node)
     {
-        auto tmp = dynamic_cast<const op::v1::GenerateMask*>(node.get());
+        auto axis_node = as_type_ptr<op::Constant>(node->input_value(2).get_node_shared_ptr());
+
+        NGRAPH_CHECK(axis_node,
+                     "Unable to convert Gather:v1 to Gather:v0 if axis is not constant. Node: ",
+                     *node);
+
+        NGRAPH_CHECK(
+            axis_node->get_element_type() == element::i64,
+            "Unable to convert Gather:v1 to Gather:v0 with axis other type than int64. Node: ",
+            *node);
+
+        int64_t axis = axis_node->get_vector<int64_t>()[0];
+
+        auto replacement_node =
+            make_shared<op::v0::Gather>(node->input_value(0), node->input_value(1), axis);
+        replace_node(node, replacement_node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::GenerateMask> node)
+    {
         NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
         auto mask_shape =
             static_pointer_cast<op::Constant>(node->input_value(1).get_node_shared_ptr())
                 ->get_shape_val();
-        auto seed = tmp->get_seed();
-        auto use_seed = tmp->get_use_seed();
-        auto probability = tmp->get_probability();
-        auto et = tmp->get_element_type();
+        auto seed = node->get_seed();
+        auto use_seed = node->get_use_seed();
+        auto probability = node->get_probability();
+        auto et = node->get_element_type();
 
         auto replacement_node = make_shared<op::v0::GenerateMask>(
-            node->input(0).get_source_output(), mask_shape, et, seed, probability, use_seed);
+            node->input_value(0), mask_shape, et, seed, probability, use_seed);
 
         replace_node(node, replacement_node);
-        modified = true;
-        break;
+        return true;
     }
-    case OP_TYPEID::Greater_v1:
-    {
-        downgrade_binary_elementwise_node<op::v0::Greater, op::v1::Greater>(node);
-        modified = true;
-        break;
-    }
-    case OP_TYPEID::GreaterEq_v1:
-    {
-        downgrade_binary_elementwise_node<op::v0::GreaterEq, op::v1::GreaterEq>(node);
-        modified = true;
-        break;
-    }
-    case OP_TYPEID::Less_v1:
-    {
-        downgrade_binary_elementwise_node<op::v0::Less, op::v1::Less>(node);
-        modified = true;
-        break;
-    }
-    case OP_TYPEID::LessEqual_v1:
-    {
-        downgrade_binary_elementwise_node<op::v0::LessEq, op::v1::LessEqual>(node);
-        modified = true;
-        break;
-    }
-    case OP_TYPEID::LogicalAnd_v1:
-    {
-        downgrade_binary_elementwise_node<op::v0::And, op::v1::LogicalAnd>(node);
-        modified = true;
-        break;
-    }
-    case OP_TYPEID::LogicalNot_v1:
-    {
-        replace_node(node, make_shared<op::v0::Not>(node->input(0).get_source_output()));
-        modified = true;
-        break;
-    }
-    case OP_TYPEID::LogicalOr_v1:
-    {
-        downgrade_binary_elementwise_node<op::v0::Or, op::v1::LogicalOr>(node);
-        modified = true;
-        break;
-    }
-    case OP_TYPEID::LogicalXor_v1:
-    {
-        downgrade_binary_elementwise_node<op::v0::Xor, op::v1::LogicalXor>(node);
-        modified = true;
-        break;
-    }
-    case OP_TYPEID::Maximum_v1:
-    {
-        downgrade_binary_elementwise_node<op::v0::Maximum, op::v1::Maximum>(node);
-        modified = true;
-        break;
-    }
-    case OP_TYPEID::MaxPool_v1:
-    {
-        auto tmp = as_type_ptr<op::v1::MaxPool>(node);
 
-        auto const input_arg = node->input(0).get_source_output();
-        auto ceil_mode = static_cast<bool>(tmp->get_rounding_type());
-        auto pad_type = tmp->get_auto_pad();
-        auto padding_below = tmp->get_pads_begin();
-        auto padding_above = tmp->get_pads_end();
-        auto window_movement_strides = tmp->get_strides();
-        auto window_shape = tmp->get_kernel();
+    bool op_cast(shared_ptr<op::v1::Greater> node)
+    {
+        op_cast_binary_elementwise_node<op::v0::Greater, op::v1::Greater>(node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::GreaterEqual> node)
+    {
+        op_cast_binary_elementwise_node<op::v0::GreaterEq, op::v1::GreaterEqual>(node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::GroupConvolution> node)
+    {
+        const auto data_arg = node->input_value(0);
+        const auto filters_arg = node->input_value(1);
+        const auto strides = node->get_strides();
+        const size_t num_spatial_dims = strides.size();
+        auto replacement_node = make_shared<op::GroupConvolution>(data_arg,
+                                                                  filters_arg,
+                                                                  node->get_strides(),
+                                                                  node->get_dilations(),
+                                                                  node->get_pads_begin(),
+                                                                  node->get_pads_end(),
+                                                                  Strides(num_spatial_dims, 1),
+                                                                  node->get_auto_pad());
+        replace_node(node, replacement_node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::GroupConvolutionBackpropData> node)
+    {
+        auto output_shape_input =
+            as_type_ptr<op::Constant>(node->input_value(2).get_node_shared_ptr());
+        const auto data_arg = node->input_value(0);
+        const auto filters_arg = node->input_value(1);
+        const auto strides = node->get_strides();
+        const auto dilations = node->get_dilations();
+
+        NGRAPH_CHECK(
+            output_shape_input,
+            "Unable to convert GroupConvolutionBackpropData:v1 to GroupConvolutionBackpropData:v0 "
+            "if output_shape is not constant. Node: ",
+            *node);
+
+        auto output_padding = node->get_output_padding();
+
+        bool is_op_valid = all_of(
+            output_padding.begin(), output_padding.end(), [](size_t value) { return value == 0; });
+
+        NGRAPH_CHECK(
+            is_op_valid,
+            "Unable to convert GroupConvolutionBackpropData:v1 to GroupConvolutionBackpropData:v0 "
+            "with output padding other than `0`. Node: ",
+            *node);
+
+        NGRAPH_CHECK(data_arg.get_partial_shape().is_static(),
+                     "Unable to convert GroupConvolution:1 to GroupConvolution:0"
+                     "with dynamic data shape. Node: ",
+                     *node);
+
+        NGRAPH_CHECK(filters_arg.get_partial_shape().is_static(),
+                     "Unable to convert GroupConvolution:1 to GroupConvolution:0"
+                     "with dynamic filters shape. Node: ",
+                     *node);
+
+        auto filters_shape = filters_arg.get_shape();
+        auto data_shape = data_arg.get_shape();
+        auto groups = filters_shape.at(0);
+        filters_shape[1] *= groups;
+        filters_shape.erase(filters_shape.begin());
+
+        auto reshaped_filters = builder::reshape(node->input_value(1), filters_shape);
+
+        auto pads_begin = node->get_pads_begin();
+        auto pads_end = node->get_pads_end();
+
+        auto auto_pad = node->get_auto_pad();
+
+        auto output_shape = output_shape_input->get_shape_val();
+        if (auto_pad == op::PadType::SAME_UPPER || auto_pad == op::PadType::SAME_LOWER)
+        {
+            infer_auto_padding(output_shape,
+                               Shape(filters_shape.begin() + 2, filters_shape.end()),
+                               strides,
+                               dilations,
+                               auto_pad,
+                               pads_begin,
+                               pads_end);
+        }
+
+        output_shape.insert(output_shape.begin(), filters_shape[1]);
+        output_shape.insert(output_shape.begin(), data_shape[0]);
+        auto replacement_node = make_shared<op::v0::GroupConvolutionBackpropData>(
+            op::Constant::create(data_arg.get_element_type(), output_shape, {0}),
+            reshaped_filters,
+            data_arg,
+            node->get_strides(),
+            node->get_dilations(),
+            pads_begin,
+            pads_end,
+            groups);
+        replace_node(node, replacement_node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::Less> node)
+    {
+        op_cast_binary_elementwise_node<op::v0::Less, op::v1::Less>(node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::LessEqual> node)
+    {
+        op_cast_binary_elementwise_node<op::v0::LessEq, op::v1::LessEqual>(node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::LogicalAnd> node)
+    {
+        op_cast_binary_elementwise_node<op::v0::And, op::v1::LogicalAnd>(node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::LogicalNot> node)
+    {
+        replace_node(node, make_shared<op::v0::Not>(node->input_value(0)));
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::LogicalOr> node)
+    {
+        op_cast_binary_elementwise_node<op::v0::Or, op::v1::LogicalOr>(node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::LogicalXor> node)
+    {
+        op_cast_binary_elementwise_node<op::v0::Xor, op::v1::LogicalXor>(node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::Maximum> node)
+    {
+        op_cast_binary_elementwise_node<op::v0::Maximum, op::v1::Maximum>(node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::MaxPool> node)
+    {
+        auto const input_arg = node->input_value(0);
+        auto ceil_mode = static_cast<bool>(node->get_rounding_type());
+        auto pad_type = node->get_auto_pad();
+        auto padding_below = node->get_pads_begin();
+        auto padding_above = node->get_pads_end();
+        auto window_movement_strides = node->get_strides();
+        auto window_shape = node->get_kernel();
 
         auto replacement_node = make_shared<op::v0::MaxPool>(input_arg,
                                                              window_shape,
@@ -356,25 +449,23 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
                                                              pad_type,
                                                              ceil_mode);
         replace_node(node, replacement_node);
-        modified = true;
-        break;
+        return true;
     }
-    case OP_TYPEID::MaxPoolBackprop_v1:
+
+    bool op_cast(shared_ptr<op::v1::MaxPoolBackprop> node)
     {
-        const auto tmp = as_type_ptr<op::v1::MaxPoolBackprop>(node);
+        const auto padding_below = node->get_pads_begin();
+        const auto padding_above = node->get_pads_end();
+        const auto window_movement_strides = node->get_strides();
+        const auto window_shape = node->get_kernel();
 
-        const auto padding_below = tmp->get_pads_begin();
-        const auto padding_above = tmp->get_pads_end();
-        const auto window_movement_strides = tmp->get_strides();
-        const auto window_shape = tmp->get_kernel();
-
-        const auto arg_forward = node->input(0).get_source_output();
-        const auto delta = node->input(1).get_source_output();
+        const auto arg_forward = node->input_value(0);
+        const auto delta = node->input_value(1);
 
         shared_ptr<Node> replacement_node;
         if (node->get_inputs().size() == 3)
         {
-            const auto result_forward = node->input(2).get_source_output();
+            const auto result_forward = node->input_value(2);
             replacement_node = make_shared<op::v0::MaxPoolBackprop>(arg_forward,
                                                                     delta,
                                                                     result_forward,
@@ -393,41 +484,40 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
                                                                     padding_above);
         }
         replace_node(node, replacement_node);
-        modified = true;
-        break;
+        return true;
     }
-    case OP_TYPEID::Minimum_v1:
+
+    bool op_cast(shared_ptr<op::v1::Minimum> node)
     {
-        downgrade_binary_elementwise_node<op::v0::Minimum, op::v1::Minimum>(node);
-        modified = true;
-        break;
+        op_cast_binary_elementwise_node<op::v0::Minimum, op::v1::Minimum>(node);
+        return true;
     }
-    case OP_TYPEID::Multiply_v1:
+
+    bool op_cast(shared_ptr<op::v1::Multiply> node)
     {
-        downgrade_binary_elementwise_node<op::v0::Multiply, op::v1::Multiply>(node);
-        modified = true;
-        break;
+        op_cast_binary_elementwise_node<op::v0::Multiply, op::v1::Multiply>(node);
+        return true;
     }
-    case OP_TYPEID::NotEqual_v1:
+
+    bool op_cast(shared_ptr<op::v1::NotEqual> node)
     {
-        downgrade_binary_elementwise_node<op::v0::NotEqual, op::v1::NotEqual>(node);
-        modified = true;
-        break;
+        op_cast_binary_elementwise_node<op::v0::NotEqual, op::v1::NotEqual>(node);
+        return true;
     }
-    case OP_TYPEID::OneHot_v1:
+
+    bool op_cast(shared_ptr<op::v1::OneHot> node)
     {
-        auto tmp = as_type_ptr<op::v1::OneHot>(node);
-        const auto indices = tmp->input_value(0).get_node_shared_ptr();
-        const auto depth = tmp->input_value(1).get_node_shared_ptr();
-        auto on_value = tmp->input_value(2).get_node_shared_ptr();
-        auto off_value = tmp->input_value(3).get_node_shared_ptr();
-        const auto axis = tmp->get_axis();
+        const auto indices = node->input_value(0).get_node_shared_ptr();
+        const auto depth = node->input_value(1).get_node_shared_ptr();
+        auto on_value = node->input_value(2).get_node_shared_ptr();
+        auto off_value = node->input_value(3).get_node_shared_ptr();
+        const auto axis = node->get_axis();
 
         NGRAPH_CHECK(depth->is_constant(), "depth input must be constant", *node);
         const auto const_depth = as_type_ptr<op::Constant>(depth);
         std::int64_t depth_value = const_depth->get_vector<std::int64_t>()[0];
 
-        const auto indices_shape = tmp->get_input_partial_shape(0);
+        const auto indices_shape = node->get_input_partial_shape(0);
         NGRAPH_CHECK(indices_shape.is_static(), "indices shape must be static", *node);
         auto output_shape = indices_shape.to_shape();
         output_shape.insert(output_shape.begin() + axis, depth_value);
@@ -443,35 +533,33 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         auto replacement_node = one_hot * (on_value - off_value) + off_value;
 
         replace_node(node, replacement_node);
-        modified = true;
-        break;
+        return true;
     }
-    case OP_TYPEID::Pad_v1:
+
+    bool op_cast(shared_ptr<op::v1::Pad> node)
     {
-        auto tmp = as_type_ptr<op::v1::Pad>(node);
-        const auto pad_arg = node->input(0).get_source_output();
-        const auto pad_value = node->input(3).get_source_output();
+        const auto pad_arg = node->input_value(0);
+        const auto pad_value = node->input_value(3);
         auto replacement_node = make_shared<op::v0::Pad>(
-            pad_arg, pad_value, tmp->get_pads_begin(), tmp->get_pads_end(), tmp->get_pad_mode());
+            pad_arg, pad_value, node->get_pads_begin(), node->get_pads_end(), node->get_pad_mode());
 
         replace_node(node, replacement_node);
-        modified = true;
-        break;
+        return true;
     }
-    case OP_TYPEID::Power_v1:
+
+    bool op_cast(shared_ptr<op::v1::Power> node)
     {
-        downgrade_binary_elementwise_node<op::v0::Power, op::v1::Power>(node);
-        modified = true;
-        break;
+        op_cast_binary_elementwise_node<op::v0::Power, op::v1::Power>(node);
+        return true;
     }
-    case OP_TYPEID::ReduceProd_v1:
+
+    bool op_cast(shared_ptr<op::v1::ReduceProd> node)
     {
-        auto tmp = as_type_ptr<op::v1::ReduceProd>(node);
-        auto replacement_node = make_shared<op::v0::Product>(node->input(0).get_source_output(),
-                                                             node->input(1).get_source_output());
-        if (tmp->get_keep_dims())
+        auto replacement_node =
+            make_shared<op::v0::Product>(node->input_value(0), node->input_value(1));
+        if (node->get_keep_dims())
         {
-            NGRAPH_CHECK(tmp->reduction_axes_constant(),
+            NGRAPH_CHECK(node->reduction_axes_constant(),
                          "Unable to convert ReduceProd:v1 to Product:v0 "
                          "if reduction axes are not constant (for keep_dims=true). Node: ",
                          *node);
@@ -482,7 +570,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
                          *node);
             const auto output_shape = output_pshape.to_shape();
             auto reshaped_output_shape = output_shape;
-            for (const auto& axis : tmp->get_reduction_axes())
+            for (const auto& axis : node->get_reduction_axes())
             {
                 reshaped_output_shape.insert(reshaped_output_shape.begin() + axis, 1);
             }
@@ -495,20 +583,19 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         {
             replace_node(node, replacement_node);
         }
-        modified = true;
-        break;
+        return true;
     }
-    case OP_TYPEID::Reverse_v1:
+
+    bool op_cast(shared_ptr<op::v1::Reverse> node)
     {
-        auto tmp = as_type_ptr<op::v1::Reverse>(node);
-        auto axes_node = tmp->input_value(1).get_node_shared_ptr();
+        auto axes_node = node->input_value(1).get_node_shared_ptr();
         NGRAPH_CHECK(axes_node->is_constant(),
                      "Unable to convert Reverse:v1 to Reverse:v0 "
                      "if reduction axes are not constant. Node: ",
                      *node);
         const auto axes_node_const = as_type_ptr<op::Constant>(axes_node);
         AxisSet axes{};
-        if (tmp->get_mode() == op::v1::Reverse::Mode::INDEX)
+        if (node->get_mode() == op::v1::Reverse::Mode::INDEX)
         {
             axes = axes_node_const->get_axis_vector_val();
         }
@@ -523,14 +610,22 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
                 }
             }
         }
-        auto replacement_node =
-            make_shared<op::v0::Reverse>(node->input(0).get_source_output(), axes);
+        auto replacement_node = make_shared<op::v0::Reverse>(node->input_value(0), axes);
 
         replace_node(node, replacement_node);
-        modified = true;
-        break;
+        return true;
     }
-    case OP_TYPEID::StridedSlice_v1:
+
+    bool op_cast(shared_ptr<op::v1::Select> node)
+    {
+        ngraph::pass::ImplicitBroadcastElimination().run_on_node(node);
+        auto replacement_node = make_shared<op::v0::Select>(
+            node->input_value(0), node->input_value(1), node->input_value(2));
+        replace_node(node, replacement_node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::StridedSlice> node)
     {
         auto convert_mask_to_axes = [](const std::vector<int64_t>& mask) {
             AxisSet axes{};
@@ -563,17 +658,15 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
                      "if begin, end or strides are not constant. Node: ",
                      *node);
 
-        const auto tmp = as_type_ptr<op::v1::StridedSlice>(node);
-
         SlicePlan p = make_slice_plan(input_data_pshape.to_shape(),
                                       begin_const->get_vector<int64_t>(),
                                       end_const->get_vector<int64_t>(),
                                       strides->get_vector<int64_t>(),
-                                      convert_mask_to_axes(tmp->get_begin_mask()),
-                                      convert_mask_to_axes(tmp->get_end_mask()),
-                                      convert_mask_to_axes(tmp->get_new_axis_mask()),
-                                      convert_mask_to_axes(tmp->get_shrink_axis_mask()),
-                                      convert_mask_to_axes(tmp->get_ellipsis_mask()));
+                                      convert_mask_to_axes(node->get_begin_mask()),
+                                      convert_mask_to_axes(node->get_end_mask()),
+                                      convert_mask_to_axes(node->get_new_axis_mask()),
+                                      convert_mask_to_axes(node->get_shrink_axis_mask()),
+                                      convert_mask_to_axes(node->get_ellipsis_mask()));
 
         shared_ptr<Node> replacement_node =
             make_shared<op::v0::Slice>(input_data,
@@ -595,30 +688,45 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         }
 
         replace_node(node, replacement_node);
-        break;
+        return true;
     }
-    case OP_TYPEID::Softmax_v1:
+
+    bool op_cast(shared_ptr<op::v1::Softmax> node)
     {
-        auto tmp = as_type_ptr<op::v1::Softmax>(node);
-        auto axis = tmp->get_axis();
+        auto axis = node->get_axis();
         auto data = node->input(0);
         auto data_shape = data.get_shape();
         std::vector<size_t> axes(data_shape.size() - axis);
         std::iota(std::begin(axes), std::end(axes), axis);
-        auto replacement_node =
-            make_shared<op::v0::Softmax>(node->input(0).get_source_output(), axes);
+        auto replacement_node = make_shared<op::v0::Softmax>(node->input_value(0), axes);
         replace_node(node, replacement_node);
-        modified = true;
-        break;
+        return true;
     }
-    case OP_TYPEID::ReduceSum_v1:
+
+    bool op_cast(shared_ptr<op::v1::Split> node)
     {
-        auto tmp = as_type_ptr<op::v1::ReduceSum>(node);
-        auto replacement_node = make_shared<op::v0::Sum>(node->input(0).get_source_output(),
-                                                         node->input(1).get_source_output());
-        if (tmp->get_keep_dims())
+        const auto num_splits = node->get_num_splits();
+
+        auto replacement_node =
+            make_shared<op::v0::Split>(node->input_value(0), node->input_value(1), num_splits);
+
+        replace_node(node, replacement_node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::Subtract> node)
+    {
+        op_cast_binary_elementwise_node<op::v0::Subtract, op::v1::Subtract>(node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::ReduceSum> node)
+    {
+        auto replacement_node =
+            make_shared<op::v0::Sum>(node->input_value(0), node->input_value(1));
+        if (node->get_keep_dims())
         {
-            NGRAPH_CHECK(tmp->reduction_axes_constant(),
+            NGRAPH_CHECK(node->reduction_axes_constant(),
                          "Unable to convert ReduceSum:v1 to Sum:v0 "
                          "if reduction axes are not constant (for keep_dims=true). Node: ",
                          *node);
@@ -629,7 +737,7 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
                          *node);
             const auto output_shape = output_pshape.to_shape();
             auto reshaped_output_shape = output_shape;
-            for (const auto& axis : tmp->get_reduction_axes())
+            for (const auto& axis : node->get_reduction_axes())
             {
                 reshaped_output_shape.insert(reshaped_output_shape.begin() + axis, 1);
             }
@@ -642,18 +750,17 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         {
             replace_node(node, replacement_node);
         }
-        modified = true;
-        break;
+        return true;
     }
-    case OP_TYPEID::TopK_v1:
+
+    bool op_cast(shared_ptr<op::v1::TopK> node)
     {
-        const auto tmp = as_type_ptr<op::v1::TopK>(node);
-        const auto axis = tmp->get_axis();
-        const auto sort_type = tmp->get_sort_type();
-        const auto index_elem_type = tmp->get_index_element_type();
+        const auto axis = node->get_axis();
+        const auto sort_type = node->get_sort_type();
+        const auto index_elem_type = node->get_index_element_type();
 
         bool compute_max;
-        switch (tmp->get_mode())
+        switch (node->get_mode())
         {
         case op::v1::TopK::Mode::MAX: compute_max = true; break;
         case op::v1::TopK::Mode::MIN: compute_max = false; break;
@@ -669,13 +776,57 @@ bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
         // values output will be 0, indices 1
         vector<int64_t> output_order{1, 0};
         replace_node(node, replacement_node, output_order);
-        modified = true;
-        break;
+        return true;
     }
-    default: break;
+
+    bool op_cast(shared_ptr<op::v1::VariadicSplit> node)
+    {
+        const auto split_lengths = node->input_value(2).get_node_shared_ptr();
+
+        NGRAPH_CHECK(split_lengths->is_constant(),
+                     "Unable to convert VariadicSplit:v1 to Split:v0 "
+                     "if 'split_lengths' input is not constant. Node: ",
+                     *node);
+
+        const auto splits = as_type_ptr<op::Constant>(split_lengths)->get_vector<int64_t>();
+        const std::vector<size_t> splits_unsigned{splits.begin(), splits.end()};
+
+        auto replacement_node =
+            make_shared<op::v0::Split>(node->input_value(0), node->input_value(1), splits_unsigned);
+
+        replace_node(node, replacement_node);
+        return true;
     }
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
+
+    using DispatchMap = map<NodeTypeInfo, std::function<bool(shared_ptr<Node> node)>>;
+
+    template <typename T>
+    bool op_cast_thunk(shared_ptr<Node> node)
+    {
+        return op_cast(as_type_ptr<T>(node));
+    }
+
+    DispatchMap& get_dispatch_map()
+    {
+        static DispatchMap dispatch_map{
+#define NGRAPH_OP(NAME, NAMESPACE) {NAMESPACE::NAME::type_info, op_cast_thunk<NAMESPACE::NAME>},
+#include "ngraph/opsets/opset1_tbl.hpp"
+            NGRAPH_OP(AvgPoolBackprop, op::v1) NGRAPH_OP(ConvolutionBackpropFilters, op::v1)
+                NGRAPH_OP(GenerateMask, op::v1) NGRAPH_OP(MaxPoolBackprop, op::v1)
+#undef NGRAPH_OP
+        };
+        return dispatch_map;
+    }
+} // namespace
+
+bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
+{
+    bool modified = false;
+    auto& dispatch_map = get_dispatch_map();
+    auto it = dispatch_map.find(node->get_type_info());
+    if (it != dispatch_map.end())
+    {
+        modified = it->second(node);
+    }
     return modified;
 }

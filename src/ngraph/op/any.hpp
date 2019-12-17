@@ -23,10 +23,9 @@ namespace ngraph
     namespace op
     {
         /// \brief Logical "any" reduction operation.
-        class Any : public util::LogicalReduction
+        class NGRAPH_API Any : public util::LogicalReduction
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Any", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs an "any" reduction operation.

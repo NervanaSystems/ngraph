@@ -18,8 +18,11 @@
 
 #include <Eigen/Dense>
 #include <cmath>
-#include <omp.h>
 #include <utility>
+
+#ifdef PARALLEL
+#include <omp.h>
+#endif
 
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/shape_util.hpp"

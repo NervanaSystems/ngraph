@@ -25,10 +25,9 @@ namespace ngraph
     {
         namespace v1
         {
-            class ReduceMean : public util::ArithmeticReductionKeepDims
+            class NGRAPH_API ReduceMean : public util::ArithmeticReductionKeepDims
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ReduceMean", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ReduceMean() = default;

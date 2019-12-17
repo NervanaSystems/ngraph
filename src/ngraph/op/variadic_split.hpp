@@ -28,10 +28,9 @@ namespace ngraph
         {
             /// \brief VariadicSplit operation splits an input tensor into pieces along some axis.
             /// The pieces may have variadic lengths depending on "split_lengths" attribute.
-            class VariadicSplit : public Op
+            class NGRAPH_API VariadicSplit : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"VariadicSplit", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a variadic split operation.

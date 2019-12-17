@@ -57,8 +57,7 @@ static void test_allreduce_common(reduction::Type reduce_type)
         {
         case reduction::Type::SUM:
             copy_data(a, v);
-            std::transform(
-                v.begin(), v.end(), v.begin(), std::bind1st(std::multiplies<float>(), comm_size));
+            std::transform(v.begin(), v.end(), v.begin(), [=](float x) { return x * comm_size; });
             break;
         case reduction::Type::PROD:
             copy_data(a, v);

@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace pass
     {
-        class LikeReplacement : public FunctionPass
+        class NGRAPH_API LikeReplacement : public FunctionPass
         {
         public:
             bool run_on_function(std::shared_ptr<ngraph::Function> function) override;

@@ -18,10 +18,12 @@ include(ExternalProject)
 
 # Includes blas 3.8.0 in mkldnn
 set(NGRAPH_MKLDNN_SHORT_VERSION 1)
-set(NGRAPH_MKLDNN_FULL_VERSION 1.0.0.0)
-set(NGRAPH_MKLDNN_VERSION "v1.0")
-set(NGRAPH_MKLDNN_SUB_VERSION "2019.0.5.20190502")
-set(NGRAPH_MKLDNN_GIT_TAG "553c23f")
+set(NGRAPH_MKLDNN_FULL_VERSION 1.0.4.0)
+set(NGRAPH_MKLDNN_MKLML_ASSET_VERSION "v0.21")
+set(NGRAPH_MKLDNN_VERSION "v1.0.4")
+set(NGRAPH_MKLDNN_MKLML_VERSION "2019.0.5.20190502")
+set(NGRAPH_MKLDNN_MKLML_WIN32_VERSION "2020.0.20190813")
+set(NGRAPH_MKLDNN_GIT_TAG "v1.0.4")
 
 #------------------------------------------------------------------------------
 # Fetch and install MKL-DNN
@@ -88,8 +90,9 @@ endif()
 
 # This section sets up MKL as an external project to be used later by MKLDNN
 
-set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/v0.19-rc/")
-set(MKLVERSION ${NGRAPH_MKLDNN_SUB_VERSION})
+set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/${NGRAPH_MKLDNN_MKLML_ASSET_VERSION}/")
+set(MKLVERSION ${NGRAPH_MKLDNN_MKLML_VERSION})
+set(MKLWIN32VERSION ${NGRAPH_MKLDNN_MKLML_WIN32_VERSION})
 if (LINUX)
     set(MKLPACKAGE "mklml_lnx_${MKLVERSION}.tgz")
     set(MKL_SHA1_HASH 6ab490f0b358124338d04ee9383c3cbc536969d8)
@@ -97,8 +100,8 @@ elseif (APPLE)
     set(MKLPACKAGE "mklml_mac_${MKLVERSION}.tgz")
     set(MKL_SHA1_HASH a1c42af04f990b0e515a1c31946424b2e68fccc9)
 elseif (WIN32)
-    set(MKLPACKAGE "mklml_win_${MKLVERSION}.zip")
-    set(MKL_SHA1_HASH 9d6ff4d5a486689338158093e96c43ee442b65f0)
+    set(MKLPACKAGE "mklml_win_${MKLWIN32VERSION}.zip")
+    set(MKL_SHA1_HASH cc117093e658d50a8e4e3d1cf192c300b6bac0fc)
 endif()
 set(MKL_LIBS ${MKLML_LIB} ${OMP_LIB})
 set(MKLURL ${MKLURLROOT}${MKLPACKAGE})
@@ -207,6 +210,8 @@ if (WIN32)
             ${NGRAPH_FORWARD_CMAKE_ARGS}
             -DWITH_TEST=FALSE
             -DWITH_EXAMPLE=FALSE
+            -DMKLDNN_BUILD_TESTS=FALSE
+            -DMKLDNN_BUILD_EXAMPLES=FALSE
             -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
             -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
             -DMKLROOT=${MKL_ROOT}
@@ -240,6 +245,8 @@ else()
             ${NGRAPH_FORWARD_CMAKE_ARGS}
             -DWITH_TEST=FALSE
             -DWITH_EXAMPLE=FALSE
+            -DMKLDNN_BUILD_TESTS=FALSE
+            -DMKLDNN_BUILD_EXAMPLES=FALSE
             -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
             ${MKLDNN_RPATH}
             -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON

@@ -228,7 +228,7 @@ shared_ptr<op::Constant> fold_constant_binary_comparison(shared_ptr<op::Constant
                                                 greater_eq_v0_node->get_autob());
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
-        else if (auto greater_eq_v1_node = as_type_ptr<op::v1::GreaterEq>(binary))
+        else if (auto greater_eq_v1_node = as_type_ptr<op::v1::GreaterEqual>(binary))
         {
             vector<char> out_vec(shape_size(out_shape));
             runtime::reference::greater_eq<Tin>(a->get_data_ptr<Tin>(),
@@ -551,7 +551,7 @@ bool is_supported_binary_op(std::shared_ptr<Node> n)
         is_type<op::v0::Power>(n) || is_type<op::v1::Power>(n) || is_type<op::v0::Equal>(n) ||
         is_type<op::v1::Equal>(n) || is_type<op::v0::NotEqual>(n) || is_type<op::v1::NotEqual>(n) ||
         is_type<op::v0::Greater>(n) || is_type<op::v1::Greater>(n) ||
-        is_type<op::v0::GreaterEq>(n) || is_type<op::v1::GreaterEq>(n) ||
+        is_type<op::v0::GreaterEq>(n) || is_type<op::v1::GreaterEqual>(n) ||
         is_type<op::v0::Less>(n) || is_type<op::v1::Less>(n) || is_type<op::v0::LessEq>(n) ||
         is_type<op::v1::LessEqual>(n) || is_type<op::v0::Maximum>(n) ||
         is_type<op::v1::Maximum>(n) || is_type<op::v0::Minimum>(n) || is_type<op::v1::Minimum>(n) ||

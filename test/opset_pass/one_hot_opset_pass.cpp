@@ -27,10 +27,8 @@ TEST(opset_transform, opset1_one_hot_upgrade_pass)
 
     const auto pass_replacement_node =
         f->get_result()->input(0).get_source_output().get_node_shared_ptr();
-    const auto one_hot_v1 = static_pointer_cast<op::v1::OneHot>(pass_replacement_node);
-
-    EXPECT_EQ(one_hot_v1->description(), "OneHot");
-    EXPECT_EQ(one_hot_v1->get_version(), 1);
+    const auto one_hot_v1 = as_type_ptr<op::v1::OneHot>(pass_replacement_node);
+    ASSERT_TRUE(one_hot_v1);
     EXPECT_EQ(one_hot_v1->get_axis(), one_hot_axis);
 
     auto one_hot_v1_depth =
@@ -62,11 +60,10 @@ TEST(opset_transform, opset1_one_hot_downgrade_pass)
     pass_manager.register_pass<pass::Opset0Downgrade>();
     pass_manager.run_passes(f);
 
-    const auto pass_replacement_node =
-        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
-    const auto one_hot_v0 = static_pointer_cast<op::v0::OneHot>(pass_replacement_node);
+    const auto pass_replacement_node = f->get_result()->input_value(0).get_node_shared_ptr();
+    ASSERT_FALSE(is_type<op::v1::OneHot>(pass_replacement_node));
 
-    EXPECT_EQ(one_hot_v0->get_shape(), (Shape{1, 3, 2, 4, 3}));
+    EXPECT_EQ(pass_replacement_node->get_shape(), (Shape{1, 3, 2, 4, 3}));
 }
 
 TEST(opset_transform, opset1_one_hot_downgrade_pass_depth_not_constant)

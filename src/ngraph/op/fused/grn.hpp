@@ -25,31 +25,34 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief  Global Response Normalization with L2 norm (across channels only).
-        ///
-        class GRN : public ngraph::op::util::FusedOp
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"GRN", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            GRN() = default;
-            /// \brief      Constructs a GRN operation.
+            /// \brief  Global Response Normalization with L2 norm (across channels only).
             ///
-            /// \param      data  - Node producing the input tensor
-            /// \param      bias  - The bias added to the variance.
-            ///
-            GRN(const Output<Node>& data, float bias);
+            class NGRAPH_API GRN : public ngraph::op::util::FusedOp
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"GRN", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                GRN() = default;
+                /// \brief      Constructs a GRN operation.
+                ///
+                /// \param      data  - Node producing the input tensor
+                /// \param      bias  - The bias added to the variance.
+                ///
+                GRN(const Output<Node>& data, float bias);
 
-            float get_bias() const { return m_bias; }
-            virtual void pre_validate_and_infer_types() override;
-            virtual NodeVector decompose_op() const override;
+                float get_bias() const { return m_bias; }
+                virtual void pre_validate_and_infer_types() override;
+                virtual NodeVector decompose_op() const override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-        protected:
-            float m_bias = 1.0f;
-        };
+            protected:
+                float m_bias = 1.0f;
+            };
+        }
+        using v0::GRN;
     }
 }

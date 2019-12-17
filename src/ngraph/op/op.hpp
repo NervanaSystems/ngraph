@@ -25,7 +25,7 @@ namespace ngraph
     namespace op
     {
         /// Root of all actual ops
-        class Op : public Node
+        class NGRAPH_API Op : public Node
         {
         public:
             virtual bool is_op() const override { return true; }

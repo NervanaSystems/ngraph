@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "ngraph/attribute_adapter.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/shape.hpp"
 
@@ -28,31 +29,18 @@ namespace ngraph
     class Coordinate : public std::vector<size_t>
     {
     public:
-        Coordinate() {}
-        Coordinate(const std::initializer_list<size_t>& axes)
-            : std::vector<size_t>(axes)
-        {
-        }
+        NGRAPH_API Coordinate();
+        NGRAPH_API Coordinate(const std::initializer_list<size_t>& axes);
 
-        Coordinate(const Shape& shape)
-            : std::vector<size_t>(static_cast<const std::vector<size_t>&>(shape))
-        {
-        }
+        NGRAPH_API Coordinate(const Shape& shape);
 
-        Coordinate(const std::vector<size_t>& axes)
-            : std::vector<size_t>(axes)
-        {
-        }
+        NGRAPH_API Coordinate(const std::vector<size_t>& axes);
 
-        Coordinate(const Coordinate& axes)
-            : std::vector<size_t>(axes)
-        {
-        }
+        NGRAPH_API Coordinate(const Coordinate& axes);
 
-        Coordinate(size_t n, size_t initial_value = 0)
-            : std::vector<size_t>(n, initial_value)
-        {
-        }
+        NGRAPH_API Coordinate(size_t n, size_t initial_value = 0);
+
+        NGRAPH_API ~Coordinate();
 
         template <class InputIterator>
         Coordinate(InputIterator first, InputIterator last)
@@ -60,17 +48,25 @@ namespace ngraph
         {
         }
 
-        Coordinate& operator=(const Coordinate& v)
+        NGRAPH_API Coordinate& operator=(const Coordinate& v);
+
+        NGRAPH_API Coordinate& operator=(Coordinate&& v) noexcept;
+    };
+
+    template <>
+    class NGRAPH_API AttributeAdapter<Coordinate> : public ValueReference<Coordinate>,
+                                                    public ValueAccessor<std::vector<uint64_t>>
+    {
+    public:
+        AttributeAdapter(Coordinate& value)
+            : ValueReference<Coordinate>(value)
         {
-            static_cast<std::vector<size_t>*>(this)->operator=(v);
-            return *this;
         }
 
-        Coordinate& operator=(Coordinate&& v)
-        {
-            static_cast<std::vector<size_t>*>(this)->operator=(v);
-            return *this;
-        }
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<Coordinate>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::vector<uint64_t>& get() override;
+        void set(const std::vector<uint64_t>& value) override;
     };
 
     std::ostream& operator<<(std::ostream& s, const Coordinate& coordinate);

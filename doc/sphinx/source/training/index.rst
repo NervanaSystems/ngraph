@@ -1,5 +1,6 @@
 .. training/index.rst:
 
+.. _training:
 
 Distributed Training
 ####################

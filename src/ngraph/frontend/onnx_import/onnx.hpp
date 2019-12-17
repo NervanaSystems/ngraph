@@ -37,6 +37,7 @@ namespace ngraph
         /// \param version  version of the operator (opset),
         /// \param domain  domain the operator belongs to,
         /// \param fn       function providing the implementation of the operator.
+        NGRAPH_API
         void register_operator(const std::string& name,
                                std::int64_t version,
                                const std::string& domain,
@@ -49,6 +50,7 @@ namespace ngraph
         ///
         /// \return     The set containing names of supported operators.
         ///
+        NGRAPH_API
         std::set<std::string> get_supported_operators(std::int64_t version,
                                                       const std::string& domain);
 
@@ -60,6 +62,7 @@ namespace ngraph
         ///
         /// \return     True if operator is supported, False otherwise.
         ///
+        NGRAPH_API
         bool is_operator_supported(const std::string& op_name,
                                    std::int64_t version,
                                    const std::string& domain = "ai.onnx");
@@ -73,6 +76,7 @@ namespace ngraph
         ///                   and providing through this parameters is invalid (the weights from
         ///                   the model  will take precedence).
         /// \return The function returns a nGraph function representing single output from graph.
+        NGRAPH_API
         std::shared_ptr<Function> import_onnx_model(std::istream& sin, const Weights& weights = {});
 
         /// \brief Convert an ONNX model to nGraph functions
@@ -84,6 +88,7 @@ namespace ngraph
         ///                   and providing through this parameters is invalid (the weights from
         ///                   the model  will take precedence).
         /// \return The function returns a nGraph function representing single output from graph.
+        NGRAPH_API
         std::shared_ptr<Function> import_onnx_model(const std::string& filename,
                                                     const Weights& weights = {});
 

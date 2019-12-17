@@ -19,13 +19,16 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
-#include "ngraph/op/slice.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "slice.hpp"
 #include "utils/common.hpp"
 
-static inline int64_t get_valid_array_idx(int64_t idx, int64_t last_idx)
+namespace
 {
-    return (idx >= 0) ? std::min(idx, last_idx) : std::max<int64_t>(0, last_idx + idx);
+    int64_t get_valid_array_idx(int64_t idx, int64_t last_idx)
+    {
+        return (idx >= 0) ? std::min(idx, last_idx) : std::max<int64_t>(0, last_idx + idx);
+    }
 }
 
 namespace ngraph
@@ -69,7 +72,8 @@ namespace ngraph
                         }
                     }
 
-                    return {std::make_shared<ngraph::op::Slice>(data, lower_bounds, upper_bounds)};
+                    return {
+                        std::make_shared<ngraph::opset0::Slice>(data, lower_bounds, upper_bounds)};
                 }
 
             } // namespace set_1

@@ -45,6 +45,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
+#include "ngraph/op/cum_sum.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
@@ -944,10 +945,26 @@ namespace ngraph
                          dot->get_reduction_axes_count() == 1)
                 {
                     // Emit an MKL SGEMM call if possible
-                    if (args[0].get_element_type() == element::f32)
+                    auto element_type = args[0].get_element_type();
+                    if (element_type == element::f32)
                     {
                         writer.block_begin();
                         writer << "cblas::cblas_sgemm("
+                               << "cblas::Layout::RowMajor, "
+                               << "cblas::Transpose::None, "
+                               << "cblas::Transpose::None, " << arg0_shape[0] << ", "
+                               << arg1_shape[1] << ", " << arg0_shape[1] << ",\n"
+                               << "        1.0f, " << args[0].get_name() << ", "
+                               << max(1UL, arg0_shape[1]) << ", " << args[1].get_name() << ", "
+                               << max(1UL, arg1_shape[1]) << ", 0.0f,\n"
+                               << "        " << out[0].get_name() << ", " << max(1UL, arg1_shape[1])
+                               << ");\n";
+                        writer.block_end();
+                    }
+                    else if (element_type == element::f64)
+                    {
+                        writer.block_begin();
+                        writer << "cblas::cblas_dgemm("
                                << "cblas::Layout::RowMajor, "
                                << "cblas::Transpose::None, "
                                << "cblas::Transpose::None, " << arg0_shape[0] << ", "
@@ -4602,6 +4619,22 @@ namespace ngraph
 
                     writer.block_end();
                 }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::CumSum)
+            {
+                const ngraph::op::CumSum* cumsum = static_cast<const ngraph::op::CumSum*>(node);
+                writer.block_begin();
+                writer << "reference::cumsum<" << args[0].get_element_type().c_type_string();
+                writer << ",           " << args[1].get_element_type().c_type_string() << ">(";
+                writer << "            " << args[0].get_name() << ",\n";
+                writer << "            " << args[1].get_name() << ",\n";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            {" << join(args[0].get_shape()) << "},\n";
+                writer << "            " << cumsum->is_exclusive() << ",\n";
+                writer << "            " << cumsum->is_reverse() << ");\n";
+                writer.block_end();
             }
 
 #undef TI

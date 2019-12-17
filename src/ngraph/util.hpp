@@ -30,6 +30,7 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
+
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
@@ -199,6 +200,7 @@ namespace ngraph
     T apply_permutation(T input, ngraph::AxisVector order);
 
     AxisVector get_default_order(size_t rank);
+    NGRAPH_API
     AxisVector get_default_order(const Shape& shape);
 
     AxisVector get_permutation_to_default_order(const AxisVector& axis_order);

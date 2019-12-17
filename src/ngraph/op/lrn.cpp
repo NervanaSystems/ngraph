@@ -64,13 +64,6 @@ void op::LRN::validate_and_infer_types()
     const PartialShape& input_shape = get_input_partial_shape(0);
     const auto input_shape_rank = input_shape.rank();
 
-    NODE_VALIDATION_CHECK(this,
-                          input_shape_rank.is_dynamic() ||
-                              static_cast<size_t>(input_shape.rank()) >= 3,
-                          "Argument must have rank >= 3 (argument shape: ",
-                          input_shape,
-                          ").");
-
     PartialShape axes_shape{PartialShape::dynamic()};
     if (get_input_partial_shape(1).is_static())
     {
@@ -86,7 +79,8 @@ void op::LRN::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(
         this,
-        static_cast<size_t>(axes_shape[0]) <= static_cast<size_t>(input_shape_rank),
+        axes_shape.is_dynamic() || input_shape_rank.is_dynamic() ||
+            static_cast<size_t>(axes_shape[0]) <= static_cast<size_t>(input_shape_rank),
         "Number of elements of axes must be >= 0 and <= argument rank (axes_shape[0]: ",
         axes_shape[0],
         ").");
@@ -123,7 +117,8 @@ shared_ptr<Node> op::LRN::copy_with_new_args(const NodeVector& new_args) const
     return make_shared<op::LRN>(new_args.at(0), new_args.at(1), m_alpha, m_beta, m_bias, m_size);
 }
 
-void op::LRN::generate_adjoints(autodiff::Adjoints& /* adjoints */, const NodeVector& /* deltas */)
+void op::LRN::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                const OutputVector& /* deltas */)
 {
     throw ngraph_error("NYI");
 }

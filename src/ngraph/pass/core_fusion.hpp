@@ -26,7 +26,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::CoreFusion : public ngraph::pass::GraphRewrite
+class NGRAPH_API ngraph::pass::CoreFusion : public ngraph::pass::GraphRewrite
 {
 public:
     CoreFusion(FusionTypeMask fusions = FusionType::REGULAR_FUSIONS)

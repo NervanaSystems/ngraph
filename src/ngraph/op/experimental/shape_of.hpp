@@ -22,21 +22,24 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Operation that returns the shape of its input argument as a tensor.
-        class ShapeOf : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"ShapeOf", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            ShapeOf() = default;
-            /// \brief Constructs a shape-of operation.
-            ShapeOf(const Output<Node>& arg);
+            /// \brief Operation that returns the shape of its input argument as a tensor.
+            class NGRAPH_API ShapeOf : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"ShapeOf", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                ShapeOf() = default;
+                /// \brief Constructs a shape-of operation.
+                ShapeOf(const Output<Node>& arg);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            void validate_and_infer_types() override;
-        };
+                void validate_and_infer_types() override;
+            };
+        }
+        using v0::ShapeOf;
     }
 }

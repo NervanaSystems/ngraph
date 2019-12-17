@@ -25,7 +25,7 @@ namespace ngraph
 {
     namespace pass
     {
-        class FusedOpDecomposition : public NodePass
+        class NGRAPH_API FusedOpDecomposition : public NodePass
         {
         public:
             /// \brief  Function signature type for callback used to check whether provided node

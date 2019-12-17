@@ -72,16 +72,18 @@ namespace ngraph
         class Adjoints;
     }
 
+    NGRAPH_API
     std::string node_validation_failure_loc_string(const Node* node);
 
     const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
                                                          size_t i);
+    NGRAPH_API
     const NodeVector& check_single_output_args(const NodeVector& args);
 
     const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
                                                          size_t i);
-    const NodeVector& check_single_output_args(const NodeVector& args);
 
+    NGRAPH_API
     OutputVector as_output_vector(const NodeVector& args);
     NodeVector as_node_vector(const OutputVector& values);
     /// Returns a ResultVector referencing values.
@@ -90,12 +92,10 @@ namespace ngraph
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
 
-    using NodeTypeInfo = DiscreteTypeInfo;
-
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// or a (possibly empty) tuple of values.
-    class Node : public std::enable_shared_from_this<Node>
+    class NGRAPH_API Node : public std::enable_shared_from_this<Node>
     {
         // For access to generate_adjoints.
         friend class autodiff::Adjoints;
@@ -117,6 +117,8 @@ namespace ngraph
 
         // Called in constructors during transition
         void constructor_validate_and_infer_types();
+
+        using type_info_t = DiscreteTypeInfo;
 
     protected:
         std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args(
@@ -145,18 +147,17 @@ namespace ngraph
         /// \param output_size Number of outputs for this node
         Node(const NodeVector& arguments, size_t output_size = 1);
 
-        virtual void generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                       const NodeVector& /* deltas */)
+        // For back-compatibility
+        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
+        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
         {
+            generate_adjoints(adjoints, as_node_vector(deltas));
         }
         /// \brief Moves nodes that would be deleted from inputs to nodes to avoid stack overflows
         /// on deep networks.
         void safe_delete(NodeVector& nodes, bool recurse);
 
     public:
-        NGRAPH_API
-        static constexpr NodeTypeInfo type_info{"Node", 0};
-
         virtual ~Node();
 
         virtual bool visit_attributes(AttributeVisitor& visitor) { return false; }
@@ -178,17 +179,8 @@ namespace ngraph
         /// Returns the NodeTypeInfo for the node's class.
         /// During transition to type_info, returns a dummy type_info for Node if the class
         /// has not been updated yet.
-        virtual const NodeTypeInfo& get_type_info() const = 0;
-        virtual const char* get_type_name() const
-        {
-            auto& info = get_type_info();
-            if (is_type<Node>(this))
-            {
-                // Transitional definition
-                return description().c_str();
-            }
-            return info.name;
-        }
+        virtual const type_info_t& get_type_info() const = 0;
+        const char* get_type_name() const { return get_type_info().name; }
         /// Sets/replaces the arguments with new arguments.
         void set_arguments(const NodeVector& arguments);
         /// Sets/replaces the arguments with new arguments.
@@ -227,7 +219,7 @@ namespace ngraph
         /// graph against the graph.
         bool is_same_op_type(const std::shared_ptr<Node>& node) const
         {
-            return description() == node->description();
+            return get_type_info() == node->get_type_info();
         }
 
         /// \brief Marks an input as being relevant or irrelevant to the output shapes of this
@@ -270,7 +262,7 @@ namespace ngraph
         virtual bool is_dynamic() const;
         virtual bool has_state() const { return false; }
         size_t get_instance_id() const { return m_instance_id; }
-        friend std::ostream& operator<<(std::ostream&, const Node&);
+        friend NGRAPH_API std::ostream& operator<<(std::ostream&, const Node&);
         virtual std::ostream& write_short_description(std::ostream&) const;
         virtual std::ostream& write_long_description(std::ostream&) const;
 
@@ -518,7 +510,6 @@ namespace ngraph
         size_t m_instance_id{m_next_instance_id.fetch_add(1)};
         std::string m_friendly_name;
         std::string m_unique_name;
-        NGRAPH_API
         static std::atomic<size_t> m_next_instance_id;
         std::unordered_set<std::string> m_provenance_tags;
         std::set<std::shared_ptr<Node>> m_provenance_group;
@@ -531,22 +522,34 @@ namespace ngraph
         std::map<std::string, std::shared_ptr<Variant>> m_rt_info;
     };
 
-    /// \brief A handle for one of a node's inputs.
+    using NodeTypeInfo = Node::type_info_t;
+
     template <typename NodeType>
     class Input
+    {
+    };
+
+    template <typename NodeType>
+    class Output
+    {
+    };
+
+    /// \brief A handle for one of a node's inputs.
+    template <>
+    class Input<Node>
     {
     public:
         /// \brief Constructs a Input.
         /// \param node Pointer to the node for the input handle.
         /// \param index The index of the input.
-        Input(NodeType* node, size_t index)
+        Input(Node* node, size_t index)
             : m_node(node)
             , m_index(index)
         {
         }
 
         /// \return A pointer to the node referenced by this input handle.
-        NodeType* get_node() const { return m_node; }
+        Node* get_node() const { return m_node; }
         /// \return The index of the input referred to by this input handle.
         size_t get_index() const { return m_index; }
         /// \return The element type of the input referred to by this input handle.
@@ -604,19 +607,92 @@ namespace ngraph
         bool operator<=(const Input& other) const { return !(*this > other); }
         bool operator>=(const Input& other) const { return !(*this < other); }
     private:
-        NodeType* const m_node;
+        Node* const m_node;
+        const size_t m_index;
+    };
+
+    /// \brief A handle for one of a node's inputs.
+    template <>
+    class NGRAPH_API Input<const Node>
+    {
+    public:
+        /// \brief Constructs a Input.
+        /// \param node Pointer to the node for the input handle.
+        /// \param index The index of the input.
+        Input(const Node* node, size_t index)
+            : m_node(node)
+            , m_index(index)
+        {
+        }
+
+        /// \return A pointer to the node referenced by this input handle.
+        const Node* get_node() const { return m_node; }
+        /// \return The index of the input referred to by this input handle.
+        size_t get_index() const { return m_index; }
+        /// \return The element type of the input referred to by this input handle.
+        const element::Type& get_element_type() const
+        {
+            return m_node->get_input_element_type(m_index);
+        }
+        /// \return The shape of the input referred to by this input handle.
+        const Shape& get_shape() const { return m_node->get_input_shape(m_index); }
+        /// \return The partial shape of the input referred to by this input handle.
+        const PartialShape& get_partial_shape() const
+        {
+            return m_node->get_input_partial_shape(m_index);
+        }
+        /// \return A handle to the output that is connected to this input.
+        Output<Node> get_source_output() const;
+        /// \return A reference to the tensor descriptor for this input.
+        descriptor::Tensor& get_tensor() const
+        {
+            return m_node->m_inputs.at(m_index).get_output().get_tensor();
+        }
+        /// \return A shared pointer to the tensor descriptor for this input.
+        std::shared_ptr<descriptor::Tensor> get_tensor_ptr() const
+        {
+            return m_node->m_inputs.at(m_index).get_output().get_tensor_ptr();
+        }
+        /// \return true if this input is relevant to its node's output shapes; else false.
+        bool get_is_relevant_to_shapes() const
+        {
+            return m_node->m_inputs.at(m_index).get_is_relevant_to_shape();
+        }
+        /// \return true if this input is relevant to its node's output values; else false.
+        bool get_is_relevant_to_values() const
+        {
+            return m_node->m_inputs.at(m_index).get_is_relevant_to_value();
+        }
+
+        bool operator==(const Input& other) const
+        {
+            return m_node == other.m_node && m_index == other.m_index;
+        }
+        bool operator!=(const Input& other) const { return !(*this == other); }
+        bool operator<(const Input& other) const
+        {
+            return m_node < other.m_node || (m_node == other.m_node && m_index < other.m_index);
+        }
+        bool operator>(const Input& other) const
+        {
+            return m_node > other.m_node || (m_node == other.m_node && m_index > other.m_index);
+        }
+        bool operator<=(const Input& other) const { return !(*this > other); }
+        bool operator>=(const Input& other) const { return !(*this < other); }
+    private:
+        const Node* const m_node;
         const size_t m_index;
     };
 
     /// \brief A handle for one of a node's outputs.
-    template <typename NodeType = Node>
-    class Output
+    template <>
+    class NGRAPH_API Output<Node>
     {
     public:
         /// \brief Constructs a Output.
         /// \param node A pointer to the node for the output handle.
         /// \param index The index of the output.
-        Output(NodeType* node, size_t index)
+        Output(Node* node, size_t index)
             : m_node(node->shared_from_this())
             , m_index(index)
         {
@@ -627,7 +703,7 @@ namespace ngraph
         /// \param index The index of the output.
         ///
         /// TODO: Make a plan to deprecate this.
-        Output(const std::shared_ptr<NodeType>& node, size_t index)
+        Output(const std::shared_ptr<Node>& node, size_t index)
             : m_node(node)
             , m_index(index)
         {
@@ -645,17 +721,13 @@ namespace ngraph
         Output() = default;
 
         /// This output position for a different node
-        Output<NodeType> for_node(const std::shared_ptr<NodeType>& node)
-        {
-            return Output(node, m_index);
-        }
-
+        Output<Node> for_node(const std::shared_ptr<Node>& node) { return Output(node, m_index); }
         /// \return A pointer to the node referred to by this output handle.
-        NodeType* get_node() const { return m_node.get(); }
+        Node* get_node() const { return m_node.get(); }
         /// \return A `shared_ptr` to the node referred to by this output handle.
         ///
         /// TODO: Make a plan to deprecate this.
-        std::shared_ptr<NodeType> get_node_shared_ptr() const { return m_node; }
+        std::shared_ptr<Node> get_node_shared_ptr() const { return m_node; }
         /// \return A useable shared pointer to this output. If index 0, the node,
         /// otherwise find or create a GOE.
         std::shared_ptr<Node> as_single_output_node(bool for_get_output_element = true) const
@@ -715,7 +787,103 @@ namespace ngraph
         bool operator<=(const Output& other) const { return !(*this > other); }
         bool operator>=(const Output& other) const { return !(*this < other); }
     private:
-        std::shared_ptr<NodeType> m_node;
+        std::shared_ptr<Node> m_node;
+        size_t m_index{0};
+    };
+
+    template <>
+    class NGRAPH_API Output<const Node>
+    {
+    public:
+        /// \brief Constructs a Output.
+        /// \param node A pointer to the node for the output handle.
+        /// \param index The index of the output.
+        Output(const Node* node, size_t index)
+            : m_node(node->shared_from_this())
+            , m_index(index)
+        {
+        }
+
+        /// \brief Constructs a Output.
+        /// \param node A `shared_ptr` to the node for the output handle.
+        /// \param index The index of the output.
+        ///
+        /// TODO: Make a plan to deprecate this.
+        Output(const std::shared_ptr<const Node>& node, size_t index)
+            : m_node(node)
+            , m_index(index)
+        {
+        }
+
+        /// \brief Constructs a Output, referencing the zeroth output of the node.
+        /// \param node A `shared_ptr` to the node for the output handle.
+        template <typename T>
+        Output(const std::shared_ptr<T>& node)
+            : Output(node, 0)
+        {
+        }
+
+        /// A null output
+        Output() = default;
+
+        /// This output position for a different node
+        Output<const Node> for_node(const std::shared_ptr<const Node>& node)
+        {
+            return Output(node, m_index);
+        }
+
+        /// \return A pointer to the node referred to by this output handle.
+        const Node* get_node() const { return m_node.get(); }
+        /// \return A `shared_ptr` to the node referred to by this output handle.
+        ///
+        /// TODO: Make a plan to deprecate this.
+        std::shared_ptr<const Node> get_node_shared_ptr() const { return m_node; }
+        /// \return The index of the output referred to by this output handle.
+        size_t get_index() const { return m_index; }
+        /// \return A reference to the tensor descriptor for this output.
+        descriptor::Tensor& get_tensor() const
+        {
+            return m_node->m_outputs.at(m_index).get_tensor();
+        }
+        /// \return A shared point to the tensor ptr for this output.
+        std::shared_ptr<descriptor::Tensor> get_tensor_ptr() const
+        {
+            return m_node->m_outputs.at(m_index).get_tensor_ptr();
+        }
+        /// \return The element type of the output referred to by this output handle.
+        const element::Type& get_element_type() const
+        {
+            return m_node->get_output_element_type(m_index);
+        }
+        /// \return The shape of the output referred to by this output handle.
+        const Shape& get_shape() const { return m_node->get_output_shape(m_index); }
+        /// \return The partial shape of the output referred to by this output handle.
+        const PartialShape& get_partial_shape() const
+        {
+            return m_node->get_output_partial_shape(m_index);
+        }
+
+        /// \return A set containing handles for all inputs targeted by the output referenced by
+        ///        this output handle.
+        std::set<Input<Node>> get_target_inputs() const;
+
+        bool operator==(const Output& other) const
+        {
+            return m_node == other.m_node && m_index == other.m_index;
+        }
+        bool operator!=(const Output& other) const { return !(*this == other); }
+        bool operator<(const Output& other) const
+        {
+            return m_node < other.m_node || (m_node == other.m_node && m_index < other.m_index);
+        }
+        bool operator>(const Output& other) const
+        {
+            return m_node > other.m_node || (m_node == other.m_node && m_index > other.m_index);
+        }
+        bool operator<=(const Output& other) const { return !(*this > other); }
+        bool operator>=(const Output& other) const { return !(*this < other); }
+    private:
+        std::shared_ptr<const Node> m_node;
         size_t m_index{0};
     };
 
@@ -764,22 +932,25 @@ namespace ngraph
         return Output<const Node>(this, output_index);
     }
 
-    template <typename NodeType>
-    Output<Node> Input<NodeType>::get_source_output() const
+    inline Output<Node> Input<Node>::get_source_output() const
     {
         auto& output_descriptor = m_node->m_inputs.at(m_index).get_output();
         return Output<Node>(output_descriptor.get_node(), output_descriptor.get_index());
     }
 
-    template <typename NodeType>
-    void Input<NodeType>::replace_source_output(const Output<Node>& new_source_output) const
+    inline Output<Node> Input<const Node>::get_source_output() const
+    {
+        auto& output_descriptor = m_node->m_inputs.at(m_index).get_output();
+        return Output<Node>(output_descriptor.get_node(), output_descriptor.get_index());
+    }
+
+    inline void Input<Node>::replace_source_output(const Output<Node>& new_source_output) const
     {
         m_node->m_inputs.at(m_index).replace_output(new_source_output.get_node_shared_ptr(),
                                                     new_source_output.get_index());
     }
 
-    template <typename NodeType>
-    std::set<Input<Node>> Output<NodeType>::get_target_inputs() const
+    inline std::set<Input<Node>> Output<Node>::get_target_inputs() const
     {
         std::set<Input<Node>> result;
 
@@ -791,8 +962,19 @@ namespace ngraph
         return result;
     }
 
-    template <typename NodeType>
-    void Output<NodeType>::remove_target_input(const Input<Node>& target_input) const
+    inline std::set<Input<Node>> Output<const Node>::get_target_inputs() const
+    {
+        std::set<Input<Node>> result;
+
+        for (auto& input : m_node->m_outputs.at(m_index).get_inputs())
+        {
+            result.emplace(input->get_raw_pointer_node(), input->get_index());
+        }
+
+        return result;
+    }
+
+    inline void Output<Node>::remove_target_input(const Input<Node>& target_input) const
     {
         m_node->m_outputs.at(m_index).remove_input(
             &(target_input.get_node()->m_inputs.at(target_input.get_index())));

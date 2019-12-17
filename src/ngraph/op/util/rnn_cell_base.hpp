@@ -34,7 +34,7 @@ namespace ngraph
             ///
             /// \note       It holds all common attributes.
             ///
-            class RNNCellBase
+            class NGRAPH_API RNNCellBase
             {
             public:
                 ///

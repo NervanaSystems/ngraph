@@ -53,6 +53,30 @@ NGRAPH_TEST(${BACKEND_NAME}, select)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, select_v1)
+{
+    auto A = make_shared<op::Parameter>(element::boolean, Shape{4});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{4});
+    auto C = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto f = make_shared<Function>(make_shared<op::v1::Select>(A, B, C), ParameterVector{A, B, C});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::boolean, Shape{4});
+    copy_data(a, vector<char>{0, 1, 1, 0});
+    auto b = backend->create_tensor(element::f32, Shape{4});
+    copy_data(b, vector<float>{1, 2, 3, 4});
+    auto c = backend->create_tensor(element::f32, Shape{2, 4});
+    copy_data(c, vector<float>{11, 12, 13, 14, 15, 16, 17, 18});
+    auto result = backend->create_tensor(element::f32, Shape{2, 4});
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b, c});
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{11, 2, 3, 14, 15, 2, 3, 18}), read_vector<float>(result)));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, select_double)
 {
     Shape shape{2, 2, 2};

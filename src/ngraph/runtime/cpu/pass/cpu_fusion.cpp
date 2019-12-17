@@ -166,6 +166,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
         auto m_bias = m_broadcast->get_argument(0);
         auto pattern_map = m.get_pattern_map();
 
+        NGRAPH_CHECK(mpattern->get_element_type() != element::f64 || m_bias == nullptr,
+                     "Bias in DP MatMulBias is not supported yet");
+
         auto mmb = std::make_shared<ngraph::op::MatmulBias>(pattern_map[W],
                                                             pattern_map[x],
                                                             m_bias,
@@ -207,10 +210,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul()
 
         auto mpattern = m.get_match_root();
         auto dot = m.get_match_root();
+        auto element_type = mpattern->get_element_type();
 
-        if (mpattern->get_element_type() != element::f32)
+        if (element_type != element::f32 && element_type != element::f64)
         {
-            NGRAPH_DEBUG << "mpattern = " << mpattern->get_name() << " type is not float!";
+            NGRAPH_DEBUG << "mpattern = " << mpattern->get_name()
+                         << " type is not float or double!";
             return false;
         }
 
@@ -1762,6 +1767,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
         }
 
         if (conv_m->get_groups() == 0)
+        {
+            return false;
+        }
+
+        if (conv_m->has_groups_in_filters())
         {
             return false;
         }

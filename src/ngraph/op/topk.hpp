@@ -29,12 +29,11 @@ namespace ngraph
         {
             // \brief Computes indices of top k maximum/minimum index along a specified axis for a
             //        given tensor
-            class TopK : public Op
+            class NGRAPH_API TopK : public Op
             {
             public:
                 using SortType = TopKSortType;
 
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"TopK", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a TopK operation
@@ -106,7 +105,7 @@ namespace ngraph
                 bool m_compute_max{false};
                 SortType m_sort{SortType::NONE};
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
             };
         } // namespace v0
 
@@ -114,7 +113,7 @@ namespace ngraph
         {
             /// \brief Computes indices and values of the k maximum/minimum values
             ///        for each slice along specified axis.
-            class TopK : public Op
+            class NGRAPH_API TopK : public Op
             {
             public:
                 using SortType = TopKSortType;
@@ -125,7 +124,6 @@ namespace ngraph
                     MIN
                 };
 
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"TopK", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a TopK operation
@@ -188,7 +186,7 @@ namespace ngraph
                 element::Type m_index_element_type;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 size_t read_k_from_constant_node(const std::shared_ptr<Node>& node,
                                                  const element::Type& k_element_type) const;

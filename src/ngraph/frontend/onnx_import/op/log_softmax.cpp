@@ -16,10 +16,8 @@
 
 #include <memory>
 
-#include "core/node.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/op/fused/log_softmax.hpp"
-#include "utils/common.hpp"
+#include "log_softmax.hpp"
+#include "ngraph/opsets/opset0.hpp"
 
 namespace ngraph
 {
@@ -36,7 +34,7 @@ namespace ngraph
                     auto data_shape = data->get_shape();
                     int axis = node.get_attribute_value<int64_t>("axis", 1);
 
-                    return {std::make_shared<ngraph::op::LogSoftmax>(data, axis)};
+                    return {std::make_shared<ngraph::opset0::LogSoftmax>(data, axis)};
                 }
 
             } // namespace set_1

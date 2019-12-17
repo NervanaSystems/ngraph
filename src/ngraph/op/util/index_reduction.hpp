@@ -29,7 +29,7 @@ namespace ngraph
     {
         namespace util
         {
-            class IndexReduction : public Op
+            class NGRAPH_API IndexReduction : public Op
             {
             protected:
                 IndexReduction();
@@ -60,7 +60,7 @@ namespace ngraph
                 element::Type m_index_element_type;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
             };
         }
     }

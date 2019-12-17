@@ -17,6 +17,7 @@
 #include "ngraph/specialize_function.hpp"
 #include <pass/constant_folding.hpp>
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/tensor_iterator.hpp"
 
 using namespace ngraph;
 
@@ -60,6 +61,7 @@ std::shared_ptr<Function>
             m[f->get_parameters()[i].get()] =
                 std::make_shared<op::Parameter>(parameter_element_types[i], parameter_shapes[i]);
         }
+        m[f->get_parameters()[i].get()]->get_rt_info() = f->get_parameters()[i]->get_rt_info();
     }
 
     for (auto old_node : f->get_ordered_ops())
@@ -83,6 +85,11 @@ std::shared_ptr<Function>
         else
         {
             m[old_node.get()] = old_node->copy_with_new_inputs(new_args);
+            //  TODO: workaround for shape inference, delete it after fix
+            if (::ngraph::as_type_ptr<ngraph::op::TensorIterator>(m[old_node.get()]))
+            {
+                m[old_node.get()]->validate_and_infer_types();
+            }
             m[old_node.get()]->get_rt_info() = old_node->get_rt_info();
         }
 

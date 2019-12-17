@@ -30,7 +30,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::MemoryVisualize : public ModulePass
+class NGRAPH_API ngraph::pass::MemoryVisualize : public ModulePass
 {
 public:
     MemoryVisualize(const std::string& filename);

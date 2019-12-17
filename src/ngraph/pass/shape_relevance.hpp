@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace pass
     {
-        class ShapeRelevance : public FunctionPass
+        class NGRAPH_API ShapeRelevance : public FunctionPass
         {
         public:
             ShapeRelevance()

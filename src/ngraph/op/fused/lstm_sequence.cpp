@@ -101,24 +101,24 @@ shared_ptr<Node> op::LSTMSequence::copy_with_new_args(const NodeVector& new_args
     }
 }
 
-shared_ptr<Node> op::LSTMSequence::get_masked_node(const shared_ptr<Node>& data,
+shared_ptr<Node> op::LSTMSequence::get_masked_node(const Output<Node>& data,
                                                    int32_t time_step,
                                                    size_t batch_axis,
-                                                   const shared_ptr<Node>& default_value) const
+                                                   const Output<Node>& default_value) const
 {
-    shared_ptr<Node> mask_value = default_value;
+    Output<Node> mask_value = default_value;
     // Create zero mask value node.
-    if (!mask_value)
+    if (!mask_value.get_node_shared_ptr())
     {
-        mask_value = op::Constant::create(data->get_element_type(),
-                                          data->get_shape(),
-                                          vector<float>(shape_size(data->get_shape()), 0.f));
+        mask_value = op::Constant::create(data.get_element_type(),
+                                          data.get_shape(),
+                                          vector<float>(shape_size(data.get_shape()), 0.f));
     }
 
     // Create predicate nodes. The condition is whether current time step value
     // is greater than sequence length for respective batch inputs.
     shared_ptr<Node> curr_time_step_node = op::Constant::create(
-        element::i32, data->get_shape(), vector<int32_t>(shape_size(data->get_shape()), time_step));
+        element::i32, data.get_shape(), vector<int32_t>(shape_size(data.get_shape()), time_step));
 
     shared_ptr<Node> batch_seq_length =
         op::legacy_style_broadcast_for_binary_operation(
@@ -197,8 +197,8 @@ NodeVector op::LSTMSequence::lstm_pass(bool is_reverse) const
                                                                m_clip_threshold,
                                                                m_input_forget);
 
-        shared_ptr<Node> H = get_output_element(lstm_cell, 0);
-        shared_ptr<Node> C = get_output_element(lstm_cell, 1);
+        Output<Node> H = lstm_cell->output(0);
+        Output<Node> C = lstm_cell->output(1);
 
         // Expand tensors with empty outermost dim, so we can later concatenate
         // them.

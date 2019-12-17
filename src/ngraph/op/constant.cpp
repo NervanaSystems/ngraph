@@ -337,7 +337,7 @@ bool op::Constant::are_all_data_elements_bitwise_identical() const
     return rc;
 }
 
-constexpr NodeTypeInfo op::ScalarConstantLikeBase::type_info;
+constexpr NodeTypeInfo op::ScalarConstantLike::type_info;
 
 shared_ptr<op::Constant> op::ScalarConstantLikeBase::as_constant() const
 {

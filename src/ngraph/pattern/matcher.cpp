@@ -28,6 +28,16 @@ namespace ngraph
 {
     namespace pattern
     {
+        namespace op
+        {
+            // The symbols are requiered to be in cpp file to workaround RTTI issue on Android LLVM
+            const NodeTypeInfo& Any::get_type_info() const { return type_info; }
+            const NodeTypeInfo& AnyOf::get_type_info() const { return type_info; }
+            const NodeTypeInfo& Label::get_type_info() const { return type_info; }
+            const NodeTypeInfo& Skip::get_type_info() const { return type_info; }
+            Predicate Pattern::get_predicate() const { return m_predicate; }
+        }
+
         constexpr NodeTypeInfo op::AnyOf::type_info;
         constexpr NodeTypeInfo op::Any::type_info;
         constexpr NodeTypeInfo op::Label::type_info;

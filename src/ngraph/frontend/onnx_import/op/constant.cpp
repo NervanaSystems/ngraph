@@ -14,10 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/constant.hpp"
-#include "core/node.hpp"
+#include "constant.hpp"
 #include "core/tensor.hpp"
-#include "ngraph/node.hpp"
+#include "default_opset.hpp"
+#include "ngraph/op/constant.hpp"
 
 namespace ngraph
 {
@@ -30,98 +30,99 @@ namespace ngraph
                 namespace
                 {
                     template <typename T>
-                    inline std::shared_ptr<ngraph::op::Constant>
+                    inline std::shared_ptr<default_opset::Constant>
                         __make_ng_constant(const element::Type& type, const Tensor& tensor)
                     {
-                        return std::make_shared<ngraph::op::Constant>(
+                        return std::make_shared<default_opset::Constant>(
                             type, tensor.get_shape(), tensor.get_data<T>());
                     }
 
                     template <Tensor::Type>
-                    inline std::shared_ptr<ngraph::op::Constant>
+                    inline std::shared_ptr<default_opset::Constant>
                         make_ng_constant(const Tensor& tensor)
                     {
                         throw error::tensor::unsupported_data_type{tensor};
                     }
 
                     template <>
-                    inline std::shared_ptr<ngraph::op::Constant>
+                    inline std::shared_ptr<default_opset::Constant>
                         make_ng_constant<Tensor::Type::float16>(const Tensor& tensor)
                     {
                         return __make_ng_constant<ngraph::float16>(element::f16, tensor);
                     }
 
                     template <>
-                    inline std::shared_ptr<ngraph::op::Constant>
+                    inline std::shared_ptr<default_opset::Constant>
                         make_ng_constant<Tensor::Type::float32>(const Tensor& tensor)
                     {
                         return __make_ng_constant<float>(element::f32, tensor);
                     }
 
                     template <>
-                    inline std::shared_ptr<ngraph::op::Constant>
+                    inline std::shared_ptr<default_opset::Constant>
                         make_ng_constant<Tensor::Type::float64>(const Tensor& tensor)
                     {
                         return __make_ng_constant<double>(element::f64, tensor);
                     }
 
                     template <>
-                    inline std::shared_ptr<ngraph::op::Constant>
+                    inline std::shared_ptr<default_opset::Constant>
                         make_ng_constant<Tensor::Type::int8>(const Tensor& tensor)
                     {
                         return __make_ng_constant<int8_t>(element::i8, tensor);
                     }
 
                     template <>
-                    inline std::shared_ptr<ngraph::op::Constant>
+                    inline std::shared_ptr<default_opset::Constant>
                         make_ng_constant<Tensor::Type::int16>(const Tensor& tensor)
                     {
                         return __make_ng_constant<int16_t>(element::i16, tensor);
                     }
 
                     template <>
-                    inline std::shared_ptr<ngraph::op::Constant>
+                    inline std::shared_ptr<default_opset::Constant>
                         make_ng_constant<Tensor::Type::int32>(const Tensor& tensor)
                     {
                         return __make_ng_constant<int32_t>(element::i32, tensor);
                     }
 
                     template <>
-                    inline std::shared_ptr<ngraph::op::Constant>
+                    inline std::shared_ptr<default_opset::Constant>
                         make_ng_constant<Tensor::Type::int64>(const Tensor& tensor)
                     {
                         return __make_ng_constant<int64_t>(element::i64, tensor);
                     }
 
                     template <>
-                    inline std::shared_ptr<ngraph::op::Constant>
+                    inline std::shared_ptr<default_opset::Constant>
                         make_ng_constant<Tensor::Type::uint8>(const Tensor& tensor)
                     {
                         return __make_ng_constant<uint8_t>(element::u8, tensor);
                     }
 
                     template <>
-                    inline std::shared_ptr<ngraph::op::Constant>
+                    inline std::shared_ptr<default_opset::Constant>
                         make_ng_constant<Tensor::Type::uint16>(const Tensor& tensor)
                     {
                         return __make_ng_constant<uint16_t>(element::u16, tensor);
                     }
 
                     template <>
-                    inline std::shared_ptr<ngraph::op::Constant>
+                    inline std::shared_ptr<default_opset::Constant>
                         make_ng_constant<Tensor::Type::uint32>(const Tensor& tensor)
                     {
                         return __make_ng_constant<uint32_t>(element::u32, tensor);
                     }
 
                     template <>
-                    inline std::shared_ptr<ngraph::op::Constant>
+                    inline std::shared_ptr<default_opset::Constant>
                         make_ng_constant<Tensor::Type::uint64>(const Tensor& tensor)
                     {
                         return __make_ng_constant<uint64_t>(element::u64, tensor);
                     }
 
-                    inline std::shared_ptr<ngraph::op::Constant> make_constant(const Tensor& tensor)
+                    inline std::shared_ptr<default_opset::Constant>
+                        make_constant(const Tensor& tensor)
                     {
 #define MAKE_NG_CONSTANT(data_type_)                                                               \
     case data_type_: return make_ng_constant<data_type_>(tensor)

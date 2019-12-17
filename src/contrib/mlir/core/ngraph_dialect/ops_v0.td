@@ -188,7 +188,7 @@ def NGAvgPoolOp :
                I64ArrayAttr     :$padBelow,
                I64ArrayAttr     :$padAbove,
                DefaultValuedAttr<BoolAttr, "false">:$includePadding,
-               DefaultValuedAttr<PadTypeEnumAttr, "static_cast<int64_t>(MLIRPadType::EXPLICIT)"> :$padType,
+               DefaultValuedAttr<PadTypeEnumAttr, "MLIRPadType::EXPLICIT"> :$padType,
                DefaultValuedAttr<BoolAttr, "false"> :$ceilMode
                )>
 {
@@ -398,7 +398,7 @@ def NGMaxPoolOp :
                I64ArrayAttr     :$windowMovementStrides,
                I64ArrayAttr     :$padBelow,
                I64ArrayAttr     :$padAbove,
-               DefaultValuedAttr<PadTypeEnumAttr, "static_cast<int64_t>(MLIRPadType::EXPLICIT)"> :$padType,
+               DefaultValuedAttr<PadTypeEnumAttr, "MLIRPadType::EXPLICIT"> :$padType,
                DefaultValuedAttr<BoolAttr, "false"> :$ceilMode
                )>
 {
@@ -482,7 +482,7 @@ def NGMaxPoolBackpropOp :
 }
 
 // OneHot
-def NGOneHOtOp :
+def NGOneHotOp :
     NG_OneResult_Op<"oneHot", [NoSideEffect, OpVersion0]>,
     Arguments<(ins NG_TensorType :$arg,
                I64ArrayAttr      :$shape,
@@ -507,7 +507,7 @@ def NGPadOp :
                NG_TensorType    :$padValue,
                I64ArrayAttr     :$padBelow,
                I64ArrayAttr     :$padAbove,
-               DefaultValuedAttr<PadModeEnumAttr, "static_cast<int64_t>(MLIRPadMode::CONSTANT)"> :$padMode)>
+               DefaultValuedAttr<PadModeEnumAttr, "MLIRPadMode::CONSTANT"> :$padMode)>
 {
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
     let verifier = [{ return verifyOp(this); }];
@@ -534,7 +534,7 @@ def NGPadOp :
 }
     
 // ReplaceSlice
-def NGReplaceSlice : 
+def NGReplaceSliceOp : 
     NG_OneResult_Op<"replaceSlice", [NoSideEffect, OpVersion0]>,
     Arguments<(ins NG_TensorType:$arg0,
                NG_TensorType    :$arg1,
@@ -565,7 +565,7 @@ def NGReplaceSlice :
 }
 
 // slice
-def NGSlice : 
+def NGSliceOp : 
     NG_OneResult_Op<"slice", [NoSideEffect, OpVersion0]>,
     Arguments<(ins NG_TensorType:$arg,
                I64ArrayAttr     :$lowerBounds,
@@ -593,7 +593,7 @@ def NGSlice :
 }
 
 // reshape
-def NGReshape : 
+def NGReshapeOp : 
     NG_OneResult_Op<"reshape", [NoSideEffect, OpVersion0]>,
     Arguments<(ins NG_TensorType:$arg,
                I64ArrayAttr     :$axisOrder,
@@ -637,14 +637,14 @@ def NGSoftMaxOp :
 }
 
 // topk
-def NGTopK : 
+def NGTopKOp : 
     NG_OneResult_Op<"topk", [NoSideEffect, OpVersion0]>,
     Arguments<(ins NG_TensorType :$arg,
                NG_TensorType :$k,
                I64Attr       :$axis,
                TypeAttr      :$indexType,
                DefaultValuedAttr<BoolAttr, "true"> :$computeMax,
-               DefaultValuedAttr<SortTypeEnumAttr, "static_cast<int64_t>(MLIRSortType::VALUES)"> :$sortType)>
+               DefaultValuedAttr<SortTypeEnumAttr, "MLIRSortType::VALUES"> :$sortType)>
 {  
     let summary = "Softmax operation.";
     let description = [{

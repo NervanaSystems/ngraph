@@ -120,8 +120,9 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
     auto backend = runtime::Backend::create(backend_name);
     auto exec = backend->compile(f, timing_detail);
     timer.stop();
-    cout.imbue(locale(""));
-    cout << "compile time: " << timer.get_milliseconds() << "ms" << endl;
+    stringstream ss;
+    ss.imbue(locale(""));
+    ss << "compile time: " << timer.get_milliseconds() << "ms" << endl;
     set_denormals_flush_to_zero();
 
     // Create random input data for all input tensors
@@ -182,7 +183,8 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
         threads[i].join();
     }
     float time = s_timer.get_milliseconds();
-    cout << time / iterations << "ms per iteration" << endl;
+    ss << time / iterations << "ms per iteration" << endl;
+    cout << ss.str();
 
     vector<runtime::PerformanceCounter> perf_data = exec->get_performance_data();
     return perf_data;

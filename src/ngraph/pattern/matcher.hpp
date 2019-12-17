@@ -52,7 +52,7 @@ namespace ngraph
 
         /// \brief Matcher matches (compares) two graphs
         ///
-        class Matcher
+        class NGRAPH_API Matcher
         {
         public:
             using PatternMap = std::map<std::shared_ptr<op::Label>, std::shared_ptr<Node>>;

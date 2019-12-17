@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace pass
     {
-        class ReshapeSinking : public ngraph::pass::FunctionPass
+        class NGRAPH_API ReshapeSinking : public ngraph::pass::FunctionPass
         {
         public:
             ReshapeSinking() { set_property(PassProperty::REQUIRE_STATIC_SHAPE, true); }

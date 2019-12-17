@@ -40,7 +40,7 @@ TEST(opset_transform, opset1_logical_not_upgrade_pass)
     const auto pass_replacement_node =
         f->get_result()->input(0).get_source_output().get_node_shared_ptr();
     const auto not_v1 = as_type_ptr<op::v1::LogicalNot>(pass_replacement_node);
-    EXPECT_TRUE(not_v1);
+    ASSERT_TRUE(not_v1);
 
     const auto values_out_element_type = not_v1->output(0).get_element_type();
     EXPECT_EQ(values_out_element_type, element::boolean);
@@ -60,7 +60,7 @@ TEST(opset_transform, opset1_logical_not_downgrade_pass)
     const auto pass_replacement_node =
         f->get_result()->input(0).get_source_output().get_node_shared_ptr();
     const auto not_v0 = as_type_ptr<op::v0::Not>(pass_replacement_node);
-    EXPECT_TRUE(not_v0);
+    ASSERT_TRUE(not_v0);
 
     const auto values_out_element_type = not_v0->output(0).get_element_type();
     EXPECT_EQ(values_out_element_type, element::boolean);

@@ -162,7 +162,31 @@ void op::v1::OneHot::validate_and_infer_types()
         }
         m_axis =
             ngraph::normalize_axis(this, m_axis, indices_rank + 1, -indices_rank - 1, indices_rank);
-        int64_t depth_val = as_type_ptr<op::Constant>(depth)->get_vector<int64_t>()[0];
+
+        auto depth_element_type = depth->get_output_element_type(0);
+        NODE_VALIDATION_CHECK(this,
+                              depth_element_type.is_integral(),
+                              "'depth' input element type must be an integer (got ",
+                              depth_element_type,
+                              ").");
+
+        NODE_VALIDATION_CHECK(this,
+                              is_scalar(depth->get_shape()),
+                              "A scalar input should be provided as 'depth' to OneHot",
+                              " (got ",
+                              depth->get_shape(),
+                              " elements).");
+
+        const auto depth_constant = as_type_ptr<op::Constant>(depth);
+        int64_t depth_val = depth_constant->cast_vector<int64_t>()[0];
+
+        NODE_VALIDATION_CHECK(this,
+                              depth_val > 0,
+                              "The value of 'depth' must be a positive number.",
+                              " (got ",
+                              depth_val,
+                              ").");
+
         out_dims.insert(out_dims.begin() + m_axis, Dimension(depth_val));
         result_shape = out_dims;
     }

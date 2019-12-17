@@ -20,7 +20,7 @@
 #define NGRAPH_HELPER_DLL_IMPORT __declspec(dllimport)
 #define NGRAPH_HELPER_DLL_EXPORT __declspec(dllexport)
 #define NGRAPH_HELPER_DLL_LOCAL
-#elif defined NGRAPH_LINUX_VISIBILITY_ENABLE && __GNUC__ >= 4
+#elif defined(__GNUC__) && __GNUC__ >= 4
 #define NGRAPH_HELPER_DLL_IMPORT __attribute__((visibility("default")))
 #define NGRAPH_HELPER_DLL_EXPORT __attribute__((visibility("default")))
 #define NGRAPH_HELPER_DLL_LOCAL __attribute__((visibility("hidden")))

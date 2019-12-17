@@ -40,7 +40,7 @@ namespace ngraph
 /// \brief Interface to a generic backend.
 ///
 /// Backends are responsible for function execution and value allocation.
-class ngraph::runtime::Backend
+class NGRAPH_API ngraph::runtime::Backend
 {
 public:
     virtual ~Backend();

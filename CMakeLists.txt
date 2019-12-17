@@ -69,14 +69,6 @@ if (UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
 
-if ("${CMAKE_GENERATOR}" MATCHES "^Visual Studio.*$")
-    set(MSVS TRUE)
-endif()
-
-if (CMAKE_CXX_COMPILER_ID MATCHES MSVC)
-    add_definitions(/bigobj)
-endif()
-
 # APPLE: Set CMAKE_OSX_SYSROOT if not set already.
 if (APPLE)
     execute_process(COMMAND sw_vers -productVersion
@@ -151,7 +143,7 @@ if (CMAKE_OSX_SYSROOT)
             )
 endif()
 
-if (NOT MSVS)
+if (NOT MSVC)
     if(NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
     endif()
@@ -172,7 +164,7 @@ option(NGRAPH_UNIT_TEST_ENABLE "Control the building of unit tests" TRUE)
 option(NGRAPH_DOC_BUILD_ENABLE "Control the building of documentation" FALSE)
 option(NGRAPH_TOOLS_ENABLE "Control the building of tool" TRUE)
 option(NGRAPH_CPU_ENABLE "Control the building of the CPU backend" TRUE)
-option(NGRAPH_USE_LEGACY_MKLDNN "Use legacy MKLDNN" TRUE)
+option(NGRAPH_USE_LEGACY_MKLDNN "Use legacy MKLDNN" FALSE)
 option(NGRAPH_MLIR_ENABLE "Control the building of MLIR backend" FALSE)
 option(NGRAPH_INTERPRETER_ENABLE "Control the building of the INTERPRETER backend" TRUE)
 option(NGRAPH_NOP_ENABLE "Control the building of the NOP backend" TRUE)
@@ -336,10 +328,10 @@ endif()
 message(STATUS "Installation directory: ${CMAKE_INSTALL_PREFIX}")
 
 # Destinations
-set(NGRAPH_INSTALL_LIB "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
-set(NGRAPH_INSTALL_INCLUDE "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
-set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DOCDIR}")
-set(NGRAPH_INSTALL_BIN "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}")
+set(NGRAPH_INSTALL_LIB "${CMAKE_INSTALL_LIBDIR}")
+set(NGRAPH_INSTALL_INCLUDE "${CMAKE_INSTALL_INCLUDEDIR}")
+set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_DOCDIR}")
+set(NGRAPH_INSTALL_BIN "${CMAKE_INSTALL_BINDIR}")
 if (LINUX)
     if (DEFINED NGRAPH_RPATH)
         set(CMAKE_BUILD_RPATH "$ORIGIN:${NGRAPH_RPATH}")
@@ -361,7 +353,16 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$" AND NOT NGRAPH_BUILD_DI
 endif()
 
 if (WIN32)
-    set(CMAKE_CXX_FLAGS "/W0 /EHsc /MP")
+    string(REPLACE "/W3" "/W0" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /MP")
+
+    if (CMAKE_CXX_COMPILER_ID MATCHES MSVC)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+        # C4251 needs to have dll-interface to be used by clients of class
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4251")
+        # C4275 non dll-interface class used as base for dll-interface class
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4275")
+    endif()
 else()
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
     set(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
@@ -461,36 +462,36 @@ if (NOT DEFINED NGRAPH_TBB_ENABLE)
     set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
 endif()
 
-# Since UNIX and APPLE support Bash we can use a Bash script to do the clang-format functions
+# Since UNIX support Bash we can use a Bash script to do the clang-format functions
 # This is much faster than the cmake method
-if (UNIX OR APPLE)
+if (UNIX)
     add_custom_target(style-check COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/check-code-format.sh)
     add_custom_target(style-apply COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/apply-code-format.sh)
     add_custom_target(style COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/apply-code-format.sh)
 else()
     add_custom_target(style-check
         COMMAND ${CMAKE_COMMAND}
-        -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-        -P ${CMAKE_MODULE_PATH}style_check.cmake
+        -DNGRAPH_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/style_check.cmake
     )
 
     add_custom_target(style-apply
         COMMAND ${CMAKE_COMMAND}
-        -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-        -P ${CMAKE_MODULE_PATH}style_apply.cmake
+        -DNGRAPH_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/style_apply.cmake
     )
 
     add_custom_target(style
         COMMAND ${CMAKE_COMMAND}
-        -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-        -P ${CMAKE_MODULE_PATH}style_apply.cmake
+        -DNGRAPH_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/style_apply.cmake
     )
 endif()
 
 add_custom_target(fix-mode
     COMMAND ${CMAKE_COMMAND}
-    -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-    -P ${CMAKE_MODULE_PATH}fix_mode.cmake
+    -DNGRAPH_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/fix_mode.cmake
 )
 
 #-----------------------------------------------------------------------------------------------
@@ -538,6 +539,9 @@ if (NOT NGRAPH_BUILD_DIR)
     endif()
 endif()
 
+# Build destination directory for nGraph binaries and tools.
+set(NGRAPH_BUILD_BIN ${CMAKE_CURRENT_BINARY_DIR}/bin)
+
 set(EXTERNAL_INSTALL_DIR ${CMAKE_BINARY_DIR}/external)
 
 if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
@@ -545,13 +549,13 @@ if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
-    if (MSVS)
+    if (MSVC)
         # When we build dll libraries. These flags make sure onnx and protobuf build with /MD, not /MT.
         # These two options can't be mixed, because they requires link two imcompatiable runtime.
         set(ONNX_USE_MSVC_STATIC_RUNTIME OFF)
         set(protobuf_WITH_ZLIB  OFF CACHE BOOL "" FORCE)
         set(protobuf_MSVC_STATIC_RUNTIME OFF CACHE BOOL "Link protobuf to static runtime libraries" FORCE)
-    endif(MSVS)
+    endif()
     if (NOT NGRAPH_USE_SYSTEM_PROTOBUF)
         include(cmake/external_protobuf.cmake)
     else()
@@ -591,7 +595,7 @@ endif()
 if(NGRAPH_CODEGEN_ENABLE)
     if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)
         include(cmake/external_llvm_prebuilt.cmake)
-    elseif (NOT MSVS)
+    elseif (NOT MSVC)
         include(cmake/external_llvm.cmake)
     else()
         message(FATAL_ERROR "CODEGEN is not supported on Windows!")
@@ -620,6 +624,7 @@ endif()
 add_subdirectory(src)
 
 add_subdirectory(test)
+add_subdirectory(doc/examples)
 
 if (NGRAPH_DOC_BUILD_ENABLE)
     add_subdirectory(doc)
@@ -636,7 +641,8 @@ export(TARGETS ngraph NAMESPACE ngraph:: FILE "${CMAKE_CURRENT_BINARY_DIR}/ngrap
 install(EXPORT ngraphTargets
     FILE ngraphTargets.cmake
     NAMESPACE ngraph::
-    DESTINATION cmake)
+    DESTINATION cmake
+    COMPONENT ngraph)
 
 configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/share/ngraphConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfig.cmake
@@ -648,11 +654,13 @@ write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/ngraphConfigVersion
 
 install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/licenses
-    DESTINATION "${CMAKE_INSTALL_PREFIX}"
+    DESTINATION "."
+    COMPONENT ngraph
 )
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_PREFIX})
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/VERSION DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION "." COMPONENT ngraph)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/VERSION DESTINATION "." COMPONENT ngraph)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfig.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfigVersion.cmake
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/cmake )
+    DESTINATION cmake
+    COMPONENT ngraph)

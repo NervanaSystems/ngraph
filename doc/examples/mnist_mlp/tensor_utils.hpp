@@ -49,7 +49,7 @@ void randomize(std::function<T()> rand,
     {
         temp.push_back(rand());
     }
-    t->write(&temp[0], 0, element_count * sizeof(T));
+    t->write(&temp[0], element_count * sizeof(T));
 }
 
 // Get a scalar value from a tensor, optionally at an element offset
@@ -58,7 +58,7 @@ T get_scalar(const std::shared_ptr<ngraph::runtime::Tensor>& t,
              size_t element_offset = 0)
 {
     T result;
-    t->read(&result, element_offset * sizeof(T), sizeof(T));
+    t->read(&result + (element_offset * sizeof(T)), sizeof(T));
     return result;
 }
 
@@ -68,7 +68,7 @@ void set_scalar(const std::shared_ptr<ngraph::runtime::Tensor>& t,
                 T value,
                 size_t element_offset = 0)
 {
-    t->write(&value, element_offset * sizeof(T), sizeof(T));
+    t->write(&value + (element_offset * sizeof(T)), sizeof(T));
 }
 
 // Show a shape

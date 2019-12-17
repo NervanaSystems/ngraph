@@ -26,42 +26,46 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief  Normalization input tensor with L2 norm.
-        ///
-        class NormalizeL2 : public ngraph::op::util::FusedOp
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"NormalizeL2", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            NormalizeL2() = default;
+            /// \brief  Normalization input tensor with L2 norm.
             ///
-            /// \brief      Constructs a Normalize operation.
-            ///
-            /// \param      data            - Node producing the input tensor
-            /// \param      axes            - Node indicating axes along which reduction is
-            ///                               calculated
-            /// \param      eps             - The epsilon added to L2 norm.
-            /// \param      eps_mode        - Specifies how eps is combined with L2 value calculated
-            ///                               before division
-            ///
-            NormalizeL2(const Output<Node>& data,
-                        const Output<Node>& axes,
-                        float eps,
-                        EpsMode eps_mode);
+            class NGRAPH_API NormalizeL2 : public ngraph::op::util::FusedOp
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"NormalizeL2", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                NormalizeL2() = default;
+                ///
+                /// \brief      Constructs a Normalize operation.
+                ///
+                /// \param      data            - Node producing the input tensor
+                /// \param      axes            - Node indicating axes along which reduction is
+                ///                               calculated
+                /// \param      eps             - The epsilon added to L2 norm.
+                /// \param      eps_mode        - Specifies how eps is combined with L2 value
+                /// calculated
+                ///                               before division
+                ///
+                NormalizeL2(const Output<Node>& data,
+                            const Output<Node>& axes,
+                            float eps,
+                            EpsMode eps_mode);
 
-            float get_eps() const { return m_eps; }
-            EpsMode get_eps_mode() const { return m_eps_mode; }
-            virtual NodeVector decompose_op() const override;
-            virtual void pre_validate_and_infer_types() override;
-            AxisSet get_reduction_axes() const;
+                float get_eps() const { return m_eps; }
+                EpsMode get_eps_mode() const { return m_eps_mode; }
+                virtual NodeVector decompose_op() const override;
+                virtual void pre_validate_and_infer_types() override;
+                AxisSet get_reduction_axes() const;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-        protected:
-            float m_eps;
-            EpsMode m_eps_mode;
-        };
+            protected:
+                float m_eps;
+                EpsMode m_eps_mode;
+            };
+        }
+        using v0::NormalizeL2;
     }
 }

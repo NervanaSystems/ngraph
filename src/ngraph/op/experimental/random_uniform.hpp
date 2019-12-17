@@ -25,10 +25,9 @@ namespace ngraph
     namespace op
     {
         /// \brief Generates a tensor populated with random values of a uniform distribution.
-        class RandomUniform : public op::Op
+        class NGRAPH_API RandomUniform : public op::Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"RandomUniform", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs an uninitialized RandomUniform node.
@@ -77,7 +76,7 @@ namespace ngraph
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                           const NodeVector& /* deltas */) override
+                                           const OutputVector& /* deltas */) override
             {
             }
 

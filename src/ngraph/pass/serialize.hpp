@@ -28,7 +28,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::Serialization : public ModulePass
+class NGRAPH_API ngraph::pass::Serialization : public ModulePass
 {
 public:
     Serialization(const std::string& name);

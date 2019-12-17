@@ -24,31 +24,34 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Exponential Linear Unit
-        /// x <  0 => f(x) = alpha * (exp(x) - 1.)
-        /// x >= 0 => f(x) = x
-        ///
-        class Elu : public ngraph::op::util::FusedOp
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Elu", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            Elu() = default;
-            /// \brief Constructs an Elu operation.
+            /// \brief Exponential Linear Unit
+            /// x <  0 => f(x) = alpha * (exp(x) - 1.)
+            /// x >= 0 => f(x) = x
             ///
-            /// \param data Input tensor
-            /// \param alpha Multiplier for negative values
-            Elu(const Output<Node>& data, const double alpha);
+            class NGRAPH_API Elu : public ngraph::op::util::FusedOp
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Elu", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Elu() = default;
+                /// \brief Constructs an Elu operation.
+                ///
+                /// \param data Input tensor
+                /// \param alpha Multiplier for negative values
+                Elu(const Output<Node>& data, const double alpha);
 
-            virtual NodeVector decompose_op() const override;
+                virtual NodeVector decompose_op() const override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            double get_alpha() const { return m_alpha; }
-        private:
-            double m_alpha;
-        };
+                double get_alpha() const { return m_alpha; }
+            private:
+                double m_alpha;
+            };
+        }
+        using v0::Elu;
     } // namespace op
 } // namespace ngraph

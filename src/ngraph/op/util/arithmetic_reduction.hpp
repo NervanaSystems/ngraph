@@ -27,7 +27,7 @@ namespace ngraph
             /// \brief Abstract base class for arithmetic reduction operations, i.e., operations
             ///        where chosen axes of the input tensors are eliminated (reduced out) by
             ///        repeated application of a particular binary arithmetic operation.
-            class ArithmeticReduction : public Op
+            class NGRAPH_API ArithmeticReduction : public Op
             {
             protected:
                 /// \brief Constructs an arithmetic reduction operation.

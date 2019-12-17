@@ -27,7 +27,7 @@ namespace ngraph
             /// \brief Abstract base class for fused ops, i.e ops that can be broken down into core
             ///        ngraph ops
             ///
-            class FusedOp : public Op
+            class NGRAPH_API FusedOp : public Op
             {
             public:
                 bool supports_decompose() const override { return true; }
@@ -50,7 +50,7 @@ namespace ngraph
                 // in validate_and_infer_types().
                 virtual void post_validate_and_infer_types() {}
                 void generate_adjoints(autodiff::Adjoints& adjoints,
-                                       const NodeVector& deltas) override;
+                                       const OutputVector& deltas) override;
 
             protected:
                 FusedOp();

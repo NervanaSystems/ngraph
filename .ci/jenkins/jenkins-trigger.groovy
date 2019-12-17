@@ -38,7 +38,7 @@ timestamps {
         def sleeptime=0
         retry(count: 3) {
             sleep sleeptime; sleeptime = 10
-            sh "git clone -b $JENKINS_BRANCH https://github.intel.com/AIPG/cje-algo ."
+            sh "git clone -b $JENKINS_BRANCH https://gitlab.devtools.intel.com/AIPG/AlgoVal/cje-algo ."
         }
 
         // Call the main job script.

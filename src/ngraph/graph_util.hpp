@@ -210,9 +210,11 @@ namespace ngraph
     ///        auto new_N = N->copy_with_new_args(N->get_arguments());
     ///        shared_ptr<Node> M = make_shared<SomeUnaryOp>(new_N);
     ///        replace_node(N, M);
+    NGRAPH_API
     void replace_node(std::shared_ptr<Node> target,
                       std::shared_ptr<Node> replacement,
                       const std::vector<int64_t>& output_order);
+    NGRAPH_API
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
     /// \brief Replace multiple nodes in a function.

@@ -288,25 +288,25 @@ TEST(serialize, constant_infinity_nan)
     {
         if (node->get_friendly_name() == "A")
         {
-            a = static_pointer_cast<op::Constant>(node);
+            a = as_type_ptr<op::Constant>(node);
         }
         else if (node->get_friendly_name() == "B")
         {
-            b = static_pointer_cast<op::Constant>(node);
+            b = as_type_ptr<op::Constant>(node);
         }
         else if (node->get_friendly_name() == "C")
         {
-            c = static_pointer_cast<op::Constant>(node);
+            c = as_type_ptr<op::Constant>(node);
         }
         else if (node->get_friendly_name() == "D")
         {
-            d = static_pointer_cast<op::Constant>(node);
+            d = as_type_ptr<op::Constant>(node);
         }
     }
-    ASSERT_NE(a, nullptr);
-    ASSERT_NE(b, nullptr);
-    ASSERT_NE(c, nullptr);
-    ASSERT_NE(d, nullptr);
+    ASSERT_TRUE(a);
+    ASSERT_TRUE(b);
+    ASSERT_TRUE(c);
+    ASSERT_TRUE(d);
     EXPECT_TRUE(test::all_close_f(a->get_vector<float>(), a_data));
     EXPECT_TRUE(test::all_close_f(b->get_vector<float>(), b_data));
     EXPECT_TRUE(test::all_close_f(c->get_vector<float>(), c_data));
@@ -335,10 +335,10 @@ TEST(serialize, non_zero_node_output)
     string s = serialize(f);
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_abs = g_result->input(0).get_source_output().get_node_shared_ptr();
-    auto topk_out = g_abs->input(0).get_source_output();
+    auto g_abs = g_result->input_value(0).get_node_shared_ptr();
+    auto topk_out = g_abs->input_value(0);
     EXPECT_EQ(topk_out.get_index(), 1);
-    EXPECT_EQ(topk_out.get_node()->description(), "TopK");
+    ASSERT_TRUE(is_type<op::TopK>(topk_out.get_node()));
 }
 
 TEST(serialize, opset1_softmax)
@@ -352,9 +352,7 @@ TEST(serialize, opset1_softmax)
     shared_ptr<Function> g = deserialize(s);
     const auto g_result = g->get_results().at(0);
     const auto g_softmax = g_result->input(0).get_source_output().get_node_shared_ptr();
-
-    EXPECT_EQ(g_softmax->description(), "Softmax");
-    EXPECT_EQ(g_softmax->get_version(), 1);
+    EXPECT_TRUE(is_type<op::v1::Softmax>(g_softmax));
 }
 
 TEST(serialize, opset1_gather)
@@ -371,9 +369,7 @@ TEST(serialize, opset1_gather)
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
     auto g_gather = g_result->input(0).get_source_output().get_node_shared_ptr();
-
-    EXPECT_EQ(g_gather->description(), "Gather");
-    EXPECT_EQ(g_gather->get_version(), 1);
+    EXPECT_TRUE(is_type<op::v1::Gather>(g_gather));
 }
 
 TEST(serialize, opset1_product)
@@ -389,12 +385,10 @@ TEST(serialize, opset1_product)
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
     auto g_red_prod = g_result->input(0).get_source_output().get_node_shared_ptr();
-
-    EXPECT_EQ(g_red_prod->description(), "Product");
-    EXPECT_EQ(g_red_prod->get_version(), 1);
-    EXPECT_EQ(dynamic_cast<const op::v1::ReduceProd*>(g_red_prod.get())->get_keep_dims(), 1);
-    EXPECT_EQ(dynamic_cast<const op::v1::ReduceProd*>(g_red_prod.get())->get_reduction_axes(),
-              AxisSet({1, 2}));
+    auto node = as_type_ptr<op::v1::ReduceProd>(g_red_prod);
+    EXPECT_TRUE(node);
+    EXPECT_EQ(node->get_keep_dims(), 1);
+    EXPECT_EQ(node->get_reduction_axes(), AxisSet({1, 2}));
 }
 
 TEST(serialize, opset1_sum)
@@ -410,12 +404,10 @@ TEST(serialize, opset1_sum)
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
     auto g_red_sum = g_result->input(0).get_source_output().get_node_shared_ptr();
-
-    EXPECT_EQ(g_red_sum->description(), "Sum");
-    EXPECT_EQ(g_red_sum->get_version(), 1);
-    EXPECT_EQ(dynamic_cast<const op::v1::ReduceSum*>(g_red_sum.get())->get_keep_dims(), 1);
-    EXPECT_EQ(dynamic_cast<const op::v1::ReduceSum*>(g_red_sum.get())->get_reduction_axes(),
-              AxisSet({1, 2}));
+    auto node = as_type_ptr<op::v1::ReduceSum>(g_red_sum);
+    EXPECT_TRUE(node);
+    EXPECT_EQ(node->get_keep_dims(), 1);
+    EXPECT_EQ(node->get_reduction_axes(), AxisSet({1, 2}));
 }
 
 TEST(serialize, opset1_pad)
@@ -434,11 +426,9 @@ TEST(serialize, opset1_pad)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_pad = g_result->input(0).get_source_output().get_node_shared_ptr();
-
-    EXPECT_EQ(g_pad->description(), "Pad");
-    EXPECT_EQ(g_pad->get_version(), 1);
-    EXPECT_EQ(dynamic_cast<const op::v1::Pad*>(g_pad.get())->get_pad_mode(), pad_mode);
+    auto g_pad = as_type_ptr<op::v1::Pad>(g_result->input_value(0).get_node_shared_ptr());
+    ASSERT_TRUE(g_pad);
+    EXPECT_EQ(g_pad->get_pad_mode(), pad_mode);
 }
 
 TEST(serialize, tensor_iterator_raw)
@@ -732,8 +722,7 @@ TEST(serialize, opset1_strided_slice)
     auto g_strided_slice_v1 = g_result->input(0).get_source_output().get_node_shared_ptr();
     auto strided_slice_out = as_type_ptr<op::v1::StridedSlice>(g_strided_slice_v1);
 
-    EXPECT_EQ(strided_slice_out->description(), "Slice");
-    EXPECT_EQ(strided_slice_out->get_version(), 1);
+    ASSERT_TRUE(strided_slice_out);
     EXPECT_EQ(strided_slice_out->get_begin_mask(), begin_mask);
     EXPECT_EQ(strided_slice_out->get_end_mask(), end_mask);
     EXPECT_EQ(strided_slice_out->get_new_axis_mask(), new_axis_mask);
@@ -764,9 +753,7 @@ TEST(serialize, opset1_binary_convolution)
     auto g_result = g->get_results().at(0);
     auto g_binary_conv = g_result->input(0).get_source_output().get_node_shared_ptr();
     auto binary_conv_out = as_type_ptr<op::v1::BinaryConvolution>(g_binary_conv);
-
-    EXPECT_EQ(binary_conv_out->description(), "BinaryConvolution");
-    EXPECT_EQ(binary_conv_out->get_version(), 1);
+    ASSERT_TRUE(binary_conv_out);
 
     EXPECT_EQ(binary_conv_out->get_strides(), strides);
     EXPECT_EQ(binary_conv_out->get_pads_begin(), pads_begin);
@@ -793,9 +780,7 @@ TEST(serialize, depth_to_space)
     auto g_result = g->get_results().at(0);
     auto g_depth_to_space = g_result->input(0).get_source_output().get_node_shared_ptr();
     auto depth_to_space_out = as_type_ptr<op::DepthToSpace>(g_depth_to_space);
-
-    EXPECT_EQ(depth_to_space_out->description(), "DepthToSpace");
-    EXPECT_EQ(depth_to_space_out->get_version(), 0);
+    ASSERT_TRUE(depth_to_space_out);
     EXPECT_EQ(depth_to_space_out->get_block_size(), block_size);
     EXPECT_EQ(depth_to_space_out->get_mode(), mode);
 }
@@ -815,9 +800,55 @@ TEST(serialize, space_to_depth)
     auto g_result = g->get_results().at(0);
     auto g_space_to_depth = g_result->input(0).get_source_output().get_node_shared_ptr();
     auto depth_to_space_out = as_type_ptr<op::SpaceToDepth>(g_space_to_depth);
-
-    EXPECT_EQ(depth_to_space_out->description(), "SpaceToDepth");
-    EXPECT_EQ(depth_to_space_out->get_version(), 0);
+    ASSERT_TRUE(depth_to_space_out);
     EXPECT_EQ(depth_to_space_out->get_block_size(), block_size);
     EXPECT_EQ(depth_to_space_out->get_mode(), mode);
+}
+
+TEST(serialize, deformable_psroi_pooling)
+{
+    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto coords = make_shared<op::Parameter>(element::f32, Shape{1, 1});
+    auto offsets = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    const int64_t output_dim = 1;
+    const int64_t group_size = 2;
+    const float spatial_scale = 3;
+    std::string mode = "bilinear_deformable";
+    int64_t spatial_bins_x = 4;
+    int64_t spatial_bins_y = 5;
+    float trans_std = 6.1f;
+    int64_t part_size = 7;
+
+    auto def_psroi_pool_in = make_shared<op::v1::DeformablePSROIPooling>(input,
+                                                                         coords,
+                                                                         offsets,
+                                                                         output_dim,
+                                                                         spatial_scale,
+                                                                         group_size,
+                                                                         mode,
+                                                                         spatial_bins_x,
+                                                                         spatial_bins_y,
+                                                                         trans_std,
+                                                                         part_size);
+
+    auto result = make_shared<op::Result>(def_psroi_pool_in);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{input, coords, offsets});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_def_psroi_pool = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto def_psroi_pool_out = as_type_ptr<op::v1::DeformablePSROIPooling>(g_def_psroi_pool);
+
+    EXPECT_EQ(def_psroi_pool_out->description(), "DeformablePSROIPooling");
+    EXPECT_EQ(def_psroi_pool_out->get_version(), 1);
+
+    EXPECT_EQ(def_psroi_pool_out->get_output_dim(), output_dim);
+    EXPECT_EQ(def_psroi_pool_out->get_group_size(), group_size);
+    EXPECT_EQ(def_psroi_pool_out->get_spatial_scale(), spatial_scale);
+    EXPECT_EQ(def_psroi_pool_out->get_mode(), mode);
+    EXPECT_EQ(def_psroi_pool_out->get_spatial_bins_x(), spatial_bins_x);
+    EXPECT_EQ(def_psroi_pool_out->get_spatial_bins_y(), spatial_bins_y);
+    EXPECT_EQ(def_psroi_pool_out->get_trans_std(), trans_std);
+    EXPECT_EQ(def_psroi_pool_out->get_part_size(), part_size);
 }

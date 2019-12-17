@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace pass
     {
-        class BatchFusion : public ngraph::pass::FunctionPass
+        class NGRAPH_API BatchFusion : public ngraph::pass::FunctionPass
         {
         public:
             BatchFusion(FusionTypeMask type = FusionType::ALL_FUSIONS)

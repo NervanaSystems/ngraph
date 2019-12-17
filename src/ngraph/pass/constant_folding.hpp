@@ -28,7 +28,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::ConstantFolding : public ngraph::pass::GraphRewrite
+class NGRAPH_API ngraph::pass::ConstantFolding : public ngraph::pass::GraphRewrite
 {
 public:
     enum class CFTransformations
@@ -50,12 +50,15 @@ public:
         GATHER,
         SLICE,
         DYN_SLICE,
+        STRIDED_SLICE,
         DYN_RESHAPE,
         TRANSPOSE,
         RANGE,
         SELECT,
         SQUEEZE,
-        UNSQUEEZE
+        UNSQUEEZE,
+        SPLIT,
+        VARIADIC_SPLIT
     };
 
     ConstantFolding(const ngraph::BuildNodeExecutorMap& cfmap = ngraph::BuildNodeExecutorMap())
@@ -64,6 +67,8 @@ public:
         m_cfmap = cfmap;
         m_enable_shape_inference = true;
 
+        construct_constant_split();
+        construct_constant_variadic_split();
         construct_constant_reshape();
         construct_constant_broadcast();
         construct_constant_dyn_broadcast();
@@ -81,6 +86,7 @@ public:
         construct_constant_gather();
         construct_constant_slice();
         construct_constant_dyn_slice();
+        construct_constant_strided_slice();
         construct_constant_dyn_reshape();
         construct_constant_transpose();
         construct_constant_range();
@@ -121,12 +127,15 @@ public:
             case CFTransformations::GATHER: construct_constant_gather(); break;
             case CFTransformations::SLICE: construct_constant_slice(); break;
             case CFTransformations::DYN_SLICE: construct_constant_dyn_slice(); break;
+            case CFTransformations::STRIDED_SLICE: construct_constant_strided_slice(); break;
             case CFTransformations::DYN_RESHAPE: construct_constant_dyn_reshape(); break;
             case CFTransformations::TRANSPOSE: construct_constant_transpose(); break;
             case CFTransformations::RANGE: construct_constant_range(); break;
             case CFTransformations::SELECT: construct_constant_select(); break;
             case CFTransformations::SQUEEZE: construct_constant_squeeze(); break;
             case CFTransformations::UNSQUEEZE: construct_constant_unsqueeze(); break;
+            case CFTransformations::SPLIT: construct_constant_split(); break;
+            case CFTransformations::VARIADIC_SPLIT: construct_constant_variadic_split(); break;
             }
         }
     }
@@ -149,12 +158,15 @@ private:
     void construct_constant_gather();
     void construct_constant_slice();
     void construct_constant_dyn_slice();
+    void construct_constant_strided_slice();
     void construct_constant_dyn_reshape();
     void construct_constant_transpose();
     void construct_constant_range();
     void construct_constant_select();
     void construct_constant_squeeze();
     void construct_constant_unsqueeze();
+    void construct_constant_split();
+    void construct_constant_variadic_split();
 
     ngraph::BuildNodeExecutorMap m_cfmap;
 };

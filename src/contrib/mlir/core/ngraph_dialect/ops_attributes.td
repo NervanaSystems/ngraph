@@ -56,7 +56,8 @@ def PadModeEdge     : I32EnumAttrCase<"EDGE",      1> ;
 def PadModeReflect  : I32EnumAttrCase<"REFLECT",   2> ;
 def PadModeSymmetric: I32EnumAttrCase<"SYMMETRIC", 3> ;
 
-def PadModeEnumAttr : I32EnumAttr<"MLIRPadMode", "Padding modes for pad operator", 
+def PadModeEnumAttr : I32EnumAttr<"MLIRPadMode", 
+                                  "Padding modes for pad operator", 
                                   [PadModeConstant, PadModeEdge, PadModeReflect, PadModeSymmetric]>;
 
 // Sort Types for TopK
@@ -67,4 +68,51 @@ def SortTypeValues     : I32EnumAttrCase<"VALUES",  2>;
 def SortTypeEnumAttr   : I32EnumAttr<"MLIRSortType", "Sort types for topk operator", 
                                      [SortTypeNone, SortTypeIndices, SortTypeValues]>;
 
+// Modes for normalizeL2
+def EpsModeAdd          : I32EnumAttrCase<"ADD", 0>;
+def EpsModeMax          : I32EnumAttrCase<"MAX", 1>;
+
+def EpsModeEnumAttr     : I32EnumAttr<"MLIREpsMode", 
+                                      "Specifies how eps is combined with L2 value",
+                                      [EpsModeAdd, EpsModeMax]>;
+
+
+def AutoBroadcastNone       : I32EnumAttrCase<"NONE",       0>;
+def AutoBroadcastExplicit   : I32EnumAttrCase<"EXPLICIT",   1>;
+def AutoBroadcastNumPy      : I32EnumAttrCase<"NUMPY",      2>;
+def AutoBroadcastPDPD       : I32EnumAttrCase<"PDPD",       3>;
+
+def AutoBroadcastEnumAttr   : I32EnumAttr<"MLIRAutoBroadcastMode",
+                                          "Specifies auto-broadcast for an op",
+                                          [AutoBroadcastNone, AutoBroadcastExplicit,
+                                           AutoBroadcastNumPy, AutoBroadcastPDPD]>;
+
+
+def DepthSpaceModeBlocks  : I32EnumAttrCase<"BLOCKS_FIRST", 0>;
+def DepthSpaceModeDepth   : I32EnumAttrCase<"DEPTH_FIRST",  1>;
+
+def DepthSpaceModeEnumAttr: I32EnumAttr<"MLIRDepthToSpaceMode", 
+                                        "Specifies how the input depth dimension is split to block coordinates",
+                                        [DepthSpaceModeBlocks, DepthSpaceModeDepth]>;
+
+def LSTMWeightsFormatFICO   : I32EnumAttrCase<"FICO", 0>;   // IE
+def LSTMWeightsFormatICOF   : I32EnumAttrCase<"ICOF", 1>;   // PyTorch
+def LSTMWeightsFormatIFCO   : I32EnumAttrCase<"IFCO", 2>;   // DNNL, TF, MxNet
+def LSTMWeightsFormatIFOC   : I32EnumAttrCase<"IFOC", 3>;   // Caffe
+def LSTMWeightsFormatIOFC   : I32EnumAttrCase<"IOFC", 4>;   // ONNX
+
+def LSTMWeightsFormatEnumAttr: I32EnumAttr<"MLIRLSTMWeightsFormat", 
+                                            "LSTM Cell Weights Format",
+                                            [LSTMWeightsFormatFICO, LSTMWeightsFormatICOF, 
+                                             LSTMWeightsFormatIFCO, LSTMWeightsFormatIFOC,
+                                             LSTMWeightsFormatIOFC]>;
+
+def LSTMSeqDirectionFWD     : I32EnumAttrCase<"FORWARD", 0>;
+def LSTMSeqDirectionRVS     : I32EnumAttrCase<"REVERSE", 1>;
+def LSTMSeqDirectionBID     : I32EnumAttrCase<"BIDIRECTIONAL", 2>;
+            
+def LSTMSeqDirectionsEnumAttr: I32EnumAttr<"MLIRLSTMSeqDirection", 
+                                           "LSTM Sequence Direction", 
+                                            [LSTMSeqDirectionFWD, LSTMSeqDirectionRVS, 
+                                             LSTMSeqDirectionBID]>;
 #endif // NG_OP_ATTRIBUTES

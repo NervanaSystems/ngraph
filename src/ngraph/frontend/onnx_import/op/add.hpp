@@ -16,10 +16,10 @@
 
 #pragma once
 
+#include <memory>
+
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -29,27 +29,13 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector add(const Node& node)
-                {
-                    auto left_rank = node.get_ng_inputs().at(0)->get_shape().size();
-                    auto right_rank = node.get_ng_inputs().at(1)->get_shape().size();
-                    auto axis =
-                        node.get_attribute_value<std::int64_t>("axis", left_rank - right_rank);
-                    NodeVector ng_inputs{ngraph::op::legacy_style_broadcast_for_binary_operation(
-                        node.get_ng_inputs().at(0), node.get_ng_inputs().at(1), axis)};
-
-                    return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
-                }
+                NodeVector add(const Node& node);
 
             } // namespace set_1
 
             namespace set_7
             {
-                inline NodeVector add(const Node& node)
-                {
-                    return {std::make_shared<ngraph::op::v1::Add>(node.get_ng_inputs().at(0),
-                                                                  node.get_ng_inputs().at(1))};
-                }
+                NodeVector add(const Node& node);
 
             } // namespace set_7
 

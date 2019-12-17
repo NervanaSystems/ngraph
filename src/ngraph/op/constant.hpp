@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <cmath>
 #include <cstring>
 #include <sstream>
 
@@ -30,12 +31,12 @@ namespace ngraph
     namespace op
     {
         /// \brief Class for constants.
-        class Constant : public Op
+        class NGRAPH_API Constant : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Constant", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            Constant() = default;
             /// \brief Constructs a tensor constant.
             ///
             /// \param type The element type of the tensor constant.
@@ -46,8 +47,9 @@ namespace ngraph
             Constant(const element::Type& type, Shape shape, const std::vector<T>& values)
                 : m_element_type(type)
                 , m_shape(shape)
-                , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
-                                                    host_alignment()))
+                , m_data(new runtime::AlignedBuffer(
+                      std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f),
+                      host_alignment()))
             {
                 NODE_VALIDATION_CHECK(
                     this,
@@ -82,8 +84,9 @@ namespace ngraph
             Constant(const element::Type& type, Shape shape, const std::vector<std::string>& values)
                 : m_element_type(type)
                 , m_shape(shape)
-                , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
-                                                    host_alignment()))
+                , m_data(new runtime::AlignedBuffer(
+                      std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f),
+                      host_alignment()))
             {
                 NODE_VALIDATION_CHECK(
                     this,
@@ -143,9 +146,8 @@ namespace ngraph
                 , m_shape(shape)
                 , m_data(nullptr)
             {
-                size_t size = shape_size(m_shape) * m_element_type.size();
-                m_data.reset(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
-                                                        host_alignment()));
+                size_t size = std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f);
+                m_data.reset(new runtime::AlignedBuffer(size, host_alignment()));
                 std::memcpy(m_data->get_ptr(), data, size);
                 constructor_validate_and_infer_types();
                 m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
@@ -238,6 +240,87 @@ namespace ngraph
                     rc.push_back(p[i]);
                 }
                 return rc;
+            }
+
+            /// \brief Return the Constant's value as a vector cast to type T
+            ///
+            /// \tparam T  Type to which data vector's entries will be cast.
+            /// \return    Constant's data vector.
+            template <typename T>
+            std::vector<T> cast_vector() const
+            {
+                auto source_type = get_element_type();
+                switch (source_type)
+                {
+                case element::Type_t::boolean:
+                {
+                    auto vector = get_vector<char>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::bf16:
+                {
+                    auto vector = get_vector<bfloat16>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::f16:
+                {
+                    auto vector = get_vector<float16>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::f32:
+                {
+                    auto vector = get_vector<float>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::f64:
+                {
+                    auto vector = get_vector<double>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::i8:
+                {
+                    auto vector = get_vector<int8_t>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::i16:
+                {
+                    auto vector = get_vector<int16_t>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::i32:
+                {
+                    auto vector = get_vector<int32_t>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::i64:
+                {
+                    auto vector = get_vector<int64_t>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::u8:
+                {
+                    auto vector = get_vector<uint8_t>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::u16:
+                {
+                    auto vector = get_vector<uint16_t>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::u32:
+                {
+                    auto vector = get_vector<uint32_t>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::u64:
+                {
+                    auto vector = get_vector<uint64_t>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::u1:
+                case element::Type_t::undefined:
+                case element::Type_t::dynamic: throw std::runtime_error("unsupported type");
+                }
             }
 
             const void* get_data_ptr() const { return (m_data ? m_data->get_ptr() : nullptr); }
@@ -356,13 +439,11 @@ namespace ngraph
             Constant operator=(const Constant&) = delete;
         };
 
-        class ScalarConstantLikeBase : public Constant
+        class NGRAPH_API ScalarConstantLikeBase : public Constant
         {
         public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"ScalarConstantLikeBase", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
             std::shared_ptr<op::Constant> as_constant() const;
+            ScalarConstantLikeBase() = default;
 
         protected:
             ScalarConstantLikeBase(const OutputVector& args)
@@ -372,9 +453,11 @@ namespace ngraph
         };
 
         /// \brief A scalar constant whose element type is the same as like.
-        class ScalarConstantLike : public ScalarConstantLikeBase
+        class NGRAPH_API ScalarConstantLike : public ScalarConstantLikeBase
         {
         public:
+            static constexpr NodeTypeInfo type_info{"ScalarConstantLike", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief A scalar constant whose element type is the same as like.
             ///
             /// Once the element type is known, the dependency on like will be removed and
@@ -389,6 +472,8 @@ namespace ngraph
             {
                 constructor_validate_and_infer_types();
             }
+
+            ScalarConstantLike() = default;
 
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 

@@ -28,7 +28,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::ImplicitBroadcastElimination : public ngraph::pass::NodePass
+class NGRAPH_API ngraph::pass::ImplicitBroadcastElimination : public ngraph::pass::NodePass
 {
 public:
     bool run_on_node(std::shared_ptr<ngraph::Node> node) override;

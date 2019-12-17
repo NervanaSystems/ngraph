@@ -31,6 +31,12 @@ namespace ngraph
 
             } // namespace set_1
 
+            namespace set_6
+            {
+                NodeVector gemm(const Node& node);
+
+            } // namespace set_6
+
         } // namespace op
 
     } // namespace  onnx_import

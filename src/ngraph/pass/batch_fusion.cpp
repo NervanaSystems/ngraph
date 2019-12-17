@@ -62,8 +62,8 @@ static bool is_trivial_convolution(std::shared_ptr<op::Convolution> conv)
 {
     Strides stride_1{1, 1};
     CoordinateDiff pad_0{0, 0};
-    return conv->get_window_dilation_strides() == stride_1 ||
-           conv->get_data_dilation_strides() == stride_1 || conv->get_padding_above() == pad_0 ||
+    return conv->get_window_dilation_strides() == stride_1 &&
+           conv->get_data_dilation_strides() == stride_1 && conv->get_padding_above() == pad_0 &&
            conv->get_padding_below() == pad_0;
 }
 
@@ -115,6 +115,7 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
             NGRAPH_DEBUG << "convolution data's rank isn't equal to 4";
             return {nullptr};
         }
+
         if (!is_trivial_convolution(sconv))
         {
             NGRAPH_DEBUG << arg->get_name() << " isn't trivial convolution";

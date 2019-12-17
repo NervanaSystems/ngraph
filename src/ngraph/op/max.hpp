@@ -26,10 +26,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Max-reduction operation.
-            class Max : public util::ArithmeticReduction
+            class NGRAPH_API Max : public util::ArithmeticReduction
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Max", 0};
 
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
@@ -58,10 +57,9 @@ namespace ngraph
 
         namespace v1
         {
-            class ReduceMax : public util::ArithmeticReductionKeepDims
+            class NGRAPH_API ReduceMax : public util::ArithmeticReductionKeepDims
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ReduceMax", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a summation operation.

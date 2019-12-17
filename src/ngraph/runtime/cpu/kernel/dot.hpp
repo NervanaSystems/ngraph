@@ -180,12 +180,12 @@ namespace ngraph
                              const Shape& arg1_shape,
                              const Shape& out_shape,
                              size_t reduction_axes_count,
-                             void* input0_scale = nullptr,
-                             void* input0_zero_point = nullptr,
-                             void* input1_scale = nullptr,
-                             void* input1_zero_point = nullptr,
-                             void* output_scale = nullptr,
-                             void* output_zero_point = nullptr)
+                             void* input0_scale,
+                             void* input0_zero_point,
+                             void* input1_scale,
+                             void* input1_zero_point,
+                             void* output_scale,
+                             void* output_zero_point)
                 {
                     reference::dot<INPUT0, INPUT1, OUTPUT, ACCUMULATION>(
                         static_cast<const INPUT0*>(arg0),
