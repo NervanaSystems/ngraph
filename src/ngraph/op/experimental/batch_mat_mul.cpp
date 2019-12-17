@@ -77,7 +77,7 @@ void op::BatchMatMul::validate_and_infer_types()
     set_output_type(0, output_et, output_shape);
 }
 
-void op::BatchMatMul::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::BatchMatMul::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0); // NxIxK
 

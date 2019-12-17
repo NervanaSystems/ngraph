@@ -40,6 +40,6 @@ Mathematical Definition
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Relu
+.. doxygenclass:: ngraph::op::v0::Relu
    :project: ngraph
    :members:
