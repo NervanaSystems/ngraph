@@ -1843,7 +1843,6 @@ private:
         case OP_TYPEID::MatMul:
         case OP_TYPEID::Split:
         case OP_TYPEID::DynBroadcast:
-        case OP_TYPEID::Transpose:
         case OP_TYPEID::DynPad:
         case OP_TYPEID::Tile:
         case OP_TYPEID::DynReplaceSlice:

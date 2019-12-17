@@ -22,8 +22,8 @@
 
 #include "core/node.hpp"
 #include "ngraph/axis_set.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/convert.hpp"
-#include "ngraph/op/reshape.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/util.hpp"
 #include "utils/common.hpp"
@@ -99,10 +99,7 @@ namespace ngraph
 
                 auto output_shape = input_node->get_shape();
                 output_shape.at(valid_axis) = 1;
-                auto reshape_node = std::make_shared<ngraph::op::Reshape>(
-                    convert_node,
-                    ngraph::get_default_order(op_node->get_shape().size()),
-                    Shape{output_shape});
+                auto reshape_node = builder::reshape(op_node, output_shape);
 
                 // WORKAROUND FOR PROBLEMS WITH RESHAPE ON i64 @TODO: remove
                 auto reconvert_node =

@@ -75,10 +75,7 @@ namespace ngraph
                 {
                     output_shape.at(idx) = 1;
                 }
-                return std::make_shared<ngraph::op::Reshape>(
-                    op_node,
-                    ngraph::get_default_order(op_node->get_shape().size()),
-                    Shape{output_shape});
+                return builder::reshape(op_node, output_shape);
             }
 
             std::shared_ptr<ngraph::Node>
