@@ -217,7 +217,8 @@ public:
             unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>&
                 backend_handlers)
         : m_node(n)
-        , m_ti(TI(*m_node.get()))
+        , m_node_ref(*n)
+        , m_ti(TI(m_node_ref))
         , m_backend_handlers(backend_handlers)
     {
     }
@@ -245,6 +246,8 @@ public:
 
 private:
     shared_ptr<Node> m_node;
+    // m_node_ref is only to allow getting the type_index in the ctor
+    Node& m_node_ref;
     std::type_index m_ti;
     unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>&
         m_backend_handlers;
