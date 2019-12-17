@@ -2649,3 +2649,83 @@ NGRAPH_TEST(${BACKEND_NAME}, cross_entropy_with_one_hot)
     auto result = read_vector<float>(result0);
     EXPECT_TRUE(test::all_close_f(result, expected, 23));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, depth_to_space_space_to_depth_block_first)
+{
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    Shape dts_input_shape{2, 32, 2, 4, 2, 4};
+    size_t block_size = 2;
+
+    auto dts_input = make_shared<op::Parameter>(element::f32, dts_input_shape);
+    auto depth_to_space = make_shared<op::DepthToSpace>(
+        dts_input, op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST, block_size);
+    auto dts_func = make_shared<Function>(NodeVector{depth_to_space}, ParameterVector{dts_input});
+
+    auto dts_input_tensor = backend->create_tensor(element::f32, dts_input_shape);
+    const auto data_size = shape_size(dts_input_shape);
+    vector<float> data(data_size);
+    std::iota(data.begin(), data.end(), 0);
+    copy_data(dts_input_tensor, data);
+    const auto dts_output_shape = depth_to_space->get_output_shape(0);
+    auto dts_output_tensor = backend->create_tensor(element::f32, dts_output_shape);
+    auto handle = backend->compile(dts_func);
+    handle->call_with_validate({dts_output_tensor}, {dts_input_tensor});
+    auto dts_result = read_vector<float>(dts_output_tensor);
+
+    // use depth_to_space output as space_to_depth input
+    auto std_input = make_shared<op::Parameter>(element::f32, dts_output_shape);
+    auto space_to_depth = make_shared<op::SpaceToDepth>(
+        std_input, op::SpaceToDepth::SpaceToDepthMode::BLOCKS_FIRST, block_size);
+    auto std_func = make_shared<Function>(NodeVector{space_to_depth}, ParameterVector{std_input});
+
+    auto std_input_tensor = backend->create_tensor(element::f32, dts_output_shape);
+    copy_data(std_input_tensor, dts_result);
+    auto std_output_tensor = backend->create_tensor(element::f32, dts_input_shape);
+    handle = backend->compile(std_func);
+    handle->call_with_validate({std_output_tensor}, {std_input_tensor});
+    auto std_result = read_vector<float>(std_output_tensor);
+
+    // expected output of space_to_depth is input of depth_to_space
+    ASSERT_EQ(dts_input_shape, space_to_depth->get_output_shape(0));
+    EXPECT_TRUE(test::all_close_f(std_result, data, data_size));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, depth_to_space_space_to_depth_depth_first)
+{
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    Shape dts_input_shape{2, 32, 2, 4, 2, 4};
+    size_t block_size = 2;
+
+    auto dts_input = make_shared<op::Parameter>(element::f32, dts_input_shape);
+    auto depth_to_space = make_shared<op::DepthToSpace>(
+        dts_input, op::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST, block_size);
+    auto dts_func = make_shared<Function>(NodeVector{depth_to_space}, ParameterVector{dts_input});
+
+    auto dts_input_tensor = backend->create_tensor(element::f32, dts_input_shape);
+    const auto data_size = shape_size(dts_input_shape);
+    vector<float> data(data_size);
+    std::iota(data.begin(), data.end(), 0);
+    copy_data(dts_input_tensor, data);
+    const auto dts_output_shape = depth_to_space->get_output_shape(0);
+    auto dts_output_tensor = backend->create_tensor(element::f32, dts_output_shape);
+    auto handle = backend->compile(dts_func);
+    handle->call_with_validate({dts_output_tensor}, {dts_input_tensor});
+    auto dts_result = read_vector<float>(dts_output_tensor);
+
+    // use depth_to_space output as space_to_depth input
+    auto std_input = make_shared<op::Parameter>(element::f32, dts_output_shape);
+    auto space_to_depth = make_shared<op::SpaceToDepth>(
+        std_input, op::SpaceToDepth::SpaceToDepthMode::DEPTH_FIRST, block_size);
+    auto std_func = make_shared<Function>(NodeVector{space_to_depth}, ParameterVector{std_input});
+
+    auto std_input_tensor = backend->create_tensor(element::f32, dts_output_shape);
+    copy_data(std_input_tensor, dts_result);
+    auto std_output_tensor = backend->create_tensor(element::f32, dts_input_shape);
+    handle = backend->compile(std_func);
+    handle->call_with_validate({std_output_tensor}, {std_input_tensor});
+    auto std_result = read_vector<float>(std_output_tensor);
+
+    // expected output of space_to_depth is input of depth_to_space
+    ASSERT_EQ(dts_input_shape, space_to_depth->get_output_shape(0));
+    EXPECT_TRUE(test::all_close_f(std_result, data, data_size));
+}

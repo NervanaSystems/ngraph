@@ -27,35 +27,29 @@ namespace ngraph
 {
     namespace fluid
     {
-        /// \brief Operator performing Matrix Multiplication.
-        class NGRAPH_API MatMul : public op::util::FusedOp
+        /// \brief Fluid layout converter
+        class NGRAPH_API LayoutConverter : public ngraph::op::util::FusedOp
         {
         public:
-            static constexpr NodeTypeInfo type_info{"MatMul", 0};
+            static constexpr NodeTypeInfo type_info{"FluidLayoutConverter", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
-            MatMul() = default;
-            /// \brief Constructs a MatMul operation.
+            LayoutConverter() = default;
+            /// \brief Constructs a LayoutConverter operation.
             ///
-            /// \param A Matrix A
-            /// \param B Matrix B
-            /// \param transpose_a If matrix A should be transposed.
-            /// \param transpose_b If matrix B should be transposed.
-            MatMul(const Output<Node>& A,
-                   const Output<Node>& B,
-                   const bool& transpose_a = 0,
-                   const bool& transpose_b = 0);
+            /// \param x Input x
+            /// \param mode : 1. nhwc->nchw, 2 hchw->nhwc
+            LayoutConverter(const Output<Node>& x, const int mode);
 
             virtual NodeVector decompose_op() const override;
 
-            void pre_validate_and_infer_types() override;
+            virtual void validate_and_infer_types() override;
 
-            virtual shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
 
-            bool get_transpose_a() const { return m_transpose_a; }
-            bool get_transpose_b() const { return m_transpose_b; }
-        private:
-            bool m_transpose_a;
-            bool m_transpose_b;
+            int get_mode() const { return m_mode; }
+        protected:
+            int m_mode;
         };
     } // namespace fluid
 } // namespace ngraph
