@@ -14,9 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/fused/unsqueeze.hpp"
-#include "ngraph/op/constant.hpp"
-#include "squeeze.hpp"
+#include <memory>
+
+#include "default_opset.hpp"
+#include "ngraph/shape.hpp"
+#include "unsqueeze.hpp"
 #include "utils/common.hpp"
 
 namespace ngraph
@@ -34,9 +36,9 @@ namespace ngraph
                     const auto expanded_rank = data->get_shape().size() + axes.size();
                     std::vector<std::size_t> valid_axes =
                         common::validate_axes(node, axes, expanded_rank);
-                    auto axes_node = std::make_shared<ngraph::op::Constant>(
+                    auto axes_node = std::make_shared<default_opset::Constant>(
                         element::i64, Shape{valid_axes.size()}, valid_axes);
-                    return {std::make_shared<ngraph::op::Unsqueeze>(data, axes_node)};
+                    return {std::make_shared<default_opset::Unsqueeze>(data, axes_node)};
                 }
 
             } // namespace set_1

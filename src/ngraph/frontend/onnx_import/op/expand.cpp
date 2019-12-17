@@ -16,11 +16,12 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 
+#include "default_opset.hpp"
 #include "expand.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/op/broadcast.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/range.hpp"
@@ -45,7 +46,8 @@ namespace ngraph
                                  "Ngraph does not support dynamic braodcasting for Expand op.");
 
                     std::vector<std::size_t> shape_vector =
-                        ngraph::as_type_ptr<ngraph::op::Constant>(shape)->get_vector<std::size_t>();
+                        ngraph::as_type_ptr<default_opset::Constant>(shape)
+                            ->get_vector<std::size_t>();
 
                     const ngraph::Shape shape_shape{shape_vector};
                     return {ngraph::op::numpy_style_broadcast(data, shape_shape)};

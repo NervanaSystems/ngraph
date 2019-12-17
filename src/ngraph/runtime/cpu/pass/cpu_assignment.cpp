@@ -411,7 +411,8 @@ namespace ngraph
                         (node->get_input_element_type(0) == element::f32 ||
                          node->get_input_element_type(0) == element::u8 ||
                          node->get_input_element_type(0) == element::i8 ||
-                         node->get_input_element_type(0) == element::bf16))
+                         (node->get_input_element_type(0) == element::bf16 &&
+                          runtime::cpu::mkldnn_utils::is_bf16_supported())))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }

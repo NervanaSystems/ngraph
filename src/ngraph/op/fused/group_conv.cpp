@@ -142,7 +142,7 @@ shared_ptr<Node> op::v1::GroupConvolution::copy_with_new_args(const NodeVector& 
 }
 
 void op::v1::GroupConvolution::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                 const NodeVector& deltas)
+                                                 const OutputVector& deltas)
 {
     ngraph_error("Not Yet Implemented");
 }
@@ -192,13 +192,28 @@ op::v1::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
 
 const PartialShape op::v1::GroupConvolutionBackpropData::get_output_shape() const
 {
-    PartialShape shape{PartialShape::dynamic()};
+    PartialShape shape{vector<Dimension>(m_strides.size() + 2)};
+    auto data_pshape = get_input_partial_shape(0);
+    if (data_pshape.rank().is_static())
+    {
+        shape[0] = data_pshape[0]; // N
+    }
+    auto filters_pshape = get_input_partial_shape(1);
+    if (filters_pshape.rank().is_static())
+    {
+        shape[1] = filters_pshape[1]; // C
+    }
     bool is_output_shape_present = get_inputs().size() == 3;
     if (is_output_shape_present)
     {
         if (auto const_op = as_type<op::Constant>(input_value(2).get_node()))
         {
-            shape = const_op->get_shape_val();
+            auto output_shape = const_op->get_shape_val();
+            // Populate spatials
+            for (int i = 0; i < output_shape.size(); ++i)
+            {
+                shape[i + 2] = output_shape[i];
+            }
         }
     }
     return shape;
@@ -257,26 +272,16 @@ void op::v1::GroupConvolutionBackpropData::validate_and_infer_types()
     if (is_output_shape_present)
     {
         set_input_is_relevant_to_shape(2);
-        if (output_pshape.is_static() && data_pshape.is_static())
-        {
-            auto data_shape = data_pshape.to_shape();
-            auto output_shape = output_pshape.to_shape();
-            output_shape.insert(output_shape.begin(), data_shape.begin(), data_shape.begin() + 1);
-            output_pshape = output_shape;
-        }
     }
     else
     {
         if (filters_pshape.is_static() && data_pshape.is_static())
         {
             auto filters_shape = filters_pshape.to_shape();
-            filters_shape.erase(filters_shape.begin(),
-                                filters_shape.begin() + 3); // remove {G, O, I}
             auto data_shape = data_pshape.to_shape();
-            data_shape.erase(data_shape.begin(), data_shape.begin() + 2); // remove {N, C}
 
             Shape output_shape;
-            auto data_spatial_rank = data_shape.size();
+            auto data_spatial_rank = data_shape.size() - 2;
             auto output_padding = get_output_padding();
             if (output_padding.size() == 0)
             {
@@ -284,13 +289,15 @@ void op::v1::GroupConvolutionBackpropData::validate_and_infer_types()
             }
             for (size_t i = 0; i < data_spatial_rank; ++i)
             {
-                size_t tmp = m_strides[i] * (data_shape[i] - 1) +
-                             ((filters_shape[i] - 1) * m_dilations[i] + 1) - m_pads_begin[i] -
+                size_t tmp = m_strides[i] * (data_shape[i + 2] - 1) +
+                             ((filters_shape[i + 3] - 1) * m_dilations[i] + 1) - m_pads_begin[i] -
                              m_pads_end[i] + output_padding[i];
                 output_shape.push_back(tmp);
-                output_pshape = output_shape;
             }
-            output_shape.insert(output_shape.begin(), data_shape.begin(), data_shape.begin() + 1);
+            output_shape.insert(output_shape.begin(),
+                                filters_shape.at(0) * filters_shape.at(2)); // GROUP * C_OUTPUT
+            output_shape.insert(output_shape.begin(), data_shape.at(0));
+            output_pshape = output_shape;
         }
     }
 
@@ -300,7 +307,7 @@ void op::v1::GroupConvolutionBackpropData::validate_and_infer_types()
 }
 
 void op::v1::GroupConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                             const NodeVector& deltas)
+                                                             const OutputVector& deltas)
 {
     ngraph_error("Not Yet Implemented");
 }
@@ -527,8 +534,8 @@ NodeVector op::v0::GroupConvolution::decompose_op() const
     return {std::make_shared<ngraph::op::Concat>(convolution_nodes, concatenation_axis)};
 }
 
-void op::v0::GroupConvolution::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                                 const NodeVector& /* deltas */)
+void op::GroupConvolution::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                             const OutputVector& /* deltas */)
 {
     throw ngraph_error("NYI");
 }
@@ -593,49 +600,34 @@ shared_ptr<Node>
 
 NodeVector op::v0::GroupConvolutionBackpropData::decompose_op() const
 {
-    auto data_batch = input_value(0);
     auto filters = input_value(1);
     auto output_delta = input_value(2);
 
     auto data_shape = get_input_shape(0);
-    auto filters_shape = get_input_shape(1);
-    auto delta_shape = get_input_shape(2);
 
     NodeVector sliced_inputs;
 
-    for (size_t i = 0; i < get_groups(); ++i)
+    auto groups = get_groups();
+    // slice data shape
+    data_shape[1] /= groups;
+    // slice delta
+    auto sliced_delta = builder::split(output_delta, groups, 1);
+    // slice filters
+    auto sliced_filters = builder::split(filters, groups, 0);
+
+    auto num_spatials = get_window_movement_strides().size();
+
+    for (size_t i = 0; i < groups; ++i)
     {
-        size_t channel_step = filters_shape.at(1);
-
-        const Coordinate data_lower_bound{0, i * channel_step, 0, 0};
-        const Coordinate data_upper_bound{
-            data_shape.at(0), (i + 1) * channel_step, data_shape.at(2), data_shape.at(3)};
-        auto sliced_data =
-            std::make_shared<op::Slice>(data_batch, data_lower_bound, data_upper_bound);
-
-        size_t filters_step = filters_shape.at(0) / get_groups();
-
-        const Coordinate filters_lower_bound{i * filters_step, 0, 0, 0};
-        const Coordinate filters_upper_bound{
-            (i + 1) * filters_step, filters_shape.at(1), filters_shape.at(2), filters_shape.at(3)};
-        auto sliced_filters =
-            std::make_shared<op::Slice>(filters, filters_lower_bound, filters_upper_bound);
-
-        const Coordinate delta_lower_bound{0, i * filters_step, 0, 0};
-        const Coordinate delta_upper_bound{
-            delta_shape.at(0), (i + 1) * filters_step, delta_shape.at(2), delta_shape.at(3)};
-        auto sliced_delta =
-            std::make_shared<op::Slice>(output_delta, delta_lower_bound, delta_upper_bound);
-
-        auto sliced_conv =
-            std::make_shared<op::ConvolutionBackpropData>(sliced_data->get_shape(),
-                                                          sliced_filters,
-                                                          sliced_delta,
-                                                          get_window_movement_strides(),
-                                                          get_window_dilation_strides(),
-                                                          get_padding_below(),
-                                                          get_padding_above(),
-                                                          Strides{1, 1});
+        auto sliced_conv = std::make_shared<op::ConvolutionBackpropData>(
+            data_shape,
+            sliced_filters[i],
+            sliced_delta[i],
+            get_window_movement_strides(),
+            get_window_dilation_strides(),
+            get_padding_below(),
+            get_padding_above(),
+            Strides(num_spatials, 1)); // default data dilation strides
 
         sliced_inputs.push_back(sliced_conv);
     }

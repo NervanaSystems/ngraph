@@ -18,11 +18,10 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/node.hpp"
-#include "ngraph/op/constant.hpp"
+#include "default_opset.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
-#include "shape.hpp"
+#include "size.hpp"
 
 namespace ngraph
 {
@@ -38,7 +37,7 @@ namespace ngraph
                     std::int64_t tensor_elements_count{
                         static_cast<std::int64_t>(shape_size(data->get_shape()))};
 
-                    return {std::make_shared<ngraph::op::Constant>(
+                    return {std::make_shared<default_opset::Constant>(
                         ngraph::element::i64,
                         Shape{},
                         std::vector<std::int64_t>{tensor_elements_count})};

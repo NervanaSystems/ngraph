@@ -14,12 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "op/conv_integer.hpp"
+#include "conv_integer.hpp"
+#include "exceptions.hpp"
 #include "ngraph/builder/make_constant.hpp"
-#include "ngraph/frontend/onnx_import/exceptions.hpp"
-#include "ngraph/frontend/onnx_import/utils/convpool.hpp"
-#include "ngraph/op/quantized_convolution.hpp"
 #include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/opsets/opset0.hpp"
+#include "utils/convpool.hpp"
 
 using namespace ngraph::builder;
 
@@ -66,7 +66,7 @@ namespace ngraph
 
                     if (num_inputs == 2)
                     {
-                        return {std::make_shared<ngraph::op::QuantizedConvolution>(
+                        return {std::make_shared<ngraph::opset0::QuantizedConvolution>(
                             input,
                             filters,
                             window_movement_strides,
@@ -92,7 +92,7 @@ namespace ngraph
                         filters_zero_point = inputs.at(3);
                     }
 
-                    return {std::make_shared<ngraph::op::QuantizedConvolution>(
+                    return {std::make_shared<ngraph::opset0::QuantizedConvolution>(
                         input,
                         filters,
                         window_movement_strides,

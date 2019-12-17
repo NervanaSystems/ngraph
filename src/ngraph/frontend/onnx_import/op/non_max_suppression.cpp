@@ -13,10 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+
 #include <memory>
 
-#include "ngraph/frontend/onnx_import/exceptions.hpp"
-#include "ngraph/op/constant.hpp"
+#include "default_opset.hpp"
+#include "exceptions.hpp"
 #include "ngraph/op/non_max_suppression.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "non_max_suppression.hpp"
@@ -46,7 +47,7 @@ namespace ngraph
                     else
                     {
                         max_output_boxes_per_class =
-                            ngraph::op::Constant::create(element::i64, Shape{}, {0});
+                            default_opset::Constant::create(element::i64, Shape{}, {0});
                     }
 
                     std::shared_ptr<ngraph::Node> iou_threshold;
@@ -56,7 +57,8 @@ namespace ngraph
                     }
                     else
                     {
-                        iou_threshold = ngraph::op::Constant::create(element::f32, Shape{}, {.0f});
+                        iou_threshold =
+                            default_opset::Constant::create(element::f32, Shape{}, {.0f});
                     }
 
                     std::shared_ptr<ngraph::Node> score_threshold;
@@ -67,7 +69,7 @@ namespace ngraph
                     else
                     {
                         score_threshold =
-                            ngraph::op::Constant::create(element::f32, Shape{}, {.0f});
+                            default_opset::Constant::create(element::f32, Shape{}, {.0f});
                     }
 
                     const auto center_point_box =
@@ -78,10 +80,10 @@ namespace ngraph
 
                     const auto box_encoding =
                         center_point_box == 0
-                            ? ngraph::op::v1::NonMaxSuppression::BoxEncodingType::CORNER
-                            : ngraph::op::v1::NonMaxSuppression::BoxEncodingType::CENTER;
+                            ? default_opset::NonMaxSuppression::BoxEncodingType::CORNER
+                            : default_opset::NonMaxSuppression::BoxEncodingType::CENTER;
 
-                    return {std::make_shared<ngraph::op::v1::NonMaxSuppression>(
+                    return {std::make_shared<default_opset::NonMaxSuppression>(
                         boxes,
                         scores,
                         max_output_boxes_per_class,

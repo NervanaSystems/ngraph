@@ -18,15 +18,13 @@
 #include <memory>
 #include <vector>
 
+#include "default_opset.hpp"
+#include "exceptions.hpp"
 #include "ngraph/builder/quantization/quantized_linear_convolution.hpp"
 #include "ngraph/coordinate_diff.hpp"
-#include "ngraph/frontend/onnx_import/exceptions.hpp"
-#include "ngraph/frontend/onnx_import/op/conv.hpp"
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
-#include "ngraph/op/concat.hpp"
-#include "ngraph/op/quantized_convolution.hpp"
-#include "ngraph/op/slice.hpp"
 #include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "ngraph/strides.hpp"
 #include "quant_conv.hpp"
 
@@ -103,12 +101,12 @@ namespace ngraph
                                 // slice data
                                 data_lower_bounds[1] = group * data_group_size;
                                 data_upper_bounds[1] = (group + 1) * data_group_size;
-                                auto sliced_data = std::make_shared<ngraph::op::Slice>(
+                                auto sliced_data = std::make_shared<ngraph::opset0::Slice>(
                                     data, data_lower_bounds, data_upper_bounds);
                                 // slice filters
                                 filters_lower_bounds[0] = group * filters_group_size;
                                 filters_upper_bounds[0] = (group + 1) * filters_group_size;
-                                auto sliced_filters = std::make_shared<ngraph::op::Slice>(
+                                auto sliced_filters = std::make_shared<ngraph::opset0::Slice>(
                                     filters, filters_lower_bounds, filters_upper_bounds);
 
                                 if (bias)
@@ -120,7 +118,7 @@ namespace ngraph
                                 else
                                 {
                                     convolution_nodes.push_back(
-                                        std::make_shared<ngraph::op::QuantizedConvolution>(
+                                        std::make_shared<ngraph::opset0::QuantizedConvolution>(
                                             sliced_data,
                                             sliced_filters,
                                             strides,
@@ -141,8 +139,8 @@ namespace ngraph
                                 }
                             }
                             std::size_t concatenation_axis = 1;
-                            return std::make_shared<ngraph::op::Concat>(convolution_nodes,
-                                                                        concatenation_axis);
+                            return std::make_shared<default_opset::Concat>(convolution_nodes,
+                                                                           concatenation_axis);
                         }
                         else
                         {
@@ -163,7 +161,7 @@ namespace ngraph
                             }
                             else
                             {
-                                return std::make_shared<ngraph::op::QuantizedConvolution>(
+                                return std::make_shared<ngraph::opset0::QuantizedConvolution>(
                                     data,
                                     filters,
                                     strides,

@@ -14,12 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
-#include <memory>
-
-#include "core/node.hpp"
-#include "ngraph/node.hpp"
+#include "ngraph/opsets/opset0.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -29,11 +25,18 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector reverse_sequence(const Node& node);
+                NodeVector gather_nd(const Node& node)
+                {
+                    NodeVector ng_inputs{node.get_ng_inputs()};
+                    auto data = ng_inputs.at(0);
+                    auto indices = ng_inputs.at(1);
+
+                    return {std::make_shared<ngraph::opset0::GatherND>(data, indices)};
+                }
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

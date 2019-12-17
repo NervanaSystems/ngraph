@@ -14,12 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <memory>
+
 #include "asinh.hpp"
+#include "default_opset.hpp"
 #include "ngraph/op/add.hpp"
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/sqrt.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -39,15 +39,15 @@ namespace ngraph
                     // asinh(x) = ln(x + sqrt(x^2 + 1))
                     //
 
-                    std::shared_ptr<ngraph::Node> one_node{ngraph::op::Constant::create(
+                    std::shared_ptr<ngraph::Node> one_node{default_opset::Constant::create(
                         data->get_element_type(),
                         data->get_shape(),
                         std::vector<float>(ngraph::shape_size(data->get_shape()), 1.f))};
 
                     std::shared_ptr<ngraph::Node> sqrt_node{
-                        std::make_shared<ngraph::op::Sqrt>(data * data + one_node)};
+                        std::make_shared<default_opset::Sqrt>(data * data + one_node)};
 
-                    return {std::make_shared<ngraph::op::Log>(data + sqrt_node)};
+                    return {std::make_shared<default_opset::Log>(data + sqrt_node)};
                 }
 
             } // namespace set_1

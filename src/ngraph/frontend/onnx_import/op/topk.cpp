@@ -17,44 +17,50 @@
 #include <cstdint>
 #include <memory>
 
+#include "default_opset.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "topk.hpp"
 #include "utils/common.hpp"
 #include "utils/reshape.hpp"
 
-/// \return Parse node attribute value for axis and adjust for negative value if needed.
-static std::int64_t get_axis(const ngraph::onnx_import::Node& node)
+namespace
 {
-    std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
+    /// \return Parse node attribute value for axis and adjust for negative value if needed.
+    std::int64_t get_axis(const ngraph::onnx_import::Node& node)
+    {
+        std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
 
-    auto data = node.get_ng_inputs().at(0);
-    auto data_rank = data->get_shape().size();
-    return ngraph::onnx_import::common::validate_axis(node, axis, data_rank);
-}
+        auto data = node.get_ng_inputs().at(0);
+        auto data_rank = data->get_shape().size();
+        return ngraph::onnx_import::common::validate_axis(node, axis, data_rank);
+    }
 
-/// \return Return the second input to the TopK node reshaped to a scalar.
-static std::shared_ptr<ngraph::Node> get_k(const ngraph::onnx_import::Node& node)
-{
-    auto k_node = node.get_ng_inputs().at(1);
-    NGRAPH_CHECK(shape_size(k_node->get_shape()) == 1,
-                 "ONNX TopK operator: 'K' parameter must contain a single positive value.",
-                 node);
+    /// \return Return the second input to the TopK node reshaped to a scalar.
+    std::shared_ptr<ngraph::Node> get_k(const ngraph::onnx_import::Node& node)
+    {
+        auto k_node = node.get_ng_inputs().at(1);
+        NGRAPH_CHECK(shape_size(k_node->get_shape()) == 1,
+                     "ONNX TopK operator: 'K' parameter must contain a single positive value.",
+                     node);
 
-    return ngraph::onnx_import::reshape::interpret_as_scalar(k_node);
-}
+        return ngraph::onnx_import::reshape::interpret_as_scalar(k_node);
+    }
 
-/// \return Return the outputs of the TopK node.
-static ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node)
-{
-    std::shared_ptr<ngraph::Node> values = std::make_shared<ngraph::op::GetOutputElement>(node, 0);
-    std::shared_ptr<ngraph::Node> indices = std::make_shared<ngraph::op::GetOutputElement>(node, 1);
+    /// \return Return the outputs of the TopK node.
+    ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node)
+    {
+        std::shared_ptr<ngraph::Node> values =
+            std::make_shared<ngraph::opset0::GetOutputElement>(node, 0);
+        std::shared_ptr<ngraph::Node> indices =
+            std::make_shared<ngraph::opset0::GetOutputElement>(node, 1);
 
-    return {values, indices};
+        return {values, indices};
+    }
 }
 
 namespace ngraph
@@ -69,15 +75,15 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
                     std::int64_t k{node.get_attribute_value<std::int64_t>("k")};
-                    auto k_node = ngraph::op::Constant::create(element::i64, Shape{}, {k});
+                    auto k_node = default_opset::Constant::create(element::i64, Shape{}, {k});
                     auto axis = get_axis(node);
 
-                    std::shared_ptr<ngraph::Node> top_k = std::make_shared<ngraph::op::v1::TopK>(
+                    std::shared_ptr<ngraph::Node> top_k = std::make_shared<default_opset::TopK>(
                         data,
                         k_node,
                         axis,
-                        ngraph::op::v1::TopK::Mode::MAX,
-                        ngraph::op::v1::TopK::SortType::SORT_VALUES,
+                        default_opset::TopK::Mode::MAX,
+                        default_opset::TopK::SortType::SORT_VALUES,
                         element::i64);
 
                     return get_outputs(top_k);
@@ -92,12 +98,12 @@ namespace ngraph
                     auto k = get_k(node);
                     auto axis = get_axis(node);
 
-                    std::shared_ptr<ngraph::Node> top_k = std::make_shared<ngraph::op::v1::TopK>(
+                    std::shared_ptr<ngraph::Node> top_k = std::make_shared<default_opset::TopK>(
                         data,
                         k,
                         axis,
-                        ngraph::op::v1::TopK::Mode::MAX,
-                        ngraph::op::v1::TopK::SortType::SORT_VALUES,
+                        default_opset::TopK::Mode::MAX,
+                        default_opset::TopK::SortType::SORT_VALUES,
                         element::i64);
 
                     return get_outputs(top_k);
@@ -118,14 +124,14 @@ namespace ngraph
                     const auto sorted = node.get_attribute_value<std::int64_t>("sorted", 1);
 
                     // Map attribute values to nGraph enums
-                    const auto sort_type = sorted ? ngraph::op::v1::TopK::SortType::SORT_VALUES
-                                                  : ngraph::op::v1::TopK::SortType::NONE;
+                    const auto sort_type = sorted ? default_opset::TopK::SortType::SORT_VALUES
+                                                  : default_opset::TopK::SortType::NONE;
 
                     const auto compute_max = static_cast<bool>(largest);
-                    const auto mode = compute_max ? ngraph::op::v1::TopK::Mode::MAX
-                                                  : ngraph::op::v1::TopK::Mode::MIN;
+                    const auto mode = compute_max ? default_opset::TopK::Mode::MAX
+                                                  : default_opset::TopK::Mode::MIN;
 
-                    std::shared_ptr<ngraph::Node> top_k = std::make_shared<ngraph::op::v1::TopK>(
+                    std::shared_ptr<ngraph::Node> top_k = std::make_shared<default_opset::TopK>(
                         data, k, axis, mode, sort_type, element::i64);
 
                     return get_outputs(top_k);

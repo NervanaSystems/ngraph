@@ -17,10 +17,9 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/op/fused/reciprocal.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "ngraph/shape.hpp"
-
 #include "reciprocal.hpp"
 
 namespace ngraph
@@ -35,7 +34,7 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
 
-                    return {std::make_shared<ngraph::op::Reciprocal>(data)};
+                    return {std::make_shared<ngraph::opset0::Reciprocal>(data)};
                 }
 
             } // namespace set_1

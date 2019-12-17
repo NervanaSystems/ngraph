@@ -16,13 +16,14 @@
 
 #include <memory>
 
+#include "default_opset.hpp"
 #include "exceptions.hpp"
 #include "ngraph/coordinate_diff.hpp"
-#include "ngraph/frontend/onnx_import/op/pad.hpp"
-#include "ngraph/frontend/onnx_import/utils/convpool.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/shape.hpp"
+#include "pad.hpp"
+#include "utils/convpool.hpp"
 
 namespace ngraph
 {
@@ -60,13 +61,13 @@ namespace ngraph
                     ngraph::CoordinateDiff padding_below = paddings.first;
                     ngraph::CoordinateDiff padding_above = paddings.second;
 
-                    return {std::make_shared<ngraph::op::v1::Pad>(
+                    return {std::make_shared<default_opset::Pad>(
                         data,
-                        std::make_shared<ngraph::op::Constant>(
+                        std::make_shared<default_opset::Constant>(
                             element::i64, ngraph::Shape{padding_below.size()}, padding_below),
-                        std::make_shared<ngraph::op::Constant>(
+                        std::make_shared<default_opset::Constant>(
                             element::i64, ngraph::Shape{padding_above.size()}, padding_above),
-                        std::make_shared<ngraph::op::Constant>(
+                        std::make_shared<default_opset::Constant>(
                             data->get_element_type(), ngraph::Shape{}, std::vector<double>{value}),
                         pad_mode)};
                 }

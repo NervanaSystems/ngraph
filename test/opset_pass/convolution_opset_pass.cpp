@@ -78,7 +78,7 @@ TEST(opset_transform, opset1_convolution_downgrade_pass)
 
 TEST(opset_transform, opset1_convolution_backprop_data_downgrade_pass)
 {
-    auto data_batch_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {64, 3, 100});
+    auto data_batch_shape = op::Constant::create<int64_t>(element::i64, Shape{1}, {100});
     auto filters = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});
     auto delta = make_shared<op::Parameter>(element::f32, Shape{64, 128, 96});
     auto strides = Strides{1};
@@ -137,4 +137,64 @@ TEST(opset_transform, opset1_convolution_backprop_filters_downgrade_pass)
     EXPECT_EQ(conv_v0_node->get_padding_below_forward(), padding_begin);
     EXPECT_EQ(conv_v0_node->get_padding_above_forward(), padding_end);
     EXPECT_EQ(conv_v0_node->get_data_dilation_strides_forward(), (Strides{1}));
+}
+
+TEST(opset_transform, opset1_group_convolution_backprop_data_downgrade_pass)
+{
+    auto output_shape = op::Constant::create<int64_t>(element::i64, Shape{1}, {100});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{1, 128, 3, 10});
+    auto delta = make_shared<op::Parameter>(element::f32, Shape{64, 128, 96});
+    auto strides = Strides{1};
+    auto dilations = Strides{1};
+    auto padding_begin = CoordinateDiff{2};
+    auto padding_end = CoordinateDiff{3};
+
+    auto group_conv_backprop = make_shared<op::v1::GroupConvolutionBackpropData>(
+        delta, filters, output_shape, strides, padding_begin, padding_end, dilations);
+    auto result = make_shared<op::Result>(group_conv_backprop);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{filters, delta});
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.run_passes(f);
+
+    auto group_conv_backprop_s0_result = f->get_results().at(0);
+    auto node = group_conv_backprop_s0_result->input(0).get_source_output().get_node_shared_ptr();
+    auto group_conv_backprop_v0_node = as_type_ptr<op::v0::GroupConvolutionBackpropData>(node);
+
+    ASSERT_TRUE(group_conv_backprop_v0_node);
+    EXPECT_EQ(group_conv_backprop_v0_node->get_window_movement_strides(), strides);
+    EXPECT_EQ(group_conv_backprop_v0_node->get_window_dilation_strides(), dilations);
+    EXPECT_EQ(group_conv_backprop_v0_node->get_padding_below(), padding_begin);
+    EXPECT_EQ(group_conv_backprop_v0_node->get_padding_above(), padding_end);
+}
+
+TEST(opset_transform, opset1_group_convolution_backprop_data_upgrade_pass)
+{
+    auto data_batch_shape = op::Constant::create<int64_t>(element::f32, Shape{64, 3, 100}, {0});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});
+    auto delta = make_shared<op::Parameter>(element::f32, Shape{64, 128, 96});
+    auto strides = Strides{1};
+    auto dilations = Strides{1};
+    auto padding_begin = CoordinateDiff{2};
+    auto padding_end = CoordinateDiff{3};
+
+    auto group_conv_backprop = make_shared<op::v0::GroupConvolutionBackpropData>(
+        data_batch_shape, filters, delta, strides, dilations, padding_begin, padding_end, 1);
+    auto result = make_shared<op::Result>(group_conv_backprop);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{filters, delta});
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Opset1Upgrade>();
+    pass_manager.run_passes(f);
+
+    auto group_conv_backprop_s1_result = f->get_results().at(0);
+    auto node = group_conv_backprop_s1_result->input(0).get_source_output().get_node_shared_ptr();
+    auto group_conv_backprop_v1_node = as_type_ptr<op::v1::GroupConvolutionBackpropData>(node);
+
+    ASSERT_TRUE(group_conv_backprop_v1_node);
+    EXPECT_EQ(group_conv_backprop_v1_node->get_strides(), strides);
+    EXPECT_EQ(group_conv_backprop_v1_node->get_dilations(), dilations);
+    EXPECT_EQ(group_conv_backprop_v1_node->get_pads_begin(), padding_begin);
+    EXPECT_EQ(group_conv_backprop_v1_node->get_pads_end(), padding_end);
 }

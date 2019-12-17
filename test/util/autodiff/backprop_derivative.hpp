@@ -142,7 +142,7 @@ namespace ngraph
             auto c_arg = backend->create_tensor<T>(y_shape);
 
             // df/dX*
-            std::vector<std::shared_ptr<Node>> df_output_params;
+            std::vector<Output<Node>> df_output_params;
 
             Adjoints adjoints(OutputVector{f->output(0)}, OutputVector{c_param});
 
@@ -150,7 +150,7 @@ namespace ngraph
             for (auto x : indep_params)
             {
                 // add df/dx to df/dX*
-                df_output_params.push_back(adjoints.backprop_node(x));
+                df_output_params.push_back(adjoints.backprop_output(x));
             }
 
             // (c, X)

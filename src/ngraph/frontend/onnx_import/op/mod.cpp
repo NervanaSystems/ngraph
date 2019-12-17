@@ -13,10 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+
 #include <memory>
 
+#include "default_opset.hpp"
+#include "exceptions.hpp"
 #include "mod.hpp"
-#include "ngraph/frontend/onnx_import/exceptions.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/fused/mod.hpp"
 #include "ngraph/op/util/attr_types.hpp"
@@ -38,7 +40,7 @@ namespace ngraph
                     ASSERT_IS_SUPPORTED(node, fmod == 1)
                         << "Only 'fmod=1' mode is supported for mod operator.";
 
-                    return {std::make_shared<ngraph::op::v1::Mod>(dividend, divisor)};
+                    return {std::make_shared<default_opset::Mod>(dividend, divisor)};
                 }
 
             } // namespace set_1

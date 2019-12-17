@@ -126,7 +126,8 @@ shared_ptr<Node> op::v1::Convolution::copy_with_new_args(const NodeVector& new_a
                                         m_auto_pad);
 }
 
-void op::v1::Convolution::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v1::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
+                                            const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -205,13 +206,28 @@ op::v1::ConvolutionBackpropData::ConvolutionBackpropData(const Output<Node>& dat
 
 const PartialShape op::v1::ConvolutionBackpropData::get_output_shape() const
 {
-    PartialShape shape{PartialShape::dynamic()};
+    PartialShape shape{vector<Dimension>(m_strides.size() + 2)};
+    auto data_pshape = get_input_partial_shape(0);
+    if (data_pshape.rank().is_static())
+    {
+        shape[0] = data_pshape[0]; // N
+    }
+    auto filters_pshape = get_input_partial_shape(1);
+    if (filters_pshape.rank().is_static())
+    {
+        shape[1] = filters_pshape[1]; // C
+    }
     bool is_output_shape_present = get_inputs().size() == 3;
     if (is_output_shape_present)
     {
         if (auto const_op = as_type<op::Constant>(input_value(2).get_node()))
         {
-            shape = const_op->get_shape_val();
+            auto output_shape = const_op->get_shape_val();
+            // Populate spatials
+            for (int i = 0; i < output_shape.size(); ++i)
+            {
+                shape[i + 2] = output_shape[i];
+            }
         }
     }
     return shape;
@@ -270,13 +286,6 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
     if (is_output_shape_present)
     {
         set_input_is_relevant_to_shape(2);
-        if (output_pshape.is_static() && data_pshape.is_static())
-        {
-            auto data_shape = data_pshape.to_shape();
-            auto output_shape = output_pshape.to_shape();
-            output_shape.insert(output_shape.begin(), data_shape.begin(), data_shape.begin() + 1);
-            output_pshape = output_shape;
-        }
     }
     else
     {
@@ -295,12 +304,13 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
             for (size_t i = 0; i < data_spatial_rank; ++i)
             {
                 size_t tmp = m_strides[i] * (data_shape[i + 2] - 1) +
-                             ((filters_shape[i] + 2 - 1) * m_dilations[i] + 1) - m_pads_begin[i] -
+                             ((filters_shape[i + 2] - 1) * m_dilations[i] + 1) - m_pads_begin[i] -
                              m_pads_end[i] + output_padding[i];
                 output_shape.push_back(tmp);
-                output_pshape = output_shape;
             }
-            output_shape.insert(output_shape.begin(), data_shape.begin(), data_shape.begin() + 1);
+            output_shape.insert(output_shape.begin(), filters_shape.at(1));
+            output_shape.insert(output_shape.begin(), data_shape.at(0));
+            output_pshape = output_shape;
         }
     }
 
@@ -310,7 +320,7 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
 }
 
 void op::v1::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                        const NodeVector& deltas)
+                                                        const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -707,7 +717,8 @@ shared_ptr<Node> op::v0::Convolution::copy_with_new_args(const NodeVector& new_a
                                         m_pad_type);
 }
 
-void op::v0::Convolution::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
+                                            const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -831,7 +842,7 @@ void op::v0::ConvolutionBackpropData::validate_and_infer_types()
 }
 
 void op::v0::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                        const NodeVector& deltas)
+                                                        const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

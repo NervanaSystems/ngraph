@@ -736,11 +736,11 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_bprop_n4c3h2w2)
     ngraph::autodiff::Adjoints adjoints(OutputVector{bn_dx, bn_dgamma, bn_dbeta},
                                         OutputVector{C, zero, zero});
 
-    auto dinput = adjoints.backprop_node(input);
-    auto dgamma = adjoints.backprop_node(gamma);
-    auto dbeta = adjoints.backprop_node(beta);
+    auto dinput = adjoints.backprop_output(input);
+    auto dgamma = adjoints.backprop_output(gamma);
+    auto dbeta = adjoints.backprop_output(beta);
 
-    auto df = make_shared<Function>(NodeVector{dinput, dgamma, dbeta},
+    auto df = make_shared<Function>(OutputVector{dinput, dgamma, dbeta},
                                     ParameterVector{mean, var, input, gamma, beta, C});
 
 #ifndef NGRAPH_JSON_DISABLE
@@ -825,4 +825,83 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_inference_b2c2h2w1)
 
     ASSERT_TRUE(
         ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, dyn_batch_norm_fprop_b1c2h2w2)
+{
+    // auto input_shape = Shape{1, 2, 2, 2};
+    auto input = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto mean_shape = Shape{2};
+    auto var_shape = Shape{2};
+    auto gamma_shape = Shape{2};
+    auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+    auto beta_shape = Shape{2};
+    auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+    double eps = 0.001;
+    auto shape_r = Shape{1, 2, 2, 2};
+    auto bn = make_shared<op::BatchNormTraining>(input, gamma, beta, eps);
+
+    auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
+    auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
+    auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
+
+    auto shapeof_mean_rt = std::make_shared<ngraph::op::ShapeOf>(mean_rt);
+    auto rankof_mean_rt = std::make_shared<ngraph::op::ShapeOf>(shapeof_mean_rt);
+    auto rank_scalar = std::make_shared<ngraph::op::Reshape>(
+        rankof_mean_rt, ngraph::AxisVector{0}, ngraph::Shape{});
+    auto range = std::make_shared<ngraph::op::Range>(
+        ngraph::op::Constant::create(ngraph::element::i64, ngraph::Shape{}, {0}),
+        rank_scalar,
+        ngraph::op::Constant::create(ngraph::element::i64, ngraph::Shape{}, {1}));
+
+    auto one_bcast = std::make_shared<ngraph::op::DynBroadcast>(
+        ngraph::op::Constant::create(mean_rt->get_element_type(), ngraph::Shape{}, {1}),
+        shapeof_mean_rt,
+        range);
+    auto mean_rt_multiplied = std::make_shared<ngraph::op::Multiply>(one_bcast, mean_rt);
+
+    auto f = make_shared<Function>(NodeVector{output_rt, mean_rt_multiplied, variance_rt},
+                                   ParameterVector{input, gamma, beta});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+
+    // Create some tensors for input/output
+    auto _input = backend->create_tensor(element::f32, Shape{1, 2, 2, 2});
+
+    copy_data(_input,
+              vector<float>{0.54881352f,
+                            0.71518934f,
+                            0.60276335f,
+                            0.54488319f,
+                            0.42365479f,
+                            0.64589411f,
+                            0.4375872f,
+                            0.89177299f});
+    auto _gamma = backend->create_tensor(element::f32, gamma_shape);
+    copy_data(_gamma, vector<float>{1.0f, 1.0f});
+    auto _beta = backend->create_tensor(element::f32, beta_shape);
+    copy_data(_beta, vector<float>{0.0f, 0.0f});
+
+    auto bn_output = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
+    auto result_mean = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
+    auto result_variance = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
+
+    vector<float> expected_result{-0.71498716f,
+                                  1.48388731f,
+                                  -0.00196938f,
+                                  -0.76693159f,
+                                  -0.91316032f,
+                                  0.23943391f,
+                                  -0.84090298f,
+                                  1.51462936f};
+    vector<float> expected_mean{0.602912f, 0.599727f};
+    vector<float> expected_variance{0.00472505f, 0.0361782f};
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({bn_output, result_mean, result_variance}, {_input, _gamma, _beta});
+
+    EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(bn_output), 1e-5f, 1e-6f));
+    EXPECT_TRUE(test::all_close(expected_mean, read_vector<float>(result_mean), 1e-5f, 1e-6f));
+    EXPECT_TRUE(
+        test::all_close(expected_variance, read_vector<float>(result_variance), 1e-5f, 1e-6f));
 }

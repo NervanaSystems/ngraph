@@ -16,9 +16,11 @@
 
 #pragma once
 
+#include <memory>
+
 #include "core/node.hpp"
+#include "default_opset.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/power.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 
 namespace ngraph
@@ -31,8 +33,8 @@ namespace ngraph
             {
                 inline NodeVector pow(const Node& node)
                 {
-                    return {std::make_shared<ngraph::op::v1::Power>(node.get_ng_inputs().at(0),
-                                                                    node.get_ng_inputs().at(1))};
+                    return {std::make_shared<default_opset::Power>(node.get_ng_inputs().at(0),
+                                                                   node.get_ng_inputs().at(1))};
                 }
 
             } // namespace set_1

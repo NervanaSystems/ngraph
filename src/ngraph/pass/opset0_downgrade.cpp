@@ -22,12 +22,14 @@
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/slice_plan.hpp"
 #include "ngraph/type.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -135,11 +137,12 @@ namespace
 
     bool op_cast(shared_ptr<op::v1::ConvolutionBackpropData> node)
     {
-        auto output_shape = as_type_ptr<op::Constant>(node->input_value(2).get_node_shared_ptr());
+        auto output_shape_node =
+            as_type_ptr<op::Constant>(node->input_value(2).get_node_shared_ptr());
         const auto data_arg = node->input(0).get_source_output();
         const auto filters_arg = node->input(1).get_source_output();
         const auto strides = node->get_strides();
-        NGRAPH_CHECK(output_shape,
+        NGRAPH_CHECK(output_shape_node,
                      "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
                      "if output_shape is not constant. Node: ",
                      *node);
@@ -155,8 +158,22 @@ namespace
                      "with output padding other than `0`. Node: ",
                      *node);
 
+        auto data_pshape = data_arg.get_partial_shape();
+        auto filters_pshape = filters_arg.get_partial_shape();
+
+        NGRAPH_CHECK(data_pshape.rank().is_static() && data_pshape[0].is_static() &&
+                         filters_pshape.rank().is_static() && filters_pshape[1].is_static(),
+                     "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
+                     "if data shape N and filters shape C dimensions are not static. Node: ",
+                     *node);
+
+        // Add N and C dimenstions to output_shape
+        auto output_shape = output_shape_node->get_shape_val();
+        output_shape.insert(output_shape.begin(), static_cast<size_t>(filters_pshape[1]));
+        output_shape.insert(output_shape.begin(), static_cast<size_t>(data_pshape[0]));
+
         auto replacement_node =
-            make_shared<op::v0::ConvolutionBackpropData>(output_shape->get_shape_val(),
+            make_shared<op::v0::ConvolutionBackpropData>(output_shape,
                                                          filters_arg,
                                                          data_arg,
                                                          node->get_strides(),
@@ -204,8 +221,19 @@ namespace
 
     bool op_cast(shared_ptr<op::v1::Reshape> node)
     {
-        auto replacement_node = make_shared<op::v0::DynReshape>(
-            node->input_value(0), node->input_value(1), node->get_special_zero());
+        shared_ptr<Node> replacement_node;
+
+        const auto target_shape_input = node->input_value(1).get_node_shared_ptr();
+        if (target_shape_input->is_constant() && node->get_output_partial_shape(0).is_static())
+        {
+            replacement_node = builder::reshape(node->input_value(0), node->get_output_shape(0));
+        }
+        else
+        {
+            replacement_node = make_shared<op::v0::DynReshape>(
+                node->input_value(0), node->input_value(1), node->get_special_zero());
+        }
+
         replace_node(node, replacement_node);
         return true;
     }
@@ -213,6 +241,27 @@ namespace
     bool op_cast(shared_ptr<op::v1::Equal> node)
     {
         op_cast_binary_elementwise_node<op::v0::Equal, op::v1::Equal>(node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::Gather> node)
+    {
+        auto axis_node = as_type_ptr<op::Constant>(node->input_value(2).get_node_shared_ptr());
+
+        NGRAPH_CHECK(axis_node,
+                     "Unable to convert Gather:v1 to Gather:v0 if axis is not constant. Node: ",
+                     *node);
+
+        NGRAPH_CHECK(
+            axis_node->get_element_type() == element::i64,
+            "Unable to convert Gather:v1 to Gather:v0 with axis other type than int64. Node: ",
+            *node);
+
+        int64_t axis = axis_node->get_vector<int64_t>()[0];
+
+        auto replacement_node =
+            make_shared<op::v0::Gather>(node->input_value(0), node->input_value(1), axis);
+        replace_node(node, replacement_node);
         return true;
     }
 
@@ -260,6 +309,82 @@ namespace
                                                                   node->get_pads_end(),
                                                                   Strides(num_spatial_dims, 1),
                                                                   node->get_auto_pad());
+        replace_node(node, replacement_node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::GroupConvolutionBackpropData> node)
+    {
+        auto output_shape_input =
+            as_type_ptr<op::Constant>(node->input_value(2).get_node_shared_ptr());
+        const auto data_arg = node->input_value(0);
+        const auto filters_arg = node->input_value(1);
+        const auto strides = node->get_strides();
+        const auto dilations = node->get_dilations();
+
+        NGRAPH_CHECK(
+            output_shape_input,
+            "Unable to convert GroupConvolutionBackpropData:v1 to GroupConvolutionBackpropData:v0 "
+            "if output_shape is not constant. Node: ",
+            *node);
+
+        auto output_padding = node->get_output_padding();
+
+        bool is_op_valid = all_of(
+            output_padding.begin(), output_padding.end(), [](size_t value) { return value == 0; });
+
+        NGRAPH_CHECK(
+            is_op_valid,
+            "Unable to convert GroupConvolutionBackpropData:v1 to GroupConvolutionBackpropData:v0 "
+            "with output padding other than `0`. Node: ",
+            *node);
+
+        NGRAPH_CHECK(data_arg.get_partial_shape().is_static(),
+                     "Unable to convert GroupConvolution:1 to GroupConvolution:0"
+                     "with dynamic data shape. Node: ",
+                     *node);
+
+        NGRAPH_CHECK(filters_arg.get_partial_shape().is_static(),
+                     "Unable to convert GroupConvolution:1 to GroupConvolution:0"
+                     "with dynamic filters shape. Node: ",
+                     *node);
+
+        auto filters_shape = filters_arg.get_shape();
+        auto data_shape = data_arg.get_shape();
+        auto groups = filters_shape.at(0);
+        filters_shape[1] *= groups;
+        filters_shape.erase(filters_shape.begin());
+
+        auto reshaped_filters = builder::reshape(node->input_value(1), filters_shape);
+
+        auto pads_begin = node->get_pads_begin();
+        auto pads_end = node->get_pads_end();
+
+        auto auto_pad = node->get_auto_pad();
+
+        auto output_shape = output_shape_input->get_shape_val();
+        if (auto_pad == op::PadType::SAME_UPPER || auto_pad == op::PadType::SAME_LOWER)
+        {
+            infer_auto_padding(output_shape,
+                               Shape(filters_shape.begin() + 2, filters_shape.end()),
+                               strides,
+                               dilations,
+                               auto_pad,
+                               pads_begin,
+                               pads_end);
+        }
+
+        output_shape.insert(output_shape.begin(), filters_shape[1]);
+        output_shape.insert(output_shape.begin(), data_shape[0]);
+        auto replacement_node = make_shared<op::v0::GroupConvolutionBackpropData>(
+            op::Constant::create(data_arg.get_element_type(), output_shape, {0}),
+            reshaped_filters,
+            data_arg,
+            node->get_strides(),
+            node->get_dilations(),
+            pads_begin,
+            pads_end,
+            groups);
         replace_node(node, replacement_node);
         return true;
     }
@@ -692,7 +817,7 @@ namespace
         };
         return dispatch_map;
     }
-}
+} // namespace
 
 bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 {
