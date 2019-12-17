@@ -602,6 +602,7 @@ set (SRC
     type/float16.cpp
     type/float16.hpp
     type/element_type.cpp
+    type.cpp
     type.hpp
     util.cpp
     util.hpp
