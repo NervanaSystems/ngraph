@@ -50,7 +50,7 @@ namespace ngraph
                 Stack(const NodeVector& args, int64_t axis);
 
                 void generate_adjoints(autodiff::Adjoints& adjoints,
-                                       const NodeVector& deltas) override;
+                                       const OutputVector& deltas) override;
 
                 virtual void pre_validate_and_infer_types() override;
 

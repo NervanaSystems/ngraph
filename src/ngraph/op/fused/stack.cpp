@@ -44,29 +44,27 @@ shared_ptr<Node> op::Stack::copy_with_new_args(const NodeVector& new_args) const
     return make_shared<Stack>(new_args, m_axis);
 }
 
-void op::Stack::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Stack::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
-    ngraph_error("Not Yet Implemented");
+    ngraph_error("Not yet implemented");
 }
 
 void op::Stack::pre_validate_and_infer_types()
 {
+    bool is_input_dynamic = false;
+
     for (size_t i = 0; i < get_input_size(); ++i)
     {
-        element::Type input_element_type = get_input_element_type(i);
-
-        NODE_VALIDATION_CHECK(this,
-                              input_element_type.is_dynamic() || input_element_type.is_real(),
-                              "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
-                              input_element_type,
-                              ").");
+        if (get_input_partial_shape(i).is_dynamic())
+        {
+            is_input_dynamic = true;
+            break;
+        }
     }
-    element::Type input_element_type = get_input_element_type(0);
-    PartialShape input_pshape = get_input_partial_shape(0);
 
-    if (input_element_type.is_dynamic())
+    if (is_input_dynamic)
     {
-        set_output_type(0, input_element_type, input_pshape);
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
     }
 }
 
