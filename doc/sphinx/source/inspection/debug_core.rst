@@ -10,9 +10,6 @@ Debug & Build Options
 Build nGraph with various compile flags and environment variables to debug your 
 use case.
 
-.. note:: Some of the following flags may be experimental only or subject to 
-   change; 
-
 
 Compile Flags
 =============
@@ -57,6 +54,9 @@ Compile Flags
 
 Environment Variables
 =====================
+
+.. note:: Some of the following flags may be experimental only or subject to change.
+
 
 .. csv-table::
    :header: "Environmental Variable", "Description"
