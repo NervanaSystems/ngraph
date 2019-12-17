@@ -26,6 +26,7 @@
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/util.hpp"
@@ -35,28 +36,20 @@ using namespace std;
 
 shared_ptr<Node> builder::reshape(const Output<Node>& value, const Shape& shape)
 {
-    return make_shared<op::Reshape>(value, get_default_order(value.get_shape().size()), shape)
+    const auto out_pattern = op::Constant::create(
+        element::i64, Shape{shape.size()}, vector<int64_t>(shape.begin(), shape.end()));
+    const bool special_zero = false;
+    return make_shared<op::v1::Reshape>(value, out_pattern, special_zero)
         ->add_provenance_group_members_above({value});
 }
 
 shared_ptr<Node> builder::reorder_axes(const Output<Node>& value, vector<size_t> axes_order)
 {
-    Shape out_shape = value.get_shape();
-    if (axes_order.empty())
-    {
-        axes_order.resize(out_shape.size());
-        iota(begin(axes_order), end(axes_order), 0);
-    }
-    else
-    {
-        for (size_t i = 0; i < axes_order.size(); ++i)
-        {
-            out_shape[i] = value.get_shape().at(axes_order.at(i));
-        }
-    }
-
-    auto axis_vector = AxisVector{begin(axes_order), end(axes_order)};
-    return make_shared<op::Reshape>(value, axis_vector, out_shape)
+    const auto axes_order_const =
+        op::Constant::create(element::i64,
+                             Shape{axes_order.size()},
+                             vector<int64_t>(axes_order.begin(), axes_order.end()));
+    return make_shared<op::v1::Transpose>(value, axes_order_const)
         ->add_provenance_group_members_above({value});
 }
 
