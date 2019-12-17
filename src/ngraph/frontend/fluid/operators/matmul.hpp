@@ -20,18 +20,21 @@
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/fused_op.hpp"
 
+using namespace std;
+using namespace ngraph;
+
 namespace ngraph
 {
     namespace fluid
     {
         /// \brief Operator performing Matrix Multiplication.
-        class NGRAPH_API MatMul : public ngraph::op::util::FusedOp
+        class NGRAPH_API MatMul : public op::util::FusedOp
         {
         public:
             static constexpr NodeTypeInfo type_info{"MatMul", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             MatMul() = default;
-            /// \brief Constructs an ScaleShift operation.
+            /// \brief Constructs a MatMul operation.
             ///
             /// \param A Matrix A
             /// \param B Matrix B
@@ -43,10 +46,10 @@ namespace ngraph
                    const bool& transpose_b = 0);
 
             virtual NodeVector decompose_op() const override;
+
             void pre_validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+            virtual shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
             bool get_transpose_a() const { return m_transpose_a; }
             bool get_transpose_b() const { return m_transpose_b; }
