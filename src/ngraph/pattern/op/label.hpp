@@ -56,7 +56,7 @@ namespace ngraph
                 }
 
                 Label(const element::Type& type, const PartialShape& s)
-                    : Label(type, s, nullptr, OutputVector())
+                    : Label(type, s, [](std::shared_ptr<Node>) { return true; }, OutputVector())
                 {
                 }
 
@@ -105,7 +105,7 @@ namespace ngraph
                 Label(std::shared_ptr<Node> node)
                     : Label(node->get_element_type(),
                             node->get_output_partial_shape(0),
-                            nullptr,
+                            [](std::shared_ptr<Node>) { return true; },
                             OutputVector{})
                 {
                 }

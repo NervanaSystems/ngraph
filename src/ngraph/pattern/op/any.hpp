@@ -39,10 +39,6 @@ namespace ngraph
                     const OutputVector& wriapped_values)
                     : Pattern(wriapped_values, pred)
                 {
-                    if (!pred)
-                    {
-                        throw ngraph_error("predicate is required");
-                    }
                     set_output_type(0, type, s);
                 }
                 Any(const element::Type& type,

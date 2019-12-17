@@ -60,7 +60,7 @@ namespace ngraph
             else
             {
                 auto predicate = label->get_predicate();
-                is_match = !predicate || predicate(graph_node);
+                is_match = predicate(graph_node);
             }
 
             if (is_match) // in case label was already bound this rebinds it to the same node
@@ -120,7 +120,7 @@ namespace ngraph
         {
             auto predicate = skip->get_predicate();
 
-            if (!predicate || predicate(graph_node))
+            if (predicate(graph_node))
             {
                 return match_arguments(skip, graph_node, pattern_map);
             }
@@ -141,11 +141,6 @@ namespace ngraph
                                 PatternMap& pattern_map)
         {
             auto predicate = any->get_predicate();
-            if (!predicate)
-            {
-                throw ngraph_error("predicate is required");
-            }
-
             if (predicate(graph_node))
             {
                 return match_arguments(any, graph_node, pattern_map);
@@ -162,11 +157,6 @@ namespace ngraph
                                    PatternMap& pattern_map)
         {
             auto predicate = any->get_predicate();
-            if (!predicate)
-            {
-                throw ngraph_error("predicate is required");
-            }
-
             if (predicate(graph_node))
             {
                 for (auto arg : graph_node->get_arguments())

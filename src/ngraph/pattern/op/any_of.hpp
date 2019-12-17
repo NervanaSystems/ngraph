@@ -45,11 +45,6 @@ namespace ngraph
                       const OutputVector& wrapped_values)
                     : Pattern(wrapped_values, pred)
                 {
-                    if (!pred)
-                    {
-                        throw ngraph_error("predicate is required");
-                    }
-
                     if (wrapped_values.size() != 1)
                     {
                         throw ngraph_error("AnyOf expects exactly one argument");

@@ -37,6 +37,10 @@ namespace ngraph
                     : Node(wrapped_values)
                     , m_predicate(pred)
                 {
+                    if (!m_predicate)
+                    {
+                        m_predicate = [](std::shared_ptr<Node>) { return true; };
+                    }
                 }
 
                 virtual std::shared_ptr<Node>
