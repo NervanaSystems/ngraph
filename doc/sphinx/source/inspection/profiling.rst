@@ -5,30 +5,35 @@
 Profiling Performance
 #####################
 
-The nGraph Compiler stack provides the ``nbench`` tool to assess 
-and debug.
+The nGraph Compiler stack includes the ``nbench`` tool which 
+provides additional methods of assessing or debugging performance 
+issues.
 
 If you follow the build process under :doc:`../buildlb`, the 
-``NGRAPH_TOOLS_ENABLE`` flag defaults to ``ON``, and automatically 
-builds ``nbench``.  ``nbench`` can be used to benchmark any nGraph 
-``.json`` model with a given backend.
-
-Some samples can be found under  ``ngraph/test/models``.
-
-.. note:: To get your own serialized files from a framework, 
-   like TensorFlow\*, use ``NGRAPH_ENABLE_SERIALIZE=1``.
-
-Example
--------
+``NGRAPH_TOOLS_ENABLE`` flag defaults to ``ON`` and automatically 
+builds ``nbench``. As its name suggests, ``nbench`` can be used 
+to benchmark any nGraph-serialized model with a given backend.
 
 To benchmark an already-serialized nGraph ``.json`` model with, for 
-example, a ``CPU`` backend, run ``nbench`` as follows:
+example, a ``CPU`` backend, run ``nbench`` as follows.
 
 .. code-block:: console
 
    $ cd ngraph/build/src/tools
    $ nbench/nbench -b CPU - i 1 -f <serialized_json file>
 
+Some samples can be found under  ``ngraph/test/models``.
+
+Use ``nbench`` to ease end-to-end debugging for TensorFlow\*
+------------------------------------------------------------
+
+Rather than run a TensorFlow\* model "end-to-end" all the time, 
+developers who notice a problem with performance or memory usage 
+can generate a unique serialized model for debugging by using 
+``NGRAPH_ENABLE_SERIALIZE=1``. This serialized model can be 
+then be re-run with ``nbench`` to experiment with any changes in 
+ngraph space. This makes it faster for developers to change and 
+test changes without the overhead of an end-to-end compilation. 
 
 .. _nbench:
 
