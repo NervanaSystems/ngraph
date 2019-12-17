@@ -44,31 +44,16 @@ op::v0::Split::Split(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-// TODO REMOVE THIS CONSTRUCTOR. INTRODUCED TO PROVIDE CI COMPATIBILITY
-op::v0::Split::Split(const Output<Node>& data, int axis, const std::vector<size_t>& splits)
-    : FusedOp({data})
-    , m_split_evenly{false}
-    , m_axis{axis}
-    , m_num_split{0}
-    , m_splits{splits}
-{
-    constructor_validate_and_infer_types();
-}
-
 void op::v0::Split::pre_validate_and_infer_types()
 {
-    // TODO REMOVE IF CHECK. INTRODUCED TO PROVIDE CI COMPATIBILITY
-    if (get_input_size() == 2)
-    {
-        const auto axis_shape = input(1).get_shape();
-        NODE_VALIDATION_CHECK(this, is_scalar(axis_shape), "The 'axis' input node must be scalar");
+    const auto axis_shape = input(1).get_shape();
+    NODE_VALIDATION_CHECK(this, is_scalar(axis_shape), "The 'axis' input node must be scalar");
 
-        const auto axis_node = input_value(1).get_node_shared_ptr();
-        NODE_VALIDATION_CHECK(
-            this, axis_node->is_constant(), "The 'axis' input node must be constant");
-        const auto axis_node_const = as_type_ptr<op::Constant>(axis_node);
-        m_axis = axis_node_const->get_vector<int64_t>()[0];
-    }
+    const auto axis_node = input_value(1).get_node_shared_ptr();
+    NODE_VALIDATION_CHECK(this, axis_node->is_constant(), "The 'axis' input node must be constant");
+    const auto axis_node_const = as_type_ptr<op::Constant>(axis_node);
+    m_axis = axis_node_const->get_vector<int64_t>()[0];
+
     // Create dynamic-typed outputs. Actual shape/type will be computed during shape inference
     for (size_t i = 0; i < std::max(m_splits.size(), m_num_split); i++)
     {
@@ -123,14 +108,8 @@ NodeVector op::v0::Split::decompose_op() const
 
 shared_ptr<Node> op::v0::Split::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() == 2)
-    {
-        check_new_args_count(this, new_args);
-        return make_shared<Split>(new_args.at(0), new_args.at(1), m_splits);
-    }
-
-    // TODO REMOVE THIS RETURN AND IF ABOVE. INTRODUCED TO PROVIDE CI COMPATIBILITY
-    return make_shared<op::v0::Split>(new_args.at(0), m_axis, m_splits);
+    check_new_args_count(this, new_args);
+    return make_shared<Split>(new_args.at(0), new_args.at(1), m_splits);
 }
 
 constexpr NodeTypeInfo op::v1::Split::type_info;

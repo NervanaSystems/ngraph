@@ -2155,12 +2155,13 @@ TEST(cpu_test, tensor_copy_from_different_layout)
     EXPECT_EQ((vector<uint8_t>{1, 4, 2, 5, 3, 6}), read_vector<uint8_t>(b));
 }
 
+#ifndef NGRAPH_MLIR_ENABLE
 TEST(cpu_test, max_pool_bf16)
 {
     if (!runtime::cpu::mkldnn_utils::is_bf16_supported())
     {
         // TODO change to skip when there is a new release of gtest
-        NGRAPH_WARN << "This test is skipped for platform without bf16 support.";
+        NGRAPH_WARN << "This test is skipped for platform without bf16 support and for mlir.";
         return;
     }
 
@@ -2195,7 +2196,7 @@ TEST(cpu_test, convolution_simple_bf16)
     if (!runtime::cpu::mkldnn_utils::is_bf16_supported())
     {
         // TODO change to skip when there is a new release of gtest
-        NGRAPH_WARN << "This test is skipped for platform without bf16 support.";
+        NGRAPH_WARN << "This test is skipped for platform without bf16 support and for mlir.";
         return;
     }
 
@@ -2234,6 +2235,7 @@ TEST(cpu_test, convolution_simple_bf16)
     EXPECT_EQ((vector<bfloat16>{18.0, 24.0, 30.0, 36.0, 18.0, 24.0, 30.0, 36.0}),
               read_vector<bfloat16>(result));
 }
+#endif
 
 // This tests a backend's implementation of the three parameter version of create_tensor
 // Testing using this tensor as a Function input

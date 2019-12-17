@@ -16,28 +16,14 @@
 
 #pragma once
 
-#include <memory>
-
-#include "core/node.hpp"
-#include "default_opset.hpp"
-#include "ngraph/node.hpp"
+#include "ngraph/ops.hpp"
 
 namespace ngraph
 {
-    namespace onnx_import
+    namespace opset0
     {
-        namespace op
-        {
-            namespace set_1
-            {
-                inline NodeVector sign(const Node& node)
-                {
-                    return {std::make_shared<default_opset::Sign>(node.get_ng_inputs().at(0))};
-                }
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+#define NGRAPH_OP(a, b) using b::a;
+#include "ngraph/opsets/opset0_tbl.hpp"
+#undef NGRAPH_OP
+    }
+}

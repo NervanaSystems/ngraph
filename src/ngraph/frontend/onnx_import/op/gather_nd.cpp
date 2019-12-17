@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/gather_nd.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "utils/common.hpp"
 
 namespace ngraph
@@ -31,7 +31,7 @@ namespace ngraph
                     auto data = ng_inputs.at(0);
                     auto indices = ng_inputs.at(1);
 
-                    return {std::make_shared<ngraph::op::GatherND>(data, indices)};
+                    return {std::make_shared<ngraph::opset0::GatherND>(data, indices)};
                 }
 
             } // namespace set_1
