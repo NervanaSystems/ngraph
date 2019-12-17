@@ -641,13 +641,13 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         std::vector<std::shared_ptr<ngraph::op::Slice>> ht_slice_per_timestep(sequence_len,
                                                                               nullptr);
-        auto rnn_ht_goe = rnn->output(0).as_single_output_node();
-        auto rnn_ht_ct_goe = rnn->output(1).as_single_output_node();
+        auto rnn_ht = rnn->output(0);
+        auto rnn_ht_ct = rnn->output(1);
 
         for (size_t i = 0, start_index = 0; i < sequence_len; i++, start_index += batch_size)
         {
             ht_slice_per_timestep[i] = (std::make_shared<ngraph::op::Slice>(
-                rnn_ht_goe,
+                rnn_ht,
                 Coordinate{start_index, 0},
                 Coordinate{start_index + batch_size, src_iter_feature_size}));
         }
@@ -703,7 +703,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         auto rnn_ct_goe = ngraph::op::get_output_elements(lstm_nodes[sequence_len - 1])[1];
         if (rnn_ct_goe)
         {
-            replace_collapse_node_user(rnn_ct_goe, rnn_ht_ct_goe->output(0));
+            replace_collapse_node_user(rnn_ct_goe, rnn_ht_ct);
         }
 
         // now go through the lstm goe_0 consumers and replace them with the slice
@@ -841,13 +841,13 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         std::vector<std::shared_ptr<ngraph::op::Slice>> ht_slice_per_timestep(sequence_len,
                                                                               nullptr);
-        auto rnn_hts_goe = rnn->output(0).as_single_output_node();
-        auto rnn_ct_goe = rnn->output(2).as_single_output_node();
+        auto rnn_hts = rnn->output(0);
+        auto rnn_ct = rnn->output(2);
 
         for (size_t i = 0, start_index = 0; i < sequence_len; i++, start_index += batch_size)
         {
             ht_slice_per_timestep[i] = (std::make_shared<ngraph::op::Slice>(
-                rnn_hts_goe,
+                rnn_hts,
                 Coordinate{start_index, 0},
                 Coordinate{start_index + batch_size, src_iter_feature_size}));
         }
@@ -876,33 +876,25 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         // LSTM in the same layer)
         for (size_t index = 0; index < sequence_len; index++)
         {
-            auto lstm_outputs = lstm_nodes[index]->outputs();
             auto goe_nodes = ngraph::op::get_output_elements(lstm_nodes[index]);
 
-            // if there is no GOE followed by the Lstm, their might be pattern match error
-            // we will return safely
-            if (lstm_outputs.size() != 3)
-            {
-                return false;
-            }
-
             // dst_iter of the lstm cell
-            for (auto goe1_input : lstm_outputs[1].get_target_inputs())
+            for (auto dst_input : lstm_nodes[index]->output(1).get_target_inputs())
             {
-                auto goe1_user = goe1_input.get_node()->shared_from_this();
+                auto dst_user = dst_input.get_node()->shared_from_this();
                 // do not include LSTM in the same layer
-                if (std::find(lstm_nodes.begin(), lstm_nodes.end(), goe1_user) == lstm_nodes.end())
+                if (std::find(lstm_nodes.begin(), lstm_nodes.end(), dst_user) == lstm_nodes.end())
                 {
-                    for (size_t i = 0; i < goe1_user->get_input_size(); i++)
+                    for (size_t i = 0; i < dst_user->get_input_size(); i++)
                     {
-                        if (goe1_user->input_value(i) == lstm_outputs[1])
+                        if (dst_user->input_value(i) == lstm_nodes[index]->output(1))
                         {
-                            goe1_user->input(i).replace_source_output(
+                            dst_user->input(i).replace_source_output(
                                 ht_slice_per_timestep[index]->output(0));
                         }
                     }
-                    NGRAPH_DEBUG << "ht_slice: " << *ht_slice_per_timestep[index] << " goe1_user "
-                                 << *goe1_user << " ";
+                    NGRAPH_DEBUG << "ht_slice: " << *ht_slice_per_timestep[index] << " dst_user "
+                                 << *dst_user << " ";
                 }
             }
         }
@@ -911,7 +903,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         auto last_lstm_ct_goe = ngraph::op::get_output_elements(lstm_nodes[sequence_len - 1])[2];
         if (last_lstm_ct_goe)
         {
-            replace_collapse_node_user(last_lstm_ct_goe, rnn_ct_goe->output(0));
+            replace_collapse_node_user(last_lstm_ct_goe, rnn_ct);
         }
 
         NGRAPH_DEBUG << "End of recurrent fusion call back "
@@ -1330,14 +1322,14 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
                                                      rnn_type);
 #endif
 
-        auto layer_rnn_ht = rnn->output(0).as_single_output_node();
-        size_t batch_size = layer_rnn_ht->get_shape()[0] / num_time_steps;
-        size_t feature_size = layer_rnn_ht->get_shape()[1];
+        auto layer_rnn_ht = rnn->output(0);
+        size_t batch_size = layer_rnn_ht.get_shape()[0] / num_time_steps;
+        size_t feature_size = layer_rnn_ht.get_shape()[1];
 
         // if the shape doesnt match, we will logically reshape it to expaned_dims{tnc} from
         // squeezed_dims{t*n, c}
-        std::shared_ptr<Node> layer_rnn_ht_reshape = layer_rnn_ht;
-        if (m.get_match_root()->get_shape() != layer_rnn_ht->get_shape())
+        auto layer_rnn_ht_reshape = layer_rnn_ht;
+        if (m.get_match_root()->get_shape() != layer_rnn_ht.get_shape())
         {
             layer_rnn_ht_reshape = std::make_shared<ngraph::op::Reshape>(
                 layer_rnn_ht, AxisVector{0, 1}, Shape{num_time_steps, batch_size, feature_size});
@@ -1352,7 +1344,7 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
                 Shape{batch_size, num_time_steps, feature_size});
         }
 
-        ngraph::replace_node(m.get_match_root(), layer_rnn_ht_reshape);
+        ngraph::replace_node(m.get_match_root(), layer_rnn_ht_reshape.as_single_output_node());
         return true;
     };
 
