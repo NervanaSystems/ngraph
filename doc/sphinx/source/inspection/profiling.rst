@@ -22,18 +22,7 @@ example, a ``CPU`` backend, run ``nbench`` as follows.
    $ cd ngraph/build/src/tools
    $ nbench/nbench -b CPU - i 1 -f <serialized_json file>
 
-Some samples can be found under  ``ngraph/test/models``.
-
-Use ``nbench`` to ease end-to-end debugging for TensorFlow\*
-------------------------------------------------------------
-
-Rather than run a TensorFlow\* model "end-to-end" all the time, 
-developers who notice a problem with performance or memory usage 
-can generate a unique serialized model for debugging by using 
-``NGRAPH_ENABLE_SERIALIZE=1``. This serialized model can then be 
-re-run with ``nbench`` to experiment with any changes in ngraph 
-space. This makes it faster for developers to change and test 
-changes without the overhead of a complete end-to-end compilation.
+Samples for testing can be found under  ``ngraph/test/models``.
 
 .. _nbench:
 
@@ -45,6 +34,8 @@ Options
 
 ::
 
+    Benchmark nGraph JSON model with a given backend.
+    
     SYNOPSIS
         nbench [-f <filename>] [-b <backend>] [-i <iterations>]
     OPTIONS
@@ -60,3 +51,15 @@ Options
         --dot                     Generate Graphviz dot file
         --double_buffer           Double buffer inputs and outputs
 
+.. _nbench_tf:
+
+Use ``nbench`` to ease end-to-end debugging for TensorFlow\*
+------------------------------------------------------------
+
+Rather than run a TensorFlow\* model "end-to-end" all the time, 
+developers who notice a problem with performance or memory usage 
+can generate a unique serialized model for debugging by using 
+``NGRAPH_ENABLE_SERIALIZE=1``. This serialized model can then be 
+re-run with ``nbench`` to experiment with any changes in ngraph 
+space. This makes it faster for developers to change and test 
+changes without the overhead of a complete end-to-end compilation.

@@ -7,7 +7,7 @@ Debug TensorFlow\*
 
 .. note:: These flags are all disabled by default
 
-For profiling with TensorFlow\* and ``nbench`` see :doc:`profiling`.
+For profiling with TensorFlow\* and ``nbench``, see :ref:`nbench_tf`.
 
 .. csv-table:: 
    :header: "Flag", "Description"
