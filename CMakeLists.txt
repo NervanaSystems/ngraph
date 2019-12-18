@@ -192,6 +192,12 @@ if (NGRAPH_CPU_ENABLE)
     option(NGRAPH_TBB_ENABLE "Control usage of TBB for CPU backend" TRUE)
 endif()
 
+if (NGRAPH_STATIC_LIB_ENABLE)
+    message(WARNING "Workaround: "
+                    "Turning off NGRAPH_EXPORT_TARGETS_ENABLE for nGraph static lib")
+    set(NGRAPH_EXPORT_TARGETS_ENABLE OFF)
+endif()
+
 if (NGRAPH_CPU_ENABLE
         AND
     (NOT NGRAPH_GENERIC_CPU_ENABLE)
