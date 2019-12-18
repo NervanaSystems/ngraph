@@ -124,21 +124,34 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reshape_single_dim)
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reshape_negative_dim)
 {
-    auto function = onnx_import::import_onnx_model(
+    // the model contains the target shape in the initializers: [2, -1, 2]
+    const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_negative_dim.prototxt"));
 
-    // input data shape (2, 3, 4)
-    Inputs inputs{test::NDArray<float, 3>({{{0, 1, 2, 3}, {4, 5, 6, 7}, {8, 9, 10, 11}},
-                                           {{12, 13, 14, 15}, {16, 17, 18, 19}, {20, 21, 22, 23}}})
+    // 2x3x4
+    Inputs inputs{test::NDArray<float, 3>({{{0.5488135, 0.71518934, 0.60276335, 0.5448832},
+                                            {0.4236548, 0.6458941, 0.4375872, 0.891773},
+                                            {0.96366274, 0.3834415, 0.79172504, 0.5288949}},
+
+                                           {{0.56804454, 0.92559665, 0.07103606, 0.0871293},
+                                            {0.0202184, 0.83261985, 0.77815676, 0.87001216},
+                                            {0.9786183, 0.7991586, 0.46147937, 0.7805292}}})
                       .get_vector()};
 
-    // output data shape (6, 2, 2)
-    Outputs expected_outputs{test::NDArray<float, 3>({{{0, 1}, {2, 3}},
-                                                      {{4, 5}, {6, 7}},
-                                                      {{8, 9}, {10, 11}},
-                                                      {{12, 13}, {14, 15}},
-                                                      {{16, 17}, {18, 19}},
-                                                      {{20, 21}, {22, 23}}})
+    // 2x6x2
+    Outputs expected_outputs{test::NDArray<float, 3>({{{0.5488135, 0.71518934},
+                                                       {0.60276335, 0.5448832},
+                                                       {0.4236548, 0.6458941},
+                                                       {0.4375872, 0.891773},
+                                                       {0.96366274, 0.3834415},
+                                                       {0.79172504, 0.5288949}},
+
+                                                      {{0.56804454, 0.92559665},
+                                                       {0.07103606, 0.0871293},
+                                                       {0.0202184, 0.83261985},
+                                                       {0.77815676, 0.87001216},
+                                                       {0.9786183, 0.7991586},
+                                                       {0.46147937, 0.7805292}}})
                                  .get_vector()};
 
     Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};

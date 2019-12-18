@@ -170,7 +170,7 @@ shared_ptr<Node> op::LayerNorm::copy_with_new_args(const NodeVector& new_args) c
     }
 }
 
-void op::LayerNorm::validate_and_infer_types()
+void op::LayerNorm::pre_validate_and_infer_types()
 {
     element::Type input_element_type = get_input_element_type(0);
 
@@ -234,7 +234,7 @@ void op::LayerNorm::validate_and_infer_types()
     set_output_type(0, input_element_type, norm_shape);
 }
 
-void op::LayerNorm::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::LayerNorm::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
     auto data = input_value(0);
@@ -509,7 +509,7 @@ shared_ptr<Node> op::LayerNormBackprop::copy_with_new_args(const NodeVector& new
     }
 }
 
-void op::LayerNormBackprop::validate_and_infer_types()
+void op::LayerNormBackprop::pre_validate_and_infer_types()
 {
     element::Type input_element_type = get_input_element_type(0);
 

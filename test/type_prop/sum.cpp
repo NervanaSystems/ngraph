@@ -126,3 +126,14 @@ TEST(type_prop, sum_partial_rank_static_dynamic_axes_oob)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, sum_partial_negative_axes)
+{
+    auto param =
+        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic(), 4, 5});
+    auto summation_axes = op::Constant::create(element::i64, Shape{2}, {-3, -2});
+    auto sum = make_shared<op::Sum>(param, summation_axes);
+
+    EXPECT_EQ(sum->get_output_element_type(0), element::f32);
+    EXPECT_EQ(sum->get_shape(), (Shape{1, 2, 5}));
+}

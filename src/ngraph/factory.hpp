@@ -17,8 +17,8 @@
 #pragma once
 
 #include <functional>
-#include <map>
 #include <mutex>
+#include <unordered_map>
 
 #include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/type.hpp"
@@ -33,7 +33,7 @@ namespace ngraph
     {
     public:
         using Factory = std::function<BASE_TYPE*()>;
-        using FactoryMap = std::map<DiscreteTypeInfo, Factory>;
+        using FactoryMap = std::unordered_map<typename BASE_TYPE::type_info_t, Factory>;
 
         // \brief Get the default factory for DERIVED_TYPE. Specialize as needed.
         template <typename DERIVED_TYPE>
@@ -43,7 +43,7 @@ namespace ngraph
         }
 
         /// \brief Register a custom factory for type_info
-        void register_factory(const DiscreteTypeInfo& type_info, Factory factory)
+        void register_factory(const typename BASE_TYPE::type_info_t& type_info, Factory factory)
         {
             std::lock_guard<std::mutex> guard(get_registry_mutex());
             m_factory_map[type_info] = factory;
@@ -78,7 +78,7 @@ namespace ngraph
         }
 
         /// \brief Create an instance for type_info
-        BASE_TYPE* create(const DiscreteTypeInfo& type_info)
+        BASE_TYPE* create(const typename BASE_TYPE::type_info_t& type_info)
         {
             std::lock_guard<std::mutex> guard(get_registry_mutex());
             auto it = m_factory_map.find(type_info);

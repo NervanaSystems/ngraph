@@ -383,7 +383,7 @@ shared_ptr<Node> op::v0::AvgPoolBackprop::copy_with_new_args(const NodeVector& n
                                             m_include_padding_in_avg_computation);
 }
 
-void op::v0::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     if (m_ceil_mode)
     {
@@ -727,7 +727,7 @@ shared_ptr<Node> op::v1::AvgPoolBackprop::copy_with_new_args(const NodeVector& n
                                             m_exclude_pad);
 }
 
-void op::v1::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v1::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     if (m_rounding_type == op::RoundingType::CEIL)
     {

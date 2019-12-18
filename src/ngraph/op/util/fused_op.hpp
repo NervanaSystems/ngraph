@@ -50,7 +50,7 @@ namespace ngraph
                 // in validate_and_infer_types().
                 virtual void post_validate_and_infer_types() {}
                 void generate_adjoints(autodiff::Adjoints& adjoints,
-                                       const NodeVector& deltas) override;
+                                       const OutputVector& deltas) override;
 
             protected:
                 FusedOp();

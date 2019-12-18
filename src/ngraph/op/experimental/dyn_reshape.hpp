@@ -62,7 +62,7 @@ namespace ngraph
                 void set_zero_flag(bool zero_flag) { m_zero_flag = zero_flag; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
             private:
                 bool m_zero_flag;

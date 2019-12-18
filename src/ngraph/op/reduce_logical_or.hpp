@@ -28,10 +28,9 @@ namespace ngraph
             ///
             /// The reduction is performed over slices of the first input. The slices shape depends
             /// on the values passed to the second input - the axes.
-            class ReduceLogicalOr : public util::LogicalReductionKeepDims
+            class NGRAPH_API ReduceLogicalOr : public util::LogicalReductionKeepDims
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ReduceLogicalOr", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ReduceLogicalOr() = default;

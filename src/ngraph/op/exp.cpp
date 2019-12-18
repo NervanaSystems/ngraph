@@ -34,7 +34,7 @@ shared_ptr<Node> op::Exp::copy_with_new_args(const NodeVector& new_args) const
     return make_shared<Exp>(new_args.at(0));
 }
 
-void op::Exp::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Exp::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

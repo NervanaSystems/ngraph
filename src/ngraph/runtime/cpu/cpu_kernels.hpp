@@ -92,6 +92,21 @@ namespace cblas
                      float* C,
                      const int64_t ldc);
 
+    void cblas_dgemm(const Layout layout,
+                     const Transpose TransA,
+                     const Transpose TransB,
+                     const int64_t M,
+                     const int64_t N,
+                     const int64_t K,
+                     const double alpha,
+                     const double* A,
+                     const int64_t lda,
+                     const double* B,
+                     const int64_t ldb,
+                     const double beta,
+                     double* C,
+                     const int64_t ldc);
+
     void cblas_sgemm_batch(const Layout Layout,
                            const Transpose* transa_array,
                            const Transpose* transb_array,
