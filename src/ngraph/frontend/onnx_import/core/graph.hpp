@@ -52,8 +52,11 @@ namespace ngraph
                     m_model->get_operator(onnx_node.op_type(), onnx_node.domain())(onnx_node);
                 for (auto& ng_node : ng_node_vector)
                 {
-                    ng_node->add_provenance_tag("<ONNX Node(" + onnx_node.op_type() + "): " +
-                                                onnx_node.get_description() + ">");
+                    std::string node_name =
+                        onnx_node.get_name().empty() ? "unnamed node" : onnx_node.get_name();
+                    std::string provenance_tag =
+                        "<ONNX " + onnx_node.op_type() + " (" + node_name + ") >";
+                    ng_node->add_provenance_tag(provenance_tag);
                 }
                 return ng_node_vector;
             }
