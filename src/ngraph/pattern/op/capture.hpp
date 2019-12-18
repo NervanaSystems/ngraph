@@ -25,29 +25,32 @@ namespace ngraph
     {
         namespace op
         {
-            /// \brief \p Skip allows users to specify unexpected nodes in a pattern
-            /// and skip them if a predicate condition is satisfied.
+            /// \brief \p Capture allows users to capture the matches
             ///
-            class NGRAPH_API Skip : public Pattern
+            class NGRAPH_API Capture : public Pattern
             {
             public:
-                static constexpr NodeTypeInfo type_info{"patternSkip", 0};
+                static constexpr NodeTypeInfo type_info{"patternCapture", 0};
                 const NodeTypeInfo& get_type_info() const override;
-                Skip(const Output<Node>& arg, ValuePredicate pred)
-                    : Pattern({arg}, pred)
+                Capture(const Output<Node>& arg)
+                    : Pattern({arg})
                 {
                     set_output_type(0, arg.get_element_type(), arg.get_partial_shape());
                 }
 
-                Skip(const Output<Node>& arg, NodePredicate pred = nullptr)
-                    : Pattern({arg}, as_value_predicate(pred))
+                /// \brief static nodes are retained after a capture. All other nodes are dropped
+                std::set<Node*> get_static_nodes() { return m_static_nodes; }
+                void set_static_nodes(const std::set<Node*>& static_nodes)
                 {
-                    set_output_type(0, arg.get_element_type(), arg.get_partial_shape());
+                    m_static_nodes = static_nodes;
                 }
 
                 virtual bool match_value(pattern::Matcher* matcher,
                                          const Output<Node>& pattern_value,
                                          const Output<Node>& graph_value) override;
+
+            protected:
+                std::set<Node*> m_static_matches;
             };
         }
     }

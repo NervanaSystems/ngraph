@@ -25,29 +25,23 @@ namespace ngraph
     {
         namespace op
         {
-            /// \brief \p Skip allows users to specify unexpected nodes in a pattern
-            /// and skip them if a predicate condition is satisfied.
-            ///
-            class NGRAPH_API Skip : public Pattern
+            /// \brief Ors are used to allow on of several patterns
+            class NGRAPH_API Or : public Pattern
             {
             public:
-                static constexpr NodeTypeInfo type_info{"patternSkip", 0};
+                static constexpr NodeTypeInfo type_info{"patternOr", 0};
                 const NodeTypeInfo& get_type_info() const override;
-                Skip(const Output<Node>& arg, ValuePredicate pred)
-                    : Pattern({arg}, pred)
+                /// \brief creates an Or node matching one of several sub-patterns in order. Does
+                /// not add node to match list.
+                /// \param patterns The patterns to try for matching
+                Or(const OutputVector& patterns)
+                    : Pattern(patterns)
                 {
-                    set_output_type(0, arg.get_element_type(), arg.get_partial_shape());
                 }
 
-                Skip(const Output<Node>& arg, NodePredicate pred = nullptr)
-                    : Pattern({arg}, as_value_predicate(pred))
-                {
-                    set_output_type(0, arg.get_element_type(), arg.get_partial_shape());
-                }
-
-                virtual bool match_value(pattern::Matcher* matcher,
-                                         const Output<Node>& pattern_value,
-                                         const Output<Node>& graph_value) override;
+                bool match_value(pattern::Matcher* matcher,
+                                 const Output<Node>& pattern_value,
+                                 const Output<Node>& graph_value) override;
             };
         }
     }

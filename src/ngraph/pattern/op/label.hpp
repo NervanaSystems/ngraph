@@ -44,38 +44,92 @@ namespace ngraph
                 /// auto label = std::make_shared<pattern::op::Label>(element::f32,
                 ///                                                   Shape{2,2},
                 ///                                                   nullptr,
-                ///                                                   NodeVector{add});
+                ///                                                   OutputVector{add});
                 /// \endcode
                 Label(const element::Type& type,
                       const PartialShape& s,
-                      Predicate pred = nullptr,
-                      const NodeVector& wrapped_nodes = NodeVector{})
-                    : Pattern(wrapped_nodes, pred)
+                      const ValuePredicate pred,
+                      const OutputVector& wrapped_values)
+                    : Pattern(wrapped_values, pred)
                 {
                     set_output_type(0, type, s);
+                }
+
+                Label(const element::Type& type, const PartialShape& s)
+                    : Label(type, s, [](const Output<Node>&) { return true; }, OutputVector())
+                {
+                }
+
+                Label(const element::Type& type, const PartialShape& s, ValuePredicate pred)
+                    : Label(type, s, pred, OutputVector{})
+                {
+                }
+
+                Label(const element::Type& type, const PartialShape& s, NodePredicate pred)
+                    : Label(type, s, as_value_predicate(pred), OutputVector{})
+                {
+                }
+
+                Label(const element::Type& type,
+                      const PartialShape& s,
+                      const NodePredicate pred,
+                      const NodeVector& wrapped_values)
+                    : Label(type, s, as_value_predicate(pred), as_output_vector(wrapped_values))
+                {
                 }
 
                 /// \brief creates a Label node containing a sub-pattern described by the type and
                 ///        shape of \sa node.
                 ///
                 /// this Label node can be bound only to the nodes in the input graph
-                /// that match the pattern specified by \sa wrapped_nodes
+                /// that match the pattern specified by \sa wrapped_values
                 /// Example:
                 /// \code{.cpp}
                 /// auto add = a + b; // a and b are op::Parameter in this example
                 /// auto label = std::make_shared<pattern::op::Label>(add,
                 ///                                                   nullptr,
-                ///                                                   NodeVector{add});
+                ///                                                   OutputVector{add});
                 /// \endcode
-                Label(std::shared_ptr<Node> node,
-                      Predicate pred = nullptr,
-                      const NodeVector& wrapped_nodes = NodeVector{})
-                    : Label(node->get_element_type(),
-                            node->get_output_partial_shape(0),
-                            pred,
-                            wrapped_nodes)
+                Label(const Output<Node>& value,
+                      const ValuePredicate pred,
+                      const OutputVector& wrapped_values)
+                    : Label(
+                          value.get_element_type(), value.get_partial_shape(), pred, wrapped_values)
                 {
                 }
+                Label(const Output<Node>& value, const ValuePredicate pred)
+                    : Label(
+                          value.get_element_type(), value.get_partial_shape(), pred, OutputVector{})
+                {
+                }
+
+                Label(const Output<Node>& value, const NodePredicate pred)
+                    : Label(value.get_element_type(),
+                            value.get_partial_shape(),
+                            as_value_predicate(pred),
+                            OutputVector{})
+                {
+                }
+                Label(const Output<Node>& value)
+                    : Label(value.get_element_type(),
+                            value.get_partial_shape(),
+                            [](const Output<Node>&) { return true; },
+                            OutputVector{})
+                {
+                }
+                Label(const Output<Node>& node,
+                      const NodePredicate pred,
+                      const NodeVector& wrapped_values)
+                    : Label(node.get_element_type(),
+                            node.get_partial_shape(),
+                            as_value_predicate(pred),
+                            as_output_vector(wrapped_values))
+                {
+                }
+
+                bool match_value(Matcher* matcher,
+                                 const Output<Node>& pattern_value,
+                                 const Output<Node>& graph_value) override;
             };
         }
     }
