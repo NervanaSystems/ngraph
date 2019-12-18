@@ -68,8 +68,7 @@ namespace ngraph
             /// \param[in]  node                The node representing incoming ONNX operation.
             /// \param[in]  ng_input            The input (nGraph) Tensor.
             /// \param[in]  reduction_function  The reduction function defining arithmetic dynamic
-            /// reduction
-            ///                                 operation (e.g. ReduceProd, ReduceSum).
+            ///                                 reduction operation (e.g. ReduceProd, ReduceSum).
             ///
             /// \return     nGraph node equivalent of the ONNX operation.
             ///

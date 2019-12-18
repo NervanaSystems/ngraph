@@ -25,7 +25,7 @@ namespace ngraph
 {
     namespace builder
     {
-        /// \brief      Specyfies method of bias application to avoid numerical problems
+        /// \brief      Specifies method of bias application to avoid numerical problems
         enum class BiasMode
         {
             // Add bias to intermediate result
