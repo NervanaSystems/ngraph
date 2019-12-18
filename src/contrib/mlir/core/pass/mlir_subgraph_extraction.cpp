@@ -32,6 +32,7 @@
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
