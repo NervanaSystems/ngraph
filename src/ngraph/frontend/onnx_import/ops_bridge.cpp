@@ -59,7 +59,6 @@
 #include "op/flatten.hpp"
 #include "op/floor.hpp"
 #include "op/gather.hpp"
-#include "op/gather_elements.hpp"
 #include "op/gather_nd.hpp"
 #include "op/gemm.hpp"
 #include "op/global_average_pool.hpp"
@@ -279,7 +278,6 @@ namespace ngraph
             REGISTER_OPERATOR("Floor", 1, floor);
             REGISTER_OPERATOR("Gather", 1, gather);
             REGISTER_OPERATOR("GatherND", 1, gather_nd);
-            REGISTER_OPERATOR("GatherElements", 1, gather_elements);
             REGISTER_OPERATOR("Gemm", 1, gemm);
             REGISTER_OPERATOR("Gemm", 6, gemm);
             REGISTER_OPERATOR("GlobalAveragePool", 1, global_average_pool);

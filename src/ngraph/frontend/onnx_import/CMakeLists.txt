@@ -98,8 +98,6 @@ add_library(onnx_import STATIC
         op/flatten.hpp
         op/floor.hpp
         op/gather.hpp
-        op/gather_elements.hpp
-        op/gather_elements.cpp
         op/gather_nd.hpp
         op/gather_nd.cpp
         op/gemm.cpp
