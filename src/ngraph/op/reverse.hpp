@@ -74,7 +74,7 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 AxisSet m_reversed_axes;
             };
@@ -119,7 +119,7 @@ namespace ngraph
                 virtual size_t get_version() const override { return 1; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 Mode mode_from_string(const std::string& mode) const;
 

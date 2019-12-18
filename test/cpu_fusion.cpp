@@ -295,6 +295,25 @@ TEST(cpu_fusion, cpu_fusion_pass_basic)
     ASSERT_NE(as_type_ptr<op::MatmulBias>(graph->get_argument(0)), nullptr);
 }
 
+TEST(cpu_fusion, matmul_f64)
+{
+    Shape shape{};
+    Shape shape_w{2, 4};
+    Shape shape_x{4, 1};
+    Shape shape_b{1};
+    auto A = make_shared<op::Parameter>(element::f64, shape_w);
+    auto B = make_shared<op::Parameter>(element::f64, shape_x);
+    auto C = make_shared<op::Parameter>(element::f64, shape_b);
+
+    auto dot = make_shared<op::Dot>(A, B);
+    auto graph = make_shared<op::Abs>(dot);
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::FusionType::REGULAR_FUSIONS);
+    auto func = make_shared<Function>(graph, ParameterVector{A, B, C});
+    pass_manager.run_passes(func);
+    ASSERT_NE(as_type_ptr<op::MatmulBias>(graph->get_argument(0)), nullptr);
+}
+
 TEST(cpu_fusion, commutative_matmul_bias)
 {
     Shape shape{};
@@ -509,12 +528,12 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
     ngraph::autodiff::Adjoints adjoints(OutputVector{convolution_bias},
                                         OutputVector{conv_test.delta});
 
-    auto d_data = adjoints.backprop_node(conv_test.data);
-    auto d_weights = adjoints.backprop_node(conv_test.weights);
-    auto d_bias = adjoints.backprop_node(conv_test.bias);
+    auto d_data = adjoints.backprop_output(conv_test.data);
+    auto d_weights = adjoints.backprop_output(conv_test.weights);
+    auto d_bias = adjoints.backprop_output(conv_test.bias);
 
     auto df = make_shared<Function>(
-        NodeVector{d_data, d_weights, d_bias},
+        OutputVector{d_data, d_weights, d_bias},
         ParameterVector{conv_test.data, conv_test.weights, conv_test.bias, conv_test.delta});
     auto handle = backend->compile(df);
     handle->call_with_validate(
@@ -548,11 +567,11 @@ TEST(cpu_fusion, conv_bias_bprop)
 
     ngraph::autodiff::Adjoints adjoints(OutputVector{conv_bias}, OutputVector{delta});
 
-    auto d_data = adjoints.backprop_node(data_batch);
-    auto d_weights = adjoints.backprop_node(filters);
-    auto d_bias = adjoints.backprop_node(bias);
+    auto d_data = adjoints.backprop_output(data_batch);
+    auto d_weights = adjoints.backprop_output(filters);
+    auto d_bias = adjoints.backprop_output(bias);
 
-    auto df = make_shared<Function>(NodeVector{d_data, d_weights, d_bias},
+    auto df = make_shared<Function>(OutputVector{d_data, d_weights, d_bias},
                                     ParameterVector{data_batch, filters, bias, delta});
 
     pass_manager.run_passes(df);
@@ -1520,9 +1539,9 @@ TEST(cpu_fusion, max_pool_with_indices)
 
     ngraph::autodiff::Adjoints adjoints(ngraph::OutputVector{max_pool}, ngraph::OutputVector{C});
 
-    auto dinput = adjoints.backprop_node(input);
+    auto dinput = adjoints.backprop_output(input);
 
-    auto df = std::make_shared<Function>(NodeVector{dinput}, ParameterVector{input, C});
+    auto df = std::make_shared<Function>(OutputVector{dinput}, ParameterVector{input, C});
 
     auto f = std::make_shared<Function>(NodeVector{max_pool}, ParameterVector{input});
 
@@ -1630,7 +1649,7 @@ static std::pair<std::shared_ptr<ngraph::Function>, OutputVector>
     transform(back_parameters.begin(),
               back_parameters.end(),
               dYdXs.begin(),
-              [&adjoint](const std::shared_ptr<Node>& X) { return adjoint.backprop_node(X); });
+              [&adjoint](const std::shared_ptr<Node>& X) { return adjoint.backprop_output(X); });
 
     // create the backward function
     std::vector<std::shared_ptr<ngraph::op::Parameter>> param_adjoints;
@@ -2399,9 +2418,9 @@ void sigmoid_multiply_fusion_backward_compute(runtime::Backend* backend,
         make_shared<op::SigmoidMultiply>(input_0_alt, input_1_alt, input_0_type, input_1_type);
 
     ngraph::autodiff::Adjoints adjoints(OutputVector{sigmoid_mul}, OutputVector{delta_param});
-    auto d_input_0 = adjoints.backprop_node(input_0_adjoint);
-    auto d_input_1 = adjoints.backprop_node(input_1_adjoint);
-    auto df = make_shared<Function>(NodeVector{d_input_0, d_input_1}, back_params);
+    auto d_input_0 = adjoints.backprop_output(input_0_adjoint);
+    auto d_input_1 = adjoints.backprop_output(input_1_adjoint);
+    auto df = make_shared<Function>(OutputVector{d_input_0, d_input_1}, back_params);
     auto handle = backend->compile(df);
     handle->call_with_validate({d_input_0_tensor, d_input_1_tensor}, input_tensors);
     EXPECT_TRUE(test::all_close(read_vector<float>(d_input_0_tensor), expected_0));

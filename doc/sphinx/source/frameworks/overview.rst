@@ -1,5 +1,7 @@
 .. frameworks/overview.rst
 
+.. _framework_support:
+
 Basic concepts
 ==============
 

@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <memory>
 
+#include "default_opset.hpp"
 #include "exceptions.hpp"
 #include "lp_pool.hpp"
 #include "ngraph/axis_set.hpp"
@@ -25,6 +26,7 @@
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "ngraph/util.hpp"
 #include "utils/common.hpp"
 
@@ -61,13 +63,13 @@ namespace ngraph
                         // output shape is all ones except N channel
                         Shape output_shape(orig_shape.size(), 1);
                         output_shape.at(0) = orig_shape.at(0);
-                        slice = std::make_shared<ngraph::op::Reshape>(
+                        slice = std::make_shared<ngraph::opset0::Reshape>(
                             slice,
                             ngraph::get_default_order(slice->get_shape().size()),
                             output_shape);
                     }
 
-                    return {std::make_shared<ngraph::op::Concat>(slices, channel_axis)};
+                    return {std::make_shared<default_opset::Concat>(slices, channel_axis)};
                 }
 
             } // namespace set_1

@@ -91,7 +91,7 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
             protected:
                 Strides m_window_movement_strides;

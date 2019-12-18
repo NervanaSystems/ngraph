@@ -63,18 +63,18 @@ index 99970659..ef88a0a7 100644
      # Compilation happens with OpenMP to enable `#pragma omp simd`
      # but during linkage OpenMP dependency should be avoided
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index 60bb0c94..cc3fc9d6 100644
+index f99ec31ce..b3c1d9bb8 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
 @@ -73,8 +73,10 @@ endif()
  add_library(${LIB_NAME}
      ${MKLDNN_LIBRARY_TYPE} ${HEADERS} ${${LIB_NAME}_SUB_OBJS})
 
--set_property(TARGET ${LIB_NAME} PROPERTY VERSION "${PROJECT_VERSION}.0")
--set_property(TARGET ${LIB_NAME} PROPERTY SOVERSION "0")
+-set_property(TARGET ${LIB_NAME} PROPERTY VERSION "${MKLDNN_VERSION_MAJOR}.${MKLDNN_VERSION_MINOR}")
+-set_property(TARGET ${LIB_NAME} PROPERTY SOVERSION "${MKLDNN_VERSION_MAJOR}")
 +if(MKLDNN_LIB_VERSIONING_ENABLE)
-+       set_property(TARGET ${LIB_NAME} PROPERTY VERSION "${PROJECT_VERSION}.0")
-+       set_property(TARGET ${LIB_NAME} PROPERTY SOVERSION "0")
++    set_property(TARGET ${LIB_NAME} PROPERTY VERSION "${MKLDNN_VERSION_MAJOR}.${MKLDNN_VERSION_MINOR}")
++    set_property(TARGET ${LIB_NAME} PROPERTY SOVERSION "${MKLDNN_VERSION_MAJOR}")
 +endif()
  set_property(TARGET ${LIB_NAME} PROPERTY PUBLIC_HEADER ${HEADERS})
 

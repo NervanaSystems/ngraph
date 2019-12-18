@@ -164,7 +164,7 @@ option(NGRAPH_UNIT_TEST_ENABLE "Control the building of unit tests" TRUE)
 option(NGRAPH_DOC_BUILD_ENABLE "Control the building of documentation" FALSE)
 option(NGRAPH_TOOLS_ENABLE "Control the building of tool" TRUE)
 option(NGRAPH_CPU_ENABLE "Control the building of the CPU backend" TRUE)
-option(NGRAPH_USE_LEGACY_MKLDNN "Use legacy MKLDNN" TRUE)
+option(NGRAPH_USE_LEGACY_MKLDNN "Use legacy MKLDNN" FALSE)
 option(NGRAPH_MLIR_ENABLE "Control the building of MLIR backend" FALSE)
 option(NGRAPH_INTERPRETER_ENABLE "Control the building of the INTERPRETER backend" TRUE)
 option(NGRAPH_NOP_ENABLE "Control the building of the NOP backend" TRUE)
@@ -538,6 +538,9 @@ if (NOT NGRAPH_BUILD_DIR)
         set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR})
     endif()
 endif()
+
+# Build destination directory for nGraph binaries and tools.
+set(NGRAPH_BUILD_BIN ${CMAKE_CURRENT_BINARY_DIR}/bin)
 
 set(EXTERNAL_INSTALL_DIR ${CMAKE_BINARY_DIR}/external)
 

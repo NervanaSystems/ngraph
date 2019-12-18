@@ -57,7 +57,7 @@ namespace ngraph
             protected:
                 ngraph::element::Type m_destination_type;
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
             };
         }
         using v0::Convert;

@@ -2155,9 +2155,16 @@ TEST(cpu_test, tensor_copy_from_different_layout)
     EXPECT_EQ((vector<uint8_t>{1, 4, 2, 5, 3, 6}), read_vector<uint8_t>(b));
 }
 
-#if MKLDNN_VERSION_MAJOR >= 1
+#ifndef NGRAPH_MLIR_ENABLE
 TEST(cpu_test, max_pool_bf16)
 {
+    if (!runtime::cpu::mkldnn_utils::is_bf16_supported())
+    {
+        // TODO change to skip when there is a new release of gtest
+        NGRAPH_WARN << "This test is skipped for platform without bf16 support and for mlir.";
+        return;
+    }
+
     Shape shape_a{1, 1, 3, 5};
     Shape window_shape{2, 3};
     auto window_movement_strides = Strides{1, 1};
@@ -2186,6 +2193,13 @@ TEST(cpu_test, max_pool_bf16)
 
 TEST(cpu_test, convolution_simple_bf16)
 {
+    if (!runtime::cpu::mkldnn_utils::is_bf16_supported())
+    {
+        // TODO change to skip when there is a new release of gtest
+        NGRAPH_WARN << "This test is skipped for platform without bf16 support and for mlir.";
+        return;
+    }
+
     Shape shape_a{1, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 2, 1, 1};

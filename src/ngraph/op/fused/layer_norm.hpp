@@ -67,7 +67,7 @@ namespace ngraph
                 int64_t get_begin_norm_axis() const { return m_begin_norm_axis; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
             private:
                 bool m_keep_stats{true};
