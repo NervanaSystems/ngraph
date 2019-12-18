@@ -2074,15 +2074,15 @@ TEST(constant_folding, constant_v1_variadic_split_axis_1_3_splits_neg_length)
 
 TEST(constant_folding, constant_v1_one_hot)
 {
-    vector<int8_t> indices{0, 1, 2};
+    vector<int64_t> indices{0, 1, 2};
     float16 on_value = 1.123f;
     float16 off_value = 0.321f;
 
-    const auto indices_const = op::Constant::create(element::i32, Shape{3}, indices);
-    const auto depth_const = op::Constant::create(element::i32, Shape{}, {1});
+    const auto indices_const = op::Constant::create(element::i64, Shape{3}, indices);
+    const auto depth_const = op::Constant::create(element::i64, Shape{}, {3});
     const auto on_const = op::Constant::create(element::f16, Shape{}, {on_value});
     const auto off_const = op::Constant::create(element::f16, Shape{}, {off_value});
-    int64_t axis = 0;
+    int64_t axis = 1;
 
     auto one_hot_v1 =
         make_shared<op::v1::OneHot>(indices_const, depth_const, on_const, off_const, axis);

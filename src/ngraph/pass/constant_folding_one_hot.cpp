@@ -36,10 +36,10 @@ shared_ptr<op::Constant> fold_constant_one_hot_ref(const shared_ptr<op::Constant
                                 indices->get_shape(),
                                 output_shape,
                                 axis,
-                                on_value->get_data_ptr<OUTPUT_TYPE>()[0],
-                                off_value->get_data_ptr<OUTPUT_TYPE>()[0]);
+                                on_value->get_vector<OUTPUT_TYPE>()[0],
+                                off_value->get_vector<OUTPUT_TYPE>()[0]);
 
-    return make_shared<op::Constant>(indices->get_output_element_type(0), output_shape, out_vec);
+    return make_shared<op::Constant>(on_value->get_element_type(), output_shape, out_vec);
 }
 
 template <class OUTPUT_TYPE>
@@ -89,13 +89,13 @@ shared_ptr<op::Constant> fold_constant_one_hot(const shared_ptr<op::Constant>& i
             return fold_constant_one_hot_ref<int64_t, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
             break;
         case element::Type_t::u8:
-            return fold_constant_one_hot_ref<uint16_t, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
+            return fold_constant_one_hot_ref<uint8_t, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
             break;
         case element::Type_t::u16:
-            return fold_constant_one_hot_ref<uint32_t, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
+            return fold_constant_one_hot_ref<uint16_t, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
             break;
         case element::Type_t::u32:
-            return fold_constant_one_hot_ref<char, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
+            return fold_constant_one_hot_ref<uint32_t, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
             break;
         case element::Type_t::u64:
             return fold_constant_one_hot_ref<uint64_t, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
@@ -127,8 +127,8 @@ void pass::ConstantFolding::construct_constant_one_hot()
         const auto off_node = static_pointer_cast<op::Constant>(pattern_map[off_label]);
         
         auto one_hot = static_pointer_cast<op::v1::OneHot>(m.get_match_root());
+        const size_t axis = one_hot->get_axis();
         const auto output_shape = one_hot->get_output_shape(0);
-        const auto axis = one_hot->get_axis();
         auto output_type = on_node->get_element_type();
 
         std::shared_ptr<op::Constant> replacement = fold_constant_one_hot<char>(indices_node, on_node, off_node, output_shape, axis);
@@ -185,7 +185,7 @@ void pass::ConstantFolding::construct_constant_one_hot()
             break;
         }
 
-        replace_node(m.get_match_root(), nullptr);
+        replace_node(m.get_match_root(), replacement);
         return true;
     };
     auto split_matcher =
