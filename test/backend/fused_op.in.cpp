@@ -2649,3 +2649,28 @@ NGRAPH_TEST(${BACKEND_NAME}, cross_entropy_with_one_hot)
     auto result = read_vector<float>(result0);
     EXPECT_TRUE(test::all_close_f(result, expected, 23));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, gather_element)
+{
+    Shape shape_a{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{2, 2};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{2, 2};
+    auto aa = make_shared<op::GatherElement>(A, B, 1);
+    auto f = make_shared<Function>(NodeVector{aa}, ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1,2,3,4});
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, vector<float>{0,0,1,0});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1,1,4,3}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+}

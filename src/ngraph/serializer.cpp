@@ -1603,6 +1603,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::v1::Gather>(args[0], args[1], args[2]);
             break;
         }
+        case OP_TYPEID::GatherElement:
+        {
+            auto axis = node_js.at("axis").get<size_t>();
+            node = make_shared<op::GatherElement>(args[0], args[1], axis);
+            break;
+        }
         case OP_TYPEID::GatherND:
         {
             node = make_shared<op::GatherND>(args[0], args[1]);
@@ -3671,6 +3677,12 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Gather_v1: { break;
+    }
+    case OP_TYPEID::GatherElement: { 
+
+        //auto tmp = static_cast<const op::v0::GatherElement*>(&n);
+        //node["axis"] = tmp->get_axis();
+        break;
     }
     case OP_TYPEID::GatherND: { break;
     }

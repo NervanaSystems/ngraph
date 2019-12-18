@@ -1865,6 +1865,7 @@ private:
         case OP_TYPEID::GeluBackpropFactor:
         case OP_TYPEID::Gemm:
         case OP_TYPEID::GroupConvolutionTranspose:
+        case OP_TYPEID::GatherElement:
         case OP_TYPEID::HardSigmoid:
         case OP_TYPEID::Interpolate:
         case OP_TYPEID::LayerNorm:

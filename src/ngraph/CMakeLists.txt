@@ -375,6 +375,8 @@ set (SRC
     op/fused/gemm.hpp
     op/fused/grn.cpp
     op/fused/grn.hpp
+    op/fused/gather_element.hpp
+    op/fused/gather_element.cpp
     op/fused/group_conv.hpp
     op/fused/group_conv.cpp
     op/fused/group_conv_transpose.hpp
