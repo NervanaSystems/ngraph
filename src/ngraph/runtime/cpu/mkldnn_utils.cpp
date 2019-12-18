@@ -785,28 +785,13 @@ bool runtime::cpu::mkldnn_utils::is_bf16_supported()
 {
     try
     {
-        mkldnn::memory::dims input_dims{1, 1, 3, 5};
-        mkldnn::memory::dims input_strides{15, 15, 5, 1};
-        mkldnn::memory::dims window_shape{2, 3};
-        mkldnn::memory::dims window_movement_strides{1, 1};
-        mkldnn::memory::dims padding_below{0, 0};
-        mkldnn::memory::dims padding_above{0, 0};
-        mkldnn::memory::dims result_dims{1, 1, 2, 3};
+        mkldnn::memory::dims dims{2, 3, 4, 5};
         auto input_desc =
-            mkldnn::memory::desc(input_dims, mkldnn::memory::data_type::bf16, memory::format::nchw);
-        auto result_desc = mkldnn::memory::desc(
-            result_dims, mkldnn::memory::data_type::bf16, memory::format::nchw);
-        auto maxpool_desc = mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_inference,
-                                                          mkldnn::algorithm::pooling_max,
-                                                          input_desc,
-                                                          result_desc,
-                                                          window_movement_strides,
-                                                          window_shape,
-                                                          padding_below,
-                                                          padding_above,
-                                                          mkldnn::padding_kind::zero);
-        mkldnn::engine cpu_engine(mkldnn::engine::kind::cpu, 0);
-        auto maxpool_prim_desc = mkldnn::pooling_forward::primitive_desc(maxpool_desc, cpu_engine);
+            mkldnn::memory::desc(dims, mkldnn::memory::data_type::f32, memory::format::nchw);
+        auto result_desc =
+            mkldnn::memory::desc(dims, mkldnn::memory::data_type::bf16, memory::format::nchw);
+        auto reorder_prim_desc = mkldnn::reorder::primitive_desc(
+            {input_desc, executor::global_cpu_engine}, {result_desc, executor::global_cpu_engine});
     }
     catch (const mkldnn::error& e)
     {
