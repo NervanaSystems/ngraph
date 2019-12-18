@@ -179,3 +179,85 @@ TEST(type_prop, scatter_nd_add_fail_updates_shape)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, scatter_nd_fail_updates_element_type)
+{
+    Shape ref_shape{3, 3, 3};
+    Shape indices_shape{1};
+    Shape updates_shape{3, 3};
+    Shape out_shape{3, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::i32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterND>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Created ScatterND op with incorrect updates element type.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Updates element type must be the same as element type of data."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_nd_fail_updates_rank)
+{
+    Shape ref_shape{3, 3, 3};
+    Shape indices_shape{1};
+    Shape updates_shape{3, 3, 3};
+    Shape out_shape{3, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterND>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Created ScatterND op with incorrect updates rank";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Updates rank is expected to be equal data_rank + indices_rank - "
+                        "indices_shape[-1] - 1."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_nd_fail_updates_shape)
+{
+    Shape ref_shape{3, 3, 3};
+    Shape indices_shape{4};
+    Shape updates_shape{2};
+    Shape out_shape{3, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterND>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Created ScatterND op with incorrect indices shape";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Last dimension of indices can be at most the rank of data."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
