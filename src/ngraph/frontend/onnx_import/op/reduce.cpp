@@ -45,9 +45,10 @@ namespace ngraph
                     auto sum_node = std::shared_ptr<ngraph::Node>{reduction::make_ng_reduction_op(
                         node,
                         node.get_ng_inputs().at(0),
-                        std::make_shared<ngraph::opset0::Sum,
+                        std::make_shared<default_opset::ReduceSum,
                                          const std::shared_ptr<ngraph::Node>&,
-                                         const ngraph::AxisSet&>)};
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         bool>)};
 
                     auto const_node = default_opset::Constant::create(
                         sum_node->get_element_type(),
@@ -55,7 +56,8 @@ namespace ngraph
                         std::vector<std::size_t>(shape_size(sum_node->get_shape()),
                                                  elem_count_product));
 
-                    return {std::make_shared<ngraph::opset0::Divide>(sum_node, const_node)};
+                    return {std::make_shared<default_opset::Divide>(
+                        sum_node, const_node, ngraph::op::AutoBroadcastSpec())};
                 }
 
             } // namespace set_1

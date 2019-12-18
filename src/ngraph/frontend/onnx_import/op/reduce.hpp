@@ -31,9 +31,6 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/reduce_prod.hpp"
 #include "ngraph/op/reduce_sum.hpp"
-#include "ngraph/op/sum.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/opsets/opset0.hpp"
 #include "utils/reduction.hpp"
 
 namespace ngraph
@@ -61,9 +58,10 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> sum_node{reduction::make_ng_reduction_op(
                         node,
                         node.get_ng_inputs().at(0),
-                        std::make_shared<ngraph::opset0::Sum,
+                        std::make_shared<default_opset::ReduceSum,
                                          const std::shared_ptr<ngraph::Node>&,
-                                         const ngraph::AxisSet&>)};
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         bool>)};
                     return {std::make_shared<default_opset::Log>(sum_node)};
                 }
 
@@ -86,9 +84,10 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> sum_node{reduction::make_ng_reduction_op(
                         node,
                         exp_node,
-                        std::make_shared<ngraph::opset0::Sum,
+                        std::make_shared<default_opset::ReduceSum,
                                          const std::shared_ptr<ngraph::Node>&,
-                                         const ngraph::AxisSet&>)};
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         bool>)};
                     return {std::make_shared<default_opset::Log>(sum_node)};
                 }
 
@@ -155,9 +154,10 @@ namespace ngraph
                     return {reduction::make_ng_reduction_op(
                         node,
                         node.get_ng_inputs().at(0),
-                        std::make_shared<ngraph::opset0::Max,
+                        std::make_shared<default_opset::ReduceMax,
                                          const std::shared_ptr<ngraph::Node>&,
-                                         const ngraph::AxisSet&>)};
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         bool>)};
                 }
 
                 /// \brief      Compute the mean value of the input tensor's elements along the
@@ -191,9 +191,10 @@ namespace ngraph
                     return {reduction::make_ng_reduction_op(
                         node,
                         node.get_ng_inputs().at(0),
-                        std::make_shared<ngraph::opset0::Min,
+                        std::make_shared<default_opset::ReduceMin,
                                          const std::shared_ptr<ngraph::Node>&,
-                                         const ngraph::AxisSet&>)};
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         bool>)};
                 }
 
                 /// \brief      Compute the product of the input tensor's elements along the
@@ -257,13 +258,14 @@ namespace ngraph
                 inline NodeVector reduce_sum_square(const Node& node)
                 {
                     auto input = std::shared_ptr<ngraph::Node>{node.get_ng_inputs().at(0)};
-                    auto square_node = input * input;
+                    auto square_node = std::make_shared<ngraph::op::v1::Multiply>(input, input);
                     return {reduction::make_ng_reduction_op(
                         node,
                         square_node,
-                        std::make_shared<ngraph::opset0::Sum,
+                        std::make_shared<default_opset::ReduceSum,
                                          const std::shared_ptr<ngraph::Node>&,
-                                         const ngraph::AxisSet&>)};
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         bool>)};
                 }
 
             } // namespace set_1
