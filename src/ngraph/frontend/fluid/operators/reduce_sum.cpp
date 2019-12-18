@@ -71,16 +71,13 @@ NodeVector ReduceSum::decompose_op() const
     return retval;
 }
 
-void ReduceSum::validate_and_infer_types()
+void ReduceSum::pre_validate_and_infer_types()
 {
     auto shape = get_input_partial_shape(0);
+
     if (shape.is_dynamic())
     {
-        set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
-    }
-    else
-    {
-        FusedOp::validate_and_infer_types();
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
     }
 }
 

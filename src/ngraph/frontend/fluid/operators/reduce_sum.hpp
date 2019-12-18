@@ -44,7 +44,7 @@ namespace ngraph
 
             virtual NodeVector decompose_op() const override;
 
-            virtual void validate_and_infer_types() override;
+            virtual void pre_validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
