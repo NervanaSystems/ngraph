@@ -407,6 +407,10 @@ set (SRC
     op/fused/rnn_cell.hpp
     op/fused/scale_shift.cpp
     op/fused/scale_shift.hpp
+    op/fused/scatter_nd.cpp
+    op/fused/scatter_nd.hpp
+    op/fused/stack.cpp
+    op/fused/stack.hpp
     op/fused/selu.cpp
     op/fused/selu.hpp
     op/fused/shuffle_channels.cpp
@@ -600,6 +604,7 @@ set (SRC
     type/float16.cpp
     type/float16.hpp
     type/element_type.cpp
+    type.cpp
     type.hpp
     util.cpp
     util.hpp
