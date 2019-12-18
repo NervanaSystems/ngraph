@@ -256,7 +256,6 @@ else()
         BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/build"
         INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn"
         EXCLUDE_FROM_ALL TRUE
-        BUILD_ALWAYS 1
         )
 endif()
 
