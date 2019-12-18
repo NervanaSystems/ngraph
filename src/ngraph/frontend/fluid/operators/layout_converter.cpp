@@ -63,15 +63,12 @@ shared_ptr<Node> LayoutConverter::copy_with_new_args(const NodeVector& new_args)
     return make_shared<LayoutConverter>(new_args.at(0), get_mode());
 }
 
-void LayoutConverter::validate_and_infer_types()
+void LayoutConverter::pre_validate_and_infer_types()
 {
     auto shape = get_input_partial_shape(0);
+
     if (shape.is_dynamic())
     {
         set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
-    }
-    else
-    {
-        FusedOp::validate_and_infer_types();
     }
 }
