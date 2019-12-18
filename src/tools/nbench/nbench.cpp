@@ -30,6 +30,7 @@
 
 #include "benchmark.hpp"
 #include "benchmark_pipelined.hpp"
+#include "ngraph/component_manager.hpp"
 #include "ngraph/distributed.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/file_util.hpp"
@@ -41,7 +42,6 @@
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
@@ -50,9 +50,16 @@ using namespace ngraph;
 
 static void configure_static_backends()
 {
-#ifdef NGRAPH_INTERPRETER_STATIC_LIB_ENABLE
-    ngraph::runtime::BackendManager::register_backend(
-        "INTERPRETER", ngraph::runtime::interpreter::get_backend_constructor_pointer());
+#ifdef NGRAPH_CPU_ENABLE
+    ngraph_register_cpu_backend();
+#endif
+#ifdef NGRAPH_INTERPRETER_ENABLE
+    ngraph_register_interpreter_backend();
+#endif
+
+#ifdef NGRAPH_MLIR_ENABLE
+    // Initialize MLIR
+    ngraph::runtime::ngmlir::initializeNGraphMLIR();
 #endif
 }
 
