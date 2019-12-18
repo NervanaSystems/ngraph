@@ -61,8 +61,7 @@ protected:
     std::stringstream m_ss;
     std::string m_name;
     std::set<std::shared_ptr<Node>> m_nodes_with_attributes;
-    std::unordered_map<std::type_index, std::function<void(const Node&, std::ostream& ss)>>
-        m_ops_to_details;
+    visualize_tree_ops_map_t m_ops_to_details;
     node_modifiers_t m_node_modifiers = nullptr;
     bool m_dot_only;
     static const int max_jump_distance;
