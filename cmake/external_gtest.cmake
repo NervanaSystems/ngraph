@@ -51,8 +51,8 @@ endif()
 
 #Build for ninja
 if(UNIX)
-    SET(GTEST_PATHS ${CMAKE_BINARY_DIR}/ngraph/gtest/build/googlemock/gtest/libgtest.a
-            ${CMAKE_BINARY_DIR}/ngraph/gtest/build/googlemock/libgmock.a)
+    SET(GTEST_PATHS ${GTEST_OUTPUT_DIR}/libgtest.a
+            ${GMOCK_OUTPUT_DIR}/libgmock.a)
 else()
     SET(GTEST_PATHS ${CMAKE_BINARY_DIR}/ngraph/gtest/build/googlemock/gtest/gtest.lib
             ${CMAKE_BINARY_DIR}/ngraph/gtest/build/googlemock/gtest/gmock.lib
