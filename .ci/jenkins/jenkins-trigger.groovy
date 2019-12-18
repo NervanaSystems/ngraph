@@ -22,7 +22,7 @@
 // original script -- we only need to provide this new trigger hook.
 //
 
-String JENKINS_BRANCH = "master"
+String JENKINS_BRANCH = "aslepko/ov_ci"
 String TIMEOUTTIME = "3600"
 
 // Constants
