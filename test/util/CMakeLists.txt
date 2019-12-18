@@ -14,6 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+if(NOT NGRAPH_TEST_UTIL_ENABLE)
+    return()
+endif()
+
 set (SRC
     autodiff/backprop_function.cpp
     all_close_f.cpp

@@ -18,11 +18,13 @@ add_definitions("-DSERIALIZED_ZOO=\"${CMAKE_CURRENT_SOURCE_DIR}/models\"")
 
 if(NOT NGRAPH_UNIT_TEST_ENABLE)
     message(STATUS "unit tests disabled")
+    include(../cmake/external_gtest.cmake)
     add_subdirectory(util)
     return()
 endif()
 
 message(STATUS "unit tests enabled")
+include(../cmake/external_gtest.cmake)
 
 if (NGRAPH_MLIR_ENABLE)
     add_subdirectory(mlir)
