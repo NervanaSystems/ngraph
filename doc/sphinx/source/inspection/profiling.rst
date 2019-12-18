@@ -2,7 +2,7 @@
 
 .. _profiling: 
 
-Profile Performance with ``nbench``
+Performance testing with ``nbench``
 ###################################
 
 The nGraph Compiler stack includes the ``nbench`` tool which 

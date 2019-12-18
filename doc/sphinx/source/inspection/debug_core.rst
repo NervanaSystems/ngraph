@@ -2,6 +2,10 @@
 
 .. contents::
 
+
+.. important:: Many of the following flags may be experimental only and subject to change.
+
+
 .. _debug_core:
 
 Debug & Build Options
@@ -55,7 +59,7 @@ Compile Flags
 Environment Variables
 =====================
 
-.. note:: Some of the following flags may be experimental only or subject to change.
+.. important:: Many of the following flags may be experimental only and subject to change.
 
 
 .. csv-table::

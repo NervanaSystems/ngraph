@@ -88,7 +88,7 @@ nGraph Compiler Stack Documentation
 
 .. toctree::
    :maxdepth: 1
-   :caption: Debug Options
+   :caption: Inspect & Debug 
 
    inspection/debug_core.rst
    inspection/debug_tf.rst
