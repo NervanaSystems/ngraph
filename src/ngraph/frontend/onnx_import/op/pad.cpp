@@ -37,10 +37,14 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
                     const Shape& data_shape = data->get_shape();
-
-                    double value = node.get_attribute_value<double>("value", 0);
+                    auto pads = node.get_ng_inputs().at(1);
+                    auto values = node.get_ng_inputs().at(2);
                     std::string mode = node.get_attribute_value<std::string>("mode", "constant");
                     ngraph::op::PadMode pad_mode;
+                    auto axis = ngraph::op::Constant::create(element::u32, ngraph::Shape{}, {0});
+
+                    auto padding = std::make_shared<default_opset::Split>(pads, axis, 2);
+
                     if (mode == "constant")
                     {
                         pad_mode = ngraph::op::PadMode::CONSTANT;
@@ -57,19 +61,8 @@ namespace ngraph
                     {
                         throw error::InvalidArgument("Unsupported padding mode: [" + mode + "]");
                     }
-                    auto paddings = convpool::get_pads(node, data_shape);
-                    ngraph::CoordinateDiff padding_below = paddings.first;
-                    ngraph::CoordinateDiff padding_above = paddings.second;
 
-                    return {std::make_shared<default_opset::Pad>(
-                        data,
-                        std::make_shared<default_opset::Constant>(
-                            element::i64, ngraph::Shape{padding_below.size()}, padding_below),
-                        std::make_shared<default_opset::Constant>(
-                            element::i64, ngraph::Shape{padding_above.size()}, padding_above),
-                        std::make_shared<default_opset::Constant>(
-                            data->get_element_type(), ngraph::Shape{}, std::vector<double>{value}),
-                        pad_mode)};
+                    return {std::make_shared<default_opset::Pad>(data, padding, values, pad_mode)};
                 }
 
             } // namespace set_1
