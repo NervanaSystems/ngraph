@@ -17,96 +17,114 @@
 #include "constant_folding.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/one_hot.hpp"
-#include "ngraph/runtime/reference/one_hot.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
+#include "ngraph/runtime/reference/one_hot.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 template <class INDICES_TYPE, class OUTPUT_TYPE>
 shared_ptr<op::Constant> fold_constant_one_hot_ref(const shared_ptr<op::Constant>& indices,
-        const shared_ptr<op::Constant>& on_value,
-        const shared_ptr<op::Constant>& off_value,
-        const Shape& output_shape,
-        size_t axis)
+                                                   const shared_ptr<op::Constant>& on_value,
+                                                   const shared_ptr<op::Constant>& off_value,
+                                                   const Shape& output_shape,
+                                                   size_t axis)
 {
     std::vector<OUTPUT_TYPE> out_vec(shape_size(output_shape));
     runtime::reference::one_hot<INDICES_TYPE, OUTPUT_TYPE>(indices->get_data_ptr<INDICES_TYPE>(),
-                                out_vec.data(),
-                                indices->get_shape(),
-                                output_shape,
-                                axis,
-                                on_value->get_vector<OUTPUT_TYPE>()[0],
-                                off_value->get_vector<OUTPUT_TYPE>()[0]);
+                                                           out_vec.data(),
+                                                           indices->get_shape(),
+                                                           output_shape,
+                                                           axis,
+                                                           on_value->get_vector<OUTPUT_TYPE>()[0],
+                                                           off_value->get_vector<OUTPUT_TYPE>()[0]);
 
     return make_shared<op::Constant>(on_value->get_element_type(), output_shape, out_vec);
 }
 
 template <class OUTPUT_TYPE>
 shared_ptr<op::Constant> fold_constant_one_hot(const shared_ptr<op::Constant>& indices,
-        const shared_ptr<op::Constant>& on_value,
-        const shared_ptr<op::Constant>& off_value,
-        const Shape& output_shape,
-        size_t axis)
+                                               const shared_ptr<op::Constant>& on_value,
+                                               const shared_ptr<op::Constant>& off_value,
+                                               const Shape& output_shape,
+                                               size_t axis)
 {
-        switch (indices->get_element_type())
-        {
-        case element::Type_t::undefined:
-            NGRAPH_CHECK(false,
-                         "Encountered 'undefined' element type in one_hot_callback during fold_constant_one_hot");
-            break;
-        case element::Type_t::dynamic:
-            NGRAPH_CHECK(false, "Encountered 'dynamic' element type in one_hot_callback during fold_constant_one_hot");
-            break;
-        case element::Type_t::u1:
-            NGRAPH_CHECK(false, "Encountered 'u1' element type in one_hot_callback during fold_constant_one_hot");
-            break;
-        case element::Type_t::boolean:
-            return fold_constant_one_hot_ref<char, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
-            break;
-        case element::Type_t::bf16:
-            return fold_constant_one_hot_ref<bfloat16, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
-            break;
-        case element::Type_t::f16:
-            return fold_constant_one_hot_ref<float16, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
-            break;
-        case element::Type_t::f32:
-            return fold_constant_one_hot_ref<float, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
-            break;
-        case element::Type_t::f64:
-            return fold_constant_one_hot_ref<double, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
-            break;
-        case element::Type_t::i8:
-            return fold_constant_one_hot_ref<int8_t, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
-            break;
-        case element::Type_t::i16:
-            return fold_constant_one_hot_ref<int16_t, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
-            break;
-        case element::Type_t::i32:
-            return fold_constant_one_hot_ref<int32_t, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
-            break;
-        case element::Type_t::i64:
-            return fold_constant_one_hot_ref<int64_t, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
-            break;
-        case element::Type_t::u8:
-            return fold_constant_one_hot_ref<uint8_t, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
-            break;
-        case element::Type_t::u16:
-            return fold_constant_one_hot_ref<uint16_t, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
-            break;
-        case element::Type_t::u32:
-            return fold_constant_one_hot_ref<uint32_t, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
-            break;
-        case element::Type_t::u64:
-            return fold_constant_one_hot_ref<uint64_t, OUTPUT_TYPE>(indices, on_value, off_value, output_shape, axis);
-            break;
-        }
+    switch (indices->get_element_type())
+    {
+    case element::Type_t::undefined:
+        NGRAPH_CHECK(false,
+                     "Encountered 'undefined' element type in one_hot_callback during "
+                     "fold_constant_one_hot");
+        break;
+    case element::Type_t::dynamic:
+        NGRAPH_CHECK(
+            false,
+            "Encountered 'dynamic' element type in one_hot_callback during fold_constant_one_hot");
+        break;
+    case element::Type_t::u1:
+        NGRAPH_CHECK(
+            false,
+            "Encountered 'u1' element type in one_hot_callback during fold_constant_one_hot");
+        break;
+    case element::Type_t::boolean:
+        return fold_constant_one_hot_ref<char, OUTPUT_TYPE>(
+            indices, on_value, off_value, output_shape, axis);
+        break;
+    case element::Type_t::bf16:
+        return fold_constant_one_hot_ref<bfloat16, OUTPUT_TYPE>(
+            indices, on_value, off_value, output_shape, axis);
+        break;
+    case element::Type_t::f16:
+        return fold_constant_one_hot_ref<float16, OUTPUT_TYPE>(
+            indices, on_value, off_value, output_shape, axis);
+        break;
+    case element::Type_t::f32:
+        return fold_constant_one_hot_ref<float, OUTPUT_TYPE>(
+            indices, on_value, off_value, output_shape, axis);
+        break;
+    case element::Type_t::f64:
+        return fold_constant_one_hot_ref<double, OUTPUT_TYPE>(
+            indices, on_value, off_value, output_shape, axis);
+        break;
+    case element::Type_t::i8:
+        return fold_constant_one_hot_ref<int8_t, OUTPUT_TYPE>(
+            indices, on_value, off_value, output_shape, axis);
+        break;
+    case element::Type_t::i16:
+        return fold_constant_one_hot_ref<int16_t, OUTPUT_TYPE>(
+            indices, on_value, off_value, output_shape, axis);
+        break;
+    case element::Type_t::i32:
+        return fold_constant_one_hot_ref<int32_t, OUTPUT_TYPE>(
+            indices, on_value, off_value, output_shape, axis);
+        break;
+    case element::Type_t::i64:
+        return fold_constant_one_hot_ref<int64_t, OUTPUT_TYPE>(
+            indices, on_value, off_value, output_shape, axis);
+        break;
+    case element::Type_t::u8:
+        return fold_constant_one_hot_ref<uint8_t, OUTPUT_TYPE>(
+            indices, on_value, off_value, output_shape, axis);
+        break;
+    case element::Type_t::u16:
+        return fold_constant_one_hot_ref<uint16_t, OUTPUT_TYPE>(
+            indices, on_value, off_value, output_shape, axis);
+        break;
+    case element::Type_t::u32:
+        return fold_constant_one_hot_ref<uint32_t, OUTPUT_TYPE>(
+            indices, on_value, off_value, output_shape, axis);
+        break;
+    case element::Type_t::u64:
+        return fold_constant_one_hot_ref<uint64_t, OUTPUT_TYPE>(
+            indices, on_value, off_value, output_shape, axis);
+        break;
+    }
 }
 
 void pass::ConstantFolding::construct_constant_one_hot()
 {
-    auto indices_label = make_shared<pattern::op::Label>(
-        element::i64, Shape{3}, pattern::has_class<op::Constant>());
+    auto indices_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{3}, pattern::has_class<op::Constant>());
     auto depth_label =
         make_shared<pattern::op::Label>(element::i64, Shape{}, pattern::has_class<op::Constant>());
     auto on_label =
@@ -114,7 +132,8 @@ void pass::ConstantFolding::construct_constant_one_hot()
     auto off_label =
         make_shared<pattern::op::Label>(element::i64, Shape{}, pattern::has_class<op::Constant>());
     int64_t axis = 0;
-    auto ont_hot_pattern = make_shared<op::v1::OneHot>(indices_label, depth_label, on_label, off_label, axis);
+    auto ont_hot_pattern =
+        make_shared<op::v1::OneHot>(indices_label, depth_label, on_label, off_label, axis);
 
     auto one_hot_callback = [indices_label, depth_label, on_label, off_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for one_hot_callback against node = "
@@ -125,18 +144,18 @@ void pass::ConstantFolding::construct_constant_one_hot()
         const auto depth_node = static_pointer_cast<op::Constant>(pattern_map[depth_label]);
         const auto on_node = static_pointer_cast<op::Constant>(pattern_map[on_label]);
         const auto off_node = static_pointer_cast<op::Constant>(pattern_map[off_label]);
-        
+
         auto one_hot = static_pointer_cast<op::v1::OneHot>(m.get_match_root());
         const size_t axis = one_hot->get_axis();
         const auto output_shape = one_hot->get_output_shape(0);
         auto output_type = on_node->get_element_type();
 
-        std::shared_ptr<op::Constant> replacement = fold_constant_one_hot<char>(indices_node, on_node, off_node, output_shape, axis);
+        std::shared_ptr<op::Constant> replacement =
+            fold_constant_one_hot<char>(indices_node, on_node, off_node, output_shape, axis);
         switch (output_type)
         {
         case element::Type_t::undefined:
-            NGRAPH_CHECK(false,
-                         "Encountered 'undefined' element type in one_hot_callback");
+            NGRAPH_CHECK(false, "Encountered 'undefined' element type in one_hot_callback");
             break;
         case element::Type_t::dynamic:
             NGRAPH_CHECK(false, "Encountered 'dynamic' element type in one_hot_callback");
@@ -145,43 +164,56 @@ void pass::ConstantFolding::construct_constant_one_hot()
             NGRAPH_CHECK(false, "Encountered 'u1' element type in one_hot_callback");
             break;
         case element::Type_t::boolean:
-            replacement = fold_constant_one_hot<char>(indices_node, on_node, off_node, output_shape, axis);
+            replacement =
+                fold_constant_one_hot<char>(indices_node, on_node, off_node, output_shape, axis);
             break;
         case element::Type_t::bf16:
-            replacement = fold_constant_one_hot<bfloat16>(indices_node, on_node, off_node, output_shape, axis);
+            replacement = fold_constant_one_hot<bfloat16>(
+                indices_node, on_node, off_node, output_shape, axis);
             break;
         case element::Type_t::f16:
-            replacement = fold_constant_one_hot<float16>(indices_node, on_node, off_node, output_shape, axis);
+            replacement =
+                fold_constant_one_hot<float16>(indices_node, on_node, off_node, output_shape, axis);
             break;
         case element::Type_t::f32:
-            replacement = fold_constant_one_hot<float>(indices_node, on_node, off_node, output_shape, axis);
+            replacement =
+                fold_constant_one_hot<float>(indices_node, on_node, off_node, output_shape, axis);
             break;
         case element::Type_t::f64:
-            replacement = fold_constant_one_hot<double>(indices_node, on_node, off_node, output_shape, axis);
+            replacement =
+                fold_constant_one_hot<double>(indices_node, on_node, off_node, output_shape, axis);
             break;
         case element::Type_t::i8:
-            replacement = fold_constant_one_hot<int8_t>(indices_node, on_node, off_node, output_shape, axis);
+            replacement =
+                fold_constant_one_hot<int8_t>(indices_node, on_node, off_node, output_shape, axis);
             break;
         case element::Type_t::i16:
-            replacement = fold_constant_one_hot<int16_t>(indices_node, on_node, off_node, output_shape, axis);
+            replacement =
+                fold_constant_one_hot<int16_t>(indices_node, on_node, off_node, output_shape, axis);
             break;
         case element::Type_t::i32:
-            replacement = fold_constant_one_hot<int32_t>(indices_node, on_node, off_node, output_shape, axis);
+            replacement =
+                fold_constant_one_hot<int32_t>(indices_node, on_node, off_node, output_shape, axis);
             break;
         case element::Type_t::i64:
-            replacement = fold_constant_one_hot<int64_t>(indices_node, on_node, off_node, output_shape, axis);
+            replacement =
+                fold_constant_one_hot<int64_t>(indices_node, on_node, off_node, output_shape, axis);
             break;
         case element::Type_t::u8:
-            replacement = fold_constant_one_hot<uint8_t>(indices_node, on_node, off_node, output_shape, axis);
+            replacement =
+                fold_constant_one_hot<uint8_t>(indices_node, on_node, off_node, output_shape, axis);
             break;
         case element::Type_t::u16:
-            replacement = fold_constant_one_hot<uint16_t>(indices_node, on_node, off_node, output_shape, axis);
+            replacement = fold_constant_one_hot<uint16_t>(
+                indices_node, on_node, off_node, output_shape, axis);
             break;
         case element::Type_t::u32:
-            replacement = fold_constant_one_hot<uint32_t>(indices_node, on_node, off_node, output_shape, axis);
+            replacement = fold_constant_one_hot<uint32_t>(
+                indices_node, on_node, off_node, output_shape, axis);
             break;
         case element::Type_t::u64:
-            replacement = fold_constant_one_hot<uint64_t>(indices_node, on_node, off_node, output_shape, axis);
+            replacement = fold_constant_one_hot<uint64_t>(
+                indices_node, on_node, off_node, output_shape, axis);
             break;
         }
 
