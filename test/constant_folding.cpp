@@ -2098,10 +2098,10 @@ TEST(constant_folding, constant_v1_one_hot)
     auto res = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(res);
 
-    ASSERT_EQ(Shape({3,3}), res->get_output_shape(0));
+    ASSERT_EQ((Shape{3,3}), res->get_output_shape(0));
     ASSERT_EQ(vector<float16>({on_value, off_value, off_value,
                               off_value, on_value, off_value,
-                              off_value, off_value, on_value}), res->get_vector<int8_t>());
+                              off_value, off_value, on_value}), res->get_vector<float16>());
 }
 
 TEST(constant_folding, pass_property)
