@@ -803,7 +803,8 @@ bool runtime::cpu::mkldnn_utils::is_bf16_supported()
                                                           window_movement_strides,
                                                           window_shape,
                                                           padding_below,
-                                                          padding_above);
+                                                          padding_above,
+                                                          mkldnn::padding_kind::zero);
         mkldnn::engine cpu_engine(mkldnn::engine::kind::cpu, 0);
         auto maxpool_prim_desc = mkldnn::pooling_forward::primitive_desc(maxpool_desc, cpu_engine);
     }
