@@ -20,6 +20,7 @@
 #include <memory>
 #include <numeric>
 
+#include "default_opset.hpp"
 #include "exceptions.hpp"
 #include "lp_norm.hpp"
 #include "ngraph/axis_set.hpp"
