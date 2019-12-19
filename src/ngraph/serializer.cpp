@@ -2624,6 +2624,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::ScatterAdd>(args[0], args[1], args[2]);
             break;
         }
+        case OP_TYPEID::ScatterND:
+        {
+            node = make_shared<op::ScatterND>(args[0], args[1], args[2]);
+            break;
+        }
         case OP_TYPEID::ScatterNDAdd:
         {
             node = make_shared<op::ScatterNDAdd>(args[0], args[1], args[2]);
@@ -2641,6 +2646,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[1],
                 args[2],
                 read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+        }
+        case OP_TYPEID::Stack:
+        {
+            auto axis = node_js.at("axis").get<size_t>();
+            node = make_shared<op::Stack>(static_cast<OutputVector>(args), axis);
             break;
         }
         case OP_TYPEID::Selu:
@@ -4386,6 +4396,8 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::ScatterAdd: { break;
     }
+    case OP_TYPEID::ScatterND: { break;
+    }
     case OP_TYPEID::ScatterNDAdd: { break;
     }
     case OP_TYPEID::Select: { break;
@@ -4498,6 +4510,12 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = static_cast<const op::Sum*>(&n);
         node["reduction_axes"] = tmp->get_reduction_axes();
+        break;
+    }
+    case OP_TYPEID::Stack:
+    {
+        auto tmp = static_cast<const op::Stack*>(&n);
+        node["axis"] = tmp->get_axis();
         break;
     }
     case OP_TYPEID::ReduceSum_v1:

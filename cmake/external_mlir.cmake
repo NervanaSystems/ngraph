@@ -24,7 +24,13 @@ set(MLIR_LLVM_COMMIT_ID 75990950)
 set(MLIR_COMMIT_ID 5e64e536)
 
 # MLIR environment variables. Some of them are used by LIT tool.
-set(MLIR_PROJECT_ROOT ${CMAKE_CURRENT_BINARY_DIR}/mlir_project)
+
+if (NGRAPH_USE_PREBUILT_MLIR)
+    set(MLIR_PROJECT_ROOT ${MLIR_LLVM_PREBUILT_PATH}/mlir_project)
+else()
+    set(MLIR_PROJECT_ROOT ${CMAKE_CURRENT_BINARY_DIR}/mlir_project)
+endif()
+
 set(MLIR_LLVM_ROOT ${MLIR_PROJECT_ROOT}/llvm-projects)
 set(MLIR_SOURCE_DIR ${MLIR_LLVM_ROOT}/llvm/projects/mlir)
 set(MLIR_BUILD_DIR ${MLIR_LLVM_ROOT}/build)
@@ -35,17 +41,21 @@ set(NGRAPH_LIT_TEST_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/test/mlir)
 # MLIR has to be pre-built before ngraph build starts
 # this will clone and build MLIR during cmake config instead
 
-configure_file(${CMAKE_SOURCE_DIR}/cmake/mlir_fetch.cmake.in ${MLIR_PROJECT_ROOT}/CMakeLists.txt)
-execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-                WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
+# we will fetch and build it from the source if cmake is not configured to use 
+# the prebuilt mlir
+if (NOT NGRAPH_USE_PREBUILT_MLIR)
+	configure_file(${CMAKE_SOURCE_DIR}/cmake/mlir_fetch.cmake.in ${MLIR_PROJECT_ROOT}/CMakeLists.txt)
+	execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+			WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
 
-# clone and build llvm
-execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target ext_mlir_llvm
-                WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
+	# clone and build llvm
+	execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target ext_mlir_llvm
+			WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
 
-# clone and build mlir
-execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target ext_mlir
-                WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
+	# clone and build mlir
+	execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target ext_mlir
+			WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
+endif()
 
 # Enable modules for LLVM.
 set(LLVM_DIR "${MLIR_BUILD_DIR}/lib/cmake/llvm"

@@ -149,6 +149,55 @@ namespace ngraph
                         };
                     }
                 }
+                else if (element_type == element::i64)
+                {
+                    if (is_int64)
+                    {
+                        functor = [&,
+                                   inputs_shape,
+                                   indices_shape,
+                                   updates_shape,
+                                   out_shape,
+                                   inputs_buffer_index,
+                                   indices_buffer_index,
+                                   updates_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* /* ectx */) {
+                            ngraph::runtime::reference::scatter_nd_add<int64_t, int64_t>(
+                                static_cast<int64_t*>(ctx->buffer_data[inputs_buffer_index]),
+                                static_cast<int64_t*>(ctx->buffer_data[indices_buffer_index]),
+                                static_cast<int64_t*>(ctx->buffer_data[updates_buffer_index]),
+                                static_cast<int64_t*>(ctx->buffer_data[out_buffer_index]),
+                                inputs_shape,
+                                indices_shape,
+                                updates_shape,
+                                out_shape);
+                        };
+                    }
+                    else
+                    {
+                        functor = [&,
+                                   inputs_shape,
+                                   indices_shape,
+                                   updates_shape,
+                                   out_shape,
+                                   inputs_buffer_index,
+                                   indices_buffer_index,
+                                   updates_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* /* ectx */) {
+                            ngraph::runtime::reference::scatter_nd_add<int64_t, int32_t>(
+                                static_cast<int64_t*>(ctx->buffer_data[inputs_buffer_index]),
+                                static_cast<int32_t*>(ctx->buffer_data[indices_buffer_index]),
+                                static_cast<int64_t*>(ctx->buffer_data[updates_buffer_index]),
+                                static_cast<int64_t*>(ctx->buffer_data[out_buffer_index]),
+                                inputs_shape,
+                                indices_shape,
+                                updates_shape,
+                                out_shape);
+                        };
+                    }
+                }
                 else
                 {
                     throw ngraph_error("Unsupported type in CPU Builder for ScatterNDAdd");
