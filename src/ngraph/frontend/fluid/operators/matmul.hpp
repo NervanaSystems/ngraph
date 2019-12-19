@@ -57,5 +57,54 @@ namespace ngraph
             bool m_transpose_a;
             bool m_transpose_b;
         };
+
+        class NGRAPH_API MatMulBackward : public op::util::FusedOp
+        {
+        public:
+            static constexpr NodeTypeInfo type_info{"MatMulBackward", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            MatMulBackward() = default;
+            /// \brief Constructs a MatMul operation.
+            ///
+            /// \param A Matrix A
+            /// \param B Matrix B
+            /// \param transpose_a If matrix A should be transposed.
+            /// \param transpose_b If matrix B should be transposed.
+            MatMulBackward(const Output<Node>& A,
+                           const Output<Node>& B,
+                           const Output<Node>& Out,
+                           bool is_dx,
+                           bool is_dy,
+                           const bool& transpose_a = 0,
+                           const bool& transpose_b = 0);
+
+            virtual NodeVector decompose_op() const override;
+
+            void pre_validate_and_infer_types() override;
+
+            virtual shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+
+            bool get_transpose_a() const { return m_transpose_a; }
+            bool get_transpose_b() const { return m_transpose_b; }
+        private:
+            bool is_x;
+            bool is_y;
+            bool m_transpose_a;
+            bool m_transpose_b;
+
+            std::shared_ptr<ngraph::Node>
+                transposeAndFlat3D(const std::shared_ptr<ngraph::Node>& input,
+                                   const bool transpose,
+                                   bool x = true) const;
+            std::shared_ptr<ngraph::Node> broadcast3D(const std::shared_ptr<ngraph::Node>& input,
+                                                      size_t axis0) const;
+
+            std::shared_ptr<ngraph::Node> dotOp(const std::shared_ptr<ngraph::Node>& a,
+                                                const std::shared_ptr<ngraph::Node>& b) const;
+
+            std::shared_ptr<ngraph::Node> reshapeToOriginal(std::shared_ptr<ngraph::Node> input,
+                                                            const ngraph::Shape& shape) const;
+        };
+
     } // namespace fluid
 } // namespace ngraph
