@@ -58,7 +58,8 @@ public:
         SQUEEZE,
         UNSQUEEZE,
         SPLIT,
-        VARIADIC_SPLIT
+        VARIADIC_SPLIT,
+        ONE_HOT
     };
 
     ConstantFolding(const ngraph::BuildNodeExecutorMap& cfmap = ngraph::BuildNodeExecutorMap())
@@ -93,6 +94,7 @@ public:
         construct_constant_select();
         construct_constant_squeeze();
         construct_constant_unsqueeze();
+        construct_constant_one_hot();
     }
 
     // this allows to specify the order in which matchers will be run
@@ -136,6 +138,7 @@ public:
             case CFTransformations::UNSQUEEZE: construct_constant_unsqueeze(); break;
             case CFTransformations::SPLIT: construct_constant_split(); break;
             case CFTransformations::VARIADIC_SPLIT: construct_constant_variadic_split(); break;
+            case CFTransformations::ONE_HOT: construct_constant_one_hot(); break;
             }
         }
     }
@@ -167,6 +170,7 @@ private:
     void construct_constant_unsqueeze();
     void construct_constant_split();
     void construct_constant_variadic_split();
+    void construct_constant_one_hot();
 
     ngraph::BuildNodeExecutorMap m_cfmap;
 };
