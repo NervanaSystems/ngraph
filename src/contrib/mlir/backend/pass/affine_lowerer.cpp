@@ -168,10 +168,13 @@ namespace
                                  ArrayAttr stridesAttr,
                                  ArrayAttr padBelowAttr,
                                  ArrayAttr padAboveAttr,
-                                 unsigned groups,
                                  PatternRewriter& rewriter,
                                  DialectLoweringPass& pass,
-                                 Location loc);
+                                 Location loc,
+                                 Value* cLb = nullptr,
+                                 Value* cUb = nullptr, 
+                                 Value* kLb = nullptr,
+                                 Value* kUb = nullptr);
 
     ValueHandle createZeroConstant(mlir::Type type);
 
@@ -905,7 +908,6 @@ namespace
                          strides,
                          padBelow,
                          padAbove,
-                         1,
                          rewriter,
                          pass,
                          convolOp.getLoc());
@@ -1146,10 +1148,14 @@ namespace
                                  ArrayAttr stridesAttr,
                                  ArrayAttr padBelowAttr,
                                  ArrayAttr padAboveAttr,
-                                 unsigned groups,
                                  PatternRewriter& rewriter,
                                  DialectLoweringPass& pass,
-                                 Location loc)
+                                 Location loc, 
+                                 Value* cLb,
+                                 Value* cUb, 
+                                 Value* kLb,
+                                 Value* kUb
+                                 )
     {
         // Let Images shape be  [N, C_IN, D_1, ... D_f]
         // Let Filters shape be [C_OUT, C_IN, F_1, ... F_f]
@@ -1209,10 +1215,7 @@ namespace
 
         // Bounds on batch size N
         ValueHandle batchLb = vImages.lb(0), batchUb = vImages.ub(0);
-        // Bounds on number of filters
-        ValueHandle numFiltersLb = vFilters.lb(0), numFiltersUb = vFilters.ub(0);
-        // Bound on number of channels
-        ValueHandle numChannelsLb = vImages.lb(1), numChannelsUb = vImages.ub(1);
+        
         // Bounds on result spatial dimensions
         SmallVector<ValueHandle, 4> resSpatialLbs, resSpatialUbs;
         SmallVector<ValueHandle, 4> imgSpatialLbs, imgSpatialUbs;
@@ -1226,6 +1229,13 @@ namespace
         SmallVector<int64_t, 4> resSteps, filtersSteps;
         SmallVector<int, 4> padBelowIntValues;
         bool withPadding = false;
+
+        // Bounds on number of filters
+        ValueHandle numFiltersLb = (kLb == nullptr) ? vFilters.lb(0) : ValueHandle(kLb);
+        ValueHandle numFiltersUb = (kUb == nullptr) ? vFilters.ub(0) : ValueHandle(kUb);
+        // Bounds on number of channels
+        ValueHandle numChannelsLb = (cLb == nullptr) ? vImages.lb(1) : ValueHandle(cLb);
+        ValueHandle numChannelsUb = (cUb == nullptr) ? vImages.ub(1) : ValueHandle(cUb);
 
         for (auto i = 0; i < spatialRank; i++)
         {
