@@ -150,7 +150,7 @@ void op::BatchMatMulTranspose::validate_and_infer_types()
 }
 
 void op::BatchMatMulTranspose::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                 const NodeVector& deltas)
+                                                 const OutputVector& deltas)
 {
     auto delta = deltas.at(0); // NxIxK
 

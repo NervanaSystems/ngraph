@@ -1,5 +1,6 @@
 .. core/overview.rst:
 
+.. _ngraph_core:
 
 Basic Concepts
 ==============

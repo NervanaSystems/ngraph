@@ -46,7 +46,7 @@ namespace ngraph
             bool needs_default_layout() const { return m_needs_default_layout; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+                                           const OutputVector& deltas) override;
 
         private:
             bool m_needs_default_layout{false};

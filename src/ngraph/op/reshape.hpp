@@ -101,7 +101,7 @@ namespace ngraph
                 void set_is_transpose(bool is_transpose) { m_is_transpose = is_transpose; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 AxisVector m_input_order;
                 Shape m_output_shape;
@@ -147,7 +147,7 @@ namespace ngraph
                 void set_special_zero(bool special_zero) { m_special_zero = special_zero; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
             private:
                 bool m_special_zero;

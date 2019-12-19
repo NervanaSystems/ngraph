@@ -92,7 +92,8 @@ shared_ptr<Node> op::SigmoidMultiply::copy_with_new_args(const NodeVector& new_a
         new_args.at(0), new_args.at(1), m_input_type[0], m_input_type[1]);
 }
 
-void op::SigmoidMultiply::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::SigmoidMultiply::generate_adjoints(autodiff::Adjoints& adjoints,
+                                            const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
     auto input_0 = get_argument(0);

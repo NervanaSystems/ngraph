@@ -17,9 +17,9 @@
 #pragma once
 
 #include "core/node.hpp"
+#include "default_opset.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/op/xor.hpp"
 
 namespace ngraph
 {
@@ -31,7 +31,7 @@ namespace ngraph
             {
                 inline NodeVector logical_xor(const Node& node)
                 {
-                    return {std::make_shared<ngraph::op::v1::LogicalXor>(
+                    return {std::make_shared<default_opset::LogicalXor>(
                         node.get_ng_inputs().at(0),
                         node.get_ng_inputs().at(1),
                         ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY))};

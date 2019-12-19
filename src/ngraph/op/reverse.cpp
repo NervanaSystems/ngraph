@@ -62,7 +62,7 @@ shared_ptr<Node> op::v0::Reverse::copy_with_new_args(const NodeVector& new_args)
     return make_shared<v0::Reverse>(new_args.at(0), m_reversed_axes);
 }
 
-void op::v0::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -175,7 +175,7 @@ shared_ptr<Node> op::v1::Reverse::copy_with_new_args(const NodeVector& new_args)
     return make_shared<op::v1::Reverse>(new_args.at(0), new_args.at(1), m_mode);
 }
 
-void op::v1::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v1::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     const auto delta = deltas.at(0);
 
