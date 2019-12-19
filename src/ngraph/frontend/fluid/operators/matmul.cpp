@@ -19,12 +19,12 @@
 #include "ngraph/builder/matmul_factory.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/frontend/fluid/operators/matmul.hpp"
-#include "ngraph/op/reshape.hpp"
-
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph::fluid;
@@ -41,8 +41,7 @@ MatMul::MatMul(const Output<Node>& A,
     constructor_validate_and_infer_types();
 }
 
-template <class Input>
-void DecomposeLogic(Input& input, bool transpose, bool reverse = false)
+void decompose_logic(Output<Node>& input, bool transpose, bool reverse = false)
 {
     auto rank = input.get_shape().size();
 
@@ -77,14 +76,14 @@ void DecomposeLogic(Input& input, bool transpose, bool reverse = false)
     }
 }
 
-inline NodeVector remove_1(std::shared_ptr<ngraph::Node> input_node)
+inline NodeVector remove_1(shared_ptr<Node> input_node)
 {
     auto input_shape = input_node->get_shape();
     AxisVector axis(input_shape.size());
     iota(axis.begin(), axis.end(), 0);
     Shape shape(input_shape.begin(), input_shape.end());
 
-    auto b_remove = std::remove(shape.begin(), shape.end(), 1);
+    auto b_remove = remove(shape.begin(), shape.end(), 1);
     shape.erase(b_remove, shape.end());
     Output<Node> node(input_node);
 
@@ -117,15 +116,16 @@ NodeVector MatMul::decompose_op() const
     auto A = input_value(0);
     auto B = input_value(1);
 
-    DecomposeLogic(A, m_transpose_a);
-    DecomposeLogic(B, m_transpose_b, true);
+    decompose_logic(A, m_transpose_a);
+    decompose_logic(B, m_transpose_b, true);
+
     builder::MatmulFactory factory({A, B});
 
     auto node_vector_matmul = factory.make_matmul_op();
     auto first_item_node_vector = node_vector_matmul[0];
     auto b = first_item_node_vector->get_shape().begin();
     auto e = first_item_node_vector->get_shape().end();
-    auto it = std::find(b, e, 1);
+    auto it = find(b, e, 1);
 
     if (it != e)
     {
@@ -154,59 +154,59 @@ MatMulGrad::MatMulGrad(const Output<Node>& A,
     constructor_validate_and_infer_types();
 }
 
-std::shared_ptr<ngraph::Node> MatMulGrad::broadcast3D(const std::shared_ptr<ngraph::Node>& input,
-                                                      size_t axis0) const
+shared_ptr<Node> broadcast_to_3d(const shared_ptr<Node>& input, size_t axis0)
 {
     auto shape = input->get_shape();
     size_t n = shape.size();
+
     if (n == 2)
     {
-        auto output = std::make_shared<ngraph::op::Broadcast>(
-            input, ngraph::Shape{axis0, shape[0], shape[1]}, ngraph::AxisSet{0});
+        auto output =
+            make_shared<op::Broadcast>(input, Shape{axis0, shape[0], shape[1]}, AxisSet{0});
         return output;
     }
+
     return input;
 }
 
-std::shared_ptr<ngraph::Node> MatMulGrad::transposeAndFlat3D(
-    const std::shared_ptr<ngraph::Node>& input, const bool transpose, const bool x) const
+shared_ptr<Node> transpose_and_flatten3d(const shared_ptr<Node>& input,
+                                         const bool transpose,
+                                         const bool x = true)
 {
     auto shape = input->get_shape();
     size_t n = shape.size();
-    std::shared_ptr<ngraph::Node> output;
+    shared_ptr<Node> output;
+
     if (n >= 3)
     {
-        std::vector<size_t> order(n);
-        std::iota(std::begin(order), std::end(order), 0);
+        vector<size_t> order(n);
+        iota(begin(order), end(order), 0);
         size_t outer = 1;
         for (size_t i = 0; i < n - 2; i++)
         {
             outer = outer * shape[i];
         }
-        std::vector<size_t> reshape{outer, shape[n - 2], shape[n - 1]};
+        vector<size_t> reshape{outer, shape[n - 2], shape[n - 1]};
 
-        if (transpose == true)
+        if (transpose)
         {
             order[n - 2] = n - 1;
             order[n - 1] = n - 2;
             reshape[2] = shape[n - 2];
             reshape[1] = shape[n - 1];
         }
-        output = std::make_shared<ngraph::op::Reshape>(
-            input, ngraph::AxisVector(order), ngraph::Shape(reshape));
+        output = make_shared<op::Reshape>(input, AxisVector(order), Shape(reshape));
     }
     else
     {
-        std::shared_ptr<ngraph::Node> temp;
+        shared_ptr<Node> temp;
         if (n == 1 && x == true)
         {
-            temp = std::make_shared<ngraph::op::Reshape>(
-                input, ngraph::AxisVector{0}, ngraph::Shape{1, shape[0]});
+            temp = make_shared<op::Reshape>(input, AxisVector{0}, Shape{1, shape[0]});
         }
         else if (n == 1 && x == false)
         {
-            temp = std::make_shared<ngraph::op::Reshape>(
-                input, ngraph::AxisVector{0}, ngraph::Shape{shape[0], 1});
+            temp = make_shared<op::Reshape>(input, AxisVector{0}, Shape{shape[0], 1});
         }
         else
         {
@@ -215,44 +215,38 @@ std::shared_ptr<ngraph::Node> MatMulGrad::transposeAndFlat3D(
         auto temp_shape = temp->get_shape();
         if (transpose == true)
         {
-            output = std::make_shared<ngraph::op::Reshape>(
-                temp, ngraph::AxisVector{1, 0}, ngraph::Shape{temp_shape[1], temp_shape[0]});
+            output = make_shared<op::Reshape>(
+                temp, AxisVector{1, 0}, Shape{temp_shape[1], temp_shape[0]});
         }
         else
         {
             output = temp;
         }
     }
+
     return output;
 }
 
-std::shared_ptr<ngraph::Node> MatMulGrad::dotOp(const std::shared_ptr<ngraph::Node>& a,
-                                                const std::shared_ptr<ngraph::Node>& b) const
+shared_ptr<Node> dot_helper(const shared_ptr<Node>& a, const shared_ptr<Node>& b)
 {
-    std::shared_ptr<ngraph::Node> out;
-    auto a_shape = a->get_shape();
-    auto na = a_shape.size();
-    auto b_shape = b->get_shape();
-    auto nb = b_shape.size();
-    if (na > 2 && nb > 2)
+    shared_ptr<Node> out;
+
+    if (a->get_shape().size() > 2 && b->get_shape().size() > 2)
     {
-        out = std::make_shared<op::BatchMatMul>(a, b);
+        out = make_shared<op::BatchMatMul>(a, b);
     }
     else
     {
-        out = std::make_shared<op::Dot>(a, b);
+        out = make_shared<op::Dot>(a, b);
     }
+
     return out;
 }
 
-std::shared_ptr<ngraph::Node> MatMulGrad::reshapeToOriginal(std::shared_ptr<ngraph::Node> input,
-                                                            const ngraph::Shape& shape) const
+shared_ptr<Node> reshape_to_original(shared_ptr<Node> input, const Shape& shape)
 {
     auto input_shape = input->get_shape();
-    std::vector<size_t> axis(input_shape.size());
-    std::iota(axis.begin(), axis.end(), 0);
-    auto out = std::make_shared<ngraph::op::Reshape>(input, axis, shape);
-    return out;
+    return make_shared<op::Reshape>(input, get_default_order(input_shape), shape);
 }
 
 NodeVector MatMulGrad::decompose_op() const
@@ -261,79 +255,80 @@ NodeVector MatMulGrad::decompose_op() const
     auto y = input_value(1).get_node_shared_ptr();
     auto dout = input_value(2).get_node_shared_ptr();
 
-    //  auto& dout = OutGrad;
-    //  auto& x = m_A;
-    //  auto& y = m_B;
     auto dout_shape = dout->get_shape();
     auto x_shape = x->get_shape();
     auto y_shape = y->get_shape();
     size_t nx = x_shape.size();
     size_t ny = y_shape.size();
     size_t ndout = dout_shape.size();
-    std::shared_ptr<ngraph::Node> x2, y2;
-    std::shared_ptr<ngraph::Node> dout2;
 
-    x2 = transposeAndFlat3D(x, false);
-    y2 = transposeAndFlat3D(y, false, false);
-    dout2 = transposeAndFlat3D(dout, false);
+    shared_ptr<Node> x2, y2, dout2;
+
+    x2 = transpose_and_flatten3d(x, false);
+    y2 = transpose_and_flatten3d(y, false, false);
+    dout2 = transpose_and_flatten3d(dout, false);
+
     auto x2_shape = x2->get_shape();
     auto y2_shape = y2->get_shape();
+
     if (nx >= 3 || ny >= 3)
     {
-        std::shared_ptr<ngraph::Node> dout_temp;
+        shared_ptr<Node> dout_temp;
         if (ndout == 2)
         {
-            dout_temp = std::make_shared<ngraph::op::Reshape>(
-                dout, ngraph::AxisVector{0, 1}, ngraph::Shape{dout_shape[0], dout_shape[1], 1});
+            dout_temp = make_shared<op::Reshape>(
+                dout, AxisVector{0, 1}, Shape{dout_shape[0], dout_shape[1], 1});
             if (ny < 3)
             {
                 dout2 = dout_temp;
             }
             else
             {
-                dout2 = transposeAndFlat3D(dout_temp, true);
+                dout2 = transpose_and_flatten3d(dout_temp, true);
             }
         }
-        x2 = broadcast3D(x2, y_shape[0]);
-        y2 = broadcast3D(y2, x_shape[0]);
+        x2 = broadcast_to_3d(x2, y_shape[0]);
+        y2 = broadcast_to_3d(y2, x_shape[0]);
     }
     else
     {
-        dout2 = transposeAndFlat3D(dout, false, nx == 1 && m_transpose_a == false);
+        dout2 = transpose_and_flatten3d(dout, false, nx == 1 && m_transpose_a == false);
     }
 
     if (m_transpose_b == false)
     {
-        y2 = transposeAndFlat3D(y2, true);
+        y2 = transpose_and_flatten3d(y2, true);
     }
     if (m_transpose_a == false)
     {
-        x2 = transposeAndFlat3D(x2, true);
+        x2 = transpose_and_flatten3d(x2, true);
     }
-    auto dx = dotOp(dout2, y2);
-    auto dy = dotOp(x2, dout2);
+
+    auto dx = dot_helper(dout2, y2);
+    auto dy = dot_helper(x2, dout2);
+
     if (m_transpose_a == true)
     {
-        dx = transposeAndFlat3D(dx, true);
+        dx = transpose_and_flatten3d(dx, true);
     }
     if (m_transpose_b == true)
     {
-        dy = transposeAndFlat3D(dy, true);
+        dy = transpose_and_flatten3d(dy, true);
     }
 
     if (nx < 3 && ny >= 3)
     {
-        dx = std::make_shared<ngraph::op::Sum>(dx, ngraph::AxisSet{0});
+        dx = make_shared<op::Sum>(dx, AxisSet{0});
     }
     if (ny < 3 && nx >= 3)
     {
-        dy = std::make_shared<ngraph::op::Sum>(dy, ngraph::AxisSet{0});
+        dy = make_shared<op::Sum>(dy, AxisSet{0});
     }
 
-    auto dx_t = reshapeToOriginal(dx, x_shape);
-    auto dy_t = reshapeToOriginal(dy, y_shape);
+    auto dx_t = reshape_to_original(dx, x_shape);
+    auto dy_t = reshape_to_original(dy, y_shape);
 
-    return NodeVector{dx_t, dy_t, dout};
+    return NodeVector{dx_t, dy_t};
 }
 
 shared_ptr<Node> MatMulGrad::copy_with_new_args(const NodeVector& new_args) const

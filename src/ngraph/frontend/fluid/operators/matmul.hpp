@@ -87,19 +87,6 @@ namespace ngraph
         private:
             bool m_transpose_a{false};
             bool m_transpose_b{false};
-
-            std::shared_ptr<ngraph::Node>
-                transposeAndFlat3D(const std::shared_ptr<ngraph::Node>& input,
-                                   const bool transpose,
-                                   const bool x = true) const;
-            std::shared_ptr<ngraph::Node> broadcast3D(const std::shared_ptr<ngraph::Node>& input,
-                                                      size_t axis0) const;
-
-            std::shared_ptr<ngraph::Node> dotOp(const std::shared_ptr<ngraph::Node>& a,
-                                                const std::shared_ptr<ngraph::Node>& b) const;
-
-            std::shared_ptr<ngraph::Node> reshapeToOriginal(std::shared_ptr<ngraph::Node> input,
-                                                            const ngraph::Shape& shape) const;
         };
 
     } // namespace fluid
