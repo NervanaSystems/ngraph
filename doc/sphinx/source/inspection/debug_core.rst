@@ -144,10 +144,7 @@ Some frameworks, like TensorFlow\*, use these settings to improve performance;
 however, they are often not sufficient for optimal performance. Framework-based 
 adjustments cannot access the underlying NUMA configuration in multi-socket 
 Intel® Xeon® processor-based platforms, which is a key requirement for 
-many kinds of inference-engine computations. See the next section on NUMA 
-performance to learn more about this performance feature available to systems 
-utilizing nGraph. 
-   
+many kinds of inference-engine computations.
 
 The meta_log contains::
  
