@@ -162,6 +162,17 @@ namespace
                                PatternRewriter& rewriter,
                                DialectLoweringPass& pass);
 
+    ValueHandle lowerConvolution(Value* result,
+                                 Value* images,
+                                 Value* filters,
+                                 ArrayAttr stridesAttr,
+                                 ArrayAttr padBelowAttr,
+                                 ArrayAttr padAboveAttr,
+                                 unsigned groups,
+                                 PatternRewriter& rewriter,
+                                 DialectLoweringPass& pass,
+                                 Location loc);
+
     ValueHandle createZeroConstant(mlir::Type type);
 
     /// Conversion from types in the nGraph dialect to the Standard dialect.
@@ -878,284 +889,26 @@ namespace
     REWRITER(NGConvolutionOp)
     {
         auto convolOp = cast<NGConvolutionOp>(op);
-        auto loc = convolOp.getLoc();
-        ScopedContext scope(rewriter, loc);
 
         // Get operands
         Value* result = pass.buildOutputDefs(op, rewriter)[0];
         NGRAPH_CHECK(result, "Unexpected null result in Convolution Op");
         Value* images = operands[0];
         Value* filters = operands[1];
-        auto strides = convolOp.strides().getValue();
-        auto padBelow = convolOp.padBelow().getValue();
-        auto padAbove = convolOp.padBelow().getValue();
+        auto strides = convolOp.strides();
+        auto padBelow = convolOp.padBelow();
+        auto padAbove = convolOp.padBelow();
 
-        Type elemTy = images->getType().cast<MemRefType>().getElementType();
-
-        // Let Images shape be  [N, C_IN, D_1, ... D_f]
-        // Let Filters shape be [C_OUT, C_IN, F_1, ... F_f]
-        // Output shape will be [N, C_OUT, R_1, ..R_f]
-        //   where R_i = (AdjD_i - AdjF_i + 1) / Strides[i]
-        //
-        // AdjD_i is adjusted image spatial dimension after padding and dilation
-        //   AdjD_i = padBelow[i] + (dilation[i] * (D_i - 1) + 1) + padAbove[i]
-        //
-        // AdjF_i is adjusted filters spatial dimension after dilation
-        //   AdjF_i = dilation[i] * (F_i - 1) + 1
-        //
-        //   If no padding, padAbove/Below[i] = 0
-        //   If no dilation, dilation[i] is 1
-        //
-        // Generate the following (currently without padding/dilation support)
-        //
-        //
-        // for n : 0 -> N
-        //   for k : 0 -> C_OUT
-        //     for <r_1 .. r_f> : <0 .. 0> -> <R_1 ... R_f>
-        //       //initialize result to zero
-        //       Output[n, k, r_1, .. r_f] = 0;
-        //
-        // for n : 0 -> N
-        //   for k : 0 -> C_OUT
-        //     for c : 0 -> C_IN
-        //       // iterate over output spatial shape
-        //       for <r_1 .. r_f> : <0 .. 0> -> <R_1 ... R_f> //
-        //         //compute image start inputs indices
-        //         i_1 = r_1 * strides[0];
-        //         ..
-        //         i_f = r_f * strides[f - 1];
-        //         // iterate over kernel spatial shape
-        //         for <j_1 .. j_f> : <0 .. 0> -> <F_1 .. F_f>
-        //           Output[n, k, r_1, .. r_f] +=
-        //             Images[n, c, i_1 + j_1, .. i_f + j_f] * Filters[k, c, j_1, .. j_f]
-
-        // With padding, we check (using IntegerSets) whether each spatial dim in Images lie inside
-        // non-padded spatial region. If true, we perform the computation:
-        //
-        //         for <j_1 .. j_f> : <0 .. 0> -> <F_1 .. F_f>
-        //         if(indices in non-padded region):
-        //           Output[n, k, r_1, .. r_f] +=
-        //             Images[n, c, i_1 + j_1, .. i_f + j_f] * Filters[k, c, j_1, .. j_f]
-
-        // Create view to write into result.
-        MemRefView vRes(result), vImages(images), vFilters(filters);
-
-        // Indexed Values
-        IndexedValue iRes(result), iImages(images), iFilters(filters);
-
-        // Bounds on batch size N
-        ValueHandle batchLb = vImages.lb(0), batchUb = vImages.ub(0);
-        // Bounds on number of filters
-        ValueHandle numFiltersLb = vFilters.lb(0), numFiltersUb = vFilters.ub(0);
-        // Bound on number of channels
-        ValueHandle numChannelsLb = vImages.lb(1), numChannelsUb = vImages.ub(1);
-        // Bounds on result spatial dimensions
-        SmallVector<ValueHandle, 4> resSpatialLbs, resSpatialUbs;
-        SmallVector<ValueHandle, 4> imgSpatialLbs, imgSpatialUbs;
-        SmallVector<ValueHandle, 4> filtersSpatialLbs, filtersSpatialUbs;
-        // Spatial rank
-        unsigned spatialRank = vImages.rank() - 2;
-
-        // Result spatial indices and bounds
-        auto resSpatialIndices = makeIndexHandles(spatialRank);
-        auto resSpatialIndicesPtrs = makeIndexHandlePointers(resSpatialIndices);
-        SmallVector<int64_t, 4> resSteps, filtersSteps;
-        SmallVector<int, 4> padBelowIntValues;
-        bool withPadding = false;
-
-        for (auto i = 0; i < spatialRank; i++)
-        {
-            // result spatial bounds and steps
-            resSpatialLbs.push_back(vRes.lb(i + 2));
-            resSpatialUbs.push_back(vRes.ub(i + 2));
-            resSteps.push_back(vRes.step(i + 2));
-            // image spatial bounds
-            imgSpatialLbs.push_back(vImages.lb(i + 2));
-            imgSpatialUbs.push_back(vImages.ub(i + 2));
-
-            // Check if we have any padding and collect pad values
-            IntegerAttr iAttr = padBelow[i].cast<IntegerAttr>();
-            int padValue = iAttr.getInt();
-            if (padValue)
-            {
-                withPadding = true;
-            }
-            padBelowIntValues.push_back(padValue);
-
-            iAttr = padAbove[i].cast<IntegerAttr>();
-            padValue = iAttr.getInt();
-            if (padValue)
-            {
-                withPadding = true;
-            }
-        }
-
-        NGRAPH_CHECK(vImages.rank() == vFilters.rank(), "Images and Filters have unequal ranks");
-        NGRAPH_CHECK(resSpatialLbs.size() == resSpatialUbs.size() &&
-                         resSpatialLbs.size() == spatialRank,
-                     "Results spatial dims mismatches input");
-
-        // Filters spatial indices and bounds
-        auto filtersSpatialIndices = makeIndexHandles(spatialRank);
-        auto filtersSpatialIndicesPtrs = makeIndexHandlePointers(filtersSpatialIndices);
-
-        for (auto i = 0; i < spatialRank; i++)
-        {
-            filtersSpatialLbs.push_back(vFilters.lb(i + 2));
-            filtersSpatialUbs.push_back(vFilters.ub(i + 2));
-            filtersSteps.push_back(vFilters.step(i + 2));
-        }
-
-        IntegerSet nonPaddedRange;
-        if (withPadding)
-        {
-            // Create affine expressions and IntegerSet
-            // IntegerSet (d0, d1, .. d_N-1)[LB_0, LB_1, .. LB_N-1, UB_0, UB_1, .. UB_N-1], where
-            // for each dim:
-            //   (d_dim - padBelow[dim] - LB_dim >= 0),
-            //   (padBelow[dim] + UB_dim - d_dim - 1 >= 0)
-            SmallVector<AffineExpr, 4> affineExprs;
-            // Bool to indicate if expr is equality or inequality
-            SmallVector<bool, 4> isEq;
-
-            for (unsigned dim = 0; dim < spatialRank; dim++)
-            {
-                // i_dim
-                auto dimExpr = rewriter.getAffineDimExpr(dim);
-                auto imgLbExpr = rewriter.getAffineSymbolExpr(dim);
-
-                // expr1 : i_dim - padBelow[dim] - imgLB >= 0
-                auto padBelowExpr = rewriter.getAffineConstantExpr(padBelowIntValues[dim]);
-                affineExprs.push_back(dimExpr - padBelowExpr - imgLbExpr);
-                isEq.push_back(false);
-
-                // expr2: padBelow[dim] + imgUB - i_dim - 1 >= 0
-                auto imgUbExpr = rewriter.getAffineSymbolExpr(spatialRank + dim);
-                auto oneExpr = rewriter.getAffineConstantExpr(1);
-                affineExprs.push_back(padBelowExpr + imgUbExpr - dimExpr - oneExpr);
-                isEq.push_back(false);
-            }
-
-            NGRAPH_CHECK(affineExprs.size() == isEq.size() && isEq.size() == 2 * spatialRank,
-                         "Invalid number of expressions in the IntegerSet");
-            nonPaddedRange = IntegerSet::get(spatialRank, 2 * spatialRank, affineExprs, isEq);
-        }
-
-        // Initialize output to zero
-        {
-            IndexHandle n, k, c;
-            auto resSpatialIndices = makeIndexHandles(spatialRank);
-            auto resSpatialIndicesPtrs = makeIndexHandlePointers(resSpatialIndices);
-
-            LoopBuilder::makeAffine(&n, batchLb, batchUb, 1)([&] {
-                LoopBuilder::makeAffine(&k, numFiltersLb, numFiltersUb, 1)([&] {
-                    AffineLoopNestBuilder(
-                        resSpatialIndicesPtrs, resSpatialLbs, resSpatialUbs, resSteps)([&] {
-                        SmallVector<IndexHandle, 4> resIndices;
-                        // Result indices
-                        resIndices.push_back(n);
-                        resIndices.push_back(k);
-                        resIndices.insert(
-                            resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
-                        ValueHandle zero = createZeroConstant(elemTy);
-                        iRes(resIndices) = zero;
-                    });
-                });
-            });
-        }
-
-        IndexHandle n, k, c;
-        // Convolution loop
-        LoopBuilder::makeAffine(&n, batchLb, batchUb, 1)([&] {
-            // Number of filters loop
-            LoopBuilder::makeAffine(&k, numFiltersLb, numFiltersUb, 1)([&] {
-                // Channels loop
-                LoopBuilder::makeAffine(&c, numChannelsLb, numChannelsUb, 1)([&] {
-                    // Results loop
-                    AffineLoopNestBuilder(
-                        resSpatialIndicesPtrs, resSpatialLbs, resSpatialUbs, resSteps)([&] {
-                        // Compute image start indices
-                        SmallVector<IndexHandle, 4> imgStartIndices;
-                        for (auto i = 0; i < spatialRank; i++)
-                        {
-                            IntegerAttr iAttr = strides[i].cast<IntegerAttr>();
-                            auto stride = intrinsics::constant_index(iAttr.getInt());
-                            imgStartIndices.push_back(IndexHandle(resSpatialIndices[i] * stride));
-                        }
-                        SmallVector<IndexHandle, 4> resIndices;
-                        // Result indices
-                        resIndices.push_back(n);
-                        resIndices.push_back(k);
-                        resIndices.insert(
-                            resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
-                        // Filters spatial loop
-                        AffineLoopNestBuilder(filtersSpatialIndicesPtrs,
-                                              filtersSpatialLbs,
-                                              filtersSpatialUbs,
-                                              filtersSteps)([&] {
-                            SmallVector<IndexHandle, 4> imgIndices, filtersIndices;
-                            // Image indices
-                            // Here we compute the virtual start index into the padded image.
-
-                            imgIndices.push_back(n);
-                            imgIndices.push_back(c);
-                            for (auto i = 0; i < spatialRank; i++)
-                            {
-                                imgIndices.push_back(
-                                    IndexHandle(imgStartIndices[i] + filtersSpatialIndices[i]));
-                            }
-                            // Filter indices
-                            filtersIndices.push_back(k);
-                            filtersIndices.push_back(c);
-                            filtersIndices.insert(filtersIndices.end(),
-                                                  filtersSpatialIndices.begin(),
-                                                  filtersSpatialIndices.end());
-
-                            if (withPadding)
-                            {
-                                // if args : img dims, img lbs, img ubs
-                                SmallVector<IndexHandle, 4>::iterator it = imgIndices.begin();
-                                std::advance(it, 2);
-                                SmallVector<Value*, 4> affineIfArgs(it, imgIndices.end());
-                                affineIfArgs.insert(
-                                    affineIfArgs.end(), imgSpatialLbs.begin(), imgSpatialLbs.end());
-                                affineIfArgs.insert(
-                                    affineIfArgs.end(), imgSpatialUbs.begin(), imgSpatialUbs.end());
-
-                                auto affineIfOp =
-                                    rewriter.create<AffineIfOp>(rewriter.getUnknownLoc(),
-                                                                nonPaddedRange,
-                                                                affineIfArgs,
-                                                                /*withElseRegion=*/false);
-                                {
-                                    auto rewriter = affineIfOp.getThenBodyBuilder();
-                                    ScopedContext scope(rewriter, loc);
-                                    // We must subtract pad below before img load, since the
-                                    // physical image is not padded
-                                    SmallVector<IndexHandle, 4> adjustedImgIndices;
-                                    adjustedImgIndices.push_back(n);
-                                    adjustedImgIndices.push_back(c);
-                                    for (auto i = 0; i < spatialRank; i++)
-                                    {
-                                        adjustedImgIndices.push_back(IndexHandle(
-                                            imgIndices[2 + i] -
-                                            intrinsics::constant_index(padBelowIntValues[i])));
-                                    }
-                                    iRes(resIndices) =
-                                        iRes(resIndices) +
-                                        (iImages(adjustedImgIndices) * iFilters(filtersIndices));
-                                }
-                            }
-                            else
-                            {
-                                iRes(resIndices) = iRes(resIndices) +
-                                                   (iImages(imgIndices) * iFilters(filtersIndices));
-                            }
-                        });
-                    });
-                });
-            });
-        });
+        lowerConvolution(result,
+                         images,
+                         filters,
+                         strides,
+                         padBelow,
+                         padAbove,
+                         1,
+                         rewriter,
+                         pass,
+                         convolOp.getLoc());
 
         rewriter.replaceOp(op, {result});
         return matchSuccess();
@@ -1385,6 +1138,288 @@ namespace
         }
 
         rewriter.replaceOp(op, result);
+    }
+
+    ValueHandle lowerConvolution(Value* result,
+                                 Value* images,
+                                 Value* filters,
+                                 ArrayAttr stridesAttr,
+                                 ArrayAttr padBelowAttr,
+                                 ArrayAttr padAboveAttr,
+                                 unsigned groups,
+                                 PatternRewriter& rewriter,
+                                 DialectLoweringPass& pass,
+                                 Location loc)
+    {
+        // Let Images shape be  [N, C_IN, D_1, ... D_f]
+        // Let Filters shape be [C_OUT, C_IN, F_1, ... F_f]
+        // Output shape will be [N, C_OUT, R_1, ..R_f]
+        //   where R_i = (AdjD_i - AdjF_i + 1) / Strides[i]
+        //
+        // AdjD_i is adjusted image spatial dimension after padding and dilation
+        //   AdjD_i = padBelow[i] + (dilation[i] * (D_i - 1) + 1) + padAbove[i]
+        //
+        // AdjF_i is adjusted filters spatial dimension after dilation
+        //   AdjF_i = dilation[i] * (F_i - 1) + 1
+        //
+        //   If no padding, padAbove/Below[i] = 0
+        //   If no dilation, dilation[i] is 1
+        //
+        // Generate the following (currently without padding/dilation support)
+        //
+        //
+        // for n : 0 -> N
+        //   for k : 0 -> C_OUT
+        //     for <r_1 .. r_f> : <0 .. 0> -> <R_1 ... R_f>
+        //       //initialize result to zero
+        //       Output[n, k, r_1, .. r_f] = 0;
+        //
+        // for n : 0 -> N
+        //   for k : 0 -> C_OUT
+        //     for c : 0 -> C_IN
+        //       // iterate over output spatial shape
+        //       for <r_1 .. r_f> : <0 .. 0> -> <R_1 ... R_f> //
+        //         //compute image start inputs indices
+        //         i_1 = r_1 * strides[0];
+        //         ..
+        //         i_f = r_f * strides[f - 1];
+        //         // iterate over kernel spatial shape
+        //         for <j_1 .. j_f> : <0 .. 0> -> <F_1 .. F_f>
+        //           Output[n, k, r_1, .. r_f] +=
+        //             Images[n, c, i_1 + j_1, .. i_f + j_f] * Filters[k, c, j_1, .. j_f]
+
+        // With padding, we check (using IntegerSets) whether each spatial dim in Images lie inside
+        // non-padded spatial region. If true, we perform the computation:
+        //
+        //         for <j_1 .. j_f> : <0 .. 0> -> <F_1 .. F_f>
+        //         if(indices in non-padded region):
+        //           Output[n, k, r_1, .. r_f] +=
+        //             Images[n, c, i_1 + j_1, .. i_f + j_f] * Filters[k, c, j_1, .. j_f]
+        ScopedContext scope(rewriter, loc);
+        auto strides = stridesAttr.getValue();
+        auto padBelow = padBelowAttr.getValue();
+        auto padAbove = padBelowAttr.getValue();
+        Type elemTy = images->getType().cast<MemRefType>().getElementType();
+
+        // Create view to write into result.
+        MemRefView vRes(result), vImages(images), vFilters(filters);
+
+        // Indexed Values
+        IndexedValue iRes(result), iImages(images), iFilters(filters);
+
+        // Bounds on batch size N
+        ValueHandle batchLb = vImages.lb(0), batchUb = vImages.ub(0);
+        // Bounds on number of filters
+        ValueHandle numFiltersLb = vFilters.lb(0), numFiltersUb = vFilters.ub(0);
+        // Bound on number of channels
+        ValueHandle numChannelsLb = vImages.lb(1), numChannelsUb = vImages.ub(1);
+        // Bounds on result spatial dimensions
+        SmallVector<ValueHandle, 4> resSpatialLbs, resSpatialUbs;
+        SmallVector<ValueHandle, 4> imgSpatialLbs, imgSpatialUbs;
+        SmallVector<ValueHandle, 4> filtersSpatialLbs, filtersSpatialUbs;
+        // Spatial rank
+        unsigned spatialRank = vImages.rank() - 2;
+
+        // Result spatial indices and bounds
+        auto resSpatialIndices = makeIndexHandles(spatialRank);
+        auto resSpatialIndicesPtrs = makeIndexHandlePointers(resSpatialIndices);
+        SmallVector<int64_t, 4> resSteps, filtersSteps;
+        SmallVector<int, 4> padBelowIntValues;
+        bool withPadding = false;
+
+        for (auto i = 0; i < spatialRank; i++)
+        {
+            // result spatial bounds and steps
+            resSpatialLbs.push_back(vRes.lb(i + 2));
+            resSpatialUbs.push_back(vRes.ub(i + 2));
+            resSteps.push_back(vRes.step(i + 2));
+            // image spatial bounds
+            imgSpatialLbs.push_back(vImages.lb(i + 2));
+            imgSpatialUbs.push_back(vImages.ub(i + 2));
+
+            // Check if we have any padding and collect pad values
+            IntegerAttr iAttr = padBelow[i].cast<IntegerAttr>();
+            int padValue = iAttr.getInt();
+            if (padValue)
+            {
+                withPadding = true;
+            }
+            padBelowIntValues.push_back(padValue);
+
+            iAttr = padAbove[i].cast<IntegerAttr>();
+            padValue = iAttr.getInt();
+            if (padValue)
+            {
+                withPadding = true;
+            }
+        }
+
+        NGRAPH_CHECK(vImages.rank() == vFilters.rank(), "Images and Filters have unequal ranks");
+        NGRAPH_CHECK(resSpatialLbs.size() == resSpatialUbs.size() &&
+                         resSpatialLbs.size() == spatialRank,
+                     "Results spatial dims mismatches input");
+
+        // Filters spatial indices and bounds
+        auto filtersSpatialIndices = makeIndexHandles(spatialRank);
+        auto filtersSpatialIndicesPtrs = makeIndexHandlePointers(filtersSpatialIndices);
+
+        for (auto i = 0; i < spatialRank; i++)
+        {
+            filtersSpatialLbs.push_back(vFilters.lb(i + 2));
+            filtersSpatialUbs.push_back(vFilters.ub(i + 2));
+            filtersSteps.push_back(vFilters.step(i + 2));
+        }
+
+        IntegerSet nonPaddedRange;
+        if (withPadding)
+        {
+            // Create affine expressions and IntegerSet
+            // IntegerSet (d0, d1, .. d_N-1)[LB_0, LB_1, .. LB_N-1, UB_0, UB_1, .. UB_N-1], where
+            // for each dim:
+            //   (d_dim - padBelow[dim] - LB_dim >= 0),
+            //   (padBelow[dim] + UB_dim - d_dim - 1 >= 0)
+            SmallVector<AffineExpr, 4> affineExprs;
+            // Bool to indicate if expr is equality or inequality
+            SmallVector<bool, 4> isEq;
+
+            for (unsigned dim = 0; dim < spatialRank; dim++)
+            {
+                // i_dim
+                auto dimExpr = rewriter.getAffineDimExpr(dim);
+                auto imgLbExpr = rewriter.getAffineSymbolExpr(dim);
+
+                // expr1 : i_dim - padBelow[dim] - imgLB >= 0
+                auto padBelowExpr = rewriter.getAffineConstantExpr(padBelowIntValues[dim]);
+                affineExprs.push_back(dimExpr - padBelowExpr - imgLbExpr);
+                isEq.push_back(false);
+
+                // expr2: padBelow[dim] + imgUB - i_dim - 1 >= 0
+                auto imgUbExpr = rewriter.getAffineSymbolExpr(spatialRank + dim);
+                auto oneExpr = rewriter.getAffineConstantExpr(1);
+                affineExprs.push_back(padBelowExpr + imgUbExpr - dimExpr - oneExpr);
+                isEq.push_back(false);
+            }
+
+            NGRAPH_CHECK(affineExprs.size() == isEq.size() && isEq.size() == 2 * spatialRank,
+                         "Invalid number of expressions in the IntegerSet");
+            nonPaddedRange = IntegerSet::get(spatialRank, 2 * spatialRank, affineExprs, isEq);
+        }
+
+        // Initialize output to zero
+        {
+            IndexHandle n, k, c;
+            auto resSpatialIndices = makeIndexHandles(spatialRank);
+            auto resSpatialIndicesPtrs = makeIndexHandlePointers(resSpatialIndices);
+
+            LoopBuilder::makeAffine(&n, batchLb, batchUb, 1)([&] {
+                LoopBuilder::makeAffine(&k, numFiltersLb, numFiltersUb, 1)([&] {
+                    AffineLoopNestBuilder(
+                        resSpatialIndicesPtrs, resSpatialLbs, resSpatialUbs, resSteps)([&] {
+                        SmallVector<IndexHandle, 4> resIndices;
+                        // Result indices
+                        resIndices.push_back(n);
+                        resIndices.push_back(k);
+                        resIndices.insert(
+                            resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
+                        ValueHandle zero = createZeroConstant(elemTy);
+                        iRes(resIndices) = zero;
+                    });
+                });
+            });
+        }
+
+        IndexHandle n, k, c;
+        // Convolution loop
+        LoopBuilder::makeAffine(&n, batchLb, batchUb, 1)([&] {
+            // Number of filters loop
+            LoopBuilder::makeAffine(&k, numFiltersLb, numFiltersUb, 1)([&] {
+                // Channels loop
+                LoopBuilder::makeAffine(&c, numChannelsLb, numChannelsUb, 1)([&] {
+                    // Results loop
+                    AffineLoopNestBuilder(
+                        resSpatialIndicesPtrs, resSpatialLbs, resSpatialUbs, resSteps)([&] {
+                        // Compute image start indices
+                        SmallVector<IndexHandle, 4> imgStartIndices;
+                        for (auto i = 0; i < spatialRank; i++)
+                        {
+                            IntegerAttr iAttr = strides[i].cast<IntegerAttr>();
+                            auto stride = intrinsics::constant_index(iAttr.getInt());
+                            imgStartIndices.push_back(IndexHandle(resSpatialIndices[i] * stride));
+                        }
+                        SmallVector<IndexHandle, 4> resIndices;
+                        // Result indices
+                        resIndices.push_back(n);
+                        resIndices.push_back(k);
+                        resIndices.insert(
+                            resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
+                        // Filters spatial loop
+                        AffineLoopNestBuilder(filtersSpatialIndicesPtrs,
+                                              filtersSpatialLbs,
+                                              filtersSpatialUbs,
+                                              filtersSteps)([&] {
+                            SmallVector<IndexHandle, 4> imgIndices, filtersIndices;
+                            // Image indices
+                            // Here we compute the virtual start index into the padded image.
+
+                            imgIndices.push_back(n);
+                            imgIndices.push_back(c);
+                            for (auto i = 0; i < spatialRank; i++)
+                            {
+                                imgIndices.push_back(
+                                    IndexHandle(imgStartIndices[i] + filtersSpatialIndices[i]));
+                            }
+                            // Filter indices
+                            filtersIndices.push_back(k);
+                            filtersIndices.push_back(c);
+                            filtersIndices.insert(filtersIndices.end(),
+                                                  filtersSpatialIndices.begin(),
+                                                  filtersSpatialIndices.end());
+
+                            if (withPadding)
+                            {
+                                // if args : img dims, img lbs, img ubs
+                                SmallVector<IndexHandle, 4>::iterator it = imgIndices.begin();
+                                std::advance(it, 2);
+                                SmallVector<Value*, 4> affineIfArgs(it, imgIndices.end());
+                                affineIfArgs.insert(
+                                    affineIfArgs.end(), imgSpatialLbs.begin(), imgSpatialLbs.end());
+                                affineIfArgs.insert(
+                                    affineIfArgs.end(), imgSpatialUbs.begin(), imgSpatialUbs.end());
+
+                                auto affineIfOp =
+                                    rewriter.create<AffineIfOp>(rewriter.getUnknownLoc(),
+                                                                nonPaddedRange,
+                                                                affineIfArgs,
+                                                                /*withElseRegion=*/false);
+                                {
+                                    auto rewriter = affineIfOp.getThenBodyBuilder();
+                                    ScopedContext scope(rewriter, loc);
+                                    // We must subtract pad below before img load, since the
+                                    // physical image is not padded
+                                    SmallVector<IndexHandle, 4> adjustedImgIndices;
+                                    adjustedImgIndices.push_back(n);
+                                    adjustedImgIndices.push_back(c);
+                                    for (auto i = 0; i < spatialRank; i++)
+                                    {
+                                        adjustedImgIndices.push_back(IndexHandle(
+                                            imgIndices[2 + i] -
+                                            intrinsics::constant_index(padBelowIntValues[i])));
+                                    }
+                                    iRes(resIndices) =
+                                        iRes(resIndices) +
+                                        (iImages(adjustedImgIndices) * iFilters(filtersIndices));
+                                }
+                            }
+                            else
+                            {
+                                iRes(resIndices) = iRes(resIndices) +
+                                                   (iImages(imgIndices) * iFilters(filtersIndices));
+                            }
+                        });
+                    });
+                });
+            });
+        });
     }
 
     ValueHandle createZeroConstant(mlir::Type type)

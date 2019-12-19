@@ -34,9 +34,9 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/greater.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
@@ -130,6 +130,8 @@ namespace
         template <typename T>
         mlir::ArrayAttr getShapeAsAttr(T ngShape);
 
+        mlir::Attribute getIntAsAttr(int64_t value);
+
     private:
         // Sub-graph to be compiled and executed with MLIR.
         const ngraph::op::CompiledKernel* m_compiledKernel;
@@ -221,7 +223,6 @@ mlir::Attribute NgDialectConversionPass::getIntAsAttr(int64_t value)
 {
     return m_builder.getI64IntegerAttr(value);
 }
-
 
 // Converts an nGraph Tensor into an MLIR tensor type, including the conversion of the Tensor's
 // element type.
@@ -447,9 +448,9 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Convolutio
 template <>
 mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::GroupConvolution)
 {
-    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGGroupConvolutionOp>(ngNode);
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGGroupConvOp>(ngNode);
     auto gConvNode = static_cast<const ngraph::op::GroupConvolution*>(ngNode);
-    auto gConvOp = llvm::cast<mlir::NGGroupConvolutionOp>(op);
+    auto gConvOp = llvm::cast<mlir::NGGroupConvOp>(op);
 
     mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(gConvNode->get_window_movement_strides());
     gConvOp.setStrides(attr);
@@ -460,7 +461,7 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::GroupConvo
     attr = NgDialectObj.getShapeAsAttr(gConvNode->get_padding_above());
     gConvOp.setPadAbove(attr);
 
-    attr = NgDialectObj.getIntAsAttr(gConvnode->get_groups());
+    gConvOp.setGroups(NgDialectObj.getIntAsAttr(gConvNode->get_groups()));
     return op;
 }
 
