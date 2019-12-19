@@ -259,8 +259,8 @@ void MatMulGrad::pre_validate_and_infer_types()
                           input_element_type,
                           ").");
 
-    if (get_input_partial_shape(0).is_dynamic() || get_input_partial_shape(1).is_dynamic()
-        || get_input_partial_shape(2).is_dynamic())
+    if (get_input_partial_shape(0).is_dynamic() || get_input_partial_shape(1).is_dynamic() ||
+        get_input_partial_shape(2).is_dynamic())
     {
         set_output_type(0, input_element_type, PartialShape::dynamic());
     }
