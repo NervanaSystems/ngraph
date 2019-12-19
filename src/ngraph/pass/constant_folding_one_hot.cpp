@@ -52,39 +52,14 @@ shared_ptr<op::Constant> fold_constant_one_hot(const shared_ptr<op::Constant>& i
     switch (indices->get_element_type())
     {
     case element::Type_t::undefined:
-        NGRAPH_CHECK(false,
-                     "Encountered 'undefined' element type in one_hot_callback during "
-                     "fold_constant_one_hot");
-        break;
     case element::Type_t::dynamic:
-        NGRAPH_CHECK(
-            false,
-            "Encountered 'dynamic' element type in one_hot_callback during fold_constant_one_hot");
-        break;
     case element::Type_t::u1:
-        NGRAPH_CHECK(
-            false,
-            "Encountered 'u1' element type in one_hot_callback during fold_constant_one_hot");
-        break;
     case element::Type_t::boolean:
-        return fold_constant_one_hot_ref<char, OUTPUT_TYPE>(
-            indices, on_value, off_value, output_shape, axis);
-        break;
     case element::Type_t::bf16:
-        return fold_constant_one_hot_ref<bfloat16, OUTPUT_TYPE>(
-            indices, on_value, off_value, output_shape, axis);
-        break;
     case element::Type_t::f16:
-        return fold_constant_one_hot_ref<float16, OUTPUT_TYPE>(
-            indices, on_value, off_value, output_shape, axis);
-        break;
     case element::Type_t::f32:
-        return fold_constant_one_hot_ref<float, OUTPUT_TYPE>(
-            indices, on_value, off_value, output_shape, axis);
-        break;
     case element::Type_t::f64:
-        return fold_constant_one_hot_ref<double, OUTPUT_TYPE>(
-            indices, on_value, off_value, output_shape, axis);
+        NGRAPH_CHECK(false, "Indices input element type must be integer");
         break;
     case element::Type_t::i8:
         return fold_constant_one_hot_ref<int8_t, OUTPUT_TYPE>(
@@ -220,7 +195,7 @@ void pass::ConstantFolding::construct_constant_one_hot()
         replace_node(m.get_match_root(), replacement);
         return true;
     };
-    auto split_matcher =
+    auto one_hot_matcher =
         make_shared<pattern::Matcher>(ont_hot_pattern, "ConstantFolding.ConstantOneHot");
-    this->add_matcher(split_matcher, one_hot_callback, PassProperty::CHANGE_DYNAMIC_STATE);
+    this->add_matcher(one_hot_matcher, one_hot_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
