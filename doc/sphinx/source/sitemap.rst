@@ -65,7 +65,7 @@ Sitemap
      frameworks/validated/list.rst
 
 
-* :ref:`Debugging <inspection>`
+* :ref:`Diagnostics <inspection>`
 
   .. toctree::
      :maxdepth: 1

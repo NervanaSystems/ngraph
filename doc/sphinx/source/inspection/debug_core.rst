@@ -2,17 +2,15 @@
 
 .. contents::
 
+.. _debug_core:
+
+Diagnostics
+###########
 
 .. important:: Many of the following flags may be experimental only and subject to change.
 
-
-.. _debug_core:
-
-Debug & Build Options
-#####################
-
-Build nGraph with various compile flags and environment variables to debug your 
-use case.
+Build nGraph with various compile flags and environment variables to diagnose performance
+and memory issues.  See also :doc:`profiling`.
 
 
 Compile Flags
