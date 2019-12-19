@@ -41,6 +41,12 @@ namespace ngraph
                 int64_t shapeAndStrides[];
             };
 
+            struct UnrankedMemRef
+            {
+                int64_t rank;
+                StaticMemRef* memRefDescPtr;
+            };
+
             /// A CPU Runtime is an MLIR runtime that owns an MLIR context and a module
             /// The module should be in LLVM dialect and ready to be lowered via an MLIR
             /// ExecutionEngine. The runtime owns the context and must out-live any MLIR

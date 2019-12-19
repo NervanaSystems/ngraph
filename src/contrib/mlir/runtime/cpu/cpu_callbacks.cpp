@@ -29,12 +29,12 @@ using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
 
 /// Callback for MaxPoolBackprop
-static void
-    __mlir_mkldnn_maxpoolbackprop(size_t rank, void* src, void* delta, void* output, void* attrs)
+static void __mlir_mkldnn_maxpoolbackprop(size_t rank,
+                                          StaticMemRef* memRefSrc,
+                                          StaticMemRef* memRefDelta,
+                                          StaticMemRef* memRefOutput,
+                                          void* attrs)
 {
-    auto memRefSrc = reinterpret_cast<StaticMemRef*>(src);
-    auto memRefDelta = reinterpret_cast<StaticMemRef*>(delta);
-    auto memRefOutput = reinterpret_cast<StaticMemRef*>(output);
     mkldnn::memory::dims srcDims(rank);
     mkldnn::memory::dims srcStrides(rank);
     mkldnn::memory::dims deltaDims(rank);
@@ -141,21 +141,12 @@ static void
     free(attrs);
 }
 
-extern "C" void __mlir_mkldnn_maxpoolbackprop_4d(void* src, void* delta, void* output, void* attrs)
-{
-    __mlir_mkldnn_maxpoolbackprop(4, src, delta, output, attrs);
-}
-
-extern "C" void __mlir_mkldnn_maxpoolbackprop_5d(void* src, void* delta, void* output, void* attrs)
-{
-    __mlir_mkldnn_maxpoolbackprop(5, src, delta, output, attrs);
-}
-
 /// Callback for AvgPoolBackprop
-static void __mlir_mkldnn_avgpoolbackprop(size_t rank, void* input, void* output, void* attrs)
+static void __mlir_mkldnn_avgpoolbackprop(size_t rank,
+                                          StaticMemRef* memRefInput,
+                                          StaticMemRef* memRefOutput,
+                                          void* attrs)
 {
-    auto memRefInput = reinterpret_cast<StaticMemRef*>(input);
-    auto memRefOutput = reinterpret_cast<StaticMemRef*>(output);
     mkldnn::memory::dims dims(rank);
     mkldnn::memory::dims strides(rank);
     mkldnn::memory::dims outDims(rank);
@@ -258,10 +249,9 @@ static void __mlir_mkldnn_avgpoolbackprop(size_t rank, void* input, void* output
 }
 
 /// Callback for AvgPool and MaxPool
-static void __mlir_mkldnn_pooling(size_t rank, void* input, void* output, void* attrs, OpType type)
+static void __mlir_mkldnn_pooling(
+    size_t rank, StaticMemRef* memRefInput, StaticMemRef* memRefOutput, void* attrs, OpType type)
 {
-    auto memRefInput = reinterpret_cast<StaticMemRef*>(input);
-    auto memRefOutput = reinterpret_cast<StaticMemRef*>(output);
     mkldnn::memory::dims dims(rank);
     mkldnn::memory::dims strides(rank);
     mkldnn::memory::dims outDims(rank);
@@ -341,35 +331,12 @@ static void __mlir_mkldnn_pooling(size_t rank, void* input, void* output, void* 
     free(attrs);
 }
 
-extern "C" void __mlir_mkldnn_pooling_4d(void* input, void* output, void* attrs, OpType type)
-{
-    if (type == OpType::AVGPOOL || type == OpType::MAXPOOL)
-    {
-        __mlir_mkldnn_pooling(4, input, output, attrs, type);
-    }
-    else if (type == OpType::AVGPOOLBACKPROP)
-    {
-        __mlir_mkldnn_avgpoolbackprop(4, input, output, attrs);
-    }
-}
-
-extern "C" void __mlir_mkldnn_pooling_5d(void* input, void* output, void* attrs, OpType type)
-{
-    if (type == OpType::AVGPOOL || type == OpType::MAXPOOL)
-    {
-        __mlir_mkldnn_pooling(5, input, output, attrs, type);
-    }
-    else if (type == OpType::AVGPOOLBACKPROP)
-    {
-        __mlir_mkldnn_avgpoolbackprop(5, input, output, attrs);
-    }
-}
-
 /// Callback for Softmax
-static void __mlir_mkldnn_softmax(size_t rank, void* input, void* output, const size_t softmax_axis)
+static void __mlir_mkldnn_softmax(size_t rank,
+                                  StaticMemRef* memRefInput,
+                                  StaticMemRef* memRefOutput,
+                                  void* attrs)
 {
-    auto memRefInput = reinterpret_cast<StaticMemRef*>(input);
-    auto memRefOutput = reinterpret_cast<StaticMemRef*>(output);
     mkldnn::memory::dims dims(rank);
     mkldnn::memory::dims strides(rank);
     for (auto i = 0; i < rank; i++)
@@ -377,6 +344,7 @@ static void __mlir_mkldnn_softmax(size_t rank, void* input, void* output, const 
         dims[i] = memRefInput->shapeAndStrides[i];
         strides[i] = memRefInput->shapeAndStrides[rank + i];
     }
+    auto softmax_axis = *reinterpret_cast<int64_t*>(attrs);
 
     // build mkldnn primitive and execute
     mkldnn::memory::data_type dtype = mkldnn::memory::data_type::f32;
@@ -402,83 +370,60 @@ static void __mlir_mkldnn_softmax(size_t rank, void* input, void* output, const 
     }
     catch (const mkldnn::error& e)
     {
+        free(attrs);
         throw ngraph_error("Could not run mkdnn primitive " + std::string(e.message));
     }
-}
-
-extern "C" void __mlir_mkldnn_softmax_2d(void* input, void* output, const size_t softmax_axis)
-{
-    __mlir_mkldnn_softmax(2, input, output, softmax_axis);
-}
-
-extern "C" void __mlir_mkldnn_softmax_4d(void* input, void* output, const size_t softmax_axis)
-{
-    __mlir_mkldnn_softmax(4, input, output, softmax_axis);
+    free(attrs);
 }
 
 /// Callback for MatMul
-extern "C" void __mlir_cblas_sgemm(
-    void* matAPtr, void* matBPtr, void* matCPtr, const bool transposeA, const bool transposeB)
+static void __mlir_cblas_sgemm(StaticMemRef* memRefmatA,
+                               StaticMemRef* memRefmatB,
+                               StaticMemRef* memRefmatC,
+                               void* attrs)
 {
-    auto memRefmatA = reinterpret_cast<StaticMemRef*>(matAPtr);
-    auto memRefmatB = reinterpret_cast<StaticMemRef*>(matBPtr);
-    auto memRefmatC = reinterpret_cast<StaticMemRef*>(matCPtr);
-
-    auto m = memRefmatA->shapeAndStrides[0];
-    auto k = memRefmatA->shapeAndStrides[1];
-    auto n = memRefmatB->shapeAndStrides[1];
-    auto lda = memRefmatA->shapeAndStrides[1];
-    auto ldb = memRefmatB->shapeAndStrides[1];
-
-    if (transposeA)
-    {
-        m = memRefmatA->shapeAndStrides[1];
-        k = memRefmatA->shapeAndStrides[0];
-    }
-    if (transposeB)
-    {
-        n = memRefmatB->shapeAndStrides[0];
-    }
-
-    auto ldc = n;
-
+    auto gAttrs = reinterpret_cast<gemmAttrs*>(attrs);
     cblas::cblas_sgemm(cblas::Layout::RowMajor,
-                       transposeA ? cblas::Transpose::Transpose : cblas::Transpose::None,
-                       transposeB ? cblas::Transpose::Transpose : cblas::Transpose::None,
-                       m,
-                       n,
-                       k,
+                       gAttrs->transposeA ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                       gAttrs->transposeB ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                       gAttrs->m,
+                       gAttrs->n,
+                       gAttrs->k,
                        1.0f,
                        reinterpret_cast<float*>(memRefmatA->allocatedPtr),
-                       std::max<size_t>(1, lda),
+                       std::max<size_t>(1, gAttrs->lda),
                        reinterpret_cast<float*>(memRefmatB->allocatedPtr),
-                       std::max<size_t>(1, ldb),
+                       std::max<size_t>(1, gAttrs->ldb),
                        0.0f,
                        reinterpret_cast<float*>(memRefmatC->allocatedPtr),
-                       std::max<size_t>(1, ldc));
+                       std::max<size_t>(1, gAttrs->ldc));
+    free(attrs);
 }
 
 /// Callback for Gemm
-extern "C" void __mlir_cblas_sgemm_with_bias(void* matAPtr,
-                                             void* matBPtr,
-                                             void* matCPtr,
-                                             void* matOutPtr,
-                                             const bool transposeA,
-                                             const bool transposeB,
-                                             const size_t m,
-                                             const size_t n,
-                                             const size_t k,
-                                             const size_t lda,
-                                             const size_t ldb,
-                                             const size_t ldc,
-                                             const float alpha,
-                                             const float beta,
-                                             const int broadcastHint)
+static void __mlir_cblas_sgemm_with_bias(StaticMemRef* memRefmatA,
+                                         StaticMemRef* memRefmatB,
+                                         StaticMemRef* memRefmatC,
+                                         StaticMemRef* memRefmatOut,
+                                         void* attrs)
 {
-    auto* matA = *(reinterpret_cast<float**>(matAPtr));
-    auto* matB = *(reinterpret_cast<float**>(matBPtr));
-    auto* matC = *(reinterpret_cast<float**>(matCPtr));
-    auto* matOut = *(reinterpret_cast<float**>(matOutPtr));
+    auto gAttrs = reinterpret_cast<gemmAttrs*>(attrs);
+    auto transposeA = gAttrs->transposeA;
+    auto transposeB = gAttrs->transposeB;
+    auto m = gAttrs->m;
+    auto n = gAttrs->n;
+    auto k = gAttrs->k;
+    auto lda = gAttrs->lda;
+    auto ldb = gAttrs->ldb;
+    auto ldc = gAttrs->ldc;
+    auto alpha = gAttrs->alpha;
+    auto beta = gAttrs->beta;
+    auto broadcastHint = gAttrs->broadcastHint;
+
+    auto matA = reinterpret_cast<float*>(memRefmatA->allocatedPtr);
+    auto matB = reinterpret_cast<float*>(memRefmatB->allocatedPtr);
+    auto matC = reinterpret_cast<float*>(memRefmatC->allocatedPtr);
+    auto matOut = reinterpret_cast<float*>(memRefmatOut->allocatedPtr);
 
     cblas::cblas_sgemm(cblas::Layout::RowMajor,
                        transposeA ? cblas::Transpose::Transpose : cblas::Transpose::None,
@@ -572,103 +517,76 @@ extern "C" void __mlir_cblas_sgemm_with_bias(void* matAPtr,
                            matOut,
                            std::max<size_t>(1, ldc));
     }
+    free(attrs);
 }
 
-extern "C" void __mlir_cblas_sgemm_scalar_bias(void* matAPtr,
-                                               void* matBPtr,
-                                               void* matCPtr,
-                                               void* matOutPtr,
-                                               const bool transposeA,
-                                               const bool transposeB,
-                                               const size_t m,
-                                               const size_t n,
-                                               const size_t k,
-                                               const size_t lda,
-                                               const size_t ldb,
-                                               const size_t ldc,
-                                               const float alpha,
-                                               const float beta,
-                                               const int broadcastHint)
+extern "C" void __mlir_callback_1_input(void* input, void* output, void* attrs, OpType type)
 {
-    __mlir_cblas_sgemm_with_bias(matAPtr,
-                                 matBPtr,
-                                 matCPtr,
-                                 matOutPtr,
-                                 transposeA,
-                                 transposeB,
-                                 m,
-                                 n,
-                                 k,
-                                 lda,
-                                 ldb,
-                                 ldc,
-                                 alpha,
-                                 beta,
-                                 broadcastHint);
+    auto unrankedMemRefInput = reinterpret_cast<UnrankedMemRef*>(input);
+    auto unrankedMemRefOutput = reinterpret_cast<UnrankedMemRef*>(output);
+
+    if (type == OpType::SOFTMAX)
+    {
+        __mlir_mkldnn_softmax(unrankedMemRefInput->rank,
+                              unrankedMemRefInput->memRefDescPtr,
+                              unrankedMemRefOutput->memRefDescPtr,
+                              attrs);
+    }
+    else if (type == OpType::AVGPOOL || type == OpType::MAXPOOL)
+    {
+        __mlir_mkldnn_pooling(unrankedMemRefInput->rank,
+                              unrankedMemRefInput->memRefDescPtr,
+                              unrankedMemRefOutput->memRefDescPtr,
+                              attrs,
+                              type);
+    }
+    else if (type == OpType::AVGPOOLBACKPROP)
+    {
+        __mlir_mkldnn_avgpoolbackprop(unrankedMemRefInput->rank,
+                                      unrankedMemRefInput->memRefDescPtr,
+                                      unrankedMemRefOutput->memRefDescPtr,
+                                      attrs);
+    }
 }
 
-extern "C" void __mlir_cblas_sgemm_1d_bias(void* matAPtr,
-                                           void* matBPtr,
-                                           void* matCPtr,
-                                           void* matOutPtr,
-                                           const bool transposeA,
-                                           const bool transposeB,
-                                           const size_t m,
-                                           const size_t n,
-                                           const size_t k,
-                                           const size_t lda,
-                                           const size_t ldb,
-                                           const size_t ldc,
-                                           const float alpha,
-                                           const float beta,
-                                           const int broadcastHint)
+extern "C" void
+    __mlir_callback_2_inputs(void* input0, void* input1, void* output, void* attrs, OpType type)
 {
-    __mlir_cblas_sgemm_with_bias(matAPtr,
-                                 matBPtr,
-                                 matCPtr,
-                                 matOutPtr,
-                                 transposeA,
-                                 transposeB,
-                                 m,
-                                 n,
-                                 k,
-                                 lda,
-                                 ldb,
-                                 ldc,
-                                 alpha,
-                                 beta,
-                                 broadcastHint);
+    auto unrankedMemRefInput0 = reinterpret_cast<UnrankedMemRef*>(input0);
+    auto unrankedMemRefInput1 = reinterpret_cast<UnrankedMemRef*>(input1);
+    auto unrankedMemRefOutput = reinterpret_cast<UnrankedMemRef*>(output);
+
+    if (type == OpType::MAXPOOLBACKPROP)
+    {
+        __mlir_mkldnn_maxpoolbackprop(unrankedMemRefInput0->rank,
+                                      unrankedMemRefInput0->memRefDescPtr,
+                                      unrankedMemRefInput1->memRefDescPtr,
+                                      unrankedMemRefOutput->memRefDescPtr,
+                                      attrs);
+    }
+    else if (type == OpType::MATMUL)
+    {
+        __mlir_cblas_sgemm(unrankedMemRefInput0->memRefDescPtr,
+                           unrankedMemRefInput1->memRefDescPtr,
+                           unrankedMemRefOutput->memRefDescPtr,
+                           attrs);
+    }
 }
 
-extern "C" void __mlir_cblas_sgemm_2d_bias(void* matAPtr,
-                                           void* matBPtr,
-                                           void* matCPtr,
-                                           void* matOutPtr,
-                                           const bool transposeA,
-                                           const bool transposeB,
-                                           const size_t m,
-                                           const size_t n,
-                                           const size_t k,
-                                           const size_t lda,
-                                           const size_t ldb,
-                                           const size_t ldc,
-                                           const float alpha,
-                                           const float beta,
-                                           const int broadcastHint)
+extern "C" void __mlir_callback_3_inputs(
+    void* input0, void* input1, void* input2, void* output, void* attrs, OpType type)
 {
-    __mlir_cblas_sgemm_with_bias(matAPtr,
-                                 matBPtr,
-                                 matCPtr,
-                                 matOutPtr,
-                                 transposeA,
-                                 transposeB,
-                                 m,
-                                 n,
-                                 k,
-                                 lda,
-                                 ldb,
-                                 ldc,
-                                 alpha,
-                                 beta,
-                                 broadcastHint);
+    auto unrankedMemRefInput0 = reinterpret_cast<UnrankedMemRef*>(input0);
+    auto unrankedMemRefInput1 = reinterpret_cast<UnrankedMemRef*>(input1);
+    auto unrankedMemRefInput2 = reinterpret_cast<UnrankedMemRef*>(input2);
+    auto unrankedMemRefOutput = reinterpret_cast<UnrankedMemRef*>(output);
+
+    if (type == OpType::GEMM)
+    {
+        __mlir_cblas_sgemm_with_bias(unrankedMemRefInput0->memRefDescPtr,
+                                     unrankedMemRefInput1->memRefDescPtr,
+                                     unrankedMemRefInput2->memRefDescPtr,
+                                     unrankedMemRefOutput->memRefDescPtr,
+                                     attrs);
+    }
 }

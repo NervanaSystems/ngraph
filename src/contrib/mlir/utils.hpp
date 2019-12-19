@@ -47,12 +47,14 @@ namespace ngraph
                 CONVOLUTIONBACKPROPWEIGHTSBIAS,
                 GELU,
                 GELUBACKPROP,
+                GEMM,
                 GROUPCONVOLUTION,
                 GROUPCONVOLUTIONBIAS,
                 DECONVOLUTIONBIAS,
                 LEAKYRELU,
                 LRN,
                 LSTM,
+                MATMUL,
                 MAXPOOL,
                 MAXPOOLBACKPROP,
                 MAXPOOLBACKPROPFORWARD,
@@ -88,6 +90,21 @@ namespace ngraph
                 int64_t windowStrides[N];
                 int64_t padBelow[N];
                 int64_t padAbove[N];
+            };
+
+            struct gemmAttrs
+            {
+                bool transposeA;
+                bool transposeB;
+                int64_t m;
+                int64_t n;
+                int64_t k;
+                int64_t lda;
+                int64_t ldb;
+                int64_t ldc;
+                float alpha;
+                float beta;
+                int64_t broadcastHint;
             };
 
             /// Common nGraph dialect initialization code. Used by nGraph compiler and tools that
