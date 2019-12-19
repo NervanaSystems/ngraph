@@ -407,6 +407,10 @@ set (SRC
     op/fused/rnn_cell.hpp
     op/fused/scale_shift.cpp
     op/fused/scale_shift.hpp
+    op/fused/scatter_nd.cpp
+    op/fused/scatter_nd.hpp
+    op/fused/stack.cpp
+    op/fused/stack.hpp
     op/fused/selu.cpp
     op/fused/selu.hpp
     op/fused/shuffle_channels.cpp
@@ -475,6 +479,7 @@ set (SRC
     pass/constant_folding_dyn_slice.cpp
     pass/constant_folding_gather.cpp
     pass/constant_folding_logical_reduction.cpp
+    pass/constant_folding_one_hot.cpp
     pass/constant_folding_pad.cpp
     pass/constant_folding_quantize.cpp
     pass/constant_folding_range.cpp
@@ -485,6 +490,8 @@ set (SRC
     pass/constant_folding_unsqueeze.cpp
     pass/constant_folding_shape_of.cpp
     pass/constant_folding_slice.cpp
+    pass/constant_folding_split.cpp
+    pass/constant_folding_variadic_split.cpp
     pass/constant_folding_strided_slice.cpp
     pass/constant_folding_transpose.cpp
     pass/constant_folding_unary.cpp
@@ -598,6 +605,7 @@ set (SRC
     type/float16.cpp
     type/float16.hpp
     type/element_type.cpp
+    type.cpp
     type.hpp
     util.cpp
     util.hpp
