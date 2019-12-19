@@ -42,8 +42,8 @@ namespace ngraph
             /// \param transpose_b If matrix B should be transposed.
             MatMul(const Output<Node>& A,
                    const Output<Node>& B,
-                   const bool& transpose_a = 0,
-                   const bool& transpose_b = 0);
+                   const bool transpose_a,
+                   const bool transpose_b);
 
             virtual NodeVector decompose_op() const override;
 
@@ -54,29 +54,27 @@ namespace ngraph
             bool get_transpose_a() const { return m_transpose_a; }
             bool get_transpose_b() const { return m_transpose_b; }
         private:
-            bool m_transpose_a;
-            bool m_transpose_b;
+            bool m_transpose_a{false};
+            bool m_transpose_b{false};
         };
 
-        class NGRAPH_API MatMulBackward : public op::util::FusedOp
+        class NGRAPH_API MatMulGrad : public op::util::FusedOp
         {
         public:
-            static constexpr NodeTypeInfo type_info{"MatMulBackward", 0};
+            static constexpr NodeTypeInfo type_info{"MatMulGrad", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
-            MatMulBackward() = default;
+            MatMulGrad() = default;
             /// \brief Constructs a MatMul operation.
             ///
             /// \param A Matrix A
             /// \param B Matrix B
             /// \param transpose_a If matrix A should be transposed.
             /// \param transpose_b If matrix B should be transposed.
-            MatMulBackward(const Output<Node>& A,
-                           const Output<Node>& B,
-                           const Output<Node>& Out,
-                           bool is_dx,
-                           bool is_dy,
-                           const bool& transpose_a = 0,
-                           const bool& transpose_b = 0);
+            MatMulGrad(const Output<Node>& A,
+                       const Output<Node>& B,
+                       const Output<Node>& Out,
+                       const bool transpose_a,
+                       const bool transpose_b);
 
             virtual NodeVector decompose_op() const override;
 
@@ -87,15 +85,13 @@ namespace ngraph
             bool get_transpose_a() const { return m_transpose_a; }
             bool get_transpose_b() const { return m_transpose_b; }
         private:
-            bool is_x;
-            bool is_y;
-            bool m_transpose_a;
-            bool m_transpose_b;
+            bool m_transpose_a{false};
+            bool m_transpose_b{false};
 
             std::shared_ptr<ngraph::Node>
                 transposeAndFlat3D(const std::shared_ptr<ngraph::Node>& input,
                                    const bool transpose,
-                                   bool x = true) const;
+                                   const bool x = true) const;
             std::shared_ptr<ngraph::Node> broadcast3D(const std::shared_ptr<ngraph::Node>& input,
                                                       size_t axis0) const;
 

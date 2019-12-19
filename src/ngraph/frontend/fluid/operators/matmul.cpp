@@ -32,8 +32,8 @@ using namespace ngraph::fluid;
 constexpr NodeTypeInfo MatMul::type_info;
 MatMul::MatMul(const Output<Node>& A,
                const Output<Node>& B,
-               const bool& transpose_a,
-               const bool& transpose_b)
+               const bool transpose_a,
+               const bool transpose_b)
     : FusedOp(OutputVector{A, B})
     , m_transpose_a{transpose_a}
     , m_transpose_b{transpose_b}
@@ -141,25 +141,21 @@ shared_ptr<Node> MatMul::copy_with_new_args(const NodeVector& new_args) const
     return make_shared<MatMul>(new_args.at(0), new_args.at(1), m_transpose_a, m_transpose_b);
 }
 
-constexpr NodeTypeInfo MatMulBackward::type_info;
-MatMulBackward::MatMulBackward(const Output<Node>& A,
-                               const Output<Node>& B,
-                               const Output<Node>& Out,
-                               bool is_dx,
-                               bool is_dy,
-                               const bool& transpose_a,
-                               const bool& transpose_b)
+constexpr NodeTypeInfo MatMulGrad::type_info;
+MatMulGrad::MatMulGrad(const Output<Node>& A,
+                       const Output<Node>& B,
+                       const Output<Node>& Out,
+                       const bool transpose_a,
+                       const bool transpose_b)
     : FusedOp(OutputVector{A, B, Out})
-    , is_x(is_x)
-    , is_y(is_y)
     , m_transpose_a{transpose_a}
     , m_transpose_b{transpose_b}
 {
     constructor_validate_and_infer_types();
 }
 
-std::shared_ptr<ngraph::Node>
-    MatMulBackward::broadcast3D(const std::shared_ptr<ngraph::Node>& input, size_t axis0) const
+std::shared_ptr<ngraph::Node> MatMulGrad::broadcast3D(const std::shared_ptr<ngraph::Node>& input,
+                                                      size_t axis0) const
 {
     auto shape = input->get_shape();
     size_t n = shape.size();
@@ -172,8 +168,8 @@ std::shared_ptr<ngraph::Node>
     return input;
 }
 
-std::shared_ptr<ngraph::Node> MatMulBackward::transposeAndFlat3D(
-    const std::shared_ptr<ngraph::Node>& input, const bool transpose, bool x) const
+std::shared_ptr<ngraph::Node> MatMulGrad::transposeAndFlat3D(
+    const std::shared_ptr<ngraph::Node>& input, const bool transpose, const bool x) const
 {
     auto shape = input->get_shape();
     size_t n = shape.size();
@@ -230,8 +226,8 @@ std::shared_ptr<ngraph::Node> MatMulBackward::transposeAndFlat3D(
     return output;
 }
 
-std::shared_ptr<ngraph::Node> MatMulBackward::dotOp(const std::shared_ptr<ngraph::Node>& a,
-                                                    const std::shared_ptr<ngraph::Node>& b) const
+std::shared_ptr<ngraph::Node> MatMulGrad::dotOp(const std::shared_ptr<ngraph::Node>& a,
+                                                const std::shared_ptr<ngraph::Node>& b) const
 {
     std::shared_ptr<ngraph::Node> out;
     auto a_shape = a->get_shape();
@@ -249,8 +245,8 @@ std::shared_ptr<ngraph::Node> MatMulBackward::dotOp(const std::shared_ptr<ngraph
     return out;
 }
 
-std::shared_ptr<ngraph::Node> MatMulBackward::reshapeToOriginal(std::shared_ptr<ngraph::Node> input,
-                                                                const ngraph::Shape& shape) const
+std::shared_ptr<ngraph::Node> MatMulGrad::reshapeToOriginal(std::shared_ptr<ngraph::Node> input,
+                                                            const ngraph::Shape& shape) const
 {
     auto input_shape = input->get_shape();
     std::vector<size_t> axis(input_shape.size());
@@ -259,7 +255,7 @@ std::shared_ptr<ngraph::Node> MatMulBackward::reshapeToOriginal(std::shared_ptr<
     return out;
 }
 
-NodeVector MatMulBackward::decompose_op() const
+NodeVector MatMulGrad::decompose_op() const
 {
     auto x = input_value(0).get_node_shared_ptr();
     auto y = input_value(1).get_node_shared_ptr();
@@ -340,14 +336,14 @@ NodeVector MatMulBackward::decompose_op() const
     return NodeVector{dx_t, dy_t, dout};
 }
 
-shared_ptr<Node> MatMulBackward::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> MatMulGrad::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<MatMulBackward>(
-        new_args.at(0), new_args.at(1), new_args.at(2), is_x, is_y, m_transpose_a, m_transpose_b);
+    return make_shared<MatMulGrad>(
+        new_args.at(0), new_args.at(1), new_args.at(2), m_transpose_a, m_transpose_b);
 }
 
-void MatMulBackward::pre_validate_and_infer_types()
+void MatMulGrad::pre_validate_and_infer_types()
 {
     element::Type input_element_type = get_input_element_type(0);
     PartialShape pshape_A = get_input_partial_shape(0);
