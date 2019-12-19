@@ -2386,11 +2386,16 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Product:
         {
-            auto reduction_axes = deserialize_axis_set(node_js.at("reduction_axes"));
+            set<size_t> reduction_axes =
+                get_or_default<set<size_t>>(node_js, "reduction_axes", set<size_t>());
             if (reduction_axes.empty())
+            {
                 node = make_shared<op::v0::Product>(args[0], args[1]);
+            }
             else
+            {
                 node = make_shared<op::v0::Product>(args[0], reduction_axes);
+            }
             break;
         }
         case OP_TYPEID::ReduceProd_v1:
@@ -2807,11 +2812,16 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Sum:
         {
-            auto reduction_axes = deserialize_axis_set(node_js.at("reduction_axes"));
+            set<size_t> reduction_axes =
+                get_or_default<set<size_t>>(node_js, "reduction_axes", set<size_t>());
             if (reduction_axes.empty())
+            {
                 node = make_shared<op::v0::Sum>(args[0], args[1]);
+            }
             else
+            {
                 node = make_shared<op::v0::Sum>(args[0], reduction_axes);
+            }
             break;
         }
         case OP_TYPEID::Tan:
@@ -4203,8 +4213,12 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::PRelu: { break;
     }
-    case OP_TYPEID::Product: { break;
-    }
+    case OP_TYPEID::Product:
+    {
+        auto tmp = static_cast<const op::Product*>(&n);
+        node["reduction_axes"] = tmp->get_reduction_axes();
+        break;
+    }    
     case OP_TYPEID::ReduceProd_v1:
     {
         auto tmp = static_cast<const op::v1::ReduceProd*>(&n);
@@ -4481,7 +4495,11 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    case OP_TYPEID::Sum: { break;
+    case OP_TYPEID::Sum:
+    {
+        auto tmp = static_cast<const op::Sum*>(&n);
+        node["reduction_axes"] = tmp->get_reduction_axes();
+        break;
     }
     case OP_TYPEID::ReduceSum_v1:
     {
