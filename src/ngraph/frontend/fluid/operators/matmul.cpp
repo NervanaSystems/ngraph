@@ -76,7 +76,7 @@ void decompose_logic(Output<Node>& input, bool transpose, bool reverse = false)
     }
 }
 
-inline NodeVector remove_1(shared_ptr<Node> input_node)
+NodeVector remove_1(shared_ptr<Node> input_node)
 {
     auto input_shape = input_node->get_shape();
     AxisVector axis(input_shape.size());
@@ -249,6 +249,22 @@ shared_ptr<Node> reshape_to_original(shared_ptr<Node> input, const Shape& shape)
     return make_shared<op::Reshape>(input, get_default_order(input_shape), shape);
 }
 
+void MatMulGrad::pre_validate_and_infer_types()
+{
+    element::Type input_element_type = get_input_element_type(0);
+
+    NODE_VALIDATION_CHECK(this,
+                          input_element_type.is_dynamic() || input_element_type.is_real(),
+                          "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
+                          input_element_type,
+                          ").");
+
+    if (get_input_partial_shape(0).is_dynamic() || get_input_partial_shape(1).is_dynamic()
+        || get_input_partial_shape(2).is_dynamic())
+    {
+        set_output_type(0, input_element_type, PartialShape::dynamic());
+    }
+}
 NodeVector MatMulGrad::decompose_op() const
 {
     auto x = input_value(0).get_node_shared_ptr();
@@ -336,22 +352,4 @@ shared_ptr<Node> MatMulGrad::copy_with_new_args(const NodeVector& new_args) cons
     check_new_args_count(this, new_args);
     return make_shared<MatMulGrad>(
         new_args.at(0), new_args.at(1), new_args.at(2), m_transpose_a, m_transpose_b);
-}
-
-void MatMulGrad::pre_validate_and_infer_types()
-{
-    element::Type input_element_type = get_input_element_type(0);
-    PartialShape pshape_A = get_input_partial_shape(0);
-    PartialShape pshape_B = get_input_partial_shape(1);
-
-    NODE_VALIDATION_CHECK(this,
-                          input_element_type.is_dynamic() || input_element_type.is_real(),
-                          "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
-                          input_element_type,
-                          ").");
-
-    if (pshape_A.is_dynamic() || pshape_B.is_dynamic())
-    {
-        set_output_type(0, input_element_type, PartialShape::dynamic());
-    }
 }

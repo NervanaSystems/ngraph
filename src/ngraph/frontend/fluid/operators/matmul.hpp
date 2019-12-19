@@ -64,7 +64,7 @@ namespace ngraph
             static constexpr NodeTypeInfo type_info{"MatMulGrad", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             MatMulGrad() = default;
-            /// \brief Constructs a MatMul operation.
+            /// \brief Constructs a MatMul Grad operation.
             ///
             /// \param A Matrix A
             /// \param B Matrix B
