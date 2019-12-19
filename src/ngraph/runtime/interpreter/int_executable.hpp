@@ -1879,6 +1879,7 @@ private:
         case OP_TYPEID::RNNCell:
         case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::ScaleShift:
+        case OP_TYPEID::ScatterND:
         case OP_TYPEID::Selu:
         case OP_TYPEID::ShuffleChannels:
         case OP_TYPEID::SoftmaxCrossEntropy:
@@ -1886,6 +1887,7 @@ private:
         case OP_TYPEID::SpaceToDepth:
         case OP_TYPEID::SquaredDifference:
         case OP_TYPEID::Squeeze:
+        case OP_TYPEID::Stack:
         case OP_TYPEID::Unsqueeze:
         // Tensor Iterator not yet supported
         case OP_TYPEID::TensorIterator:
