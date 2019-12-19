@@ -31,8 +31,8 @@ constexpr NodeTypeInfo op::Gemm::type_info;
 op::Gemm::Gemm(const Output<Node>& A,
                const Output<Node>& B,
                const Output<Node>& C,
-               float alpha,
-               float beta,
+               double alpha,
+               double beta,
                bool transA,
                bool transB)
     : FusedOp({A, B, C})
@@ -67,13 +67,13 @@ NodeVector op::Gemm::decompose_op() const
 
     // alpha
     std::shared_ptr<ngraph::Node> alpha_node = std::make_shared<ngraph::op::Constant>(
-        a_dot_b->get_element_type(), a_dot_b->get_shape(), std::vector<float>{m_alpha});
+        a_dot_b->get_element_type(), a_dot_b->get_shape(), std::vector<double>{m_alpha});
     // alpha * A' * B'
     a_dot_b = std::make_shared<ngraph::op::Multiply>(alpha_node, a_dot_b);
 
     // beta * C
     std::shared_ptr<ngraph::Node> beta_node = std::make_shared<ngraph::op::Constant>(
-        C.get_element_type(), C.get_shape(), std::vector<float>{m_beta});
+        C.get_element_type(), C.get_shape(), std::vector<double>{m_beta});
     C = std::make_shared<ngraph::op::Multiply>(beta_node, C);
 
     // alpha * A' * B' + beta * C

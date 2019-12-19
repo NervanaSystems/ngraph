@@ -667,28 +667,3 @@ def NGTopKOp :
     }];
 }
 
-// MatMul
-def NGMatMulOp :
-    NG_OneResult_Op<"matmul", [NoSideEffect]>,
-    Arguments<(ins NG_TensorType:$matA, NG_TensorType:$matB, BoolAttr:$transposeA, BoolAttr:$transposeB)>
-{
-  let summary = "Matrix multiplication";
-
-  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-
-  let verifier = [{ return verifyOp(this); }];
-}
-
-// Gemm
-def NGGemmOp :
-    NG_OneResult_Op<"gemm", [NoSideEffect]>,
-    Arguments<(ins NG_TensorType:$matA, NG_TensorType:$matB, NG_TensorType:$matC,
-               BoolAttr:$transposeA, BoolAttr:$transposeB,
-               F32Attr:$alpha, F32Attr:$beta)>
-{
-  let summary = "Matrix multiplication with bias";
-
-  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-
-  let verifier = [{ return verifyOp(this); }];
-}

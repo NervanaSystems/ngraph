@@ -282,7 +282,7 @@ def NGMVN :
 }
 
 // MatMul Op
-def NGMatMul : 
+def NGMatMulOp :
   NG_OneResult_Op<"matmul", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
   Arguments<(ins NG_TensorType:$A, NG_TensorType:$B, 
             DefaultValuedAttr<BoolAttr, "false">:$transposeA,

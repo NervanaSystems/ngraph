@@ -217,11 +217,6 @@ namespace
                            ArrayRef<Type> output,
                            PatternRewriter& rewriter);
 
-        LLVM::LLVMFuncOp getLLVMCallDecl(StringRef name,
-                                         ArrayRef<LLVM::LLVMType> args,
-                                         LLVM::LLVMType output,
-                                         PatternRewriter& rewriter);
-
     private:
         /// Collect a set of patterns to convert from the nGraph dialect to Affine dialect.
         void populateNGraphToAffineConversionPatterns(OwningRewritePatternList& patterns);
@@ -502,29 +497,6 @@ namespace
             SmallVector<NamedAttribute, 4> attributes;
             rewriter.create<mlir::FuncOp>(rewriter.getUnknownLoc(), name, callBackType, attributes);
             callBackFunc = module.lookupSymbol<mlir::FuncOp>(name);
-        }
-        return callBackFunc;
-    }
-
-    LLVM::LLVMFuncOp DialectLoweringPass::getLLVMCallDecl(StringRef name,
-                                                          ArrayRef<LLVM::LLVMType> args,
-                                                          LLVM::LLVMType output,
-                                                          PatternRewriter& rewriter)
-    {
-        auto module = getModule();
-        auto* context = module.getContext();
-
-        auto callBackFunc = module.lookupSymbol<LLVM::LLVMFuncOp>(name);
-        if (!callBackFunc)
-        {
-            // Create a function declaration and insert to the module.
-            auto callBackType = LLVM::LLVMType::getFunctionTy(output, args, false);
-            PatternRewriter::InsertionGuard insertGuard(rewriter);
-            rewriter.setInsertionPointToStart(module.getBody());
-            SmallVector<NamedAttribute, 4> attributes;
-            rewriter.create<LLVM::LLVMFuncOp>(
-                rewriter.getUnknownLoc(), name, callBackType, attributes);
-            callBackFunc = module.lookupSymbol<LLVM::LLVMFuncOp>(name);
         }
         return callBackFunc;
     }
@@ -848,12 +820,12 @@ namespace
         auto lda = lhsShape[lhsDim1];
         auto ldb = rhsShape[rhsDim1];
 
-        if (gemm.transposeA())
+        if (gemm.transA())
         {
             m = lhsShape[lhsDim1];
             k = lhsShape[lhsDim0];
         }
-        if (gemm.transposeB())
+        if (gemm.transB())
         {
             n = rhsShape[rhsDim0];
         }
@@ -897,13 +869,11 @@ namespace
         auto ldaArg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), lda);
         auto ldbArg = rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(), ldb);
         auto transposeA =
-            gemm.transposeA()
-                ? rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 1, 1)
-                : rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 0, 1);
+            gemm.transA() ? rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 1, 1)
+                          : rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 0, 1);
         auto transposeB =
-            gemm.transposeB()
-                ? rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 1, 1)
-                : rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 0, 1);
+            gemm.transB() ? rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 1, 1)
+                          : rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), 0, 1);
         auto broadcastHintArg =
             rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), broadcastHint, 32);
 

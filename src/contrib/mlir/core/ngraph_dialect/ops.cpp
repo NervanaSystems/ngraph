@@ -469,7 +469,7 @@ void mlir::NGLSTMCellOp::decompose()
 void mlir::NGLSTMSequenceOp::decompose()
 {
 }
-void mlir::NGMatMul::decompose()
+void mlir::NGMatMulOp::decompose()
 {
 }
 void mlir::NGLayerNormOp::decompose()

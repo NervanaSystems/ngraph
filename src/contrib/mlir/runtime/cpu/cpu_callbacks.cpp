@@ -111,16 +111,13 @@ static void
     }
 
     mkldnn::pooling_forward maxpool_f(maxpool_pd_f);
-    mkldnn::memory src_mem{
-        maxpool_pd_b.diff_src_desc(), cpu_engine, memRefSrc->basePtr + memRefSrc->offset};
+    mkldnn::memory src_mem{maxpool_pd_b.diff_src_desc(), cpu_engine, memRefSrc->allocatedPtr};
     mkldnn::memory dst_mem{maxpool_pd_b.diff_dst_desc(), cpu_engine};
     mkldnn::memory workspace{maxpool_pd_f.workspace_desc(), cpu_engine};
 
     mkldnn::pooling_backward maxpool_b(maxpool_pd_b);
-    mkldnn::memory diff_dst{
-        maxpool_pd_b.diff_dst_desc(), cpu_engine, memRefDelta->basePtr + memRefDelta->offset};
-    mkldnn::memory diff_src{
-        maxpool_pd_b.diff_src_desc(), cpu_engine, memRefOutput->basePtr + memRefOutput->offset};
+    mkldnn::memory diff_dst{maxpool_pd_b.diff_dst_desc(), cpu_engine, memRefDelta->allocatedPtr};
+    mkldnn::memory diff_src{maxpool_pd_b.diff_src_desc(), cpu_engine, memRefOutput->allocatedPtr};
 
     std::unordered_map<int, mkldnn::memory> exec_args_f = {
         {MKLDNN_ARG_SRC, src_mem}, {MKLDNN_ARG_WORKSPACE, workspace}, {MKLDNN_ARG_DST, dst_mem}};
@@ -240,10 +237,8 @@ static void __mlir_mkldnn_avgpoolbackprop(size_t rank, void* input, void* output
     }
 
     mkldnn::pooling_backward avgpool(avgpool_pd_b);
-    mkldnn::memory in{
-        avgpool_pd_b.diff_dst_desc(), cpu_engine, memRefInput->basePtr + memRefInput->offset};
-    mkldnn::memory out{
-        avgpool_pd_b.diff_src_desc(), cpu_engine, memRefOutput->basePtr + memRefOutput->offset};
+    mkldnn::memory in{avgpool_pd_b.diff_dst_desc(), cpu_engine, memRefInput->allocatedPtr};
+    mkldnn::memory out{avgpool_pd_b.diff_src_desc(), cpu_engine, memRefOutput->allocatedPtr};
 
     std::unordered_map<int, mkldnn::memory> exec_args = {{MKLDNN_ARG_DIFF_DST, in},
                                                          {MKLDNN_ARG_DIFF_SRC, out}};
@@ -326,9 +321,8 @@ static void __mlir_mkldnn_pooling(size_t rank, void* input, void* output, void* 
     }
 
     mkldnn::pooling_forward pool(pool_pd);
-    mkldnn::memory in{pool_pd.src_desc(), cpu_engine, memRefInput->basePtr + memRefInput->offset};
-    mkldnn::memory out{
-        pool_pd.dst_desc(), cpu_engine, memRefOutput->basePtr + memRefOutput->offset};
+    mkldnn::memory in{pool_pd.src_desc(), cpu_engine, memRefInput->allocatedPtr};
+    mkldnn::memory out{pool_pd.dst_desc(), cpu_engine, memRefOutput->allocatedPtr};
 
     std::unordered_map<int, mkldnn::memory> exec_args = {{MKLDNN_ARG_SRC, in},
                                                          {MKLDNN_ARG_DST, out}};
@@ -394,10 +388,8 @@ static void __mlir_mkldnn_softmax(size_t rank, void* input, void* output, const 
     auto softmax_pd = mkldnn::softmax_forward::primitive_desc(softmax_desc, attr, cpu_engine);
     mkldnn::softmax_forward softmax(softmax_pd);
 
-    mkldnn::memory in{
-        softmax_pd.src_desc(), cpu_engine, memRefInput->basePtr + memRefInput->offset};
-    mkldnn::memory out{
-        softmax_pd.dst_desc(), cpu_engine, memRefOutput->basePtr + memRefOutput->offset};
+    mkldnn::memory in{softmax_pd.src_desc(), cpu_engine, memRefInput->allocatedPtr};
+    mkldnn::memory out{softmax_pd.dst_desc(), cpu_engine, memRefOutput->allocatedPtr};
 
     std::unordered_map<int, mkldnn::memory> exec_args = {{MKLDNN_ARG_SRC, in},
                                                          {MKLDNN_ARG_DST, out}};
@@ -457,12 +449,12 @@ extern "C" void __mlir_cblas_sgemm(
                        n,
                        k,
                        1.0f,
-                       memRefmatA->basePtr + memRefmatA->offset,
+                       reinterpret_cast<float*>(memRefmatA->allocatedPtr),
                        std::max<size_t>(1, lda),
-                       memRefmatB->basePtr + memRefmatB->offset,
+                       reinterpret_cast<float*>(memRefmatB->allocatedPtr),
                        std::max<size_t>(1, ldb),
                        0.0f,
-                       memRefmatC->basePtr + memRefmatC->offset,
+                       reinterpret_cast<float*>(memRefmatC->allocatedPtr),
                        std::max<size_t>(1, ldc));
 }
 

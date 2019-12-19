@@ -552,22 +552,24 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::MaxPoolBac
 template <>
 mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::MatMul)
 {
-    auto matmul = static_cast<const ngraph::op::MatMul*>(ngNode);
+    auto matmulNode = static_cast<const ngraph::op::MatMul*>(ngNode);
     auto op = NgDialectObj.createGenericOp<mlir::NGMatMulOp>(ngNode);
-    op->setAttr("transposeA", NgDialectObj.m_builder.getBoolAttr(matmul->get_transpose_a()));
-    op->setAttr("transposeB", NgDialectObj.m_builder.getBoolAttr(matmul->get_transpose_b()));
+    auto matmulOp = llvm::cast<mlir::NGMatMulOp>(op);
+    matmulOp.setTransposeA(NgDialectObj.m_builder.getBoolAttr(matmulNode->get_transpose_a()));
+    matmulOp.setTransposeB(NgDialectObj.m_builder.getBoolAttr(matmulNode->get_transpose_b()));
     return op;
 }
 
 template <>
 mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Gemm)
 {
-    auto gemm = static_cast<const ngraph::op::Gemm*>(ngNode);
+    auto gemmNode = static_cast<const ngraph::op::Gemm*>(ngNode);
     auto op = NgDialectObj.createGenericOp<mlir::NGGemmOp>(ngNode);
-    op->setAttr("transposeA", NgDialectObj.m_builder.getBoolAttr(gemm->get_transA()));
-    op->setAttr("transposeB", NgDialectObj.m_builder.getBoolAttr(gemm->get_transB()));
-    op->setAttr("alpha", NgDialectObj.m_builder.getF32FloatAttr(gemm->get_alpha()));
-    op->setAttr("beta", NgDialectObj.m_builder.getF32FloatAttr(gemm->get_beta()));
+    auto gemmOp = llvm::cast<mlir::NGGemmOp>(op);
+    gemmOp.setTransA(NgDialectObj.m_builder.getBoolAttr(gemmNode->get_transA()));
+    gemmOp.setTransB(NgDialectObj.m_builder.getBoolAttr(gemmNode->get_transB()));
+    gemmOp.setAlpha(NgDialectObj.m_builder.getF32FloatAttr(gemmNode->get_alpha()));
+    gemmOp.setBeta(NgDialectObj.m_builder.getF32FloatAttr(gemmNode->get_beta()));
     return op;
 }
 
