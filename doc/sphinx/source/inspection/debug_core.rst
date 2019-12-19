@@ -70,10 +70,10 @@ Environment Variables
    ``NGRAPH_MLIR``, 
    ``NGRAPH_ENABLE_VISUALIZE_TRACING``,
    ``NGRAPH_VISUALIZE_TRACING_FORMAT``, Default format is ``.svg``
-   ``NGRAPH_VISUALIZE_EDGE_LABELS``, Set it to 1 in ~/.bashrc
+   ``NGRAPH_VISUALIZE_EDGE_LABELS``, Set it to 1 in ``~/.bashrc``
    ``NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE``, Calculated in code; helps prevent *long* edges between two nodes very far apart
-   ``NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES``, Set it to 1 in ~/.bashrc
-   ``NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES``, Set it to 1 in ~/.bashrc
+   ``NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES``, Set it to 1 in ``~/.bashrc``
+   ``NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES``, Set it to 1 in ``~/.bashrc``
    ``NGRAPH_ENABLE_SERIALIZE_TRACING``, Creates serialized files to be run with ``nbench`` for localized execution rather than whole stack execution
    ``NGRAPH_PROFILE_PASS_ENABLE``, Per-pass time taken to compile
    ``NGRAPH_PASS_ENABLES``, Enable or disable a pass: either core or backend
@@ -90,13 +90,13 @@ Environment Variables
    ``NGRAPH_CODEGEN``,
    ``NGRAPH_DEX_DEBUG``,
    ``NGRAPH_CPU_CONCURRENCY``,
-   ``NGRAPH_CPU_DEBUG_TRACER``, See: :doc:`../frameworks/other/index`
-   ``NGRAPH_CPU_TRACER_LOG``, See: :doc:`../frameworks/other/index`
-   ``NGRAPH_CPU_BIN_TRACER_LOG``, See: :doc:`../frameworks/other/index`
+   ``NGRAPH_CPU_DEBUG_TRACER``, See also :ref:`debug_tracer`
+   ``NGRAPH_CPU_TRACER_LOG``, See also :ref:`debug_tracer`
+   ``NGRAPH_CPU_BIN_TRACER_LOG``, See also :ref:`debug_tracer`
    ``NGRAPH_CPU_USE_REF_KERNELS``, 
    ``OMP_NUM_THREADS``, See `OpenMPI Runtime Library Documentation`_
-   ``NGRAPH_INTRA_OP_PARALLELISM``, See: :doc:`../frameworks/other/index` 
-   ``NGRAPH_INTER_OP_PARALLELISM``, See: :doc:`../frameworks/other/index`
+   ``NGRAPH_INTRA_OP_PARALLELISM``, See also :ref:`interop_intraop`
+   ``NGRAPH_INTER_OP_PARALLELISM``, See also :ref:`interop_intraop`
    ``NGRAPH_CPU_EIGEN_THREAD_COUNT``,
    ``NGRAPH_CPU_CHECK_PARMS_AND_CONSTS``,
    ``NGRAPH_CPU_NAN_CHECK``,
@@ -104,6 +104,65 @@ Environment Variables
    ``NGRAPH_DECONV_FUSE``, "Default ``FALSE``; when ``TRUE`` it enables fusion for deconvolution.  Only available with CPU."
    ``NGRAPH_PASS_CPU_LAYOUT_ELTWISE``,
 
+
+
+.. _debug_tracer:
+
+Debug Tracer
+------------
+
+Another diagnostic configuration option is to activate ``NGRAPH_CPU_DEBUG_TRACER``,
+a runtime environment variable that supports extra logging and debug detail. 
+
+This is a useful tool for data scientists interested in outputs from logtrace 
+files that can, for example, help in tracking down model convergences. It can 
+also help engineers who might want to add their new ``Backend`` to an existing 
+framework to compare intermediate tensors/values to references from a CPU 
+backend.
+
+To activate this tool, set the ``env`` var ``NGRAPH_CPU_DEBUG_TRACER=1``.
+It will dump ``trace_meta.log`` and ``trace_bin_data.log``. The names of the 
+logfiles can be customized.
+
+To specify the names of logs with those flags:
+
+:: 
+
+  NGRAPH_TRACER_LOG = "meta.log"
+  NGRAPH_BIN_TRACER_LOG = "bin.log"
+
+
+.. _interop_intraop:
+
+Intra-op and inter-op parallelism
+---------------------------------
+
+* ``intra_op_parallelism_threads``
+* ``inter_op_parallelism_threads``
+
+Some frameworks, like TensorFlow\*, use these settings to improve performance; 
+however, they are often not sufficient for optimal performance. Framework-based 
+adjustments cannot access the underlying NUMA configuration in multi-socket 
+Intel® Xeon® processor-based platforms, which is a key requirement for 
+many kinds of inference-engine computations. See the next section on NUMA 
+performance to learn more about this performance feature available to systems 
+utilizing nGraph. 
+   
+
+The meta_log contains::
+ 
+  kernel_name, serial_number_of_op, tensor_id, symbol_of_in_out, num_elements, shape, binary_data_offset, mean_of_tensor, variance_of_tensor
+
+A line example from a unit-test might look like::
+
+  K=Add S=0 TID=0_0 >> size=4 Shape{2, 2} bin_data_offset=8 mean=1.5 var=1.25
+
+The binary_log line contains::
+
+  tensor_id, binary data (tensor data)
+
+A reference for the implementation of parsing these logfiles can also be found 
+in the unit test for this feature.
 
 
 .. _pass config: https://github.com/NervanaSystems/ngraph/blob/a4a3031bb40f19ec28704f76de39762e1f27e031/src/ngraph/pass/pass_config.cpp#L54

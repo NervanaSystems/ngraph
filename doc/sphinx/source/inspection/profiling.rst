@@ -61,3 +61,20 @@ run and re-run with ``nbench`` to efficiently experiment with any
 changes in ``ngraph`` space; developers can make changes and test 
 changes without the overhead of a complete end-to-end compilation 
 for each change.
+
+Find or display version
+-----------------------
+
+If you're working with the :doc:`../../python_api/index`, the following command 
+may be useful:
+
+.. code-block:: console
+
+   python3 -c "import ngraph as ng; print('nGraph version: ',ng.__version__)";
+
+To manually build a newer version than is available from the latest `PyPI`_
+(:abbr:`Python Package Index (PyPI)`), see our nGraph Python API `BUILDING.md`_ 
+documentation.
+
+
+.. _BUILDING.md: https://github.com/NervanaSystems/ngraph/blob/master/python/BUILDING.md
