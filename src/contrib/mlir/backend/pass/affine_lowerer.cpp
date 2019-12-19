@@ -1271,7 +1271,7 @@ namespace
         // Steps
         auto steps = vLHS.getSteps();
         // element type of the operand
-        Type elemTy = result->getType().dyn_cast<MemRefType>().getElementType();
+        Type elemTy = result->getType().cast<MemRefType>().getElementType();
         AffineLoopNestBuilder(pivs, lbs, ubs, steps)(
             // single stmt body
             [&] {
