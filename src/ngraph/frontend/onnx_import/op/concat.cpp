@@ -20,7 +20,7 @@
 #include "default_opset.hpp"
 #include "exceptions.hpp"
 #include "ngraph/op/concat.hpp"
-#include "utils/common.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -34,10 +34,10 @@ namespace ngraph
                 {
                     NodeVector inputs{node.get_ng_inputs()};
                     std::int64_t axis = node.get_attribute_value<std::int64_t>("axis");
-                    size_t valid_axis =
-                        common::validate_axis(node, axis, inputs.at(0)->get_shape().size());
+                    const auto normalized_axis = ngraph::normalize_axis(
+                        node.get_description(), axis, inputs.at(0)->get_shape().size());
 
-                    return {std::make_shared<default_opset::Concat>(inputs, valid_axis)};
+                    return {std::make_shared<default_opset::Concat>(inputs, normalized_axis)};
                 }
 
             } // namespace set_1

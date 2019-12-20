@@ -24,7 +24,7 @@
 #include "ngraph/builder/norm.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/opsets/opset0.hpp"
-#include "utils/common.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -39,14 +39,14 @@ namespace ngraph
                     const std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
                     std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
                     const std::int64_t p_norm{node.get_attribute_value<std::int64_t>("p", 2)};
-                    std::size_t valid_axis =
-                        common::validate_axis(node, axis, data->get_shape().size());
+                    const size_t normalize_axis = ngraph::normalize_axis(
+                        node.get_description(), axis, data->get_shape().size());
 
                     ASSERT_VALID_ARGUMENT(node, p_norm == 1 || p_norm == 2)
                         << "Invalid `p` attribute value: " << p_norm
                         << "Only normalization of 1st or 2nd order is supported.";
 
-                    const AxisSet reduction_axes{valid_axis};
+                    const AxisSet reduction_axes{normalize_axis};
                     std::shared_ptr<ngraph::Node> norm = ngraph::builder::lp_norm(
                         data, reduction_axes, static_cast<std::size_t>(p_norm));
                     norm = std::make_shared<ngraph::opset0::Broadcast>(
