@@ -16,8 +16,6 @@
 #include <memory>
 #include <numeric>
 
-#include "ngraph/builder/matmul_factory.hpp"
-#include "ngraph/builder/reshape.hpp"
 #include "ngraph/frontend/fluid/operators/matmul.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/dot.hpp"
