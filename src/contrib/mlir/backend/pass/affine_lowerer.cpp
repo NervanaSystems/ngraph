@@ -163,18 +163,18 @@ namespace
                                PatternRewriter& rewriter,
                                DialectLoweringPass& pass);
 
-    // Generates a convolution kernel that can be used to generate single or 
-    // group convolution. It can handle filters where C_OUT dim includes 
-    // all groups, or if groups is an additional dimension before C_OUT. 
+    // Generates a convolution kernel that can be used to generate single or
+    // group convolution. It can handle filters where C_OUT dim includes
+    // all groups, or if groups is an additional dimension before C_OUT.
     //
-    // For single convolution, the default variables do not 
-    // have to be specific and will be auto-deduced from the input shapes. 
+    // For single convolution, the default variables do not
+    // have to be specific and will be auto-deduced from the input shapes.
     //
-    // For group convolution, the caller has to generate the outter loop 
+    // For group convolution, the caller has to generate the outter loop
     // over the number of groups. It will also generate the bounds on the
-    // C_IN and C_OUT dimensions. It will pass the bounds and IV of the outter 
+    // C_IN and C_OUT dimensions. It will pass the bounds and IV of the outter
     // loop as follows:
-    //    
+    //
     // cLb/Ub : Values representing bounds on channel dim in image (C_IN)
     // kLb/Ub : Values representing bounds on numFilters dim in filters (C_OUT)
     // gId    : Value representing induction variable for the outter loop
@@ -971,11 +971,10 @@ namespace
 
         NGRAPH_CHECK(groupsInFilters || filtersShape[0] % groups == 0,
                      "Filters dim is not divisible by number of groups");
-        
 
         auto channelGroupSize = intrinsics::constant_index(imagesShape[1] / groups);
-        auto filtersGroupSize = intrinsics::constant_index(groupsInFilters ? filtersShape[1] : filtersShape[0] / groups);
-        
+        auto filtersGroupSize = intrinsics::constant_index(
+            groupsInFilters ? filtersShape[1] : filtersShape[0] / groups);
 
         NGRAPH_CHECK(!groupsInFilters || groups == filtersShape[0]);
 
@@ -998,8 +997,7 @@ namespace
                              cUb,
                              kLb,
                              kUb,
-                             iv
-                            );
+                             iv);
         });
         rewriter.replaceOp(op, {result});
         return matchSuccess();
@@ -1247,7 +1245,7 @@ namespace
     {
         // Let Images shape be  [N, C_IN, D_1, ... D_f]
         // Let Filters shape be [C_OUT, C_IN, F_1, ... F_f]
-        //      (or [GROUPS, C_OUT, C_IN, F_1, ... F_f] in case of 
+        //      (or [GROUPS, C_OUT, C_IN, F_1, ... F_f] in case of
         //       group convolution with groups in filters shape)
         // Output shape will be [N, C_OUT, R_1, ..R_f]
         //   where R_i = (AdjD_i - AdjF_i + 1) / Strides[i]
@@ -1323,7 +1321,7 @@ namespace
         bool groupConvolution = (kLb != nullptr);
 
         // Number of groups can be in filters shape only with group convolution
-        NGRAPH_CHECK( !groupsInFilters || 
+        NGRAPH_CHECK(!groupsInFilters ||
                      (kLb != nullptr && kUb != nullptr && cLb != nullptr && cUb != nullptr));
 
         // Bounds on number of filters
@@ -1335,20 +1333,21 @@ namespace
             {
                 // use entire dim size if groups are out of the num filters dim
                 numFiltersLb = vFilters.lb(1);
-                numFiltersUb = vFilters.ub(1);    
-            } else
+                numFiltersUb = vFilters.ub(1);
+            }
+            else
             {
                 // use split dim within bounds generated in outter loop
                 numFiltersLb = ValueHandle(kLb);
-                numFiltersUb = ValueHandle(kUb);       
+                numFiltersUb = ValueHandle(kUb);
             }
-        } 
-        else 
+        }
+        else
         {
             numFiltersLb = vFilters.lb(0);
             numFiltersUb = vFilters.ub(0);
         }
-         
+
         // determine where spatial index starts in filters
         int filtersSpatialIdx = 2;
         const int imgSpatialIdx = 2;
@@ -1387,7 +1386,8 @@ namespace
             }
         }
 
-        NGRAPH_CHECK((groupConvolution && groupsInFilters) || (vImages.rank() == vFilters.rank()), "Images and Filters have unequal ranks");
+        NGRAPH_CHECK((groupConvolution && groupsInFilters) || (vImages.rank() == vFilters.rank()),
+                     "Images and Filters have unequal ranks");
         NGRAPH_CHECK(resSpatialLbs.size() == resSpatialUbs.size() &&
                          resSpatialLbs.size() == spatialRank,
                      "Results spatial dims mismatches input");
@@ -1500,7 +1500,7 @@ namespace
                         {
                             resIndices.push_back(k);
                         }
-                        
+
                         resIndices.insert(
                             resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
                         // Filters spatial loop
@@ -1518,16 +1518,17 @@ namespace
                                 imgIndices.push_back(
                                     IndexHandle(imgStartIndices[i] + filtersSpatialIndices[i]));
                             }
-                            
+
                             // Filter indices
-                            
+
                             // If we are doing group convolution and filters shape dim0
-                            // holds the number of groups, we need to use group id as the first index
+                            // holds the number of groups, we need to use group id as the first
+                            // index
                             if (groupConvolution && groupsInFilters)
                             {
                                 filtersIndices.push_back(IndexHandle(gId));
                             }
-                            
+
                             filtersIndices.push_back(k);
                             // subtract lower bound of channel
                             // if we are doing group convolution this bound will advance based
