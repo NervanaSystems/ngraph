@@ -1866,6 +1866,335 @@ TEST(constant_folding, constant_v1_select)
     ASSERT_EQ(values_expected, values_out);
 }
 
+TEST(constant_folding, constant_v1_split)
+{
+    vector<float> data{.1f, .2f, .3f, .4f, .5f, .6f};
+    const auto const_data = op::Constant::create(element::f32, Shape{data.size()}, data);
+    const auto const_axis = op::Constant::create(element::i64, Shape{}, {0});
+    const auto num_splits = 3;
+
+    auto split_v1 = make_shared<op::v1::Split>(const_data, const_axis, num_splits);
+    auto f = make_shared<Function>(split_v1->outputs(), ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Split>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), num_splits);
+
+    auto res1 = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto res2 = as_type_ptr<op::Constant>(f->get_results().at(1)->get_argument(0));
+    auto res3 = as_type_ptr<op::Constant>(f->get_results().at(2)->get_argument(0));
+    ASSERT_TRUE(res1);
+    ASSERT_TRUE(res2);
+    ASSERT_TRUE(res3);
+
+    auto res1_values = res1->get_vector<float>();
+    ASSERT_TRUE(test::all_close_f(vector<float>(data.begin(), data.begin() + 2), res1_values));
+    auto res2_values = res2->get_vector<float>();
+    ASSERT_TRUE(test::all_close_f(vector<float>(data.begin() + 2, data.begin() + 4), res2_values));
+    auto res3_values = res3->get_vector<float>();
+    ASSERT_TRUE(test::all_close_f(vector<float>(data.begin() + 4, data.end()), res3_values));
+}
+
+TEST(constant_folding, constant_v1_split_axis_1_4_splits)
+{
+    vector<int64_t> data{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+
+                         16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+
+                         32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+                         48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63};
+
+    const auto const_data = op::Constant::create(element::i64, Shape{4, 4, 4}, data);
+    const auto const_axis = op::Constant::create(element::i64, Shape{}, {1});
+    const auto num_splits = 4;
+
+    auto split_v1 = make_shared<op::v1::Split>(const_data, const_axis, num_splits);
+    auto f = make_shared<Function>(split_v1->outputs(), ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Split>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), num_splits);
+
+    auto res1 = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto res2 = as_type_ptr<op::Constant>(f->get_results().at(1)->get_argument(0));
+    auto res3 = as_type_ptr<op::Constant>(f->get_results().at(2)->get_argument(0));
+    auto res4 = as_type_ptr<op::Constant>(f->get_results().at(3)->get_argument(0));
+    ASSERT_TRUE(res1);
+    ASSERT_TRUE(res2);
+    ASSERT_TRUE(res3);
+    ASSERT_TRUE(res4);
+
+    auto res1_values = res1->get_vector<int64_t>();
+    ASSERT_EQ(vector<int64_t>({0, 1, 2, 3, 16, 17, 18, 19, 32, 33, 34, 35, 48, 49, 50, 51}),
+              res1_values);
+    auto res2_values = res2->get_vector<int64_t>();
+    ASSERT_EQ(vector<int64_t>({4, 5, 6, 7, 20, 21, 22, 23, 36, 37, 38, 39, 52, 53, 54, 55}),
+              res2_values);
+    auto res3_values = res3->get_vector<int64_t>();
+    ASSERT_EQ(vector<int64_t>({8, 9, 10, 11, 24, 25, 26, 27, 40, 41, 42, 43, 56, 57, 58, 59}),
+              res3_values);
+    auto res4_values = res4->get_vector<int64_t>();
+    ASSERT_EQ(vector<int64_t>({12, 13, 14, 15, 28, 29, 30, 31, 44, 45, 46, 47, 60, 61, 62, 63}),
+              res4_values);
+}
+
+TEST(constant_folding, constant_v1_split_axis_1_2_splits)
+{
+    vector<int64_t> data{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+
+                         16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+
+                         32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+                         48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63};
+
+    const auto const_data = op::Constant::create(element::i64, Shape{4, 4, 4}, data);
+    const auto const_axis = op::Constant::create(element::i64, Shape{}, {1});
+    const auto num_splits = 2;
+
+    auto split_v1 = make_shared<op::v1::Split>(const_data, const_axis, num_splits);
+    auto f = make_shared<Function>(split_v1->outputs(), ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Split>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), num_splits);
+
+    auto res1 = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto res2 = as_type_ptr<op::Constant>(f->get_results().at(1)->get_argument(0));
+    ASSERT_TRUE(res1);
+    ASSERT_TRUE(res2);
+
+    auto res1_values = res1->get_vector<int64_t>();
+    ASSERT_EQ(vector<int64_t>({0,  1,  2,  3,  4,  5,  6,  7,  16, 17, 18, 19, 20, 21, 22, 23,
+                               32, 33, 34, 35, 36, 37, 38, 39, 48, 49, 50, 51, 52, 53, 54, 55}),
+              res1_values);
+    auto res2_values = res2->get_vector<int64_t>();
+    ASSERT_EQ(vector<int64_t>({8,  9,  10, 11, 12, 13, 14, 15, 24, 25, 26, 27, 28, 29, 30, 31,
+                               40, 41, 42, 43, 44, 45, 46, 47, 56, 57, 58, 59, 60, 61, 62, 63}),
+              res2_values);
+}
+
+TEST(constant_folding, constant_v1_variadic_split_axis_1_2_splits)
+{
+    vector<int64_t> data{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+
+                         16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+
+                         32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+                         48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63};
+
+    const auto const_data = op::Constant::create(element::i64, Shape{4, 4, 4}, data);
+    const auto const_axis = op::Constant::create(element::i16, Shape{}, {1});
+    vector<int64_t> values_lengths{3, 1};
+    auto constant_lengths =
+        make_shared<op::Constant>(element::i64, Shape{values_lengths.size()}, values_lengths);
+
+    auto variadic_split_v1 =
+        make_shared<op::v1::VariadicSplit>(const_data, const_axis, constant_lengths);
+    auto f = make_shared<Function>(variadic_split_v1->outputs(), ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::VariadicSplit>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), values_lengths.size());
+
+    auto res1 = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto res2 = as_type_ptr<op::Constant>(f->get_results().at(1)->get_argument(0));
+    ASSERT_TRUE(res1);
+    ASSERT_TRUE(res2);
+
+    auto res1_values = res1->get_vector<int64_t>();
+    ASSERT_EQ(vector<int64_t>({0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 16, 17, 18, 19,
+                               20, 21, 22, 23, 24, 25, 26, 27, 32, 33, 34, 35, 36, 37, 38, 39,
+                               40, 41, 42, 43, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59}),
+              res1_values);
+    auto res2_values = res2->get_vector<int64_t>();
+    ASSERT_EQ(vector<int64_t>({12, 13, 14, 15, 28, 29, 30, 31, 44, 45, 46, 47, 60, 61, 62, 63}),
+              res2_values);
+}
+
+TEST(constant_folding, constant_v1_variadic_split_axis_1_3_splits_neg_length)
+{
+    vector<int64_t> data{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+
+                         16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+
+                         32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+                         48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63};
+
+    const auto const_data = op::Constant::create(element::i64, Shape{4, 4, 4}, data);
+    const auto const_axis = op::Constant::create(element::i32, Shape{}, {1});
+    vector<int64_t> values_lengths{1, 1, -1};
+    auto constant_lengths =
+        make_shared<op::Constant>(element::i64, Shape{values_lengths.size()}, values_lengths);
+
+    auto variadic_split_v1 =
+        make_shared<op::v1::VariadicSplit>(const_data, const_axis, constant_lengths);
+    auto f = make_shared<Function>(variadic_split_v1->outputs(), ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::VariadicSplit>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), values_lengths.size());
+
+    auto res1 = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto res2 = as_type_ptr<op::Constant>(f->get_results().at(1)->get_argument(0));
+    auto res3 = as_type_ptr<op::Constant>(f->get_results().at(2)->get_argument(0));
+    ASSERT_TRUE(res1);
+    ASSERT_TRUE(res2);
+    ASSERT_TRUE(res3);
+
+    auto res1_values = res1->get_vector<int64_t>();
+    ASSERT_EQ(vector<int64_t>({0, 1, 2, 3, 16, 17, 18, 19, 32, 33, 34, 35, 48, 49, 50, 51}),
+              res1_values);
+    auto res2_values = res2->get_vector<int64_t>();
+    ASSERT_EQ(vector<int64_t>({4, 5, 6, 7, 20, 21, 22, 23, 36, 37, 38, 39, 52, 53, 54, 55}),
+              res2_values);
+    auto res3_values = res3->get_vector<int64_t>();
+    ASSERT_EQ(vector<int64_t>({8,  9,  10, 11, 12, 13, 14, 15, 24, 25, 26, 27, 28, 29, 30, 31,
+                               40, 41, 42, 43, 44, 45, 46, 47, 56, 57, 58, 59, 60, 61, 62, 63}),
+              res3_values);
+}
+
+TEST(constant_folding, constant_v1_one_hot)
+{
+    vector<int64_t> indices{0, 1, 2};
+    float16 on_value = 1.123f;
+    float16 off_value = 0.321f;
+
+    const auto indices_const = op::Constant::create(element::i64, Shape{3}, indices);
+    const auto depth_const = op::Constant::create(element::i64, Shape{}, {3});
+    const auto on_const = op::Constant::create(element::f16, Shape{}, {on_value});
+    const auto off_const = op::Constant::create(element::f16, Shape{}, {off_value});
+    int64_t axis = 1;
+
+    auto one_hot_v1 =
+        make_shared<op::v1::OneHot>(indices_const, depth_const, on_const, off_const, axis);
+    auto f = make_shared<Function>(one_hot_v1, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::OneHot>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto res = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(res);
+
+    ASSERT_EQ((Shape{3, 3}), res->get_output_shape(0));
+    ASSERT_EQ(vector<float16>({on_value,
+                               off_value,
+                               off_value,
+                               off_value,
+                               on_value,
+                               off_value,
+                               off_value,
+                               off_value,
+                               on_value}),
+              res->get_vector<float16>());
+}
+
+TEST(constant_folding, constant_v1_one_hot_negative_axes)
+{
+    vector<int64_t> indices{0, 2, -1, 1};
+    int16_t on_value = 4;
+    int16_t off_value = 1;
+
+    const auto indices_const = op::Constant::create(element::i64, Shape{4}, indices);
+    const auto depth_const = op::Constant::create(element::i64, Shape{}, {3});
+    const auto on_const = op::Constant::create(element::i16, Shape{}, {on_value});
+    const auto off_const = op::Constant::create(element::i16, Shape{}, {off_value});
+    int64_t axis = -1;
+
+    auto one_hot_v1 =
+        make_shared<op::v1::OneHot>(indices_const, depth_const, on_const, off_const, axis);
+    auto f = make_shared<Function>(one_hot_v1, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::OneHot>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto res = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(res);
+
+    ASSERT_EQ((Shape{4, 3}), res->get_output_shape(0));
+    ASSERT_EQ(vector<int16_t>({on_value,
+                               off_value,
+                               off_value,
+                               off_value,
+                               off_value,
+                               on_value,
+                               off_value,
+                               off_value,
+                               off_value,
+                               off_value,
+                               on_value,
+                               off_value}),
+              res->get_vector<int16_t>());
+}
+
+TEST(constant_folding, constant_v1_one_hot_negative_axes_2)
+{
+    vector<int64_t> indices{0, 2, 1, -1};
+    auto on_value = true;
+    auto off_value = false;
+
+    const auto indices_const = op::Constant::create(element::i64, Shape{2, 2}, indices);
+    const auto depth_const = op::Constant::create(element::i64, Shape{}, {3});
+    const auto on_const = op::Constant::create(element::boolean, Shape{}, {on_value});
+    const auto off_const = op::Constant::create(element::boolean, Shape{}, {off_value});
+    int64_t axis = -1;
+
+    auto one_hot_v1 =
+        make_shared<op::v1::OneHot>(indices_const, depth_const, on_const, off_const, axis);
+    auto f = make_shared<Function>(one_hot_v1, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::OneHot>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto res = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(res);
+
+    ASSERT_EQ((Shape{2, 2, 3}), res->get_output_shape(0));
+    ASSERT_EQ(vector<bool>({on_value,
+                            off_value,
+                            off_value,
+                            off_value,
+                            off_value,
+                            on_value,
+                            off_value,
+                            on_value,
+                            off_value,
+                            off_value,
+                            off_value,
+                            off_value}),
+              res->get_vector<bool>());
+}
+
 TEST(constant_folding, pass_property)
 {
     auto pass = std::make_shared<ngraph::pass::ConstantFolding>();

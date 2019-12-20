@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #*****************************************************************************
+"""Lit runner configuration."""
 
 import lit.formats
 from lit.llvm import llvm_config
