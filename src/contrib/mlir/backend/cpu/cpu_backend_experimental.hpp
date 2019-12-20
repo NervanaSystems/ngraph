@@ -23,6 +23,11 @@
 
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
 
+namespace mlir
+{
+    class MemRefDescriptor;
+}
+
 namespace ngraph
 {
     namespace runtime
@@ -48,6 +53,23 @@ namespace ngraph
                     mlir::FunctionType type,
                     bool isVariadic,
                     mlir::LLVMTypeConverter::SignatureConversion& result) override;
+
+                /// Create a DefaultMemRefDescriptor object for 'value'.
+                std::unique_ptr<mlir::MemRefDescriptor>
+                    createMemRefDescriptor(mlir::Value* value) override;
+
+                /// Builds IR creating a nullptr value of the descriptor type.
+                std::unique_ptr<mlir::MemRefDescriptor>
+                    buildMemRefDescriptor(mlir::OpBuilder& builder,
+                                          mlir::Location loc,
+                                          mlir::Type descriptorType) override;
+                /// Builds IR creating a MemRef descriptor that represents `type` and populates it
+                /// with static shape and stride information extracted from the type.
+                std::unique_ptr<mlir::MemRefDescriptor>
+                    buildStaticMemRefDescriptor(mlir::OpBuilder& builder,
+                                                mlir::Location loc,
+                                                mlir::MemRefType type,
+                                                mlir::Value* memory) override;
 
             private:
                 mlir::Type convertMemRefType(mlir::MemRefType type);

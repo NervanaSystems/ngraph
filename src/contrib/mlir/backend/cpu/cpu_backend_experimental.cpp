@@ -87,6 +87,64 @@ namespace
         }
     };
 
+    class CustomMemRefDescriptor : public MemRefDescriptor
+    {
+    public:
+        /// Construct a helper for the given descriptor value.
+        explicit CustomMemRefDescriptor(Value* descriptor)
+            : value(descriptor){};
+
+        Value* getValue() override { return value; }
+
+        /// Builds IR extracting the allocated pointer from the descriptor.
+        Value* allocatedPtr(OpBuilder& builder, Location loc) override { return value; };
+        /// Builds IR inserting the allocated pointer into the descriptor.
+        void setAllocatedPtr(OpBuilder& builder, Location loc, Value* ptr) override
+        {
+            value = ptr;
+        };
+
+        /// Builds IR extracting the aligned pointer from the descriptor.
+        Value* alignedPtr(OpBuilder& builder, Location loc) override { return value; };
+
+        /// Builds IR inserting the aligned pointer into the descriptor.
+        void setAlignedPtr(OpBuilder& builder, Location loc, Value* ptr) override{};
+
+        /// Builds IR extracting the offset from the descriptor.
+        Value* offset(OpBuilder& builder, Location loc) override { return nullptr; };
+
+        /// Builds IR inserting the offset into the descriptor.
+        void setOffset(OpBuilder& builder, Location loc, Value* offset) override{};
+
+        void setConstantOffset(OpBuilder& builder, Location loc, uint64_t offset) override{};
+
+        /// Builds IR extracting the pos-th size from the descriptor.
+        Value* size(OpBuilder& builder, Location loc, unsigned pos) override { return nullptr; };
+
+        /// Builds IR inserting the pos-th size into the descriptor
+        void setSize(OpBuilder& builder, Location loc, unsigned pos, Value* size) override{};
+        void setConstantSize(OpBuilder& builder,
+                             Location loc,
+                             unsigned pos,
+                             uint64_t size) override{};
+
+        /// Builds IR extracting the pos-th size from the descriptor.
+        Value* stride(OpBuilder& builder, Location loc, unsigned pos) override { return nullptr; };
+
+        /// Builds IR inserting the pos-th stride into the descriptor
+        void setStride(OpBuilder& builder, Location loc, unsigned pos, Value* stride) override{};
+        void setConstantStride(OpBuilder& builder,
+                               Location loc,
+                               unsigned pos,
+                               uint64_t stride) override{};
+
+        /// Returns the (LLVM) type this descriptor points to.
+        LLVM::LLVMType getElementType() override { return value->getType().cast<LLVM::LLVMType>(); }
+
+    private:
+        Value* value;
+    };
+
 } // namespace
 
 /// Custom Std-to-LLVM type converter that overrides `convertType` and `convertFunctionSignature`
@@ -150,13 +208,43 @@ Type CustomLLVMTypeConverter::convertMemRefType(MemRefType type)
     return ptrTy;
 }
 
+/// Create a CustomMemRefDescriptor object for 'value'.
+std::unique_ptr<MemRefDescriptor> CustomLLVMTypeConverter::createMemRefDescriptor(Value* value)
+{
+    return std::make_unique<CustomMemRefDescriptor>(value);
+}
+
+/// Create a CustomMemRefDescriptor object for an uninitialized descriptor (nullptr value). No new
+/// IR is needed for such initialization.
+std::unique_ptr<MemRefDescriptor> CustomLLVMTypeConverter::buildMemRefDescriptor(
+    OpBuilder& builder, Location loc, Type descriptorType)
+{
+    return createMemRefDescriptor(nullptr);
+}
+
+/// Builds IR creating a MemRef descriptor that represents `type` and populates it with static shape
+/// and stride information extracted from the type.
+std::unique_ptr<MemRefDescriptor> CustomLLVMTypeConverter::buildStaticMemRefDescriptor(
+    OpBuilder& builder, Location loc, MemRefType type, Value* memory)
+{
+    assert(type.hasStaticShape() && "unexpected dynamic shape");
+    assert(type.getAffineMaps().empty() && "unexpected layout map");
+
+    auto convertedType = convertType(type);
+    assert(convertedType && "unexpected failure in memref type conversion");
+
+    auto descr = buildMemRefDescriptor(builder, loc, convertedType);
+    descr->setAllocatedPtr(builder, loc, memory);
+    return descr;
+}
+
 /// Populates 'patterns' with default LLVM conversion patterns using CustomLLVMTypeConverter and a
 /// custom conversion pattern for FuncOp which takes into account MemRef custom lowering to plain
 /// LLVM pointer.
 void ngraph::runtime::ngmlir::customPopulateStdToLLVMConversionPatterns(
     LLVMTypeConverter& converter, OwningRewritePatternList& patterns)
 {
-    mlir::populateStdToLLVMConversionPatterns<CustomMemRefDescriptor>(converter, patterns);
+    mlir::populateStdToLLVMConversionPatterns(converter, patterns);
     // Add custom FuncOp conversion pattern with higher benefit than default FuncOp conversion
     // pattern (1).
     patterns.insert<CustomFuncOpConversion>(converter, /*benefit=*/100);
