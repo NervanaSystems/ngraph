@@ -24,6 +24,7 @@
 #include "ngraph/assertion.hpp"
 
 #include <llvm/ADT/DenseSet.h>
+#include <mlir/Dialect/LoopOps/LoopOps.h>
 #include <mlir/EDSC/Builders.h>
 #include <mlir/EDSC/Helpers.h>
 #include <mlir/EDSC/Intrinsics.h>
@@ -162,19 +163,23 @@ namespace
                                PatternRewriter& rewriter,
                                DialectLoweringPass& pass);
 
-    ValueHandle lowerConvolution(Value* result,
-                                 Value* images,
-                                 Value* filters,
-                                 ArrayAttr stridesAttr,
-                                 ArrayAttr padBelowAttr,
-                                 ArrayAttr padAboveAttr,
-                                 PatternRewriter& rewriter,
-                                 DialectLoweringPass& pass,
-                                 Location loc,
-                                 Value* cLb = nullptr,
-                                 Value* cUb = nullptr, 
-                                 Value* kLb = nullptr,
-                                 Value* kUb = nullptr);
+    // Generates a convolution kernel with configurable bounds
+    // on num of filters and channels. For group convolution
+    // this will be called inside an outter loop over the number of
+    // groups, and it will computer the lower/upper bounds every iteration
+    void lowerConvolution(Value* result,
+                          Value* images,
+                          Value* filters,
+                          ArrayAttr stridesAttr,
+                          ArrayAttr padBelowAttr,
+                          ArrayAttr padAboveAttr,
+                          PatternRewriter& rewriter,
+                          DialectLoweringPass& pass,
+                          Location loc,
+                          Value* cLb = nullptr,
+                          Value* cUb = nullptr,
+                          Value* kLb = nullptr,
+                          Value* kUb = nullptr);
 
     ValueHandle createZeroConstant(mlir::Type type);
 
@@ -248,7 +253,7 @@ namespace
         // Create target that defines legal ops for nGraph dialect to be lowered to.
         ConversionTarget target(getContext());
 
-        target.addLegalDialect<AffineOpsDialect, StandardOpsDialect>();
+        target.addLegalDialect<AffineOpsDialect, StandardOpsDialect, mlir::loop::LoopOpsDialect>();
         target.addLegalOp<ModuleOp, ModuleTerminatorOp>();
         target.addDynamicallyLegalOp<FuncOp>([&](FuncOp op) {
             // FuncOp is legal only if types have been converted to Std types.
@@ -916,6 +921,68 @@ namespace
         return matchSuccess();
     }
 
+    REWRITER(NGGroupConvOp)
+    {
+        auto gConvOp = cast<NGGroupConvOp>(op);
+        ScopedContext scope(rewriter, gConvOp.getLoc());
+        // Get operands
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result, "Unexpected null result in Convolution Op");
+        Value* images = operands[0];
+        Value* filters = operands[1];
+        auto strides = gConvOp.strides();
+        auto padBelow = gConvOp.padBelow();
+        auto padAbove = gConvOp.padBelow();
+        int groups = gConvOp.groups().getSExtValue();
+
+        // create outter group convolution loop
+        // for group = 0 to groups
+        IndexHandle iv;
+
+        ValueHandle lb = intrinsics::constant_index(0);
+        ValueHandle ub = intrinsics::constant_index(groups);
+        ValueHandle step = intrinsics::constant_index(1);
+
+        auto imagesType = images->getType().cast<MemRefType>();
+        auto filtersType = filters->getType().cast<MemRefType>();
+        auto imagesShape = imagesType.getShape();
+        auto filtersShape = filtersType.getShape();
+
+        NGRAPH_CHECK(imagesType.hasStaticShape() && filtersType.hasStaticShape(),
+                     "Dynamic shapes are not supported");
+        NGRAPH_CHECK(imagesShape[1] % groups == 0,
+                     "Channel dim is not divisible by number of groups");
+        NGRAPH_CHECK(filtersShape[0] % groups == 0,
+                     "Filters dim is not divisible by number of groups");
+
+        auto channelGroupSize = intrinsics::constant_index(imagesShape[1] / groups);
+        auto filtersGroupSize = intrinsics::constant_index(filtersShape[0] / groups);
+
+        LoopBuilder::makeLoop(&iv, lb, ub, step)([&] {
+            // lower/upper bounds on image channel dim and kernels dim
+
+            auto cLb = iv * channelGroupSize;
+            auto cUb = cLb + channelGroupSize;
+
+            auto kLb = iv * filtersGroupSize;
+            auto kUb = kLb + filtersGroupSize;
+            lowerConvolution(result,
+                             images,
+                             filters,
+                             strides,
+                             padBelow,
+                             padAbove,
+                             rewriter,
+                             pass,
+                             gConvOp.getLoc(),
+                             cLb,
+                             cUb,
+                             kLb,
+                             kUb);
+        });
+        rewriter.replaceOp(op, {result});
+        return matchSuccess();
+    }
     REWRITER(NGReturnOp)
     {
         pass.insertDeallocs(rewriter);
@@ -1142,20 +1209,19 @@ namespace
         rewriter.replaceOp(op, result);
     }
 
-    ValueHandle lowerConvolution(Value* result,
-                                 Value* images,
-                                 Value* filters,
-                                 ArrayAttr stridesAttr,
-                                 ArrayAttr padBelowAttr,
-                                 ArrayAttr padAboveAttr,
-                                 PatternRewriter& rewriter,
-                                 DialectLoweringPass& pass,
-                                 Location loc, 
-                                 Value* cLb,
-                                 Value* cUb, 
-                                 Value* kLb,
-                                 Value* kUb
-                                 )
+    void lowerConvolution(Value* result,
+                          Value* images,
+                          Value* filters,
+                          ArrayAttr stridesAttr,
+                          ArrayAttr padBelowAttr,
+                          ArrayAttr padAboveAttr,
+                          PatternRewriter& rewriter,
+                          DialectLoweringPass& pass,
+                          Location loc,
+                          Value* cLb,
+                          Value* cUb,
+                          Value* kLb,
+                          Value* kUb)
     {
         // Let Images shape be  [N, C_IN, D_1, ... D_f]
         // Let Filters shape be [C_OUT, C_IN, F_1, ... F_f]
@@ -1215,7 +1281,7 @@ namespace
 
         // Bounds on batch size N
         ValueHandle batchLb = vImages.lb(0), batchUb = vImages.ub(0);
-        
+
         // Bounds on result spatial dimensions
         SmallVector<ValueHandle, 4> resSpatialLbs, resSpatialUbs;
         SmallVector<ValueHandle, 4> imgSpatialLbs, imgSpatialUbs;
@@ -1380,7 +1446,10 @@ namespace
                             }
                             // Filter indices
                             filtersIndices.push_back(k);
-                            filtersIndices.push_back(c);
+                            // subtract lower bound of channel
+                            // if we are doing group convolution this bound will advance based
+                            // on the group id. For the filters, it should always start from 0
+                            filtersIndices.push_back(IndexHandle(c - numChannelsLb));
                             filtersIndices.insert(filtersIndices.end(),
                                                   filtersSpatialIndices.begin(),
                                                   filtersSpatialIndices.end());
