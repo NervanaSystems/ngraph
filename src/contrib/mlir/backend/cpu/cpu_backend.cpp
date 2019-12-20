@@ -175,13 +175,6 @@ void MLIRCPUBackend::lowerNgDialect()
     // Apply any generic pass manager command line options.
     mlir::applyPassManagerCLOptions(pm);
 
-#if 0
-    pm.enableTiming();
-    std::function<bool(mlir::Pass *)> shouldPrintBeforePass, shouldPrintAfterPass;
-    shouldPrintBeforePass = [](mlir::Pass *) { return true; };
-    shouldPrintAfterPass = [](mlir::Pass *) { return true; };
-    pm.enableIRPrinting(shouldPrintBeforePass, shouldPrintAfterPass, true, llvm::errs());
-#endif
     if (failed(pm.run(m_module.get())))
     {
         NGRAPH_CHECK(false, "MLIR pass manager failed");
