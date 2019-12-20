@@ -77,6 +77,12 @@ elseif (APPLE)
         EXCLUDE_FROM_ALL TRUE
         )
 else()
+    if (DEFINED NGRAPH_USE_CXX_ABI)
+        set(BUILD_FLAGS "CXXFLAGS=-std=c++${NGRAPH_CXX_STANDARD} -fPIC -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI}")
+    else()
+        set(BUILD_FLAGS "CXXFLAGS=-std=c++${NGRAPH_CXX_STANDARD} -fPIC")
+    endif()
+
     ExternalProject_Add(
         ext_protobuf
         PREFIX protobuf
@@ -85,7 +91,7 @@ else()
         UPDATE_COMMAND ""
         PATCH_COMMAND ""
         CONFIGURE_COMMAND ./autogen.sh COMMAND ./configure --prefix=${EXTERNAL_PROJECTS_ROOT}/protobuf --disable-shared CXX=${CMAKE_CXX_COMPILER}
-        BUILD_COMMAND $(MAKE) "CXXFLAGS=-std=c++${NGRAPH_CXX_STANDARD} -fPIC"
+        BUILD_COMMAND $(MAKE) "${BUILD_FLAGS}"
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/download"
