@@ -42,7 +42,7 @@ namespace ngraph
 
                 AxisSet axes = lrn->get_reduction_axes();
 
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node) && axes == AxisSet{1})
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto lrn_desc = mkldnn_emitter->get_lrn_forward_desc(node);
