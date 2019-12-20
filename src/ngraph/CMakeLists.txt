@@ -711,9 +711,6 @@ endif()
 # Defines macro in C++ to load backend plugin
 target_include_directories(ngraph PUBLIC $<BUILD_INTERFACE:${NGRAPH_INCLUDE_PATH}> $<INSTALL_INTERFACE:include>)
 
-#Add an alias so that library can be used inside the build tree, e.g. when testing
-add_library(ngraph::ngraph ALIAS ngraph)
-
 if (NOT WIN32)
     find_package(Threads REQUIRED)
     target_link_libraries(ngraph PUBLIC dl Threads::Threads)
