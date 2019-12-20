@@ -263,6 +263,7 @@ void MatMulGrad::pre_validate_and_infer_types()
         get_input_partial_shape(2).is_dynamic())
     {
         set_output_type(0, input_element_type, PartialShape::dynamic());
+        set_output_type(1, input_element_type, PartialShape::dynamic());
     }
 }
 NodeVector MatMulGrad::decompose_op() const
