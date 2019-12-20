@@ -163,10 +163,21 @@ namespace
                                PatternRewriter& rewriter,
                                DialectLoweringPass& pass);
 
-    // Generates a convolution kernel with configurable bounds
-    // on num of filters and channels. For group convolution
-    // this will be called inside an outter loop over the number of
-    // groups, and it will computer the lower/upper bounds every iteration
+    // Generates a convolution kernel that can be used to generate single or 
+    // group convolution. It can handle filters where C_OUT dim includes 
+    // all groups, or if groups is an additional dimension before C_OUT. 
+    //
+    // For single convolution, the default variables do not 
+    // have to be specific and will be auto-deduced from the input shapes. 
+    //
+    // For group convolution, the caller has to generate the outter loop 
+    // over the number of groups. It will also generate the bounds on the
+    // C_IN and C_OUT dimensions. It will pass the bounds and IV of the outter 
+    // loop as follows:
+    //    
+    // cLb/Ub : Values representing bounds on channel dim in image (C_IN)
+    // kLb/Ub : Values representing bounds on numFilters dim in filters (C_OUT)
+    // gId    : Value representing induction variable for the outter loop
     void lowerConvolution(Value* result,
                           Value* images,
                           Value* filters,
@@ -179,7 +190,8 @@ namespace
                           Value* cLb = nullptr,
                           Value* cUb = nullptr,
                           Value* kLb = nullptr,
-                          Value* kUb = nullptr);
+                          Value* kUb = nullptr,
+                          Value* gId = nullptr);
 
     ValueHandle createZeroConstant(mlir::Type type);
 
@@ -935,6 +947,7 @@ namespace
         auto padAbove = gConvOp.padBelow();
         int groups = gConvOp.groups().getSExtValue();
 
+        NGRAPH_CHECK(groups > 0, "Invalid number of groups");
         // create outter group convolution loop
         // for group = 0 to groups
         IndexHandle iv;
@@ -948,22 +961,28 @@ namespace
         auto imagesShape = imagesType.getShape();
         auto filtersShape = filtersType.getShape();
 
+        // Filters shape contains num of groups ?
+        bool groupsInFilters = (filtersShape.size() != imagesShape.size());
+
         NGRAPH_CHECK(imagesType.hasStaticShape() && filtersType.hasStaticShape(),
                      "Dynamic shapes are not supported");
         NGRAPH_CHECK(imagesShape[1] % groups == 0,
                      "Channel dim is not divisible by number of groups");
-        NGRAPH_CHECK(filtersShape[0] % groups == 0,
+
+        NGRAPH_CHECK(groupsInFilters || filtersShape[0] % groups == 0,
                      "Filters dim is not divisible by number of groups");
+        
 
         auto channelGroupSize = intrinsics::constant_index(imagesShape[1] / groups);
-        auto filtersGroupSize = intrinsics::constant_index(filtersShape[0] / groups);
+        auto filtersGroupSize = intrinsics::constant_index(groupsInFilters ? filtersShape[1] : filtersShape[0] / groups);
+        
+
+        NGRAPH_CHECK(!groupsInFilters || groups == filtersShape[0]);
 
         LoopBuilder::makeLoop(&iv, lb, ub, step)([&] {
             // lower/upper bounds on image channel dim and kernels dim
-
             auto cLb = iv * channelGroupSize;
             auto cUb = cLb + channelGroupSize;
-
             auto kLb = iv * filtersGroupSize;
             auto kUb = kLb + filtersGroupSize;
             lowerConvolution(result,
@@ -978,7 +997,9 @@ namespace
                              cLb,
                              cUb,
                              kLb,
-                             kUb);
+                             kUb,
+                             iv
+                            );
         });
         rewriter.replaceOp(op, {result});
         return matchSuccess();
@@ -1221,10 +1242,13 @@ namespace
                           Value* cLb,
                           Value* cUb,
                           Value* kLb,
-                          Value* kUb)
+                          Value* kUb,
+                          Value* gId)
     {
         // Let Images shape be  [N, C_IN, D_1, ... D_f]
         // Let Filters shape be [C_OUT, C_IN, F_1, ... F_f]
+        //      (or [GROUPS, C_OUT, C_IN, F_1, ... F_f] in case of 
+        //       group convolution with groups in filters shape)
         // Output shape will be [N, C_OUT, R_1, ..R_f]
         //   where R_i = (AdjD_i - AdjF_i + 1) / Strides[i]
         //
@@ -1267,22 +1291,20 @@ namespace
         //         if(indices in non-padded region):
         //           Output[n, k, r_1, .. r_f] +=
         //             Images[n, c, i_1 + j_1, .. i_f + j_f] * Filters[k, c, j_1, .. j_f]
+
         ScopedContext scope(rewriter, loc);
         auto strides = stridesAttr.getValue();
         auto padBelow = padBelowAttr.getValue();
         auto padAbove = padBelowAttr.getValue();
         Type elemTy = images->getType().cast<MemRefType>().getElementType();
 
-        // Create view to write into result.
+        // Create views
         MemRefView vRes(result), vImages(images), vFilters(filters);
-
-        // Indexed Values
+        // Create indexed Values
         IndexedValue iRes(result), iImages(images), iFilters(filters);
-
         // Bounds on batch size N
         ValueHandle batchLb = vImages.lb(0), batchUb = vImages.ub(0);
-
-        // Bounds on result spatial dimensions
+        // Bounds on spatial dimensions
         SmallVector<ValueHandle, 4> resSpatialLbs, resSpatialUbs;
         SmallVector<ValueHandle, 4> imgSpatialLbs, imgSpatialUbs;
         SmallVector<ValueHandle, 4> filtersSpatialLbs, filtersSpatialUbs;
@@ -1296,9 +1318,44 @@ namespace
         SmallVector<int, 4> padBelowIntValues;
         bool withPadding = false;
 
+        // Do we have an extra dim for groups or is it folded in numFilters ?
+        bool groupsInFilters = (vImages.rank() != vFilters.rank());
+        bool groupConvolution = (kLb != nullptr);
+
+        // Number of groups can be in filters shape only with group convolution
+        NGRAPH_CHECK( !groupsInFilters || 
+                     (kLb != nullptr && kUb != nullptr && cLb != nullptr && cUb != nullptr));
+
         // Bounds on number of filters
-        ValueHandle numFiltersLb = (kLb == nullptr) ? vFilters.lb(0) : ValueHandle(kLb);
-        ValueHandle numFiltersUb = (kUb == nullptr) ? vFilters.ub(0) : ValueHandle(kUb);
+        ValueHandle numFiltersLb(rewriter.getIndexType());
+        ValueHandle numFiltersUb(rewriter.getIndexType());
+        if (groupConvolution)
+        {
+            if (groupsInFilters)
+            {
+                // use entire dim size if groups are out of the num filters dim
+                numFiltersLb = vFilters.lb(1);
+                numFiltersUb = vFilters.ub(1);    
+            } else
+            {
+                // use split dim within bounds generated in outter loop
+                numFiltersLb = ValueHandle(kLb);
+                numFiltersUb = ValueHandle(kUb);       
+            }
+        } 
+        else 
+        {
+            numFiltersLb = vFilters.lb(0);
+            numFiltersUb = vFilters.ub(0);
+        }
+         
+        // determine where spatial index starts in filters
+        int filtersSpatialIdx = 2;
+        const int imgSpatialIdx = 2;
+        if (groupConvolution && groupsInFilters)
+        {
+            filtersSpatialIdx = 3;
+        }
         // Bounds on number of channels
         ValueHandle numChannelsLb = (cLb == nullptr) ? vImages.lb(1) : ValueHandle(cLb);
         ValueHandle numChannelsUb = (cUb == nullptr) ? vImages.ub(1) : ValueHandle(cUb);
@@ -1306,12 +1363,12 @@ namespace
         for (auto i = 0; i < spatialRank; i++)
         {
             // result spatial bounds and steps
-            resSpatialLbs.push_back(vRes.lb(i + 2));
-            resSpatialUbs.push_back(vRes.ub(i + 2));
-            resSteps.push_back(vRes.step(i + 2));
+            resSpatialLbs.push_back(vRes.lb(imgSpatialIdx + i));
+            resSpatialUbs.push_back(vRes.ub(imgSpatialIdx + i));
+            resSteps.push_back(vRes.step(imgSpatialIdx + i));
             // image spatial bounds
-            imgSpatialLbs.push_back(vImages.lb(i + 2));
-            imgSpatialUbs.push_back(vImages.ub(i + 2));
+            imgSpatialLbs.push_back(vImages.lb(imgSpatialIdx + i));
+            imgSpatialUbs.push_back(vImages.ub(imgSpatialIdx + i));
 
             // Check if we have any padding and collect pad values
             IntegerAttr iAttr = padBelow[i].cast<IntegerAttr>();
@@ -1330,7 +1387,7 @@ namespace
             }
         }
 
-        NGRAPH_CHECK(vImages.rank() == vFilters.rank(), "Images and Filters have unequal ranks");
+        NGRAPH_CHECK((groupConvolution && groupsInFilters) || (vImages.rank() == vFilters.rank()), "Images and Filters have unequal ranks");
         NGRAPH_CHECK(resSpatialLbs.size() == resSpatialUbs.size() &&
                          resSpatialLbs.size() == spatialRank,
                      "Results spatial dims mismatches input");
@@ -1341,9 +1398,9 @@ namespace
 
         for (auto i = 0; i < spatialRank; i++)
         {
-            filtersSpatialLbs.push_back(vFilters.lb(i + 2));
-            filtersSpatialUbs.push_back(vFilters.ub(i + 2));
-            filtersSteps.push_back(vFilters.step(i + 2));
+            filtersSpatialLbs.push_back(vFilters.lb(filtersSpatialIdx + i));
+            filtersSpatialUbs.push_back(vFilters.ub(filtersSpatialIdx + i));
+            filtersSteps.push_back(vFilters.step(filtersSpatialIdx + i));
         }
 
         IntegerSet nonPaddedRange;
@@ -1394,7 +1451,16 @@ namespace
                         SmallVector<IndexHandle, 4> resIndices;
                         // Result indices
                         resIndices.push_back(n);
-                        resIndices.push_back(k);
+                        if (groupConvolution && groupsInFilters)
+                        {
+                            // compute global C_OUT from gID and k
+                            // gId * C_OUT (num of filters) + k
+                            resIndices.push_back(IndexHandle(ValueHandle(gId) * numFiltersUb + k));
+                        }
+                        else
+                        {
+                            resIndices.push_back(k);
+                        }
                         resIndices.insert(
                             resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
                         ValueHandle zero = createZeroConstant(elemTy);
@@ -1425,7 +1491,16 @@ namespace
                         SmallVector<IndexHandle, 4> resIndices;
                         // Result indices
                         resIndices.push_back(n);
-                        resIndices.push_back(k);
+                        if (groupConvolution && groupsInFilters)
+                        {
+                            // gId * C_OUT (num of filters) + k
+                            resIndices.push_back(IndexHandle(ValueHandle(gId) * numFiltersUb + k));
+                        }
+                        else
+                        {
+                            resIndices.push_back(k);
+                        }
+                        
                         resIndices.insert(
                             resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
                         // Filters spatial loop
@@ -1436,7 +1511,6 @@ namespace
                             SmallVector<IndexHandle, 4> imgIndices, filtersIndices;
                             // Image indices
                             // Here we compute the virtual start index into the padded image.
-
                             imgIndices.push_back(n);
                             imgIndices.push_back(c);
                             for (auto i = 0; i < spatialRank; i++)
@@ -1444,7 +1518,16 @@ namespace
                                 imgIndices.push_back(
                                     IndexHandle(imgStartIndices[i] + filtersSpatialIndices[i]));
                             }
+                            
                             // Filter indices
+                            
+                            // If we are doing group convolution and filters shape dim0
+                            // holds the number of groups, we need to use group id as the first index
+                            if (groupConvolution && groupsInFilters)
+                            {
+                                filtersIndices.push_back(IndexHandle(gId));
+                            }
+                            
                             filtersIndices.push_back(k);
                             // subtract lower bound of channel
                             // if we are doing group convolution this bound will advance based
