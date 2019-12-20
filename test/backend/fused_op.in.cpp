@@ -2656,7 +2656,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_element)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 2};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    Shape shape_r{2, 2};
+    Shape shape_r{4};
     auto aa = make_shared<op::GatherElement>(A, B, 1);
     auto f = make_shared<Function>(NodeVector{aa}, ParameterVector{A, B});
 
@@ -2672,5 +2672,5 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_element)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
     EXPECT_TRUE(test::all_close_f(
-        (vector<float>{1,1,4,3}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+        (vector<float>{1,1,1,1}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }

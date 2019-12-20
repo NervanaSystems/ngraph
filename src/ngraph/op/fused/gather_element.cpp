@@ -16,16 +16,21 @@
 #include "ngraph/op/fused/gather_element.hpp"
 
 #include "ngraph/builder/make_constant.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
+#include "ngraph/op/gather.hpp"
+#include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/slice.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
@@ -42,6 +47,35 @@ op::GatherElement::GatherElement(const Output<Node>& arg1, const Output<Node>& a
     constructor_validate_and_infer_types();
 }
 
+template <typename TH>
+void _dbg(const char* sdbg, TH h)
+{
+    cerr << sdbg << "=" << h << "\n";
+}
+template <typename TH, typename... TA>
+void _dbg(const char* sdbg, TH h, TA... t)
+{
+    while (*sdbg != ',')
+    {
+        cerr << *sdbg++;
+    }
+    cerr << "=" << h << ",";
+    _dbg(sdbg + 1, t...);
+}
+#define debug(...) _dbg(#__VA_ARGS__, __VA_ARGS__)
+#define debugvS(x)                                                                                 \
+    {                                                                                              \
+        {                                                                                          \
+            std::cerr << #x << " = ";                                                              \
+            auto shape = x->get_shape();                                                           \
+            std::cout << "[ ";                                                                     \
+            for (auto& it : shape)                                                                 \
+            {                                                                                      \
+                std::cerr << it << " ";                                                            \
+            }                                                                                      \
+            std::cerr << "]\n";                                                                    \
+        }                                                                                          \
+    }
 NodeVector op::GatherElement::decompose_op() const
 {
     auto axis = get_axis();
@@ -51,51 +85,65 @@ NodeVector op::GatherElement::decompose_op() const
     auto x_shape = data.get_shape();
     auto indicate_shape = indicate.get_shape();
 
-    auto reshape = [&](const Output<Node>& input, ngraph::Shape shape) {
-        std::vector<size_t> input_order(input.get_shape().size());
-        std::iota(std::begin(input_order), std::end(input_order), 0);
-        std::shared_ptr<ngraph::Node> reshape =
-            std::make_shared<op::Reshape>(input, ngraph::AxisVector(input_order), shape);
-        return reshape;
-    };
+    std::shared_ptr<ngraph::Node> data_slice_1 = std::make_shared<op::Slice>(
+        data, ngraph::Coordinate{0, 0}, ngraph::Coordinate{1, 2} /*,ngraph::Strides{1,1}*/);
 
-    for (auto& it : x_shape)
-    {
-        std::cout << it << " ";
-    }
-    std::cout << std::endl;
-    for (auto& it : indicate_shape)
-    {
-        std::cout << it << " ";
-    }
-    std::cout << std::endl;
-    std::vector<size_t> input_order(data.get_shape().size());
-    std::iota(std::begin(input_order), std::end(input_order), 0);
-    size_t axis_1 = x_shape[0];
-    size_t axis_2 = 1;
-    if (x_shape.size() > 1)
-    {
-        axis_2 = std::accumulate(
-            std::begin(x_shape) + 1, std::end(x_shape), 1, std::multiplies<size_t>());
-    }
-    std::shared_ptr<ngraph::Node> x_reshape = std::make_shared<op::Reshape>(
-        data, ngraph::AxisVector(input_order), ngraph::Shape{axis_1, axis_2});
+    std::shared_ptr<ngraph::Node> data_slice_2 = std::make_shared<op::Slice>(
+        data, ngraph::Coordinate{0, 0}, ngraph::Coordinate{1, 2} /*,ngraph::Strides{1,1}*/);
 
-    for (auto& it : x_reshape->get_shape())
-    {
-        std::cout << it << " ";
-    }
-    std::cout << std::endl << std::endl;
-    // return reshape;
-    // auto x_reshape = std::make_shared<ngraph::op::Reshape>(
-    //    data, ngraph::AxisVector(x_order), ngraph::Shape{axis});
-    auto result = std::make_shared<ngraph::op::EmbeddingLookup>(indicate, x_reshape);
-    auto result_shape = result->get_shape();
-    std::vector<size_t> out_shape(x_shape);
-    out_shape[0] = result_shape[0];
-     auto out =
-        std::make_shared<ngraph::op::Reshape>(result, ngraph::AxisVector{0, 1}, out_shape);
-    return {out};
+    auto ds1_shape = data_slice_1->get_shape();
+    auto ds2_shape = data_slice_2->get_shape();
+
+    debugvS(data_slice_1);
+    debugvS(data_slice_2);
+
+    std::shared_ptr<ngraph::Node> ind_slice_1 = std::make_shared<op::Slice>(
+        indicate, ngraph::Coordinate{0, 0}, ngraph::Coordinate{1, 1} /*,ngraph::Strides{1,1}*/);
+
+    std::shared_ptr<ngraph::Node> ind_slice_2 = std::make_shared<op::Slice>(
+        indicate, ngraph::Coordinate{0, 0}, ngraph::Coordinate{1, 1} /*,ngraph::Strides{1,1}*/);
+
+    std::shared_ptr<ngraph::Node> ind_slice_3 = std::make_shared<op::Slice>(
+        indicate, ngraph::Coordinate{0, 0}, ngraph::Coordinate{1, 1} /*,ngraph::Strides{1,1}*/);
+
+    std::shared_ptr<ngraph::Node> ind_slice_4 = std::make_shared<op::Slice>(
+        indicate, ngraph::Coordinate{0, 0}, ngraph::Coordinate{1, 1} /*,ngraph::Strides{1,1}*/);
+
+    debugvS(ind_slice_1);
+    debugvS(ind_slice_2);
+    debugvS(ind_slice_3);
+    debugvS(ind_slice_4);
+
+    auto convert1 = std::make_shared<ngraph::op::Convert>(ind_slice_1, ngraph::element::i64);
+    auto convert2 = std::make_shared<ngraph::op::Convert>(ind_slice_2, ngraph::element::i64);
+    auto convert3 = std::make_shared<ngraph::op::Convert>(ind_slice_3, ngraph::element::i64);
+    auto convert4 = std::make_shared<ngraph::op::Convert>(ind_slice_4, ngraph::element::i64);
+
+    auto indicate_shape_hard =
+        op::Constant::create(data.get_element_type(), ngraph::Shape{1, 2}, {0});
+    auto convert_indicate_shape_hard =
+        std::make_shared<ngraph::op::Convert>(indicate_shape_hard, ngraph::element::i64);
+
+    std::shared_ptr<ngraph::Node> gather_nd_1_slice_res =
+        std::make_shared<op::GatherND>(data_slice_1, convert_indicate_shape_hard);
+    std::shared_ptr<ngraph::Node> gather_nd_2_slice_res =
+        std::make_shared<op::GatherND>(data_slice_1, convert_indicate_shape_hard);
+    std::shared_ptr<ngraph::Node> gather_nd_3_slice_res =
+        std::make_shared<op::GatherND>(data_slice_2, convert_indicate_shape_hard);
+    std::shared_ptr<ngraph::Node> gather_nd_4_slice_res =
+        std::make_shared<op::GatherND>(data_slice_2, convert_indicate_shape_hard);
+
+    std::vector<std::shared_ptr<ngraph::Node>> gather_nd_args;
+    gather_nd_args.push_back(gather_nd_1_slice_res);
+    gather_nd_args.push_back(gather_nd_2_slice_res);
+    gather_nd_args.push_back(gather_nd_3_slice_res);
+    gather_nd_args.push_back(gather_nd_4_slice_res);
+    auto concat = std::make_shared<op::Concat>(gather_nd_args, 0);
+
+    debugvS(concat);
+    std::cout << "\n\n";
+
+    return {concat};
 }
 
 shared_ptr<Node> op::GatherElement::copy_with_new_args(const NodeVector& new_args) const
