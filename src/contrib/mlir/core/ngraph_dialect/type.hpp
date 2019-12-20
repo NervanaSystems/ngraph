@@ -162,8 +162,8 @@ namespace mlir
             return Base::get(context, kind);
         }
 
-        static bool kindof(unsigned kind) { return kind == NGTypeKind::NG_U8_TYPE_ID; }
-        static NGBoolType get(mlir::MLIRContext* ctx) { return get(NG_U8_TYPE_ID, ctx); }
+        static bool kindof(unsigned kind) { return kind == NGTypeKind::NG_BOOL_TYPE_ID; }
+        static NGBoolType get(mlir::MLIRContext* ctx) { return get(NG_BOOL_TYPE_ID, ctx); }
         size_t getWidth() { return 8; }
     };
 
