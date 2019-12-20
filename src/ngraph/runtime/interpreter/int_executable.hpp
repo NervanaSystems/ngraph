@@ -1888,6 +1888,7 @@ private:
         case OP_TYPEID::SpaceToDepth:
         case OP_TYPEID::SquaredDifference:
         case OP_TYPEID::Squeeze:
+        case OP_TYPEID::Stack:
         case OP_TYPEID::Unsqueeze:
         // Tensor Iterator not yet supported
         case OP_TYPEID::TensorIterator:

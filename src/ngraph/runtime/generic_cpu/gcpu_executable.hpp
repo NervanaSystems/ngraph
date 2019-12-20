@@ -1646,6 +1646,7 @@ private:
         case OP_TYPEID::Split:
         case OP_TYPEID::SquaredDifference:
         case OP_TYPEID::Squeeze:
+        case OP_TYPEID::Stack:
         // Tensor Iterator not yet supported
         case OP_TYPEID::TensorIterator:
         case OP_TYPEID::Tile:
