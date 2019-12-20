@@ -33,6 +33,7 @@ if(WIN32)
         -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG=${GTEST_OUTPUT_DIR}
         -Dgtest_force_shared_crt=TRUE
     )
+    set(GMOCK_OUTPUT_DIR ${GTEST_OUTPUT_DIR})
 endif()
 
 if(CMAKE_BUILD_TYPE)
