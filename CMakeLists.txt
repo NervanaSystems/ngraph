@@ -653,6 +653,10 @@ endif()
 
 add_subdirectory(src)
 
+if (NGRAPH_TEST_UTIL_ENABLE)
+    include(cmake/external_gtest.cmake)
+endif()
+
 add_subdirectory(test)
 add_subdirectory(doc/examples)
 
