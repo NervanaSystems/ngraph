@@ -24,6 +24,7 @@ add_subdirectory(tools/ngraph-opt)
 
 set(SRC
     backend/cpu/cpu_backend.cpp
+    backend/cpu/cpu_backend_experimental.cpp
     backend/pass/affine_lowerer.cpp
     backend/pass/memory_optimization.cpp
     core/compiler.cpp

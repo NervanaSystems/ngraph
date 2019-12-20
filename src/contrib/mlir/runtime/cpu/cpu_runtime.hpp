@@ -61,7 +61,7 @@ namespace ngraph
                 llvm::SmallVector<void*, 8> allocateMemrefArgs();
 
                 /// Helper to allocate a mem ref object. Handles static shapes only for now.
-                StaticMemRef* allocateMemrefDescriptor();
+                StaticMemRef* allocateDefaultMemrefDescriptor();
 
             private:
                 // Pointers to externally allocated memory for sub-graph's input and output tensors.

@@ -21,6 +21,7 @@
 #include "contrib/mlir/backend/pass/affine_lowerer.hpp"
 #include "contrib/mlir/backend/pass/memory_optimization.hpp"
 #include "contrib/mlir/utils.hpp"
+#include "cpu_backend_experimental.hpp"
 #include "ngraph/check.hpp"
 
 #include <llvm/ADT/STLExtras.h>
@@ -34,6 +35,7 @@
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
 #include <mlir/Dialect/LLVMIR/LLVMDialect.h>
+#include <mlir/IR/StandardTypes.h>
 #include <mlir/Pass/PassManager.h>
 #include <mlir/Target/LLVMIR.h>
 #include <mlir/Transforms/DialectConversion.h>
@@ -71,7 +73,12 @@ static llvm::cl::opt<unsigned> clLoopTilingCacheSize(
         "inferred from the host CPU using for the cache level specified by "
         "-ngraph-loop-tile-cache-level."));
 
+// *** Experimental flags ***
+
+extern llvm::cl::opt<bool> clEnableCustomMemRefLowering;
+
 using namespace ngraph::runtime::ngmlir;
+using namespace mlir;
 
 // Default optimization level.
 llvm::CodeGenOpt::Level MLIRCPUBackend::mlirOptLevel = llvm::CodeGenOpt::Level::Aggressive;
@@ -195,7 +202,17 @@ void MLIRCPUBackend::lowerNgDialect()
 void MLIRCPUBackend::lowerStandardDialect()
 {
     mlir::PassManager pm(&m_context);
-    pm.addPass(mlir::createLowerToLLVMPass());
+    if (!clEnableCustomMemRefLowering)
+    {
+        // Default lowering to LLVM.
+        pm.addPass(mlir::createLowerToLLVMPass());
+    }
+    else
+    {
+        // Custom lowering of MemRef to LLVM.
+        pm.addPass(mlir::createLowerToLLVMPass<CustomLLVMTypeConverter>(
+            customPopulateStdToLLVMConversionPatterns));
+    }
 
     // Apply any generic pass manager command line options.
     mlir::applyPassManagerCLOptions(pm);

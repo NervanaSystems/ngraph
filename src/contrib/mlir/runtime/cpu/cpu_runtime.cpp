@@ -53,6 +53,11 @@ static llvm::cl::opt<std::string>
     clObjectFilename("ngraph-mlir-object-filename",
                      llvm::cl::desc("Dump MLIR JITted-compiled object to file jitted_mlir.o"));
 
+// *** Experimental flags ***
+
+// Enable a custom memref lowering to LLVM
+extern llvm::cl::opt<bool> clEnableCustomMemRefLowering;
+
 void MLIRCPURuntime::run(void* args)
 {
     run_internal(*reinterpret_cast<std::vector<void*>*>(args));
@@ -102,9 +107,19 @@ void MLIRCPURuntime::bindArguments(std::vector<void*>& externalTensors)
     // Assign external tensor pointers to invocation arguments.
     for (size_t i = 0, numArgs = m_invokeArgs.size(); i < numArgs; ++i)
     {
-        auto* memRefArg = *(reinterpret_cast<StaticMemRef**>(m_invokeArgs[i]));
-        memRefArg->allocatedPtr = (*m_externalTensors)[i];
-        memRefArg->alignedPtr = (*m_externalTensors)[i];
+        if (!clEnableCustomMemRefLowering)
+        {
+            // Default memref lowering lowers memrefs to StaticMemRef descriptors.
+            auto* memRefArg = *(reinterpret_cast<StaticMemRef**>(m_invokeArgs[i]));
+            memRefArg->allocatedPtr = (*m_externalTensors)[i];
+            memRefArg->alignedPtr = (*m_externalTensors)[i];
+        }
+        else
+        {
+            // Custom memref lowering lowers memrefs to plain pointers to tensors.
+            auto** memRefArg = reinterpret_cast<void**>(m_invokeArgs[i]);
+            *memRefArg = (*m_externalTensors)[i];
+        }
     }
 }
 
@@ -130,12 +145,23 @@ void MLIRCPURuntime::cleanup()
     // Free void double pointer arguments without freeing external tensor data.
     for (auto* arg : m_invokeArgs)
     {
-        auto* memRefArg = *(reinterpret_cast<StaticMemRef**>(arg));
-        free(memRefArg);
-        free(arg);
+        if (!clEnableCustomMemRefLowering)
+        {
+            // Default memref lowering lowers memrefs to StaticMemRef descriptors.
+            auto* memRefArg = *(reinterpret_cast<StaticMemRef**>(arg));
+            free(memRefArg);
+            free(arg);
+        }
+        else
+        {
+            // Custom memref lowering lowers memrefs to plain pointers to tensors.
+            auto** memRefArg = reinterpret_cast<void**>(arg);
+            free(memRefArg);
+        }
     }
 }
 
+// TODO: This comment is no up-to-date.
 // The current call ABI takes a single arg pointer (argPtr) pointing to a list of args.
 // Each arg is a  pointer to a StaticMemRef which contains a data pointer
 //
@@ -148,15 +174,26 @@ SmallVector<void*, 8> MLIRCPURuntime::allocateMemrefArgs()
     SmallVector<void*, 8> args;
     for (auto i = 0; i < m_externalTensors->size(); i++)
     {
-        auto descriptor = allocateMemrefDescriptor();
-        StaticMemRef** arg = reinterpret_cast<StaticMemRef**>(malloc(sizeof(StaticMemRef*)));
-        *arg = descriptor;
-        args.push_back(arg);
+        if (!clEnableCustomMemRefLowering)
+        {
+            // Default memref lowering lowers memrefs to StaticMemRef descriptors.
+            auto descriptor = allocateDefaultMemrefDescriptor();
+            StaticMemRef** arg = reinterpret_cast<StaticMemRef**>(malloc(sizeof(StaticMemRef*)));
+            *arg = descriptor;
+            args.push_back(arg);
+        }
+        else
+        {
+            // Custom memref lowering lowers memrefs to plain pointers to tensors.
+            auto** arg = reinterpret_cast<void**>(malloc(sizeof(void**)));
+            *arg = reinterpret_cast<void*>(malloc(sizeof(void*)));
+            args.push_back(arg);
+        }
     }
     return args;
 }
 
-StaticMemRef* MLIRCPURuntime::allocateMemrefDescriptor()
+StaticMemRef* MLIRCPURuntime::allocateDefaultMemrefDescriptor()
 {
     // We only use StaticMemRef because that's what MLIR currently offers.
     // We should expand this with different types and dynamic MemRefs
