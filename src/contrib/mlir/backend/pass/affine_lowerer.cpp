@@ -202,7 +202,6 @@ namespace
         void insertDeallocs(PatternRewriter& rewriter);
 
         NGraphTypeConverter& getTypeConverter() { return typeConverter; }
-
     private:
         /// Collect a set of patterns to convert from the nGraph dialect to Affine dialect.
         void populateNGraphToAffineConversionPatterns(OwningRewritePatternList& patterns);
