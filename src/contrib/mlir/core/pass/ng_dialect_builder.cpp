@@ -250,7 +250,7 @@ mlir::Type NgDialectConversionPass::getMlirType(const element::Type& type)
     case ngraph::element::Type_t::f64: return mlir::NGFloatType::getF64(m_context);
     case ngraph::element::Type_t::i8: return mlir::NGIntegerType::getInt8(m_context);
     case ngraph::element::Type_t::u8:
-    case ngraph::element::Type_t::boolean: return mlir::NGBoolType::get(m_context);
+    case ngraph::element::Type_t::boolean: return mlir::NGIntegerType::getUInt8(m_context);
     case ngraph::element::Type_t::i16: return mlir::NGIntegerType::getInt16(m_context);
     case ngraph::element::Type_t::u16: return mlir::NGIntegerType::getInt16(m_context);
     case ngraph::element::Type_t::i32: return mlir::NGIntegerType::getInt32(m_context);

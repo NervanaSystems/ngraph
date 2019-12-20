@@ -833,7 +833,7 @@ TEST(core_fusion, softmax_crossentropy_bprop_with_ignore_mask)
 // TODO(pthoreho): MLIR currently does not support all the op's needed for CrossEntropy+Softmax
 // this results in multiple CompiledKernels and we cannot able to safely check for certain op's
 // from the function created by user.
-// Note: remove this gaurds once we have full support for CE and Softmax through MLIR
+// Note: remove this guards once we have full support for CE and Softmax through MLIR
 
 void test_softmax_crossentropy(Shape input_shape,
                                Shape label_shape,
