@@ -67,39 +67,9 @@ void op::PriorBox::validate_and_infer_types()
 
         auto layer_shape = const_shape->get_shape_val();
 
-        // Starting with 0 number of prior and then various conditions on attributes will contribute
-        // real number of prior boxes as PriorBox is a fat thing with several modes of
-        // operation that will be checked in order in the next statements.
-        size_t num_priors = 0;
-
-        // Total number of boxes around each point; depends on whether flipped boxes are included
-        // plus one box 1x1.
-        size_t total_aspect_ratios = ((m_attrs.flip ? 2 : 1) * m_attrs.aspect_ratio.size() + 1);
-
-        if(!m_attrs.min_size.empty())
-            num_priors = total_aspect_ratios * m_attrs.min_size.size();
-
-        if(!m_attrs.fixed_size.empty())
-            num_priors = total_aspect_ratios * m_attrs.fixed_size.size();
-
-        for(auto density: m_attrs.density)
-        {
-            auto rounded_density = static_cast<size_t>(density);
-            auto density_2d = (rounded_density * rounded_density - 1);
-            if(!m_attrs.fixed_ratio.empty())
-                num_priors += m_attrs.fixed_ratio.size() * density_2d;
-            else
-                num_priors += total_aspect_ratios * density_2d;
-        }
-
-        // TODO: Check whether m_attrs.max_size is really should be ignored when m_attrs.scale_all_size == False
-        //       as the spec says or it is done automatically because m_attrs_max_size is always emtpy in this case.
-        //       The following statement is executed unconditionally according to the code in OpenVINO Model Optimizer
-        //       that infer shapes for this operation.
-        num_priors += m_attrs.max_size.size();
 
         set_output_type(
-            0, element::f32, Shape{2, 4 * layer_shape[0] * layer_shape[1] * num_priors});
+            0, element::f32, Shape{2, 4 * layer_shape[0] * layer_shape[1] * number_of_priors(m_attrs)});
     }
     else
     {
@@ -111,4 +81,40 @@ shared_ptr<Node> op::PriorBox::copy_with_new_args(const NodeVector& new_args) co
 {
     check_new_args_count(this, new_args);
     return make_shared<PriorBox>(new_args.at(0), new_args.at(1), m_attrs);
+}
+
+size_t op::PriorBox::number_of_priors(const PriorBoxAttrs& attrs)
+{
+    // Starting with 0 number of prior and then various conditions on attributes will contribute
+    // real number of prior boxes as PriorBox is a fat thing with several modes of
+    // operation that will be checked in order in the next statements.
+    size_t num_priors = 0;
+
+    // Total number of boxes around each point; depends on whether flipped boxes are included
+    // plus one box 1x1.
+    size_t total_aspect_ratios = ((attrs.flip ? 2 : 1) * attrs.aspect_ratio.size() + 1);
+
+    if(!attrs.min_size.empty())
+        num_priors = total_aspect_ratios * attrs.min_size.size();
+
+    if(!attrs.fixed_size.empty())
+        num_priors = total_aspect_ratios * attrs.fixed_size.size();
+
+    for(auto density: attrs.density)
+    {
+        auto rounded_density = static_cast<size_t>(density);
+        auto density_2d = (rounded_density * rounded_density - 1);
+        if(!attrs.fixed_ratio.empty())
+            num_priors += attrs.fixed_ratio.size() * density_2d;
+        else
+            num_priors += total_aspect_ratios * density_2d;
+    }
+
+    // TODO: Check whether attrs.max_size is really should be ignored when attrs.scale_all_size == False
+    //       as the spec says or it is done automatically because attrs_max_size is always emtpy in this case.
+    //       The following statement is executed unconditionally according to the code in OpenVINO Model Optimizer
+    //       that infer shapes for this operation.
+    num_priors += attrs.max_size.size();
+
+    return num_priors;
 }
