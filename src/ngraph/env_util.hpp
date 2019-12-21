@@ -29,8 +29,8 @@ namespace ngraph
     /// \brief Get the names environment variable as an integer. If the value is not a
     ///        valid integer then an exception is thrown.
     /// \param env_var The string name of the environment variable to get.
-    /// \return Returns value or -1 if the environment
-    ///         variable is not set.
+    /// \param default_value The value to return if the environment variable is not set.
+    /// \return Returns value or default_value if the environment variable is not set.
     int32_t getenv_int(const char* env_var, int32_t default_value = -1);
 
     /// \brief Get the names environment variable as a boolean. If the value is not a
