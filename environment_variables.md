@@ -1,6 +1,7 @@
 # Environment Variables
 
 | Name | Default | Description |
+| ------------------------------------|:---:| --- |
 | NGRAPH_CODEGEN | |
 | NGRAPH_COMPILER_DEBUGINFO_ENABLE | |
 | NGRAPH_COMPILER_DIAG_ENABLE | |
