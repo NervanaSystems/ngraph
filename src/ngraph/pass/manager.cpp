@@ -139,8 +139,8 @@ void pass::Manager::run_passes(shared_ptr<Function> func, bool /* transitive */)
 
             if (m_visualize)
             {
-                auto format = std::getenv("NGRAPH_VISUALIZE_TRACING_FORMAT");
-                auto file_ext = format ? std::string(format) : std::string("svg");
+                static const string format = getenv_string("NGRAPH_VISUALIZE_TRACING_FORMAT");
+                auto file_ext = format.empty() ? "svg" : format;
                 pass::VisualizeTree vt(base_filename + std::string(".") + file_ext);
                 vt.set_ops_to_details(get_state().get_visualize_tree_ops_map());
                 vt.run_on_module(f_array);

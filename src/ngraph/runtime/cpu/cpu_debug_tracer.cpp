@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cpu/cpu_debug_tracer.hpp"
+#include "ngraph/env_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -22,8 +23,8 @@ using namespace ngraph;
 runtime::cpu::CPU_DebugTracer::CPU_DebugTracer()
     : m_serial_number(0)
 {
-    static const auto debug_t = std::getenv("NGRAPH_CPU_DEBUG_TRACER");
-    if (debug_t != nullptr)
+    static const bool debug_t = getenv_bool("NGRAPH_CPU_DEBUG_TRACER");
+    if (debug_t)
     {
         m_enable_tracing = true;
 
@@ -38,15 +39,15 @@ void runtime::cpu::CPU_DebugTracer::init_streams()
         return;
     }
 
-    static auto trace_file_path = std::getenv("NGRAPH_CPU_TRACER_LOG");
-    static auto trace_bin_file_path = std::getenv("NGRAPH_CPU_BIN_TRACER_LOG");
-    if (trace_file_path == nullptr)
+    static string trace_file_path = getenv_string("NGRAPH_CPU_TRACER_LOG");
+    static string trace_bin_file_path = getenv_string("NGRAPH_CPU_BIN_TRACER_LOG");
+    if (trace_file_path.empty())
     {
-        trace_file_path = const_cast<char*>("trace_meta.log");
+        trace_file_path = "trace_meta.log";
     }
-    if (trace_bin_file_path == nullptr)
+    if (trace_bin_file_path.empty())
     {
-        trace_bin_file_path = const_cast<char*>("trace_bin_data.log");
+        trace_bin_file_path = "trace_bin_data.log";
     }
 
     m_tracer_stream.open(trace_file_path, ios_base::out | ios_base::ate);

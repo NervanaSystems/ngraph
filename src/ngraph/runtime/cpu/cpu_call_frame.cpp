@@ -37,8 +37,7 @@ runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction>
     , m_compiled_destroy_ctx_func(compiled_destroy_ctx_func)
     , m_compiled_function(compiled_function)
 {
-    const auto envConcurrency = std::getenv("NGRAPH_CPU_CONCURRENCY");
-    m_num_ctx = envConcurrency == nullptr ? 1 : std::atoi(envConcurrency);
+    static const int32_t m_num_ctx = getenv_int("NGRAPH_CPU_CONCURRENCY", 1);
     if (m_num_ctx > std::thread::hardware_concurrency())
     {
         throw ngraph_error(
@@ -239,8 +238,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
             // For codegen mode, graph and global control are now part of the code generated
             // CPURuntimeContextCG class.
             ctx->G = new tbb::flow::graph;
-            const auto envParallelism = std::getenv("NGRAPH_INTER_OP_PARALLELISM");
-            const auto parallelism = envParallelism == nullptr ? 1 : std::atoi(envParallelism);
+            static const int32_t parallelism = getenv_int("NGRAPH_INTER_OP_PARALLELISM", 1);
             ctx->c =
                 new tbb::global_control(tbb::global_control::max_allowed_parallelism, parallelism);
         }

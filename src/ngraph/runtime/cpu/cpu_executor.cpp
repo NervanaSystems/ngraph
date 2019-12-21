@@ -18,21 +18,22 @@
 
 #include "cpu_executor.hpp"
 
+#include "ngraph/env_util.hpp"
 #include "ngraph/except.hpp"
 
 #define MAX_PARALLELISM_THRESHOLD 2
 
 static int GetNumCores()
 {
-    const auto omp_num_threads = std::getenv("OMP_NUM_THREADS");
-    const auto ngraph_intra_op_parallelism = std::getenv("NGRAPH_INTRA_OP_PARALLELISM");
+    const string omp_num_threads = getenv_string("OMP_NUM_THREADS");
+    const string ngraph_intra_op_parallelism = getenv_string("NGRAPH_INTRA_OP_PARALLELISM");
     int count = 0;
 
-    if (omp_num_threads)
+    if (!omp_num_threads.empty())
     {
         count = std::atoi(omp_num_threads);
     }
-    else if (ngraph_intra_op_parallelism)
+    else if (!ngraph_intra_op_parallelism.empty())
     {
         count = std::atoi(ngraph_intra_op_parallelism);
     }
@@ -56,14 +57,7 @@ static int GetNumCores()
 
 static int GetNumThreadPools()
 {
-    const auto ngraph_inter_op_parallelism = std::getenv("NGRAPH_INTER_OP_PARALLELISM");
-    int count = 0;
-
-    if (ngraph_inter_op_parallelism)
-    {
-        count = std::atoi(ngraph_inter_op_parallelism);
-    }
-
+    int count = getenv_int("NGRAPH_INTRA_OP_PARALLELISM", 1);
     return count < 1 ? 1 : count;
 }
 
@@ -85,23 +79,16 @@ namespace ngraph
 
                         // Eigen threadpool will still be used for reductions
                         // and other tensor operations that dont use a parallelFor
-                        num_threads_per_pool = GetNumCores();
-
-                        // User override
-                        char* eigen_tp_count = std::getenv("NGRAPH_CPU_EIGEN_THREAD_COUNT");
-                        if (eigen_tp_count != nullptr)
+                        num_threads_per_pool =
+                            getenv_int("NGRAPH_CPU_EIGEN_THREAD_COUNT", GetNumCores());
+                        if (num_threads_per_pool < 1 || num_threads_per_pool > GetNumCores())
                         {
-                            const int tp_count = std::atoi(eigen_tp_count);
-                            if (tp_count < 1 || tp_count > GetNumCores())
-                            {
-                                throw ngraph_error(
-                                    "Unexpected value specified for NGRAPH_CPU_EIGEN_THREAD_COUNT "
-                                    "(" +
-                                    std::string(eigen_tp_count) +
-                                    "). Please specify a value in range [1-" +
-                                    std::to_string(GetNumCores()) + "]");
-                            }
-                            num_threads_per_pool = tp_count;
+                            throw ngraph_error(
+                                "Unexpected value specified for NGRAPH_CPU_EIGEN_THREAD_COUNT "
+                                "(" +
+                                std::string(eigen_tp_count) +
+                                "). Please specify a value in range [1-" +
+                                std::to_string(GetNumCores()) + "]");
                         }
 
                         m_thread_pools.push_back(std::unique_ptr<Eigen::ThreadPool>(

@@ -124,11 +124,10 @@ bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
 
 static vector<regex> initialize_fusion_regexes()
 {
-    const char* cnsf = getenv("NGRAPH_DISABLED_FUSIONS");
+    static const string nsf = getenv_string("NGRAPH_DISABLED_FUSIONS");
     vector<regex> regexes;
-    if (cnsf)
+    if (!nsf.empty())
     {
-        const string nsf = cnsf;
         const auto sregexes = split(nsf, ';');
 
         transform(sregexes.begin(),

@@ -28,10 +28,10 @@ std::string ngraph::getenv_string(const char* env_var)
     return env_string;
 }
 
-int32_t ngraph::getenv_int(const char* env_var)
+int32_t ngraph::getenv_int(const char* env_var, int32_t default_value)
 {
     const char* env_p = ::getenv(env_var);
-    int32_t env = -1;
+    int32_t env = default_value;
     // If env_var is not "" or undefined
     if (env_p && *env_p)
     {
@@ -60,7 +60,7 @@ int32_t ngraph::getenv_int(const char* env_var)
     else
     {
         NGRAPH_DEBUG << "Environment variable (" << env_var << ") empty or undefined, "
-                     << " defaulted to 0 here.";
+                     << " defaulted to -1 here.";
     }
     return env;
 }

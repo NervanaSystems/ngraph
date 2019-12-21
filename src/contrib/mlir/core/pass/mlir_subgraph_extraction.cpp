@@ -97,12 +97,8 @@ void MLIRSubgraphExtractionPass::MLIRSubgraph::merge(MLIRSubgraph& sg2)
 }
 
 MLIRSubgraphExtractionPass::MLIRSubgraphExtractionPass()
-    : m_max_cycle_depth(20)
+    : m_max_cycle_depth(getenv_int("NGRAPH_MLIR_MAX_CYCLE_DEPTH", 20))
 {
-    if (char* max_cycle_depth = std::getenv("NGRAPH_MLIR_MAX_CYCLE_DEPTH"))
-    {
-        m_max_cycle_depth = std::stoi(max_cycle_depth);
-    }
 }
 
 // The sub-graph construction algorithm is as follows

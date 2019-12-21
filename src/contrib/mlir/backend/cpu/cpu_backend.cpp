@@ -140,7 +140,8 @@ void MLIRCPUBackend::init()
     if (!initialized)
     {
         // Override default optimization level with macro value.
-        if (char* optLevelStr = std::getenv("NGRAPH_MLIR_OPT_LEVEL"))
+        static string optLevelStr = getenv_string("NGRAPH_MLIR_OPT_LEVEL"))
+        if (!optLevelStr.empty())
         {
             unsigned clOptLevel = std::stoi(optLevelStr);
             NGRAPH_CHECK(clOptLevel >= 0 && clOptLevel <= 3, "Invalid optimization level");

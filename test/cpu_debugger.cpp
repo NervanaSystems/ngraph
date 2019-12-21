@@ -40,14 +40,8 @@ using namespace std;
 
 bool static is_codegen_mode()
 {
-    static bool codegen_set = false;
-    static bool codegen_mode = false;
-    if (!codegen_set)
-    {
-        const char* ngraph_codegen = std::getenv("NGRAPH_CODEGEN");
-        codegen_mode = (ngraph_codegen != nullptr) && std::string(ngraph_codegen) != "0";
-        codegen_set = true;
-    }
+    static bool codegen_mode = getenv_bool("NGRAPH_CODEGEN");
+    ;
     return codegen_mode;
 }
 
