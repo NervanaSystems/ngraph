@@ -88,7 +88,7 @@ public:
 #if MKLDNN_VERSION_MAJOR < 1
             construct_fuse_lstm_recurrent_state();
 #endif
-            if (std::getenv("NGRAPH_DECONV_FUSE") != nullptr)
+            if (getenv_bool("NGRAPH_DECONV_FUSE"))
             {
                 // Note: enable when the deconv perf is better than convbackpropdata
                 construct_deconvolution_affine_folding();

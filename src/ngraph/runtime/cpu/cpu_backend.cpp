@@ -93,7 +93,7 @@ shared_ptr<runtime::Executable>
                                        bool performance_counters_enabled)
 {
 #ifdef NGRAPH_MLIR_ENABLE
-    if (std::getenv("NGRAPH_MLIR") != nullptr)
+    if (getenv_bool("NGRAPH_MLIR"))
     {
         // Initialize MLIR compiler
         ngmlir::MLIRCompiler::init();

@@ -234,8 +234,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
 
         ctx->states = m_external_function->m_states.data();
 #if defined(NGRAPH_TBB_ENABLE)
-        if (m_external_function->is_direct_execution() &&
-            std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+        if (m_external_function->is_direct_execution() && getenv_bool("NGRAPH_CPU_USE_TBB"))
         {
             // For codegen mode, graph and global control are now part of the code generated
             // CPURuntimeContextCG class.
@@ -281,8 +280,7 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
         }
 
 #if defined(NGRAPH_TBB_ENABLE)
-        if (m_external_function->is_direct_execution() &&
-            std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+        if (m_external_function->is_direct_execution() && getenv_bool("NGRAPH_CPU_USE_TBB"))
         {
             // For codegen mode, graph and global control are now part of a code generated
             // CPURuntimeContext class.

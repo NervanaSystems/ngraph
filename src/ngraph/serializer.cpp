@@ -33,8 +33,7 @@ using namespace std;
 using json = nlohmann::json;
 using const_data_callback_t = shared_ptr<Node>(const string&, const element::Type&, const Shape&);
 
-static bool s_serialize_output_shapes_enabled =
-    (std::getenv("NGRAPH_SERIALIZER_OUTPUT_SHAPES") != nullptr);
+static bool s_serialize_output_shapes_enabled = (getenv_bool("NGRAPH_SERIALIZER_OUTPUT_SHAPES"));
 
 void ngraph::set_serialize_output_shapes(bool enable)
 {

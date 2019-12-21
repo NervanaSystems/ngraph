@@ -20,18 +20,14 @@
 
 #include "distributed.hpp"
 #include "event_tracing.hpp"
+#include "ngraph/env_util.hpp"
 #include "nlohmann/json.hpp"
 
 using namespace std;
 
-static bool read_tracing_env_var()
-{
-    return (std::getenv("NGRAPH_ENABLE_TRACING") != nullptr);
-}
-
 NGRAPH_API mutex ngraph::Event::s_file_mutex;
 NGRAPH_API ofstream ngraph::Event::s_event_log;
-NGRAPH_API bool ngraph::Event::s_tracing_enabled = read_tracing_env_var();
+NGRAPH_API bool ngraph::Event::s_tracing_enabled = ngraph::getenv_bool("NGRAPH_ENABLE_TRACING");
 NGRAPH_API bool ngraph::Event::s_event_writer_registered = false;
 NGRAPH_API std::function<void(const ngraph::Event& event)> ngraph::Event::s_event_writer;
 

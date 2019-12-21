@@ -23,6 +23,7 @@
 #include <iostream>
 #include <memory>
 
+#include "ngraph/env_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
@@ -55,7 +56,7 @@ pass::Manager::~Manager()
 
 void pass::Manager::run_passes(shared_ptr<Function> func, bool /* transitive */)
 {
-    static bool profile_enabled = getenv("NGRAPH_PROFILE_PASS_ENABLE") != nullptr;
+    static bool profile_enabled = getenv_bool("NGRAPH_PROFILE_PASS_ENABLE");
 
     get_state().set_function(func);
     vector<std::pair<shared_ptr<Function>, bool>> fs{std::make_pair(func, func->is_dynamic())};

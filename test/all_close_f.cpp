@@ -22,6 +22,7 @@
 
 #include "gtest/gtest.h"
 
+#include "ngraph/env_util.hpp"
 #include "ngraph/ngraph.hpp"
 #include "util/all_close_f.hpp"
 #include "util/float_util.hpp"
@@ -104,7 +105,7 @@ protected:
 
 TEST_P(all_close_f_param_test, test_boundaries)
 {
-    if (std::getenv("NGRAPH_GTEST_INFO") != nullptr)
+    if (getenv_bool("NGRAPH_GTEST_INFO"))
     {
         // Print short string documenting which test is being run
         std::cout << "[   INFO   ] Test params: (" << expected << ", " << tolerance_bits << ")\n";
@@ -261,7 +262,7 @@ protected:
 
 TEST_P(all_close_f_double_param_test, test_boundaries)
 {
-    if (std::getenv("NGRAPH_GTEST_INFO") != nullptr)
+    if (getenv_bool("NGRAPH_GTEST_INFO"))
     {
         // Print short string documenting which test is being run
         std::cout << "[   INFO   ] Test params: (" << expected << ", " << tolerance_bits << ")\n";

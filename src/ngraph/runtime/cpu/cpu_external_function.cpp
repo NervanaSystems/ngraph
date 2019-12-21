@@ -243,7 +243,7 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     , m_release_function(release_function)
     , m_emit_timing(false)
 #if defined(NGRAPH_TBB_ENABLE)
-    , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+    , m_use_tbb(getenv_bool("NGRAPH_CPU_USE_TBB"))
 #endif
 #if !defined(NGRAPH_DEX_ONLY)
     , m_is_compiled(false)
@@ -1290,7 +1290,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 #endif
 
 #ifdef NGRAPH_MLIR_ENABLE
-    if (std::getenv("NGRAPH_MLIR") != nullptr)
+    if (getenv_bool("NGRAPH_MLIR"))
     {
         REGISTER_KNOBBED_PASS(MLIRSubgraphExtractionPass, /*enable by default*/ true, ngraph::pass)
     }
@@ -1452,7 +1452,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     pass_manager.run_passes(m_function, false);
 
     static runtime::cpu::CPU_DebugTracer debug_tracer;
-    if (std::getenv("NGRAPH_CPU_DEBUG_TRACER") != nullptr)
+    if (getenv_bool("NGRAPH_CPU_DEBUG_TRACER"))
     {
         debug_tracer.set_enable_tracing(true);
     }
@@ -1704,7 +1704,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         m_perf_counters.emplace_back(node, 0, 0);
     }
 
-    if ((std::getenv("NGRAPH_DEX_DEBUG") != nullptr))
+    if ((getenv_bool("NGRAPH_DEX_DEBUG")))
     {
         string filename = file_util::path_join(s_debug_dir, m_function_name + "_debug.txt");
         std::stringstream strm;

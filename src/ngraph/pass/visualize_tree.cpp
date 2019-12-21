@@ -16,6 +16,7 @@
 
 #include <fstream>
 
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
@@ -158,7 +159,7 @@ static std::string label_edge(const std::shared_ptr<Node>& /* src */,
                               int64_t jump_distance)
 {
     std::stringstream ss;
-    if (getenv("NGRAPH_VISUALIZE_EDGE_LABELS") != nullptr)
+    if (getenv_bool("NGRAPH_VISUALIZE_EDGE_LABELS"))
     {
         size_t output = 0;
         if (auto goe = as_type_ptr<op::GetOutputElement>(dst))
@@ -170,7 +171,7 @@ static std::string label_edge(const std::shared_ptr<Node>& /* src */,
         ss << label_edge.str();
     }
 
-    else if (getenv("NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE") != nullptr)
+    else if (getenv_bool("NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE"))
     {
         if (jump_distance > 1)
         {

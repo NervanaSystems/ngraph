@@ -141,7 +141,7 @@ TEST(cpu_test, abc_tbb)
 {
     // Force TBB flow graph generation in the CPU backend
     // This has no effect on other backends
-    bool use_tbb = (getenv("NGRAPH_CPU_USE_TBB") != nullptr);
+    bool use_tbb = (getenv_bool("NGRAPH_CPU_USE_TBB"));
     if (!use_tbb)
     {
         set_environment("NGRAPH_CPU_USE_TBB", "1", 1);
