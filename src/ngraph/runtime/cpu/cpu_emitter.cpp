@@ -138,7 +138,7 @@
 using namespace std;
 using namespace ngraph;
 
-static bool s_use_ref_kernels = (getenv_bool("NGRAPH_CPU_USE_REF_KERNELS"));
+static bool s_use_ref_kernels = getenv_bool("NGRAPH_CPU_USE_REF_KERNELS");
 
 static string eigen_vector_format(const runtime::cpu::TensorViewWrapper& tvi)
 {

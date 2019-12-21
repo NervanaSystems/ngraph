@@ -28,7 +28,7 @@ using namespace ngraph;
 
 static bool read_tracing_env_var()
 {
-    static const bool is_enabled = (getenv_bool("NGRAPH_ENABLE_TRACING"));
+    static const bool is_enabled = getenv_bool("NGRAPH_ENABLE_TRACING");
 
     return is_enabled;
 }

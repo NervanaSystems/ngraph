@@ -141,7 +141,7 @@ TEST(cpu_test, abc_tbb)
 {
     // Force TBB flow graph generation in the CPU backend
     // This has no effect on other backends
-    bool use_tbb = (getenv_bool("NGRAPH_CPU_USE_TBB"));
+    bool use_tbb = getenv_bool("NGRAPH_CPU_USE_TBB");
     if (!use_tbb)
     {
         set_environment("NGRAPH_CPU_USE_TBB", "1", 1);
@@ -971,7 +971,6 @@ constexpr int tolerance = FLOAT_MANTISSA_BITS - three_quarters_of_available_bits
 bool static is_codegen_mode()
 {
     static bool codegen_mode = getenv_bool("NGRAPH_CODEGEN");
-    ;
     return codegen_mode;
 }
 
