@@ -303,13 +303,6 @@ static element::Type read_element_type(json j)
     return element::Type(bitwidth, is_real, is_signed, is_quantized, c_type_string);
 }
 
-static op::LSTMWeightsFormat read_lstm_weights_format(const json& js)
-{
-    return has_key(js, "weights_format")
-               ? static_cast<op::LSTMWeightsFormat>(js.at("weights_format"))
-               : op::LSTMWeightsFormat::IFCO;
-}
-
 void ngraph::serialize(const string& path, shared_ptr<ngraph::Function> func, size_t indent)
 {
     ofstream out(path);
@@ -1950,14 +1943,16 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::LSTMCell:
         {
             auto hidden_size = node_js.at("hidden_size").get<size_t>();
-            auto weights_format = read_lstm_weights_format(node_js);
+            auto weights_format = get_or_default<op::LSTMWeightsFormat>(
+                node_js, "weights_format", op::LSTMWeightsFormat::IFCO);
             auto clip = node_js.at("clip").get<float>();
             auto activations = node_js.at("activations").get<vector<string>>();
             auto activations_alpha = node_js.at("activations_alpha").get<vector<float>>();
             auto activations_beta = node_js.at("activations_beta").get<vector<float>>();
             auto input_forget = node_js.at("input_forget").get<bool>();
-            if (args.size() == 7)
+            switch (args.size())
             {
+            case 7:
                 node = make_shared<op::LSTMCell>(args[0],
                                                  args[1],
                                                  args[2],
@@ -1972,9 +1967,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                  activations_beta,
                                                  clip,
                                                  input_forget);
-            }
-            if (args.size() == 6)
-            {
+                break;
+            case 6:
                 node = make_shared<op::LSTMCell>(args[0],
                                                  args[1],
                                                  args[2],
@@ -1988,9 +1982,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                  activations_beta,
                                                  clip,
                                                  input_forget);
-            }
-            else
-            {
+                break;
+            case 5:
                 node = make_shared<op::LSTMCell>(args[0],
                                                  args[1],
                                                  args[2],
@@ -2003,6 +1996,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                  activations_beta,
                                                  clip,
                                                  input_forget);
+                break;
+            default: throw runtime_error("LSTMCell constructor not supported in serializer");
             }
             break;
         }
@@ -2015,7 +2010,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto activations_beta = node_js.at("activations_beta").get<vector<float>>();
             auto input_forget = node_js.at("input_forget").get<bool>();
             auto direction = node_js.at("direction").get<op::LSTMSequence::direction>();
-            auto weights_format = read_lstm_weights_format(node_js);
+            auto weights_format = get_or_default<op::LSTMWeightsFormat>(
+                node_js, "weights_format", op::LSTMWeightsFormat::IFCO);
             if (args.size() == 8)
             {
                 node = make_shared<op::LSTMSequence>(args[0],
