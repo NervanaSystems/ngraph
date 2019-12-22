@@ -67,9 +67,9 @@ void op::PriorBox::validate_and_infer_types()
 
         auto layer_shape = const_shape->get_shape_val();
 
-
-        set_output_type(
-            0, element::f32, Shape{2, 4 * layer_shape[0] * layer_shape[1] * number_of_priors(m_attrs)});
+        set_output_type(0,
+                        element::f32,
+                        Shape{2, 4 * layer_shape[0] * layer_shape[1] * number_of_priors(m_attrs)});
     }
     else
     {
@@ -94,25 +94,28 @@ size_t op::PriorBox::number_of_priors(const PriorBoxAttrs& attrs)
     // plus one box 1x1.
     size_t total_aspect_ratios = ((attrs.flip ? 2 : 1) * attrs.aspect_ratio.size() + 1);
 
-    if(!attrs.min_size.empty())
+    if (!attrs.min_size.empty())
         num_priors = total_aspect_ratios * attrs.min_size.size();
 
-    if(!attrs.fixed_size.empty())
+    if (!attrs.fixed_size.empty())
         num_priors = total_aspect_ratios * attrs.fixed_size.size();
 
-    for(auto density: attrs.density)
+    for (auto density : attrs.density)
     {
         auto rounded_density = static_cast<size_t>(density);
         auto density_2d = (rounded_density * rounded_density - 1);
-        if(!attrs.fixed_ratio.empty())
+        if (!attrs.fixed_ratio.empty())
             num_priors += attrs.fixed_ratio.size() * density_2d;
         else
             num_priors += total_aspect_ratios * density_2d;
     }
 
-    // TODO: Check whether attrs.max_size is really should be ignored when attrs.scale_all_size == False
-    //       as the spec says or it is done automatically because attrs_max_size is always emtpy in this case.
-    //       The following statement is executed unconditionally according to the code in OpenVINO Model Optimizer
+    // TODO: Check whether attrs.max_size is really should be ignored when attrs.scale_all_size ==
+    // False
+    //       as the spec says or it is done automatically because attrs_max_size is always emtpy in
+    //       this case.
+    //       The following statement is executed unconditionally according to the code in OpenVINO
+    //       Model Optimizer
     //       that infer shapes for this operation.
     num_priors += attrs.max_size.size();
 
