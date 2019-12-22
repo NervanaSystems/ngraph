@@ -28,7 +28,8 @@
 #include "ngraph/node.hpp"
 
 using visualize_tree_ops_map_t =
-    std::unordered_map<std::type_index, std::function<void(const ngraph::Node&, std::ostream& ss)>>;
+    std::unordered_map<ngraph::Node::type_info_t,
+                       std::function<void(const ngraph::Node&, std::ostream& ss)>>;
 
 namespace ngraph
 {

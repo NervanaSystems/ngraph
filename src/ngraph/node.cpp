@@ -32,8 +32,6 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo Node::type_info;
-
 atomic<size_t> Node::m_next_instance_id(0);
 
 Node::Node(size_t output_size)

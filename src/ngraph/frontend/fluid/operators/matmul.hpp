@@ -42,8 +42,8 @@ namespace ngraph
             /// \param transpose_b If matrix B should be transposed.
             MatMul(const NodeOutput& A,
                    const NodeOutput& B,
-                   const bool& transpose_a = 0,
-                   const bool& transpose_b = 0);
+                   const bool transpose_a,
+                   const bool transpose_b);
 
             virtual NodeVector decompose_op() const override;
 
@@ -54,8 +54,40 @@ namespace ngraph
             bool get_transpose_a() const { return m_transpose_a; }
             bool get_transpose_b() const { return m_transpose_b; }
         private:
-            bool m_transpose_a;
-            bool m_transpose_b;
+            bool m_transpose_a{false};
+            bool m_transpose_b{false};
         };
+
+        class NGRAPH_API MatMulGrad : public op::util::FusedOp
+        {
+        public:
+            static constexpr NodeTypeInfo type_info{"MatMulGrad", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            MatMulGrad() = default;
+            /// \brief Constructs a MatMul Grad operation.
+            ///
+            /// \param A Matrix A
+            /// \param B Matrix B
+            /// \param transpose_a If matrix A should be transposed.
+            /// \param transpose_b If matrix B should be transposed.
+            MatMulGrad(const NodeOutput& A,
+                       const NodeOutput& B,
+                       const NodeOutput& Out,
+                       const bool transpose_a,
+                       const bool transpose_b);
+
+            virtual NodeVector decompose_op() const override;
+
+            void pre_validate_and_infer_types() override;
+
+            virtual shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+
+            bool get_transpose_a() const { return m_transpose_a; }
+            bool get_transpose_b() const { return m_transpose_b; }
+        private:
+            bool m_transpose_a{false};
+            bool m_transpose_b{false};
+        };
+
     } // namespace fluid
 } // namespace ngraph
