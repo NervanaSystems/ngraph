@@ -786,7 +786,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-// #pragma GCC diagnostic error "-Wimplicit-fallthrough"
 
         switch (get_typeid(type_info))
         {
@@ -3125,7 +3124,6 @@ json JSONSerializer::serialize_node(const Node& n)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-// #pragma GCC diagnostic error "-Wimplicit-fallthrough"
     switch (get_typeid(type_info))
     {
     case OP_TYPEID::Abs: { break;
