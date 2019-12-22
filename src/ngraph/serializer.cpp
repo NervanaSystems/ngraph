@@ -243,12 +243,6 @@ static op::AutoBroadcastSpec
     }
 }
 
-static op::PadType read_pad_type(json node_js)
-{
-    return has_key(node_js, "pad_type") ? static_cast<op::PadType>(node_js.at("pad_type"))
-                                        : op::PadType::EXPLICIT;
-}
-
 static op::PadMode read_pad_mode(json node_js)
 {
     return has_key(node_js, "pad_mode") ? static_cast<op::PadMode>(node_js.at("pad_mode"))
@@ -871,7 +865,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
             auto include_padding_in_avg_computation =
                 node_js.at("include_padding_in_avg_computation").get<bool>();
-            op::PadType pad_type = read_pad_type(node_js);
+            op::PadType pad_type =
+                get_or_default<op::PadType>(node_js, "pad_type", op::PadType::EXPLICIT);
             bool ceil_mode = get_or_default<bool>(node_js, "ceil_mode", false);
             node = make_shared<op::v0::AvgPool>(args[0],
                                                 window_shape,
@@ -890,8 +885,10 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto pads_begin = node_js.at("pads_begin").get<vector<size_t>>();
             auto pads_end = node_js.at("pads_end").get<vector<size_t>>();
             auto exclude_pad = node_js.at("exclude_pad").get<bool>();
-            op::PadType pad_type = read_pad_type(node_js);
-            op::RoundingType rounding_type = read_rounding_type(node_js);
+            op::PadType pad_type =
+                get_or_default<op::PadType>(node_js, "pad_type", op::PadType::EXPLICIT);
+            op::RoundingType rounding_type =
+                get_or_default<op::RoundingType>(node_js, "rounding_type", op::RoundingType::FLOOR);
             node = make_shared<op::v1::AvgPool>(args[0],
                                                 strides,
                                                 pads_begin,
@@ -1076,7 +1073,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 data_dilation_strides = node_js["image_dilation_strides"];
             }
 
-            op::PadType pad_type = read_pad_type(node_js);
+            op::PadType pad_type =
+                get_or_default<op::PadType>(node_js, "pad_type", op::PadType::EXPLICIT);
 
             if (data_dilation_strides.empty())
             {
@@ -1701,7 +1699,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
             auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
             auto data_dilation_strides = node_js.at("data_dilation_strides").get<vector<size_t>>();
-            op::PadType pad_type = read_pad_type(node_js);
+            op::PadType pad_type =
+                get_or_default<op::PadType>(node_js, "pad_type", op::PadType::EXPLICIT);
             if (has_key(node_js, "groups"))
             {
                 auto groups = node_js.at("groups").get<size_t>();
@@ -1776,7 +1775,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto padding_end = node_js.at("padding_end").get<vector<ptrdiff_t>>();
             auto output_padding = node_js.at("output_padding").get<vector<ptrdiff_t>>();
             auto groups = node_js.at("groups").get<size_t>();
-            op::PadType pad_type = read_pad_type(node_js);
+            op::PadType pad_type =
+                get_or_default<op::PadType>(node_js, "pad_type", op::PadType::EXPLICIT);
             auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
 
             node = make_shared<op::GroupConvolutionTranspose>(args[0],
@@ -2091,7 +2091,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             // be omitted.
             auto padding_below_maybe = get_or_default(node_js, "padding_below", json{});
             auto padding_above_maybe = get_or_default(node_js, "padding_above", json{});
-            op::PadType pad_type = read_pad_type(node_js);
+            op::PadType pad_type =
+                get_or_default<op::PadType>(node_js, "pad_type", op::PadType::EXPLICIT);
             if (padding_below_maybe.empty() && !padding_above_maybe.empty())
             {
                 throw runtime_error(
@@ -2127,8 +2128,10 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto strides = node_js.at("strides").get<vector<size_t>>();
             auto pads_begin = node_js.at("pads_begin").get<vector<size_t>>();
             auto pads_end = node_js.at("pads_end").get<vector<size_t>>();
-            auto rounding_type = read_rounding_type(node_js);
-            op::PadType pad_type = read_pad_type(node_js);
+            auto rounding_type =
+                get_or_default<op::RoundingType>(node_js, "rounding_type", op::RoundingType::FLOOR);
+            op::PadType pad_type =
+                get_or_default<op::PadType>(node_js, "pad_type", op::PadType::EXPLICIT);
             node = make_shared<op::v1::MaxPool>(
                 args[0], strides, pads_begin, pads_end, kernel, rounding_type, pad_type);
             break;
