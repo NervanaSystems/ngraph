@@ -2605,18 +2605,35 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto hidden_size = node_js.at("hidden_size").get<size_t>();
             auto clip = node_js.at("clip").get<float>();
             auto activations = node_js.at("activations").get<vector<string>>();
-            auto activation_alpha = node_js.at("activation_alpha").get<vector<float>>();
-            auto activation_beta = node_js.at("activation_beta").get<vector<float>>();
-            node = make_shared<op::RNNCell>(args[0],
-                                            args[1],
-                                            args[2],
-                                            args[3],
-                                            args[4],
-                                            hidden_size,
-                                            activations,
-                                            activation_alpha,
-                                            activation_beta,
-                                            clip);
+            auto activation_alpha = node_js.at("activations_alpha").get<vector<float>>();
+            auto activation_beta = node_js.at("activations_beta").get<vector<float>>();
+            switch (args.size())
+            {
+            case 4:
+                node = make_shared<op::RNNCell>(args[0],
+                                                args[1],
+                                                args[2],
+                                                args[3],
+                                                hidden_size,
+                                                activations,
+                                                activation_alpha,
+                                                activation_beta,
+                                                clip);
+                break;
+            case 5:
+                node = make_shared<op::RNNCell>(args[0],
+                                                args[1],
+                                                args[2],
+                                                args[3],
+                                                args[4],
+                                                hidden_size,
+                                                activations,
+                                                activation_alpha,
+                                                activation_beta,
+                                                clip);
+                break;
+            default: throw runtime_error("GRUCell constructor not supported in serializer");
+            }
             break;
         }
         case OP_TYPEID::ROIPooling: { break;
