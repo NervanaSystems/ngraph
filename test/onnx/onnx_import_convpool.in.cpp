@@ -408,7 +408,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p3)
 
     Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
 
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front(), 18));
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_convtranspose_output_shape)

@@ -778,8 +778,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
-#pragma GCC diagnostic error "-Wswitch"
-#pragma GCC diagnostic error "-Wswitch-enum"
+// #pragma GCC diagnostic error "-Wswitch"
+// #pragma GCC diagnostic error "-Wswitch-enum"
 // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
 #endif
 
@@ -1510,8 +1510,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Reshape_v1:
         {
-            const auto zero_flag = node_js.at("zero_flag").get<bool>();
-            node = make_shared<op::v1::Reshape>(args[0], args[1], zero_flag);
+            const bool special_zero = node_js.at("special_zero").get<bool>();
+            node = make_shared<op::v1::Reshape>(args[0], args[1], special_zero);
             break;
         }
         case OP_TYPEID::DynSlice:
@@ -2017,7 +2017,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::LSTMSequence:
         {
             auto hidden_size = node_js.at("hidden_size").get<size_t>();
-            auto clip = node_js.at("clip").get<float>();
+            auto clip = node_js.at("clip_threshold").get<float>();
             auto activations = node_js.at("activations").get<vector<string>>();
             auto activations_alpha = node_js.at("activations_alpha").get<vector<float>>();
             auto activations_beta = node_js.at("activations_beta").get<vector<float>>();
@@ -3044,8 +3044,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         m_node_map[node_name] = node;
     }
-    catch (...)
+    catch (exception& err)
     {
+        NGRAPH_INFO << err.what();
         string node_name;
         auto it = node_js.find("name");
         if (it != node_js.end())
