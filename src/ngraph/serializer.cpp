@@ -2684,6 +2684,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[1],
                 args[2],
                 read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+            break;
         }
         case OP_TYPEID::Stack:
         {
