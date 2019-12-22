@@ -2897,23 +2897,26 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             auto compute_max = node_js.at("compute_max").get<bool>();
             auto target_type = read_element_type(node_js.at("index_element_type"));
+            op::TopKSortType sort = node_js.at("sort").get<op::TopKSortType>();
             if (has_key(node_js, "top_k_axis"))
             {
                 auto top_k_axis = node_js.at("top_k_axis").get<size_t>();
                 if (has_key(node_js, "k"))
                 {
                     auto k = node_js.at("k").get<size_t>();
-                    node = make_shared<op::TopK>(args[0], top_k_axis, target_type, k, compute_max);
+                    node = make_shared<op::TopK>(
+                        args[0], top_k_axis, target_type, k, compute_max, sort);
                 }
                 else
                 {
                     node = make_shared<op::TopK>(
-                        args[0], args[1], top_k_axis, target_type, compute_max);
+                        args[0], args[1], top_k_axis, target_type, compute_max, sort);
                 }
             }
             else
             {
-                node = make_shared<op::TopK>(args[0], args[1], args[2], target_type, compute_max);
+                node = make_shared<op::TopK>(
+                    args[0], args[1], args[2], target_type, compute_max, sort);
             }
             break;
         }
@@ -4600,6 +4603,17 @@ json JSONSerializer::serialize_node(const Node& n)
         const auto tmp = static_cast<const op::TopK*>(&n);
         node["index_element_type"] = write_element_type(tmp->get_index_element_type());
         node["compute_max"] = tmp->get_compute_max();
+        node["sort"] = tmp->get_sort();
+        switch (tmp->inputs().size())
+        {
+        case 1:
+            node["k"] = tmp->get_k();
+            node["top_k_axis"] = tmp->get_top_k_axis();
+            break;
+        case 2: node["top_k_axis"] = tmp->get_top_k_axis(); break;
+        case 3: break;
+        default: throw runtime_error("TopK constructor not supported in serializer");
+        }
         break;
     }
 
