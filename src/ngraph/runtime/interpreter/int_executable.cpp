@@ -65,7 +65,6 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
 {
     // To verify that the serializer works correctly let's just run this graph round-trip
     string ser = serialize(function, 4);
-    cout << ser << endl;
     m_function = deserialize(ser);
     // m_function = clone_function(*function);
     pass::Manager pass_manager;

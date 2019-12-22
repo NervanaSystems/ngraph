@@ -4446,8 +4446,8 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = static_cast<const op::ScalarConstantLikeBase*>(&n);
         auto constant = tmp->as_constant();
-        node["value"] = constant->get_value_strings()[0];
-        node["element_type"] = write_element_type(constant->get_element_type());
+        char* p_end;
+        node["value"] = strtod(constant->get_value_strings()[0].c_str(), &p_end);
         break;
     }
     case OP_TYPEID::ScaleShift: { break;
