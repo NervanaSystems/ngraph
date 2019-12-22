@@ -27,9 +27,9 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::ScatterND::type_info;
 
-op::v0::ScatterND::ScatterND(const Output<Node>& data,
-                             const Output<Node>& indices,
-                             const Output<Node>& updates)
+op::v0::ScatterND::ScatterND(const NodeOutput& data,
+                             const NodeOutput& indices,
+                             const NodeOutput& updates)
     : op::util::FusedOp({data, indices, updates})
 {
     constructor_validate_and_infer_types();
