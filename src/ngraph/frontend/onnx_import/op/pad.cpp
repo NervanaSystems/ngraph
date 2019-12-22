@@ -82,7 +82,7 @@ namespace ngraph
 
                     auto pads = node.get_ng_inputs().at(1);
                     auto values = node.get_ng_inputs().at(2);
-                    auto axis = ngraph::op::Constant::create(element::u32, ngraph::Shape{}, {0});
+                    auto axis = ngraph::op::Constant::create(element::i64, ngraph::Shape{}, {0});
                     auto padding = std::make_shared<default_opset::Split>(pads, axis, 2);
 
                     std::string mode = node.get_attribute_value<std::string>("mode", "constant");
