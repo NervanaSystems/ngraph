@@ -1701,18 +1701,31 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
             auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
             auto data_dilation_strides = node_js.at("data_dilation_strides").get<vector<size_t>>();
-            auto groups = node_js.at("groups").get<size_t>();
-
             op::PadType pad_type = read_pad_type(node_js);
-            node = make_shared<op::GroupConvolution>(args[0],
-                                                     args[1],
-                                                     window_movement_strides,
-                                                     window_dilation_strides,
-                                                     padding_below,
-                                                     padding_above,
-                                                     data_dilation_strides,
-                                                     groups,
-                                                     pad_type);
+            if (has_key(node_js, "groups"))
+            {
+                auto groups = node_js.at("groups").get<size_t>();
+                node = make_shared<op::GroupConvolution>(args[0],
+                                                         args[1],
+                                                         window_movement_strides,
+                                                         window_dilation_strides,
+                                                         padding_below,
+                                                         padding_above,
+                                                         data_dilation_strides,
+                                                         groups,
+                                                         pad_type);
+            }
+            else
+            {
+                node = make_shared<op::GroupConvolution>(args[0],
+                                                         args[1],
+                                                         window_movement_strides,
+                                                         window_dilation_strides,
+                                                         padding_below,
+                                                         padding_above,
+                                                         data_dilation_strides,
+                                                         pad_type);
+            }
             break;
         }
         case OP_TYPEID::GroupConvolutionBackpropData:
@@ -3841,7 +3854,10 @@ json JSONSerializer::serialize_node(const Node& n)
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
         node["data_dilation_strides"] = tmp->get_data_dilation_strides();
-        node["groups"] = tmp->get_groups();
+        if (!tmp->has_groups_in_filters())
+        {
+            node["groups"] = tmp->get_groups();
+        }
         node["pad_type"] = tmp->get_pad_type();
         break;
     }
