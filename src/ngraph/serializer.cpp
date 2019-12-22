@@ -1790,20 +1790,38 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto hidden_size = node_js.at("hidden_size").get<size_t>();
             auto clip = node_js.at("clip").get<float>();
             auto activations = node_js.at("activations").get<vector<string>>();
-            auto activation_alpha = node_js.at("activation_alpha").get<vector<float>>();
-            auto activation_beta = node_js.at("activation_beta").get<vector<float>>();
+            auto activation_alpha = node_js.at("activations_alpha").get<vector<float>>();
+            auto activation_beta = node_js.at("activations_beta").get<vector<float>>();
             auto linear_before_reset = node_js.at("linear_before_reset").get<bool>();
-            node = make_shared<op::GRUCell>(args[0],
-                                            args[1],
-                                            args[2],
-                                            args[3],
-                                            hidden_size,
-                                            args[4],
-                                            activations,
-                                            activation_alpha,
-                                            activation_beta,
-                                            clip,
-                                            linear_before_reset);
+            switch (args.size())
+            {
+            case 4:
+                node = make_shared<op::GRUCell>(args[0],
+                                                args[1],
+                                                args[2],
+                                                args[3],
+                                                hidden_size,
+                                                activations,
+                                                activation_alpha,
+                                                activation_beta,
+                                                clip,
+                                                linear_before_reset);
+                break;
+            case 5:
+                node = make_shared<op::GRUCell>(args[0],
+                                                args[1],
+                                                args[2],
+                                                args[3],
+                                                hidden_size,
+                                                args[4],
+                                                activations,
+                                                activation_alpha,
+                                                activation_beta,
+                                                clip,
+                                                linear_before_reset);
+                break;
+            default: throw runtime_error("GRUCell constructor not supported in serializer");
+            }
             break;
         }
         case OP_TYPEID::HardSigmoid:
