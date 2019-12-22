@@ -1009,5 +1009,28 @@ def NGConvBiasAddOp :
   }];
 }
 
+// MatMulBias Op
+def NGMatMul : 
+  NG_OneResult_Op<"matmul", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+  Arguments<(ins NG_TensorType:$A, NG_TensorType:$B, NG_TensorType:$bias, 
+            DefaultValuedAttr<BoolAttr, "false">:$transposeA,
+            DefaultValuedAttr<BoolAttr, "false">:$transposeB)>
+{
+  let summary = "MatMulBias, implements (A*B + bias) within a single computation Op";
+  let description = [{
+    A Matrix A
+    B Matrix B
+    bias bias to be added after the MatMul operation
+    transpose_a If matrix A should be transposed.
+    transpose_b If matrix B should be transposed.
+  }];
+
+  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+  let verifier = [{ return verifyOp(this); }];
+  let extraClassDeclaration = [{
+    void setTransposeA(const Attribute& attr) { this->setAttr("transposeA", attr); }
+    void setTransposeB(const Attribute& attr) { this->setAttr("transposeB", attr); }
+  }];
+}
 
 #endif //NG_FUSED_OPS
