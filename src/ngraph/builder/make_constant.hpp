@@ -31,11 +31,9 @@ namespace ngraph
         {
             std::shared_ptr<Node> val = nullptr;
 
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-#endif
             switch (type)
             {
             case element::Type_t::f32:
@@ -99,9 +97,7 @@ namespace ngraph
             case element::Type_t::undefined:
                 throw ngraph_error("make_constant: Unsupported element type 'undefined'");
             }
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
-#endif
 
             if (shape.size() > 0)
             {
