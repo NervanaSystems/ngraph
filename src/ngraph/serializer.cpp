@@ -2230,9 +2230,16 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::MVN:
         {
             auto normalize_variance = node_js.at("normalize_variance").get<bool>();
-            auto reduction_axes = deserialize_axis_set(node_js.at("reduction_axes"));
+            AxisSet reduction_axes = deserialize_axis_set(node_js.at("reduction_axes"));
             auto eps = node_js.at("eps").get<double>();
-            node = make_shared<op::MVN>(args[0], normalize_variance, normalize_variance, eps);
+            if (reduction_axes.size() > 0)
+            {
+                node = make_shared<op::MVN>(args[0], reduction_axes, normalize_variance, eps);
+            }
+            else
+            {
+                node = make_shared<op::MVN>(args[0], true, normalize_variance, eps);
+            }
             break;
         }
         case OP_TYPEID::Negative:
