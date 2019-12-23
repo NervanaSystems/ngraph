@@ -40,6 +40,8 @@ namespace ngraph
                 auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
+                AxisSet axes = lrn->get_reduction_axes();
+
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
@@ -77,7 +79,6 @@ namespace ngraph
                 }
                 else
                 {
-                    AxisSet axes = lrn->get_reduction_axes();
                     double alpha = lrn->get_alpha();
                     double beta = lrn->get_beta();
                     double bias = lrn->get_bias();

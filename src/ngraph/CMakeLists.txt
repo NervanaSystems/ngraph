@@ -479,6 +479,7 @@ set (SRC
     pass/constant_folding_dyn_slice.cpp
     pass/constant_folding_gather.cpp
     pass/constant_folding_logical_reduction.cpp
+    pass/constant_folding_one_hot.cpp
     pass/constant_folding_pad.cpp
     pass/constant_folding_quantize.cpp
     pass/constant_folding_range.cpp
