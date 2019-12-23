@@ -18,8 +18,10 @@
 
 #include "default_opset.hpp"
 #include "exceptions.hpp"
+#include "ngraph/builder/split.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/convert.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/shape.hpp"
 #include "pad.hpp"
@@ -81,9 +83,21 @@ namespace ngraph
                     const Shape& data_shape = data->get_shape();
 
                     auto pads = node.get_ng_inputs().at(1);
-                    auto values = node.get_ng_inputs().at(2);
+                    std::shared_ptr<ngraph::Node> values;
+                    if (node.get_ng_inputs().size() == 3)
+                    {
+                        values = node.get_ng_inputs().at(2);
+                    }
+                    else
+                    {
+                        values = ngraph::op::Constant::create(element::i64, ngraph::Shape{}, {0});
+                    }
                     auto axis = ngraph::op::Constant::create(element::i64, ngraph::Shape{}, {0});
-                    auto padding = std::make_shared<default_opset::Split>(pads, axis, 2);
+                    NodeVector padding = builder::split(pads, 2, 0);
+                    auto padding_begin =
+                        std::make_shared<default_opset::Convert>(padding.at(0), element::i64);
+                    auto padding_end =
+                        std::make_shared<default_opset::Convert>(padding.at(1), element::i64);
 
                     std::string mode = node.get_attribute_value<std::string>("mode", "constant");
                     ngraph::op::PadMode pad_mode;
@@ -103,7 +117,8 @@ namespace ngraph
                     {
                         throw error::InvalidArgument("Unsupported padding mode: [" + mode + "]");
                     }
-                    return {std::make_shared<default_opset::Pad>(data, padding, values, pad_mode)};
+                    return {std::make_shared<default_opset::Pad>(
+                        data, padding_begin, padding_end, values, pad_mode)};
                 }
 
             } // namespace set_11
