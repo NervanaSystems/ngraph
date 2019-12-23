@@ -25,7 +25,6 @@
 #include "lp_norm.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/norm.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "utils/common.hpp"
 
@@ -53,14 +52,14 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> norm = ngraph::builder::lp_norm(
                         data, AxisSet{valid_axis}, static_cast<std::size_t>(p_norm));
 
-                    const auto target_shape = ngraph::op::Constant::create(
+                    const auto target_shape = default_opset::Constant::create(
                         element::i64, Shape{data->get_shape().size()}, data->get_shape());
 
                     std::vector<size_t> axes_values(data->get_shape().size());
                     std::iota(axes_values.begin(), axes_values.end(), 0);
                     axes_values.erase(axes_values.begin() + valid_axis);
 
-                    const auto axes_mapping = ngraph::op::Constant::create(
+                    const auto axes_mapping = default_opset::Constant::create(
                         element::i64, Shape{axes_values.size()}, axes_values);
 
                     norm = std::make_shared<default_opset::Broadcast>(
