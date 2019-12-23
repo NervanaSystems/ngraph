@@ -160,5 +160,3 @@ include "core/ngraph_dialect/ops_v1.td"
 // Fused Ops
 include "core/ngraph_dialect/fused_ops.td"
 
-// Pattern for Fused Ops
-include "core/pass/fused_ops_pattern.td"

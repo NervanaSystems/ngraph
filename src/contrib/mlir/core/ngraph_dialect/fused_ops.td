@@ -1011,7 +1011,7 @@ def NGConvBiasAddOp :
 
 // MatMulBias Op
 def NGMatMulBiasOp : 
-  NG_OneResult_Op<"matmulbias", [NoSideEffect]>,
+  NG_OneResult_Op<"matmulbias", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
   Arguments<(ins NG_TensorType:$A, NG_TensorType:$B, NG_TensorType:$bias, 
             DefaultValuedAttr<BoolAttr, "false">:$transposeA,
             DefaultValuedAttr<BoolAttr, "false">:$transposeB)>

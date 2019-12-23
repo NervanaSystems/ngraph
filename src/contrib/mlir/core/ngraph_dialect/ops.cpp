@@ -432,3 +432,6 @@ void mlir::NGDepthToSpaceOp::decompose()
 void mlir::NGEluOp::decompose()
 {
 }
+void mlir::NGMatMulBiasOp::decompose()
+{
+}

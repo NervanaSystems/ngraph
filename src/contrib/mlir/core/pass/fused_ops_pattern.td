@@ -21,8 +21,10 @@
 // NOTE: This file follows nGraph format style and MLIR naming convention since it does
 // not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
 
+include "mlir/IR/OpBase.td"
+include "core/ngraph_dialect/ops.td"
 
-// nGraph Dialect fused operations definitions
+// nGraph Dialect pattern match definitions for fused Op's
 //
 // This files declares nGraph fused operations that table-gen uses to create C++ code
 // For more information about tablegen. See https://llvm.org/docs/TableGen/index.html
@@ -35,4 +37,4 @@
 
 // class for defining the pattern to fuse MatMul + Bias
 
-def : Pat<(NGAddOp ( NGDotOp $dot_input1, $dot_input2), $add_input), (NGMatMulBiasOp $dot_input1, $dot_input2, $add_input)>;
+def MatMulBiasPattern : Pat<(NGAddOp ( NGMatMul $input1, $input2, $attr_1, $attr_2), $add_input), (NGMatMulBiasOp $input1, $input2, $add_input, $attr_1, $attr_2)>;
