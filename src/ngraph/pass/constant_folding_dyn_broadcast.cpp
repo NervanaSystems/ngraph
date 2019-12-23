@@ -27,16 +27,14 @@ shared_ptr<op::Constant> fold_constant_dyn_broadcast(shared_ptr<op::Constant> ar
                                                      shared_ptr<op::Constant> shape,
                                                      shared_ptr<op::Constant> axes)
 {
-    auto out_shape = shape->get_shape_val();
-    vector<T> out_vec(shape_size(out_shape));
+    const Shape& out_shape = shape->get_shape_val();
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
+    T* data_ptr = buffer.get_ptr<T>();
 
-    runtime::reference::broadcast<T>(arg->get_data_ptr<T>(),
-                                     out_vec.data(),
-                                     arg->get_shape(),
-                                     out_shape,
-                                     axes->get_axis_set_val());
+    runtime::reference::broadcast<T>(
+        arg->get_data_ptr<T>(), data_ptr, arg->get_shape(), out_shape, axes->get_axis_set_val());
 
-    return make_shared<op::Constant>(arg->get_element_type(), out_shape, out_vec);
+    return make_shared<op::Constant>(arg->get_element_type(), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_dyn_broadcast()

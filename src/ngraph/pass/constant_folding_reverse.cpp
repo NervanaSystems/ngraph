@@ -25,13 +25,14 @@ template <typename T>
 static shared_ptr<op::Constant> fold_constant_reverse_helper(shared_ptr<op::Constant> constant,
                                                              const AxisSet& reversed_axes)
 {
-    auto out_shape = constant->get_shape();
-    vector<T> out_vec(shape_size(out_shape));
+    const Shape& out_shape = constant->get_shape();
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
+    T* data_ptr = buffer.get_ptr<T>();
 
     runtime::reference::reverse<T>(
-        constant->get_vector<T>().data(), out_vec.data(), out_shape, out_shape, reversed_axes);
+        constant->get_vector<T>().data(), data_ptr, out_shape, out_shape, reversed_axes);
 
-    return make_shared<op::Constant>(constant->get_output_element_type(0), out_shape, out_vec);
+    return make_shared<op::Constant>(constant->get_output_element_type(0), out_shape, data_ptr);
 }
 
 static shared_ptr<op::Constant> fold_constant_reverse(shared_ptr<op::Constant> constant,

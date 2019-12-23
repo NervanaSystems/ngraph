@@ -37,12 +37,14 @@ static shared_ptr<op::Constant>
     fold_constant_arithmetic_reduction_helper(shared_ptr<op::Constant> constant,
                                               shared_ptr<Node> reduction_node)
 {
-    vector<T> out_vec(shape_size(reduction_node->get_shape()));
+    const Shape& out_shape = reduction_node->get_shape();
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
+    T* data_ptr = buffer.get_ptr<T>();
 
     if (auto max = as_type_ptr<op::Max>(reduction_node))
     {
         runtime::reference::max<T>(constant->get_vector<T>().data(),
-                                   out_vec.data(),
+                                   data_ptr,
                                    constant->get_output_shape(0),
                                    reduction_node->get_shape(),
                                    max->get_reduction_axes());
@@ -60,7 +62,7 @@ static shared_ptr<op::Constant>
             }
         }
         runtime::reference::max<T>(constant->get_vector<T>().data(),
-                                   out_vec.data(),
+                                   data_ptr,
                                    constant->get_output_shape(0),
                                    shape_no_keep_dims,
                                    reduce_max->get_reduction_axes());
@@ -68,7 +70,7 @@ static shared_ptr<op::Constant>
     else if (auto min = as_type_ptr<op::Min>(reduction_node))
     {
         runtime::reference::min<T>(constant->get_vector<T>().data(),
-                                   out_vec.data(),
+                                   data_ptr,
                                    constant->get_output_shape(0),
                                    reduction_node->get_shape(),
                                    min->get_reduction_axes());
@@ -86,7 +88,7 @@ static shared_ptr<op::Constant>
             }
         }
         runtime::reference::min<T>(constant->get_vector<T>().data(),
-                                   out_vec.data(),
+                                   data_ptr,
                                    constant->get_output_shape(0),
                                    shape_no_keep_dims,
                                    reduce_min->get_reduction_axes());
@@ -94,7 +96,7 @@ static shared_ptr<op::Constant>
     else if (auto prod = as_type_ptr<op::Product>(reduction_node))
     {
         runtime::reference::product<T>(constant->get_vector<T>().data(),
-                                       out_vec.data(),
+                                       data_ptr,
                                        constant->get_output_shape(0),
                                        reduction_node->get_shape(),
                                        prod->get_reduction_axes());
@@ -112,7 +114,7 @@ static shared_ptr<op::Constant>
             }
         }
         runtime::reference::product<T>(constant->get_vector<T>().data(),
-                                       out_vec.data(),
+                                       data_ptr,
                                        constant->get_output_shape(0),
                                        shape_no_keep_dims,
                                        reduce_prod->get_reduction_axes());
@@ -120,7 +122,7 @@ static shared_ptr<op::Constant>
     else if (auto sum = as_type_ptr<op::Sum>(reduction_node))
     {
         runtime::reference::sum<T>(constant->get_vector<T>().data(),
-                                   out_vec.data(),
+                                   data_ptr,
                                    constant->get_output_shape(0),
                                    reduction_node->get_shape(),
                                    sum->get_reduction_axes());
@@ -138,7 +140,7 @@ static shared_ptr<op::Constant>
             }
         }
         runtime::reference::sum<T>(constant->get_vector<T>().data(),
-                                   out_vec.data(),
+                                   data_ptr,
                                    constant->get_output_shape(0),
                                    shape_no_keep_dims,
                                    reduce_sum->get_reduction_axes());
@@ -156,7 +158,7 @@ static shared_ptr<op::Constant>
             }
         }
         runtime::reference::mean<T>(constant->get_vector<T>().data(),
-                                    out_vec.data(),
+                                    data_ptr,
                                     constant->get_output_shape(0),
                                     shape_no_keep_dims,
                                     reduce_mean->get_reduction_axes());
@@ -170,7 +172,7 @@ static shared_ptr<op::Constant>
     }
 
     return make_shared<op::Constant>(
-        reduction_node->get_output_element_type(0), reduction_node->get_shape(), out_vec);
+        reduction_node->get_output_element_type(0), reduction_node->get_shape(), data_ptr);
 }
 
 static shared_ptr<op::Constant>

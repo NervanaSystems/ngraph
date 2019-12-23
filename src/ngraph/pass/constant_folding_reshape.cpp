@@ -26,28 +26,29 @@ shared_ptr<op::Constant> fold_constant_reshape(shared_ptr<op::Constant> constant
                                                shared_ptr<op::Reshape> reshape,
                                                NodeExecutorTy func)
 {
-    auto out_shape = reshape->get_shape();
-    vector<T> out_vec(shape_size(out_shape));
+    const Shape& out_shape = reshape->get_shape();
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
+    T* data_ptr = buffer.get_ptr<T>();
 
     if (func != nullptr)
     {
         vector<void*> inputs;
         inputs.push_back(const_cast<void*>(constant->get_data_ptr()));
         vector<void*> outputs;
-        outputs.push_back(out_vec.data());
+        outputs.push_back(data_ptr);
 
         func(inputs, outputs);
     }
     else
     {
         runtime::reference::reshape<T>(constant->get_data_ptr<T>(),
-                                       out_vec.data(),
+                                       data_ptr,
                                        constant->get_shape(),
                                        reshape->get_input_order(),
                                        out_shape);
     }
 
-    return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
+    return make_shared<op::Constant>(constant->get_element_type(), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_reshape()
