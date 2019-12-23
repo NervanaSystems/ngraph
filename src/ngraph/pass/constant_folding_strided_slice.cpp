@@ -54,31 +54,31 @@ shared_ptr<op::Constant> fold_constant_strided_slice(shared_ptr<op::Constant> da
                                      convert_mask_to_axis_set(slice->get_shrink_axis_mask()),
                                      convert_mask_to_axis_set(slice->get_ellipsis_mask()));
 
-    vector<T> slice_out_vec(shape_size(plan.reshape_in_shape));
+    runtime::AlignedBuffer slice_out_buffer(shape_size(plan.reshape_in_shape) * sizeof(T));
     runtime::reference::slice<T>(data->get_data_ptr<T>(),
-                                 slice_out_vec.data(),
+                                 slice_out_buffer.get_ptr<T>(),
                                  data->get_shape(),
                                  Coordinate(plan.begins.begin(), plan.begins.end()),
                                  Coordinate(plan.ends.begin(), plan.ends.end()),
                                  Strides(plan.strides.begin(), plan.strides.end()),
                                  plan.reshape_in_shape);
 
-    vector<T> reshape_out_vec(shape_size(plan.reshape_out_shape));
-    runtime::reference::reshape<T>(slice_out_vec.data(),
-                                   reshape_out_vec.data(),
+    runtime::AlignedBuffer reshape_out_buffer(shape_size(plan.reshape_out_shape) * sizeof(T));
+    runtime::reference::reshape<T>(slice_out_buffer.get_ptr<T>(),
+                                   reshape_out_buffer.get_ptr<T>(),
                                    plan.reshape_in_shape,
                                    get_default_order(plan.reshape_in_shape.size()),
                                    plan.reshape_out_shape);
 
-    vector<T> reverse_out_vec(shape_size(plan.reshape_out_shape));
-    runtime::reference::reverse<T>(reshape_out_vec.data(),
-                                   reverse_out_vec.data(),
+    runtime::AlignedBuffer reverse_out_buffer(shape_size(plan.reshape_out_shape) * sizeof(T));
+    runtime::reference::reverse<T>(reshape_out_buffer.get_ptr<T>(),
+                                   reverse_out_buffer.get_ptr<T>(),
                                    plan.reshape_out_shape,
                                    plan.reshape_out_shape,
                                    plan.reverse_axes);
 
     return make_shared<op::Constant>(
-        data->get_element_type(), plan.reshape_out_shape, reverse_out_vec);
+        data->get_element_type(), plan.reshape_out_shape, reverse_out_buffer.get_ptr<T>());
 }
 
 void pass::ConstantFolding::construct_constant_strided_slice()
