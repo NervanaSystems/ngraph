@@ -56,6 +56,9 @@ void op::PriorBox::validate_and_infer_types()
                           " must match image shape input rank ",
                           image_shape_rank);
 
+    NODE_VALIDATION_CHECK(
+        this, ratios_normalized(), "There are duplicates in the normalized list of aspect_ratio");
+
     set_input_is_relevant_to_shape(0);
 
     if (auto const_shape = as_type_ptr<op::Constant>(input_value(0).get_node_shared_ptr()))
@@ -120,4 +123,18 @@ size_t op::PriorBox::number_of_priors(const PriorBoxAttrs& attrs)
     num_priors += attrs.max_size.size();
 
     return num_priors;
+}
+
+bool op::PriorBox::ratios_normalized() const
+{
+    std::set<float> unique_ratios;
+    for (auto ratio : m_attrs.aspect_ratio)
+    {
+        unique_ratios.insert(ratio);
+        if (m_attrs.flip)
+            unique_ratios.insert(1 / ratio);
+    }
+    unique_ratios.insert(1);
+    size_t expected_num_of_ratios = ((m_attrs.flip ? 2 : 1) * m_attrs.aspect_ratio.size() + 1);
+    return unique_ratios.size() == expected_num_of_ratios;
 }

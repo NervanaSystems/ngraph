@@ -74,6 +74,8 @@ namespace ngraph
                 static size_t number_of_priors(const PriorBoxAttrs& attrs);
 
                 const PriorBoxAttrs& get_attrs() const { return m_attrs; }
+                bool ratios_normalized() const;
+
             private:
                 PriorBoxAttrs m_attrs;
             };
