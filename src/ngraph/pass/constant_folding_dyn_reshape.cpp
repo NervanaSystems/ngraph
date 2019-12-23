@@ -28,20 +28,20 @@ template <class T>
 shared_ptr<op::Constant> fold_constant_dyn_reshape(shared_ptr<op::Constant> constant_data,
                                                    shared_ptr<op::v1::Reshape> dyn_reshape)
 {
-    auto out_shape = dyn_reshape->get_shape();
+    const Shape& out_shape = dyn_reshape->get_shape();
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
+    T* data_ptr = buffer.get_ptr<T>();
 
     AxisVector input_order(constant_data->get_shape().size());
     std::iota(input_order.begin(), input_order.end(), 0);
 
-    vector<T> out_vec(shape_size(out_shape));
-
     runtime::reference::reshape<T>(constant_data->get_data_ptr<T>(),
-                                   out_vec.data(),
+                                   data_ptr,
                                    constant_data->get_shape(),
                                    input_order,
                                    out_shape);
 
-    return make_shared<op::Constant>(dyn_reshape->get_element_type(), out_shape, out_vec);
+    return make_shared<op::Constant>(dyn_reshape->get_element_type(), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_dyn_reshape()
