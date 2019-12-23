@@ -122,19 +122,7 @@ ngraph_tablegen(ops_attributes.h.inc -gen-enum-decls)
 ngraph_tablegen(ops_attributes.cpp.inc -gen-enum-defs)
 add_public_tablegen_target(ngraph_ops_attributes_gen)
 
-# table-gen fused_ops.td
-set(LLVM_TARGET_DEFINITIONS core/ngraph_dialect/fused_ops.td)
-ngraph_tablegen(fused_ops.h.inc -gen-op-decls)
-ngraph_tablegen(fused_ops.cpp.inc -gen-op-defs)
-add_public_tablegen_target(ngraph_fused_ops_gen)
-
-# table-gen fused_ops_pattern.td
-set(LLVM_TARGET_DEFINITIONS core/ngraph_dialect/fused_ops_pattern.td)
-ngraph_tablegen(fused_ops_pattern.h.inc -gen-op-decls)
-ngraph_tablegen(fused_ops_pattern.cpp.inc -gen-op-defs)
-add_public_tablegen_target(ngraph_fused_ops_pattern_gen)
-
-add_dependencies(mlir_backend ngraph_ops_gen ngraph_ops_interfaces_gen ngraph_ops_attributes_gen ngraph_fused_ops_gen ngraph_fused_ops_pattern_gen)
+add_dependencies(mlir_backend ngraph_ops_gen ngraph_ops_interfaces_gen ngraph_ops_attributes_gen)
 
 target_include_directories(mlir_backend PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 

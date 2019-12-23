@@ -21,10 +21,6 @@
 // NOTE: This file follows nGraph format style and MLIR naming convention since it does
 // not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
 
-include "core/ngraph_dialect/ops_v0.td"
-include "core/ngraph_dialect/fused_ops.td"
-include "core/ngraph_dialect/ops.td"
-include "mlir/IR/OpBase.td"
 
 // nGraph Dialect fused operations definitions
 //
@@ -39,4 +35,4 @@ include "mlir/IR/OpBase.td"
 
 // class for defining the pattern to fuse MatMul + Bias
 
-def Pat<(NGAddOp ( NGDotOp($dot_input1, $dot_input2), $add_input), NGMatMulBiasOp($dot_input1, $dot_input2, $add_input)>;
+def : Pat<(NGAddOp ( NGDotOp $dot_input1, $dot_input2), $add_input), (NGMatMulBiasOp $dot_input1, $dot_input2, $add_input)>;

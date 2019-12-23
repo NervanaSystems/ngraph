@@ -21,7 +21,7 @@
 #ifdef NG_FUSED_OPS
 #else
 #define NG_FUSED_OPS
-
+ 
 // Squeeze Op
 def NGSqueezeOp : 
     NG_OneResult_Op<"squeeze", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
@@ -1010,8 +1010,8 @@ def NGConvBiasAddOp :
 }
 
 // MatMulBias Op
-def NGMatMul : 
-  NG_OneResult_Op<"matmul", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+def NGMatMulBiasOp : 
+  NG_OneResult_Op<"matmulbias", [NoSideEffect]>,
   Arguments<(ins NG_TensorType:$A, NG_TensorType:$B, NG_TensorType:$bias, 
             DefaultValuedAttr<BoolAttr, "false">:$transposeA,
             DefaultValuedAttr<BoolAttr, "false">:$transposeB)>
