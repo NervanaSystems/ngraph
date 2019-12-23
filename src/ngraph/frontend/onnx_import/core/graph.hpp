@@ -55,15 +55,8 @@ namespace ngraph
                     std::string node_name =
                         onnx_node.get_name().empty() ? "unnamed node" : onnx_node.get_name();
                     std::string provenance_tag =
-                        "<ONNX " + onnx_node.op_type() + " (" + node_name + ") >";
+                        "<ONNX " + onnx_node.op_type() + " (" + node_name + ")>";
                     ng_node->add_provenance_tag(provenance_tag);
-
-                    // FOR DEBBUG ONLY
-                    auto tags = ng_node->get_provenance_tags();
-                    for (auto tag : tags)
-                    {
-                         std::cout << tag << std::endl;
-                    }
                 }
                 return ng_node_vector;
             }
