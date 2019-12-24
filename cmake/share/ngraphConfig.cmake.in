@@ -34,6 +34,7 @@ find_dependency(Threads)
 if(NOT TARGET ngraph)
     include("${CMAKE_CURRENT_LIST_DIR}/ngraphTargets.cmake")
 else()
+    message("TEST I am here!")
     if ("${CMAKE_GENERATOR}" STREQUAL "Ninja")
 	    add_library(ngraph::ngraph ALIAS ngraph)
 	else()
@@ -52,6 +53,7 @@ else()
             set(_LIB_POSTFIX ${CMAKE_DEBUG_POSTFIX})
         endif()
 
+        message("TEST I am here! <<< ${_LIB_LOC}/${CMAKE_SHARED_LIBRARY_PREFIX}${_LIB_NAME}${_LIB_POSTFIX}${CMAKE_SHARED_LIBRARY_SUFFIX}")
         set_target_properties(ngraph::ngraph PROPERTIES
             IMPORTED_LOCATION ${_LIB_LOC}/${CMAKE_SHARED_LIBRARY_PREFIX}${_LIB_NAME}${_LIB_POSTFIX}${CMAKE_SHARED_LIBRARY_SUFFIX}
             )
