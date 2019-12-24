@@ -2973,7 +2973,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             if (has_key(node_js, "provenance_tags"))
             {
-                std::vector<json> prov_js = node_js.at("provenance_tags");
+                const std::vector<json> prov_js = node_js.at("provenance_tags");
                 for (auto prov_tag : prov_js)
                 {
                     node->add_provenance_tag(prov_tag);

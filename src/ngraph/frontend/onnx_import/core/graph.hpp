@@ -48,13 +48,13 @@ namespace ngraph
             const std::string& get_name() const { return m_graph_proto->name(); }
             NodeVector make_ng_nodes(const Node& onnx_node) const
             {
-                auto ng_node_vector =
+                const auto ng_node_vector =
                     m_model->get_operator(onnx_node.op_type(), onnx_node.domain())(onnx_node);
                 for (auto& ng_node : ng_node_vector)
                 {
-                    std::string node_name =
+                    const std::string node_name =
                         onnx_node.get_name().empty() ? "unnamed node" : onnx_node.get_name();
-                    std::string provenance_tag =
+                    const std::string provenance_tag =
                         "<ONNX " + onnx_node.op_type() + " (" + node_name + ")>";
                     ng_node->add_provenance_tag(provenance_tag);
                 }
