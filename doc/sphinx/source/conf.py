@@ -63,7 +63,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'nGraph Compiler stack'
-copyright = '2017-2019, Intel Corporation'
+copyright = '2017-2020, Intel Corporation'
 author = 'Intel Corporation'
 
 # License specifics see LICENSE of component
