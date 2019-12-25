@@ -96,6 +96,10 @@ set (SRC
     ngraph.cpp
     ngraph.hpp
     ngraph_visibility.hpp
+    node_input.cpp
+    node_input.hpp
+    node_output.cpp
+    node_output.hpp
     node.cpp
     node.hpp
     op/abs.cpp

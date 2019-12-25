@@ -21,6 +21,7 @@
 #include <unordered_map>
 
 #include "ngraph/coordinate.hpp"
+#include "ngraph/node_output.hpp"
 #include "ngraph/output_vector.hpp"
 #include "ngraph/strides.hpp"
 
@@ -28,9 +29,6 @@ namespace ngraph
 {
     class Node;
     class Function;
-
-    template <typename T>
-    class Output;
 
     namespace autodiff
     {
@@ -51,7 +49,7 @@ namespace ngraph
             ///
             /// \param x The adjoint node
             /// \param delta A backprop contribution
-            void add_delta(const Output<Node>& x, const Output<Node>& delta);
+            void add_delta(const NodeOutput& x, const NodeOutput& delta);
 
             /// \brief Add a backprop contribution to a slice of x's adjoint
             ///
@@ -60,8 +58,8 @@ namespace ngraph
             /// \param lower_bounds Lower bounds of slice to add to
             /// \param upper_bounds Upper bounds of slice to add to
             /// \param strides Strides of slice to add to
-            void add_delta_to_slice(const Output<Node>& x,
-                                    const Output<Node>& delta,
+            void add_delta_to_slice(const NodeOutput& x,
+                                    const NodeOutput& delta,
                                     const Coordinate& lower_bounds,
                                     const Coordinate& upper_bounds,
                                     const Strides& strides);
@@ -69,7 +67,7 @@ namespace ngraph
             /// \brief (dy/dx)(c)
             ///
             /// \param x The output whose adjoint is desired.
-            Output<Node> backprop_output(const Output<Node>& x);
+            NodeOutput backprop_output(const NodeOutput& x);
 
         protected:
             std::map<Node*, OutputVector> m_adjoint_map;
