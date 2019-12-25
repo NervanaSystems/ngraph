@@ -22,8 +22,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v1::ReduceProd::type_info;
 
-op::v1::ReduceProd::ReduceProd(const Output<Node>& arg,
-                               const Output<Node>& reduction_axes,
+op::v1::ReduceProd::ReduceProd(const NodeOutput& arg,
+                               const NodeOutput& reduction_axes,
                                bool keep_dims)
     : ArithmeticReductionKeepDims(arg, reduction_axes, keep_dims)
 {

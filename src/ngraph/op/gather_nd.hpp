@@ -33,7 +33,7 @@ namespace ngraph
                 GatherND() = default;
                 /// \param params The tensor from which slices are gathered
                 /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
-                GatherND(const Output<Node>& params, const Output<Node>& indices)
+                GatherND(const NodeOutput& params, const NodeOutput& indices)
                     : Op({params, indices})
                 {
                     constructor_validate_and_infer_types();

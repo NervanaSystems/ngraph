@@ -36,12 +36,12 @@ namespace ngraph
                 ///
                 /// \param arg Output that produces the first input tensor.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
-                LogicalReduction(const Output<Node>& arg, const AxisSet& reduction_axes);
+                LogicalReduction(const NodeOutput& arg, const AxisSet& reduction_axes);
                 /// \brief Constructs a 'dynamic' logical reduction operation.
                 ///
                 /// \param arg Node that produces the first input tensor.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
-                LogicalReduction(const Output<Node>& arg, const Output<Node>& reduction_axes);
+                LogicalReduction(const NodeOutput& arg, const NodeOutput& reduction_axes);
 
             public:
                 void validate_and_infer_types() override;

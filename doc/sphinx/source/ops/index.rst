@@ -172,7 +172,7 @@ may define transformer-specific ops to represent kernels or other intermediate
 operations. 
 
 The  input and output ports of ops are any of the functions which work with 
-``Output<Node>/Input<Node>``. Previous functions that worked at the level 
+``NodeOutput/NodeInput``. Previous functions that worked at the level 
 of ops are deprecated, like::
 
    Node::get_element_type()

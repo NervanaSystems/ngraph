@@ -59,7 +59,7 @@ namespace ngraph
                 /// \param shape        The shape of the output tensor, including the new one-hot
                 /// axis.
                 /// \param one_hot_axis The index within the output shape of the new one-hot axis.
-                OneHot(const Output<Node>& arg, const PartialShape& shape, size_t one_hot_axis);
+                OneHot(const NodeOutput& arg, const PartialShape& shape, size_t one_hot_axis);
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
@@ -92,10 +92,10 @@ namespace ngraph
                 /// represented
                 ///                  by indices in input take.
                 /// \param axis      Axis along which one-hot representation in added.
-                OneHot(const Output<Node>& indices,
-                       const Output<Node>& depth,
-                       const Output<Node>& on_value,
-                       const Output<Node>& off_value,
+                OneHot(const NodeOutput& indices,
+                       const NodeOutput& depth,
+                       const NodeOutput& on_value,
+                       const NodeOutput& off_value,
                        int64_t axis);
 
                 virtual std::shared_ptr<Node>

@@ -22,9 +22,9 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Dequantize::type_info;
 
-op::Dequantize::Dequantize(const Output<Node>& input,
-                           const Output<Node>& scale,
-                           const Output<Node>& zero_point,
+op::Dequantize::Dequantize(const NodeOutput& input,
+                           const NodeOutput& scale,
+                           const NodeOutput& zero_point,
                            const element::Type& type,
                            const AxisSet& axes)
 

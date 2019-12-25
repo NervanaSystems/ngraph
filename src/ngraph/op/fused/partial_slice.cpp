@@ -30,7 +30,7 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::PartialSlice::type_info;
 constexpr NodeTypeInfo op::PartialSliceBackprop::type_info;
 
-op::PartialSlice::PartialSlice(const Output<Node>& data,
+op::PartialSlice::PartialSlice(const NodeOutput& data,
                                const AxisVector& axes,
                                const std::vector<int64_t>& lower_bounds,
                                const std::vector<int64_t>& upper_bounds,
@@ -151,8 +151,8 @@ void op::PartialSlice::generate_adjoints(autodiff::Adjoints& adjoints, const Out
     throw ngraph_error("op::PartialSlice::generate_adjoints function is not implemented yet");
 }
 
-op::PartialSliceBackprop::PartialSliceBackprop(const Output<Node>& data,
-                                               const Output<Node>& dout,
+op::PartialSliceBackprop::PartialSliceBackprop(const NodeOutput& data,
+                                               const NodeOutput& dout,
                                                const AxisVector& axes,
                                                const std::vector<int64_t>& lower_bounds,
                                                const std::vector<int64_t>& upper_bounds)

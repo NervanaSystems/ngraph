@@ -22,7 +22,7 @@ using namespace ngraph::fluid;
 
 constexpr NodeTypeInfo LayoutConverter::type_info;
 
-LayoutConverter::LayoutConverter(const Output<Node>& x, const int mode)
+LayoutConverter::LayoutConverter(const NodeOutput& x, const int mode)
     : FusedOp({x})
     , m_mode(mode)
 {

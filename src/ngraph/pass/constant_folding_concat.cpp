@@ -58,7 +58,7 @@ void pass::ConstantFolding::construct_constant_concat()
         auto concat_node = static_pointer_cast<op::Concat>(m.get_match_root());
         auto concat_inputs = concat_node->inputs();
 
-        if (std::any_of(concat_inputs.begin(), concat_inputs.end(), [](const Input<Node>& input) {
+        if (std::any_of(concat_inputs.begin(), concat_inputs.end(), [](const NodeInput& input) {
                 return !(input.get_source_output().get_node()->is_constant());
             }))
         {

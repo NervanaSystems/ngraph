@@ -21,7 +21,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Recv::type_info;
 
-op::Recv::Recv(const Output<Node>& arg, int src_id)
+op::Recv::Recv(const NodeOutput& arg, int src_id)
     : Op({arg})
     , m_src_id(src_id)
 {

@@ -40,7 +40,7 @@ namespace ngraph
                 /// \param      data  - Node producing the input tensor
                 /// \param      bias  - The bias added to the variance.
                 ///
-                GRN(const Output<Node>& data, float bias);
+                GRN(const NodeOutput& data, float bias);
 
                 float get_bias() const { return m_bias; }
                 virtual void pre_validate_and_infer_types() override;

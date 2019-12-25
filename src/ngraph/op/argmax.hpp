@@ -38,9 +38,7 @@ namespace ngraph
                 /// \param axis The axis along which to compute an index for maximum
                 /// \param index_element_type produce indices. Currently, only int64 or int32 are
                 ///                           supported
-                ArgMax(const Output<Node>& arg,
-                       size_t axis,
-                       const element::Type& index_element_type);
+                ArgMax(const NodeOutput& arg, size_t axis, const element::Type& index_element_type);
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;

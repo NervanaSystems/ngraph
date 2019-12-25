@@ -54,8 +54,8 @@ namespace ngraph
                 ///
                 /// Output `[N, C_OUT, R1, ... Rf]`
                 ///
-                GroupConvolution(const Output<Node>& data_batch,
-                                 const Output<Node>& filters,
+                GroupConvolution(const NodeOutput& data_batch,
+                                 const NodeOutput& filters,
                                  const Strides& strides,
                                  const CoordinateDiff& pads_begin,
                                  const CoordinateDiff& pads_end,
@@ -118,9 +118,9 @@ namespace ngraph
                 /// \param auto_pad        The pad type for automatically computing padding sizes.
                 /// \param output_padding  The output padding adds additional amount of paddings per each spatial axis in the output tensor.
                 // clang-format on
-                GroupConvolutionBackpropData(const Output<Node>& data,
-                                             const Output<Node>& filter,
-                                             const Output<Node>& output_shape,
+                GroupConvolutionBackpropData(const NodeOutput& data,
+                                             const NodeOutput& filter,
+                                             const NodeOutput& output_shape,
                                              const Strides& strides,
                                              const CoordinateDiff& pads_begin,
                                              const CoordinateDiff& pads_end,
@@ -140,8 +140,8 @@ namespace ngraph
                 /// \param auto_pad        The pad type for automatically computing padding sizes.
                 /// \param output_padding  The output padding adds additional amount of paddings per each spatial axis in the output tensor.
                 // clang-format on
-                GroupConvolutionBackpropData(const Output<Node>& data,
-                                             const Output<Node>& filter,
+                GroupConvolutionBackpropData(const NodeOutput& data,
+                                             const NodeOutput& filter,
                                              const Strides& strides,
                                              const CoordinateDiff& pads_begin,
                                              const CoordinateDiff& pads_end,
@@ -203,8 +203,8 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"GroupConvolution", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 GroupConvolution() = default;
-                GroupConvolution(const Output<Node>& data_batch,
-                                 const Output<Node>& filters,
+                GroupConvolution(const NodeOutput& data_batch,
+                                 const NodeOutput& filters,
                                  const Strides& window_movement_strides,
                                  const Strides& window_dilation_strides,
                                  const CoordinateDiff& padding_below,
@@ -214,8 +214,8 @@ namespace ngraph
                                  const PadType& pad_type = PadType::EXPLICIT);
 
                 // constructor which accept groups included in filters shape.
-                GroupConvolution(const Output<Node>& data_batch,
-                                 const Output<Node>& filters,
+                GroupConvolution(const NodeOutput& data_batch,
+                                 const NodeOutput& filters,
                                  const Strides& window_movement_strides,
                                  const Strides& window_dilation_strides,
                                  const CoordinateDiff& padding_below,
@@ -234,8 +234,8 @@ namespace ngraph
                 const CoordinateDiff& get_padding_below() const { return m_padding_below; }
                 const CoordinateDiff& get_padding_above() const { return m_padding_above; }
                 const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
-                Output<Node> get_filters() { return input_value(1); }
-                Output<Node> get_data_batch() { return input_value(0); }
+                NodeOutput get_filters() { return input_value(1); }
+                NodeOutput get_data_batch() { return input_value(0); }
                 size_t get_groups() const { return m_groups; };
                 const PadType& get_pad_type() const { return m_pad_type; }
                 virtual std::shared_ptr<Node>
@@ -270,9 +270,9 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"GroupConvolutionBackpropData", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 GroupConvolutionBackpropData() = default;
-                GroupConvolutionBackpropData(const Output<Node>& data_batch,
-                                             const Output<Node>& filters,
-                                             const Output<Node>& output_delta,
+                GroupConvolutionBackpropData(const NodeOutput& data_batch,
+                                             const NodeOutput& filters,
+                                             const NodeOutput& output_delta,
                                              const Strides& window_movement_strides,
                                              const Strides& window_dilation_strides,
                                              const CoordinateDiff& padding_below,
@@ -312,9 +312,9 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"GroupConvolutionBackpropFilters", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 GroupConvolutionBackpropFilters() = default;
-                GroupConvolutionBackpropFilters(const Output<Node>& data_batch,
-                                                const Output<Node>& filters,
-                                                const Output<Node>& output_delta,
+                GroupConvolutionBackpropFilters(const NodeOutput& data_batch,
+                                                const NodeOutput& filters,
+                                                const NodeOutput& output_delta,
                                                 const Strides& window_movement_strides,
                                                 const Strides& window_dilation_strides,
                                                 const CoordinateDiff& padding_below,

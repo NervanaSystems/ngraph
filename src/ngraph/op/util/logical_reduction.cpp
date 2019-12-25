@@ -25,7 +25,7 @@ op::util::LogicalReduction::LogicalReduction()
 {
 }
 
-op::util::LogicalReduction::LogicalReduction(const Output<Node>& arg, const AxisSet& reduction_axes)
+op::util::LogicalReduction::LogicalReduction(const NodeOutput& arg, const AxisSet& reduction_axes)
     : Op({arg,
           op::Constant::create(
               element::i64, Shape{reduction_axes.size()}, reduction_axes.to_vector())
@@ -34,8 +34,8 @@ op::util::LogicalReduction::LogicalReduction(const Output<Node>& arg, const Axis
     add_provenance_group_member(input_value(1).get_node_shared_ptr());
 }
 
-op::util::LogicalReduction::LogicalReduction(const Output<Node>& arg,
-                                             const Output<Node>& reduction_axes)
+op::util::LogicalReduction::LogicalReduction(const NodeOutput& arg,
+                                             const NodeOutput& reduction_axes)
     : Op({arg, reduction_axes})
 {
 }

@@ -23,9 +23,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::ScaleShift::type_info;
 
-op::ScaleShift::ScaleShift(const Output<Node>& data,
-                           const Output<Node>& scale,
-                           const Output<Node>& shift)
+op::ScaleShift::ScaleShift(const NodeOutput& data, const NodeOutput& scale, const NodeOutput& shift)
     : FusedOp({data, scale, shift})
 {
     constructor_validate_and_infer_types();

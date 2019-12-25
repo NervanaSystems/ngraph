@@ -24,7 +24,7 @@ using namespace ngraph;
 // *** AvgPool OP SET 0 ***
 constexpr NodeTypeInfo op::v0::AvgPool::type_info;
 
-op::v0::AvgPool::AvgPool(const Output<Node>& arg,
+op::v0::AvgPool::AvgPool(const NodeOutput& arg,
                          const Shape& window_shape,
                          const Strides& window_movement_strides,
                          const Shape& padding_below,
@@ -44,7 +44,7 @@ op::v0::AvgPool::AvgPool(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::v0::AvgPool::AvgPool(const Output<Node>& arg,
+op::v0::AvgPool::AvgPool(const NodeOutput& arg,
                          const Shape& window_shape,
                          const Strides& window_movement_strides,
                          const Shape& padding_below,
@@ -62,7 +62,7 @@ op::v0::AvgPool::AvgPool(const Output<Node>& arg,
 {
 }
 
-op::v0::AvgPool::AvgPool(const Output<Node>& arg,
+op::v0::AvgPool::AvgPool(const NodeOutput& arg,
                          const Shape& window_shape,
                          const Strides& window_movement_strides,
                          const Shape& padding_below,
@@ -144,14 +144,14 @@ void op::v0::AvgPool::validate_and_infer_types()
                                                   m_ceil_mode));
 }
 
-op::v0::AvgPool::AvgPool(const Output<Node>& arg,
+op::v0::AvgPool::AvgPool(const NodeOutput& arg,
                          const Shape& window_shape,
                          const Strides& window_movement_strides)
     : AvgPool(arg, window_shape, window_movement_strides, Shape(), Shape(), false)
 {
 }
 
-op::v0::AvgPool::AvgPool(const Output<Node>& arg, const Shape& window_shape)
+op::v0::AvgPool::AvgPool(const NodeOutput& arg, const Shape& window_shape)
     : AvgPool(arg, window_shape, Strides(), Shape(), Shape(), false)
 {
 }
@@ -247,7 +247,7 @@ shared_ptr<Node> op::v0::AvgPool::get_default_value() const
 }
 
 op::v0::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
-                                         const Output<Node>& delta,
+                                         const NodeOutput& delta,
                                          const Shape& window_shape,
                                          const Strides& window_movement_strides,
                                          const Shape& padding_below,
@@ -407,7 +407,7 @@ void op::v0::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
 // *** AvgPool OP SET 1 ***
 constexpr NodeTypeInfo op::v1::AvgPool::type_info;
 
-op::v1::AvgPool::AvgPool(const Output<Node>& arg,
+op::v1::AvgPool::AvgPool(const NodeOutput& arg,
                          const Strides& strides,
                          const Shape& pads_begin,
                          const Shape& pads_end,
@@ -427,7 +427,7 @@ op::v1::AvgPool::AvgPool(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::v1::AvgPool::AvgPool(const Output<Node>& arg,
+op::v1::AvgPool::AvgPool(const NodeOutput& arg,
                          const Strides& strides,
                          const Shape& pads_begin,
                          const Shape& pads_end,
@@ -595,8 +595,8 @@ shared_ptr<Node> op::v1::AvgPool::copy_with_new_args(const NodeVector& new_args)
 
 constexpr NodeTypeInfo op::v1::AvgPoolBackprop::type_info;
 
-op::v1::AvgPoolBackprop::AvgPoolBackprop(const Output<Node>& delta,
-                                         const Output<Node>& forward_arg_shape,
+op::v1::AvgPoolBackprop::AvgPoolBackprop(const NodeOutput& delta,
+                                         const NodeOutput& forward_arg_shape,
                                          const Strides& strides,
                                          const Shape& pads_begin,
                                          const Shape& pads_end,

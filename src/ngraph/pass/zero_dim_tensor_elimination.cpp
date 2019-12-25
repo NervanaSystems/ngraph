@@ -35,7 +35,7 @@
 using namespace std;
 using namespace ngraph;
 
-static bool has_zero_dim(const Output<Node>& output)
+static bool has_zero_dim(const NodeOutput& output)
 {
     const auto& shape = output.get_shape();
     return find(shape.begin(), shape.end(), 0) != shape.end();
@@ -43,7 +43,7 @@ static bool has_zero_dim(const Output<Node>& output)
 
 static bool verify_no_internal_zero_length_ops(shared_ptr<Function> f)
 {
-    set<Output<Node>> zero_length_source_outputs;
+    set<NodeOutput> zero_length_source_outputs;
     for (auto n : f->get_ordered_ops())
     {
         if (n->is_output() || n->is_parameter() || n->is_constant() || n->get_output_size() > 1)
@@ -139,9 +139,9 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
             if (shape_size(replacement_shape) == 0)
             {
                 // Op is a noop
-                Output<Node> source_output = replace_slice->input(0).get_source_output();
-                Output<Node> output = replace_slice->output(0);
-                for (Input<Node> input : output.get_target_inputs())
+                NodeOutput source_output = replace_slice->input(0).get_source_output();
+                NodeOutput output = replace_slice->output(0);
+                for (NodeInput input : output.get_target_inputs())
                 {
                     input.replace_source_output(source_output);
                 }

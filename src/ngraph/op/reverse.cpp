@@ -26,7 +26,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::Reverse::type_info;
 
-op::v0::Reverse::Reverse(const Output<Node>& arg, const AxisSet& reversed_axes)
+op::v0::Reverse::Reverse(const NodeOutput& arg, const AxisSet& reversed_axes)
     : Op({arg})
     , m_reversed_axes(reversed_axes)
 {
@@ -73,8 +73,8 @@ void op::v0::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
 
 constexpr NodeTypeInfo op::v1::Reverse::type_info;
 
-op::v1::Reverse::Reverse(const Output<Node>& data,
-                         const Output<Node>& reversed_axes,
+op::v1::Reverse::Reverse(const NodeOutput& data,
+                         const NodeOutput& reversed_axes,
                          const std::string& mode)
     : Op({data, reversed_axes})
     , m_mode{mode_from_string(mode)}
@@ -82,9 +82,7 @@ op::v1::Reverse::Reverse(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-op::v1::Reverse::Reverse(const Output<Node>& data,
-                         const Output<Node>& reversed_axes,
-                         const Mode mode)
+op::v1::Reverse::Reverse(const NodeOutput& data, const NodeOutput& reversed_axes, const Mode mode)
     : Op({data, reversed_axes})
     , m_mode{mode}
 {

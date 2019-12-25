@@ -26,8 +26,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::Power::type_info;
 
-op::v0::Power::Power(const Output<Node>& arg0,
-                     const Output<Node>& arg1,
+op::v0::Power::Power(const NodeOutput& arg0,
+                     const NodeOutput& arg1,
                      const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
@@ -62,8 +62,8 @@ void op::v0::Power::generate_adjoints(autodiff::Adjoints& adjoints, const Output
 
 constexpr NodeTypeInfo op::v1::Power::type_info;
 
-op::v1::Power::Power(const Output<Node>& arg0,
-                     const Output<Node>& arg1,
+op::v1::Power::Power(const NodeOutput& arg0,
+                     const NodeOutput& arg1,
                      const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {

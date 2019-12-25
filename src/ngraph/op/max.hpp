@@ -39,13 +39,13 @@ namespace ngraph
                 ///
                 /// \param arg The tensor to be reduced.
                 /// \param reduction_axes The axis positions (0-based) to be elimaxated.
-                Max(const Output<Node>& arg, const AxisSet& reduction_axes);
+                Max(const NodeOutput& arg, const AxisSet& reduction_axes);
 
                 /// \brief Constructs a "max" reduction operation.
                 ///
                 /// \param arg The tensor to be reduced.
                 /// \param reduction_axes The axis positions (0-based) to be elimaxated.
-                Max(const Output<Node>& arg, const Output<Node>& reduction_axes);
+                Max(const NodeOutput& arg, const NodeOutput& reduction_axes);
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
@@ -69,8 +69,8 @@ namespace ngraph
                 /// \param arg The tensor to be summed.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
                 /// \param keep_dims If set to 1 it holds axes that are used for reduction.
-                ReduceMax(const Output<Node>& arg,
-                          const Output<Node>& reduction_axes,
+                ReduceMax(const NodeOutput& arg,
+                          const NodeOutput& reduction_axes,
                           bool keep_dims = false);
 
                 size_t get_version() const override { return 1; }

@@ -65,8 +65,8 @@ namespace ngraph
             /// \param strides The slicing strides; for example, strides of `{n,m}` means to take
             ///                every nth row and every mth column of `arg0` as part of the
             ///                slice to be replaced.
-            UpdateSlice(const Output<Node>& arg0,
-                        const Output<Node>& arg1,
+            UpdateSlice(const NodeOutput& arg0,
+                        const NodeOutput& arg1,
                         const Coordinate& lower_bounds,
                         const Coordinate& upper_bounds,
                         const Strides& strides);
@@ -78,8 +78,8 @@ namespace ngraph
             /// \param arg1 The tensor to increment into `arg0`.
             /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).
             /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
-            UpdateSlice(const Output<Node>& arg0,
-                        const Output<Node>& arg1,
+            UpdateSlice(const NodeOutput& arg0,
+                        const NodeOutput& arg1,
                         const Coordinate& lower_bounds,
                         const Coordinate& upper_bounds);
 

@@ -24,7 +24,7 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::GetOutputElement::type_info;
 
 op::GetOutputElement::GetOutputElement(const shared_ptr<Node>& arg, size_t n)
-    : Op({Output<Node>{arg, n}})
+    : Op({NodeOutput{arg, n}})
     , m_n{n}
 {
     constructor_validate_and_infer_types();
@@ -49,7 +49,7 @@ shared_ptr<Node> op::GetOutputElement::copy_with_new_args(const NodeVector& new_
     return make_shared<GetOutputElement>(new_args.at(0), m_n);
 }
 
-Output<Node> op::GetOutputElement::get_as_output() const
+NodeOutput op::GetOutputElement::get_as_output() const
 {
     return input_value(0);
 }

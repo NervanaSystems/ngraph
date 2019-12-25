@@ -33,8 +33,8 @@ namespace ngraph
                 /// \param arg The tensor to be summed.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
                 /// \param keep_dims If set to 1 it holds axes that are used for reduction.
-                ArithmeticReductionKeepDims(const Output<Node>& arg,
-                                            const Output<Node>& reduction_axes,
+                ArithmeticReductionKeepDims(const NodeOutput& arg,
+                                            const NodeOutput& reduction_axes,
                                             bool keep_dims = false);
 
             public:

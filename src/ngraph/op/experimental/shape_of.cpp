@@ -21,7 +21,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::ShapeOf::type_info;
 
-op::ShapeOf::ShapeOf(const Output<Node>& arg)
+op::ShapeOf::ShapeOf(const NodeOutput& arg)
     : Op({arg})
 {
     constructor_validate_and_infer_types();

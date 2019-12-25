@@ -39,8 +39,8 @@ namespace ngraph
                 /// \param n The index of the tuple element to get.
                 GetOutputElement(const std::shared_ptr<Node>& arg, size_t n);
 
-                /// Return the equilent Output<Node>
-                Output<Node> get_as_output() const;
+                /// Return the equilent NodeOutput
+                NodeOutput get_as_output() const;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
@@ -59,7 +59,7 @@ namespace ngraph
         using v0::GetOutputElement;
     }
 
-    inline std::shared_ptr<Node> get_output_element(const Output<Node>& output,
+    inline std::shared_ptr<Node> get_output_element(const NodeOutput& output,
                                                     bool for_get_output_element = false)
     {
         return (for_get_output_element ||

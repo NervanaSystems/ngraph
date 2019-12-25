@@ -25,10 +25,10 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v1::StridedSlice::type_info;
 
-op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
-                                   const Output<Node>& begin,
-                                   const Output<Node>& end,
-                                   const Output<Node>& strides,
+op::v1::StridedSlice::StridedSlice(const NodeOutput& data,
+                                   const NodeOutput& begin,
+                                   const NodeOutput& end,
+                                   const NodeOutput& strides,
                                    const std::vector<int64_t>& begin_mask,
                                    const std::vector<int64_t>& end_mask,
                                    const std::vector<int64_t>& new_axis_mask,
@@ -44,9 +44,9 @@ op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
-                                   const Output<Node>& begin,
-                                   const Output<Node>& end,
+op::v1::StridedSlice::StridedSlice(const NodeOutput& data,
+                                   const NodeOutput& begin,
+                                   const NodeOutput& end,
                                    const std::vector<int64_t>& begin_mask,
                                    const std::vector<int64_t>& end_mask,
                                    const std::vector<int64_t>& new_axis_mask,

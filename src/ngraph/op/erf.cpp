@@ -29,7 +29,7 @@ shared_ptr<Node> op::Erf::copy_with_new_args(const NodeVector& new_args) const
     return make_shared<Erf>(new_args.at(0));
 }
 
-op::Erf::Erf(const Output<Node>& arg)
+op::Erf::Erf(const NodeOutput& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();

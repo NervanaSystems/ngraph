@@ -82,7 +82,7 @@ namespace ngraph
                 ///                     \f$(a_0,\dots,a_{k-1})\f$ then the output shape must
                 ///                     be of the form \f$(b_0,\dots,b_{j-1})\f$ where
                 ///                     \f$\Pi(a_i) = \Pi(b_i)\f$.
-                Reshape(const Output<Node>& arg,
+                Reshape(const NodeOutput& arg,
                         const AxisVector& input_order,
                         const Shape& output_shape);
 
@@ -135,7 +135,7 @@ namespace ngraph
                 /// \param special_zero Treats zeros in `pattern` as wildcard flags indicating a
                 /// copy
                 /// from input shape at the same index.
-                Reshape(const Output<Node>& arg, const Output<Node>& pattern, bool special_zero);
+                Reshape(const NodeOutput& arg, const NodeOutput& pattern, bool special_zero);
 
                 void validate_and_infer_types() override;
 

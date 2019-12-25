@@ -24,8 +24,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::Subtract::type_info;
 
-op::v0::Subtract::Subtract(const Output<Node>& arg0,
-                           const Output<Node>& arg1,
+op::v0::Subtract::Subtract(const NodeOutput& arg0,
+                           const NodeOutput& arg1,
                            const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
@@ -54,7 +54,7 @@ void op::Subtract::generate_adjoints(autodiff::Adjoints& adjoints, const OutputV
     adjoints.add_delta(y, -delta);
 }
 
-shared_ptr<ngraph::Node> ngraph::operator-(const Output<Node> arg0, const Output<Node> arg1)
+shared_ptr<ngraph::Node> ngraph::operator-(const NodeOutput arg0, const NodeOutput arg1)
 {
     return make_shared<op::v0::Subtract>(arg0, arg1);
 }
@@ -63,8 +63,8 @@ shared_ptr<ngraph::Node> ngraph::operator-(const Output<Node> arg0, const Output
 
 constexpr NodeTypeInfo op::v1::Subtract::type_info;
 
-op::v1::Subtract::Subtract(const Output<Node>& arg0,
-                           const Output<Node>& arg1,
+op::v1::Subtract::Subtract(const NodeOutput& arg0,
+                           const NodeOutput& arg1,
                            const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {

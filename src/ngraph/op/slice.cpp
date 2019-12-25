@@ -21,7 +21,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Slice::type_info;
 
-op::Slice::Slice(const Output<Node>& arg,
+op::Slice::Slice(const NodeOutput& arg,
                  const Coordinate& lower_bounds,
                  const Coordinate& upper_bounds,
                  const Strides& strides)
@@ -33,7 +33,7 @@ op::Slice::Slice(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::Slice::Slice(const Output<Node>& arg,
+op::Slice::Slice(const NodeOutput& arg,
                  const Coordinate& lower_bounds,
                  const Coordinate& upper_bounds)
     : Op({arg})

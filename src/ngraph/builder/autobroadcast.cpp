@@ -151,12 +151,12 @@ namespace ngraph
         /// Return a pointer to the node that produces the wrapped value.
         /// If no additional reshape or broadcast op was needed, simply return \p node.
         static std::shared_ptr<Node>
-            add_required_ops(const Output<Node>& value,
+            add_required_ops(const NodeOutput& value,
                              const ngraph::Shape& shape_after_possible_reshaping,
                              const ngraph::AxisSet& broadcast_axes,
                              const ngraph::Shape& final_shape)
         {
-            Output<Node> return_value{value};
+            NodeOutput return_value{value};
 
             if (value.get_shape() != shape_after_possible_reshaping)
             {
@@ -176,7 +176,7 @@ namespace ngraph
         }
 
         std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>
-            numpy_broadcast(const std::pair<Output<Node>, Output<Node>>& args)
+            numpy_broadcast(const std::pair<NodeOutput, NodeOutput>& args)
         {
             NGRAPH_CHECK(args.first.get_node());
             NGRAPH_CHECK(args.second.get_node());

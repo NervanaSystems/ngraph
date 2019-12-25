@@ -123,8 +123,8 @@ shared_ptr<Node> reshape_to_original(shared_ptr<Node> input, const Shape& shape)
 }
 
 constexpr NodeTypeInfo MatMul::type_info;
-MatMul::MatMul(const Output<Node>& A,
-               const Output<Node>& B,
+MatMul::MatMul(const NodeOutput& A,
+               const NodeOutput& B,
                const bool transpose_a,
                const bool transpose_b)
     : FusedOp(OutputVector{A, B})
@@ -220,9 +220,9 @@ shared_ptr<Node> MatMul::copy_with_new_args(const NodeVector& new_args) const
 }
 
 constexpr NodeTypeInfo MatMulGrad::type_info;
-MatMulGrad::MatMulGrad(const Output<Node>& A,
-                       const Output<Node>& B,
-                       const Output<Node>& Out,
+MatMulGrad::MatMulGrad(const NodeOutput& A,
+                       const NodeOutput& B,
+                       const NodeOutput& Out,
                        const bool transpose_a,
                        const bool transpose_b)
     : FusedOp(OutputVector{A, B, Out})

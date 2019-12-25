@@ -22,7 +22,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Exp::type_info;
 
-op::Exp::Exp(const Output<Node>& arg)
+op::Exp::Exp(const NodeOutput& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();

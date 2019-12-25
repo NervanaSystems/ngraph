@@ -54,8 +54,8 @@ namespace ngraph
                 ///
                 /// Output `[N, C_OUT, R1, ... Rf]`
                 ///
-                Convolution(const Output<Node>& data_batch,
-                            const Output<Node>& filters,
+                Convolution(const NodeOutput& data_batch,
+                            const NodeOutput& filters,
                             const Strides& strides,
                             const CoordinateDiff& pads_begin,
                             const CoordinateDiff& pads_end,
@@ -116,9 +116,9 @@ namespace ngraph
                 /// \param auto_pad        The pad type for automatically computing padding sizes.
                 /// \param output_padding  The output padding adds additional amount of paddings per each spatial axis in the output tensor.
                 // clang-format on
-                ConvolutionBackpropData(const Output<Node>& data,
-                                        const Output<Node>& filters,
-                                        const Output<Node>& output_shape,
+                ConvolutionBackpropData(const NodeOutput& data,
+                                        const NodeOutput& filters,
+                                        const NodeOutput& output_shape,
                                         const Strides& strides,
                                         const CoordinateDiff& pads_begin,
                                         const CoordinateDiff& pads_end,
@@ -138,8 +138,8 @@ namespace ngraph
                 /// \param auto_pad        The pad type for automatically computing padding sizes.
                 /// \param output_padding  The output padding adds additional amount of paddings per each spatial axis in the output tensor.
                 // clang-format on
-                ConvolutionBackpropData(const Output<Node>& data,
-                                        const Output<Node>& filters,
+                ConvolutionBackpropData(const NodeOutput& data,
+                                        const NodeOutput& filters,
                                         const Strides& strides,
                                         const CoordinateDiff& pads_begin,
                                         const CoordinateDiff& pads_end,
@@ -205,9 +205,9 @@ namespace ngraph
                 /// \param dilations The dilations from forward-prop.
                 /// \param pads_begin The padding-below sizes from forward-prop.
                 /// \param pads_end The padding-above sizes from forward-prop.
-                ConvolutionBackpropFilters(const Output<Node>& data_batch,
-                                           const Output<Node>& output_delta,
-                                           const Output<Node>& filters_shape,
+                ConvolutionBackpropFilters(const NodeOutput& data_batch,
+                                           const NodeOutput& output_delta,
+                                           const NodeOutput& filters_shape,
                                            const Strides& strides,
                                            const Strides& dilations,
                                            const CoordinateDiff& pads_begin,
@@ -276,8 +276,8 @@ namespace ngraph
                 ///
                 /// Output `[N, C_OUT, R1, ... Rf]`
                 ///
-                Convolution(const Output<Node>& data_batch,
-                            const Output<Node>& filters,
+                Convolution(const NodeOutput& data_batch,
+                            const NodeOutput& filters,
                             const Strides& window_movement_strides,
                             const Strides& window_dilation_strides,
                             const CoordinateDiff& padding_below,
@@ -304,8 +304,8 @@ namespace ngraph
                 ///
                 /// Output `[N, C_OUT, R1, ... Rf]`
                 ///
-                Convolution(const Output<Node>& data_batch,
-                            const Output<Node>& filters,
+                Convolution(const NodeOutput& data_batch,
+                            const NodeOutput& filters,
                             const Strides& window_movement_strides,
                             const Strides& window_dilation_strides,
                             const CoordinateDiff& padding_below,
@@ -327,8 +327,8 @@ namespace ngraph
                 ///
                 /// Output `[N, C_OUT, R1, ... Rf]`
                 ///
-                Convolution(const Output<Node>& data_batch,
-                            const Output<Node>& filters,
+                Convolution(const NodeOutput& data_batch,
+                            const NodeOutput& filters,
                             const Strides& window_movement_strides,
                             const Strides& window_dilation_strides);
 
@@ -346,8 +346,8 @@ namespace ngraph
                 ///
                 /// Output `[N, C_OUT, R1, ... Rf]`
                 ///
-                Convolution(const Output<Node>& data_batch,
-                            const Output<Node>& filters,
+                Convolution(const NodeOutput& data_batch,
+                            const NodeOutput& filters,
                             const Strides& window_movement_strides);
 
                 /// \brief Constructs a batched convolution operation with no window dilation or
@@ -361,7 +361,7 @@ namespace ngraph
                 ///
                 /// Output `[N, C_OUT, R1, ... Rf]`
                 ///
-                Convolution(const Output<Node>& data_batch, const Output<Node>& filters);
+                Convolution(const NodeOutput& data_batch, const NodeOutput& filters);
 
                 void validate_and_infer_types() override;
 
@@ -443,8 +443,8 @@ namespace ngraph
                 /// \param data_dilation_strides_forward The data dilation strides from
                 /// forward-prop.
                 ConvolutionBackpropData(const Shape& data_batch_shape,
-                                        const Output<Node>& filters,
-                                        const Output<Node>& data,
+                                        const NodeOutput& filters,
+                                        const NodeOutput& data,
                                         const Strides& window_movement_strides_forward,
                                         const Strides& window_dilation_strides_forward,
                                         const CoordinateDiff& padding_below_forward,
@@ -544,9 +544,9 @@ namespace ngraph
                 /// forward-prop. \param padding_above_forward The padding-above sizes from
                 /// forward-prop. \param data_dilation_strides_forward The data dilation strides
                 /// from forward-prop.
-                ConvolutionBackpropFilters(const Output<Node>& data_batch,
+                ConvolutionBackpropFilters(const NodeOutput& data_batch,
                                            const Shape& filters_shape,
-                                           const Output<Node>& output_delta,
+                                           const NodeOutput& output_delta,
                                            const Strides& window_movement_strides_forward,
                                            const Strides& window_dilation_strides_forward,
                                            const CoordinateDiff& padding_below_forward,

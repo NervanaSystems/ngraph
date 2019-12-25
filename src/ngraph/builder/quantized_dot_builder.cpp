@@ -25,15 +25,15 @@ namespace ngraph
 {
     namespace builder
     {
-        shared_ptr<Node> QuantizedDotBuilder(const Output<Node>& input0,
-                                             const Output<Node>& input1,
+        shared_ptr<Node> QuantizedDotBuilder(const NodeOutput& input0,
+                                             const NodeOutput& input1,
                                              const size_t reduction_axes_count,
-                                             const Output<Node>& min_input0,
-                                             const Output<Node>& max_input0,
-                                             const Output<Node>& min_input1,
-                                             const Output<Node>& max_input1,
-                                             const Output<Node>& min_output,
-                                             const Output<Node>& max_output,
+                                             const NodeOutput& min_input0,
+                                             const NodeOutput& max_input0,
+                                             const NodeOutput& min_input1,
+                                             const NodeOutput& max_input1,
+                                             const NodeOutput& min_output,
+                                             const NodeOutput& max_output,
                                              const ngraph::element::Type& output_type,
                                              const ngraph::AxisSet& input0_axes,
                                              const ngraph::AxisSet& input1_axes,
@@ -66,15 +66,15 @@ namespace ngraph
                 ->add_provenance_group_members_above({input0, input1});
         }
 
-        shared_ptr<Node> QuantizedDotBiasBuilder(const Output<Node>& input,
-                                                 const Output<Node>& filters,
-                                                 const Output<Node>& bias,
-                                                 const Output<Node>& min_input,
-                                                 const Output<Node>& max_input,
-                                                 const Output<Node>& min_filter,
-                                                 const Output<Node>& max_filter,
-                                                 const Output<Node>& min_output,
-                                                 const Output<Node>& max_output,
+        shared_ptr<Node> QuantizedDotBiasBuilder(const NodeOutput& input,
+                                                 const NodeOutput& filters,
+                                                 const NodeOutput& bias,
+                                                 const NodeOutput& min_input,
+                                                 const NodeOutput& max_input,
+                                                 const NodeOutput& min_filter,
+                                                 const NodeOutput& max_filter,
+                                                 const NodeOutput& min_output,
+                                                 const NodeOutput& max_output,
                                                  const bool requantize,
                                                  const bool with_relu)
         {

@@ -54,11 +54,11 @@ namespace ngraph
                 /// \param mode Specifies how the input depth dimension is split to block
                 /// coordinates
                 /// \param block_size The size of the block of values to be moved
-                DepthToSpace(const Output<Node>& data,
+                DepthToSpace(const NodeOutput& data,
                              const DepthToSpaceMode& mode,
                              std::size_t block_size = 1);
 
-                DepthToSpace(const Output<Node>& data,
+                DepthToSpace(const NodeOutput& data,
                              const std::string& mode,
                              std::size_t block_size = 1);
 

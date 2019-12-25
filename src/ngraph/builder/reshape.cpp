@@ -33,13 +33,13 @@
 using namespace ngraph;
 using namespace std;
 
-shared_ptr<Node> builder::reshape(const Output<Node>& value, const Shape& shape)
+shared_ptr<Node> builder::reshape(const NodeOutput& value, const Shape& shape)
 {
     return make_shared<op::Reshape>(value, get_default_order(value.get_shape().size()), shape)
         ->add_provenance_group_members_above({value});
 }
 
-shared_ptr<Node> builder::reorder_axes(const Output<Node>& value, vector<size_t> axes_order)
+shared_ptr<Node> builder::reorder_axes(const NodeOutput& value, vector<size_t> axes_order)
 {
     Shape out_shape = value.get_shape();
     if (axes_order.empty())
@@ -60,7 +60,7 @@ shared_ptr<Node> builder::reorder_axes(const Output<Node>& value, vector<size_t>
         ->add_provenance_group_members_above({value});
 }
 
-shared_ptr<Node> builder::transpose(const Output<Node>& value)
+shared_ptr<Node> builder::transpose(const NodeOutput& value)
 {
     vector<size_t> axes_order(value.get_shape().size());
     iota(begin(axes_order), end(axes_order), 0);
@@ -68,7 +68,7 @@ shared_ptr<Node> builder::transpose(const Output<Node>& value)
     return builder::reorder_axes(value, axes_order);
 }
 
-shared_ptr<Node> builder::flatten(const Output<Node>& value, int axis)
+shared_ptr<Node> builder::flatten(const NodeOutput& value, int axis)
 {
     auto data_shape = value.get_shape();
 
@@ -87,7 +87,7 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, int axis)
 }
 
 // Dynamic version of "flatten".
-shared_ptr<Node> builder::flatten(const Output<Node>& value, const Output<Node>& axis)
+shared_ptr<Node> builder::flatten(const NodeOutput& value, const NodeOutput& axis)
 {
     // value_shape := ShapeOf(value)
     auto value_shape = make_shared<op::ShapeOf>(value);
@@ -125,7 +125,7 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, const Output<Node>&
         ->add_provenance_group_members_above({value});
 }
 
-shared_ptr<Node> builder::squeeze(const Output<Node>& value, vector<size_t> axes)
+shared_ptr<Node> builder::squeeze(const NodeOutput& value, vector<size_t> axes)
 {
     if (axes.empty())
     {
@@ -149,7 +149,7 @@ shared_ptr<Node> builder::squeeze(const Output<Node>& value, vector<size_t> axes
 }
 
 shared_ptr<Node>
-    builder::collapse(const Output<Node>& value, const size_t start_axis, const size_t end_axis)
+    builder::collapse(const NodeOutput& value, const size_t start_axis, const size_t end_axis)
 {
     auto shape = value.get_shape();
     size_t collapsed_axis_size = accumulate(next(begin(shape), start_axis),
@@ -162,7 +162,7 @@ shared_ptr<Node>
     return builder::reshape(value, output_shape);
 }
 
-shared_ptr<Node> builder::expand_dims(const Output<Node>& value, size_t axis)
+shared_ptr<Node> builder::expand_dims(const NodeOutput& value, size_t axis)
 {
     Shape output_shape(value.get_shape());
     // Add empty axis at specified position.

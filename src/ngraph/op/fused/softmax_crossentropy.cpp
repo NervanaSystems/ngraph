@@ -36,8 +36,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::SoftmaxCrossEntropy::type_info;
 
-op::SoftmaxCrossEntropy::SoftmaxCrossEntropy(const Output<Node>& arg1,
-                                             const Output<Node>& arg2,
+op::SoftmaxCrossEntropy::SoftmaxCrossEntropy(const NodeOutput& arg1,
+                                             const NodeOutput& arg2,
                                              bool soft_label,
                                              int64_t ignore_index)
     : FusedOp({arg1, arg2})
@@ -160,9 +160,9 @@ shared_ptr<Node> op::SoftmaxCrossEntropy::copy_with_new_args(const NodeVector& n
 
 constexpr NodeTypeInfo op::SoftmaxCrossEntropyBackprop::type_info;
 
-op::SoftmaxCrossEntropyBackprop::SoftmaxCrossEntropyBackprop(const Output<Node>& delta,
-                                                             const Output<Node>& softmax,
-                                                             const Output<Node>& labels,
+op::SoftmaxCrossEntropyBackprop::SoftmaxCrossEntropyBackprop(const NodeOutput& delta,
+                                                             const NodeOutput& softmax,
+                                                             const NodeOutput& labels,
                                                              bool soft_label,
                                                              int64_t ignore_index)
     : FusedOp({delta, softmax, labels})

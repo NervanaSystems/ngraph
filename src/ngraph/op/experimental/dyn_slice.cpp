@@ -26,10 +26,10 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::DynSlice::type_info;
 
-op::DynSlice::DynSlice(const Output<Node>& arg,
-                       const Output<Node>& lower_bounds,
-                       const Output<Node>& upper_bounds,
-                       const Output<Node>& strides,
+op::DynSlice::DynSlice(const NodeOutput& arg,
+                       const NodeOutput& lower_bounds,
+                       const NodeOutput& upper_bounds,
+                       const NodeOutput& strides,
                        const AxisSet& lower_bounds_mask,
                        const AxisSet& upper_bounds_mask,
                        const AxisSet& new_axis,

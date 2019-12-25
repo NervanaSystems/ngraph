@@ -40,8 +40,8 @@ namespace ngraph
                 /// \param reduction_axes - The input tensor with information about axes over which
                 /// the first tensor should be sliced prior to the reduction operation
                 /// \param keep_dims - Indicates if the axes used for reduction should be held/kept
-                ReduceLogicalAnd(const Output<Node>& data,
-                                 const Output<Node>& reduction_axes,
+                ReduceLogicalAnd(const NodeOutput& data,
+                                 const NodeOutput& reduction_axes,
                                  const bool keep_dims = false);
 
                 virtual std::shared_ptr<Node>

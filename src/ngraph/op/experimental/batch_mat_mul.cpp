@@ -24,7 +24,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::BatchMatMul::type_info;
 
-op::BatchMatMul::BatchMatMul(const Output<Node>& arg0, const Output<Node>& arg1)
+op::BatchMatMul::BatchMatMul(const NodeOutput& arg0, const NodeOutput& arg1)
     : Op({arg0, arg1})
 {
     constructor_validate_and_infer_types();

@@ -32,7 +32,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Acos::type_info;
 
-op::Acos::Acos(const Output<Node>& arg)
+op::Acos::Acos(const NodeOutput& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();

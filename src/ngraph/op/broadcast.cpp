@@ -27,9 +27,9 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v1::Broadcast::type_info;
 
-op::v1::Broadcast::Broadcast(const Output<Node>& arg,
-                             const Output<Node>& target_shape,
-                             const Output<Node>& axes_mapping,
+op::v1::Broadcast::Broadcast(const NodeOutput& arg,
+                             const NodeOutput& target_shape,
+                             const NodeOutput& axes_mapping,
                              const AutoBroadcastSpec& broadcast_spec)
     : Op({arg, target_shape, axes_mapping})
     , m_broadcast_spec(broadcast_spec)
@@ -37,8 +37,8 @@ op::v1::Broadcast::Broadcast(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::v1::Broadcast::Broadcast(const Output<Node>& arg,
-                             const Output<Node>& target_shape,
+op::v1::Broadcast::Broadcast(const NodeOutput& arg,
+                             const NodeOutput& target_shape,
                              const AutoBroadcastSpec& broadcast_spec)
     : Op({arg, target_shape, op::Constant::create(element::u8, Shape{}, {0})->output(0)})
     , m_broadcast_spec(broadcast_spec)
@@ -285,7 +285,7 @@ op::v0::Broadcast::Broadcast(const OutputVector& args,
     constructor_validate_and_infer_types();
 }
 
-op::v0::Broadcast::Broadcast(const Output<Node>& arg,
+op::v0::Broadcast::Broadcast(const NodeOutput& arg,
                              const Shape& shape,
                              const AxisSet& broadcast_axes)
     : Broadcast(OutputVector{arg}, shape, broadcast_axes)
@@ -359,8 +359,8 @@ void op::v0::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const Ou
 
 constexpr NodeTypeInfo op::v0::BroadcastLike::type_info;
 
-op::v0::BroadcastLike::BroadcastLike(const Output<Node>& arg,
-                                     const Output<Node>& like_arg,
+op::v0::BroadcastLike::BroadcastLike(const NodeOutput& arg,
+                                     const NodeOutput& like_arg,
                                      const AxisSet& initial_broadcast_axes)
     : op::v0::Broadcast({arg, like_arg}, {}, {})
     , m_initial_broadcast_axes(initial_broadcast_axes)

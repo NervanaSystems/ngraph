@@ -35,8 +35,8 @@ namespace ngraph
                 /// \param input              Logits on which greedy decoding is performed
                 /// \param seq_len            Sequence lengths
                 /// \param ctc_merge_repeated Whether to merge repeated labels
-                CTCGreedyDecoder(const Output<Node>& input,
-                                 const Output<Node>& seq_len,
+                CTCGreedyDecoder(const NodeOutput& input,
+                                 const NodeOutput& seq_len,
                                  const bool ctc_merge_repeated);
 
                 void validate_and_infer_types() override;

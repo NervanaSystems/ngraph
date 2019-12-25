@@ -32,15 +32,15 @@ namespace ngraph
             static constexpr NodeTypeInfo type_info{"GroupConvolutionBias", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             GroupConvolutionBias(const std::shared_ptr<op::GroupConvolution>& conv,
-                                 const Output<Node>& bias,
+                                 const NodeOutput& bias,
                                  const size_t groups,
                                  const Shape& output_shape,
                                  bool with_relu,
                                  float alpha = 1.0);
 
-            GroupConvolutionBias(const Output<Node>& data_batch,
-                                 const Output<Node>& filters,
-                                 const Output<Node>& bias,
+            GroupConvolutionBias(const NodeOutput& data_batch,
+                                 const NodeOutput& filters,
+                                 const NodeOutput& bias,
                                  const Strides& window_movement_strides,
                                  const Strides& window_dilation_strides,
                                  const CoordinateDiff& padding_below,
@@ -57,9 +57,9 @@ namespace ngraph
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
-            Output<Node> get_bias() { return input(2).get_source_output(); }
-            Output<Node> get_filters() { return input(1).get_source_output(); }
-            Output<Node> get_data_batch() { return input(0).get_source_output(); }
+            NodeOutput get_bias() { return input(2).get_source_output(); }
+            NodeOutput get_filters() { return input(1).get_source_output(); }
+            NodeOutput get_data_batch() { return input(0).get_source_output(); }
             size_t get_groups() const { return m_groups; }
             bool with_relu() const { return m_with_relu; }
             float get_alpha() const { return m_alpha; }

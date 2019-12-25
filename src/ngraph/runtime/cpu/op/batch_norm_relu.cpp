@@ -23,9 +23,9 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::BatchNormTrainingRelu::type_info;
 
 ngraph::op::BatchNormTrainingRelu::BatchNormTrainingRelu(double eps,
-                                                         const Output<Node>& gamma,
-                                                         const Output<Node>& beta,
-                                                         const Output<Node>& input)
+                                                         const NodeOutput& gamma,
+                                                         const NodeOutput& beta,
+                                                         const NodeOutput& input)
     : Op({gamma, beta, input})
     , m_epsilon(eps)
 {
@@ -83,11 +83,11 @@ ngraph::op::BatchNormTrainingRelu::BatchNormTrainingRelu(double eps,
 constexpr NodeTypeInfo op::BatchNormInferenceRelu::type_info;
 
 ngraph::op::BatchNormInferenceRelu::BatchNormInferenceRelu(double eps,
-                                                           const Output<ngraph::Node>& gamma,
-                                                           const Output<ngraph::Node>& beta,
-                                                           const Output<ngraph::Node>& input,
-                                                           const Output<ngraph::Node>& mean,
-                                                           const Output<ngraph::Node>& variance)
+                                                           const NodeOutput& gamma,
+                                                           const NodeOutput& beta,
+                                                           const NodeOutput& input,
+                                                           const NodeOutput& mean,
+                                                           const NodeOutput& variance)
     : Op({gamma, beta, input, mean, variance})
     , m_epsilon(eps)
 {

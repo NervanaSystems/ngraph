@@ -24,10 +24,10 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::QuantizedDotBias::type_info;
 
-op::QuantizedDotBias::QuantizedDotBias(const Output<Node>& data,
-                                       const Output<Node>& weights,
-                                       const Output<Node>& bias,
-                                       const Output<Node>& scale,
+op::QuantizedDotBias::QuantizedDotBias(const NodeOutput& data,
+                                       const NodeOutput& weights,
+                                       const NodeOutput& bias,
+                                       const NodeOutput& scale,
                                        bool requantize,
                                        bool with_relu)
     : Op({data, weights, bias, scale})

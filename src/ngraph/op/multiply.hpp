@@ -40,8 +40,8 @@ namespace ngraph
                 /// \param arg0 Node that produces the first input tensor.
                 /// \param arg1 Node that produces the second input tensor.
                 /// \param auto_broadcast Auto broadcast specification
-                Multiply(const Output<Node>& arg0,
-                         const Output<Node>& arg1,
+                Multiply(const NodeOutput& arg0,
+                         const NodeOutput& arg1,
                          const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
                 virtual std::shared_ptr<Node>
@@ -73,8 +73,8 @@ namespace ngraph
                 /// \param arg0 Node that produces the first input tensor.
                 /// \param arg1 Node that produces the second input tensor.
                 /// \param auto_broadcast Auto broadcast specification
-                Multiply(const Output<Node>& arg0,
-                         const Output<Node>& arg1,
+                Multiply(const NodeOutput& arg0,
+                         const NodeOutput& arg1,
                          const AutoBroadcastSpec& auto_broadcast =
                              AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 
@@ -93,5 +93,5 @@ namespace ngraph
     } // namespace op
 
     NGRAPH_API
-    std::shared_ptr<Node> operator*(const Output<Node>& arg0, const Output<Node>& arg1);
+    std::shared_ptr<Node> operator*(const NodeOutput& arg0, const NodeOutput& arg1);
 } // namespace ngraph

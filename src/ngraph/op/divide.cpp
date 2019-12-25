@@ -25,16 +25,16 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::Divide::type_info;
 
-op::v0::Divide::Divide(const Output<Node>& arg0,
-                       const Output<Node>& arg1,
+op::v0::Divide::Divide(const NodeOutput& arg0,
+                       const NodeOutput& arg1,
                        const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }
 
-op::v0::Divide::Divide(const Output<Node>& arg0,
-                       const Output<Node>& arg1,
+op::v0::Divide::Divide(const NodeOutput& arg0,
+                       const NodeOutput& arg1,
                        bool pythondiv,
                        const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
@@ -66,7 +66,7 @@ void op::v0::Divide::generate_adjoints(autodiff::Adjoints& adjoints, const Outpu
     adjoints.add_delta(y, -delta * shared_from_this() / y);
 }
 
-shared_ptr<Node> ngraph::operator/(const Output<Node>& arg0, const Output<Node>& arg1)
+shared_ptr<Node> ngraph::operator/(const NodeOutput& arg0, const NodeOutput& arg1)
 {
     return make_shared<op::v0::Divide>(arg0, arg1);
 }
@@ -75,16 +75,16 @@ shared_ptr<Node> ngraph::operator/(const Output<Node>& arg0, const Output<Node>&
 
 constexpr NodeTypeInfo op::v1::Divide::type_info;
 
-op::v1::Divide::Divide(const Output<Node>& arg0,
-                       const Output<Node>& arg1,
+op::v1::Divide::Divide(const NodeOutput& arg0,
+                       const NodeOutput& arg1,
                        const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }
 
-op::v1::Divide::Divide(const Output<Node>& arg0,
-                       const Output<Node>& arg1,
+op::v1::Divide::Divide(const NodeOutput& arg0,
+                       const NodeOutput& arg1,
                        bool pythondiv,
                        const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)

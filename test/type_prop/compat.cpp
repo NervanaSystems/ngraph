@@ -28,7 +28,7 @@ public:
     const NodeTypeInfo& get_type_info() const override { return type_info; }
     CompatOp() = default;
 
-    CompatOp(const Output<Node>& value)
+    CompatOp(const NodeOutput& value)
         : Op({value})
     {
     }
@@ -66,7 +66,7 @@ TEST(compat, node)
     auto bprop = adjoints.backprop_output(param);
     ASSERT_TRUE(bprop.get_index() == 0);
     ASSERT_TRUE(is_type<op::v0::Multiply>(bprop.get_node_shared_ptr()));
-    set<Output<Node>> params;
+    set<NodeOutput> params;
     params.insert(bprop.get_node_shared_ptr()->input_value(0));
     params.insert(bprop.get_node_shared_ptr()->input_value(1));
     EXPECT_TRUE(params.count(param) == 1);

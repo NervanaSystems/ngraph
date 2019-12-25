@@ -60,10 +60,10 @@ namespace ngraph
                 ///                                   shape: [batch_size, hidden_size].
                 /// \param[in]  hidden_size           The number of hidden units for recurrent cell.
                 ///
-                GRUCell(const Output<Node>& X,
-                        const Output<Node>& W,
-                        const Output<Node>& R,
-                        const Output<Node>& initial_hidden_state,
+                GRUCell(const NodeOutput& X,
+                        const NodeOutput& W,
+                        const NodeOutput& R,
+                        const NodeOutput& initial_hidden_state,
                         std::size_t hidden_size);
 
                 ///
@@ -91,10 +91,10 @@ namespace ngraph
                 /// clip] on
                 ///                                   input of activation functions.
                 ///
-                GRUCell(const Output<Node>& X,
-                        const Output<Node>& W,
-                        const Output<Node>& R,
-                        const Output<Node>& initial_hidden_state,
+                GRUCell(const NodeOutput& X,
+                        const NodeOutput& W,
+                        const NodeOutput& R,
+                        const NodeOutput& initial_hidden_state,
                         std::size_t hidden_size,
                         const std::vector<std::string>& activations,
                         const std::vector<float>& activations_alpha,
@@ -133,12 +133,12 @@ namespace ngraph
                 ///                                   before multiplying by the output of the reset
                 ///                                   gate.
                 ///
-                GRUCell(const Output<Node>& X,
-                        const Output<Node>& W,
-                        const Output<Node>& R,
-                        const Output<Node>& initial_hidden_state,
+                GRUCell(const NodeOutput& X,
+                        const NodeOutput& W,
+                        const NodeOutput& R,
+                        const NodeOutput& initial_hidden_state,
                         std::size_t hidden_size,
-                        const Output<Node>& B,
+                        const NodeOutput& B,
                         const std::vector<std::string>& activations =
                             std::vector<std::string>{"sigmoid", "tanh"},
                         const std::vector<float>& activations_alpha = {},

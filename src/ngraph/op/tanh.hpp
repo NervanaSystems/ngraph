@@ -33,7 +33,7 @@ namespace ngraph
                 /// \brief Constructs a hyperbolic tangent operation.
                 ///
                 /// \param arg Node that produces the input tensor.
-                Tanh(const Output<Node>& arg);
+                Tanh(const NodeOutput& arg);
                 Tanh() = default;
 
                 virtual std::shared_ptr<Node>

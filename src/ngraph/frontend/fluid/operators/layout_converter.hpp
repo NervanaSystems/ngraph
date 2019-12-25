@@ -38,7 +38,7 @@ namespace ngraph
             ///
             /// \param x Input x
             /// \param mode : 1. nhwc->nchw, 2 hchw->nhwc
-            LayoutConverter(const Output<Node>& x, const int mode);
+            LayoutConverter(const NodeOutput& x, const int mode);
 
             virtual NodeVector decompose_op() const override;
 

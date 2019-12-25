@@ -23,8 +23,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::PriorBoxClustered::type_info;
 
-op::PriorBoxClustered::PriorBoxClustered(const Output<Node>& layer_shape,
-                                         const Output<Node>& image_shape,
+op::PriorBoxClustered::PriorBoxClustered(const NodeOutput& layer_shape,
+                                         const NodeOutput& image_shape,
                                          const PriorBoxClusteredAttrs& attrs)
     : Op({layer_shape, image_shape})
     , m_attrs(attrs)

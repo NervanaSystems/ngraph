@@ -21,7 +21,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Negative::type_info;
 
-op::Negative::Negative(const Output<Node>& arg)
+op::Negative::Negative(const NodeOutput& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
@@ -42,7 +42,7 @@ void op::Negative::generate_adjoints(autodiff::Adjoints& adjoints, const OutputV
     adjoints.add_delta(x, -delta);
 }
 
-shared_ptr<Node> ngraph::operator-(const Output<Node>& arg0)
+shared_ptr<Node> ngraph::operator-(const NodeOutput& arg0)
 {
     return make_shared<op::Negative>(arg0);
 }

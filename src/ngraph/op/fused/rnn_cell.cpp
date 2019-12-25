@@ -31,10 +31,10 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::RNNCell::type_info;
 
-op::RNNCell::RNNCell(const Output<Node>& X,
-                     const Output<Node>& initial_hidden_state,
-                     const Output<Node>& W,
-                     const Output<Node>& R,
+op::RNNCell::RNNCell(const NodeOutput& X,
+                     const NodeOutput& initial_hidden_state,
+                     const NodeOutput& W,
+                     const NodeOutput& R,
                      size_t hidden_size,
                      const vector<string>& activations,
                      const vector<float>& activations_alpha,
@@ -48,11 +48,11 @@ op::RNNCell::RNNCell(const Output<Node>& X,
     constructor_validate_and_infer_types();
 }
 
-op::RNNCell::RNNCell(const Output<Node>& X,
-                     const Output<Node>& initial_hidden_state,
-                     const Output<Node>& W,
-                     const Output<Node>& R,
-                     const Output<Node>& B,
+op::RNNCell::RNNCell(const NodeOutput& X,
+                     const NodeOutput& initial_hidden_state,
+                     const NodeOutput& W,
+                     const NodeOutput& R,
+                     const NodeOutput& B,
                      size_t hidden_size,
                      const vector<string>& activations,
                      const vector<float>& activations_alpha,
@@ -162,11 +162,11 @@ NodeVector op::RNNCell::decompose_op() const
     // Ht = f(Xt*(Wi^T) + Ht-1*(Ri^T) + Wbi + Rbi)
     // --------------------
 
-    Output<Node> X = input_value(0);
-    Output<Node> H_t = input_value(1);
-    Output<Node> W = input_value(2);
-    Output<Node> R = input_value(3);
-    Output<Node> bias = input_value(4);
+    NodeOutput X = input_value(0);
+    NodeOutput H_t = input_value(1);
+    NodeOutput W = input_value(2);
+    NodeOutput R = input_value(3);
+    NodeOutput bias = input_value(4);
 
     // Xt*(W^T)
     auto Xt_W = std::make_shared<op::Dot>(X, builder::transpose(W));
@@ -181,12 +181,11 @@ NodeVector op::RNNCell::decompose_op() const
     return {i_t};
 }
 
-Output<Node> op::RNNCell::get_default_bias_input() const
+NodeOutput op::RNNCell::get_default_bias_input() const
 {
-    return Output<Node>{
-        op::Constant::create(input(0).get_element_type(),
-                             Shape{s_gates_count * get_hidden_size()},
-                             vector<float>(s_gates_count * get_hidden_size(), 0.f))};
+    return NodeOutput{op::Constant::create(input(0).get_element_type(),
+                                           Shape{s_gates_count * get_hidden_size()},
+                                           vector<float>(s_gates_count * get_hidden_size(), 0.f))};
 }
 
 shared_ptr<Node> op::RNNCell::copy_with_new_args(const NodeVector& new_args) const

@@ -35,7 +35,7 @@ namespace ngraph
         /// Return a list of function's outputs
         const ResultVector& get_results() const { return m_results; };
         /// Index for value or result referencing it, or -1
-        int64_t get_result_index(const Output<Node>& value) const;
+        int64_t get_result_index(const NodeOutput& value) const;
 
     protected:
         Lambda(const ResultVector& results, const ParameterVector& parameters);

@@ -139,7 +139,7 @@ shared_ptr<op::TensorIterator::OutputDescription>
     return make_shared<BodyOutputDescription>(m_body_value_index, m_output_index, m_iteration);
 }
 
-Input<Node> op::TensorIterator::input_for_value(const Output<Node>& value)
+NodeInput op::TensorIterator::input_for_value(const NodeOutput& value)
 {
     for (auto input : inputs())
     {
@@ -150,11 +150,11 @@ Input<Node> op::TensorIterator::input_for_value(const Output<Node>& value)
     }
     auto input_index = get_input_size();
     set_argument(input_index, value);
-    return Input<Node>(this, input_index);
+    return NodeInput(this, input_index);
 }
 
 void op::TensorIterator::set_sliced_input(const std::shared_ptr<op::Parameter>& body_parameter,
-                                          const Output<Node>& value,
+                                          const NodeOutput& value,
                                           int64_t start,
                                           int64_t stride,
                                           int64_t part_size,
@@ -172,8 +172,8 @@ void op::TensorIterator::set_sliced_input(const std::shared_ptr<op::Parameter>& 
 }
 
 void op::TensorIterator::set_merged_input(const std::shared_ptr<Parameter>& body_parameter,
-                                          const Output<Node>& initial_value,
-                                          const Output<Node>& successive_value)
+                                          const NodeOutput& initial_value,
+                                          const NodeOutput& successive_value)
 {
     m_input_descriptions.push_back(
         make_shared<MergedInputDescription>(input_for_value(initial_value).get_index(),
@@ -182,33 +182,33 @@ void op::TensorIterator::set_merged_input(const std::shared_ptr<Parameter>& body
 }
 
 void op::TensorIterator::set_invariant_input(const std::shared_ptr<Parameter>& body_parameter,
-                                             const Output<Node>& value)
+                                             const NodeOutput& value)
 {
     m_input_descriptions.push_back(make_shared<InvariantInputDescription>(
         input_for_value(value).get_index(), m_body->get_parameter_index(body_parameter)));
 }
 
-Output<Node> op::TensorIterator::get_iter_value(const Output<Node>& body_value, int64_t iteration)
+NodeOutput op::TensorIterator::get_iter_value(const NodeOutput& body_value, int64_t iteration)
 {
     auto output_index = get_output_size();
     m_output_descriptions.push_back(make_shared<BodyOutputDescription>(
         m_body->get_result_index(body_value), output_index, iteration));
     set_output_size(output_index + 1);
-    return Output<Node>(shared_from_this(), output_index);
+    return NodeOutput(shared_from_this(), output_index);
 }
 
-Output<Node> op::TensorIterator::get_concatenated_slices(const Output<Node>& body_value,
-                                                         int64_t start,
-                                                         int64_t stride,
-                                                         int64_t part_size,
-                                                         int64_t end,
-                                                         int64_t axis)
+NodeOutput op::TensorIterator::get_concatenated_slices(const NodeOutput& body_value,
+                                                       int64_t start,
+                                                       int64_t stride,
+                                                       int64_t part_size,
+                                                       int64_t end,
+                                                       int64_t axis)
 {
     auto output_index = get_output_size();
     m_output_descriptions.push_back(make_shared<ConcatOutputDescription>(
         m_body->get_result_index(body_value), output_index, start, stride, part_size, end, axis));
     set_output_size(output_index + 1);
-    return Output<Node>(shared_from_this(), output_index);
+    return NodeOutput(shared_from_this(), output_index);
 }
 
 NodeVector op::TensorIterator::decompose_op() const

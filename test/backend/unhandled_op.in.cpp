@@ -28,7 +28,7 @@ namespace
     class UnhandledOp : public ngraph::op::Op
     {
     public:
-        UnhandledOp(const Output<Node>& arg)
+        UnhandledOp(const NodeOutput& arg)
             : Op({arg})
         {
             constructor_validate_and_infer_types();

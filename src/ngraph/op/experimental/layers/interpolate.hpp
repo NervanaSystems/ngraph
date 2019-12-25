@@ -46,8 +46,8 @@ namespace ngraph
                 /// \param image	    Input image
                 /// \param output_shape Output shape of spatial axes
                 /// \param attrs        Interpolation attributes
-                Interpolate(const Output<Node>& image,
-                            const Output<Node>& output_shape,
+                Interpolate(const NodeOutput& image,
+                            const NodeOutput& output_shape,
                             const InterpolateAttrs& attrs);
 
                 void validate_and_infer_types() override;

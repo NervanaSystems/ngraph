@@ -23,7 +23,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Reciprocal::type_info;
 
-op::Reciprocal::Reciprocal(const Output<Node>& data)
+op::Reciprocal::Reciprocal(const NodeOutput& data)
     : FusedOp({data})
 {
     constructor_validate_and_infer_types();

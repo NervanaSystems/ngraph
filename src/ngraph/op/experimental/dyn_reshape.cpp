@@ -25,7 +25,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::DynReshape::type_info;
 
-op::v0::DynReshape::DynReshape(const Output<Node>& arg, const Output<Node>& pattern, bool zero_flag)
+op::v0::DynReshape::DynReshape(const NodeOutput& arg, const NodeOutput& pattern, bool zero_flag)
     : Op({arg, pattern})
     , m_zero_flag(zero_flag)
 {

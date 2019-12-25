@@ -26,7 +26,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::MaxPoolWithIndices::type_info;
 
-op::MaxPoolWithIndices::MaxPoolWithIndices(const Output<Node>& arg,
+op::MaxPoolWithIndices::MaxPoolWithIndices(const NodeOutput& arg,
                                            const Shape& window_shape,
                                            const Strides& window_movement_strides,
                                            const Shape& padding_below,
@@ -184,9 +184,9 @@ shared_ptr<Node> op::MaxPoolWithIndices::copy_with_new_args(const NodeVector& ne
 
 constexpr NodeTypeInfo op::MaxPoolWithIndicesBackprop::type_info;
 
-op::MaxPoolWithIndicesBackprop::MaxPoolWithIndicesBackprop(const Output<Node>& arg_forward,
-                                                           const Output<Node>& delta,
-                                                           const Output<Node>& indices,
+op::MaxPoolWithIndicesBackprop::MaxPoolWithIndicesBackprop(const NodeOutput& arg_forward,
+                                                           const NodeOutput& delta,
+                                                           const NodeOutput& indices,
                                                            const Shape& window_shape,
                                                            const Strides& window_movement_strides,
                                                            const Shape& padding_below,

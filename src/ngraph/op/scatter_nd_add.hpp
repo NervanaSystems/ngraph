@@ -34,9 +34,9 @@ namespace ngraph
                 /// \param inputs Tensor
                 /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
                 /// \param updates Tensor: Must have same type as inputs
-                ScatterNDAdd(const Output<Node>& inputs,
-                             const Output<Node>& indices,
-                             const Output<Node>& updates)
+                ScatterNDAdd(const NodeOutput& inputs,
+                             const NodeOutput& indices,
+                             const NodeOutput& updates)
                     : Op({inputs, indices, updates})
                 {
                     constructor_validate_and_infer_types();

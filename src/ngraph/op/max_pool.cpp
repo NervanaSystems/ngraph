@@ -24,7 +24,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::MaxPool::type_info;
 
-op::v0::MaxPool::MaxPool(const Output<Node>& arg,
+op::v0::MaxPool::MaxPool(const NodeOutput& arg,
                          const Shape& window_shape,
                          const Strides& window_movement_strides,
                          const Shape& padding_below,
@@ -42,7 +42,7 @@ op::v0::MaxPool::MaxPool(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::v0::MaxPool::MaxPool(const Output<Node>& arg,
+op::v0::MaxPool::MaxPool(const NodeOutput& arg,
                          const Shape& window_shape,
                          const Strides& window_movement_strides,
                          const Shape& padding_below,
@@ -53,7 +53,7 @@ op::v0::MaxPool::MaxPool(const Output<Node>& arg,
 {
 }
 
-op::v0::MaxPool::MaxPool(const Output<Node>& arg,
+op::v0::MaxPool::MaxPool(const NodeOutput& arg,
                          const Shape& window_shape,
                          const Strides& window_movement_strides,
                          const Shape& padding_below,
@@ -120,14 +120,14 @@ void op::v0::MaxPool::validate_and_infer_types()
                                                   m_ceil_mode));
 }
 
-op::v0::MaxPool::MaxPool(const Output<Node>& arg,
+op::v0::MaxPool::MaxPool(const NodeOutput& arg,
                          const Shape& window_shape,
                          const Strides& window_movement_strides)
     : v0::MaxPool(arg, window_shape, window_movement_strides, Shape(), Shape())
 {
 }
 
-op::v0::MaxPool::MaxPool(const Output<Node>& arg, const Shape& window_shape)
+op::v0::MaxPool::MaxPool(const NodeOutput& arg, const Shape& window_shape)
     : v0::MaxPool(arg, window_shape, Strides(), Shape(), Shape())
 {
 }
@@ -150,8 +150,8 @@ shared_ptr<Node> op::v0::MaxPool::get_default_value() const
     return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
 }
 
-op::v0::MaxPoolBackprop::MaxPoolBackprop(const Output<Node>& arg_forward,
-                                         const Output<Node>& delta,
+op::v0::MaxPoolBackprop::MaxPoolBackprop(const NodeOutput& arg_forward,
+                                         const NodeOutput& delta,
                                          const Shape& window_shape,
                                          const Strides& window_movement_strides,
                                          const Shape& padding_below,
@@ -165,9 +165,9 @@ op::v0::MaxPoolBackprop::MaxPoolBackprop(const Output<Node>& arg_forward,
     constructor_validate_and_infer_types();
 }
 
-op::v0::MaxPoolBackprop::MaxPoolBackprop(const Output<Node>& arg_forward,
-                                         const Output<Node>& delta,
-                                         const Output<Node>& result_forward,
+op::v0::MaxPoolBackprop::MaxPoolBackprop(const NodeOutput& arg_forward,
+                                         const NodeOutput& delta,
+                                         const NodeOutput& result_forward,
                                          const Shape& window_shape,
                                          const Strides& window_movement_strides,
                                          const Shape& padding_below,
@@ -275,7 +275,7 @@ void op::v0::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
 
 constexpr NodeTypeInfo op::v1::MaxPool::type_info;
 
-op::v1::MaxPool::MaxPool(const Output<Node>& arg,
+op::v1::MaxPool::MaxPool(const NodeOutput& arg,
                          const Strides& strides,
                          const Shape& pads_begin,
                          const Shape& pads_end,
@@ -293,7 +293,7 @@ op::v1::MaxPool::MaxPool(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::v1::MaxPool::MaxPool(const Output<Node>& arg,
+op::v1::MaxPool::MaxPool(const NodeOutput& arg,
                          const Strides& strides,
                          const Shape& pads_begin,
                          const Shape& pads_end,
@@ -370,8 +370,8 @@ shared_ptr<Node> op::v1::MaxPool::get_default_value() const
 
 constexpr NodeTypeInfo op::v1::MaxPoolBackprop::type_info;
 
-op::v1::MaxPoolBackprop::MaxPoolBackprop(const Output<Node>& arg_forward,
-                                         const Output<Node>& delta,
+op::v1::MaxPoolBackprop::MaxPoolBackprop(const NodeOutput& arg_forward,
+                                         const NodeOutput& delta,
                                          const Strides& strides,
                                          const Shape& pads_begin,
                                          const Shape& pads_end,
@@ -385,9 +385,9 @@ op::v1::MaxPoolBackprop::MaxPoolBackprop(const Output<Node>& arg_forward,
     constructor_validate_and_infer_types();
 }
 
-op::v1::MaxPoolBackprop::MaxPoolBackprop(const Output<Node>& arg_forward,
-                                         const Output<Node>& delta,
-                                         const Output<Node>& result_forward,
+op::v1::MaxPoolBackprop::MaxPoolBackprop(const NodeOutput& arg_forward,
+                                         const NodeOutput& delta,
+                                         const NodeOutput& result_forward,
                                          const Strides& strides,
                                          const Shape& pads_begin,
                                          const Shape& pads_end,

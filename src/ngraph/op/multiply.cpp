@@ -23,8 +23,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::Multiply::type_info;
 
-op::v0::Multiply::Multiply(const Output<Node>& arg0,
-                           const Output<Node>& arg1,
+op::v0::Multiply::Multiply(const NodeOutput& arg0,
+                           const NodeOutput& arg1,
                            const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
@@ -57,8 +57,8 @@ void op::v0::Multiply::generate_adjoints(autodiff::Adjoints& adjoints, const Out
 
 constexpr NodeTypeInfo op::v1::Multiply::type_info;
 
-op::v1::Multiply::Multiply(const Output<Node>& arg0,
-                           const Output<Node>& arg1,
+op::v1::Multiply::Multiply(const NodeOutput& arg0,
+                           const NodeOutput& arg1,
                            const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
@@ -89,7 +89,7 @@ void op::v1::Multiply::generate_adjoints(autodiff::Adjoints& adjoints, const Out
 
 // -----------------------------------------------------------------------------
 
-shared_ptr<Node> ngraph::operator*(const Output<Node>& arg0, const Output<Node>& arg1)
+shared_ptr<Node> ngraph::operator*(const NodeOutput& arg0, const NodeOutput& arg1)
 {
     return make_shared<op::Multiply>(arg0, arg1);
 }

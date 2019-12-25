@@ -32,11 +32,11 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::LSTMCell::type_info;
 
-op::LSTMCell::LSTMCell(const Output<Node>& X,
-                       const Output<Node>& initial_hidden_state,
-                       const Output<Node>& initial_cell_state,
-                       const Output<Node>& W,
-                       const Output<Node>& R,
+op::LSTMCell::LSTMCell(const NodeOutput& X,
+                       const NodeOutput& initial_hidden_state,
+                       const NodeOutput& initial_cell_state,
+                       const NodeOutput& W,
+                       const NodeOutput& R,
                        size_t hidden_size,
                        op::LSTMWeightsFormat weights_format,
                        const vector<string>& activations,
@@ -57,12 +57,12 @@ op::LSTMCell::LSTMCell(const Output<Node>& X,
     constructor_validate_and_infer_types();
 }
 
-op::LSTMCell::LSTMCell(const Output<Node>& X,
-                       const Output<Node>& initial_hidden_state,
-                       const Output<Node>& initial_cell_state,
-                       const Output<Node>& W,
-                       const Output<Node>& R,
-                       const Output<Node>& B,
+op::LSTMCell::LSTMCell(const NodeOutput& X,
+                       const NodeOutput& initial_hidden_state,
+                       const NodeOutput& initial_cell_state,
+                       const NodeOutput& W,
+                       const NodeOutput& R,
+                       const NodeOutput& B,
                        size_t hidden_size,
                        op::LSTMWeightsFormat weights_format,
                        const vector<string>& activations,
@@ -82,13 +82,13 @@ op::LSTMCell::LSTMCell(const Output<Node>& X,
     constructor_validate_and_infer_types();
 }
 
-op::LSTMCell::LSTMCell(const Output<Node>& X,
-                       const Output<Node>& initial_hidden_state,
-                       const Output<Node>& initial_cell_state,
-                       const Output<Node>& W,
-                       const Output<Node>& R,
-                       const Output<Node>& B,
-                       const Output<Node>& P,
+op::LSTMCell::LSTMCell(const NodeOutput& X,
+                       const NodeOutput& initial_hidden_state,
+                       const NodeOutput& initial_cell_state,
+                       const NodeOutput& W,
+                       const NodeOutput& R,
+                       const NodeOutput& B,
+                       const NodeOutput& P,
                        size_t hidden_size,
                        op::LSTMWeightsFormat weights_format,
                        const vector<string>& activations,
@@ -239,12 +239,12 @@ NodeVector op::LSTMCell::decompose_op() const
     // Ht = ot (.) h(Ct)
     // --------------------
 
-    Output<Node> X = input_value(0);
-    Output<Node> H_t = input_value(1);
-    Output<Node> C_t = input_value(2);
-    Output<Node> W = input_value(3);
-    Output<Node> R = input_value(4);
-    Output<Node> bias = input_value(5);
+    NodeOutput X = input_value(0);
+    NodeOutput H_t = input_value(1);
+    NodeOutput C_t = input_value(2);
+    NodeOutput W = input_value(3);
+    NodeOutput R = input_value(4);
+    NodeOutput bias = input_value(5);
     NodeVector p_iof = builder::split(input_value(6), s_peepholes_count);
 
     // Converting to IFCO format since it's DNNL default.
@@ -297,20 +297,20 @@ NodeVector op::LSTMCell::decompose_op() const
     return {H, C};
 }
 
-Output<Node> op::LSTMCell::get_default_bias_input() const
+NodeOutput op::LSTMCell::get_default_bias_input() const
 {
-    return Output<Node>{op::Constant::create(
+    return NodeOutput{op::Constant::create(
         input(0).get_element_type(), Shape{s_gates_count * get_hidden_size()}, vector<float>{0.f})};
 }
 
-Output<Node> op::LSTMCell::get_default_peepholes_input() const
+NodeOutput op::LSTMCell::get_default_peepholes_input() const
 {
-    return Output<Node>{op::Constant::create(input(0).get_element_type(),
-                                             Shape{s_peepholes_count * get_hidden_size()},
-                                             vector<float>{0.f})};
+    return NodeOutput{op::Constant::create(input(0).get_element_type(),
+                                           Shape{s_peepholes_count * get_hidden_size()},
+                                           vector<float>{0.f})};
 }
 
-shared_ptr<Node> op::LSTMCell::convert_node_format(const Output<Node>& node) const
+shared_ptr<Node> op::LSTMCell::convert_node_format(const NodeOutput& node) const
 {
     static const std::map<op::LSTMWeightsFormat, std::vector<size_t>> gate_order_conversion_map{
         {op::LSTMWeightsFormat::FICO, {1, 0, 2, 3}},

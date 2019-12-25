@@ -31,7 +31,7 @@ static const int64_t AXIS_NOT_SET_VALUE = std::numeric_limits<int64_t>::max();
 
 constexpr NodeTypeInfo op::v0::Gather::type_info;
 
-op::v0::Gather::Gather(const Output<Node>& params, const Output<Node>& indices, size_t axis)
+op::v0::Gather::Gather(const NodeOutput& params, const NodeOutput& indices, size_t axis)
     : Op({params, indices})
     , m_axis(axis)
 {
@@ -104,9 +104,7 @@ void op::v0::Gather::generate_adjoints(autodiff::Adjoints& /* adjoints */,
 
 constexpr NodeTypeInfo op::v1::Gather::type_info;
 
-op::v1::Gather::Gather(const Output<Node>& params,
-                       const Output<Node>& indices,
-                       const Output<Node>& axes)
+op::v1::Gather::Gather(const NodeOutput& params, const NodeOutput& indices, const NodeOutput& axes)
     : Op({params, indices, axes})
 {
     constructor_validate_and_infer_types();

@@ -83,10 +83,10 @@ namespace ngraph
                 ///                                   input of activation functions.
                 ///
                 RNNCell(
-                    const Output<Node>& X,
-                    const Output<Node>& initial_hidden_state,
-                    const Output<Node>& W,
-                    const Output<Node>& R,
+                    const NodeOutput& X,
+                    const NodeOutput& initial_hidden_state,
+                    const NodeOutput& W,
+                    const NodeOutput& R,
                     std::size_t hidden_size,
                     const std::vector<std::string>& activations = std::vector<std::string>{"tanh"},
                     const std::vector<float>& activations_alpha = {},
@@ -121,11 +121,11 @@ namespace ngraph
                 ///                                   input of activation functions.
                 ///
                 RNNCell(
-                    const Output<Node>& X,
-                    const Output<Node>& initial_hidden_state,
-                    const Output<Node>& W,
-                    const Output<Node>& R,
-                    const Output<Node>& B,
+                    const NodeOutput& X,
+                    const NodeOutput& initial_hidden_state,
+                    const NodeOutput& W,
+                    const NodeOutput& R,
+                    const NodeOutput& B,
                     std::size_t hidden_size,
                     const std::vector<std::string>& activations = std::vector<std::string>{"tanh"},
                     const std::vector<float>& activations_alpha = {},
@@ -143,7 +143,7 @@ namespace ngraph
                 ///
                 /// \return     The object of Output class.
                 ///
-                Output<Node> get_default_bias_input() const;
+                NodeOutput get_default_bias_input() const;
 
                 ///
                 /// \brief The Activation function f.

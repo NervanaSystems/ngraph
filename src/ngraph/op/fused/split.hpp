@@ -42,7 +42,7 @@ namespace ngraph
                 ///                   should be split. Negative values mean counting from
                 ///                   the back of the input tensor's shape.
                 /// \param num_split  a number of "pieces" the input tensor will be split to
-                Split(const Output<Node>& data, const Output<Node>& axis, const size_t num_split);
+                Split(const NodeOutput& data, const NodeOutput& axis, const size_t num_split);
 
                 /// \brief Constructs a Split op that splits the input tensor into variable length
                 ///        "pieces"
@@ -54,8 +54,8 @@ namespace ngraph
                 /// \param splits  a list of lengths that the input tensor should be
                 ///                split to. Use this constructor to split the input
                 ///                tensor to variable length chunks.
-                Split(const Output<Node>& data,
-                      const Output<Node>& axis,
+                Split(const NodeOutput& data,
+                      const NodeOutput& axis,
                       const std::vector<size_t>& splits);
 
                 void pre_validate_and_infer_types() override;
@@ -93,7 +93,7 @@ namespace ngraph
                 ///                    the split.
                 /// \param num_splits  The number of pieces that the data tensor should be
                 ///                    split into.
-                Split(const Output<Node>& data, const Output<Node>& axis, const size_t num_splits);
+                Split(const NodeOutput& data, const NodeOutput& axis, const size_t num_splits);
 
                 void validate_and_infer_types() override;
                 virtual std::shared_ptr<Node>

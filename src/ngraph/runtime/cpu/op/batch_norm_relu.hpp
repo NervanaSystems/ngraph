@@ -34,9 +34,9 @@ namespace ngraph
             static constexpr NodeTypeInfo type_info{"BatchNormTrainingRelu", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             CPU_BACKEND_API BatchNormTrainingRelu(double eps,
-                                                  const Output<Node>& gamma,
-                                                  const Output<Node>& beta,
-                                                  const Output<Node>& input);
+                                                  const NodeOutput& gamma,
+                                                  const NodeOutput& beta,
+                                                  const NodeOutput& input);
 
             double get_eps_value() const { return m_epsilon; }
             virtual std::shared_ptr<Node>
@@ -64,11 +64,11 @@ namespace ngraph
             static constexpr NodeTypeInfo type_info{"BatchNormInferenceRelu", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             BatchNormInferenceRelu(double eps,
-                                   const Output<ngraph::Node>& gamma,
-                                   const Output<ngraph::Node>& beta,
-                                   const Output<ngraph::Node>& input,
-                                   const Output<ngraph::Node>& mean,
-                                   const Output<ngraph::Node>& variance);
+                                   const NodeOutput& gamma,
+                                   const NodeOutput& beta,
+                                   const NodeOutput& input,
+                                   const NodeOutput& mean,
+                                   const NodeOutput& variance);
 
             double get_eps_value() const { return m_epsilon; }
             virtual std::shared_ptr<Node>

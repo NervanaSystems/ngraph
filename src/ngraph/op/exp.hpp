@@ -35,7 +35,7 @@ namespace ngraph
                 /// \brief Constructs an exponential operation.
                 ///
                 /// \param arg Node that produces the input tensor.
-                Exp(const Output<Node>& arg);
+                Exp(const NodeOutput& arg);
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;

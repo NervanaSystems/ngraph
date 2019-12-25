@@ -23,8 +23,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Interpolate::type_info;
 
-op::Interpolate::Interpolate(const Output<Node>& image,
-                             const Output<Node>& output_shape,
+op::Interpolate::Interpolate(const NodeOutput& image,
+                             const NodeOutput& output_shape,
                              const InterpolateAttrs& attrs)
     : Op({image, output_shape})
     , m_attrs(attrs)

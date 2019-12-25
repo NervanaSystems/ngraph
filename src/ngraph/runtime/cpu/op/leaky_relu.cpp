@@ -21,7 +21,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::CPULeakyRelu::type_info;
 
-op::CPULeakyRelu::CPULeakyRelu(const Output<Node>& arg, float alpha)
+op::CPULeakyRelu::CPULeakyRelu(const NodeOutput& arg, float alpha)
     : UnaryElementwiseArithmetic(arg)
     , m_alpha(alpha)
 {

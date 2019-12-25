@@ -39,8 +39,8 @@ namespace ngraph
                 /// \param B Matrix B
                 /// \param transpose_a If matrix A should be transposed.
                 /// \param transpose_b If matrix B should be transposed.
-                MatMul(const Output<Node>& A,
-                       const Output<Node>& B,
+                MatMul(const NodeOutput& A,
+                       const NodeOutput& B,
                        const bool& transpose_a = 0,
                        const bool& transpose_b = 0);
 

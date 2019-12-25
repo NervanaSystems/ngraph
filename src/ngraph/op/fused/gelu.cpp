@@ -31,7 +31,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Gelu::type_info;
 
-op::Gelu::Gelu(const Output<Node>& data)
+op::Gelu::Gelu(const NodeOutput& data)
     : FusedOp({data})
 {
     constructor_validate_and_infer_types();
@@ -91,7 +91,7 @@ void op::Gelu::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVecto
 
 constexpr NodeTypeInfo op::GeluBackpropFactor::type_info;
 
-op::GeluBackpropFactor::GeluBackpropFactor(const Output<Node>& x)
+op::GeluBackpropFactor::GeluBackpropFactor(const NodeOutput& x)
     : FusedOp({x})
 {
     constructor_validate_and_infer_types();

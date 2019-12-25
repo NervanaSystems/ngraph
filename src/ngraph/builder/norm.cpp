@@ -36,7 +36,7 @@ namespace ngraph
     {
         namespace detail
         {
-            shared_ptr<Node> lp_norm(const Output<Node>& value,
+            shared_ptr<Node> lp_norm(const NodeOutput& value,
                                      size_t p_norm,
                                      const AxisSet& reduction_axes,
                                      float bias)
@@ -71,7 +71,7 @@ namespace ngraph
             }
         }
 
-        shared_ptr<Node> l0_norm(const Output<Node>& value, const AxisSet& reduction_axes)
+        shared_ptr<Node> l0_norm(const NodeOutput& value, const AxisSet& reduction_axes)
         {
             // L0 norm returns number of elements different from zero.
             shared_ptr<Node> zero_node{
@@ -87,8 +87,7 @@ namespace ngraph
                 ->add_provenance_group_members_above({value});
         }
 
-        shared_ptr<Node>
-            l1_norm(const Output<Node>& value, const AxisSet& reduction_axes, float bias)
+        shared_ptr<Node> l1_norm(const NodeOutput& value, const AxisSet& reduction_axes, float bias)
         {
             shared_ptr<Node> values{
                 make_shared<op::Sum>(make_shared<op::Abs>(value), reduction_axes)};
@@ -101,7 +100,7 @@ namespace ngraph
             return (values + bias_node)->add_provenance_group_members_above({value});
         }
 
-        shared_ptr<Node> l2_norm(const Output<Node>& value,
+        shared_ptr<Node> l2_norm(const NodeOutput& value,
                                  const AxisSet& reduction_axes,
                                  float bias,
                                  BiasMode bias_mode,
@@ -131,7 +130,7 @@ namespace ngraph
             return result->add_provenance_group_members_above({value});
         }
 
-        shared_ptr<Node> lp_norm(const Output<Node>& value,
+        shared_ptr<Node> lp_norm(const NodeOutput& value,
                                  const AxisSet& reduction_axes,
                                  size_t p_norm,
                                  float bias)

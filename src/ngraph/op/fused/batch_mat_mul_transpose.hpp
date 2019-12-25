@@ -45,8 +45,8 @@ namespace ngraph
             /// \param arg1 The node producing the second argument.
             /// \param transpose_0 Apply transpose to arg0.
             /// \param transpose_1 Apply transpose to arg1.
-            BatchMatMulTranspose(const Output<Node>& arg0,
-                                 const Output<Node>& arg1,
+            BatchMatMulTranspose(const NodeOutput& arg0,
+                                 const NodeOutput& arg1,
                                  bool transpose_0 = false,
                                  bool transpose_1 = false);
 

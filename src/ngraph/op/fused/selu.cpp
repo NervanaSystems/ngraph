@@ -28,7 +28,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::Selu::type_info;
 
-op::v0::Selu::Selu(const Output<Node>& data, const Output<Node>& alpha, const Output<Node>& lambda)
+op::v0::Selu::Selu(const NodeOutput& data, const NodeOutput& alpha, const NodeOutput& lambda)
     : FusedOp({data, alpha, lambda})
 {
     constructor_validate_and_infer_types();

@@ -27,7 +27,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Atan2::type_info;
 
-op::Atan2::Atan2(const Output<Node>& y, const Output<Node>& x, const AutoBroadcastSpec& autob)
+op::Atan2::Atan2(const NodeOutput& y, const NodeOutput& x, const AutoBroadcastSpec& autob)
     : BinaryElementwiseArithmetic(y, x, autob)
 {
     constructor_validate_and_infer_types();

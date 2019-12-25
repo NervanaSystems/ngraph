@@ -21,8 +21,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::ROIPooling::type_info;
 
-op::ROIPooling::ROIPooling(const Output<Node>& input,
-                           const Output<Node>& coords,
+op::ROIPooling::ROIPooling(const NodeOutput& input,
+                           const NodeOutput& coords,
                            const Shape& output_size,
                            const float spatial_scale,
                            const string& method)

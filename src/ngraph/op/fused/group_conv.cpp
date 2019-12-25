@@ -35,8 +35,8 @@ shared_ptr<Node> op::v1::GroupConvolution::get_default_value() const
     return op::Constant::create(get_element_type(), get_shape(), {0});
 }
 
-op::v1::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
-                                           const Output<Node>& filters,
+op::v1::GroupConvolution::GroupConvolution(const NodeOutput& data_batch,
+                                           const NodeOutput& filters,
                                            const Strides& strides,
                                            const CoordinateDiff& pads_begin,
                                            const CoordinateDiff& pads_end,
@@ -150,9 +150,9 @@ void op::v1::GroupConvolution::generate_adjoints(autodiff::Adjoints& adjoints,
 constexpr NodeTypeInfo op::v1::GroupConvolutionBackpropData::type_info;
 
 op::v1::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
-    const Output<Node>& data,
-    const Output<Node>& filters,
-    const Output<Node>& output_shape,
+    const NodeOutput& data,
+    const NodeOutput& filters,
+    const NodeOutput& output_shape,
     const Strides& strides,
     const CoordinateDiff& pads_begin,
     const CoordinateDiff& pads_end,
@@ -171,8 +171,8 @@ op::v1::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
 }
 
 op::v1::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
-    const Output<Node>& data,
-    const Output<Node>& filters,
+    const NodeOutput& data,
+    const NodeOutput& filters,
     const Strides& strides,
     const CoordinateDiff& pads_begin,
     const CoordinateDiff& pads_end,
@@ -343,8 +343,8 @@ shared_ptr<Node>
 
 constexpr NodeTypeInfo op::v0::GroupConvolution::type_info;
 
-op::v0::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
-                                           const Output<Node>& filters,
+op::v0::GroupConvolution::GroupConvolution(const NodeOutput& data_batch,
+                                           const NodeOutput& filters,
                                            const Strides& window_movement_strides,
                                            const Strides& window_dilation_strides,
                                            const CoordinateDiff& padding_below,
@@ -365,8 +365,8 @@ op::v0::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
     constructor_validate_and_infer_types();
 }
 
-op::v0::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
-                                           const Output<Node>& filters,
+op::v0::GroupConvolution::GroupConvolution(const NodeOutput& data_batch,
+                                           const NodeOutput& filters,
                                            const Strides& window_movement_strides,
                                            const Strides& window_dilation_strides,
                                            const CoordinateDiff& padding_below,
@@ -543,9 +543,9 @@ void op::GroupConvolution::generate_adjoints(autodiff::Adjoints& /* adjoints */,
 constexpr NodeTypeInfo op::v0::GroupConvolutionBackpropData::type_info;
 
 op::v0::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
-    const Output<Node>& data_batch,
-    const Output<Node>& filters,
-    const Output<Node>& output_delta,
+    const NodeOutput& data_batch,
+    const NodeOutput& filters,
+    const NodeOutput& output_delta,
     const Strides& window_movement_strides,
     const Strides& window_dilation_strides,
     const CoordinateDiff& padding_below,
@@ -639,9 +639,9 @@ NodeVector op::v0::GroupConvolutionBackpropData::decompose_op() const
 constexpr NodeTypeInfo op::v0::GroupConvolutionBackpropFilters::type_info;
 
 op::v0::GroupConvolutionBackpropFilters::GroupConvolutionBackpropFilters(
-    const Output<Node>& data_batch,
-    const Output<Node>& filters,
-    const Output<Node>& output_delta,
+    const NodeOutput& data_batch,
+    const NodeOutput& filters,
+    const NodeOutput& output_delta,
     const Strides& window_movement_strides,
     const Strides& window_dilation_strides,
     const CoordinateDiff& padding_below,

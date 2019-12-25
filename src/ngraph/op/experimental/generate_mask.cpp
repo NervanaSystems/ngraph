@@ -22,7 +22,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::GenerateMask::type_info;
 
-op::v0::GenerateMask::GenerateMask(const Output<Node>& training,
+op::v0::GenerateMask::GenerateMask(const NodeOutput& training,
                                    const Shape& shape,
                                    const element::Type& element_type,
                                    uint64_t seed,
@@ -69,8 +69,8 @@ void ngraph::op::v0::GenerateMask::validate_and_infer_types()
 // V1 version starts
 constexpr NodeTypeInfo op::v1::GenerateMask::type_info;
 
-op::v1::GenerateMask::GenerateMask(const Output<Node>& training,
-                                   const Output<Node>& shape,
+op::v1::GenerateMask::GenerateMask(const NodeOutput& training,
+                                   const NodeOutput& shape,
                                    const element::Type& element_type,
                                    uint64_t seed,
                                    double prob,

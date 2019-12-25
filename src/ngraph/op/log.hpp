@@ -35,7 +35,7 @@ namespace ngraph
                 /// \brief Constructs a natural log operation.
                 ///
                 /// \param arg Node that produces the input tensor.
-                Log(const Output<Node>& arg);
+                Log(const NodeOutput& arg);
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;

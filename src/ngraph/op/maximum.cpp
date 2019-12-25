@@ -29,8 +29,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::Maximum::type_info;
 
-op::v0::Maximum::Maximum(const Output<Node>& arg0,
-                         const Output<Node>& arg1,
+op::v0::Maximum::Maximum(const NodeOutput& arg0,
+                         const NodeOutput& arg1,
                          const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
@@ -66,8 +66,8 @@ void op::v0::Maximum::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
 
 constexpr NodeTypeInfo op::v1::Maximum::type_info;
 
-op::v1::Maximum::Maximum(const Output<Node>& arg0,
-                         const Output<Node>& arg1,
+op::v1::Maximum::Maximum(const NodeOutput& arg0,
+                         const NodeOutput& arg1,
                          const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {

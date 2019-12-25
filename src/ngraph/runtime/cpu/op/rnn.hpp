@@ -59,11 +59,11 @@ namespace ngraph
             static constexpr NodeTypeInfo type_info{"Rnn", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
 #if MKLDNN_VERSION_MAJOR < 1
-            CPU_BACKEND_API Rnn(const Output<Node>& src_layer,
-                                const Output<Node>& src_iter,
-                                const Output<Node>& weights_layer,
-                                const Output<Node>& weights_iter,
-                                const Output<Node>& bias,
+            CPU_BACKEND_API Rnn(const NodeOutput& src_layer,
+                                const NodeOutput& src_iter,
+                                const NodeOutput& weights_layer,
+                                const NodeOutput& weights_iter,
+                                const NodeOutput& bias,
                                 size_t num_timesteps,
                                 size_t num_gates_per_cell,
                                 size_t src_sequence_length,
@@ -72,12 +72,12 @@ namespace ngraph
                                 size_t num_fused_layers,
                                 ngraph::runtime::cpu::rnn_utils::rnntype rnn_type);
 #else
-            CPU_BACKEND_API Rnn(const Output<Node>& src_layer,
-                                const Output<Node>& src_iter,
-                                const Output<Node>& src_iter_c,
-                                const Output<Node>& weights_layer,
-                                const Output<Node>& weights_iter,
-                                const Output<Node>& bias,
+            CPU_BACKEND_API Rnn(const NodeOutput& src_layer,
+                                const NodeOutput& src_iter,
+                                const NodeOutput& src_iter_c,
+                                const NodeOutput& weights_layer,
+                                const NodeOutput& weights_iter,
+                                const NodeOutput& bias,
                                 size_t num_timesteps,
                                 size_t num_gates_per_cell,
                                 size_t src_sequence_length,

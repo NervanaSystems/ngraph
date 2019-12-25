@@ -34,8 +34,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::CrossEntropy::type_info;
 
-op::CrossEntropy::CrossEntropy(const Output<Node>& arg1,
-                               const Output<Node>& arg2,
+op::CrossEntropy::CrossEntropy(const NodeOutput& arg1,
+                               const NodeOutput& arg2,
                                bool soft_label,
                                int64_t ignore_index)
     : FusedOp({arg1, arg2})
@@ -66,7 +66,7 @@ static Shape get_result_shape(Shape& target_shape, int start, int end)
     return result;
 }
 
-static Output<Node> get_2d_tensor(Output<Node> node)
+static NodeOutput get_2d_tensor(NodeOutput node)
 {
     if (node.get_shape().size() == 2)
     {
@@ -80,7 +80,7 @@ static Output<Node> get_2d_tensor(Output<Node> node)
     return reshape;
 }
 
-static std::shared_ptr<Node> expand_shape(std::shared_ptr<Node> result, Output<Node> original)
+static std::shared_ptr<Node> expand_shape(std::shared_ptr<Node> result, NodeOutput original)
 {
     Shape result_shape = result->get_shape();
     Shape original_shape = original.get_shape();
@@ -109,7 +109,7 @@ static std::shared_ptr<Node> expand_shape(std::shared_ptr<Node> result, Output<N
 
 // create mask based on ignore_index
 static std::shared_ptr<ngraph::Node>
-    create_mask(Output<Node> labels, Output<Node> input, int64_t ignore_index)
+    create_mask(NodeOutput labels, NodeOutput input, int64_t ignore_index)
 {
     auto mask_constant =
         ngraph::op::Constant::create(labels.get_element_type(), labels.get_shape(), {ignore_index});
@@ -125,7 +125,7 @@ NodeVector op::CrossEntropy::decompose_op() const
     auto labels = get_2d_tensor(input_value(1));
     auto reduction_axis = input_to_normalize.get_shape().size() - 1;
 
-    auto create_xe = [&](const Output<Node>& one_hot, const Output<Node>& input) {
+    auto create_xe = [&](const NodeOutput& one_hot, const NodeOutput& input) {
         auto node_log = std::make_shared<ngraph::op::Log>(input);
         auto node_mul = one_hot * node_log;
         auto node_sum = std::make_shared<ngraph::op::Sum>(
@@ -207,9 +207,9 @@ void op::CrossEntropy::pre_validate_and_infer_types()
 
 constexpr NodeTypeInfo op::CrossEntropyBackprop::type_info;
 
-op::CrossEntropyBackprop::CrossEntropyBackprop(const Output<Node>& input,
-                                               const Output<Node>& labels,
-                                               const Output<Node>& delta,
+op::CrossEntropyBackprop::CrossEntropyBackprop(const NodeOutput& input,
+                                               const NodeOutput& labels,
+                                               const NodeOutput& delta,
                                                bool soft_label,
                                                int64_t ignore_index)
     : FusedOp({input, labels, delta})

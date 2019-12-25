@@ -27,7 +27,7 @@ shared_ptr<Node> runtime::cpu::op::HalideOp::copy_with_new_args(const NodeVector
 constexpr NodeTypeInfo runtime::cpu::op::HalideOp::type_info;
 
 runtime::cpu::op::HalideOp::HalideOp(const OutputVector& args,
-                                     const std::list<Output<Node>>& ops,
+                                     const std::list<NodeOutput>& ops,
                                      const element::Type& out_type,
                                      const Shape& out_shape)
     : Op(args)

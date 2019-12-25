@@ -44,15 +44,15 @@ namespace ngraph
                 /// \param input0_axes Input0 axes set for channel wise quantization
                 /// \param input1_axes Input1 axes set for channel wise quantization
                 /// \param output_axes Output axes set for channel wise quantization
-                QuantizedDot(const Output<Node>& input0,
-                             const Output<Node>& input1,
+                QuantizedDot(const NodeOutput& input0,
+                             const NodeOutput& input1,
                              size_t reduction_axes_count,
-                             const Output<Node>& input0_scale,
-                             const Output<Node>& input0_zero_point,
-                             const Output<Node>& input1_scale,
-                             const Output<Node>& input1_zero_point,
-                             const Output<Node>& output_scale,
-                             const Output<Node>& output_zero_point,
+                             const NodeOutput& input0_scale,
+                             const NodeOutput& input0_zero_point,
+                             const NodeOutput& input1_scale,
+                             const NodeOutput& input1_zero_point,
+                             const NodeOutput& output_scale,
+                             const NodeOutput& output_zero_point,
                              const element::Type& output_type,
                              const AxisSet& input0_axes = ngraph::AxisSet{},
                              const AxisSet& input1_axes = ngraph::AxisSet{},

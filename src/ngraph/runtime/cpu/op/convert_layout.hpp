@@ -39,11 +39,11 @@ namespace ngraph
                     static constexpr NodeTypeInfo type_info{"ConvertLayout", 0};
                     const NodeTypeInfo& get_type_info() const override { return type_info; }
                     CPU_BACKEND_API ConvertLayout(
-                        const Output<Node>& arg,
+                        const NodeOutput& arg,
                         const std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>& layout);
 
                     CPU_BACKEND_API ConvertLayout(
-                        const Output<Node>& arg,
+                        const NodeOutput& arg,
                         size_t output_index,
                         const std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>& layout);
 

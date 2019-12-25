@@ -36,7 +36,7 @@ namespace ngraph
                 /// \brief Constructs a conversion operation.
                 /// \param data  Node that produces the input tensor.
                 /// \param like  Node which provides the target type information for the conversion.
-                ConvertLike(const Output<Node>& data, const Output<Node>& like);
+                ConvertLike(const NodeOutput& data, const NodeOutput& like);
 
                 void validate_and_infer_types() override;
 

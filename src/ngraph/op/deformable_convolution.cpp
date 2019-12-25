@@ -27,9 +27,9 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v1::DeformableConvolution::type_info;
 
-op::v1::DeformableConvolution::DeformableConvolution(const Output<Node>& arg,
-                                                     const Output<Node>& deformable_values,
-                                                     const Output<Node>& filters,
+op::v1::DeformableConvolution::DeformableConvolution(const NodeOutput& arg,
+                                                     const NodeOutput& deformable_values,
+                                                     const NodeOutput& filters,
                                                      const Strides& strides,
                                                      const CoordinateDiff& pads_begin,
                                                      const CoordinateDiff& pads_end,

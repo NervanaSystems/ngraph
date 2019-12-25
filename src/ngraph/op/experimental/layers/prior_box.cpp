@@ -23,8 +23,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::PriorBox::type_info;
 
-op::PriorBox::PriorBox(const Output<Node>& layer_shape,
-                       const Output<Node>& image_shape,
+op::PriorBox::PriorBox(const NodeOutput& layer_shape,
+                       const NodeOutput& image_shape,
                        const PriorBoxAttrs& attrs)
     : Op({layer_shape, image_shape})
     , m_attrs(attrs)

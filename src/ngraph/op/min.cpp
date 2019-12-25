@@ -22,13 +22,13 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::Min::type_info;
 
-op::v0::Min::Min(const Output<Node>& arg, const AxisSet& reduction_axes)
+op::v0::Min::Min(const NodeOutput& arg, const AxisSet& reduction_axes)
     : ArithmeticReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
 }
 
-op::v0::Min::Min(const Output<Node>& arg, const Output<Node>& reduction_axes)
+op::v0::Min::Min(const NodeOutput& arg, const NodeOutput& reduction_axes)
     : ArithmeticReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
@@ -84,8 +84,8 @@ shared_ptr<Node> op::v0::Min::get_default_value() const
 
 constexpr NodeTypeInfo op::v1::ReduceMin::type_info;
 
-op::v1::ReduceMin::ReduceMin(const Output<Node>& arg,
-                             const Output<Node>& reduction_axes,
+op::v1::ReduceMin::ReduceMin(const NodeOutput& arg,
+                             const NodeOutput& reduction_axes,
                              bool keep_dims)
     : ArithmeticReductionKeepDims(arg, reduction_axes, keep_dims)
 {

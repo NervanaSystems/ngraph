@@ -42,8 +42,8 @@ namespace ngraph
                 /// \param spatial_bins_y Numbers of bins to divide the input feature maps over
                 /// height
                 /// \param mode           Mode of pooling - Avg or Bilinear
-                PSROIPooling(const Output<Node>& input,
-                             const Output<Node>& coords,
+                PSROIPooling(const NodeOutput& input,
+                             const NodeOutput& coords,
                              const size_t output_dim,
                              const size_t group_size,
                              const float spatial_scale,

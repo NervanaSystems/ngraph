@@ -37,8 +37,8 @@ namespace ngraph
                 /// \param output_size    Height/Width of ROI output features
                 /// \param spatial_scale  Ratio of input feature map over input image size
                 /// \param method         Method of pooling - Max or Bilinear
-                ROIPooling(const Output<Node>& input,
-                           const Output<Node>& coords,
+                ROIPooling(const NodeOutput& input,
+                           const NodeOutput& coords,
                            const Shape& output_size,
                            const float spatial_scale,
                            const std::string& method);

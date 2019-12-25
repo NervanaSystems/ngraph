@@ -27,7 +27,7 @@ using namespace std;
 using namespace ngraph;
 
 ngraph::op::SigmoidMultiply::FunctionType
-    op::SigmoidMultiply::identify_node_type(const Output<ngraph::Node>& value)
+    op::SigmoidMultiply::identify_node_type(const NodeOutput& value)
 {
     auto node = value.get_node_shared_ptr();
     if (is_type<ngraph::op::Tanh>(node))
@@ -55,8 +55,8 @@ ngraph::op::SigmoidMultiply::FunctionType
 
 constexpr NodeTypeInfo op::SigmoidMultiply::type_info;
 
-op::SigmoidMultiply::SigmoidMultiply(const Output<Node>& input_0,
-                                     const Output<Node>& input_1,
+op::SigmoidMultiply::SigmoidMultiply(const NodeOutput& input_0,
+                                     const NodeOutput& input_1,
                                      const FunctionType input_0_type,
                                      const FunctionType input_1_type)
     : Op({input_0, input_1})
@@ -111,9 +111,9 @@ void op::SigmoidMultiply::generate_adjoints(autodiff::Adjoints& adjoints,
 
 constexpr NodeTypeInfo op::SigmoidMultiplyBackprop::type_info;
 
-op::SigmoidMultiplyBackprop::SigmoidMultiplyBackprop(const Output<Node>& input_0,
-                                                     const Output<Node>& input_1,
-                                                     const Output<Node>& delta,
+op::SigmoidMultiplyBackprop::SigmoidMultiplyBackprop(const NodeOutput& input_0,
+                                                     const NodeOutput& input_1,
+                                                     const NodeOutput& delta,
                                                      const std::array<FunctionType, 2>& input_type)
     : Op({input_0, input_1, delta})
     , m_input_type(input_type)

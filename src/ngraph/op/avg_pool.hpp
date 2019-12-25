@@ -52,7 +52,7 @@ namespace ngraph
                 /// entirely ignored when computing averages. \param pad_type Padding type to use
                 /// for additional padded dimensions \param ceil_mode Whether to use ceiling while
                 /// computing output shape.
-                AvgPool(const Output<Node>& arg,
+                AvgPool(const NodeOutput& arg,
                         const Shape& window_shape,
                         const Strides& window_movement_strides,
                         const Shape& padding_below,
@@ -77,7 +77,7 @@ namespace ngraph
                 /// elements, each treated as the number zero.  If false, padding elements are
                 /// entirely ignored when computing averages. \param pad_type Padding type to use
                 /// for additional padded dimensions
-                AvgPool(const Output<Node>& arg,
+                AvgPool(const NodeOutput& arg,
                         const Shape& window_shape,
                         const Strides& window_movement_strides,
                         const Shape& padding_below,
@@ -100,7 +100,7 @@ namespace ngraph
                 /// \param include_padding_in_avg_computation If true then averages include padding
                 /// elements, each treated as the number zero.  If false, padding elements are
                 /// entirely ignored when computing averages.
-                AvgPool(const Output<Node>& arg,
+                AvgPool(const NodeOutput& arg,
                         const Shape& window_shape,
                         const Strides& window_movement_strides,
                         const Shape& padding_below,
@@ -116,7 +116,7 @@ namespace ngraph
                 /// `[n]`
                 /// \param window_movement_strides The window movement strides.<br>
                 /// `[n]`
-                AvgPool(const Output<Node>& arg,
+                AvgPool(const NodeOutput& arg,
                         const Shape& window_shape,
                         const Strides& window_movement_strides);
 
@@ -127,7 +127,7 @@ namespace ngraph
                 /// `[d1, ..., dn]`
                 /// \param window_shape The window shape.<br>
                 /// `[n]`
-                AvgPool(const Output<Node>& arg, const Shape& window_shape);
+                AvgPool(const NodeOutput& arg, const Shape& window_shape);
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
 
@@ -179,7 +179,7 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 AvgPoolBackprop() = default;
                 AvgPoolBackprop(const Shape& forward_arg_shape,
-                                const Output<Node>& delta,
+                                const NodeOutput& delta,
                                 const Shape& window_shape,
                                 const Strides& window_movement_strides,
                                 const Shape& padding_below,
@@ -245,7 +245,7 @@ namespace ngraph
                 /// computing averages. \param rounding_type Whether to use ceiling or floor
                 /// rounding type while computing output shape. \param auto_pad Padding type to use
                 /// for additional padded dimensions
-                AvgPool(const Output<Node>& arg,
+                AvgPool(const NodeOutput& arg,
                         const Strides& strides,
                         const Shape& pads_begin,
                         const Shape& pads_end,
@@ -271,7 +271,7 @@ namespace ngraph
                 /// computing averages.
                 /// \param rounding_type Whether to use ceiling or floor rounding type while
                 /// computing output shape.
-                AvgPool(const Output<Node>& arg,
+                AvgPool(const NodeOutput& arg,
                         const Strides& strides,
                         const Shape& pads_begin,
                         const Shape& pads_end,
@@ -327,8 +327,8 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"AvgPoolBackprop", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 AvgPoolBackprop() = default;
-                AvgPoolBackprop(const Output<Node>& delta,
-                                const Output<Node>& forward_arg_shape,
+                AvgPoolBackprop(const NodeOutput& delta,
+                                const NodeOutput& forward_arg_shape,
                                 const Strides& strides,
                                 const Shape& pads_begin,
                                 const Shape& pads_end,

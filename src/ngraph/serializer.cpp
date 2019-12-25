@@ -111,7 +111,7 @@ public:
     }
 
     json serialize_function(const Function& function);
-    json serialize_output(const Output<Node>& output);
+    json serialize_output(const NodeOutput& output);
     json serialize_parameter_vector(const ParameterVector& parameters);
     json serialize_output_vector(const OutputVector& output_vector);
     json serialize_node_reference(const Node& node);
@@ -140,7 +140,7 @@ public:
     }
 
     shared_ptr<Function> deserialize_function(json j);
-    Output<Node> deserialize_output(json j);
+    NodeOutput deserialize_output(json j);
     OutputVector deserialize_output_vector(json j);
     ParameterVector deserialize_parameter_vector(json j);
     shared_ptr<Node> deserialize_node_reference(json j);
@@ -482,7 +482,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node_reference(json j)
     return m_node_map.at(name);
 }
 
-Output<Node> JSONDeserializer::deserialize_output(json j)
+NodeOutput JSONDeserializer::deserialize_output(json j)
 {
     size_t index;
     json json_node_reference;
@@ -500,7 +500,7 @@ Output<Node> JSONDeserializer::deserialize_output(json j)
     {
         throw ngraph_error("Expected string or object an output while deserializing");
     }
-    return Output<Node>(deserialize_node_reference(json_node_reference), index);
+    return NodeOutput(deserialize_node_reference(json_node_reference), index);
 }
 
 OutputVector JSONDeserializer::deserialize_output_vector(json j)
@@ -725,14 +725,14 @@ shared_ptr<Function> JSONDeserializer::deserialize_function(json func_js)
 // when all op constructors use the new style arguments.
 struct OutputHelper
 {
-    OutputHelper(const Output<Node>& output)
+    OutputHelper(const NodeOutput& output)
         : m_output(output)
     {
     }
 
     operator shared_ptr<Node>() const { return get_output_element(m_output); }
-    operator const Output<Node>&() const { return m_output; }
-    Output<Node> m_output;
+    operator const NodeOutput&() const { return m_output; }
+    NodeOutput m_output;
 };
 
 // This helps with conversions to old-style shared-ptr<Node> and new-style Output&
@@ -746,7 +746,7 @@ struct OutputVectorHelper
     }
     OutputVectorHelper() = default;
     OutputHelper operator[](size_t i) const { return OutputHelper(m_vector[i]); }
-    void push_back(const Output<Node>& output) { m_vector.push_back(output); }
+    void push_back(const NodeOutput& output) { m_vector.push_back(output); }
     size_t size() const { return m_vector.size(); }
     operator vector<shared_ptr<Node>>() const
     {
@@ -1661,7 +1661,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::GetOutputElement:
         {
             node = make_shared<op::GetOutputElement>(
-                static_cast<Output<Node>>(args[0]).get_node_shared_ptr(),
+                static_cast<NodeOutput>(args[0]).get_node_shared_ptr(),
                 node_js.at("n").get<size_t>());
             break;
         }
@@ -3031,7 +3031,7 @@ json JSONSerializer::serialize_node_reference(const Node& n)
     return n.get_name();
 }
 
-json JSONSerializer::serialize_output(const Output<Node>& output)
+json JSONSerializer::serialize_output(const NodeOutput& output)
 {
     json result;
     auto index = output.get_index();
@@ -3051,7 +3051,7 @@ json JSONSerializer::serialize_output(const Output<Node>& output)
 json JSONSerializer::serialize_output_vector(const OutputVector& output_vector)
 {
     json result;
-    for (const Output<Node>& output : output_vector)
+    for (const NodeOutput& output : output_vector)
     {
         result.push_back(serialize_output(output));
     }

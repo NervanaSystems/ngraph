@@ -32,7 +32,7 @@ namespace ngraph
             public:
                 static constexpr NodeTypeInfo type_info{"Sigmoid", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
-                Sigmoid(const Output<Node>& arg);
+                Sigmoid(const NodeOutput& arg);
                 Sigmoid() = default;
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
@@ -55,7 +55,7 @@ namespace ngraph
                 /// \brief Constructs a SigmoidBackprop operation.
                 ///
                 /// \param arg Node that produces the Sigmoid forward input tensor.
-                SigmoidBackprop(const Output<Node>& arg, const Output<Node>& delta);
+                SigmoidBackprop(const NodeOutput& arg, const NodeOutput& delta);
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;

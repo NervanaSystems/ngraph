@@ -22,13 +22,13 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::Max::type_info;
 
-op::v0::Max::Max(const Output<Node>& arg, const AxisSet& reduction_axes)
+op::v0::Max::Max(const NodeOutput& arg, const AxisSet& reduction_axes)
     : ArithmeticReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
 }
 
-op::v0::Max::Max(const Output<Node>& arg, const Output<Node>& reduction_axes)
+op::v0::Max::Max(const NodeOutput& arg, const NodeOutput& reduction_axes)
     : ArithmeticReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
@@ -84,8 +84,8 @@ shared_ptr<Node> op::v0::Max::get_default_value() const
 
 constexpr NodeTypeInfo op::v1::ReduceMax::type_info;
 
-op::v1::ReduceMax::ReduceMax(const Output<Node>& arg,
-                             const Output<Node>& reduction_axes,
+op::v1::ReduceMax::ReduceMax(const NodeOutput& arg,
+                             const NodeOutput& reduction_axes,
                              bool keep_dims)
     : ArithmeticReductionKeepDims(arg, reduction_axes, keep_dims)
 {

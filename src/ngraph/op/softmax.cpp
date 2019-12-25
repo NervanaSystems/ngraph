@@ -32,7 +32,7 @@ using namespace ngraph;
 // *** SOFTMAX OP SET 0 ***
 constexpr NodeTypeInfo op::v0::Softmax::type_info;
 
-op::v0::Softmax::Softmax(const Output<Node>& arg, const AxisSet& axes)
+op::v0::Softmax::Softmax(const NodeOutput& arg, const AxisSet& axes)
     : Op({arg})
 {
     set_argument(
@@ -43,7 +43,7 @@ op::v0::Softmax::Softmax(const Output<Node>& arg, const AxisSet& axes)
     constructor_validate_and_infer_types();
 }
 
-op::v0::Softmax::Softmax(const Output<Node>& arg, const Output<Node>& axes)
+op::v0::Softmax::Softmax(const NodeOutput& arg, const NodeOutput& axes)
     : Op({arg, axes})
 {
     constructor_validate_and_infer_types();
@@ -157,7 +157,7 @@ void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
 // *** SOFTMAX OP SET V1 ***
 constexpr NodeTypeInfo op::v1::Softmax::type_info;
 
-op::v1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
+op::v1::Softmax::Softmax(const NodeOutput& arg, const size_t axis)
     : Op({arg})
     , m_axis(axis)
 {

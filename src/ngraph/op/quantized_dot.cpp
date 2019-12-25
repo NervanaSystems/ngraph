@@ -25,15 +25,15 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::QuantizedDot::type_info;
 
-op::QuantizedDot::QuantizedDot(const Output<Node>& input0,
-                               const Output<Node>& input1,
+op::QuantizedDot::QuantizedDot(const NodeOutput& input0,
+                               const NodeOutput& input1,
                                size_t reduction_axes_count,
-                               const Output<Node>& input0_scale,
-                               const Output<Node>& input0_zero_point,
-                               const Output<Node>& input1_scale,
-                               const Output<Node>& input1_zero_point,
-                               const Output<Node>& output_scale,
-                               const Output<Node>& output_zero_point,
+                               const NodeOutput& input0_scale,
+                               const NodeOutput& input0_zero_point,
+                               const NodeOutput& input1_scale,
+                               const NodeOutput& input1_zero_point,
+                               const NodeOutput& output_scale,
+                               const NodeOutput& output_zero_point,
                                const element::Type& output_type,
                                const AxisSet& input0_axes,
                                const AxisSet& input1_axes,

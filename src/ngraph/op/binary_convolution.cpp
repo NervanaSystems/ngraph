@@ -27,8 +27,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v1::BinaryConvolution::type_info;
 
-op::v1::BinaryConvolution::BinaryConvolution(const Output<Node>& data,
-                                             const Output<Node>& kernel,
+op::v1::BinaryConvolution::BinaryConvolution(const NodeOutput& data,
+                                             const NodeOutput& kernel,
                                              const Strides& strides,
                                              const CoordinateDiff& pads_begin,
                                              const CoordinateDiff& pads_end,
@@ -48,8 +48,8 @@ op::v1::BinaryConvolution::BinaryConvolution(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-op::v1::BinaryConvolution::BinaryConvolution(const Output<Node>& data,
-                                             const Output<Node>& kernel,
+op::v1::BinaryConvolution::BinaryConvolution(const NodeOutput& data,
+                                             const NodeOutput& kernel,
                                              const Strides& strides,
                                              const CoordinateDiff& pads_begin,
                                              const CoordinateDiff& pads_end,

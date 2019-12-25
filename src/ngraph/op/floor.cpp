@@ -21,7 +21,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Floor::type_info;
 
-op::Floor::Floor(const Output<Node>& arg)
+op::Floor::Floor(const NodeOutput& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();

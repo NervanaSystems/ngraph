@@ -24,7 +24,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Cos::type_info;
 
-op::Cos::Cos(const Output<Node>& arg)
+op::Cos::Cos(const NodeOutput& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();

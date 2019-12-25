@@ -30,9 +30,9 @@ namespace ngraph
             CPU_BACKEND_API
             static constexpr NodeTypeInfo type_info{"MatmulBias", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
-            CPU_BACKEND_API MatmulBias(const Output<Node>& W,
-                                       const Output<Node>& x,
-                                       const Output<Node>& b,
+            CPU_BACKEND_API MatmulBias(const NodeOutput& W,
+                                       const NodeOutput& x,
+                                       const NodeOutput& b,
                                        Shape shape_w,
                                        Shape shape_x,
                                        bool transpose_w,

@@ -23,7 +23,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::AllReduce::type_info;
 
-op::AllReduce::AllReduce(const Output<Node>& arg, reduction::Type reduce_type)
+op::AllReduce::AllReduce(const NodeOutput& arg, reduction::Type reduce_type)
     : Op({arg})
     , m_reduce_type(reduce_type)
 {

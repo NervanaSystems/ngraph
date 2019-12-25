@@ -24,7 +24,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Transpose::type_info;
 
-op::Transpose::Transpose(const Output<Node>& arg, const Output<Node>& input_order)
+op::Transpose::Transpose(const NodeOutput& arg, const NodeOutput& input_order)
     : Op({arg, input_order})
 {
     constructor_validate_and_infer_types();

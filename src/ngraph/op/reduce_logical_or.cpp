@@ -21,8 +21,8 @@ using namespace std;
 
 constexpr NodeTypeInfo op::v1::ReduceLogicalOr::type_info;
 
-op::v1::ReduceLogicalOr::ReduceLogicalOr(const Output<Node>& data,
-                                         const Output<Node>& reduction_axes,
+op::v1::ReduceLogicalOr::ReduceLogicalOr(const NodeOutput& data,
+                                         const NodeOutput& reduction_axes,
                                          const bool keep_dims)
     : LogicalReductionKeepDims(data, reduction_axes, keep_dims)
 {

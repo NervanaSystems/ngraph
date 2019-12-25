@@ -27,7 +27,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::DepthToSpace::type_info;
 
-op::DepthToSpace::DepthToSpace(const Output<Node>& data,
+op::DepthToSpace::DepthToSpace(const NodeOutput& data,
                                const DepthToSpaceMode& mode,
                                const size_t block_size)
     : FusedOp({data})
@@ -37,7 +37,7 @@ op::DepthToSpace::DepthToSpace(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-op::DepthToSpace::DepthToSpace(const Output<Node>& data,
+op::DepthToSpace::DepthToSpace(const NodeOutput& data,
                                const std::string& mode,
                                const size_t block_size)
     : DepthToSpace(data, mode_from_string(mode), block_size)

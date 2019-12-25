@@ -34,9 +34,9 @@ namespace ngraph
                 /// \param data The tensor whithn slice-values will be updated
                 /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
                 /// \param updates The tensor of replacement-slice-values
-                ScatterND(const Output<Node>& data,
-                          const Output<Node>& indices,
-                          const Output<Node>& updates);
+                ScatterND(const NodeOutput& data,
+                          const NodeOutput& indices,
+                          const NodeOutput& updates);
 
                 void pre_validate_and_infer_types() override;
 

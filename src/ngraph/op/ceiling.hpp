@@ -35,7 +35,7 @@ namespace ngraph
                 /// \brief Constructs a ceiling operation.
                 ///
                 /// \param arg Node that produces the input tensor.
-                Ceiling(const Output<Node>& arg);
+                Ceiling(const NodeOutput& arg);
 
                 bool visit_attributes(AttributeVisitor& visitor) override { return true; }
                 virtual std::shared_ptr<Node>

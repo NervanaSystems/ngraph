@@ -21,7 +21,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::BoundedRelu::type_info;
 
-op::BoundedRelu::BoundedRelu(const Output<Node>& arg, float alpha)
+op::BoundedRelu::BoundedRelu(const NodeOutput& arg, float alpha)
     : UnaryElementwiseArithmetic(arg)
     , m_alpha(alpha)
 {

@@ -21,8 +21,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::PSROIPooling::type_info;
 
-op::PSROIPooling::PSROIPooling(const Output<Node>& input,
-                               const Output<Node>& coords,
+op::PSROIPooling::PSROIPooling(const NodeOutput& input,
+                               const NodeOutput& coords,
                                const size_t output_dim,
                                const size_t group_size,
                                const float spatial_scale,

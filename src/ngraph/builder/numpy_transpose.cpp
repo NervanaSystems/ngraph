@@ -37,7 +37,7 @@ namespace ngraph
 
     namespace builder
     {
-        std::shared_ptr<Node> numpy_transpose(const Output<Node>& value, AxisVector order)
+        std::shared_ptr<Node> numpy_transpose(const NodeOutput& value, AxisVector order)
         {
             auto in_shape = value.get_shape();
             // default, reverse the order of the axes

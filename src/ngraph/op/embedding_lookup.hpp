@@ -42,7 +42,7 @@ namespace ngraph
                 /// \param weights is a dense matrix [N,M] where each row 0..N
                 /// corresponds to an embedding (i.e. typically, a vector of real numbers) of length
                 /// M
-                EmbeddingLookup(const Output<Node>& data, const Output<Node>& weights)
+                EmbeddingLookup(const NodeOutput& data, const NodeOutput& weights)
                     : Op({data, weights})
                 {
                     constructor_validate_and_infer_types();

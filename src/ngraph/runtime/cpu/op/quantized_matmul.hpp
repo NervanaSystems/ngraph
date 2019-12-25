@@ -31,9 +31,9 @@ namespace ngraph
             CPU_BACKEND_API
             static constexpr NodeTypeInfo type_info{"QuantizedMatmul", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
-            QuantizedMatmul(const Output<Node>& data,
-                            const Output<Node>& weights,
-                            const Output<Node>& scale,
+            QuantizedMatmul(const NodeOutput& data,
+                            const NodeOutput& weights,
+                            const NodeOutput& scale,
                             const element::Type& output_type);
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override

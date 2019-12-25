@@ -101,12 +101,12 @@ shared_ptr<Node> op::LSTMSequence::copy_with_new_args(const NodeVector& new_args
     }
 }
 
-shared_ptr<Node> op::LSTMSequence::get_masked_node(const Output<Node>& data,
+shared_ptr<Node> op::LSTMSequence::get_masked_node(const NodeOutput& data,
                                                    int32_t time_step,
                                                    size_t batch_axis,
-                                                   const Output<Node>& default_value) const
+                                                   const NodeOutput& default_value) const
 {
-    Output<Node> mask_value = default_value;
+    NodeOutput mask_value = default_value;
     // Create zero mask value node.
     if (!mask_value.get_node_shared_ptr())
     {
@@ -197,8 +197,8 @@ NodeVector op::LSTMSequence::lstm_pass(bool is_reverse) const
                                                                m_clip_threshold,
                                                                m_input_forget);
 
-        Output<Node> H = lstm_cell->output(0);
-        Output<Node> C = lstm_cell->output(1);
+        NodeOutput H = lstm_cell->output(0);
+        NodeOutput C = lstm_cell->output(1);
 
         // Expand tensors with empty outermost dim, so we can later concatenate
         // them.
@@ -235,7 +235,7 @@ NodeVector op::LSTMSequence::lstm_pass(bool is_reverse) const
     return {Y, Y_h, Y_c};
 }
 
-shared_ptr<Node> op::LSTMSequence::prepare_input(Output<Node> node, bool is_reverse) const
+shared_ptr<Node> op::LSTMSequence::prepare_input(NodeOutput node, bool is_reverse) const
 {
     // In bidirectional mode inputs are stacked together, so we must split them.
     shared_ptr<Node> tmp = node.get_node_shared_ptr();

@@ -217,7 +217,7 @@ namespace ngraph
                 /// \param end The last index on axis of the slicing
                 /// \param axis The axis to slice along
                 void set_sliced_input(const std::shared_ptr<Parameter>& parameter,
-                                      const Output<Node>& value,
+                                      const NodeOutput& value,
                                       int64_t start,
                                       int64_t stride,
                                       int64_t part_size,
@@ -233,21 +233,21 @@ namespace ngraph
                 /// The
                 /// value is what is active in the most recent completed iteration.
                 void set_merged_input(const std::shared_ptr<Parameter>& body_parameter,
-                                      const Output<Node>& initial_value,
-                                      const Output<Node>& successive_value);
+                                      const NodeOutput& initial_value,
+                                      const NodeOutput& successive_value);
                 /// \brief Indicates that a body parameter has an invariant value during
                 /// iteration that
                 /// may depend on values computed outside of the iteration
                 /// \param body_parameter The body parameter
                 /// \param value The value supplied as an input to the block
                 void set_invariant_input(const std::shared_ptr<Parameter>& body_parameter,
-                                         const Output<Node>& value);
+                                         const NodeOutput& value);
                 /// \brief Gets a value for a particular iteration point
                 /// \param body_value The value
                 /// \param iteration The iteration that supplies the value. Negative values are
                 /// from the
                 /// last iteration.
-                Output<Node> get_iter_value(const Output<Node>& body_value, int64_t iteration);
+                NodeOutput get_iter_value(const NodeOutput& body_value, int64_t iteration);
                 /// \brief Concatenates slices from all iterations
                 /// \param value The value supplying slice values from each iteration.
                 /// \param start First index on axis of the slicing
@@ -255,12 +255,12 @@ namespace ngraph
                 /// \param part_size Size of the slice on axis
                 /// \param end The last index on axis of the slicing
                 /// \param axis The axis to slice along
-                Output<Node> get_concatenated_slices(const Output<Node>& value,
-                                                     int64_t start,
-                                                     int64_t stride,
-                                                     int64_t part_size,
-                                                     int64_t end,
-                                                     int64_t axis);
+                NodeOutput get_concatenated_slices(const NodeOutput& value,
+                                                   int64_t start,
+                                                   int64_t stride,
+                                                   int64_t part_size,
+                                                   int64_t end,
+                                                   int64_t axis);
 
                 std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
                 NodeVector decompose_op() const override;
@@ -307,7 +307,7 @@ namespace ngraph
 
             private:
                 // Find an input corresponding to value, adding one if necessary.
-                Input<Node> input_for_value(const Output<Node>& value);
+                NodeInput input_for_value(const NodeOutput& value);
 
                 std::shared_ptr<BodyLambda> m_body;
                 std::vector<std::shared_ptr<InputDescription>> m_input_descriptions;

@@ -237,7 +237,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
 }
 
 static void replace_collapse_node_user(std::shared_ptr<Node> collapsed_node,
-                                       const Output<Node>& new_output)
+                                       const NodeOutput& new_output)
 {
     for (auto node : collapsed_node->get_users(true))
     {

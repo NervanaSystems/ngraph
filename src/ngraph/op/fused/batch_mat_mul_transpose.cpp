@@ -30,8 +30,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::BatchMatMulTranspose::type_info;
 
-op::BatchMatMulTranspose::BatchMatMulTranspose(const Output<Node>& arg0,
-                                               const Output<Node>& arg1,
+op::BatchMatMulTranspose::BatchMatMulTranspose(const NodeOutput& arg0,
+                                               const NodeOutput& arg1,
                                                bool transpose_arg0,
                                                bool transpose_arg1)
     : FusedOp({arg0, arg1})

@@ -56,10 +56,10 @@ namespace ngraph
                 ///                         on the i-th position is deleted.
                 /// \param ellipsis_mask    It inserts missing dimensions
                 ///                         on a position of a non-zero bit.
-                StridedSlice(const Output<Node>& data,
-                             const Output<Node>& begin,
-                             const Output<Node>& end,
-                             const Output<Node>& strides,
+                StridedSlice(const NodeOutput& data,
+                             const NodeOutput& begin,
+                             const NodeOutput& end,
+                             const NodeOutput& strides,
                              const std::vector<int64_t>& begin_mask,
                              const std::vector<int64_t>& end_mask,
                              const std::vector<int64_t>& new_axis_mask = std::vector<int64_t>{},
@@ -81,9 +81,9 @@ namespace ngraph
                 ///                         on the i-th position is deleted.
                 /// \param ellipsis_mask    It inserts missing dimensions
                 ///                         on a position of a non-zero bit.
-                StridedSlice(const Output<Node>& data,
-                             const Output<Node>& begin,
-                             const Output<Node>& end,
+                StridedSlice(const NodeOutput& data,
+                             const NodeOutput& begin,
+                             const NodeOutput& end,
                              const std::vector<int64_t>& begin_mask,
                              const std::vector<int64_t>& end_mask,
                              const std::vector<int64_t>& new_axis_mask = std::vector<int64_t>{},

@@ -23,7 +23,7 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::Relu::type_info;
 constexpr NodeTypeInfo op::ReluBackprop::type_info;
 
-op::Relu::Relu(const Output<Node>& arg)
+op::Relu::Relu(const NodeOutput& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
@@ -35,7 +35,7 @@ shared_ptr<Node> op::Relu::copy_with_new_args(const NodeVector& new_args) const
     return make_shared<Relu>(new_args.at(0));
 }
 
-op::ReluBackprop::ReluBackprop(const Output<Node>& arg, const Output<Node>& delta)
+op::ReluBackprop::ReluBackprop(const NodeOutput& arg, const NodeOutput& delta)
     : BinaryElementwiseArithmetic(arg, delta, AutoBroadcastSpec::NONE)
 {
     constructor_validate_and_infer_types();

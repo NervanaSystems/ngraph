@@ -39,10 +39,10 @@ namespace ngraph
                 /// \param max_seq_len  Tensor of shape [BATCH_SIZE] with maximum lengths for each
                 ///                     sequence in the batch
                 /// \param end_token    Tensor of shape [MAX_TIME, BATCH_SIZE, BEAM_WIDTH]
-                GatherTree(const Output<Node>& step_ids,
-                           const Output<Node>& parent_idx,
-                           const Output<Node>& max_seq_len,
-                           const Output<Node>& end_token);
+                GatherTree(const NodeOutput& step_ids,
+                           const NodeOutput& parent_idx,
+                           const NodeOutput& max_seq_len,
+                           const NodeOutput& end_token);
 
                 void validate_and_infer_types() override;
 

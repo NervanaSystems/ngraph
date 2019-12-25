@@ -22,7 +22,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::OneHot::type_info;
 
-op::v0::OneHot::OneHot(const Output<Node>& arg, const PartialShape& shape, size_t one_hot_axis)
+op::v0::OneHot::OneHot(const NodeOutput& arg, const PartialShape& shape, size_t one_hot_axis)
     : Op({arg})
     , m_shape(shape)
     , m_one_hot_axis(one_hot_axis)
@@ -101,10 +101,10 @@ shared_ptr<Node> op::v0::OneHot::copy_with_new_args(const NodeVector& new_args) 
 
 constexpr NodeTypeInfo op::v1::OneHot::type_info;
 
-op::v1::OneHot::OneHot(const Output<Node>& indices,
-                       const Output<Node>& depth,
-                       const Output<Node>& on_value,
-                       const Output<Node>& off_value,
+op::v1::OneHot::OneHot(const NodeOutput& indices,
+                       const NodeOutput& depth,
+                       const NodeOutput& on_value,
+                       const NodeOutput& off_value,
                        int64_t axis)
     : Op({indices, depth, on_value, off_value})
     , m_axis(axis)

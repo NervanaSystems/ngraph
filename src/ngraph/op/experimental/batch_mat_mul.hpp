@@ -39,7 +39,7 @@ namespace ngraph
             ///
             /// \param arg0 The node producing the first argument.
             /// \param arg1 The node producing the second argument.
-            BatchMatMul(const Output<Node>& arg0, const Output<Node>& arg1);
+            BatchMatMul(const NodeOutput& arg0, const NodeOutput& arg1);
 
             virtual void validate_and_infer_types() override;
 

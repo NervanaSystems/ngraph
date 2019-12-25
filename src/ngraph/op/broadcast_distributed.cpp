@@ -21,7 +21,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::BroadcastDistributed::type_info;
 
-op::BroadcastDistributed::BroadcastDistributed(const Output<Node>& arg, int64_t root_id)
+op::BroadcastDistributed::BroadcastDistributed(const NodeOutput& arg, int64_t root_id)
     : Op({arg})
     , m_root_id(root_id)
 {

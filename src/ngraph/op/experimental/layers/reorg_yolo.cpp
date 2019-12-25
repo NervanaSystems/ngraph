@@ -21,7 +21,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::ReorgYolo::type_info;
 
-op::ReorgYolo::ReorgYolo(const Output<Node>& input, const Strides& strides)
+op::ReorgYolo::ReorgYolo(const NodeOutput& input, const Strides& strides)
     : Op({input})
     , m_strides(strides)
 {

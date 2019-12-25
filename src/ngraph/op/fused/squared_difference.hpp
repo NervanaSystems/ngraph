@@ -41,8 +41,8 @@ namespace ngraph
                 /// \param x2 Second input tensor
                 /// \param auto_broadcast Auto broadcast specification
                 SquaredDifference(
-                    const Output<Node>& x1,
-                    const Output<Node>& x2,
+                    const NodeOutput& x1,
+                    const NodeOutput& x2,
                     const AutoBroadcastSpec& auto_broadcast = AutoBroadcastType::NUMPY);
 
                 virtual NodeVector decompose_op() const override;

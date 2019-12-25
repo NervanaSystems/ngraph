@@ -329,7 +329,7 @@ TEST(serialize, non_zero_node_output)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{10});
     auto topk = make_shared<op::TopK>(arg, 0, element::i32, 5, true);
-    auto abs = make_shared<op::Abs>(Output<Node>(topk, 1));
+    auto abs = make_shared<op::Abs>(NodeOutput(topk, 1));
     auto result = make_shared<op::Result>(abs);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
     string s = serialize(f);

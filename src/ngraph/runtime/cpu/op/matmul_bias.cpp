@@ -40,9 +40,9 @@ shared_ptr<Node> op::MatmulBias::copy_with_new_args(const NodeVector& new_args) 
                                    m_broadcast_axes);
 }
 
-op::MatmulBias::MatmulBias(const Output<Node>& W,
-                           const Output<Node>& x,
-                           const Output<Node>& b,
+op::MatmulBias::MatmulBias(const NodeOutput& W,
+                           const NodeOutput& x,
+                           const NodeOutput& b,
                            Shape shape_w,
                            Shape shape_x,
                            bool transpose_w,

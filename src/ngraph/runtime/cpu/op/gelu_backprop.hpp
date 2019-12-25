@@ -36,7 +36,7 @@ namespace ngraph
             /// \brief Constructs a GeluBackprop operation.
             ///
             /// \param arg Node that produces the gelu forward input tensor.
-            GeluBackprop(const Output<ngraph::Node>& arg, const Output<ngraph::Node>& delta);
+            GeluBackprop(const NodeOutput& arg, const NodeOutput& delta);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

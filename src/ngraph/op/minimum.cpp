@@ -29,8 +29,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::Minimum::type_info;
 
-op::v0::Minimum::Minimum(const Output<Node>& arg0,
-                         const Output<Node>& arg1,
+op::v0::Minimum::Minimum(const NodeOutput& arg0,
+                         const NodeOutput& arg1,
                          const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
@@ -65,8 +65,8 @@ void op::v0::Minimum::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
 
 constexpr NodeTypeInfo op::v1::Minimum::type_info;
 
-op::v1::Minimum::Minimum(const Output<Node>& arg0,
-                         const Output<Node>& arg1,
+op::v1::Minimum::Minimum(const NodeOutput& arg0,
+                         const NodeOutput& arg1,
                          const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {

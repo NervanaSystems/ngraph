@@ -27,9 +27,9 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v1::Select::type_info;
 
-op::v1::Select::Select(const Output<Node>& arg0,
-                       const Output<Node>& arg1,
-                       const Output<Node>& arg2,
+op::v1::Select::Select(const NodeOutput& arg0,
+                       const NodeOutput& arg1,
+                       const NodeOutput& arg2,
                        const AutoBroadcastSpec& auto_broadcast)
     : Op({arg0, arg1, arg2})
     , m_auto_broadcast(auto_broadcast)
@@ -116,7 +116,7 @@ void op::v1::Select::generate_adjoints(autodiff::Adjoints& adjoints, const Outpu
 
 constexpr NodeTypeInfo op::v0::Select::type_info;
 
-op::v0::Select::Select(const Output<Node>& arg0, const Output<Node>& arg1, const Output<Node>& arg2)
+op::v0::Select::Select(const NodeOutput& arg0, const NodeOutput& arg1, const NodeOutput& arg2)
     : Op({arg0, arg1, arg2})
 {
     constructor_validate_and_infer_types();

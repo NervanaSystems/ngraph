@@ -29,13 +29,13 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Dot::type_info;
 
-op::Dot::Dot(const Output<Node>& arg0, const Output<Node>& arg1)
+op::Dot::Dot(const NodeOutput& arg0, const NodeOutput& arg1)
     : Dot(arg0, arg1, 0, false)
 {
 }
 
-op::Dot::Dot(const Output<Node>& arg0,
-             const Output<Node>& arg1,
+op::Dot::Dot(const NodeOutput& arg0,
+             const NodeOutput& arg1,
              size_t reduction_axes_count,
              bool has_reduction_axes_count)
     : Op({arg0, arg1})
@@ -154,7 +154,7 @@ void op::Dot::validate_and_infer_types()
     set_output_type(0, result_et, result_shape);
 }
 
-shared_ptr<op::Reshape> make_reshape_axes_to_front(const Output<Node>& n,
+shared_ptr<op::Reshape> make_reshape_axes_to_front(const NodeOutput& n,
                                                    const Shape& front_shape,
                                                    const Shape& back_shape)
 {

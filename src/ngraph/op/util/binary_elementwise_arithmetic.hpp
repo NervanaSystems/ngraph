@@ -65,8 +65,8 @@ namespace ngraph
                 ///
                 /// \param arg0 Output that produces the first input tensor.
                 /// \param arg1 Output that produces the second input tensor.
-                BinaryElementwiseArithmetic(const Output<Node>& arg0,
-                                            const Output<Node>& arg1,
+                BinaryElementwiseArithmetic(const NodeOutput& arg0,
+                                            const NodeOutput& arg1,
                                             const AutoBroadcastSpec& autob);
 
                 /// \brief Constructs a binary elementwise arithmetic operation.

@@ -51,8 +51,8 @@ namespace ngraph
                 /// \param auto_pad The pad type for automatically computing padding sizes.
                 ///
                 /// Output `[N, C_OUT, R1, ... Rf]`
-                BinaryConvolution(const Output<Node>& data,
-                                  const Output<Node>& kernel,
+                BinaryConvolution(const NodeOutput& data,
+                                  const NodeOutput& kernel,
                                   const Strides& strides,
                                   const CoordinateDiff& pads_begin,
                                   const CoordinateDiff& pads_end,
@@ -61,8 +61,8 @@ namespace ngraph
                                   float pad_value,
                                   const PadType& auto_pad = PadType::EXPLICIT);
 
-                BinaryConvolution(const Output<Node>& data,
-                                  const Output<Node>& kernel,
+                BinaryConvolution(const NodeOutput& data,
+                                  const NodeOutput& kernel,
                                   const Strides& strides,
                                   const CoordinateDiff& pads_begin,
                                   const CoordinateDiff& pads_end,

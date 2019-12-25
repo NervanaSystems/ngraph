@@ -33,7 +33,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Asin::type_info;
 
-op::Asin::Asin(const Output<Node>& arg)
+op::Asin::Asin(const NodeOutput& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();

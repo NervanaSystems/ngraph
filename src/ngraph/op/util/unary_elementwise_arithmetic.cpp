@@ -23,7 +23,7 @@ op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic()
 {
 }
 
-op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const Output<Node>& arg)
+op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const NodeOutput& arg)
     : Op({arg})
 {
 }

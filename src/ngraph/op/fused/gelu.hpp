@@ -37,7 +37,7 @@ namespace ngraph
                 /// \brief Constructs an Gelu operation.
                 ///
                 /// \param data Input tensor
-                Gelu(const Output<Node>& data);
+                Gelu(const NodeOutput& data);
 
                 virtual NodeVector decompose_op() const override;
 
@@ -59,7 +59,7 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 GeluBackpropFactor() = default;
 
-                GeluBackpropFactor(const Output<Node>& x);
+                GeluBackpropFactor(const NodeOutput& x);
 
                 virtual NodeVector decompose_op() const override;
 

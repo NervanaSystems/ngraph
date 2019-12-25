@@ -30,15 +30,15 @@ namespace ngraph
             static constexpr NodeTypeInfo type_info{"QuantizedConvolutionBias", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             QuantizedConvolutionBias() = default;
-            QuantizedConvolutionBias(const Output<Node>& data_batch,
-                                     const Output<Node>& filters,
-                                     const Output<Node>& bias,
+            QuantizedConvolutionBias(const NodeOutput& data_batch,
+                                     const NodeOutput& filters,
+                                     const NodeOutput& bias,
                                      const Strides& window_movement_strides,
                                      const Strides& window_dilation_strides,
                                      const CoordinateDiff& padding_below,
                                      const CoordinateDiff& padding_above,
                                      const Strides& data_dilation_strides,
-                                     const Output<Node>& scale,
+                                     const NodeOutput& scale,
                                      const bool with_relu = false);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
@@ -46,9 +46,9 @@ namespace ngraph
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
-            Output<Node> get_bias() { return input_value(2); }
-            Output<Node> get_filters() { return input_value(1); }
-            Output<Node> get_data_batch() { return input_value(0); }
+            NodeOutput get_bias() { return input_value(2); }
+            NodeOutput get_filters() { return input_value(1); }
+            NodeOutput get_data_batch() { return input_value(0); }
             bool with_relu() const { return m_with_relu; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -68,17 +68,17 @@ namespace ngraph
             static constexpr NodeTypeInfo type_info{"QuantizedConvolutionBiasAdd", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             QuantizedConvolutionBiasAdd() = default;
-            QuantizedConvolutionBiasAdd(const Output<Node>& data_batch,
-                                        const Output<Node>& filters,
-                                        const Output<Node>& bias,
-                                        const Output<Node>& sum_input,
+            QuantizedConvolutionBiasAdd(const NodeOutput& data_batch,
+                                        const NodeOutput& filters,
+                                        const NodeOutput& bias,
+                                        const NodeOutput& sum_input,
                                         const Strides& window_movement_strides,
                                         const Strides& window_dilation_strides,
                                         const CoordinateDiff& padding_below,
                                         const CoordinateDiff& padding_above,
                                         const Strides& data_dilation_strides,
-                                        const Output<Node>& scale,
-                                        const Output<Node>& sum_scale,
+                                        const NodeOutput& scale,
+                                        const NodeOutput& sum_scale,
                                         const bool with_relu = false);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
@@ -86,9 +86,9 @@ namespace ngraph
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
-            Output<Node> get_bias() { return input_value(2); }
-            Output<Node> get_filters() { return input_value(1); }
-            Output<Node> get_data_batch() { return input_value(0); }
+            NodeOutput get_bias() { return input_value(2); }
+            NodeOutput get_filters() { return input_value(1); }
+            NodeOutput get_data_batch() { return input_value(0); }
             bool with_relu() const { return m_with_relu; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -108,17 +108,17 @@ namespace ngraph
             static constexpr NodeTypeInfo type_info{"QuantizedConvolutionBiasSignedAdd", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             QuantizedConvolutionBiasSignedAdd() = default;
-            QuantizedConvolutionBiasSignedAdd(const Output<Node>& data_batch,
-                                              const Output<Node>& filters,
-                                              const Output<Node>& bias,
-                                              const Output<Node>& sum_input,
+            QuantizedConvolutionBiasSignedAdd(const NodeOutput& data_batch,
+                                              const NodeOutput& filters,
+                                              const NodeOutput& bias,
+                                              const NodeOutput& sum_input,
                                               const Strides& window_movement_strides,
                                               const Strides& window_dilation_strides,
                                               const CoordinateDiff& padding_below,
                                               const CoordinateDiff& padding_above,
                                               const Strides& data_dilation_strides,
-                                              const Output<Node>& scale,
-                                              const Output<Node>& sum_scale,
+                                              const NodeOutput& scale,
+                                              const NodeOutput& sum_scale,
                                               const bool with_relu = false);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
@@ -126,9 +126,9 @@ namespace ngraph
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
-            Output<Node> get_bias() { return input_value(2); }
-            Output<Node> get_filters() { return input_value(1); }
-            Output<Node> get_data_batch() { return input_value(0); }
+            NodeOutput get_bias() { return input_value(2); }
+            NodeOutput get_filters() { return input_value(1); }
+            NodeOutput get_data_batch() { return input_value(0); }
             bool with_relu() const { return m_with_relu; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

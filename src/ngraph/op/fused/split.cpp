@@ -25,7 +25,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::Split::type_info;
 
-op::v0::Split::Split(const Output<Node>& data, const Output<Node>& axis, const size_t num_split)
+op::v0::Split::Split(const NodeOutput& data, const NodeOutput& axis, const size_t num_split)
     : FusedOp({data, axis})
     , m_split_evenly{true}
     , m_num_split{num_split}
@@ -33,8 +33,8 @@ op::v0::Split::Split(const Output<Node>& data, const Output<Node>& axis, const s
     constructor_validate_and_infer_types();
 }
 
-op::v0::Split::Split(const Output<Node>& data,
-                     const Output<Node>& axis,
+op::v0::Split::Split(const NodeOutput& data,
+                     const NodeOutput& axis,
                      const std::vector<size_t>& splits)
     : FusedOp({data, axis})
     , m_split_evenly{false}
@@ -114,7 +114,7 @@ shared_ptr<Node> op::v0::Split::copy_with_new_args(const NodeVector& new_args) c
 
 constexpr NodeTypeInfo op::v1::Split::type_info;
 
-op::v1::Split::Split(const Output<Node>& data, const Output<Node>& axis, const size_t num_splits)
+op::v1::Split::Split(const NodeOutput& data, const NodeOutput& axis, const size_t num_splits)
     : FusedOp({data, axis})
     , m_num_splits{num_splits}
 {

@@ -23,7 +23,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v1::ConvertLike::type_info;
 
-op::v1::ConvertLike::ConvertLike(const Output<Node>& data, const Output<Node>& like)
+op::v1::ConvertLike::ConvertLike(const NodeOutput& data, const NodeOutput& like)
     : Op({data, like})
 {
     constructor_validate_and_infer_types();

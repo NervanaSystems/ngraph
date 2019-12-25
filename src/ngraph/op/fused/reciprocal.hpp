@@ -35,7 +35,7 @@ namespace ngraph
             /// \brief Constructs a Reciprocal operation.
             ///
             /// \param data Input tensor
-            Reciprocal(const Output<Node>& data);
+            Reciprocal(const NodeOutput& data);
 
             virtual NodeVector decompose_op() const override;
 

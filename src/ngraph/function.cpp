@@ -209,7 +209,7 @@ shared_ptr<Node> Function::get_output_op(size_t i) const
     return m_results.at(i);
 }
 
-Output<Node> Function::output(size_t i) const
+NodeOutput Function::output(size_t i) const
 {
     return m_results.at(i);
 }

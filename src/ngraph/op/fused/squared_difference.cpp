@@ -26,8 +26,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::SquaredDifference::type_info;
 
-op::SquaredDifference::SquaredDifference(const Output<Node>& x1,
-                                         const Output<Node>& x2,
+op::SquaredDifference::SquaredDifference(const NodeOutput& x1,
+                                         const NodeOutput& x2,
                                          const AutoBroadcastSpec& auto_broadcast)
     : FusedOp({x1, x2})
     , m_autobroadcast(auto_broadcast)

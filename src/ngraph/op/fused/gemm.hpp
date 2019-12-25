@@ -51,9 +51,9 @@ namespace ngraph
                 /// \param beta Scalar multiplier for input tensor C
                 /// \param transA Whether A should be transposed
                 /// \param transB Whether B should be transposed
-                Gemm(const Output<Node>& A,
-                     const Output<Node>& B,
-                     const Output<Node>& C,
+                Gemm(const NodeOutput& A,
+                     const NodeOutput& B,
+                     const NodeOutput& C,
                      double alpha = 1.0,
                      double beta = 1.0,
                      bool transA = false,

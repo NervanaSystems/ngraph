@@ -41,9 +41,9 @@ namespace ngraph
             /// \param zero_point zero point used for mapping
             /// \param type output element type
             /// \param axes axis positions on which `scale` and `zero_point` are specified
-            Dequantize(const Output<Node>& input,
-                       const Output<Node>& scale,
-                       const Output<Node>& zero_point,
+            Dequantize(const NodeOutput& input,
+                       const NodeOutput& scale,
+                       const NodeOutput& zero_point,
                        const element::Type& type,
                        const AxisSet& axes);
 

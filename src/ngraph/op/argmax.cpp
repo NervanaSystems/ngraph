@@ -22,7 +22,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::ArgMax::type_info;
 
-op::ArgMax::ArgMax(const Output<Node>& arg, size_t axis, const element::Type& index_element_type)
+op::ArgMax::ArgMax(const NodeOutput& arg, size_t axis, const element::Type& index_element_type)
     : op::util::IndexReduction(arg, axis, index_element_type)
 {
     constructor_validate_and_infer_types();

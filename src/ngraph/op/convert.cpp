@@ -23,7 +23,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Convert::type_info;
 
-op::Convert::Convert(const Output<Node>& arg, const element::Type& destination_type)
+op::Convert::Convert(const NodeOutput& arg, const element::Type& destination_type)
     : Op({arg})
     , m_destination_type(destination_type)
 {

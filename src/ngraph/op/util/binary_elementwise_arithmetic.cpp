@@ -24,8 +24,8 @@ op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(const AutoBro
 {
 }
 
-op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(const Output<Node>& arg0,
-                                                                   const Output<Node>& arg1,
+op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(const NodeOutput& arg0,
+                                                                   const NodeOutput& arg1,
                                                                    const AutoBroadcastSpec& autob)
     : Op({arg0, arg1})
     , m_autob(autob)

@@ -26,7 +26,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v0::TopK::type_info;
 
-op::v0::TopK::TopK(const Output<Node>& arg,
+op::v0::TopK::TopK(const NodeOutput& arg,
                    size_t top_k_axis,
                    const element::Type& index_element_type,
                    size_t k,
@@ -44,8 +44,8 @@ op::v0::TopK::TopK(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::v0::TopK::TopK(const Output<Node>& arg,
-                   const Output<Node>& k,
+op::v0::TopK::TopK(const NodeOutput& arg,
+                   const NodeOutput& k,
                    size_t top_k_axis,
                    const element::Type& index_element_type,
                    bool compute_max,
@@ -60,9 +60,9 @@ op::v0::TopK::TopK(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::v0::TopK::TopK(const Output<Node>& arg,
-                   const Output<Node>& k,
-                   const Output<Node>& top_k_axis,
+op::v0::TopK::TopK(const NodeOutput& arg,
+                   const NodeOutput& k,
+                   const NodeOutput& top_k_axis,
                    const element::Type& index_element_type,
                    bool compute_max,
                    SortType sort)
@@ -227,8 +227,8 @@ void op::v0::TopK::generate_adjoints(autodiff::Adjoints& /* adjoints */,
 // v1 version starts
 constexpr NodeTypeInfo op::v1::TopK::type_info;
 
-op::v1::TopK::TopK(const Output<Node>& data,
-                   const Output<Node>& k,
+op::v1::TopK::TopK(const NodeOutput& data,
+                   const NodeOutput& k,
                    const int64_t axis,
                    const std::string& mode,
                    const std::string& sort,
@@ -242,8 +242,8 @@ op::v1::TopK::TopK(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-op::v1::TopK::TopK(const Output<Node>& data,
-                   const Output<Node>& k,
+op::v1::TopK::TopK(const NodeOutput& data,
+                   const NodeOutput& k,
                    const int64_t axis,
                    const Mode mode,
                    const SortType sort,

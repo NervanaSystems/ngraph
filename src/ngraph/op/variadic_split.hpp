@@ -44,9 +44,9 @@ namespace ngraph
                 /// along the split "axis". Size of "split_lengths" should be equal to the number of
                 ///
                 /// outputs. The sum of split_lengths must match data.shape[axis]
-                VariadicSplit(const Output<Node>& data,
-                              const Output<Node>& axis,
-                              const Output<Node>& split_lengths);
+                VariadicSplit(const NodeOutput& data,
+                              const NodeOutput& axis,
+                              const NodeOutput& split_lengths);
 
                 void validate_and_infer_types() override;
                 virtual std::shared_ptr<Node>

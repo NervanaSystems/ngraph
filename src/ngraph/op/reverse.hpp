@@ -58,7 +58,7 @@ namespace ngraph
                 ///
                 /// \param arg The input tensor, some of whose axes are to be reversed.
                 /// \param reversed_axes The axes to reverse.
-                Reverse(const Output<Node>& arg, const AxisSet& reversed_axes);
+                Reverse(const NodeOutput& arg, const AxisSet& reversed_axes);
 
                 void validate_and_infer_types() override;
 
@@ -100,13 +100,11 @@ namespace ngraph
                 /// \param reversed_axes The axes to reverse in a form of a set of indices or
                 /// boolean mask.
                 /// \param mode The way reversed_axes should be interpreted - a set or a mask.
-                Reverse(const Output<Node>& data,
-                        const Output<Node>& reversed_axes,
+                Reverse(const NodeOutput& data,
+                        const NodeOutput& reversed_axes,
                         const std::string& mode);
 
-                Reverse(const Output<Node>& data,
-                        const Output<Node>& reversed_axes,
-                        const Mode mode);
+                Reverse(const NodeOutput& data, const NodeOutput& reversed_axes, const Mode mode);
 
                 void validate_and_infer_types() override;
 

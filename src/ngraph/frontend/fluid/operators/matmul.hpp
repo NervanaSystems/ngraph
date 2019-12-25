@@ -40,8 +40,8 @@ namespace ngraph
             /// \param B Matrix B
             /// \param transpose_a If matrix A should be transposed.
             /// \param transpose_b If matrix B should be transposed.
-            MatMul(const Output<Node>& A,
-                   const Output<Node>& B,
+            MatMul(const NodeOutput& A,
+                   const NodeOutput& B,
                    const bool transpose_a,
                    const bool transpose_b);
 
@@ -70,9 +70,9 @@ namespace ngraph
             /// \param B Matrix B
             /// \param transpose_a If matrix A should be transposed.
             /// \param transpose_b If matrix B should be transposed.
-            MatMulGrad(const Output<Node>& A,
-                       const Output<Node>& B,
-                       const Output<Node>& Out,
+            MatMulGrad(const NodeOutput& A,
+                       const NodeOutput& B,
+                       const NodeOutput& Out,
                        const bool transpose_a,
                        const bool transpose_b);
 

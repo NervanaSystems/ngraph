@@ -41,8 +41,8 @@ namespace ngraph
                 /// \param arg1 Node that produces the second input tensor.
                 /// \param pythondiv Use Python style rounding for integral type
                 /// \param auto_broadcast Auto broadcast specification
-                Divide(const Output<Node>& arg0,
-                       const Output<Node>& arg1,
+                Divide(const NodeOutput& arg0,
+                       const NodeOutput& arg1,
                        bool pythondiv,
                        const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
@@ -51,8 +51,8 @@ namespace ngraph
                 /// \param arg0 Node that produces the first input tensor.
                 /// \param arg1 Node that produces the second input tensor.
                 /// \param auto_broadcast Auto broadcast specification
-                Divide(const Output<Node>& arg0,
-                       const Output<Node>& arg1,
+                Divide(const NodeOutput& arg0,
+                       const NodeOutput& arg1,
                        const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
                 bool is_pythondiv() const { return m_pythondiv; }
@@ -88,8 +88,8 @@ namespace ngraph
                 /// \param arg1 Node that produces the second input tensor.
                 /// \param pythondiv Use Python style rounding for integral type
                 /// \param auto_broadcast Auto broadcast specification
-                Divide(const Output<Node>& arg0,
-                       const Output<Node>& arg1,
+                Divide(const NodeOutput& arg0,
+                       const NodeOutput& arg1,
                        bool pythondiv,
                        const AutoBroadcastSpec& auto_broadcast =
                            AutoBroadcastSpec(AutoBroadcastType::NUMPY));
@@ -99,8 +99,8 @@ namespace ngraph
                 /// \param arg0 Node that produces the first input tensor.
                 /// \param arg1 Node that produces the second input tensor.
                 /// \param auto_broadcast Auto broadcast specification
-                Divide(const Output<Node>& arg0,
-                       const Output<Node>& arg1,
+                Divide(const NodeOutput& arg0,
+                       const NodeOutput& arg1,
                        const AutoBroadcastSpec& auto_broadcast =
                            AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 
@@ -120,5 +120,5 @@ namespace ngraph
         using v0::Divide;
     } // namespace op
 
-    std::shared_ptr<Node> operator/(const Output<Node>& arg0, const Output<Node>& arg1);
+    std::shared_ptr<Node> operator/(const NodeOutput& arg0, const NodeOutput& arg1);
 } // namespace ngraph

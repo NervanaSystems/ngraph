@@ -143,7 +143,7 @@ static AxisSet get_quantization_axes_in_default_order(shared_ptr<op::Reshape> ar
 
 struct Swimmer
 {
-    Input<Node> input;
+    NodeInput input;
     shared_ptr<op::Reshape> reshape;
 };
 
@@ -153,7 +153,7 @@ struct Swimmer
 // we prefer nchw since a lot of ngraph ops require this format,
 // so keeping things in nchw allows us to eliminate as many reshapes
 // as possible
-void swim(Input<Node> input, shared_ptr<op::Reshape> reshape)
+void swim(NodeInput input, shared_ptr<op::Reshape> reshape)
 {
     Swimmer sw{input, reshape};
     list<Swimmer> work_queue;
@@ -242,7 +242,7 @@ void swim(Input<Node> input, shared_ptr<op::Reshape> reshape)
 // We have to normalize this other argument to nchw by swimming nchw towards parameters
 // as far as we can
 static void convert_binary_to_default_order(shared_ptr<Node> binary,
-                                            const Input<Node>& input,
+                                            const NodeInput& input,
                                             shared_ptr<Node> right,
                                             ReshapeMap& reorders,
                                             set<shared_ptr<Node>>& reshapes_to_delete)

@@ -42,9 +42,7 @@ namespace ngraph
                 /// \param broadcast_axes The axis positions (0-based) in the result that are being
                 ///                       broadcast. The remaining axes in shape must be the same as
                 ///                       the shape of arg.
-                Broadcast(const Output<Node>& arg,
-                          const Shape& shape,
-                          const AxisSet& broadcast_axes);
+                Broadcast(const NodeOutput& arg, const Shape& shape, const AxisSet& broadcast_axes);
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
@@ -89,8 +87,8 @@ namespace ngraph
                 /// \param like_arg Provides the shape for the result.
                 /// \param initial_broadcast_axes indicates which axes will be broadcast. If empty,
                 ///        arg must be scalar and all axes are broadcast.
-                BroadcastLike(const Output<Node>& arg,
-                              const Output<Node>& like_arg,
+                BroadcastLike(const NodeOutput& arg,
+                              const NodeOutput& like_arg,
                               const AxisSet& initial_broadcast_axes);
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual std::shared_ptr<Node>
@@ -136,9 +134,9 @@ namespace ngraph
                 /// \param broadcast_spec Broadcast specification to use for determining broadcast
                 ///                       axes. 'axes_mapping' is ignored if broadcast_spec is not
                 ///                       NONE
-                Broadcast(const Output<Node>& arg,
-                          const Output<Node>& target_shape,
-                          const Output<Node>& axes_mapping,
+                Broadcast(const NodeOutput& arg,
+                          const NodeOutput& target_shape,
+                          const NodeOutput& axes_mapping,
                           const AutoBroadcastSpec& broadcast_spec = AutoBroadcastSpec());
 
                 /// \brief Constructs a broadcast operation.
@@ -147,8 +145,8 @@ namespace ngraph
                 /// \param target_shape   The shape of the output tensor.
                 /// \param broadcast_spec Broadcast specification to use for determining broadcast
                 ///                       axes
-                Broadcast(const Output<Node>& arg,
-                          const Output<Node>& target_shape,
+                Broadcast(const NodeOutput& arg,
+                          const NodeOutput& target_shape,
                           const AutoBroadcastSpec& broadcast_spec =
                               AutoBroadcastSpec(AutoBroadcastType::NUMPY));
                 bool visit_attributes(AttributeVisitor& visitor) override;

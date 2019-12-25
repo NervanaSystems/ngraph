@@ -38,11 +38,11 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::FakeQuantize::type_info;
 
-op::FakeQuantize::FakeQuantize(const Output<Node>& data,
-                               const Output<Node>& input_low,
-                               const Output<Node>& input_high,
-                               const Output<Node>& output_low,
-                               const Output<Node>& output_high,
+op::FakeQuantize::FakeQuantize(const NodeOutput& data,
+                               const NodeOutput& input_low,
+                               const NodeOutput& input_high,
+                               const NodeOutput& output_low,
+                               const NodeOutput& output_high,
                                size_t levels,
                                const AutoBroadcastSpec& auto_broadcast)
     : FusedOp({data, input_low, input_high, output_low, output_high})
@@ -81,11 +81,11 @@ void op::FakeQuantize::pre_validate_and_infer_types()
 
 NodeVector op::FakeQuantize::decompose_op() const
 {
-    Output<Node> data{input_value(0)};
-    Output<Node> input_low{input_value(1)};
-    Output<Node> input_high{input_value(2)};
-    Output<Node> output_low{input_value(3)};
-    Output<Node> output_high{input_value(4)};
+    NodeOutput data{input_value(0)};
+    NodeOutput input_low{input_value(1)};
+    NodeOutput input_high{input_value(2)};
+    NodeOutput output_low{input_value(3)};
+    NodeOutput output_high{input_value(4)};
 
     if (m_auto_broadcast.m_type == AutoBroadcastType::NUMPY)
     {

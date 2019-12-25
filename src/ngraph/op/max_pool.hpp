@@ -43,7 +43,7 @@ namespace ngraph
                 /// \param padding_above The above-padding shape.
                 /// \param pad_type The pad type for automatically computing padding sizes
                 /// \param ceil_mode Whether to use ceiling while computing output shape.
-                MaxPool(const Output<Node>& arg,
+                MaxPool(const NodeOutput& arg,
                         const Shape& window_shape,
                         const Strides& window_movement_strides,
                         const Shape& padding_below,
@@ -59,7 +59,7 @@ namespace ngraph
                 /// \param padding_below The below-padding shape.
                 /// \param padding_above The above-padding shape.
                 /// \param pad_type The pad type for automatically computing padding sizes
-                MaxPool(const Output<Node>& arg,
+                MaxPool(const NodeOutput& arg,
                         const Shape& window_shape,
                         const Strides& window_movement_strides,
                         const Shape& padding_below,
@@ -73,7 +73,7 @@ namespace ngraph
                 /// \param window_movement_strides The window movement strides.
                 /// \param padding_below The below-padding shape.
                 /// \param padding_above The above-padding shape.
-                MaxPool(const Output<Node>& arg,
+                MaxPool(const NodeOutput& arg,
                         const Shape& window_shape,
                         const Strides& window_movement_strides,
                         const Shape& padding_below,
@@ -87,7 +87,7 @@ namespace ngraph
                 /// \param arg The node producing the input data batch tensor.
                 /// \param window_shape The window shape.
                 /// \param window_movement_strides The window movement strides.
-                MaxPool(const Output<Node>& arg,
+                MaxPool(const NodeOutput& arg,
                         const Shape& window_shape,
                         const Strides& window_movement_strides);
 
@@ -96,7 +96,7 @@ namespace ngraph
                 ///
                 /// \param arg The node producing the input data batch tensor.
                 /// \param window_shape The window shape.
-                MaxPool(const Output<Node>& arg, const Shape& window_shape);
+                MaxPool(const NodeOutput& arg, const Shape& window_shape);
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
@@ -153,16 +153,16 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 MaxPoolBackprop() = default;
 
-                MaxPoolBackprop(const Output<Node>& arg_forward,
-                                const Output<Node>& delta,
+                MaxPoolBackprop(const NodeOutput& arg_forward,
+                                const NodeOutput& delta,
                                 const Shape& window_shape,
                                 const Strides& window_movement_strides,
                                 const Shape& padding_below,
                                 const Shape& padding_above);
 
-                MaxPoolBackprop(const Output<Node>& arg_forward,
-                                const Output<Node>& delta,
-                                const Output<Node>& result_forward,
+                MaxPoolBackprop(const NodeOutput& arg_forward,
+                                const NodeOutput& delta,
+                                const NodeOutput& result_forward,
                                 const Shape& window_shape,
                                 const Strides& window_movement_strides,
                                 const Shape& padding_below,
@@ -223,7 +223,7 @@ namespace ngraph
                 /// \param rounding_mode Whether to use ceiling or floor rounding type while
                 /// computing output shape.
                 /// \param auto_pad The pad type for automatically computing padding sizes.
-                MaxPool(const Output<Node>& arg,
+                MaxPool(const NodeOutput& arg,
                         const Strides& strides,
                         const Shape& pads_begin,
                         const Shape& pads_end,
@@ -240,7 +240,7 @@ namespace ngraph
                 /// \param kernel The kernel shape.
                 /// \param rounding_mode Whether to use ceiling or floor rounding type while
                 /// computing output shape.
-                MaxPool(const Output<Node>& arg,
+                MaxPool(const NodeOutput& arg,
                         const Strides& strides,
                         const Shape& pads_begin,
                         const Shape& pads_end,
@@ -296,16 +296,16 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 MaxPoolBackprop() = default;
 
-                MaxPoolBackprop(const Output<Node>& arg_forward,
-                                const Output<Node>& delta,
+                MaxPoolBackprop(const NodeOutput& arg_forward,
+                                const NodeOutput& delta,
                                 const Strides& strides,
                                 const Shape& pads_begin,
                                 const Shape& pads_end,
                                 const Shape& kernel);
 
-                MaxPoolBackprop(const Output<Node>& arg_forward,
-                                const Output<Node>& delta,
-                                const Output<Node>& result_forward,
+                MaxPoolBackprop(const NodeOutput& arg_forward,
+                                const NodeOutput& delta,
+                                const NodeOutput& result_forward,
                                 const Strides& strides,
                                 const Shape& pads_begin,
                                 const Shape& pads_end,

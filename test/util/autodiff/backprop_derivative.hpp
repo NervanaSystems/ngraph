@@ -142,7 +142,7 @@ namespace ngraph
             auto c_arg = backend->create_tensor<T>(y_shape);
 
             // df/dX*
-            std::vector<Output<Node>> df_output_params;
+            std::vector<NodeOutput> df_output_params;
 
             Adjoints adjoints(OutputVector{f->output(0)}, OutputVector{c_param});
 
