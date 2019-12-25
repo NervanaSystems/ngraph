@@ -21,6 +21,7 @@
 #include <unordered_map>
 
 #include "ngraph/coordinate.hpp"
+#include "ngraph/output_vector.hpp"
 #include "ngraph/strides.hpp"
 
 namespace ngraph
@@ -30,10 +31,6 @@ namespace ngraph
 
     template <typename T>
     class Output;
-    // Need duplicate definition here to avoid g++ issues
-    // Keep consistent with version in node.hpp
-    using NodeVector = std::vector<std::shared_ptr<Node>>;
-    using OutputVector = std::vector<Output<Node>>;
 
     namespace autodiff
     {
