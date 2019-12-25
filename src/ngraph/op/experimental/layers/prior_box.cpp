@@ -56,9 +56,6 @@ void op::PriorBox::validate_and_infer_types()
                           " must match image shape input rank ",
                           image_shape_rank);
 
-    NODE_VALIDATION_CHECK(
-        this, ratios_normalized(), "There are duplicates in the normalized list of aspect_ratio");
-
     set_input_is_relevant_to_shape(0);
 
     if (auto const_shape = as_type_ptr<op::Constant>(input_value(0).get_node_shared_ptr()))
@@ -95,7 +92,7 @@ size_t op::PriorBox::number_of_priors(const PriorBoxAttrs& attrs)
 
     // Total number of boxes around each point; depends on whether flipped boxes are included
     // plus one box 1x1.
-    size_t total_aspect_ratios = ((attrs.flip ? 2 : 1) * attrs.aspect_ratio.size() + 1);
+    size_t total_aspect_ratios = normalized_aspect_ratio(attrs.aspect_ratio, attrs.flip).size();
 
     if (!attrs.min_size.empty())
         num_priors = total_aspect_ratios * attrs.min_size.size();
@@ -125,16 +122,15 @@ size_t op::PriorBox::number_of_priors(const PriorBoxAttrs& attrs)
     return num_priors;
 }
 
-bool op::PriorBox::ratios_normalized() const
+std::vector<float> op::PriorBox::normalized_aspect_ratio(const std::vector<float>& aspect_ratio, bool flip)
 {
     std::set<float> unique_ratios;
-    for (auto ratio : m_attrs.aspect_ratio)
+    for (auto ratio : aspect_ratio)
     {
-        unique_ratios.insert(ratio);
-        if (m_attrs.flip)
-            unique_ratios.insert(1 / ratio);
+        unique_ratios.insert(std::round(ratio * 1e6) / 1e6);
+        if (flip)
+            unique_ratios.insert(std::round(1 / ratio * 1e6)/1e6);
     }
     unique_ratios.insert(1);
-    size_t expected_num_of_ratios = ((m_attrs.flip ? 2 : 1) * m_attrs.aspect_ratio.size() + 1);
-    return unique_ratios.size() == expected_num_of_ratios;
+    return std::vector<float>(unique_ratios.begin(), unique_ratios.end());
 }
