@@ -73,10 +73,10 @@ namespace ngraph
 
                 static size_t number_of_priors(const PriorBoxAttrs& attrs);
 
-                static std::vector<float> normalized_aspect_ratio(const std::vector<float>& aspect_ratio, bool flip);
+                static std::vector<float>
+                    normalized_aspect_ratio(const std::vector<float>& aspect_ratio, bool flip);
 
                 const PriorBoxAttrs& get_attrs() const { return m_attrs; }
-
             private:
                 PriorBoxAttrs m_attrs;
             };

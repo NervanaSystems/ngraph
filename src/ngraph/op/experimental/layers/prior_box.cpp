@@ -122,14 +122,15 @@ size_t op::PriorBox::number_of_priors(const PriorBoxAttrs& attrs)
     return num_priors;
 }
 
-std::vector<float> op::PriorBox::normalized_aspect_ratio(const std::vector<float>& aspect_ratio, bool flip)
+std::vector<float> op::PriorBox::normalized_aspect_ratio(const std::vector<float>& aspect_ratio,
+                                                         bool flip)
 {
     std::set<float> unique_ratios;
     for (auto ratio : aspect_ratio)
     {
         unique_ratios.insert(std::round(ratio * 1e6) / 1e6);
         if (flip)
-            unique_ratios.insert(std::round(1 / ratio * 1e6)/1e6);
+            unique_ratios.insert(std::round(1 / ratio * 1e6) / 1e6);
     }
     unique_ratios.insert(1);
     return std::vector<float>(unique_ratios.begin(), unique_ratios.end());
