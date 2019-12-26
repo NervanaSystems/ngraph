@@ -94,8 +94,10 @@ size_t op::PriorBox::number_of_priors(const PriorBoxAttrs& attrs)
     // plus one box 1x1.
     size_t total_aspect_ratios = normalized_aspect_ratio(attrs.aspect_ratio, attrs.flip).size();
 
-    if (!attrs.min_size.empty())
-        num_priors = total_aspect_ratios * attrs.min_size.size();
+    if (attrs.scale_all_sizes)
+        num_priors = total_aspect_ratios * attrs.min_size.size() + attrs.max_size.size();
+    else
+        num_priors = total_aspect_ratios + attrs.min_size.size() - 1;
 
     if (!attrs.fixed_size.empty())
         num_priors = total_aspect_ratios * attrs.fixed_size.size();
@@ -109,15 +111,6 @@ size_t op::PriorBox::number_of_priors(const PriorBoxAttrs& attrs)
         else
             num_priors += total_aspect_ratios * density_2d;
     }
-
-    // TODO: Check whether attrs.max_size is really should be ignored when attrs.scale_all_size ==
-    // False
-    //       as the spec says or it is done automatically because attrs_max_size is always emtpy in
-    //       this case.
-    //       The following statement is executed unconditionally according to the code in OpenVINO
-    //       Model Optimizer
-    //       that infer shapes for this operation.
-    num_priors += attrs.max_size.size();
 
     return num_priors;
 }
