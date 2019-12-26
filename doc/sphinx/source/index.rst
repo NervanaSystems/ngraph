@@ -46,7 +46,6 @@ nGraph Compiler Stack Documentation
    frameworks/tensorflow_connect.rst
    frameworks/onnx_integ.rst
    frameworks/paddle_integ.rst
-   frameworks/other/index.rst
 
 .. toctree::
    :maxdepth: 1

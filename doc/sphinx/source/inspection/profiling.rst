@@ -77,4 +77,5 @@ To manually build a newer version than is available from the latest `PyPI`_
 documentation.
 
 
+.. _PyPI: https://pypi.org/project/ngraph-core/
 .. _BUILDING.md: https://github.com/NervanaSystems/ngraph/blob/master/python/BUILDING.md
