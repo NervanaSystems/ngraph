@@ -518,7 +518,11 @@ foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
     endif()
 
     string(TOLOWER ${BACKEND_NAME} BACKEND_DIR)
-    set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
+    if(${BACKEND_NAME} MATCHES ^GCPU$)
+        set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/generic_cpu/unit_test.manifest)
+    else()
+        set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
+    endif()
 
     foreach(TEST_SRC ${MULTI_TEST_SRC})
         string(REPLACE ".in." "_${BACKEND_NAME}." TARGET_NAME ${TEST_SRC})
