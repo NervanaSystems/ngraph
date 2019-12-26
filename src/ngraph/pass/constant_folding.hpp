@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph
