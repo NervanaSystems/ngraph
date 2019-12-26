@@ -170,14 +170,14 @@ namespace
     // For single convolution, the default variables do not
     // have to be specific and will be auto-deduced from the input shapes.
     //
-    // For group convolution, the caller has to generate the outter loop
+    // For group convolution, the caller has to generate the outer loop
     // over the number of groups. It will also generate the bounds on the
-    // C_IN and C_OUT dimensions. It will pass the bounds and IV of the outter
+    // C_IN and C_OUT dimensions. It will pass the bounds and IV of the outer
     // loop as follows:
     //
     // cLb/Ub : Values representing bounds on channel dim in image (C_IN)
     // kLb/Ub : Values representing bounds on numFilters dim in filters (C_OUT)
-    // gId    : Value representing induction variable for the outter loop
+    // gId    : Value representing induction variable for the outer loop
     void lowerConvolution(Value* result,
                           Value* images,
                           Value* filters,
@@ -948,7 +948,7 @@ namespace
         int groups = gConvOp.groups().getSExtValue();
 
         NGRAPH_CHECK(groups > 0, "Invalid number of groups");
-        // create outter group convolution loop
+        // create outer group convolution loop
         // for group = 0 to groups
         IndexHandle iv;
 
@@ -1337,7 +1337,7 @@ namespace
             }
             else
             {
-                // use split dim within bounds generated in outter loop
+                // use split dim within bounds generated in outer loop
                 numFiltersLb = ValueHandle(kLb);
                 numFiltersUb = ValueHandle(kUb);
             }
