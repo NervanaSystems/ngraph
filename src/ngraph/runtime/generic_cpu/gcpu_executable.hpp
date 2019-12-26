@@ -55,6 +55,7 @@
 #include "ngraph/runtime/reference/copy.hpp"
 #include "ngraph/runtime/reference/cos.hpp"
 #include "ngraph/runtime/reference/cosh.hpp"
+#include "ngraph/runtime/reference/cum_sum.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/divide.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
@@ -87,6 +88,7 @@
 #include "ngraph/runtime/reference/power.hpp"
 #include "ngraph/runtime/reference/product.hpp"
 #include "ngraph/runtime/reference/quantize.hpp"
+#include "ngraph/runtime/reference/random_uniform.hpp"
 #include "ngraph/runtime/reference/recv.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
 #include "ngraph/runtime/reference/replace_slice.hpp"
@@ -133,8 +135,8 @@ namespace ngraph
                 // ...
                 enum class OP_TYPEID
                 {
-#define NGRAPH_OP(NAME, NAMESPACE) a,
-#include "ngraph/opsets/opset0_tbl.hpp"
+#define NGRAPH_OP(NAME, NAMESPACE) ID_SUFFIX(NAME),
+#include "ngraph/runtime/generic_cpu/opset_gcpu_tbl.hpp"
 #undef NGRAPH_OP
                     UnknownOp
                 };
@@ -382,12 +384,9 @@ private:
         }
         case OP_TYPEID::GetOutputElement:
         {
-            const op::GetOutputElement* get_output_element =
-                static_cast<const op::GetOutputElement*>(&node);
-            size_t n = get_output_element->get_n();
             size_t element_count = shape_size(node.get_output_shape(0));
             size_t num_bytes = element_count * node.get_output_element_type(0).size();
-            std::memcpy(out[0]->get_data_ptr<T>(), args[n]->get_data_ptr<T>(), num_bytes);
+            std::memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), num_bytes);
             break;
         }
         case OP_TYPEID::BatchMatMul:
@@ -671,6 +670,30 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
+        case OP_TYPEID::CumSum:
+        {
+            const op::CumSum* cumsum = static_cast<const op::CumSum*>(&node);
+            auto axis_et = node.get_input_element_type(1);
+            if (axis_et == element::i32)
+            {
+                reference::cumsum<T, int32_t>(args[0]->get_data_ptr<const T>(),
+                                              args[1]->get_data_ptr<const int32_t>(),
+                                              out[0]->get_data_ptr<T>(),
+                                              node.get_input_shape(0),
+                                              cumsum->is_exclusive(),
+                                              cumsum->is_reverse());
+            }
+            else if (axis_et == element::i64)
+            {
+                reference::cumsum<T, int64_t>(args[0]->get_data_ptr<const T>(),
+                                              args[1]->get_data_ptr<const int64_t>(),
+                                              out[0]->get_data_ptr<T>(),
+                                              node.get_input_shape(0),
+                                              cumsum->is_exclusive(),
+                                              cumsum->is_reverse());
+            }
+            break;
+        }
         case OP_TYPEID::Dequantize:
         {
             const op::Dequantize* dequantize = static_cast<const op::Dequantize*>(&node);
@@ -930,11 +953,55 @@ private:
                                   element_count);
             break;
         }
+        case OP_TYPEID::LessEqual_v1:
+        {
+            auto less_eq = static_cast<const op::v1::LessEqual*>(&node);
+            reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
+                                  args[1]->get_data_ptr<const T>(),
+                                  out[0]->get_data_ptr<char>(),
+                                  node.get_input_shape(0),
+                                  node.get_input_shape(1),
+                                  less_eq->get_autob());
+            break;
+        }
         case OP_TYPEID::Log:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::log<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
+        }
+        case OP_TYPEID::LogicalAnd_v1:
+        {
+            auto logical_and = static_cast<const op::v1::LogicalAnd*>(&node);
+            reference::logical_and(args[0]->get_data_ptr<const T>(),
+                                   args[1]->get_data_ptr<const T>(),
+                                   out[0]->get_data_ptr<T>(),
+                                   node.get_input_shape(0),
+                                   node.get_input_shape(1),
+                                   logical_and->get_autob());
+            break;
+        }
+        case OP_TYPEID::LogicalOr_v1:
+        {
+            auto logical_or = static_cast<const op::v1::LogicalOr*>(&node);
+            reference::logical_or(args[0]->get_data_ptr<const T>(),
+                                  args[1]->get_data_ptr<const T>(),
+                                  out[0]->get_data_ptr<T>(),
+                                  node.get_input_shape(0),
+                                  node.get_input_shape(1),
+                                  logical_or->get_autob());
+            break;
+        }
+        case OP_TYPEID::LogicalXor_v1:
+        {
+            auto logical_xor = static_cast<const op::v1::LogicalXor*>(&node);
+            reference::logical_xor(args[0]->get_data_ptr<const T>(),
+                                   args[1]->get_data_ptr<const T>(),
+                                   out[0]->get_data_ptr<T>(),
+                                   node.get_input_shape(0),
+                                   node.get_input_shape(1),
+                                   logical_xor->get_autob());
             break;
         }
         case OP_TYPEID::LRN:
@@ -1034,6 +1101,7 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
+        case OP_TYPEID::LogicalNot_v1:
         case OP_TYPEID::Not:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1270,8 +1338,92 @@ private:
         case OP_TYPEID::QuantizedDotBias:
         case OP_TYPEID::QuantizedDot:
         {
-            throw unsupported_op("Unsupported op '" + node.description() +
-                                 "' in Interpreter back end.");
+            const op::QuantizedDot* qd = static_cast<const op::QuantizedDot*>(&node);
+
+            auto input0_element_type = qd->get_input_element_type(0);
+            auto input1_element_type = qd->get_input_element_type(1);
+            auto output_element_type = qd->get_output_element_type(0);
+
+            if (input0_element_type == element::u8 && input1_element_type == element::i8 &&
+                output_element_type == element::i8)
+            {
+                reference::dot<uint8_t, int8_t, int8_t, int32_t>(
+                    args[0]->get_data_ptr<const uint8_t>(),
+                    args[1]->get_data_ptr<const int8_t>(),
+                    out[0]->get_data_ptr<int8_t>(),
+                    node.get_input_shape(0),
+                    node.get_input_shape(1),
+                    node.get_output_shape(0),
+                    1,
+                    args[2]->get_data_ptr<const float>(),
+                    args[3]->get_data_ptr<const uint8_t>(),
+                    args[4]->get_data_ptr<const float>(),
+                    args[5]->get_data_ptr<const int8_t>(),
+                    args[6]->get_data_ptr<const float>(),
+                    args[7]->get_data_ptr<const int8_t>());
+            }
+            else if (input0_element_type == element::u8 && input1_element_type == element::u8 &&
+                     output_element_type == element::u8)
+            {
+                reference::dot<uint8_t, uint8_t, uint8_t, int32_t>(
+                    args[0]->get_data_ptr<const uint8_t>(),
+                    args[1]->get_data_ptr<const uint8_t>(),
+                    out[0]->get_data_ptr<uint8_t>(),
+                    node.get_input_shape(0),
+                    node.get_input_shape(1),
+                    node.get_output_shape(0),
+                    1,
+                    args[2]->get_data_ptr<const float>(),
+                    args[3]->get_data_ptr<const uint8_t>(),
+                    args[4]->get_data_ptr<const float>(),
+                    args[5]->get_data_ptr<const uint8_t>(),
+                    args[6]->get_data_ptr<const float>(),
+                    args[7]->get_data_ptr<const uint8_t>());
+            }
+            else if (input0_element_type == element::u8 && input1_element_type == element::u8 &&
+                     output_element_type == element::i32)
+            {
+                reference::dot<uint8_t, uint8_t, int32_t, int32_t>(
+                    args[0]->get_data_ptr<const uint8_t>(),
+                    args[1]->get_data_ptr<const uint8_t>(),
+                    out[0]->get_data_ptr<int32_t>(),
+                    node.get_input_shape(0),
+                    node.get_input_shape(1),
+                    node.get_output_shape(0),
+                    1,
+                    args[2]->get_data_ptr<const float>(),
+                    args[3]->get_data_ptr<const uint8_t>(),
+                    args[4]->get_data_ptr<const float>(),
+                    args[5]->get_data_ptr<const uint8_t>(),
+                    args[6]->get_data_ptr<const float>(),
+                    args[7]->get_data_ptr<const int32_t>());
+            }
+            else if (input0_element_type == element::u8 && input1_element_type == element::i8 &&
+                     output_element_type == element::i32)
+            {
+                reference::dot<uint8_t, int8_t, int32_t, int32_t>(
+                    args[0]->get_data_ptr<const uint8_t>(),
+                    args[1]->get_data_ptr<const int8_t>(),
+                    out[0]->get_data_ptr<int32_t>(),
+                    node.get_input_shape(0),
+                    node.get_input_shape(1),
+                    node.get_output_shape(0),
+                    1,
+                    args[2]->get_data_ptr<const float>(),
+                    args[3]->get_data_ptr<const uint8_t>(),
+                    args[4]->get_data_ptr<const float>(),
+                    args[5]->get_data_ptr<const int8_t>(),
+                    args[6]->get_data_ptr<const float>(),
+                    args[7]->get_data_ptr<const int32_t>());
+            }
+            else
+            {
+                std::stringstream ss;
+                ss << "unsupported element type";
+                throw std::runtime_error(ss.str());
+            }
+
+            break;
         }
         case OP_TYPEID::Recv:
         {
@@ -1284,6 +1436,38 @@ private:
                 args[0]->get_data_ptr<T>(), node.get_input_element_type(0), element_count, src_id);
 
             memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
+            break;
+        }
+        case OP_TYPEID::RandomUniform:
+        {
+            const op::RandomUniform* ru = static_cast<const op::RandomUniform*>(&node);
+
+            T min_val = args[0]->get_data_ptr<const T>()[0];
+            T max_val = args[1]->get_data_ptr<const T>()[0];
+            // In INTERPRETER we can ignore arg 2 (output_shape) for now because we only work on
+            // static output shapes anyway.
+            bool use_fixed_seed = static_cast<bool>(args[3]->get_data_ptr<const char>()[0]);
+
+            if (m_states.count(&node) == 0)
+            {
+                m_states[&node] = std::unique_ptr<UniformRNGState>(new UniformRNGState());
+            }
+
+            auto state = static_cast<UniformRNGState*>(m_states.at(&node).get());
+            size_t element_count = shape_size(node.get_output_shape(0));
+            if (!use_fixed_seed)
+            {
+                reference::random_uniform<T>(
+                    out[0]->get_data_ptr<T>(), min_val, max_val, element_count, state);
+            }
+            else
+            {
+                reference::random_uniform_with_fixed_seed<T>(out[0]->get_data_ptr<T>(),
+                                                             min_val,
+                                                             max_val,
+                                                             element_count,
+                                                             ru->get_fixed_seed());
+            }
             break;
         }
         case OP_TYPEID::Range:
@@ -1614,6 +1798,8 @@ private:
         case OP_TYPEID::Elu:
         case OP_TYPEID::FakeQuantize:
         case OP_TYPEID::GroupConvolution:
+        case OP_TYPEID::GroupConvolutionBackpropData:
+        case OP_TYPEID::GroupConvolutionBackpropFilters:
         case OP_TYPEID::GRN:
         case OP_TYPEID::GRUCell:
         case OP_TYPEID::Gelu:
@@ -1633,7 +1819,6 @@ private:
         case OP_TYPEID::PRelu:
         case OP_TYPEID::PartialSlice:
         case OP_TYPEID::PartialSliceBackprop:
-        case OP_TYPEID::RandomUniform:
         case OP_TYPEID::Reciprocal:
         case OP_TYPEID::RNNCell:
         case OP_TYPEID::ScaleShift:
