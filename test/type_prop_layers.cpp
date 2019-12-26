@@ -79,7 +79,7 @@ TEST(type_prop_layers, prior_box1)
     auto layer_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {32, 32});
     auto image_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {300, 300});
     auto pb = make_shared<op::PriorBox>(layer_shape, image_shape, attrs);
-    ASSERT_EQ(pb->get_shape(), (Shape{2, 32768}));
+    ASSERT_EQ(pb->get_shape(), (Shape{2, 20480}));
 }
 
 TEST(type_prop_layers, prior_box2)
@@ -92,7 +92,7 @@ TEST(type_prop_layers, prior_box2)
     auto layer_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {32, 32});
     auto image_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {300, 300});
     auto pb = make_shared<op::PriorBox>(layer_shape, image_shape, attrs);
-    ASSERT_EQ(pb->get_shape(), (Shape{2, 57344}));
+    ASSERT_EQ(pb->get_shape(), (Shape{2, 32768}));
 }
 
 TEST(type_prop_layers, prior_box3)
