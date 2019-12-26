@@ -52,21 +52,7 @@ else()
     endif()
 endif()
 
-ExternalProject_Add(
-    ext_llvm
-    PREFIX llvm
-    URL ${LLVM_TARBALL_URL}
-    URL_HASH SHA1=${LLVM_SHA1_HASH}
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    UPDATE_COMMAND ""
-    DOWNLOAD_NO_PROGRESS TRUE
-    EXCLUDE_FROM_ALL TRUE
-    )
-
-ExternalProject_Get_Property(ext_llvm SOURCE_DIR)
-set(INSTALL_DIR ${SOURCE_DIR})
+set(INSTALL_DIR ${EXTERNAL_PROJECTS_ROOT}/llvm/src/ext_llvm)
 
 set(LLVM_LINK_LIBS
     # Do not change order of libraries !!!
@@ -148,6 +134,20 @@ if(APPLE)
 else()
     set(LLVM_LINK_LIBS ${LLVM_LINK_LIBS} tinfo z m)
 endif()
+
+ExternalProject_Add(
+    ext_llvm
+    PREFIX llvm
+    URL ${LLVM_TARBALL_URL}
+    URL_HASH SHA1=${LLVM_SHA1_HASH}
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    UPDATE_COMMAND ""
+    DOWNLOAD_NO_PROGRESS TRUE
+    EXCLUDE_FROM_ALL TRUE
+    BUILD_BYPRODUCTS ${LLVM_LINK_LIBS}
+    )
 
 add_library(libllvm INTERFACE)
 add_dependencies(libllvm ext_llvm)
