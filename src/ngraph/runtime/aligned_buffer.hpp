@@ -37,7 +37,7 @@ public:
     // Allocator objects and the allocation interfaces are owned by the
     // creators of AlignedBuffers. They need to ensure that the lifetime of
     // allocator exceeds the lifetime of this AlignedBuffer.
-    AlignedBuffer(size_t byte_size, size_t alignment, Allocator* allocator = nullptr);
+    AlignedBuffer(size_t byte_size, size_t alignment = 64, Allocator* allocator = nullptr);
 
     AlignedBuffer();
     ~AlignedBuffer();
@@ -47,7 +47,25 @@ public:
 
     size_t size() const { return m_byte_size; }
     void* get_ptr(size_t offset) const { return m_aligned_buffer + offset; }
-    void* get_ptr() const { return m_aligned_buffer; }
+    void* get_ptr() { return m_aligned_buffer; }
+    const void* get_ptr() const { return m_aligned_buffer; }
+    template <typename T>
+    T* get_ptr()
+    {
+        return reinterpret_cast<T*>(m_aligned_buffer);
+    }
+    template <typename T>
+    const T* get_ptr() const
+    {
+        return reinterpret_cast<const T*>(m_aligned_buffer);
+    }
+
+    template <typename T>
+    explicit operator T*()
+    {
+        return get_ptr<T>();
+    }
+
 private:
     AlignedBuffer(const AlignedBuffer&) = delete;
     AlignedBuffer& operator=(const AlignedBuffer&) = delete;
