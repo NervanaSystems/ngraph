@@ -45,8 +45,8 @@ namespace ngraph
                 return m_ng_node_cache.at(name);
             }
             const std::string& get_name() const { return m_graph_proto->name(); }
-            NodeVector& add_provenance_tags(const Node& onnx_node,
-                                           const NodeVector& ng_node_vector) const;
+            const NodeVector& add_provenance_tags(const Node& onnx_node,
+                                                  const NodeVector& ng_node_vector) const;
             NodeVector make_ng_nodes(const Node& onnx_node) const
             {
                 const auto ng_node_vector =
