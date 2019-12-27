@@ -38,6 +38,7 @@ namespace ngraph
             float step_heights = 1.0f;
             float offset = 0.0f;
             std::vector<float> variances;
+            element::Type_t outputType;
         };
 
         namespace v0

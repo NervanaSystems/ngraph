@@ -40,6 +40,7 @@ namespace ngraph
             size_t input_height = 1;
             size_t input_width = 1;
             float objectness_score = 0;
+            element::Type outputType;
         } DetectionOutputAttrs;
 
         namespace v0
