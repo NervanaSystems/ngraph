@@ -25,13 +25,11 @@ runtime::LRUCache::LRUCache()
     char* cache_size = getenv("NGRAPH_CACHE_SIZE");
     if (cache_size == nullptr)
     {
-        m_size = 5; // TODO(nbpatel): Figure out a default size for the cache
-        NGRAPH_INFO << "Cache size is " << m_size;
+        m_cache_size = 6; // TODO(nbpatel): Figure out a default size for the cache
     }
     else
     {
-        m_size = atoi(cache_size);
-        NGRAPH_INFO << "User Defined Cache size is " << m_size;
+        m_cache_size = atoi(cache_size);
     }
 
     m_map = {};
@@ -61,7 +59,7 @@ void runtime::LRUCache::add_entry(const vector<int>& shape,
     std::lock_guard<std::mutex> guard(m_mutex);
     ostringstream key;
     // check if the list is empty
-    if (m_list.size() == m_size)
+    if (m_list.size() == m_cache_size)
     {
         ostringstream key;
         convert_shape_to_string(m_list.back(), key);
@@ -73,12 +71,10 @@ void runtime::LRUCache::add_entry(const vector<int>& shape,
     m_map.insert({key.str(), exec});
     m_list.push_front(shape);
     m_clone_function_map.insert({key.str(), func});
-    NGRAPH_INFO << "Key is " << key.str();
 }
 
 bool runtime::LRUCache::is_cached(const vector<int>& shape)
 {
-    NGRAPH_INFO << "List size " << m_list.size();
     for (auto itr = m_list.begin(); itr != m_list.end(); itr++)
     {
         if (*itr == shape)
