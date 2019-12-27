@@ -27,15 +27,16 @@ shared_ptr<op::Constant> fold_constant_broadcast(shared_ptr<op::Constant> consta
                                                  shared_ptr<Node> broadcast,
                                                  NodeExecutorTy func)
 {
-    auto out_shape = broadcast->get_shape();
-    vector<T> out_vec(shape_size(out_shape));
+    const Shape& out_shape = broadcast->get_shape();
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
+    T* data_ptr = buffer.get_ptr<T>();
 
-    if (func != nullptr)
+    if (func)
     {
         vector<void*> inputs;
         inputs.push_back(const_cast<void*>(constant->get_data_ptr()));
         vector<void*> outputs;
-        outputs.push_back(out_vec.data());
+        outputs.push_back(data_ptr);
 
         func(inputs, outputs);
     }
@@ -45,7 +46,7 @@ shared_ptr<op::Constant> fold_constant_broadcast(shared_ptr<op::Constant> consta
         if (static_bcast_axes.first)
         {
             runtime::reference::broadcast<T>(constant->get_data_ptr<T>(),
-                                             out_vec.data(),
+                                             data_ptr,
                                              constant->get_shape(),
                                              out_shape,
                                              static_bcast_axes.second);
@@ -58,7 +59,7 @@ shared_ptr<op::Constant> fold_constant_broadcast(shared_ptr<op::Constant> consta
     else if (auto broadcast_v0 = as_type_ptr<op::v0::Broadcast>(broadcast))
     {
         runtime::reference::broadcast<T>(constant->get_data_ptr<T>(),
-                                         out_vec.data(),
+                                         data_ptr,
                                          constant->get_shape(),
                                          out_shape,
                                          broadcast_v0->get_broadcast_axes());
@@ -68,7 +69,7 @@ shared_ptr<op::Constant> fold_constant_broadcast(shared_ptr<op::Constant> consta
         throw ngraph_error("Unsupported op in broadcast constant folding.");
     }
 
-    return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
+    return make_shared<op::Constant>(constant->get_element_type(), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_broadcast()

@@ -27,28 +27,30 @@ namespace ngraph
     {
         namespace reference
         {
-            template <typename T>
-            void one_hot(const T* arg,
-                         T* out,
+            template <typename INDICES_TYPE, typename OUTPUT_TYPE>
+            void one_hot(const INDICES_TYPE* arg,
+                         OUTPUT_TYPE* out,
                          const Shape& in_shape,
                          const Shape& out_shape,
-                         size_t one_hot_axis)
+                         size_t one_hot_axis,
+                         const OUTPUT_TYPE on_value,
+                         const OUTPUT_TYPE off_value)
             {
-                // Step 1: Zero out the output.
+                // Step 1: Set off_value to the output.
                 CoordinateTransform output_transform(out_shape);
 
                 for (const Coordinate& output_coord : output_transform)
                 {
-                    out[output_transform.index(output_coord)] = 0;
+                    out[output_transform.index(output_coord)] = off_value;
                 }
 
-                // Step 2: Write ones at needed positions, throwing exceptions when invalid
+                // Step 2: Write off_value at needed positions, throwing exceptions when invalid
                 // conditions are encountered.
                 CoordinateTransform input_transform(in_shape);
 
                 for (const Coordinate& input_coord : input_transform)
                 {
-                    T val = arg[input_transform.index(input_coord)];
+                    INDICES_TYPE val = arg[input_transform.index(input_coord)];
 
                     if (std::floor(val) < val || std::floor(val) > val)
                     {
@@ -64,8 +66,21 @@ namespace ngraph
 
                     Coordinate one_hot_coord = inject(input_coord, one_hot_axis, one_hot_pos);
 
-                    out[output_transform.index(one_hot_coord)] = 1;
+                    out[output_transform.index(one_hot_coord)] = on_value;
                 }
+            }
+
+            template <typename T>
+            void one_hot(const T* arg,
+                         T* out,
+                         const Shape& in_shape,
+                         const Shape& out_shape,
+                         size_t one_hot_axis)
+            {
+                const T on_value = 1;
+                const T off_value = 0;
+                return one_hot<T, T>(
+                    arg, out, in_shape, out_shape, one_hot_axis, on_value, off_value);
             }
         }
     }
