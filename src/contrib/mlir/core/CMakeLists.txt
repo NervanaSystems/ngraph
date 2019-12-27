@@ -14,23 +14,21 @@
 # limitations under the License.
 # ******************************************************************************
 
-set(LIBS
-    mlir_cpu_backend
-    MLIROptMain
-    MLIRPass
-    MLIRParser
-    LLVMSupport
+include_directories(
+    ${NGRAPH_INCLUDE_PATH}
+    ${MLIR_LLVM_INCLUDE_PATH}
+    ${MLIR_INCLUDE_PATHS}
 )
 
-add_executable(ngraph-opt
-    ngraph_opt.cpp
+set(SRC
+    compiler.cpp
+    ngraph_dialect/dialect.cpp
+    ngraph_dialect/type.cpp
+    ngraph_dialect/ops.cpp
+    pass/mlir_subgraph_extraction.cpp
+    pass/mlir_subgraph_extraction.hpp
+    pass/ng_dialect_builder.cpp
+    pass/ng_dialect_builder.hpp
 )
 
-target_link_libraries(ngraph-opt PRIVATE ${LIBS})
-
-set_target_properties(ngraph-opt PROPERTIES
-                      RUNTIME_OUTPUT_DIRECTORY_DEBUG ${NGRAPH_BUILD_BIN}
-                      RUNTIME_OUTPUT_DIRECTORY_RELEASE ${NGRAPH_BUILD_BIN}
-)
-
-install(TARGETS ngraph-opt RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})
+add_library(mlir_core SHARED ${SRC})
