@@ -24,7 +24,6 @@
 #include "ngraph/assertion.hpp"
 
 #include <llvm/ADT/DenseSet.h>
-#include <mlir/Dialect/LoopOps/LoopOps.h>
 #include <mlir/EDSC/Builders.h>
 #include <mlir/EDSC/Helpers.h>
 #include <mlir/EDSC/Intrinsics.h>
@@ -265,7 +264,7 @@ namespace
         // Create target that defines legal ops for nGraph dialect to be lowered to.
         ConversionTarget target(getContext());
 
-        target.addLegalDialect<AffineOpsDialect, StandardOpsDialect, mlir::loop::LoopOpsDialect>();
+        target.addLegalDialect<AffineOpsDialect, StandardOpsDialect>();
         target.addLegalOp<ModuleOp, ModuleTerminatorOp>();
         target.addDynamicallyLegalOp<FuncOp>([&](FuncOp op) {
             // FuncOp is legal only if types have been converted to Std types.
@@ -978,7 +977,7 @@ namespace
 
         NGRAPH_CHECK(!groupsInFilters || groups == filtersShape[0]);
 
-        LoopBuilder::makeLoop(&iv, lb, ub, step)([&] {
+        LoopBuilder::makeAffine(&iv, lb, ub, 1)([&] {
             // lower/upper bounds on image channel dim and kernels dim
             auto cLb = iv * channelGroupSize;
             auto cUb = cLb + channelGroupSize;

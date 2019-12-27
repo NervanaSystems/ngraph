@@ -97,12 +97,7 @@ func @convolution(%arg0: !ng.tensor<1x2x2x2xf32>, %arg1: !ng.tensor<2x2x1x1xf32>
 // CHECK-LABEL: @groupConv
 //
 // Outer groups loops
-// CHECK-DAG: %[[c0:.*]] = constant 0 : index
-// CHECK-DAG: %[[c1:.*]] = constant 1 : index
-// CHECK-DAG: %[[c2:.*]] = constant 2 : index
-// CHECK:     "loop.for"(%[[c0]], %[[c2]], %[[c1]])
-// CHECK-NEXT: bb0(%[[gid:.*]]: index)
-//
+// CHECK:      affine.for %[[gid:.*]] = 0 to 2
 // CHECK:     %[[v0:.*]] = affine.apply #[[M0]](%[[gid]])
 // CHECK:     %[[v1:.*]] = affine.apply #[[M1]](%[[gid]])
 // CHECK:     %[[v2:.*]] = affine.apply #[[M2]](%[[gid]])
