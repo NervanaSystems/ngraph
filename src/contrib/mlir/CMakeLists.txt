@@ -34,6 +34,8 @@ set(SRC
     core/pass/mlir_subgraph_extraction.hpp
     core/pass/ng_dialect_builder.cpp
     core/pass/ng_dialect_builder.hpp
+    core/pass/ng_dialect_fused_ops.cpp
+    core/pass/ng_dialect_fused_ops.hpp
     runtime/cpu/memory_manager.cpp
     runtime/cpu/cpu_runtime.cpp
     utils.cpp

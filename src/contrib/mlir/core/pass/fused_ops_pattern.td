@@ -37,4 +37,4 @@ include "core/ngraph_dialect/ops.td"
 
 // class for defining the pattern to fuse MatMul + Bias
 
-def MatMulBiasPattern : Pat<(NGAddOp ( NGMatMul $input1, $input2, $attr_1, $attr_2), $add_input), (NGMatMulBiasOp $input1, $input2, $add_input, $attr_1, $attr_2)>;
+def MatMulBiasPattern : Pat<(NGAddOp ( NGDotOp $input1, $input2), $add_input), (NGMatMulBiasOp $input1, $input2, $add_input)>;

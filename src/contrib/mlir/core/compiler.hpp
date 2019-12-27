@@ -79,7 +79,7 @@ namespace ngraph
                 // Converts an nGraph sub-graph to MLIR nGraph dialect.
                 void buildNgDialectModule();
                 // Applies any nGraph dialect optimizations
-                void optimizeNgDialect() { /*TODO: Add Core NG dialect optimizations */}
+                void optimizeNgDialect();
 
             private:
                 // Sub-graph to be compiled and executed with MLIR.
