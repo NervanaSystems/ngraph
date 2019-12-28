@@ -507,8 +507,8 @@ add_custom_target(fix-mode
 )
 
 if (NGRAPH_USE_PREBUILT_MLIR)
-	if (NOT DEFINED MLIR_LLVM_PREBUILT_PATH)
-	    message(FATAL_ERROR "MLIR_LLVM_PREBUILT_PATH not specified")
+    if (NOT DEFINED MLIR_LLVM_PREBUILT_PATH)
+        message(FATAL_ERROR "MLIR_LLVM_PREBUILT_PATH not specified")
     endif()
 endif()
 #-----------------------------------------------------------------------------------------------
