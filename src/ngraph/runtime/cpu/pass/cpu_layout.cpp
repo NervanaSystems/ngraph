@@ -1744,15 +1744,16 @@ namespace ngraph
                     memory::dims mkldnn_padding_above(padding_above.begin(), padding_above.end());
 
                     auto fprop_input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                    auto delta_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 1);
 
 #if MKLDNN_VERSION_MAJOR < 1
                     auto fprop_input_layout =
                         static_cast<memory::format>(fprop_input_md.data.format);
                     auto diff_dst_desc = memory::desc(mkldnn_arg1_shape, et, fprop_input_layout);
 #else
-                    auto strides = fprop_input_md.data.format_desc.blocking.strides;
+                    auto strides = delta_md.data.format_desc.blocking.strides;
                     memory::dims strides_arg;
-                    for (auto i = 0; i < fprop_input_md.data.ndims; i++)
+                    for (auto i = 0; i < delta_md.data.ndims; i++)
                     {
                         strides_arg.push_back(strides[i]);
                     }
