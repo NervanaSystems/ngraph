@@ -2331,6 +2331,21 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Round)
+            {
+                (void)external_function;
+                (void)node;
+                writer.block_begin();
+                size_t element_count = out[0].get_size();
+                writer << "#pragma omp parallel for\n";
+                writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = round(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
+                writer.block_end();
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Sqrt)
             {
                 (void)external_function;

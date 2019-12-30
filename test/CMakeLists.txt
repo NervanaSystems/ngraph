@@ -349,6 +349,7 @@ set(MULTI_TEST_SRC
     backend/reshape.in.cpp
     backend/reverse_sequence.in.cpp
     backend/reverse.in.cpp
+    backend/round.in.cpp
     backend/scatter.in.cpp
     backend/select.in.cpp
     backend/shape_of.in.cpp

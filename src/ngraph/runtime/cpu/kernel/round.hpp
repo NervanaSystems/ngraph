@@ -16,35 +16,22 @@
 
 #pragma once
 
-#include <cmath>
+#include "ngraph/runtime/reference/round.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace reference
+        namespace cpu
         {
-            template <typename T>
-            T round_to_nearest_even(const T arg)
+            namespace kernel
             {
-                const auto floor_arg = std::floor(arg);
-                const auto diff = arg - floor_arg;
-                if (diff < 0.5f || (diff == 0.5f && static_cast<int>(floor_arg) % 2 == 0))
+                template <typename ElementType>
+                void round(void* arg, void* output, size_t count, int arena)
                 {
-                    return floor_arg;
-                }
-                else
-                {
-                    return floor_arg + 1.0f;
-                }
-            }
-
-            template <typename T>
-            void round(const T* arg, T* out, size_t count)
-            {
-                for (size_t i = 0; i < count; ++i)
-                {
-                    out[i] = round_to_nearest_even(arg[i]);
+                    reference::round<ElementType>(static_cast<const ElementType*>(arg),
+                                                  static_cast<ElementType*>(output),
+                                                  count);
                 }
             }
         }
