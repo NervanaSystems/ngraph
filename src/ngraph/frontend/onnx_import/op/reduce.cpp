@@ -56,8 +56,7 @@ namespace ngraph
                         std::vector<std::size_t>(shape_size(sum_node->get_shape()),
                                                  elem_count_product));
 
-                    return {std::make_shared<default_opset::Divide>(
-                        sum_node, const_node, ngraph::op::AutoBroadcastSpec())};
+                    return {std::make_shared<default_opset::Divide>(sum_node, const_node)};
                 }
 
             } // namespace set_1

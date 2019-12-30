@@ -23,14 +23,6 @@
 #include "default_opset.hpp"
 #include "ngraph/builder/norm.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/abs.hpp"
-#include "ngraph/op/exp.hpp"
-#include "ngraph/op/log.hpp"
-#include "ngraph/op/max.hpp"
-#include "ngraph/op/min.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/reduce_prod.hpp"
-#include "ngraph/op/reduce_sum.hpp"
 #include "utils/reduction.hpp"
 
 namespace ngraph
@@ -258,7 +250,7 @@ namespace ngraph
                 inline NodeVector reduce_sum_square(const Node& node)
                 {
                     auto input = std::shared_ptr<ngraph::Node>{node.get_ng_inputs().at(0)};
-                    auto square_node = std::make_shared<ngraph::op::v1::Multiply>(input, input);
+                    auto square_node = std::make_shared<default_opset::Multiply>(input, input);
                     return {reduction::make_ng_reduction_op(
                         node,
                         square_node,
