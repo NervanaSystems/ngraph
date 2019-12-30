@@ -28,13 +28,14 @@ static shared_ptr<op::Constant> fold_constant_gather_helper(const shared_ptr<op:
                                                             const shared_ptr<op::Constant>& indices,
                                                             const shared_ptr<Node>& gather)
 {
-    std::vector<T> result_vec(shape_size(gather->get_shape()));
+    runtime::AlignedBuffer buffer(shape_size(gather->get_shape()) * sizeof(T));
+    T* data_ptr = buffer.get_ptr<T>();
 
     if (auto gather_v1 = as_type_ptr<op::v1::Gather>(gather))
     {
         runtime::reference::gather<T, U>(data->get_data_ptr<T>(),
                                          indices->get_data_ptr<U>(),
-                                         result_vec.data(),
+                                         data_ptr,
                                          data->get_shape(),
                                          indices->get_shape(),
                                          gather_v1->get_shape(),
@@ -44,7 +45,7 @@ static shared_ptr<op::Constant> fold_constant_gather_helper(const shared_ptr<op:
     {
         runtime::reference::gather<T, U>(data->get_data_ptr<T>(),
                                          indices->get_data_ptr<U>(),
-                                         result_vec.data(),
+                                         data_ptr,
                                          data->get_shape(),
                                          indices->get_shape(),
                                          gather_v0->get_shape(),
@@ -56,7 +57,7 @@ static shared_ptr<op::Constant> fold_constant_gather_helper(const shared_ptr<op:
     }
 
     return make_shared<op::Constant>(
-        gather->get_output_element_type(0), gather->get_output_shape(0), result_vec);
+        gather->get_output_element_type(0), gather->get_output_shape(0), data_ptr);
 }
 
 template <typename T>
