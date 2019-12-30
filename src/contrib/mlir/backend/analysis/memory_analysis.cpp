@@ -422,6 +422,7 @@ namespace
                 if (useCount == -1 || uses < useCount)
                 {
                     use = opnd;
+                    useCount = uses;
                 }
             }
         }
