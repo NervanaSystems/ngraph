@@ -35,7 +35,10 @@ using namespace std;
 
 shared_ptr<Node> builder::reshape(const Output<Node>& value, const Shape& shape)
 {
-    return make_shared<op::Reshape>(value, get_default_order(value.get_shape().size()), shape)
+    const auto out_pattern = op::Constant::create(
+        element::i64, Shape{shape.size()}, vector<int64_t>(shape.begin(), shape.end()));
+    const bool special_zero = false;
+    return make_shared<op::v1::Reshape>(value, out_pattern, special_zero)
         ->add_provenance_group_members_above({value});
 }
 

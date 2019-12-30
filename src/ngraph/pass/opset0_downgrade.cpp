@@ -29,6 +29,7 @@
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/slice_plan.hpp"
 #include "ngraph/type.hpp"
+#include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
@@ -226,7 +227,11 @@ namespace
         const auto target_shape_input = node->input_value(1).get_node_shared_ptr();
         if (target_shape_input->is_constant() && node->get_output_partial_shape(0).is_static())
         {
-            replacement_node = builder::reshape(node->input_value(0), node->get_output_shape(0));
+            const auto input_arg = node->input_value(0);
+            replacement_node =
+                make_shared<op::v0::Reshape>(input_arg,
+                                             get_default_order(input_arg.get_shape().size()),
+                                             node->get_output_shape(0));
         }
         else
         {
