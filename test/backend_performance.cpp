@@ -22,6 +22,7 @@
 
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/concat.hpp"

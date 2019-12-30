@@ -25,6 +25,7 @@
 #include "cpu_layout.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"

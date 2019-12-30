@@ -49,6 +49,7 @@
 
 #include "header_resource.hpp"
 #include "ngraph/codegen/compiler.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"

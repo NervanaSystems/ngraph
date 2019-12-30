@@ -19,6 +19,7 @@
 
 #include "mlir_subgraph_extraction.hpp"
 #include "ngraph/assertion.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"

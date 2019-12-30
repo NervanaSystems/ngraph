@@ -22,6 +22,7 @@
 #include "contrib/mlir/backend/pass/memory_optimization.hpp"
 #include "contrib/mlir/utils.hpp"
 #include "ngraph/check.hpp"
+#include "ngraph/env_util.hpp"
 
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Analysis/TargetTransformInfo.h>

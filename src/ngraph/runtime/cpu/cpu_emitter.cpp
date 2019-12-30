@@ -22,6 +22,7 @@
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
+#include "ngraph/env_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"

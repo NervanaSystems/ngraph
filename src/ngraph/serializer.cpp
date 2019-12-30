@@ -20,6 +20,7 @@
 #include <stack>
 
 #include "ngraph/cpio.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/ops.hpp"
