@@ -97,7 +97,7 @@ TEST(opset_transform, opset1_one_hot_downgrade_pass_depth_not_constant)
     }
 }
 
-TEST(opset_transform, opset1_one_hot_downgrade_pass_indices_shape_not_static)
+TEST(opset_transform, opset1_one_hot_downgrade_pass_output_shape_not_static)
 {
     auto indices = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
     auto depth = op::Constant::create(element::i64, Shape{}, {4});
@@ -116,11 +116,11 @@ TEST(opset_transform, opset1_one_hot_downgrade_pass_indices_shape_not_static)
     {
         pass_manager.run_passes(f);
         // Should have thrown, so fail if it didn't
-        FAIL() << "Not static indices shape not detected";
+        FAIL() << "Not static output shape not detected";
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("indices shape must be static"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("output shape must be static"));
     }
     catch (...)
     {

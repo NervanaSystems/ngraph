@@ -185,6 +185,7 @@ namespace
     {
     public:
         void runOnModule() override;
+
         SmallVector<Value*, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
         /// Allocates a linear buffer for a temporary memref that shares its
         /// underlying memory. Used in conjunction with createTempMemref
@@ -586,7 +587,7 @@ namespace
         auto ubs = vLHS.getUbs();
         // Loop induction vars
         auto ivs = makeIndexHandles(vLHS.rank());
-        auto pivs = makeIndexHandlePointers(ivs);
+        auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
         // Steps
         auto steps = vLHS.getSteps();
 
@@ -689,11 +690,6 @@ namespace
         Value* result = pass.buildOutputDefs(op, rewriter)[0];
         NGRAPH_CHECK(result, "Unexpected null result in ConcatOp");
 
-        if (isInPlaceConcat(concat, pass))
-        {
-            rewriter.replaceOp(op, {result});
-            return matchSuccess();
-        }
         // Create view to write into result.
         MemRefView vRes(result);
         auto rank = vRes.rank();
@@ -802,14 +798,14 @@ namespace
                      "Incorrect loop nest bounds size for gather params");
 
         paramsIVs = makeIndexHandles(vParams.rank() - 1);
-        paramsIVPtrs = makeIndexHandlePointers(paramsIVs);
+        paramsIVPtrs = makeHandlePointers(MutableArrayRef<IndexHandle>(paramsIVs));
 
         auto indicesLbs = vIndices.getLbs();
         auto indicesUbs = vIndices.getUbs();
         auto indicesSteps = vIndices.getSteps();
 
         auto indicesIVs = makeIndexHandles(vIndices.rank());
-        auto indicesIVPtrs = makeIndexHandlePointers(indicesIVs);
+        auto indicesIVPtrs = makeHandlePointers(MutableArrayRef<IndexHandle>(indicesIVs));
 
         SmallVector<IndexHandle, 8> paramsIndices, resIndices;
 
@@ -964,7 +960,8 @@ namespace
 
         // Result spatial indices and bounds
         auto resSpatialIndices = makeIndexHandles(spatialRank);
-        auto resSpatialIndicesPtrs = makeIndexHandlePointers(resSpatialIndices);
+        auto resSpatialIndicesPtrs =
+            makeHandlePointers(MutableArrayRef<IndexHandle>(resSpatialIndices));
         SmallVector<int64_t, 4> resSteps, filtersSteps;
         SmallVector<int, 4> padBelowIntValues;
         bool withPadding = false;
@@ -1003,7 +1000,8 @@ namespace
 
         // Filters spatial indices and bounds
         auto filtersSpatialIndices = makeIndexHandles(spatialRank);
-        auto filtersSpatialIndicesPtrs = makeIndexHandlePointers(filtersSpatialIndices);
+        auto filtersSpatialIndicesPtrs =
+            makeHandlePointers(MutableArrayRef<IndexHandle>(filtersSpatialIndices));
 
         for (auto i = 0; i < spatialRank; i++)
         {
@@ -1051,7 +1049,8 @@ namespace
         {
             IndexHandle n, k, c;
             auto resSpatialIndices = makeIndexHandles(spatialRank);
-            auto resSpatialIndicesPtrs = makeIndexHandlePointers(resSpatialIndices);
+            auto resSpatialIndicesPtrs =
+                makeHandlePointers(MutableArrayRef<IndexHandle>(resSpatialIndices));
 
             LoopBuilder::makeAffine(&n, batchLb, batchUb, 1)([&] {
                 LoopBuilder::makeAffine(&k, numFiltersLb, numFiltersUb, 1)([&] {
@@ -1202,7 +1201,7 @@ namespace
         auto ubs = vLHS.getUbs();
         // Loop induction vars
         auto ivs = makeIndexHandles(vLHS.rank());
-        auto pivs = makeIndexHandlePointers(ivs);
+        auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
         // Steps
         auto steps = vLHS.getSteps();
 
@@ -1248,7 +1247,7 @@ namespace
         auto ubs = vLHS.getUbs();
         // Loop induction vars
         auto ivs = makeIndexHandles(vLHS.rank());
-        auto pivs = makeIndexHandlePointers(ivs);
+        auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
         // Steps
         auto steps = vLHS.getSteps();
         AffineLoopNestBuilder(pivs, lbs, ubs, steps)(
@@ -1341,7 +1340,7 @@ namespace
         // Generate loop nest that initializes result to lower bound of the axis to be reduced.
         {
             auto ivs = makeIndexHandles(vRes.rank());
-            auto pivs = makeIndexHandlePointers(ivs);
+            auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
             auto steps = vRes.getSteps();
             auto initVal = vArg.lb(axis);
             AffineLoopNestBuilder(pivs, resLbs, resUbs, steps)(
@@ -1351,7 +1350,7 @@ namespace
         // Generate loop nest that computes the actual index reduction.
         {
             auto allIVs = makeIndexHandles(vArg.rank());
-            auto pAllIVs = makeIndexHandlePointers(allIVs);
+            auto pAllIVs = makeHandlePointers(MutableArrayRef<IndexHandle>(allIVs));
             auto steps = vArg.getSteps();
             SmallVector<IndexHandle, 8> nonRedIVs;
 
@@ -1481,7 +1480,7 @@ namespace
 
         return true;
     }
-}
+} // namespace
 
 namespace mlir
 {
