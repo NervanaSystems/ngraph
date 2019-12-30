@@ -46,7 +46,7 @@ NGRAPH_TEST(${BACKEND_NAME}, round)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, round_2)
+NGRAPH_TEST(${BACKEND_NAME}, round_2D)
 {
     Shape shape{3, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape);
