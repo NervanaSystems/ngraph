@@ -34,7 +34,6 @@ namespace ngraph
         {
         public:
             Graph(const onnx::GraphProto& proto, Model& model, const Weights& weights = {});
-
             const std::vector<Node>& get_nodes() const { return m_nodes; }
             const std::vector<ValueInfo>& get_inputs() const { return m_inputs; }
             const std::vector<ValueInfo>& get_outputs() const { return m_outputs; }
@@ -45,15 +44,7 @@ namespace ngraph
                 return m_ng_node_cache.at(name);
             }
             const std::string& get_name() const { return m_graph_proto->name(); }
-            const NodeVector& add_provenance_tags(const Node& onnx_node,
-                                                  const NodeVector& ng_node_vector) const;
-            NodeVector make_ng_nodes(const Node& onnx_node) const
-            {
-                const auto ng_node_vector =
-                    m_model->get_operator(onnx_node.op_type(), onnx_node.domain())(onnx_node);
-                add_provenance_tags(onnx_node, ng_node_vector);
-                return ng_node_vector;
-            }
+            NodeVector make_ng_nodes(const Node& onnx_node) const;
 
         private:
             const onnx::GraphProto* m_graph_proto;
