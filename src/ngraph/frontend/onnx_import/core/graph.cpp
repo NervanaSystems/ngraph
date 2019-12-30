@@ -158,10 +158,10 @@ namespace ngraph
 
         NodeVector Graph::make_ng_nodes(const Node& onnx_node) const
         {
-        const auto ng_node_vector =
-            m_model->get_operator(onnx_node.op_type(), onnx_node.domain())(onnx_node);
-        common::add_provenance_tags(onnx_node, ng_node_vector);
-        return ng_node_vector;
+            const auto ng_node_vector =
+                m_model->get_operator(onnx_node.op_type(), onnx_node.domain())(onnx_node);
+            common::add_provenance_tags(onnx_node, ng_node_vector);
+            return ng_node_vector;
         }
 
     } // namespace onnx_import

@@ -28,7 +28,7 @@ namespace ngraph
         namespace common
         {
             const NodeVector& add_provenance_tags(const Node& onnx_node,
-                                                     const NodeVector& ng_node_vector)
+                                                  const NodeVector& ng_node_vector)
             {
                 for (auto& ng_node : ng_node_vector)
                 {
