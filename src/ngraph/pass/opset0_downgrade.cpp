@@ -228,10 +228,7 @@ namespace
         if (target_shape_input->is_constant() && node->get_output_partial_shape(0).is_static())
         {
             const auto input_arg = node->input_value(0);
-            replacement_node =
-                make_shared<op::v0::Reshape>(input_arg,
-                                             get_default_order(input_arg.get_shape().size()),
-                                             node->get_output_shape(0));
+            replacement_node = builder::reshape(node->input_value(0), node->get_output_shape(0));
         }
         else
         {
