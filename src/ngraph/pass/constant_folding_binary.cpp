@@ -56,89 +56,90 @@ static shared_ptr<op::Constant> fold_constant_binary_logical(shared_ptr<op::Cons
                                                              shared_ptr<Node> binary,
                                                              NodeExecutorTy func)
 {
-    auto out_shape = binary->get_shape();
+    const Shape& out_shape = binary->get_shape();
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(char));
+    char* data_ptr = buffer.get_ptr<char>();
 
     // NOTE: We will skip the executor if the shapes do not match, because that means
     // auto-broadcast is in use, and the CPU functors don't yet support that.
     if (func != nullptr && a->get_shape() == b->get_shape())
     {
-        vector<char> out_vec(shape_size(out_shape));
         vector<void*> inputs;
         inputs.push_back(const_cast<void*>(a->get_data_ptr()));
         inputs.push_back(const_cast<void*>(b->get_data_ptr()));
         vector<void*> outputs;
-        outputs.push_back(out_vec.data());
+        outputs.push_back(data_ptr);
 
         func(inputs, outputs);
-        return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        return make_shared<op::Constant>(binary->get_output_element_type(0), out_shape, data_ptr);
     }
     else
     {
         if (auto and_v0_node = as_type_ptr<op::v0::And>(binary))
         {
-            vector<char> out_vec(shape_size(out_shape));
             runtime::reference::logical_and<char>(a->get_data_ptr<char>(),
                                                   b->get_data_ptr<char>(),
-                                                  out_vec.data(),
+                                                  data_ptr,
                                                   a->get_shape(),
                                                   b->get_shape(),
                                                   and_v0_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto logical_and_node = as_type_ptr<op::v1::LogicalAnd>(binary))
         {
-            vector<char> out_vec(shape_size(out_shape));
             runtime::reference::logical_and<char>(a->get_data_ptr<char>(),
                                                   b->get_data_ptr<char>(),
-                                                  out_vec.data(),
+                                                  data_ptr,
                                                   a->get_shape(),
                                                   b->get_shape(),
                                                   logical_and_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto or_node = as_type_ptr<op::v0::Or>(binary))
         {
-            vector<char> out_vec(shape_size(out_shape));
             runtime::reference::logical_or<char>(a->get_data_ptr<char>(),
                                                  b->get_data_ptr<char>(),
-                                                 out_vec.data(),
+                                                 data_ptr,
                                                  a->get_shape(),
                                                  b->get_shape(),
                                                  or_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto logical_or_node = as_type_ptr<op::v1::LogicalOr>(binary))
         {
-            vector<char> out_vec(shape_size(out_shape));
             runtime::reference::logical_or<char>(a->get_data_ptr<char>(),
                                                  b->get_data_ptr<char>(),
-                                                 out_vec.data(),
+                                                 data_ptr,
                                                  a->get_shape(),
                                                  b->get_shape(),
                                                  logical_or_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto xor_node = as_type_ptr<op::v0::Xor>(binary))
         {
-            vector<char> out_vec(shape_size(out_shape));
             runtime::reference::logical_xor<char>(a->get_data_ptr<char>(),
                                                   b->get_data_ptr<char>(),
-                                                  out_vec.data(),
+                                                  data_ptr,
                                                   a->get_shape(),
                                                   b->get_shape(),
                                                   xor_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto logical_xor_node = as_type_ptr<op::v1::LogicalXor>(binary))
         {
-            vector<char> out_vec(shape_size(out_shape));
             runtime::reference::logical_xor<char>(a->get_data_ptr<char>(),
                                                   b->get_data_ptr<char>(),
-                                                  out_vec.data(),
+                                                  data_ptr,
                                                   a->get_shape(),
                                                   b->get_shape(),
                                                   logical_xor_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else
         {
@@ -155,155 +156,156 @@ shared_ptr<op::Constant> fold_constant_binary_comparison(shared_ptr<op::Constant
                                                          shared_ptr<Node> binary,
                                                          NodeExecutorTy func)
 {
-    auto out_shape = binary->get_shape();
+    const Shape& out_shape = binary->get_shape();
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(char));
+    char* data_ptr = buffer.get_ptr<char>();
 
     // NOTE: We will skip the executor if the shapes do not match, because that means
     // auto-broadcast is in use, and the CPU functors don't yet support that.
     if (func != nullptr && a->get_shape() == b->get_shape())
     {
-        vector<char> out_vec(shape_size(out_shape));
         vector<void*> inputs;
         inputs.push_back(const_cast<void*>(a->get_data_ptr()));
         inputs.push_back(const_cast<void*>(b->get_data_ptr()));
         vector<void*> outputs;
-        outputs.push_back(out_vec.data());
+        outputs.push_back(data_ptr);
 
         func(inputs, outputs);
-        return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        return make_shared<op::Constant>(binary->get_output_element_type(0), out_shape, data_ptr);
     }
     else
     {
         if (auto equal_v0_node = as_type_ptr<op::v0::Equal>(binary))
         {
-            vector<char> out_vec(shape_size(out_shape));
             runtime::reference::equal<Tin>(a->get_data_ptr<Tin>(),
                                            b->get_data_ptr<Tin>(),
-                                           out_vec.data(),
+                                           data_ptr,
                                            a->get_shape(),
                                            b->get_shape(),
                                            equal_v0_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto equal_v1_node = as_type_ptr<op::v1::Equal>(binary))
         {
-            vector<char> out_vec(shape_size(out_shape));
             runtime::reference::equal<Tin>(a->get_data_ptr<Tin>(),
                                            b->get_data_ptr<Tin>(),
-                                           out_vec.data(),
+                                           data_ptr,
                                            a->get_shape(),
                                            b->get_shape(),
                                            equal_v1_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto greater_v0_node = as_type_ptr<op::v0::Greater>(binary))
         {
-            vector<char> out_vec(shape_size(out_shape));
             runtime::reference::greater<Tin>(a->get_data_ptr<Tin>(),
                                              b->get_data_ptr<Tin>(),
-                                             out_vec.data(),
+                                             data_ptr,
                                              a->get_shape(),
                                              b->get_shape(),
                                              greater_v0_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto greater_v1_node = as_type_ptr<op::v1::Greater>(binary))
         {
-            vector<char> out_vec(shape_size(out_shape));
             runtime::reference::greater<Tin>(a->get_data_ptr<Tin>(),
                                              b->get_data_ptr<Tin>(),
-                                             out_vec.data(),
+                                             data_ptr,
                                              a->get_shape(),
                                              b->get_shape(),
                                              greater_v1_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto greater_eq_v0_node = as_type_ptr<op::v0::GreaterEq>(binary))
         {
-            vector<char> out_vec(shape_size(out_shape));
             runtime::reference::greater_eq<Tin>(a->get_data_ptr<Tin>(),
                                                 b->get_data_ptr<Tin>(),
-                                                out_vec.data(),
+                                                data_ptr,
                                                 a->get_shape(),
                                                 b->get_shape(),
                                                 greater_eq_v0_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto greater_eq_v1_node = as_type_ptr<op::v1::GreaterEqual>(binary))
         {
-            vector<char> out_vec(shape_size(out_shape));
             runtime::reference::greater_eq<Tin>(a->get_data_ptr<Tin>(),
                                                 b->get_data_ptr<Tin>(),
-                                                out_vec.data(),
+                                                data_ptr,
                                                 a->get_shape(),
                                                 b->get_shape(),
                                                 greater_eq_v1_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto less_v0_node = as_type_ptr<op::v0::Less>(binary))
         {
-            vector<char> out_vec(shape_size(out_shape));
             runtime::reference::less<Tin>(a->get_data_ptr<Tin>(),
                                           b->get_data_ptr<Tin>(),
-                                          out_vec.data(),
+                                          data_ptr,
                                           a->get_shape(),
                                           b->get_shape(),
                                           less_v0_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto less_v1_node = as_type_ptr<op::v1::Less>(binary))
         {
-            vector<char> out_vec(shape_size(out_shape));
             runtime::reference::less<Tin>(a->get_data_ptr<Tin>(),
                                           b->get_data_ptr<Tin>(),
-                                          out_vec.data(),
+                                          data_ptr,
                                           a->get_shape(),
                                           b->get_shape(),
                                           less_v1_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto less_eq_v0_node = as_type_ptr<op::v0::LessEq>(binary))
         {
-            vector<char> out_vec(shape_size(out_shape));
             runtime::reference::less_eq<Tin>(a->get_data_ptr<Tin>(),
                                              b->get_data_ptr<Tin>(),
-                                             out_vec.data(),
+                                             data_ptr,
                                              a->get_shape(),
                                              b->get_shape(),
                                              less_eq_v0_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto less_eq_v1_node = as_type_ptr<op::v1::LessEqual>(binary))
         {
-            vector<char> out_vec(shape_size(out_shape));
             runtime::reference::less_eq<Tin>(a->get_data_ptr<Tin>(),
                                              b->get_data_ptr<Tin>(),
-                                             out_vec.data(),
+                                             data_ptr,
                                              a->get_shape(),
                                              b->get_shape(),
                                              less_eq_v1_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto not_equal_v0_node = as_type_ptr<op::v0::NotEqual>(binary))
         {
-            vector<char> out_vec(shape_size(out_shape));
             runtime::reference::not_equal<Tin>(a->get_data_ptr<Tin>(),
                                                b->get_data_ptr<Tin>(),
-                                               out_vec.data(),
+                                               data_ptr,
                                                a->get_shape(),
                                                b->get_shape(),
                                                not_equal_v0_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto not_equal_v1_node = as_type_ptr<op::v1::NotEqual>(binary))
         {
-            vector<char> out_vec(shape_size(out_shape));
             runtime::reference::not_equal<Tin>(a->get_data_ptr<Tin>(),
                                                b->get_data_ptr<Tin>(),
-                                               out_vec.data(),
+                                               data_ptr,
                                                a->get_shape(),
                                                b->get_shape(),
                                                not_equal_v1_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else
         {
@@ -319,21 +321,22 @@ shared_ptr<op::Constant> fold_constant_binary_arithmetic(shared_ptr<op::Constant
                                                          shared_ptr<Node> binary,
                                                          NodeExecutorTy func)
 {
-    auto out_shape = binary->get_shape();
+    const Shape& out_shape = binary->get_shape();
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(Tout));
+    Tout* data_ptr = buffer.get_ptr<Tout>();
 
     // NOTE: We will skip the executor if the shapes do not match, because that means
     // auto-broadcast is in use, and the CPU functors don't yet support that.
     if (func != nullptr && a->get_shape() == b->get_shape())
     {
-        vector<Tout> out_vec(shape_size(out_shape));
         vector<void*> inputs;
         inputs.push_back(const_cast<void*>(a->get_data_ptr()));
         inputs.push_back(const_cast<void*>(b->get_data_ptr()));
         vector<void*> outputs;
-        outputs.push_back(out_vec.data());
+        outputs.push_back(data_ptr);
 
         func(inputs, outputs);
-        return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        return make_shared<op::Constant>(binary->get_output_element_type(0), out_shape, data_ptr);
     }
     else
     {
@@ -341,178 +344,178 @@ shared_ptr<op::Constant> fold_constant_binary_arithmetic(shared_ptr<op::Constant
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
-            vector<Tout> out_vec(shape_size(out_shape));
             runtime::reference::add<Tin>(a->get_data_ptr<Tin>(),
                                          b->get_data_ptr<Tin>(),
-                                         out_vec.data(),
+                                         data_ptr,
                                          a->get_shape(),
                                          b->get_shape(),
                                          add_v0_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto add_v1_node = as_type_ptr<op::v1::Add>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
-            vector<Tout> out_vec(shape_size(out_shape));
             runtime::reference::add<Tin>(a->get_data_ptr<Tin>(),
                                          b->get_data_ptr<Tin>(),
-                                         out_vec.data(),
+                                         data_ptr,
                                          a->get_shape(),
                                          b->get_shape(),
                                          add_v1_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto divide_v0_node = as_type_ptr<op::v0::Divide>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
-            vector<Tout> out_vec(shape_size(out_shape));
             shared_ptr<op::v0::Divide> divop = as_type_ptr<op::v0::Divide>(binary);
             bool pythondiv = divop->is_pythondiv();
             runtime::reference::divide<Tin>(a->get_data_ptr<Tin>(),
                                             b->get_data_ptr<Tin>(),
-                                            out_vec.data(),
+                                            data_ptr,
                                             a->get_shape(),
                                             b->get_shape(),
                                             divide_v0_node->get_autob(),
                                             pythondiv);
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto divide_v1_node = as_type_ptr<op::v1::Divide>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
-            vector<Tout> out_vec(shape_size(out_shape));
             shared_ptr<op::v1::Divide> divop = as_type_ptr<op::v1::Divide>(binary);
             bool pythondiv = divop->is_pythondiv();
             runtime::reference::divide<Tin>(a->get_data_ptr<Tin>(),
                                             b->get_data_ptr<Tin>(),
-                                            out_vec.data(),
+                                            data_ptr,
                                             a->get_shape(),
                                             b->get_shape(),
                                             divide_v1_node->get_autob(),
                                             pythondiv);
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto maximum_v0_node = as_type_ptr<op::v0::Maximum>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
-            vector<Tout> out_vec(shape_size(out_shape));
             runtime::reference::maximum<Tin>(a->get_data_ptr<Tin>(),
                                              b->get_data_ptr<Tin>(),
-                                             out_vec.data(),
+                                             data_ptr,
                                              a->get_shape(),
                                              b->get_shape(),
                                              maximum_v0_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto maximum_v1_node = as_type_ptr<op::v1::Maximum>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
-            vector<Tout> out_vec(shape_size(out_shape));
             runtime::reference::maximum<Tin>(a->get_data_ptr<Tin>(),
                                              b->get_data_ptr<Tin>(),
-                                             out_vec.data(),
+                                             data_ptr,
                                              a->get_shape(),
                                              b->get_shape(),
                                              maximum_v1_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto minimum_v0_node = as_type_ptr<op::v0::Minimum>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
-            vector<Tout> out_vec(shape_size(out_shape));
             runtime::reference::minimum<Tin>(a->get_data_ptr<Tin>(),
                                              b->get_data_ptr<Tin>(),
-                                             out_vec.data(),
+                                             data_ptr,
                                              a->get_shape(),
                                              b->get_shape(),
                                              minimum_v0_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto minimum_v1_node = as_type_ptr<op::v1::Minimum>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
-            vector<Tout> out_vec(shape_size(out_shape));
             runtime::reference::minimum<Tin>(a->get_data_ptr<Tin>(),
                                              b->get_data_ptr<Tin>(),
-                                             out_vec.data(),
+                                             data_ptr,
                                              a->get_shape(),
                                              b->get_shape(),
                                              minimum_v1_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto multiply_v0_node = as_type_ptr<op::v0::Multiply>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
-            vector<Tout> out_vec(shape_size(out_shape));
             runtime::reference::multiply<Tin>(a->get_data_ptr<Tin>(),
                                               b->get_data_ptr<Tin>(),
-                                              out_vec.data(),
+                                              data_ptr,
                                               a->get_shape(),
                                               b->get_shape(),
                                               multiply_v0_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto multiply_v1_node = as_type_ptr<op::v1::Multiply>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
-            vector<Tout> out_vec(shape_size(out_shape));
             runtime::reference::multiply<Tin>(a->get_data_ptr<Tin>(),
                                               b->get_data_ptr<Tin>(),
-                                              out_vec.data(),
+                                              data_ptr,
                                               a->get_shape(),
                                               b->get_shape(),
                                               multiply_v1_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto power_v0_node = as_type_ptr<op::v0::Power>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
-            vector<Tout> out_vec(shape_size(out_shape));
             shared_ptr<op::v0::Power> powop = as_type_ptr<op::v0::Power>(binary);
             runtime::reference::power<Tin>(a->get_data_ptr<Tin>(),
                                            b->get_data_ptr<Tin>(),
-                                           out_vec.data(),
+                                           data_ptr,
                                            a->get_shape(),
                                            b->get_shape(),
                                            power_v0_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto power_v1_node = as_type_ptr<op::v1::Power>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
-            vector<Tout> out_vec(shape_size(out_shape));
             shared_ptr<op::v1::Power> powop = as_type_ptr<op::v1::Power>(binary);
             runtime::reference::power<Tin>(a->get_data_ptr<Tin>(),
                                            b->get_data_ptr<Tin>(),
-                                           out_vec.data(),
+                                           data_ptr,
                                            a->get_shape(),
                                            b->get_shape(),
                                            power_v1_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else if (auto subtract_node = as_type_ptr<op::Subtract>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
-            vector<Tout> out_vec(shape_size(out_shape));
             runtime::reference::subtract<Tin>(a->get_data_ptr<Tin>(),
                                               b->get_data_ptr<Tin>(),
-                                              out_vec.data(),
+                                              data_ptr,
                                               a->get_shape(),
                                               b->get_shape(),
                                               subtract_node->get_autob());
-            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else
         {
