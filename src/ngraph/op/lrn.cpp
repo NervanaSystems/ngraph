@@ -79,7 +79,8 @@ void op::LRN::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(
         this,
-        static_cast<size_t>(axes_shape[0]) <= static_cast<size_t>(input_shape_rank),
+        axes_shape.is_dynamic() || input_shape_rank.is_dynamic() ||
+            static_cast<size_t>(axes_shape[0]) <= static_cast<size_t>(input_shape_rank),
         "Number of elements of axes must be >= 0 and <= argument rank (axes_shape[0]: ",
         axes_shape[0],
         ").");
