@@ -2989,8 +2989,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         m_node_map[node_name] = node;
     }
-    catch (...)
+    catch (exception& err)
     {
+        NGRAPH_INFO << err.what();
         string node_name;
         auto it = node_js.find("name");
         if (it != node_js.end())

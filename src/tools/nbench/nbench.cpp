@@ -421,7 +421,10 @@ OPTIONS
             if (!backend.empty())
             {
                 cout << "\n---- Benchmark ----\n";
+                stopwatch t1;
+                t1.start();
                 shared_ptr<Function> f = deserialize(model);
+                NGRAPH_INFO << "deserialize took " << t1.get_milliseconds();
                 vector<runtime::PerformanceCounter> perf_data;
                 if (double_buffer)
                 {
