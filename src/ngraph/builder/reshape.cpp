@@ -74,9 +74,7 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, int axis)
     size_t last_dim_size =
         accumulate(next(begin(data_shape), axis), end(data_shape), 1UL, multiplies<size_t>());
 
-    return make_shared<op::Reshape>(
-               value, get_default_order(data_shape.size()), Shape{first_dim_size, last_dim_size})
-        ->add_provenance_group_members_above({value});
+    return builder::reshape(value, Shape{first_dim_size, last_dim_size});
 }
 
 // Dynamic version of "flatten".
@@ -162,7 +160,5 @@ shared_ptr<Node> builder::expand_dims(const Output<Node>& value, size_t axis)
     auto empty_axis_it = begin(output_shape);
     advance(empty_axis_it, axis);
     output_shape.insert(empty_axis_it, 1);
-    return make_shared<op::Reshape>(
-               value, get_default_order(value.get_shape().size()), output_shape)
-        ->add_provenance_group_members_above({value});
+    return builder::reshape(value, output_shape);
 }
