@@ -34,6 +34,7 @@
 #include "util/test_case.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
+#include "util/type_prop.hpp"
 
 using namespace ngraph;
 
@@ -365,7 +366,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tag_text)
     {
         for (auto tag : ng_node->get_provenance_tags())
         {
-            EXPECT_EQ("<ONNX Add (add_node1)>", tag);
+            EXPECT_HAS_SUBSTRING(tag, "ONNX Add");
         }
     }
 }
