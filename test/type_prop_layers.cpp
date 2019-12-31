@@ -74,25 +74,25 @@ TEST(type_prop_layers, prior_box1)
 {
     op::PriorBoxAttrs attrs;
     attrs.min_size = {2.0f, 3.0f};
-    attrs.aspect_ratio = {1.0f, 2.0f, 0.5f};
+    attrs.aspect_ratio = {1.5f, 2.0f, 2.5f};
 
     auto layer_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {32, 32});
     auto image_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {300, 300});
     auto pb = make_shared<op::PriorBox>(layer_shape, image_shape, attrs);
-    ASSERT_EQ(pb->get_shape(), (Shape{2, 16384}));
+    ASSERT_EQ(pb->get_shape(), (Shape{2, 20480}));
 }
 
 TEST(type_prop_layers, prior_box2)
 {
     op::PriorBoxAttrs attrs;
     attrs.min_size = {2.0f, 3.0f};
-    attrs.aspect_ratio = {1.0f, 2.0f, 0.5f};
+    attrs.aspect_ratio = {1.5f, 2.0f, 2.5f};
     attrs.flip = true;
 
     auto layer_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {32, 32});
     auto image_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {300, 300});
     auto pb = make_shared<op::PriorBox>(layer_shape, image_shape, attrs);
-    ASSERT_EQ(pb->get_shape(), (Shape{2, 28672}));
+    ASSERT_EQ(pb->get_shape(), (Shape{2, 32768}));
 }
 
 TEST(type_prop_layers, prior_box3)
