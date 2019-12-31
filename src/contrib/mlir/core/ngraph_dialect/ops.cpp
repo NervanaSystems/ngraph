@@ -130,6 +130,31 @@ mlir::LogicalResult verifyOp(NGConcatOp* op)
 }
 
 template <>
+mlir::LogicalResult verifyOp(NGMatMulBiasOp* op)
+{
+    mlir::Type dot_input0 = op->getOperation()->getOperand(0)->getType();
+    mlir::Type dot_input1 = op->getOperation()->getOperand(1)->getType();
+    mlir::Type bias = op->getOperation()->getOperand(2)->getType();
+    mlir::Type r0 = op->getOperation()->getResult(0)->getType();
+
+    NGTensorType opType0 = dot_input0.cast<NGTensorType>();
+    NGTensorType opType1 = dot_input1.cast<NGTensorType>();
+    NGTensorType opType2 = bias.cast<NGTensorType>();
+    NGTensorType resType = r0.cast<NGTensorType>();
+
+    // MatMulBias only support tensor of rank 2 for now
+    if (opType0.getRank() != 2 || opType1.getRank() != 2 || opType2.getRank() != 2)
+        return op->emitOpError("Incompatible rank, rank of the input tensor should be 2");
+
+    // result is of same shape and elt type as bias (bias is broadcasted to of same shape as dot
+    // result)
+    if (!resType.isCompatible(opType2))
+        return op->emitOpError("Incompatible bias shape or type for matmulbias op");
+
+    return mlir::success();
+}
+
+template <>
 mlir::LogicalResult verifyOp(NGSelectOp* op)
 {
     mlir::Type t0 = op->getOperation()->getOperand(0)->getType();

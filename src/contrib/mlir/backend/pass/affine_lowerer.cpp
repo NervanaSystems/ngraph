@@ -875,6 +875,75 @@ namespace
         return matchSuccess();
     }
 
+    REWRITER(NGMatMulBiasOp)
+    {
+        auto dot = cast<NGMatMulBiasOp>(op);
+        auto loc = dot.getLoc();
+
+        // Retrieve/generate Values for operands and result.
+        ScopedContext scope(rewriter, loc);
+        Value* lhs = operands[0];
+        Value* rhs = operands[1];
+        Value* bias = operands[2];
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(lhs && rhs && result, "Unexpected null values in DotOp");
+
+        auto resultTy = result->getType().dyn_cast<MemRefType>();
+        auto lhsTy = lhs->getType().dyn_cast<MemRefType>();
+        auto rhsTy = rhs->getType().dyn_cast<MemRefType>();
+        auto biasTy = bias->getType().dyn_cast<MemRefType>();
+        NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
+        NGRAPH_CHECK(lhsTy, "Unexpected non-memref LHS type");
+        NGRAPH_CHECK(rhsTy, "Unexpected non-memref RHS type");
+        NGRAPH_CHECK(biasTy, "Unexpected non-memref bias type");
+
+        Type elemTy = resultTy.getElementType();
+        NGRAPH_CHECK(elemTy == lhsTy.getElementType() && elemTy == rhsTy.getElementType(),
+                     "Types mismatch in DotOp");
+
+        MemRefView vRes(result), vLhs(lhs), vRhs(rhs), vBias(bias);
+
+        NGRAPH_CHECK(vLhs.rank() == 2 && vRhs.rank() == 2 && vRes.rank() == 2,
+                     "Dot operation is only supported for 2D tensors");
+
+        // Create induction variables, lower bounds, upper bounds and steps of the loop nest.
+        // It's important to note that MemRefView priovides lb/ub/step info is "reverse order",
+        // i.e., fastest varying dimension is the last one, slowest varying dimention is the first
+        // one.
+        IndexHandle n, m, k;
+        unsigned nDim = vLhs.fastestVarying() - 1;
+        unsigned mDim = vRhs.fastestVarying();
+        unsigned kDim = vRhs.fastestVarying();
+        IndexHandle nLb(vLhs.lb(nDim)), mLb(vLhs.lb(mDim)), kLb(vRhs.lb(kDim));
+        IndexHandle nUb(vLhs.ub(nDim)), mUb(vLhs.ub(mDim)), kUb(vRhs.ub(kDim));
+        int64_t nStep = vLhs.step(nDim), mStep = vLhs.step(mDim), kStep = vRhs.step(kDim);
+
+        // Constants and indexed values to be used inside the loop nest.
+        IndexedValue iRes(result), iLhs(lhs), iRhs(rhs), iBias(bias);
+        ValueHandle zeroInit(rewriter.create<ConstantOp>(loc, rewriter.getZeroAttr(elemTy)));
+
+        {
+            IndexHandle n, k;
+            LoopBuilder::makeAffine(&n, nLb, nUb, nStep)([&] {
+                LoopBuilder::makeAffine(&k, kLb, kUb, kStep)([&] { iRes(n, k) = zeroInit; });
+            });
+        }
+        LoopBuilder::makeAffine(&n, nLb, nUb, nStep)([&] {
+            LoopBuilder::makeAffine(&m, mLb, mUb, mStep)([&] {
+                LoopBuilder::makeAffine(&k, kLb, kUb, kStep)(
+                    [&] { iRes(n, k) += iLhs(n, m) * iRhs(m, k); });
+            });
+        });
+
+        LoopBuilder::makeAffine(&n, nLb, nUb, nStep)([&] {
+            LoopBuilder::makeAffine(&k, kLb, kUb, kStep)([&] { iRes(n, k) += iBias(n, k); });
+        });
+
+        rewriter.replaceOp(op, {result});
+
+        return matchSuccess();
+    }
+
     REWRITER(NGConvolutionOp)
     {
         auto convolOp = cast<NGConvolutionOp>(op);
