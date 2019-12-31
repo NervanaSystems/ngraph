@@ -3374,17 +3374,17 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3])
-                           << ", cg_ctx->mkldnn_workspaces[" << deps[5] << "]);\n";
+                           << ", cg_ctx->mkldnn_workspaces[" << deps[4] << "]);\n";
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(deps[4])
-                           << ",deps, OpType::MAXPOOLBACKPROPFORWARD, "
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(max_pool_index - 1)
+                           << ", deps, OpType::MAXPOOLBACKPROPFORWARD, "
                            << to_string(scratchpad_size) << ");\n";
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << args[1].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3])
-                           << ", cg_ctx->mkldnn_workspaces[" << deps[5] << "]);\n";
+                           << ", cg_ctx->mkldnn_workspaces[" << deps[4] << "]);\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
 
