@@ -1552,7 +1552,7 @@ TEST(cpu_test, max_pool_with_indices_bprop_2d_2channel_2image)
     Shape padding_above{0, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_i{2, 2, 4, 3};
-    auto indices = make_shared<op::Parameter>(element::i32, shape_i);
+    auto indices = make_shared<op::Parameter>(element::i8, shape_i);
     auto delta = make_shared<op::Parameter>(element::f32, shape_i);
 
     auto max_pool_bprop = make_shared<op::MaxPoolWithIndicesBackprop>(
@@ -1590,27 +1590,27 @@ TEST(cpu_test, max_pool_with_indices_bprop_2d_2channel_2image)
                                          {1, 0, 0, 0, 2}}}})
                   .get_vector());
 
-    auto i = backend->create_tensor(element::i32, shape_i);
+    auto i = backend->create_tensor(element::i8, shape_i);
     copy_data(i,
-              test::NDArray<int, 4>({{{{4, 3, 1}, // img 0 chan 0
-                                       {1, 0, 0},
-                                       {0, 4, 5},
-                                       {0, 3, 2}},
+              test::NDArray<int8_t, 4>({{{{4, 3, 1}, // img 0 chan 0
+                                          {1, 0, 0},
+                                          {0, 4, 5},
+                                          {0, 3, 2}},
 
-                                      {{5, 4, 3}, // img 0 chan 1
-                                       {2, 1, 0},
-                                       {3, 1, 2},
-                                       {0, 0, 0}}},
+                                         {{5, 4, 3}, // img 0 chan 1
+                                          {2, 1, 0},
+                                          {3, 1, 2},
+                                          {0, 0, 0}}},
 
-                                     {{{1, 0, 3}, // img 1 chan 0
-                                       {2, 1, 5},
-                                       {3, 5, 2},
-                                       {0, 2, 1}},
+                                        {{{1, 0, 3}, // img 1 chan 0
+                                          {2, 1, 5},
+                                          {3, 5, 2},
+                                          {0, 2, 1}},
 
-                                      {{0, 3, 2}, // img 1 chan 1
-                                       {1, 0, 3},
-                                       {2, 1, 0},
-                                       {0, 0, 5}}}})
+                                         {{0, 3, 2}, // img 1 chan 1
+                                          {1, 0, 3},
+                                          {2, 1, 0},
+                                          {0, 0, 5}}}})
                   .get_vector());
 
     auto d = backend->create_tensor(element::f32, shape_i);
