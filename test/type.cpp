@@ -22,6 +22,14 @@
 using namespace std;
 using namespace ngraph;
 
+TEST(type, is_type)
+{
+    Shape shape{2, 2, 2};
+    auto A = op::Constant::create(element::f32, shape, {1, 2, 3, 4, 5, 6, 7, 8});
+
+    EXPECT_FALSE(is_type<op::ScalarConstantLikeBase>(A));
+}
+
 TEST(type, as_type_ptr)
 {
     Shape shape{2, 2, 2};
