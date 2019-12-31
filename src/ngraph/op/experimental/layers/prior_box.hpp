@@ -36,6 +36,9 @@ namespace ngraph
             std::vector<float> min_size;
             std::vector<float> max_size;
             std::vector<float> aspect_ratio;
+            std::vector<float> density;
+            std::vector<float> fixed_ratio;
+            std::vector<float> fixed_size;
             bool clip = false;
             bool flip = false;
             float step = 1.0f;
@@ -67,6 +70,11 @@ namespace ngraph
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
+
+                static size_t number_of_priors(const PriorBoxAttrs& attrs);
+
+                static std::vector<float>
+                    normalized_aspect_ratio(const std::vector<float>& aspect_ratio, bool flip);
 
                 const PriorBoxAttrs& get_attrs() const { return m_attrs; }
             private:
