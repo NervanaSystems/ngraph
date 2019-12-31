@@ -47,18 +47,6 @@ string to_cpp_string(T value)
 
 constexpr NodeTypeInfo op::Constant::type_info;
 
-op::Constant::Constant(const element::Type& type, const Shape& shape, const void* data)
-    : m_element_type(type)
-    , m_shape(shape)
-    , m_data(nullptr)
-{
-    size_t size = std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f);
-    m_data.reset(new runtime::AlignedBuffer(size, host_alignment()));
-    std::memcpy(m_data->get_ptr(), data, size);
-    constructor_validate_and_infer_types();
-    m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
-}
-
 op::Constant::Constant(const element::Type& type,
                        Shape shape,
                        const std::vector<std::string>& values)
@@ -203,6 +191,18 @@ op::Constant::Constant(const element::Type& type,
         std::vector<double> dvalues = parse_string<double>(values);
         write_values(dvalues);
     }
+    constructor_validate_and_infer_types();
+    m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
+}
+
+op::Constant::Constant(const element::Type& type, const Shape& shape, const void* data)
+    : m_element_type(type)
+    , m_shape(shape)
+    , m_data(nullptr)
+{
+    size_t size = std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f);
+    m_data.reset(new runtime::AlignedBuffer(size, host_alignment()));
+    std::memcpy(m_data->get_ptr(), data, size);
     constructor_validate_and_infer_types();
     m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
 }
