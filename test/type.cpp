@@ -28,6 +28,7 @@ TEST(type, is_type)
     auto A = op::Constant::create(element::f32, shape, {1, 2, 3, 4, 5, 6, 7, 8});
 
     EXPECT_FALSE(is_type<op::ScalarConstantLikeBase>(A));
+    EXPECT_TRUE(is_type<op::Constant>(A));
 }
 
 TEST(type, as_type_ptr)
@@ -37,4 +38,7 @@ TEST(type, as_type_ptr)
 
     auto scl = as_type_ptr<op::ScalarConstantLikeBase>(A);
     EXPECT_EQ(scl, nullptr);
+
+    auto c = as_type_ptr<op::Constant>(A);
+    EXPECT_NE(c, nullptr);
 }

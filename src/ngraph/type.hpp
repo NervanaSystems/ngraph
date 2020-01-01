@@ -23,7 +23,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <iostream>
 
 #include "ngraph/ngraph_visibility.hpp"
 
@@ -41,11 +40,7 @@ namespace ngraph
         const char* name;
         uint64_t version;
 
-        bool is_castable(const DiscreteTypeInfo& target_type) const
-        {
-            std::cout << __FILE__ << " " << __LINE__ << std::endl;
-            return *this == target_type;
-        }
+        bool is_castable(const DiscreteTypeInfo& target_type) const { return *this == target_type; }
         // For use as a key
         bool operator<(const DiscreteTypeInfo& b) const
         {
@@ -65,13 +60,9 @@ namespace ngraph
         }
         bool operator==(const DiscreteTypeInfo& b) const
         {
-            std::cout << __FILE__ << " " << __LINE__ << name << ", " << b.name << std::endl;
             return version == b.version && strcmp(name, b.name) == 0;
         }
-        bool operator!=(const DiscreteTypeInfo& b) const
-        {
-            return version != b.version || strcmp(name, b.name) != 0;
-        }
+        bool operator!=(const DiscreteTypeInfo& b) const { return !(*this == b); }
     };
 
     /// \brief Tests if value is a pointer/shared_ptr that can be statically cast to a
