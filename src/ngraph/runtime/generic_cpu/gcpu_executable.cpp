@@ -137,7 +137,9 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
         case ngraph::runtime::interpreter::OP_TYPEID::Quantize:
         case ngraph::runtime::interpreter::OP_TYPEID::Dequantize:
         case ngraph::runtime::interpreter::OP_TYPEID::ArgMin:
-        case ngraph::runtime::interpreter::OP_TYPEID::ArgMax: type = op->get_input_element_type(0); break;
+        case ngraph::runtime::interpreter::OP_TYPEID::ArgMax:
+            type = op->get_input_element_type(0);
+            break;
         case ngraph::runtime::interpreter::OP_TYPEID::Equal:
         case ngraph::runtime::interpreter::OP_TYPEID::Greater:
         case ngraph::runtime::interpreter::OP_TYPEID::GreaterEq:
@@ -149,7 +151,9 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
             // Select has bool for first input and the type we are interested in for the second
             type = op->get_input_element_type(1);
             break;
-        case ngraph::runtime::interpreter::OP_TYPEID::TopK: type = op->get_output_element_type(1); break;
+        case ngraph::runtime::interpreter::OP_TYPEID::TopK:
+            type = op->get_output_element_type(1);
+            break;
         default: type = op->get_output_element_type(0); break;
         }
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)

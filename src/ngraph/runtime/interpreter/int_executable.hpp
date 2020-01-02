@@ -127,18 +127,18 @@ namespace ngraph
             class INTBackend;
             class INTExecutable;
 
-                // This expands the op list in op_tbl.hpp into a list of enumerations that look like
-                // this:
-                // Abs,
-                // Acos,
-                // ...
-                enum class OP_TYPEID
-                {
+            // This expands the op list in op_tbl.hpp into a list of enumerations that look like
+            // this:
+            // Abs,
+            // Acos,
+            // ...
+            enum class OP_TYPEID
+            {
 #define NGRAPH_OP(NAME, NAMESPACE) ID_SUFFIX(NAME),
 #include "ngraph/runtime/interpreter/opset_int_tbl.hpp"
 #undef NGRAPH_OP
-                    UnknownOp
-                };
+                UnknownOp
+            };
         } // namespace interpreter
     }     // namespace runtime
 } // namespace ngraph

@@ -157,7 +157,6 @@ public:
 
 private:
     int get_alignment() const { return 64; }
-
     void generate_calls(const element::Type& type,
                         const Node& op,
                         const std::vector<std::shared_ptr<HostTensor>>& outputs,
@@ -165,8 +164,8 @@ private:
 
     template <typename T>
     void gop_engine(const Node& node,
-                   const std::vector<std::shared_ptr<HostTensor>>& out,
-                   const std::vector<std::shared_ptr<HostTensor>>& args)
+                    const std::vector<std::shared_ptr<HostTensor>>& out,
+                    const std::vector<std::shared_ptr<HostTensor>>& args)
     {
         switch (INTExecutable::get_typeid(node))
         {

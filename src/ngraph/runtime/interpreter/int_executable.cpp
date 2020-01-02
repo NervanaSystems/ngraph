@@ -36,8 +36,7 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorLayout;
 
-runtime::interpreter::OP_TYPEID
-    runtime::interpreter::INTExecutable::get_typeid(const Node& node)
+runtime::interpreter::OP_TYPEID runtime::interpreter::INTExecutable::get_typeid(const Node& node)
 {
     const NodeTypeInfo& type_info = node.get_type_info();
     // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
