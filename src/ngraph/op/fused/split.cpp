@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -137,7 +137,8 @@ void op::v1::Split::validate_and_infer_types()
 
     if (input_value(1).get_node_shared_ptr()->is_constant())
     {
-        auto axis = axis_value_from_input();
+        const auto axis_input = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr());
+        auto axis = axis_input->cast_vector<int64_t>()[0];
 
         if (data_ps.is_static())
         {
@@ -177,28 +178,4 @@ shared_ptr<Node> op::v1::Split::copy_with_new_args(const NodeVector& new_args) c
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::Split>(new_args.at(0), new_args.at(1), m_num_splits);
-}
-
-int64_t op::v1::Split::axis_value_from_input() const
-{
-    int64_t axis_value{0};
-
-    const auto axis_input = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr());
-
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wswitch-enum"
-#endif
-    switch (static_cast<element::Type_t>(axis_input->get_element_type()))
-    {
-    case element::Type_t::i8: axis_value = axis_input->get_vector<int8_t>().at(0); break;
-    case element::Type_t::i32: axis_value = axis_input->get_vector<int32_t>().at(0); break;
-    case element::Type_t::i64: axis_value = axis_input->get_vector<int64_t>().at(0); break;
-    default: break;
-    }
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
-
-    return axis_value;
 }

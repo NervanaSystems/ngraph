@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -169,6 +169,8 @@ add_library(onnx_import STATIC
         op/reshape.hpp
         op/reverse_sequence.cpp
         op/reverse_sequence.hpp
+        op/scatter_nd.cpp
+        op/scatter_nd.hpp
         op/selu.cpp
         op/selu.hpp
         op/shape.hpp

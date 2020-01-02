@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -92,8 +92,6 @@ namespace ngraph
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
 
-    using NodeTypeInfo = DiscreteTypeInfo;
-
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// or a (possibly empty) tuple of values.
@@ -119,6 +117,8 @@ namespace ngraph
 
         // Called in constructors during transition
         void constructor_validate_and_infer_types();
+
+        using type_info_t = DiscreteTypeInfo;
 
     protected:
         std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args(
@@ -158,8 +158,6 @@ namespace ngraph
         void safe_delete(NodeVector& nodes, bool recurse);
 
     public:
-        static constexpr NodeTypeInfo type_info{"Node", 0};
-
         virtual ~Node();
 
         virtual bool visit_attributes(AttributeVisitor& visitor) { return false; }
@@ -181,17 +179,8 @@ namespace ngraph
         /// Returns the NodeTypeInfo for the node's class.
         /// During transition to type_info, returns a dummy type_info for Node if the class
         /// has not been updated yet.
-        virtual const NodeTypeInfo& get_type_info() const = 0;
-        virtual const char* get_type_name() const
-        {
-            auto& info = get_type_info();
-            if (is_type<Node>(this))
-            {
-                // Transitional definition
-                return description().c_str();
-            }
-            return info.name;
-        }
+        virtual const type_info_t& get_type_info() const = 0;
+        const char* get_type_name() const { return get_type_info().name; }
         /// Sets/replaces the arguments with new arguments.
         void set_arguments(const NodeVector& arguments);
         /// Sets/replaces the arguments with new arguments.
@@ -230,7 +219,7 @@ namespace ngraph
         /// graph against the graph.
         bool is_same_op_type(const std::shared_ptr<Node>& node) const
         {
-            return description() == node->description();
+            return get_type_info() == node->get_type_info();
         }
 
         /// \brief Marks an input as being relevant or irrelevant to the output shapes of this
@@ -532,6 +521,8 @@ namespace ngraph
         std::shared_ptr<ngraph::op::util::OpAnnotations> m_op_annotations;
         std::map<std::string, std::shared_ptr<Variant>> m_rt_info;
     };
+
+    using NodeTypeInfo = Node::type_info_t;
 
     template <typename NodeType>
     class Input

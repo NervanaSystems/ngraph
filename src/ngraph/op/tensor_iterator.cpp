@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -468,6 +468,7 @@ std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& n
         }
     }
 
+    op->m_num_iterations = m_num_iterations;
     auto func = std::make_shared<Function>(m_body->get_results(), m_body->get_parameters());
     auto spec_func = specialize_function(
         func, types, new_shapes, std::vector<void*>(new_args.size(), nullptr), false, true);
