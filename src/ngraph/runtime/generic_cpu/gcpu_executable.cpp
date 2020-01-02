@@ -41,21 +41,21 @@ runtime::gcpu::GCPUExecutable::GCPUExecutable(const shared_ptr<Function>& functi
                                               bool enable_performance_collection)
     : INTExecutable(function, enable_performance_collection)
 {
-    m_function = clone_function(*function);
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::LikeReplacement>();
-    pass_manager.register_pass<pass::FusedOpDecomposition>();
-    pass_manager.register_pass<pass::Opset0Downgrade>();
-    pass_manager.register_pass<pass::ImplicitBroadcastElimination>();
-    pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
-    pass_manager.register_pass<pass::Liveness>();
-    pass_manager.run_passes(m_function);
+    // m_function = clone_function(*function);
+    // pass::Manager pass_manager;
+    // pass_manager.register_pass<pass::LikeReplacement>();
+    // pass_manager.register_pass<pass::FusedOpDecomposition>();
+    // pass_manager.register_pass<pass::Opset0Downgrade>();
+    // pass_manager.register_pass<pass::ImplicitBroadcastElimination>();
+    // pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
+    // pass_manager.register_pass<pass::Liveness>();
+    // pass_manager.run_passes(m_function);
 
-    for (auto node : m_function->get_ordered_ops())
-    {
-        m_nodes.push_back(node);
-    }
-    set_parameters_and_results(*m_function);
+    // for (auto node : m_function->get_ordered_ops())
+    // {
+    //     m_nodes.push_back(node);
+    // }
+    // set_parameters_and_results(*m_function);
 }
 
 bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
@@ -70,6 +70,7 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
         func_inputs.push_back(host_tensor);
     }
 
+    NGRAPH_INFO;
     // convert outputs to HostTensor
     vector<shared_ptr<HostTensor>> func_outputs;
     for (auto tensor : outputs)
@@ -78,6 +79,7 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
         func_outputs.push_back(host_tensor);
     }
 
+    NGRAPH_INFO;
     // map function params -> HostTensor
     unordered_map<descriptor::Tensor*, shared_ptr<HostTensor>> tensor_map;
     size_t input_count = 0;
@@ -90,6 +92,7 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
         }
     }
 
+    NGRAPH_INFO;
     // map function outputs -> HostTensor
     for (size_t output_count = 0; output_count < get_results().size(); ++output_count)
     {
@@ -102,9 +105,11 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
         tensor_map.insert({tensor, func_outputs[output_count]});
     }
 
+    NGRAPH_INFO;
     // for each ordered op in the graph
     for (auto& op : m_nodes)
     {
+        NGRAPH_INFO << *op;
         auto type_id = get_typeid(*op);
         if (type_id == ngraph::runtime::interpreter::OP_TYPEID::Parameter)
         {
