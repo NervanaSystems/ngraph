@@ -28,7 +28,7 @@ if (NGRAPH_NOP_ENABLE)
 endif()
 
 if (NGRAPH_GENERIC_CPU_ENABLE)
-    add_subdirectory(gcpu)
+    add_subdirectory(generic_cpu)
 endif()
 
 if (NGRAPH_PLAIDML_ENABLE)
