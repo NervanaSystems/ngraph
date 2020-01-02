@@ -80,18 +80,19 @@ namespace ngraph
                 NodeVector pad(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
-                    const Shape& data_shape = data->get_shape();
-
                     auto pads = node.get_ng_inputs().at(1);
                     std::shared_ptr<ngraph::Node> values;
+
                     if (node.get_ng_inputs().size() == 3)
                     {
                         values = node.get_ng_inputs().at(2);
                     }
                     else
                     {
-                        values = ngraph::op::Constant::create(element::i64, ngraph::Shape{}, {0});
+                        values = ngraph::op::Constant::create(
+                            data->get_element_type(), ngraph::Shape{}, {0});
                     }
+
                     auto axis = ngraph::op::Constant::create(element::i64, ngraph::Shape{}, {0});
                     NodeVector padding = builder::split(pads, 2, 0);
                     auto padding_begin =
