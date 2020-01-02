@@ -63,10 +63,13 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     : m_is_compiled{true}
     , m_performance_counters_enabled{enable_performance_collection}
 {
+#ifdef INTERPRETER_FORCE_SERIALIZE
     // To verify that the serializer works correctly let's just run this graph round-trip
-    string ser = serialize(function, 4);
+    string ser = serialize(function);
     m_function = deserialize(ser);
-    // m_function = clone_function(*function);
+#else
+    m_function = clone_function(*function);
+#endif
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
     pass_manager.register_pass<pass::FusedOpDecomposition>();
