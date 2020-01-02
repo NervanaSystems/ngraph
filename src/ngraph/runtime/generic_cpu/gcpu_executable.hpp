@@ -168,7 +168,6 @@ private:
                    const std::vector<std::shared_ptr<HostTensor>>& out,
                    const std::vector<std::shared_ptr<HostTensor>>& args)
     {
-        NGRAPH_INFO;
         switch (INTExecutable::get_typeid(node))
         {
         case ngraph::runtime::interpreter::OP_TYPEID::Broadcast:

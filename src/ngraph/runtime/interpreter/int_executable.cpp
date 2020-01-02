@@ -96,7 +96,6 @@ runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_stri
 bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    NGRAPH_INFO;
     runtime::event::Duration d1("call", "Interpreter");
 
     // convert inputs to HostTensor
