@@ -37,8 +37,9 @@ using namespace ngraph;
 using descriptor::layout::DenseTensorLayout;
 
 runtime::interpreter::OP_TYPEID
-    runtime::interpreter::INTExecutable::get_typeid(const NodeTypeInfo& type_info)
+    runtime::interpreter::INTExecutable::get_typeid(const Node& node)
 {
+    const NodeTypeInfo& type_info = node.get_type_info();
     // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
     // {Abs::type_info, OP_TYPEID::Abs},
     // {Acos::type_info, OP_TYPEID::Acos},
@@ -95,6 +96,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_stri
 bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
+    NGRAPH_INFO;
     runtime::event::Duration d1("call", "Interpreter");
 
     // convert inputs to HostTensor
