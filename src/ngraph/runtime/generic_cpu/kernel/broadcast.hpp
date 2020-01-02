@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2020 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,13 +16,8 @@
 
 #pragma once
 
-#include <Eigen/Dense>
 #include <cmath>
 #include <utility>
-
-#ifdef PARALLEL
-#include <omp.h>
-#endif
 
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/shape_util.hpp"
@@ -36,16 +31,6 @@ namespace ngraph
         {
             namespace kernel
             {
-#ifdef PARALLEL
-                static std::tuple<size_t, size_t> get_start_finish(size_t size)
-                {
-                    const size_t nthreads = omp_get_num_threads();
-                    const size_t ithread = omp_get_thread_num();
-                    const size_t start = ithread * size / nthreads;
-                    const size_t finish = (ithread + 1) * size / nthreads;
-                    return std::make_tuple(start, finish);
-                }
-#endif
                 template <typename T>
                 void broadcast_2d(const T* in,
                                   T* out,
@@ -73,37 +58,24 @@ namespace ngraph
                                   const Shape& out_shape,
                                   const AxisSet& broadcast_axes)
                 {
-#ifdef PARALLEL
-#pragma omp parallel
-#endif
+                    size_t index[3];
+                    size_t* out_index = 0;
+                    for (size_t i = 0; i < 3; i++)
                     {
-                        size_t start;
-                        size_t finish;
-#ifdef PARALLEL
-                        std::tie(start, finish) = get_start_finish(out_shape[0]);
-#else
-                        start = 0;
-                        finish = out_shape[0];
-#endif
-                        size_t index[3];
-                        size_t* out_index = 0;
-                        for (size_t i = 0; i < 3; i++)
+                        if (broadcast_axes.count(i) == 0)
                         {
-                            if (broadcast_axes.count(i) == 0)
-                            {
-                                out_index = &index[i];
-                                break;
-                            }
+                            out_index = &index[i];
+                            break;
                         }
-                        for (index[0] = start; index[0] < finish; ++index[0])
+                    }
+                    for (index[0] = 0; index[0] < out_shape[0]; ++index[0])
+                    {
+                        for (index[1] = 0; index[1] < out_shape[1]; ++index[1])
                         {
-                            for (index[1] = 0; index[1] < out_shape[1]; ++index[1])
+                            for (index[2] = 0; index[2] < out_shape[2]; ++index[2])
                             {
-                                for (index[2] = 0; index[2] < out_shape[2]; ++index[2])
-                                {
-                                    out[index[0] * out_shape[1] * out_shape[2] +
-                                        index[1] * out_shape[2] + index[2]] = in[*out_index];
-                                }
+                                out[index[0] * out_shape[1] * out_shape[2] +
+                                    index[1] * out_shape[2] + index[2]] = in[*out_index];
                             }
                         }
                     }

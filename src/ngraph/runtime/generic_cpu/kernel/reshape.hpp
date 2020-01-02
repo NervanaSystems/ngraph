@@ -16,9 +16,6 @@
 
 #pragma once
 
-#define EIGEN_USE_THREADS
-#include <unsupported/Eigen/CXX11/Tensor>
-
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/shape.hpp"
