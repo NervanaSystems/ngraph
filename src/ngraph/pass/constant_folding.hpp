@@ -56,7 +56,9 @@ public:
         RANGE,
         SELECT,
         SQUEEZE,
-        UNSQUEEZE
+        UNSQUEEZE,
+        SPLIT,
+        VARIADIC_SPLIT
     };
 
     ConstantFolding(const ngraph::BuildNodeExecutorMap& cfmap = ngraph::BuildNodeExecutorMap())
@@ -65,6 +67,8 @@ public:
         m_cfmap = cfmap;
         m_enable_shape_inference = true;
 
+        construct_constant_split();
+        construct_constant_variadic_split();
         construct_constant_reshape();
         construct_constant_broadcast();
         construct_constant_dyn_broadcast();
@@ -130,6 +134,8 @@ public:
             case CFTransformations::SELECT: construct_constant_select(); break;
             case CFTransformations::SQUEEZE: construct_constant_squeeze(); break;
             case CFTransformations::UNSQUEEZE: construct_constant_unsqueeze(); break;
+            case CFTransformations::SPLIT: construct_constant_split(); break;
+            case CFTransformations::VARIADIC_SPLIT: construct_constant_variadic_split(); break;
             }
         }
     }
@@ -159,6 +165,8 @@ private:
     void construct_constant_select();
     void construct_constant_squeeze();
     void construct_constant_unsqueeze();
+    void construct_constant_split();
+    void construct_constant_variadic_split();
 
     ngraph::BuildNodeExecutorMap m_cfmap;
 };
