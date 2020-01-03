@@ -4386,7 +4386,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::ScalarConstantLike:
     {
-        auto tmp = static_cast<const op::ScalarConstantLikeBase*>(&n);
+        auto tmp = static_cast<const op::ScalarConstantLike*>(&n);
         auto constant = tmp->as_constant();
         node["value"] = constant->get_value_strings()[0];
         node["element_type"] = write_element_type(constant->get_element_type());
