@@ -1802,3 +1802,42 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_gatherND_float)
 
     test_case.run();
 }
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_gather_elements_axis_0)
+{
+    const auto gather_elements_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/gather_elements_axis_0.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(gather_elements_fn, "${BACKEND_NAME}");
+
+    test_case.add_input<float>({1.f, 2.f, 3.f, 4.f});
+    test_case.add_input<int32_t>({0, 0, 1, 0});
+    test_case.add_expected_output<float>(Shape{2, 2}, {1.f, 1.f, 4.f, 3.f});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_gather_elements_axis_1)
+{
+    const auto gather_elements_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/gather_elements_axis_1.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(gather_elements_fn, "${BACKEND_NAME}");
+
+    test_case.add_input<float>({1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f});
+    test_case.add_input<int32_t>({1, 2, 0, 2, 0, 0});
+    test_case.add_expected_output<float>(Shape{2, 3}, {4.f, 8.f, 3.f, 7.f, 2.f, 3.f});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_gather_elements_negative_axis)
+{
+    const auto gather_elements_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/gather_elements_negative_axis.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(gather_elements_fn, "${BACKEND_NAME}");
+
+    test_case.add_input<float>({1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f});
+    test_case.add_input<int32_t>({-1, -2, 0, -2, 0, 0});
+    test_case.add_expected_output<float>(Shape{2, 3}, {7.f, 5.f, 3.f, 4.f, 2.f, 3.f});
+
+    test_case.run();
+}

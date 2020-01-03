@@ -1856,6 +1856,7 @@ private:
         case OP_TYPEID::DepthToSpace:
         case OP_TYPEID::Elu:
         case OP_TYPEID::FakeQuantize:
+        case OP_TYPEID::GatherElements:
         case OP_TYPEID::GroupConvolution:
         case OP_TYPEID::GroupConvolutionBackpropData:
         case OP_TYPEID::GroupConvolutionBackpropFilters:

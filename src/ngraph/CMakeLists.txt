@@ -369,6 +369,8 @@ set (SRC
     op/fused/elu.hpp
     op/fused/fake_quantize.cpp
     op/fused/fake_quantize.hpp
+    op/fused/gather_elements.cpp
+    op/fused/gather_elements.hpp
     op/fused/gelu.cpp
     op/fused/gelu.hpp
     op/fused/gemm.cpp
