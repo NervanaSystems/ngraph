@@ -27,6 +27,16 @@ namespace ngraph
     {
         namespace common
         {
+            void add_provenance_tag_recursive(const NodeVector& ng_node_args,
+                                              std::string provenance_tag)
+            {
+                for (auto& ng_node_arg : ng_node_args)
+                {
+                    ng_node_arg->add_provenance_tag(provenance_tag);
+                    add_provenance_tag_recursive(ng_node_arg->get_arguments(), provenance_tag);
+                }
+            }
+
             const NodeVector& add_provenance_tags(const Node& onnx_node,
                                                   const NodeVector& ng_node_vector)
             {
@@ -36,10 +46,14 @@ namespace ngraph
                         onnx_node.get_name().empty() ? "unnamed node" : onnx_node.get_name();
                     const std::string provenance_tag =
                         "<ONNX " + onnx_node.op_type() + " (" + node_name + ")>";
+
+                    auto ng_args = ng_node->get_arguments();
+                    add_provenance_tag_recursive(ng_args, provenance_tag);
                     ng_node->add_provenance_tag(provenance_tag);
                 }
                 return ng_node_vector;
             }
+
             const ngraph::element::Type& get_ngraph_element_type(int64_t onnx_type)
             {
                 switch (onnx_type)
