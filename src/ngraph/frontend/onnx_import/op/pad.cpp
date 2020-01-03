@@ -27,6 +27,37 @@
 #include "pad.hpp"
 #include "utils/convpool.hpp"
 
+using namespace std;
+
+template <typename TH>
+void _dbg(const char* sdbg, TH h)
+{
+    cerr << sdbg << "=" << h << "\n";
+}
+template <typename TH, typename... TA>
+void _dbg(const char* sdbg, TH h, TA... t)
+{
+    while (*sdbg != ',')
+    {
+        cerr << *sdbg++;
+    }
+    cerr << "=" << h << ",";
+    _dbg(sdbg + 1, t...);
+}
+#define debug(...) _dbg(#__VA_ARGS__, __VA_ARGS__)
+#define debugvS(x)                                                                                 \
+    {                                                                                              \
+        {                                                                                          \
+            std::cerr << #x << " = ";                                                              \
+            auto shape = x->get_shape();                                                           \
+            std::cout << "[ ";                                                                     \
+            for (auto& it : shape)                                                                 \
+            {                                                                                      \
+                std::cerr << it << " ";                                                            \
+            }                                                                                      \
+            std::cerr << "]\n";                                                                    \
+        }                                                                                          \
+    }
 namespace ngraph
 {
     namespace onnx_import
@@ -95,6 +126,8 @@ namespace ngraph
 
                     auto axis = ngraph::op::Constant::create(element::i64, ngraph::Shape{}, {0});
                     NodeVector padding = builder::split(pads, 2, 0);
+                    debugvS(padding.at(0));
+                    debugvS(padding.at(1));
                     auto padding_begin =
                         std::make_shared<default_opset::Convert>(padding.at(0), element::i64);
                     auto padding_end =
@@ -118,7 +151,7 @@ namespace ngraph
                     {
                         throw error::InvalidArgument("Unsupported padding mode: [" + mode + "]");
                     }
-                    return {std::make_shared<default_opset::Pad>(
+                    return {std::make_shared<ngraph::op::v1::Pad>(
                         data, padding_begin, padding_end, values, pad_mode)};
                 }
 
