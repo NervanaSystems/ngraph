@@ -2730,6 +2730,7 @@ NGRAPH_TEST(${BACKEND_NAME}, depth_to_space_space_to_depth_depth_first)
     EXPECT_TRUE(test::all_close_f(std_result, data, data_size));
 }
 
+
 NGRAPH_TEST(${BACKEND_NAME}, gather_elements)
 {
     Shape shape_a{2, 2};
@@ -2741,7 +2742,6 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_elements)
     auto f = make_shared<Function>(NodeVector{aa}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4});
@@ -2754,3 +2754,4 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_elements)
     EXPECT_TRUE(test::all_close_f(
         (vector<float>{1, 1, 1, 1}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
+
