@@ -32,8 +32,12 @@ namespace ngraph
             {
                 for (auto& ng_node_arg : ng_node_args)
                 {
-                    ng_node_arg->add_provenance_tag(provenance_tag);
-                    add_provenance_tag_recursive(ng_node_arg->get_arguments(), provenance_tag);
+                    if (!ng_node_arg->is_parameter() && !ng_node_arg->is_constant() &&
+                        ng_node_arg->get_provenance_tags().size() == 0)
+                    {
+                        ng_node_arg->add_provenance_tag(provenance_tag);
+                        add_provenance_tag_recursive(ng_node_arg->get_arguments(), provenance_tag);
+                    }
                 }
             }
 
