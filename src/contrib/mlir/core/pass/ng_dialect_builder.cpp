@@ -96,8 +96,9 @@ namespace
 
         // Generic op lowerer to ng dialect.
         // Simply maps ngraph tensors to values and generate an OP. No op-specific logic.
+        // Use inNum when mlir OP needs less input than its corresponding ngraph OP.
         template <typename Op>
-        mlir::Operation* createGenericOp(const ngraph::Node* ngNode);
+        mlir::Operation* createGenericOp(const ngraph::Node* ngNode, int inNum = 0);
 
         template <typename RedOp>
         mlir::Operation* createIndexReduction(const ngraph::Node* ngNode);
@@ -553,7 +554,7 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Gemm)
 template <>
 mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Softmax)
 {
-    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGSoftMaxOp>(ngNode);
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGSoftMaxOp>(ngNode, 1);
     auto softmaxNode = static_cast<const ngraph::op::Softmax*>(ngNode);
     auto softmaxOp = llvm::cast<mlir::NGSoftMaxOp>(op);
 
@@ -567,14 +568,19 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Softmax)
 }
 
 template <typename Op>
-mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ngNode)
+mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ngNode, int inNum)
 {
     std::vector<mlir::Value*> argValues;
     std::vector<mlir::Type> resTypes;
     auto inputMap = m_compiledKernel->get_input_map();
     std::shared_ptr<descriptor::Tensor> argTensor;
+    int i = 0;
     for (auto& argOutput : ngNode->input_values())
     {
+        if (inNum > 0 && i == inNum)
+        {
+            break;
+        }
         auto argOutputNode = argOutput.get_node();
         if (as_type<op::Parameter>(argOutputNode))
         {
@@ -590,10 +596,7 @@ mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ng
 
         auto argV = getTensorValue(argTensor.get()).m_value;
         argValues.push_back(argV);
-        if (as_type<const ngraph::op::Softmax>(ngNode))
-        {
-            break;
-        }
+        i++;
     }
 
     for (auto& output : ngNode->outputs())

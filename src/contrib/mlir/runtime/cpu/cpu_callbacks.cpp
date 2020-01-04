@@ -18,7 +18,7 @@
 // Follows nGraph naming convention for public APIs only, else MLIR naming convention.
 
 #include "contrib/mlir/backend/cpu/cpu_backend.hpp"
-#include "contrib/mlir/utils.hpp"
+#include "contrib/mlir/callback_utils.hpp"
 #include "cpu_runtime.hpp"
 #include "ngraph/check.hpp"
 
@@ -135,10 +135,8 @@ static void __mlir_mkldnn_maxpoolbackprop(size_t rank,
     }
     catch (const mkldnn::error& e)
     {
-        free(attrs);
         throw ngraph_error("Could not run mkdnn primitive " + std::string(e.message));
     }
-    free(attrs);
 }
 
 /// Callback for AvgPoolBackprop
@@ -242,10 +240,8 @@ static void __mlir_mkldnn_avgpoolbackprop(size_t rank,
     }
     catch (const mkldnn::error& e)
     {
-        free(attrs);
         throw ngraph_error("Could not run mkdnn primitive " + std::string(e.message));
     }
-    free(attrs);
 }
 
 /// Callback for AvgPool and MaxPool
@@ -325,10 +321,8 @@ static void __mlir_mkldnn_pooling(
     }
     catch (const mkldnn::error& e)
     {
-        free(attrs);
         throw ngraph_error("Could not run mkdnn primitive " + std::string(e.message));
     }
-    free(attrs);
 }
 
 /// Callback for Softmax
@@ -370,10 +364,8 @@ static void __mlir_mkldnn_softmax(size_t rank,
     }
     catch (const mkldnn::error& e)
     {
-        free(attrs);
         throw ngraph_error("Could not run mkdnn primitive " + std::string(e.message));
     }
-    free(attrs);
 }
 
 /// Callback for MatMul
@@ -397,7 +389,6 @@ static void __mlir_cblas_sgemm(StaticMemRef* memRefmatA,
                        0.0f,
                        reinterpret_cast<float*>(memRefmatC->allocatedPtr),
                        std::max<size_t>(1, gAttrs->ldc));
-    free(attrs);
 }
 
 /// Callback for Gemm
@@ -517,7 +508,6 @@ static void __mlir_cblas_sgemm_with_bias(StaticMemRef* memRefmatA,
                            matOut,
                            std::max<size_t>(1, ldc));
     }
-    free(attrs);
 }
 
 extern "C" void __mlir_callback_1_input(void* input, void* output, void* attrs, OpType type)

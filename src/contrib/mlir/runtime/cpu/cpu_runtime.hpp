@@ -54,19 +54,14 @@ namespace ngraph
             class MLIRCPURuntime : public MLIRRuntime
             {
             public:
+                ~MLIRCPURuntime();
                 /// Executes a pre-compiled subgraph
-                void run(void* args,
-                         const std::vector<std::vector<size_t>>& shapeVec,
-                         const std::vector<std::vector<size_t>>& stridesVec) override;
-
+                void run(std::vector<MemRefArg>& args) override;
+                std::vector<void*>& get_attrPtrs() { return m_attrPtrs; }
             private:
-                void run_internal(std::vector<void*>& externalTensors,
-                                  const std::vector<std::vector<size_t>>& shapeVec,
-                                  const std::vector<std::vector<size_t>>& stridesVec);
+                void run_internal(std::vector<MemRefArg>& args);
                 // Bind external tensors to MLIR module entry point
-                void bindArguments(std::vector<void*>& externalTensors,
-                                   const std::vector<std::vector<size_t>>& shapeVec,
-                                   const std::vector<std::vector<size_t>>& stridesVec);
+                void bindArguments(std::vector<MemRefArg>& args);
                 // Invokes an MLIR module entry point with bound arguments
                 void execute();
                 // Cleans up allocated args
@@ -80,11 +75,12 @@ namespace ngraph
 
             private:
                 // Pointers to externally allocated memory for sub-graph's input and output tensors.
-                std::vector<void*>* m_externalTensors;
+                std::vector<MemRefArg>* m_externalTensors;
                 // Arguments for the MLIR function generated for the nGraph sub-graph.
                 llvm::SmallVector<void*, 8> m_invokeArgs;
                 std::unique_ptr<mlir::ExecutionEngine> m_engine;
                 std::vector<size_t> m_ranks;
+                std::vector<void*> m_attrPtrs;
             };
         }
     }

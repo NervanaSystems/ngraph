@@ -666,4 +666,3 @@ def NGTopKOp :
       void setSortType(const Attribute& attr)   { this->setAttr("sortType", attr); }
     }];
 }
-

@@ -43,27 +43,25 @@ namespace ngraph
                 // Tensors haven't been allocated yet so we have to keep a pointer to the pointer
                 // that will hold the future memory address.
                 std::vector<size_t> buffer_indices;
-                std::vector<std::vector<size_t>> shape_vec;
-                std::vector<std::vector<size_t>> strides_vec;
+                std::vector<MemRefArg> mem_ref_arg_vec;
                 for (const TensorViewWrapper& arg : args)
                 {
                     auto buffer_index = external_function->get_buffer_index(arg.get_name());
                     buffer_indices.push_back(buffer_index);
                     // Get shape and strides
+                    MemRefArg mem_ref_arg;
+                    mem_ref_arg.m_tensor = nullptr;
                     auto tensor_shape = arg.get_shape();
-                    std::vector<size_t> shape(tensor_shape.size());
                     for (auto i = 0; i < tensor_shape.size(); i++)
                     {
-                        shape[i] = tensor_shape[i];
+                        mem_ref_arg.m_shape.push_back(tensor_shape[i]);
                     }
-                    shape_vec.push_back(shape);
                     auto tensor_strides = arg.get_strides();
-                    std::vector<size_t> strides(tensor_strides.size());
                     for (auto i = 0; i < tensor_strides.size(); i++)
                     {
-                        strides[i] = tensor_strides[i];
+                        mem_ref_arg.m_strides.push_back(tensor_strides[i]);
                     }
-                    strides_vec.push_back(strides);
+                    mem_ref_arg_vec.push_back(mem_ref_arg);
                 }
 
                 for (const TensorViewWrapper& result : out)
@@ -71,33 +69,34 @@ namespace ngraph
                     auto buffer_index = external_function->get_buffer_index(result.get_name());
                     buffer_indices.push_back(buffer_index);
                     // Get shape and strides
+                    MemRefArg mem_ref_arg;
+                    mem_ref_arg.m_tensor = nullptr;
                     auto tensor_shape = result.get_shape();
-                    std::vector<size_t> shape(tensor_shape.size());
                     for (auto i = 0; i < tensor_shape.size(); i++)
                     {
-                        shape[i] = tensor_shape[i];
+                        mem_ref_arg.m_shape.push_back(tensor_shape[i]);
                     }
-                    shape_vec.push_back(shape);
                     auto tensor_strides = result.get_strides();
-                    std::vector<size_t> strides(tensor_strides.size());
                     for (auto i = 0; i < tensor_strides.size(); i++)
                     {
-                        strides[i] = tensor_strides[i];
+                        mem_ref_arg.m_strides.push_back(tensor_strides[i]);
                     }
-                    strides_vec.push_back(strides);
+                    mem_ref_arg_vec.push_back(mem_ref_arg);
                 }
 
                 // Create functor that will be executed to compile and run this CompiledKernel.
                 // Note that 'double_ptr_args' must be captured by value since it's a local var.
-                auto functor = [node, buffer_indices, shape_vec, strides_vec](
-                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                auto functor = [node, buffer_indices, mem_ref_arg_vec](
+                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) mutable {
 
                     // MLIR requires a list of type-erased pointer to arguments. Tensors must have
                     // been allocated at this point so we can get rid of the extra reference.
-                    std::vector<void*> ptr_args;
+                    // std::vector<void*> ptr_args;
+                    int i = 0;
                     for (auto& buffer_index : buffer_indices)
                     {
-                        ptr_args.push_back(ctx->buffer_data[buffer_index]);
+                        mem_ref_arg_vec[i].m_tensor = ctx->buffer_data[buffer_index];
+                        i++;
                     }
                     // Compile nodes within the CompiledKernel op.
                     CompiledKernel* compiled_kernel =
@@ -126,16 +125,16 @@ namespace ngraph
                         // Grab a context and initialize a CPU backend using same context
                         MLIRCPUBackend mlir_backend(mlir_compiler.get_module(), context);
                         // Codegen to LLVM dialect
-                        mlir_backend.codegen();
+                        mlir_backend.codegen(mlir_runtime.get_attrPtrs());
                         // Store module into runtime, and invoke.
                         mlir_runtime.set_module(mlir_backend.get_module());
-                        mlir_runtime.run(&ptr_args, shape_vec, strides_vec);
+                        mlir_runtime.run(mem_ref_arg_vec);
                     }
                     else
                     {
                         // We have found a cached runtime, just invoke.
                         MLIRCPURuntime& mlir_runtime = it->second;
-                        mlir_runtime.run(&ptr_args, shape_vec, strides_vec);
+                        mlir_runtime.run(mem_ref_arg_vec);
                     }
                 };
 

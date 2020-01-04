@@ -19,6 +19,7 @@
 
 #include "affine_lowerer.hpp"
 
+#include "contrib/mlir/callback_utils.hpp"
 #include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/ngraph_dialect/type.hpp"
 #include "contrib/mlir/utils.hpp"
@@ -34,8 +35,6 @@
 #include <mlir/IR/MLIRContext.h>
 #include <mlir/IR/StandardTypes.h>
 #include <mlir/Transforms/DialectConversion.h>
-
-#include <mlir/Dialect/LLVMIR/LLVMDialect.h>
 
 #include <map>
 
@@ -190,6 +189,16 @@ namespace
     class DialectLoweringPass : public ModulePass<DialectLoweringPass>
     {
     public:
+        DialectLoweringPass()
+            : ModulePass<DialectLoweringPass>()
+        {
+        }
+
+        DialectLoweringPass(std::vector<void*>& attrPtrs)
+            : ModulePass<DialectLoweringPass>()
+        {
+            m_attrPtrs = &attrPtrs;
+        }
         void runOnModule() override;
 
         SmallVector<Value*, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
@@ -217,6 +226,7 @@ namespace
                            ArrayRef<Type> output,
                            PatternRewriter& rewriter);
 
+        void insertAttrPtr(void* p) { m_attrPtrs->push_back(p); }
     private:
         /// Collect a set of patterns to convert from the nGraph dialect to Affine dialect.
         void populateNGraphToAffineConversionPatterns(OwningRewritePatternList& patterns);
@@ -236,6 +246,9 @@ namespace
 
         // TODO: Workaround for findOutputValues and buildOutputDefs. See NGCPU-470.
         std::string funcName;
+
+        // Store the pointers to attributes needed by callback
+        std::vector<void*>* m_attrPtrs = nullptr;
     };
 
     void DialectLoweringPass::runOnModule()
@@ -249,7 +262,7 @@ namespace
         // Create target that defines legal ops for nGraph dialect to be lowered to.
         ConversionTarget target(getContext());
 
-        target.addLegalDialect<AffineOpsDialect, StandardOpsDialect, LLVM::LLVMDialect>();
+        target.addLegalDialect<AffineOpsDialect, StandardOpsDialect>();
         target.addLegalOp<ModuleOp, ModuleTerminatorOp>();
         target.addDynamicallyLegalOp<FuncOp>([&](FuncOp op) {
             // FuncOp is legal only if types have been converted to Std types.
@@ -486,7 +499,6 @@ namespace
     {
         auto module = getModule();
         auto* context = getModule().getContext();
-
         auto callBackFunc = module.lookupSymbol<mlir::FuncOp>(name);
         if (!callBackFunc)
         {
@@ -711,207 +723,6 @@ namespace
         });
 
         rewriter.replaceOp(op, {result});
-
-        return matchSuccess();
-    }
-
-    REWRITER(NGMatMulOp)
-    {
-        auto matmul = cast<NGMatMulOp>(op);
-        auto loc = matmul.getLoc();
-
-        // Retrieve/generate Values for operands and result.
-        ScopedContext scope(rewriter, loc);
-        Value* lhs = operands[0];
-        Value* rhs = operands[1];
-        Value* result = pass.buildOutputDefs(op, rewriter)[0];
-        NGRAPH_CHECK(lhs && rhs && result, "Unexpected null values in MatMulOp");
-
-        auto resultTy = result->getType().dyn_cast<MemRefType>();
-        auto resultShape = resultTy.getShape();
-        auto lhsTy = lhs->getType().dyn_cast<MemRefType>();
-        auto lhsShape = lhsTy.getShape();
-        auto rhsTy = rhs->getType().dyn_cast<MemRefType>();
-        auto rhsShape = rhsTy.getShape();
-        NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
-        NGRAPH_CHECK(lhsTy, "Unexpected non-memref LHS type");
-        NGRAPH_CHECK(rhsTy, "Unexpected non-memref RHS type");
-
-        Type elemTy = resultTy.getElementType();
-        NGRAPH_CHECK(elemTy == lhsTy.getElementType() && elemTy == rhsTy.getElementType(),
-                     "Types mismatch in MatMulOp");
-
-        NGRAPH_CHECK(lhsShape.size() == 2 && rhsShape.size() == 2 && resultShape.size() == 2,
-                     "MatMul operation is only supported for 2D tensors");
-
-        auto attrPtr = static_cast<gemmAttrs*>(malloc(sizeof(gemmAttrs)));
-        attrPtr->transposeA = matmul.transposeA();
-        attrPtr->transposeB = matmul.transposeB();
-        attrPtr->m = lhsShape[0];
-        attrPtr->k = lhsShape[1];
-        attrPtr->n = rhsShape[1];
-        attrPtr->lda = lhsShape[1];
-        attrPtr->ldb = rhsShape[1];
-
-        if (matmul.transposeA())
-        {
-            attrPtr->m = lhsShape[1];
-            attrPtr->k = lhsShape[0];
-        }
-        if (matmul.transposeB())
-        {
-            attrPtr->n = rhsShape[0];
-        }
-        attrPtr->ldc = attrPtr->n;
-
-        auto int64Ty = rewriter.getIntegerType(64);
-        auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
-        auto callBackFunc = pass.getCallDecl(
-            "__mlir_callback_2_inputs",
-            {unrankedMemrefTy, unrankedMemrefTy, unrankedMemrefTy, int64Ty, int64Ty},
-            {},
-            rewriter);
-
-        auto lhsCast =
-            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), lhs, unrankedMemrefTy);
-        auto rhsCast =
-            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), rhs, unrankedMemrefTy);
-        auto resultCast =
-            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), result, unrankedMemrefTy);
-        auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
-            rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
-        auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
-            rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::MATMUL), 64);
-
-        SmallVector<mlir::Value*, 4> args = {lhsCast, rhsCast, resultCast, attrPtrArg, opTypeArg};
-
-        rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
-        rewriter.replaceOp(op, result);
-
-        return matchSuccess();
-    }
-
-    REWRITER(NGGemmOp)
-    {
-        auto gemm = cast<NGGemmOp>(op);
-        auto loc = gemm.getLoc();
-
-        // Retrieve/generate Values for operands and result.
-        ScopedContext scope(rewriter, loc);
-        Value* lhs = operands[0];
-        Value* rhs = operands[1];
-        Value* bias = operands[2];
-        Value* result = pass.buildOutputDefs(op, rewriter)[0];
-        NGRAPH_CHECK(lhs && rhs && bias && result, "Unexpected null values in GemmOp");
-
-        auto resultTy = result->getType().dyn_cast<MemRefType>();
-        auto lhsTy = lhs->getType().dyn_cast<MemRefType>();
-        auto lhsShape = lhsTy.getShape();
-        auto rhsTy = rhs->getType().dyn_cast<MemRefType>();
-        auto rhsShape = rhsTy.getShape();
-        auto biasTy = bias->getType().dyn_cast<MemRefType>();
-        auto biasShape = biasTy.getShape();
-        NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
-        NGRAPH_CHECK(lhsTy, "Unexpected non-memref LHS type");
-        NGRAPH_CHECK(rhsTy, "Unexpected non-memref RHS type");
-        NGRAPH_CHECK(biasTy, "Unexpected non-memref bias type");
-
-        Type elemTy = resultTy.getElementType();
-        NGRAPH_CHECK(elemTy == lhsTy.getElementType() && elemTy == rhsTy.getElementType() &&
-                         elemTy == biasTy.getElementType(),
-                     "Types mismatch in GemmOp");
-
-        MemRefView vRes(result), vLhs(lhs), vRhs(rhs), vBias(bias);
-
-        NGRAPH_CHECK(vLhs.rank() == 2 && vRhs.rank() == 2 && vRes.rank() == 2 && vBias.rank() <= 2,
-                     "Gemm operation is only supported for 2D tensors");
-
-        auto attrPtr = static_cast<gemmAttrs*>(malloc(sizeof(gemmAttrs)));
-        attrPtr->transposeA = gemm.transA();
-        attrPtr->transposeB = gemm.transB();
-        attrPtr->alpha = gemm.alpha().convertToFloat();
-        attrPtr->beta = gemm.beta().convertToFloat();
-        attrPtr->m = lhsShape[0];
-        attrPtr->k = lhsShape[1];
-        attrPtr->n = rhsShape[1];
-        attrPtr->lda = lhsShape[1];
-        attrPtr->ldb = rhsShape[1];
-
-        if (gemm.transA())
-        {
-            attrPtr->m = lhsShape[1];
-            attrPtr->k = lhsShape[0];
-        }
-        if (gemm.transB())
-        {
-            attrPtr->n = rhsShape[0];
-        }
-        attrPtr->ldc = attrPtr->n;
-
-        int broadcastHint;
-        if (vBias.rank() == 0)
-        {
-            // Scalar
-            broadcastHint = 2;
-        }
-        else if (vBias.rank() == 2)
-        {
-            if (biasShape[0] == attrPtr->m && biasShape[1] == 1)
-            {
-                broadcastHint = 1;
-            }
-            else if (biasShape[0] == 1 && biasShape[1] == attrPtr->n)
-            {
-                broadcastHint = 0;
-            }
-            else
-            {
-                broadcastHint = -1;
-            }
-        }
-        else
-        {
-            if (biasShape[0] == attrPtr->m)
-            {
-                broadcastHint = 1;
-            }
-            else if (biasShape[0] == attrPtr->n)
-            {
-                broadcastHint = 0;
-            }
-        }
-        attrPtr->broadcastHint = broadcastHint;
-
-        auto int64Ty = rewriter.getIntegerType(64);
-        auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
-        auto callBackFunc = pass.getCallDecl("__mlir_callback_3_inputs",
-                                             {unrankedMemrefTy,
-                                              unrankedMemrefTy,
-                                              unrankedMemrefTy,
-                                              unrankedMemrefTy,
-                                              int64Ty,
-                                              int64Ty},
-                                             {},
-                                             rewriter);
-
-        auto lhsCast =
-            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), lhs, unrankedMemrefTy);
-        auto rhsCast =
-            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), rhs, unrankedMemrefTy);
-        auto biasCast =
-            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), bias, unrankedMemrefTy);
-        auto resultCast =
-            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), result, unrankedMemrefTy);
-        auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
-            rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
-        auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
-            rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::GEMM), 64);
-
-        SmallVector<mlir::Value*, 4> args = {
-            lhsCast, rhsCast, biasCast, resultCast, attrPtrArg, opTypeArg};
-
-        rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
-        rewriter.replaceOp(op, result);
 
         return matchSuccess();
     }
@@ -1399,57 +1210,24 @@ namespace
         return matchSuccess();
     }
 
-    REWRITER(NGSoftMaxOp)
+    REWRITER(NGReturnOp)
     {
-        auto softmax = cast<NGSoftMaxOp>(op);
-        auto loc = softmax.getLoc();
-
-        // Retrieve/generate Values for operands and result.
-        ScopedContext scope(rewriter, loc);
-        Value* lhs = operands[0];
-        Value* result = pass.buildOutputDefs(op, rewriter)[0];
-        NGRAPH_CHECK(lhs && result, "Unexpected null values in SoftmaxOp");
-
-        auto resultTy = result->getType().dyn_cast<MemRefType>();
-        auto resultShape = resultTy.getShape();
-        auto lhsTy = lhs->getType().dyn_cast<MemRefType>();
-        auto lhsShape = lhsTy.getShape();
-        NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
-        NGRAPH_CHECK(lhsTy, "Unexpected non-memref LHS type");
-
-        Type elemTy = resultTy.getElementType();
-        NGRAPH_CHECK(elemTy == lhsTy.getElementType(), "Types mismatch in SoftmaxOp");
-
-        NGRAPH_CHECK((lhsShape.size() == 2 && resultShape.size() == 2) ||
-                         (lhsShape.size() == 4 && resultShape.size() == 4),
-                     "MKLDNN Softmax operation is only supported for 2D and 4D tensors");
-
-        auto int64Ty = rewriter.getIntegerType(64);
-        auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
-        auto lhsCast =
-            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), lhs, unrankedMemrefTy);
-        auto resultCast =
-            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), result, unrankedMemrefTy);
-        auto axes = softmax.axes().getValue();
-        auto attrPtr = static_cast<int64_t*>(malloc(sizeof(int64_t)));
-        *attrPtr = axes[0].cast<IntegerAttr>().getInt();
-        auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
-            rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
-        auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
-            rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::SOFTMAX), 64);
-
-        FuncOp callBackFunc =
-            pass.getCallDecl("__mlir_callback_1_input",
-                             {unrankedMemrefTy, unrankedMemrefTy, int64Ty, int64Ty},
-                             {},
-                             rewriter);
-
-        SmallVector<mlir::Value*, 4> args = {lhsCast, resultCast, attrPtrArg, opTypeArg};
-
-        rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
-        rewriter.replaceOp(op, result);
-
+        pass.insertDeallocs(rewriter);
+        rewriter.replaceOpWithNewOp<ReturnOp>(op);
         return matchSuccess();
+    }
+
+    // Use callback: Pooling, MatMul, Gemm, Softmax
+    static void castMemRef(SmallVector<mlir::Value*, 4> inputs,
+                           SmallVector<mlir::Value*, 4>& outputs,
+                           PatternRewriter& rewriter,
+                           UnrankedMemRefType type)
+    {
+        for (auto in : inputs)
+        {
+            auto out = rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), in, type);
+            outputs.push_back(out);
+        }
     }
 
     REWRITER(NGAvgPoolOp)
@@ -1507,12 +1285,9 @@ namespace
 
         auto int64Ty = rewriter.getIntegerType(64);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
-        auto srcCast =
-            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), src, unrankedMemrefTy);
-        auto deltaCast =
-            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), delta, unrankedMemrefTy);
-        auto resultCast =
-            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), result, unrankedMemrefTy);
+        SmallVector<mlir::Value*, 4> inputs = {src, delta, result};
+        SmallVector<mlir::Value*, 4> outputs;
+        castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
 
         FuncOp callBackFunc = pass.getCallDecl(
             "__mlir_callback_2_inputs",
@@ -1524,6 +1299,7 @@ namespace
         if (srcShape.size() == 4)
         {
             auto attrPtr = static_cast<poolAttrs<2>*>(malloc(sizeof(poolAttrs<2>)));
+            pass.insertAttrPtr(attrPtr);
             auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
                 rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
             attrPtr->includePaddingInAvgComputation = false;
@@ -1537,11 +1313,12 @@ namespace
             auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
                 rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::MAXPOOLBACKPROP), 64);
 
-            args = {srcCast, deltaCast, resultCast, attrPtrArg, opTypeArg};
+            args = {outputs[0], outputs[1], outputs[2], attrPtrArg, opTypeArg};
         }
         else if (srcShape.size() == 5)
         {
             auto attrPtr = static_cast<poolAttrs<3>*>(malloc(sizeof(poolAttrs<3>)));
+            pass.insertAttrPtr(attrPtr);
             auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
                 rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
             attrPtr->includePaddingInAvgComputation = false;
@@ -1554,7 +1331,7 @@ namespace
             }
             auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
                 rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::MAXPOOLBACKPROP), 64);
-            args = {srcCast, deltaCast, resultCast, attrPtrArg, opTypeArg};
+            args = {outputs[0], outputs[1], outputs[2], attrPtrArg, opTypeArg};
         }
 
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
@@ -1562,10 +1339,250 @@ namespace
         return matchSuccess();
     }
 
-    REWRITER(NGReturnOp)
+    REWRITER(NGMatMulOp)
     {
-        pass.insertDeallocs(rewriter);
-        rewriter.replaceOpWithNewOp<ReturnOp>(op);
+        auto matmul = cast<NGMatMulOp>(op);
+        auto loc = matmul.getLoc();
+
+        // Retrieve/generate Values for operands and result.
+        ScopedContext scope(rewriter, loc);
+        Value* lhs = operands[0];
+        Value* rhs = operands[1];
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(lhs && rhs && result, "Unexpected null values in MatMulOp");
+
+        auto resultTy = result->getType().dyn_cast<MemRefType>();
+        auto resultShape = resultTy.getShape();
+        auto lhsTy = lhs->getType().dyn_cast<MemRefType>();
+        auto lhsShape = lhsTy.getShape();
+        auto rhsTy = rhs->getType().dyn_cast<MemRefType>();
+        auto rhsShape = rhsTy.getShape();
+        NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
+        NGRAPH_CHECK(lhsTy, "Unexpected non-memref LHS type");
+        NGRAPH_CHECK(rhsTy, "Unexpected non-memref RHS type");
+
+        Type elemTy = resultTy.getElementType();
+        NGRAPH_CHECK(elemTy == lhsTy.getElementType() && elemTy == rhsTy.getElementType(),
+                     "Types mismatch in MatMulOp");
+
+        NGRAPH_CHECK(lhsShape.size() == 2 && rhsShape.size() == 2 && resultShape.size() == 2,
+                     "MatMul operation is only supported for 2D tensors");
+
+        auto attrPtr = static_cast<gemmAttrs*>(malloc(sizeof(gemmAttrs)));
+        pass.insertAttrPtr(attrPtr);
+        attrPtr->transposeA = matmul.transposeA();
+        attrPtr->transposeB = matmul.transposeB();
+        attrPtr->m = lhsShape[0];
+        attrPtr->k = lhsShape[1];
+        attrPtr->n = rhsShape[1];
+        attrPtr->lda = lhsShape[1];
+        attrPtr->ldb = rhsShape[1];
+
+        if (matmul.transposeA())
+        {
+            attrPtr->m = lhsShape[1];
+            attrPtr->k = lhsShape[0];
+        }
+        if (matmul.transposeB())
+        {
+            attrPtr->n = rhsShape[0];
+        }
+        attrPtr->ldc = attrPtr->n;
+
+        auto int64Ty = rewriter.getIntegerType(64);
+        auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
+        auto callBackFunc = pass.getCallDecl(
+            "__mlir_callback_2_inputs",
+            {unrankedMemrefTy, unrankedMemrefTy, unrankedMemrefTy, int64Ty, int64Ty},
+            {},
+            rewriter);
+
+        auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
+            rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
+        auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
+            rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::MATMUL), 64);
+        SmallVector<mlir::Value*, 4> inputs = {lhs, rhs, result};
+        SmallVector<mlir::Value*, 4> outputs;
+        castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
+        SmallVector<mlir::Value*, 4> args = {
+            outputs[0], outputs[1], outputs[2], attrPtrArg, opTypeArg};
+
+        rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
+        rewriter.replaceOp(op, result);
+
+        return matchSuccess();
+    }
+
+    REWRITER(NGGemmOp)
+    {
+        auto gemm = cast<NGGemmOp>(op);
+        auto loc = gemm.getLoc();
+
+        // Retrieve/generate Values for operands and result.
+        ScopedContext scope(rewriter, loc);
+        Value* lhs = operands[0];
+        Value* rhs = operands[1];
+        Value* bias = operands[2];
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(lhs && rhs && bias && result, "Unexpected null values in GemmOp");
+
+        auto resultTy = result->getType().dyn_cast<MemRefType>();
+        auto lhsTy = lhs->getType().dyn_cast<MemRefType>();
+        auto lhsShape = lhsTy.getShape();
+        auto rhsTy = rhs->getType().dyn_cast<MemRefType>();
+        auto rhsShape = rhsTy.getShape();
+        auto biasTy = bias->getType().dyn_cast<MemRefType>();
+        auto biasShape = biasTy.getShape();
+        NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
+        NGRAPH_CHECK(lhsTy, "Unexpected non-memref LHS type");
+        NGRAPH_CHECK(rhsTy, "Unexpected non-memref RHS type");
+        NGRAPH_CHECK(biasTy, "Unexpected non-memref bias type");
+
+        Type elemTy = resultTy.getElementType();
+        NGRAPH_CHECK(elemTy == lhsTy.getElementType() && elemTy == rhsTy.getElementType() &&
+                         elemTy == biasTy.getElementType(),
+                     "Types mismatch in GemmOp");
+
+        MemRefView vRes(result), vLhs(lhs), vRhs(rhs), vBias(bias);
+
+        NGRAPH_CHECK(vLhs.rank() == 2 && vRhs.rank() == 2 && vRes.rank() == 2 && vBias.rank() <= 2,
+                     "Gemm operation is only supported for 2D tensors");
+
+        auto attrPtr = static_cast<gemmAttrs*>(malloc(sizeof(gemmAttrs)));
+        pass.insertAttrPtr(attrPtr);
+        attrPtr->transposeA = gemm.transA();
+        attrPtr->transposeB = gemm.transB();
+        attrPtr->alpha = gemm.alpha().convertToFloat();
+        attrPtr->beta = gemm.beta().convertToFloat();
+        attrPtr->m = lhsShape[0];
+        attrPtr->k = lhsShape[1];
+        attrPtr->n = rhsShape[1];
+        attrPtr->lda = lhsShape[1];
+        attrPtr->ldb = rhsShape[1];
+
+        if (gemm.transA())
+        {
+            attrPtr->m = lhsShape[1];
+            attrPtr->k = lhsShape[0];
+        }
+        if (gemm.transB())
+        {
+            attrPtr->n = rhsShape[0];
+        }
+        attrPtr->ldc = attrPtr->n;
+
+        int broadcastHint;
+        if (vBias.rank() == 0)
+        {
+            // Scalar
+            broadcastHint = 2;
+        }
+        else if (vBias.rank() == 2)
+        {
+            if (biasShape[0] == attrPtr->m && biasShape[1] == 1)
+            {
+                broadcastHint = 1;
+            }
+            else if (biasShape[0] == 1 && biasShape[1] == attrPtr->n)
+            {
+                broadcastHint = 0;
+            }
+            else
+            {
+                broadcastHint = -1;
+            }
+        }
+        else
+        {
+            if (biasShape[0] == attrPtr->m)
+            {
+                broadcastHint = 1;
+            }
+            else if (biasShape[0] == attrPtr->n)
+            {
+                broadcastHint = 0;
+            }
+        }
+        attrPtr->broadcastHint = broadcastHint;
+
+        auto int64Ty = rewriter.getIntegerType(64);
+        auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
+        auto callBackFunc = pass.getCallDecl("__mlir_callback_3_inputs",
+                                             {unrankedMemrefTy,
+                                              unrankedMemrefTy,
+                                              unrankedMemrefTy,
+                                              unrankedMemrefTy,
+                                              int64Ty,
+                                              int64Ty},
+                                             {},
+                                             rewriter);
+
+        auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
+            rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
+        auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
+            rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::GEMM), 64);
+        SmallVector<mlir::Value*, 4> inputs = {lhs, rhs, bias, result};
+        SmallVector<mlir::Value*, 4> outputs;
+        castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
+        SmallVector<mlir::Value*, 4> args = {
+            outputs[0], outputs[1], outputs[2], outputs[3], attrPtrArg, opTypeArg};
+
+        rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
+        rewriter.replaceOp(op, result);
+
+        return matchSuccess();
+    }
+
+    REWRITER(NGSoftMaxOp)
+    {
+        auto softmax = cast<NGSoftMaxOp>(op);
+        auto loc = softmax.getLoc();
+
+        // Retrieve/generate Values for operands and result.
+        ScopedContext scope(rewriter, loc);
+        Value* lhs = operands[0];
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(lhs && result, "Unexpected null values in SoftmaxOp");
+
+        auto resultTy = result->getType().dyn_cast<MemRefType>();
+        auto resultShape = resultTy.getShape();
+        auto lhsTy = lhs->getType().dyn_cast<MemRefType>();
+        auto lhsShape = lhsTy.getShape();
+        NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
+        NGRAPH_CHECK(lhsTy, "Unexpected non-memref LHS type");
+
+        Type elemTy = resultTy.getElementType();
+        NGRAPH_CHECK(elemTy == lhsTy.getElementType(), "Types mismatch in SoftmaxOp");
+
+        NGRAPH_CHECK((lhsShape.size() == 2 && resultShape.size() == 2) ||
+                         (lhsShape.size() == 4 && resultShape.size() == 4),
+                     "MKLDNN Softmax operation is only supported for 2D and 4D tensors");
+
+        auto int64Ty = rewriter.getIntegerType(64);
+        auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
+        auto axes = softmax.axes().getValue();
+        auto attrPtr = static_cast<int64_t*>(malloc(sizeof(int64_t)));
+        pass.insertAttrPtr(attrPtr);
+        *attrPtr = axes[0].cast<IntegerAttr>().getInt();
+        auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
+            rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
+        auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
+            rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::SOFTMAX), 64);
+
+        FuncOp callBackFunc =
+            pass.getCallDecl("__mlir_callback_1_input",
+                             {unrankedMemrefTy, unrankedMemrefTy, int64Ty, int64Ty},
+                             {},
+                             rewriter);
+
+        SmallVector<mlir::Value*, 4> inputs = {lhs, result};
+        SmallVector<mlir::Value*, 4> outputs;
+        castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
+        SmallVector<mlir::Value*, 4> args = {outputs[0], outputs[1], attrPtrArg, opTypeArg};
+
+        rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
+        rewriter.replaceOp(op, result);
+
         return matchSuccess();
     }
 
@@ -1841,10 +1858,9 @@ namespace
         }
 
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
-        auto lhsCast =
-            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), lhs, unrankedMemrefTy);
-        auto resultCast =
-            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), result, unrankedMemrefTy);
+        SmallVector<mlir::Value*, 4> inputs = {lhs, result};
+        SmallVector<mlir::Value*, 4> outputs;
+        castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
 
         FuncOp callBackFunc =
             pass.getCallDecl("__mlir_callback_1_input",
@@ -1856,6 +1872,7 @@ namespace
         if (lhsShape.size() == 4)
         {
             auto attrPtr = static_cast<poolAttrs<2>*>(malloc(sizeof(poolAttrs<2>)));
+            pass.insertAttrPtr(attrPtr);
             auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
                 rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
             attrPtr->includePaddingInAvgComputation = includePadding;
@@ -1868,11 +1885,12 @@ namespace
             }
             auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
                 rewriter.getUnknownLoc(), static_cast<int64_t>(ty), 64);
-            args = {lhsCast, resultCast, attrPtrArg, opTypeArg};
+            args = {outputs[0], outputs[1], attrPtrArg, opTypeArg};
         }
         else if (lhsShape.size() == 5)
         {
             auto attrPtr = static_cast<poolAttrs<3>*>(malloc(sizeof(poolAttrs<3>)));
+            pass.insertAttrPtr(attrPtr);
             auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
                 rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
             attrPtr->includePaddingInAvgComputation = includePadding;
@@ -1885,7 +1903,7 @@ namespace
             }
             auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
                 rewriter.getUnknownLoc(), static_cast<int64_t>(ty), 64);
-            args = {lhsCast, resultCast, attrPtrArg, opTypeArg};
+            args = {outputs[0], outputs[1], attrPtrArg, opTypeArg};
         }
 
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
@@ -1919,9 +1937,9 @@ namespace
 
 namespace mlir
 {
-    std::unique_ptr<Pass> createDialectLoweringPass()
+    std::unique_ptr<Pass> createDialectLoweringPass(std::vector<void*>& attrPtrs)
     {
-        return std::make_unique<DialectLoweringPass>();
+        return std::make_unique<DialectLoweringPass>(attrPtrs);
     }
 } // namespace mlir
 

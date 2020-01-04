@@ -53,16 +53,21 @@ static llvm::cl::opt<std::string>
     clObjectFilename("ngraph-mlir-object-filename",
                      llvm::cl::desc("Dump MLIR JITted-compiled object to file jitted_mlir.o"));
 
-void MLIRCPURuntime::run(void* args,
-                         const std::vector<std::vector<size_t>>& shapeVec,
-                         const std::vector<std::vector<size_t>>& stridesVec)
+MLIRCPURuntime::~MLIRCPURuntime()
 {
-    run_internal(*reinterpret_cast<std::vector<void*>*>(args), shapeVec, stridesVec);
+    for (auto p : m_attrPtrs)
+    {
+        free(p);
+    }
 }
 
-void MLIRCPURuntime::run_internal(std::vector<void*>& externalTensors,
-                                  const std::vector<std::vector<size_t>>& shapeVec,
-                                  const std::vector<std::vector<size_t>>& stridesVec)
+void MLIRCPURuntime::run(std::vector<MemRefArg>& args)
+{
+    // run_internal(*reinterpret_cast<std::vector<void*>*>(args), shapeVec, stridesVec);
+    run_internal(args);
+}
+
+void MLIRCPURuntime::run_internal(std::vector<MemRefArg>& args)
 {
     // Create an MLIR execution engine. We use a null MLIR pass manager for now to make sure we
     // don't run MLIR passes that were already run. We also pass a default transformer created with
@@ -75,16 +80,14 @@ void MLIRCPURuntime::run_internal(std::vector<void*>& externalTensors,
     NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
     m_engine = std::move(maybeEngine.get());
 
-    bindArguments(externalTensors, shapeVec, stridesVec);
+    bindArguments(args);
     execute();
     cleanup();
 }
 
 // Binds MLIR function arguments to the proper values. This includes externally allocated tensors
 // helpers to be used inside the function.
-void MLIRCPURuntime::bindArguments(std::vector<void*>& externalTensors,
-                                   const std::vector<std::vector<size_t>>& shapeVec,
-                                   const std::vector<std::vector<size_t>>& stridesVec)
+void MLIRCPURuntime::bindArguments(std::vector<MemRefArg>& args)
 {
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
@@ -92,16 +95,16 @@ void MLIRCPURuntime::bindArguments(std::vector<void*>& externalTensors,
     NGRAPH_CHECK(func && !func.getBlocks().empty(), "Function not found");
 
     // Set external arguments
-    m_externalTensors = &externalTensors;
+    m_externalTensors = &args;
 
     // Create list with a type-erased double pointer for each invocation arguments.
     // We currently use 'allocateMemrefArgs', which creates the arguments list per call ABI (see
     // comment below).
     // StaticMemRef is just a struct with the actual pointer to the data.
 
-    for (auto i = 0; i < shapeVec.size(); i++)
+    for (auto i = 0; i < m_externalTensors->size(); i++)
     {
-        m_ranks.push_back(shapeVec[i].size());
+        m_ranks.push_back((*m_externalTensors)[i].m_shape.size());
     }
     auto expectedArguments = allocateMemrefArgs();
     NGRAPH_CHECK(expectedArguments.size(), "Arguments can't be created");
@@ -114,13 +117,13 @@ void MLIRCPURuntime::bindArguments(std::vector<void*>& externalTensors,
     for (size_t i = 0, numArgs = m_invokeArgs.size(); i < numArgs; ++i)
     {
         auto* memRefArg = *(reinterpret_cast<StaticMemRef**>(m_invokeArgs[i]));
-        memRefArg->allocatedPtr = (*m_externalTensors)[i];
-        memRefArg->alignedPtr = (*m_externalTensors)[i];
+        memRefArg->allocatedPtr = (*m_externalTensors)[i].m_tensor;
+        memRefArg->alignedPtr = (*m_externalTensors)[i].m_tensor;
         auto rank = m_ranks[i];
         for (auto j = 0; j < rank; j++)
         {
-            memRefArg->shapeAndStrides[j] = shapeVec[i][j];
-            memRefArg->shapeAndStrides[rank + j] = stridesVec[i][j];
+            memRefArg->shapeAndStrides[j] = (*m_externalTensors)[i].m_shape[j];
+            memRefArg->shapeAndStrides[rank + j] = (*m_externalTensors)[i].m_strides[j];
         }
     }
 }

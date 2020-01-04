@@ -44,7 +44,7 @@ namespace ngraph
                 }
 
                 /// Generate code for the module
-                virtual void codegen() = 0;
+                virtual void codegen(std::vector<void*>&) = 0;
 
                 mlir::OwningModuleRef& get_module() { return m_module; }
             protected:

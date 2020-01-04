@@ -530,7 +530,6 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
             return false;
         }
         auto softmax = static_cast<ngraph::op::Softmax*>(node.get());
-
         auto arg0_shape = node->get_input_shape(0);
         auto arg0_rank = arg0_shape.size();
 
@@ -546,7 +545,6 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
             return false;
         }
         auto avg_pool = static_cast<ngraph::op::AvgPool*>(node.get());
-
         auto arg0_shape = node->get_input_shape(0);
         auto arg0_rank = arg0_shape.size();
 
@@ -563,7 +561,6 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
             return false;
         }
         auto avg_pool_backprop = static_cast<ngraph::op::AvgPoolBackprop*>(node.get());
-
         auto arg0_shape = node->get_input_shape(0);
         auto arg0_rank = arg0_shape.size();
 
@@ -580,7 +577,6 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
             return false;
         }
         auto max_pool_backprop = static_cast<ngraph::op::MaxPoolBackprop*>(node.get());
-
         auto arg0_shape = node->get_input_shape(0);
         auto arg0_rank = arg0_shape.size();
 
@@ -597,7 +593,6 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
             return false;
         }
         auto max_pool = static_cast<ngraph::op::MaxPool*>(node.get());
-
         auto arg0_shape = node->get_input_shape(0);
         auto arg0_rank = arg0_shape.size();
 
