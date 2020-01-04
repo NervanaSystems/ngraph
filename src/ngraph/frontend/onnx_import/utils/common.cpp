@@ -27,6 +27,31 @@ namespace ngraph
     {
         namespace common
         {
+            std::unordered_set<ngraph::Node*> traverse_node_args(const NodeVector& ng_node_args)
+            {
+                std::unordered_set<ngraph::Node*> instances_seen;
+                std::stack<ngraph::Node*, std::vector<ngraph::Node*>> stack;
+
+                for (auto& ng_node_arg : ng_node_args)
+                {
+                    stack.push(ng_node_arg.get());
+                }
+
+                while (stack.size() > 0)
+                {
+                    auto ng_node = stack.top();
+                    stack.pop();
+                    if (instances_seen.insert(ng_node).second)
+                    {
+                        for (auto& ng_node_arg : ng_node->get_arguments())
+                        {
+                            stack.push(ng_node_arg.get());
+                        }
+                    }
+                }
+                return instances_seen;
+            }
+
             void add_provenance_tag_recursive(const NodeVector& ng_node_args,
                                               std::string provenance_tag)
             {
@@ -52,7 +77,15 @@ namespace ngraph
                         "<ONNX " + onnx_node.op_type() + " (" + node_name + ")>";
 
                     auto ng_args = ng_node->get_arguments();
-                    add_provenance_tag_recursive(ng_args, provenance_tag);
+                    auto ng_inner_nodes = traverse_node_args(ng_args);
+                    for (auto& ng_inner_node : ng_inner_nodes)
+                    {
+                        if (!ng_inner_node->is_parameter() && !ng_inner_node->is_constant() &&
+                            ng_inner_node->get_provenance_tags().size() == 0)
+                        {
+                            ng_inner_node->add_provenance_tag(provenance_tag);
+                        }
+                    }
                     ng_node->add_provenance_tag(provenance_tag);
                 }
                 return ng_node_vector;
