@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,10 @@ MLIR_OP(NGGatherOp          , false                 )
 MLIR_OP(NGGemmOp            , false                 )
 MLIR_OP(NGGreaterOp         , true                  )
 MLIR_OP(NGLessOp            , true                  )
+MLIR_OP(NGGreaterEqOp       , true                  )
+MLIR_OP(NGLessEqOp          , true                  )
+MLIR_OP(NGEqOp              , true                  )
+MLIR_OP(NGNotEqOp           , true                  )
 MLIR_OP(NGMatMulOp          , false                 )
 MLIR_OP(NGMulOp             , true                  )
 MLIR_OP(NGMaxOp             , true                  )

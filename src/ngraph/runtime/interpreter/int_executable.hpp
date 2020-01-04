@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -1888,6 +1888,7 @@ private:
         case OP_TYPEID::SpaceToDepth:
         case OP_TYPEID::SquaredDifference:
         case OP_TYPEID::Squeeze:
+        case OP_TYPEID::Stack:
         case OP_TYPEID::Unsqueeze:
         // Tensor Iterator not yet supported
         case OP_TYPEID::TensorIterator:

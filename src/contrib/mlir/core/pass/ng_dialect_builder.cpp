@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -353,6 +353,29 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Less)
     return NgDialectObj.createGenericOp<mlir::NGLessOp>(ngNode);
 }
 
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::GreaterEq)
+{
+    return NgDialectObj.createGenericOp<mlir::NGGreaterEqOp>(ngNode);
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::LessEq)
+{
+    return NgDialectObj.createGenericOp<mlir::NGLessEqOp>(ngNode);
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Equal)
+{
+    return NgDialectObj.createGenericOp<mlir::NGEqOp>(ngNode);
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::NotEqual)
+{
+    return NgDialectObj.createGenericOp<mlir::NGNotEqOp>(ngNode);
+}
 template <>
 mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Maximum)
 {
