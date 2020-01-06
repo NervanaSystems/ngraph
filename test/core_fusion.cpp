@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -830,6 +830,11 @@ TEST(core_fusion, softmax_crossentropy_bprop_with_ignore_mask)
 }
 #endif
 
+// TODO(pthoreho): MLIR currently does not support all the op's needed for CrossEntropy+Softmax
+// this results in multiple CompiledKernels and we cannot able to safely check for certain op's
+// from the function created by user.
+// Note: remove this guards once we have full support for CE and Softmax through MLIR
+
 void test_softmax_crossentropy(Shape input_shape,
                                Shape label_shape,
                                bool soft_label,
@@ -864,7 +869,7 @@ void test_softmax_crossentropy(Shape input_shape,
     }
 }
 
-TEST(core_fusion, softmax_crossentropy)
+TEST(core_fusion, MLIR_DISABLE_TEST(softmax_crossentropy))
 {
     test_softmax_crossentropy(Shape{41, 37}, Shape{41, 37}, true, -1);
     test_softmax_crossentropy(Shape{41, 37}, Shape{41, 1}, false, 5);
@@ -901,7 +906,7 @@ void test_crossentropy(Shape input_shape, Shape label_shape, bool soft_label, in
     }
 }
 
-TEST(core_fusion, crossentropy)
+TEST(core_fusion, MLIR_DISABLE_TEST(crossentropy))
 {
     test_crossentropy(Shape{41, 37}, Shape{41, 37}, true, -1);
     test_crossentropy(Shape{41, 37}, Shape{41, 1}, false, 5);
