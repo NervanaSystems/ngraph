@@ -117,6 +117,11 @@ namespace ngraph
                 {
                     convert<InputElementType, bfloat16>(input, output, count, arena);
                 }
+                template <typename InputElementType>
+                void convert_to_f16(void* input, void* output, size_t count, int arena)
+                {
+                    convert<InputElementType, float16>(input, output, count, arena);
+                }
             }
         }
     }

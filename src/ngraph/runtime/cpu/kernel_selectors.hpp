@@ -129,7 +129,7 @@
     {                                                                                              \
         EXPAND_MACRO(S(K, KV, char));                                                              \
     }                                                                                              \
-    else if (ET == element::f32)                                                                   \
+    else if (ET == element::f32 || ET == element::f16)                                                                   \
     {                                                                                              \
         EXPAND_MACRO(S(K, KV, float));                                                             \
     }                                                                                              \
