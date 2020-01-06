@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -887,51 +887,6 @@ namespace ngraph
         size_t m_index{0};
     };
 
-    inline Input<Node> Node::input(size_t input_index)
-    {
-        if (input_index >= m_inputs.size())
-        {
-            throw std::out_of_range("node input index is out of range");
-        }
-
-        return Input<Node>(this, input_index);
-    }
-
-    inline Output<Node> Node::input_value(size_t input_index) const
-    {
-        return input(input_index).get_source_output();
-    }
-
-    inline Input<const Node> Node::input(size_t input_index) const
-    {
-        if (input_index >= m_inputs.size())
-        {
-            throw std::out_of_range("node input index is out of range");
-        }
-
-        return Input<const Node>(this, input_index);
-    }
-
-    inline Output<Node> Node::output(size_t output_index)
-    {
-        if (output_index >= m_outputs.size())
-        {
-            throw std::out_of_range("node output index is out of range");
-        }
-
-        return Output<Node>(this, output_index);
-    }
-
-    inline Output<const Node> Node::output(size_t output_index) const
-    {
-        if (output_index >= m_outputs.size())
-        {
-            throw std::out_of_range("node output index is out of range");
-        }
-
-        return Output<const Node>(this, output_index);
-    }
-
     inline Output<Node> Input<Node>::get_source_output() const
     {
         auto& output_descriptor = m_node->m_inputs.at(m_index).get_output();
@@ -978,66 +933,6 @@ namespace ngraph
     {
         m_node->m_outputs.at(m_index).remove_input(
             &(target_input.get_node()->m_inputs.at(target_input.get_index())));
-    }
-
-    inline std::vector<Input<Node>> Node::inputs()
-    {
-        std::vector<Input<Node>> result;
-
-        for (size_t i = 0; i < get_input_size(); i++)
-        {
-            result.emplace_back(this, i);
-        }
-
-        return result;
-    }
-
-    inline std::vector<Output<Node>> Node::input_values() const
-    {
-        std::vector<Output<Node>> result;
-
-        for (size_t i = 0; i < get_input_size(); i++)
-        {
-            result.emplace_back(input(i).get_source_output());
-        }
-
-        return result;
-    }
-
-    inline std::vector<Input<const Node>> Node::inputs() const
-    {
-        std::vector<Input<const Node>> result;
-
-        for (size_t i = 0; i < get_input_size(); i++)
-        {
-            result.emplace_back(this, i);
-        }
-
-        return result;
-    }
-
-    inline std::vector<Output<Node>> Node::outputs()
-    {
-        std::vector<Output<Node>> result;
-
-        for (size_t i = 0; i < get_output_size(); i++)
-        {
-            result.emplace_back(shared_from_this(), i);
-        }
-
-        return result;
-    }
-
-    inline std::vector<Output<const Node>> Node::outputs() const
-    {
-        std::vector<Output<const Node>> result;
-
-        for (size_t i = 0; i < get_output_size(); i++)
-        {
-            result.emplace_back(shared_from_this(), i);
-        }
-
-        return result;
     }
 
     class NodeValidationFailure : public CheckFailure

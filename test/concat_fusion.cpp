@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -171,10 +171,10 @@ TEST(concat_fusion, multiple_branches_2)
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
 
     size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
-    size_t num_broadcast_optimzed = count_ops_of_type<op::Broadcast>(optimized_f);
+    size_t num_broadcast_optimized = count_ops_of_type<op::Broadcast>(optimized_f);
 
-    ASSERT_EQ(num_reshapes_optimized, 1);
-    ASSERT_EQ(num_broadcast_optimzed, 1);
+    ASSERT_EQ(num_reshapes_optimized, 2);
+    ASSERT_EQ(num_broadcast_optimized, 2);
 }
 
 TEST(concat_fusion, non_fusable_self_concat)
@@ -226,8 +226,8 @@ TEST(concat_fusion, non_fusable_self_concat)
     size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
     size_t num_broadcast_optimzed = count_ops_of_type<op::Broadcast>(optimized_f);
 
-    ASSERT_EQ(num_reshapes_optimized, 2);
-    ASSERT_EQ(num_broadcast_optimzed, 3);
+    ASSERT_EQ(num_reshapes_optimized, 3);
+    ASSERT_EQ(num_broadcast_optimzed, 4);
 }
 
 TEST(concat_fusion, self_concat_with_fan_out)
@@ -279,8 +279,8 @@ TEST(concat_fusion, self_concat_with_fan_out)
     size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
     size_t num_broadcast_optimzed = count_ops_of_type<op::Broadcast>(optimized_f);
 
-    ASSERT_EQ(num_reshapes_optimized, 1);
-    ASSERT_EQ(num_broadcast_optimzed, 1);
+    ASSERT_EQ(num_reshapes_optimized, 3);
+    ASSERT_EQ(num_broadcast_optimzed, 3);
 }
 
 TEST(concat_fusion, pass_property)
