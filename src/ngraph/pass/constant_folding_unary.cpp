@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -60,15 +60,15 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
         }
     }
 
-    auto out_shape = unary->get_shape();
-    vector<T> out_vec(shape_size(out_shape));
+    const Shape& out_shape = unary->get_shape();
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
 
     if (func != nullptr)
     {
         vector<void*> inputs;
         inputs.push_back(const_cast<void*>(constant->get_data_ptr()));
         vector<void*> outputs;
-        outputs.push_back(out_vec.data());
+        outputs.push_back(buffer.get_ptr<T>());
 
         func(inputs, outputs);
     }
@@ -77,47 +77,47 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
         if (is_type<op::Abs>(unary))
         {
             runtime::reference::abs<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
         else if (is_type<op::Ceiling>(unary))
         {
             runtime::reference::ceiling<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
         else if (is_type<op::Floor>(unary))
         {
             runtime::reference::floor<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
         else if (is_type<op::v1::LogicalNot>(unary))
         {
             runtime::reference::logical_not<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
         else if (is_type<op::Negative>(unary))
         {
             runtime::reference::negate<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
         else if (is_type<op::v0::Not>(unary))
         {
             runtime::reference::logical_not<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
         else if (is_type<op::Relu>(unary))
         {
             runtime::reference::relu<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
         else if (is_type<op::Sign>(unary))
         {
             runtime::reference::sign<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
         else if (is_type<op::Sqrt>(unary))
         {
             runtime::reference::sqrt<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
         else
         {
@@ -125,7 +125,7 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
         }
     }
 
-    return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
+    return make_shared<op::Constant>(constant->get_element_type(), out_shape, buffer.get_ptr<T>());
 }
 
 void pass::ConstantFolding::construct_constant_unary()

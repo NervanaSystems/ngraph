@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -3338,7 +3338,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Constant:
     {
         auto tmp = static_cast<const op::Constant*>(&n);
-        if (tmp->are_all_data_elements_bitwise_identical() && shape_size(tmp->get_shape()) > 0)
+        if (tmp->get_all_data_elements_bitwise_identical() && shape_size(tmp->get_shape()) > 0)
         {
             vector<string> vs;
             vs.push_back(tmp->convert_value_to_string(0));

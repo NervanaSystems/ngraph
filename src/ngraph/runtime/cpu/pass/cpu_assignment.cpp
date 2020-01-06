@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -548,11 +548,13 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::LRN)
                 {
                     (void)external_function;
-                    auto arg0_shape = node->input_value(0).get_shape();
+                    auto arg0_shape = node->get_input_shape(0);
+                    AxisSet axes = as_type<ngraph::op::LRN>(node)->get_reduction_axes();
                     auto arg0_rank = arg0_shape.size();
                     auto result_shape = node->output(0).get_shape();
 
-                    if ((arg0_rank == 4) && node->input_value(0).get_element_type() == element::f32)
+                    if ((arg0_rank == 4) && node->get_input_element_type(0) == element::f32 &&
+                        axes == AxisSet{1})
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }

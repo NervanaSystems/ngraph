@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,18 +27,19 @@ shared_ptr<op::Constant> fold_constant_dequantize(shared_ptr<op::Constant> const
                                                   shared_ptr<op::Constant> scale,
                                                   shared_ptr<op::Constant> offset)
 {
-    auto out_shape = constant->get_shape();
-    vector<REAL> out_vec(shape_size(out_shape));
+    const Shape& out_shape = constant->get_shape();
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(REAL));
+    REAL* data_ptr = buffer.get_ptr<REAL>();
 
     runtime::reference::dequantize<QUANT, REAL>(constant->get_vector<QUANT>().data(),
                                                 scale->get_vector<REAL>().data(),
                                                 offset->get_vector<QUANT>().data(),
-                                                out_vec.data(),
+                                                data_ptr,
                                                 constant->get_shape(),
                                                 scale->get_shape(),
                                                 dequant->get_axes());
 
-    return make_shared<op::Constant>(dequant->get_element_type(), out_shape, out_vec);
+    return make_shared<op::Constant>(dequant->get_element_type(), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_dequantize()

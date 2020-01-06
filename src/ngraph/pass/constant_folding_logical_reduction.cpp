@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,12 +43,13 @@ static Shape get_shape_no_keep_dims(const AxisSet& reduction_axes, const Shape& 
 static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::Constant> constant,
                                                                 shared_ptr<Node> reduction_node)
 {
-    vector<char> out_vec(shape_size(reduction_node->get_shape()));
+    runtime::AlignedBuffer buffer(shape_size(reduction_node->get_shape()) * sizeof(char));
+    char* data_ptr = buffer.get_ptr<char>();
 
     if (auto all = as_type_ptr<::ngraph::op::All>(reduction_node))
     {
         runtime::reference::all(constant->get_vector<char>().data(),
-                                out_vec.data(),
+                                data_ptr,
                                 constant->get_output_shape(0),
                                 reduction_node->get_shape(),
                                 all->get_reduction_axes());
@@ -56,7 +57,7 @@ static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::C
     else if (auto any = as_type_ptr<::ngraph::op::Any>(reduction_node))
     {
         runtime::reference::any(constant->get_vector<char>().data(),
-                                out_vec.data(),
+                                data_ptr,
                                 constant->get_output_shape(0),
                                 reduction_node->get_shape(),
                                 any->get_reduction_axes());
@@ -67,7 +68,7 @@ static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::C
         const auto input_shape = reduce_and->get_input_shape(0);
 
         runtime::reference::all(constant->get_vector<char>().data(),
-                                out_vec.data(),
+                                data_ptr,
                                 constant->get_output_shape(0),
                                 get_shape_no_keep_dims(reduction_axes, input_shape),
                                 reduction_axes);
@@ -78,7 +79,7 @@ static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::C
         const auto input_shape = reduce_or->get_input_shape(0);
 
         runtime::reference::any(constant->get_vector<char>().data(),
-                                out_vec.data(),
+                                data_ptr,
                                 constant->get_output_shape(0),
                                 get_shape_no_keep_dims(reduction_axes, input_shape),
                                 reduction_axes);
@@ -92,7 +93,7 @@ static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::C
     }
 
     return make_shared<op::Constant>(
-        reduction_node->get_output_element_type(0), reduction_node->get_shape(), out_vec);
+        reduction_node->get_output_element_type(0), reduction_node->get_shape(), data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_logical_reduction()
