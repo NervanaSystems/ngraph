@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -2155,12 +2155,12 @@ TEST(cpu_test, tensor_copy_from_different_layout)
     EXPECT_EQ((vector<uint8_t>{1, 4, 2, 5, 3, 6}), read_vector<uint8_t>(b));
 }
 
-TEST(cpu_test, max_pool_bf16)
+TEST(cpu_test, MLIR_DISABLE_TEST(max_pool_bf16))
 {
     if (!runtime::cpu::mkldnn_utils::is_bf16_supported())
     {
         // TODO change to skip when there is a new release of gtest
-        NGRAPH_WARN << "This test is skipped for platform without bf16 support.";
+        NGRAPH_WARN << "This test is skipped for platform without bf16 support and for mlir.";
         return;
     }
 
@@ -2190,12 +2190,12 @@ TEST(cpu_test, max_pool_bf16)
     EXPECT_EQ((vector<bfloat16>{3.5, 3.5, 2.5, 3.5, 3.5, 2.5}), read_vector<bfloat16>(result));
 }
 
-TEST(cpu_test, convolution_simple_bf16)
+TEST(cpu_test, MLIR_DISABLE_TEST(convolution_simple_bf16))
 {
     if (!runtime::cpu::mkldnn_utils::is_bf16_supported())
     {
         // TODO change to skip when there is a new release of gtest
-        NGRAPH_WARN << "This test is skipped for platform without bf16 support.";
+        NGRAPH_WARN << "This test is skipped for platform without bf16 support and for mlir.";
         return;
     }
 

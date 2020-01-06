@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -177,6 +177,7 @@ NGRAPH_OP(RNNCell, ngraph::op)
 NGRAPH_OP(ScalarConstantLike, ngraph::op)
 NGRAPH_OP(ScaleShift, ngraph::op)
 NGRAPH_OP(ScatterAdd, ngraph::op)
+NGRAPH_OP(ScatterND, ngraph::op)
 NGRAPH_OP(ScatterNDAdd, ngraph::op)
 NGRAPH_OP(Select, ngraph::op)
 NGRAPH_OP(Selu, ngraph::op)
@@ -198,6 +199,7 @@ NGRAPH_OP(Sqrt, ngraph::op)
 NGRAPH_OP(SquaredDifference, ngraph::op)
 NGRAPH_OP(Squeeze, ngraph::op)
 NGRAPH_OP(StopGradient, ngraph::op)
+NGRAPH_OP(Stack, ngraph::op)
 NGRAPH_OP(Subtract, ngraph::op)
 NGRAPH_OP(Sum, ngraph::op)
 NGRAPH_OP(Tan, ngraph::op)

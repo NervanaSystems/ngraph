@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -125,16 +125,13 @@ shared_ptr<Node> Pool::copy_with_new_args(const NodeVector& new_args) const
                              get_pooling_type());
 }
 
-void Pool::validate_and_infer_types()
+void Pool::pre_validate_and_infer_types()
 {
     auto shape = get_input_partial_shape(0);
+
     if (shape.is_dynamic())
     {
         set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
-    }
-    else
-    {
-        FusedOp::validate_and_infer_types();
     }
 }
 
@@ -162,17 +159,12 @@ PoolGrad::PoolGrad(const Output<Node>& x,
     constructor_validate_and_infer_types();
 }
 
-void PoolGrad::validate_and_infer_types()
+void PoolGrad::pre_validate_and_infer_types()
 {
-    auto shape = get_input_partial_shape(0);
     if (get_input_partial_shape(0).is_dynamic() || get_input_partial_shape(1).is_dynamic() ||
         get_input_partial_shape(2).is_dynamic())
     {
         set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
-    }
-    else
-    {
-        FusedOp::validate_and_infer_types();
     }
 }
 
